@@ -1,0 +1,13 @@
+[
+  {
+    "card": "Laughing Mad",
+    "edges": [
+      { "theme": "graveyard", "role": "produce", "weight": 1, "modifiers": [] },
+      { "theme": "graveyard", "role": "consume", "weight": 1, "modifiers": [] },
+      { "theme": "exile", "role": "atypical", "weight": 1, "modifiers": [] },
+      { "theme": "discard", "role": "atypical", "weight": 1, "modifiers": [] },
+      { "theme": "flashback", "role": "produce", "weight": 3, "modifiers": [] },
+      { "theme": "flashback", "role": "consume", "weight": 3, "modifiers": [] }
+    ]
+  }
+]
