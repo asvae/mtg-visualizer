@@ -6,7 +6,7 @@
 //
 // Creature subtypes (Human, Goblin, Dragon, ...) get their THEME auto-generated —
 // derived fresh from type_line every load (see creatureSubtypes below), never listed
-// in data/themes.json, so the theme checklist/graph knows Human/Goblin/etc. exist
+// in data/global_themes.json, so the theme checklist/graph knows Human/Goblin/etc. exist
 // without anyone hand-adding them. Their EDGES are not automatic though: which card
 // produces/consumes a creature-type theme, and at what weight, is a normal tagging
 // call the agent makes and writes to <set>_relations.json, same as any curated
@@ -155,7 +155,7 @@ export function buildGraph(
       for (const [role, byTheme] of Object.entries(entry.themes ?? {})) {
         for (const [theme, weight] of Object.entries(byTheme ?? {})) {
           if (theme !== 'not-processed' && !themeIds.has(theme)) {
-            console.warn(`"${c.name}": unknown theme id "${theme}" (not in data/themes.json and no card's type_line produces it) — skipping.`);
+            console.warn(`"${c.name}": unknown theme id "${theme}" (not in data/global_themes.json and no card's type_line produces it) — skipping.`);
             continue;
           }
           edges.push({ card: c.id, theme, role: role as Role, weight });

@@ -1,6 +1,6 @@
 // Scans a set's raw Scryfall data for creature subtypes (Human, Goblin, Dragon, ...)
 // and merges their id -> label into data/type_themes.json — a global registry,
-// alongside data/themes.json, but kept separate since these are auto-derived
+// alongside data/global_themes.json, but kept separate since these are auto-derived
 // (mechanical, no review judgment) rather than curated. Purely for human
 // inspection: src/lib/buildGraph.ts re-derives the actual per-card edges itself,
 // straight from type_line, on every load — it doesn't read this file. Safe to
@@ -35,7 +35,7 @@ function slugify(word) {
 }
 
 const raw = JSON.parse(await readFile(`data/${setCode}/${setCode}_scryfall.json`, 'utf-8'));
-const themes = JSON.parse(await readFile('data/themes.json', 'utf-8'));
+const themes = JSON.parse(await readFile('data/global_themes.json', 'utf-8'));
 const themeIds = new Set(themes.map((t) => t.id));
 
 let existing = [];

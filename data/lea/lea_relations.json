@@ -1,0 +1,3599 @@
+[
+  {
+    "name": "Air Elemental",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Ancestral Recall",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "draw": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Animate Artifact",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "creature": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Animate Dead",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "etb": 3
+      },
+      "consume": {
+        "graveyard": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Animate Wall",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "atypical": {
+        "defender": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Ankh of Mishra",
+    "themes": {
+      "produce": {
+        "face-damage": 3
+      },
+      "consume": {
+        "landfall": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Armageddon",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "board-wipe": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Aspect of Wolf",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "consume": {
+        "land": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Bad Moon",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "anthem": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Badlands",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Balance",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "discard": 2,
+        "board-wipe": 2,
+        "removal": 2
+      },
+      "consume": {
+        "land": 2,
+        "sacrifice": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Basalt Monolith",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3,
+        "untap": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Bayou",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Benalish Hero",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "banding": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Berserk",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      },
+      "grant": {
+        "trample": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Birds of Paradise",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bird": 2,
+        "flying": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Black Knight",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "first-strike": 2,
+        "protection": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Black Lotus",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3,
+        "sacrifice": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Black Vise",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "face-damage": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Black Ward",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "protection": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Blaze of Glory",
+    "themes": {
+      "produce": {
+        "instant": 2
+      },
+      "grant": {
+        "forced-block": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Blessing",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Blue Elemental Blast",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Blue Ward",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "protection": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Bog Wraith",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wraith": 2,
+        "unblockable": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Braingeyser",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "draw": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Burrowing",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "unblockable": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Camouflage",
+    "themes": {
+      "produce": {
+        "instant": 2
+      },
+      "atypical": {
+        "forced-block": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Castle",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "consume": {
+        "creature": 2,
+        "tap": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Celestial Prism",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Channel",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Chaos Orb",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "removal": 3,
+        "board-wipe": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Chaoslace",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "color-change": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Circle of Protection: Blue",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "damage-prevention": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Circle of Protection: Green",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "damage-prevention": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Circle of Protection: Red",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "damage-prevention": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Circle of Protection: White",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "damage-prevention": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Clockwork Beast",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "beast": 2,
+        "other-counters": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Clone",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "shapeshifter": 2,
+        "copy": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Cockatrice",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "cockatrice": 2,
+        "flying": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Consecrate Land",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "indestructible": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Conservator",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "damage-prevention": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Contract from Below",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "draw": 3,
+        "discard": 2,
+        "graveyard": 1,
+        "ante": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Control Magic",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "commandeer": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Conversion",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "mana-denial": 3
+      },
+      "consume": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Copper Tablet",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "face-damage": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Copy Artifact",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "artifacts": 2,
+        "copy": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Counterspell",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Craw Wurm",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wurm": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Creature Bond",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Crusade",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "anthem": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Crystal Rod",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Cursed Land",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Cyclopean Tomb",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana-denial": 2,
+        "other-counters": 2,
+        "land-type-change": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Dark Ritual",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Darkpact",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "ante": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Death Ward",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Deathgrip",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Deathlace",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "color-change": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Demonic Attorney",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "ante": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Demonic Hordes",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "demon": 2,
+        "removal": 2
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Demonic Tutor",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "tutor": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Dingus Egg",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "face-damage": 3
+      },
+      "consume": {
+        "graveyard": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Disenchant",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Disintegrate",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "face-damage": 2,
+        "exile": 1
+      },
+      "atypical": {
+        "regeneration": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Disrupting Scepter",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "discard": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Dragon Whelp",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dragon": 2,
+        "flying": 2
+      },
+      "consume": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Drain Life",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "lifegain": 2,
+        "removal": 2,
+        "face-damage": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Drain Power",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "mana": 3,
+        "mana-denial": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Drudge Skeletons",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "skeleton": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Dwarven Demolition Team",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dwarf": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Dwarven Warriors",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dwarf": 2,
+        "warrior": 2,
+        "unblockable": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Earth Elemental",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Earthbind",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "removal": 1
+      },
+      "consume": {
+        "flying": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Earthquake",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "face-damage": 2,
+        "removal": 2,
+        "board-wipe": 2
+      },
+      "consume": {
+        "flying": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Elvish Archers",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elf": 2,
+        "archer": 2,
+        "first-strike": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Evil Presence",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "mana-denial": 1,
+        "land-type-change": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "False Orders",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "forced-block": 3,
+        "combat-trick": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Farmstead",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "lifegain": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Fastbond",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "land": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Fear",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "unblockable": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Feedback",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 2
+      },
+      "consume": {
+        "enchantment": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Fire Elemental",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Fireball",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "face-damage": 2,
+        "removal": 2,
+        "board-wipe": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Firebreathing",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "firebreathing": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Flashfires",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 2,
+        "board-wipe": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Flight",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Fog",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "damage-prevention": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Force of Nature",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2,
+        "trample": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Forcefield",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "damage-prevention": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Fork",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "copy": 3
+      },
+      "consume": {
+        "instant": 1,
+        "sorcery": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Frozen Shade",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "shade": 2,
+        "firebreathing": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Fungusaur",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "fungus": 2,
+        "dinosaur": 2,
+        "counters": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Gaea's Liege",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "avatar": 2,
+        "land-type-change": 2
+      },
+      "consume": {
+        "land": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Gauntlet of Might",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "anthem": 2
+      },
+      "consume": {
+        "land": 1
+      },
+      "magnifier": {
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Giant Growth",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Giant Spider",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "spider": 2,
+        "reach": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Glasses of Urza",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Gloom",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "cost-increase": 3
+      },
+      "consume": {
+        "enchantment": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Goblin Balloon Brigade",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "goblin": 2,
+        "warrior": 2,
+        "flying": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Goblin King",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "goblin": 2
+      },
+      "grant": {
+        "anthem": 3,
+        "landwalk": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Granite Gargoyle",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "gargoyle": 2,
+        "flying": 2,
+        "firebreathing": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Gray Ogre",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "ogre": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Green Ward",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "protection": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Grizzly Bears",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bear": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Guardian Angel",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "damage-prevention": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Healing Salve",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "lifegain": 2,
+        "damage-prevention": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Helm of Chatzuk",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "grant": {
+        "banding": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Hill Giant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "giant": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Holy Armor",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "firebreathing": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Holy Strength",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Howl from Beyond",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Howling Mine",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "draw": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Hurloon Minotaur",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "minotaur": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Hurricane",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "face-damage": 2,
+        "removal": 2,
+        "board-wipe": 2
+      },
+      "consume": {
+        "flying": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Hypnotic Specter",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "specter": 2,
+        "flying": 2,
+        "discard": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Ice Storm",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Icy Manipulator",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lockdown": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Illusionary Mask",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "atypical": {
+        "creature": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Instill Energy",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "haste": 2,
+        "untap": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Invisibility",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "unblockable": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Iron Star",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Ironclaw Orcs",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "orc": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Ironroot Treefolk",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "treefolk": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Island Sanctuary",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "atypical": {
+        "damage-prevention": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Ivory Cup",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Jade Monolith",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "damage-redirection": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Jade Statue",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 1,
+        "golem": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Jayemdae Tome",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "draw": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Juggernaut",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "juggernaut": 2,
+        "forced-attack": 2,
+        "unblockable": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Jump",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "flying": 1,
+        "combat-trick": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Karma",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "face-damage": 3
+      },
+      "consume": {
+        "land": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Keldon Warlord",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "barbarian": 2
+      },
+      "consume": {
+        "creature": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Kormus Bell",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "grant": {
+        "creature": 3
+      },
+      "consume": {
+        "land": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Kudzu",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lance",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "first-strike": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Ley Druid",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "druid": 2,
+        "untap": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Library of Leng",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "consume": {
+        "discard": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lich",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "life-loss": 2,
+        "draw": 2
+      },
+      "consume": {
+        "lifegain": 2,
+        "sacrifice": 2
+      },
+      "atypical": {
+        "alt-win": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lifeforce",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lifelace",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "color-change": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lifetap",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "land": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lightning Bolt",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "face-damage": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Living Artifact",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "lifegain": 2,
+        "other-counters": 2
+      },
+      "consume": {
+        "artifacts": 1,
+        "other-counters": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Living Lands",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "grant": {
+        "creature": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Living Wall",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "wall": 2,
+        "defender": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Llanowar Elves",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elf": 2,
+        "druid": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lord of Atlantis",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "merfolk": 2
+      },
+      "consume": {
+        "merfolk": 2
+      },
+      "grant": {
+        "unblockable": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lord of the Pit",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "demon": 2,
+        "flying": 2,
+        "trample": 2
+      },
+      "consume": {
+        "sacrifice": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Lure",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "forced-block": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Magical Hack",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "land-type-change": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mahamoti Djinn",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "djinn": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mana Flare",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "magnifier": {
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mana Short",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "mana-denial": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mana Vault",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3
+      },
+      "consume": {
+        "tap": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Manabarbs",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "face-damage": 3
+      },
+      "atypical": {
+        "mana": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Meekstone",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lockdown": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Merfolk of the Pearl Trident",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "merfolk": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mesa Pegasus",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "pegasus": 2,
+        "flying": 2,
+        "banding": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mind Twist",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "discard": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mons's Goblin Raiders",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "goblin": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mox Emerald",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mox Jet",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mox Pearl",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mox Ruby",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Mox Sapphire",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Natural Selection",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "tutor": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Nether Shadow",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "spirit": 2,
+        "haste": 2,
+        "etb": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Nettling Imp",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "imp": 2,
+        "removal": 1
+      },
+      "grant": {
+        "forced-attack": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Nevinyrral's Disk",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "board-wipe": 3,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Nightmare",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "nightmare": 2,
+        "horse": 2,
+        "flying": 2
+      },
+      "consume": {
+        "land": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Northern Paladin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Obsianus Golem",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "golem": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Orcish Artillery",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "orc": 2,
+        "warrior": 2,
+        "face-damage": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Orcish Oriflamme",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Paralyze",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "lockdown": 3
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Pearled Unicorn",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "unicorn": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Personal Incarnation",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "avatar": 2,
+        "incarnation": 2,
+        "damage-redirection": 3,
+        "life-loss": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Pestilence",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "board-wipe": 3,
+        "removal": 3,
+        "face-damage": 3
+      },
+      "consume": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Phantasmal Forces",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "illusion": 2,
+        "flying": 2
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Phantasmal Terrain",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "land-type-change": 2
+      },
+      "atypical": {
+        "mana-denial": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Phantom Monster",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "illusion": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Pirate Ship",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "pirate": 2,
+        "face-damage": 2,
+        "removal": 2
+      },
+      "consume": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Plague Rats",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "rat": 2
+      },
+      "consume": {
+        "creature": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Plateau",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Power Leak",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 3,
+        "damage-prevention": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Power Sink",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3,
+        "mana-denial": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Power Surge",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "face-damage": 3
+      },
+      "consume": {
+        "land": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Prodigal Sorcerer",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "sorcerer": 2,
+        "face-damage": 2,
+        "removal": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Psionic Blast",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "face-damage": 3,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Psychic Venom",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Purelace",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "color-change": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Raging River",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "forced-block": 3
+      },
+      "consume": {
+        "attack": 2,
+        "flying": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Raise Dead",
+    "themes": {
+      "produce": {
+        "sorcery": 2
+      },
+      "consume": {
+        "graveyard": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Red Elemental Blast",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Red Ward",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "protection": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Regeneration",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "regeneration": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Regrowth",
+    "themes": {
+      "produce": {
+        "sorcery": 2
+      },
+      "consume": {
+        "graveyard": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Resurrection",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "etb": 2
+      },
+      "consume": {
+        "graveyard": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Reverse Damage",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "damage-prevention": 3,
+        "lifegain": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Righteousness",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Roc of Kher Ridges",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bird": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Rock Hydra",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "hydra": 2,
+        "counters": 3,
+        "damage-prevention": 3
+      },
+      "consume": {
+        "counters": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Rod of Ruin",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "face-damage": 2,
+        "removal": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Royal Assassin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "assassin": 2,
+        "removal": 3
+      },
+      "consume": {
+        "tap": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sacrifice",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "mana": 3
+      },
+      "consume": {
+        "sacrifice": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Samite Healer",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "cleric": 2,
+        "damage-prevention": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Savannah",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Savannah Lions",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "cat": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Scathe Zombies",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "zombie": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Scavenging Ghoul",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "zombie": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Scrubland",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Scryb Sprites",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "faerie": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sea Serpent",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "serpent": 2
+      },
+      "consume": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sedge Troll",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "troll": 2,
+        "regeneration": 2
+      },
+      "consume": {
+        "land": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sengir Vampire",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "vampire": 2,
+        "flying": 2,
+        "counters": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Serra Angel",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "angel": 2,
+        "flying": 2,
+        "vigilance": 2,
+        "attack": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Shanodin Dryads",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "nymph": 2,
+        "dryad": 2,
+        "unblockable": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Shatter",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 2
+      },
+      "atypical": {
+        "artifacts": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Shivan Dragon",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dragon": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Simulacrum",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "lifegain": 2
+      },
+      "atypical": {
+        "damage-redirection": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sinkhole",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Siren's Call",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "forced-attack": 3,
+        "removal": 2,
+        "board-wipe": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sleight of Mind",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "color-change": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Smoke",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "lockdown": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sol Ring",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Soul Net",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Spell Blast",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Stasis",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "lockdown": 3
+      },
+      "atypical": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Steal Artifact",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "commandeer": 3
+      },
+      "atypical": {
+        "artifacts": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Stone Giant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "giant": 2,
+        "flying": 1
+      },
+      "atypical": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Stone Rain",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Stream of Life",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "lifegain": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Sunglasses of Urza",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "atypical": {
+        "mana": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Swords to Plowshares",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3,
+        "exile": 2,
+        "lifegain": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Taiga",
+    "themes": {
+      "produce": {
+        "land": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Terror",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "The Hive",
+    "themes": {
+      "produce": {
+        "artifacts": 3,
+        "creature": 1,
+        "flying": 1,
+        "token": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Thicket Basilisk",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "basilisk": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Thoughtlace",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "color-change": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Throne of Bone",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Timber Wolves",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wolf": 2,
+        "banding": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Time Vault",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "extra-turns": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Time Walk",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "extra-turns": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Timetwister",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "draw": 3
+      },
+      "atypical": {
+        "graveyard": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Tranquility",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "board-wipe": 3
+      },
+      "atypical": {
+        "enchantment": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Tropical Island",
+    "themes": {
+      "produce": {
+        "land": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Tsunami",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "board-wipe": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Tundra",
+    "themes": {
+      "produce": {
+        "land": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Tunnel",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Twiddle",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "untap": 2,
+        "lockdown": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Two-Headed Giant of Foriys",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "giant": 2,
+        "trample": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Underground Sea",
+    "themes": {
+      "produce": {
+        "land": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Unholy Strength",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Unsummon",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "bounce": 3,
+        "removal": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Uthden Troll",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "troll": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Verduran Enchantress",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "druid": 2,
+        "draw": 3
+      },
+      "consume": {
+        "enchantment": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Vesuvan Doppelganger",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "shapeshifter": 2,
+        "copy": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Veteran Bodyguard",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "damage-redirection": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Volcanic Eruption",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 2,
+        "board-wipe": 2,
+        "face-damage": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Air",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wall": 2,
+        "defender": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Bone",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "skeleton": 2,
+        "wall": 2,
+        "defender": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Brambles",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2,
+        "wall": 2,
+        "defender": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Fire",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wall": 2,
+        "defender": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Ice",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wall": 2,
+        "defender": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Stone",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wall": 2,
+        "defender": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Swords",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wall": 2,
+        "defender": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Water",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wall": 2,
+        "defender": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wall of Wood",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wall": 2,
+        "defender": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wanderlust",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "War Mammoth",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elephant": 2,
+        "trample": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Warp Artifact",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 2
+      },
+      "atypical": {
+        "artifacts": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Water Elemental",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Weakness",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "removal": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Web",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "reach": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wheel of Fortune",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "discard": 3,
+        "draw": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "White Knight",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "first-strike": 2,
+        "protection": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "White Ward",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "protection": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wild Growth",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "mana": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Will-o'-the-Wisp",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "spirit": 2,
+        "flying": 2,
+        "regeneration": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Winter Orb",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lockdown": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wooden Sphere",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 2
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Word of Command",
+    "themes": {
+      "produce": {
+        "instant": 2
+      },
+      "atypical": {
+        "commandeer": 1
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Wrath of God",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "board-wipe": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  },
+  {
+    "name": "Zombie Master",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "zombie": 2,
+        "regeneration": 2
+      },
+      "grant": {
+        "unblockable": 3
+      }
+    },
+    "reviewed": "agent",
+    "reviewed_at": "2026-08-30T13:13:58.000Z"
+  }
+]

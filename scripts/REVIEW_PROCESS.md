@@ -12,7 +12,7 @@ There's no regex/algorithmic tagger anymore — `data/fin/fin_relations.json`
 card against `scripts/TAGGING_RULES.md`, confirmed or corrected by the user,
 one card at a time. That file — not any code — is the actual source of truth
 the visualizer reads from (fetched directly, along with
-`data/fin/fin_scryfall.json` and `data/themes.json`, and assembled into a
+`data/fin/fin_scryfall.json` and `data/global_themes.json`, and assembled into a
 graph client-side by `src/lib/buildGraph.ts` — no build step, just refresh).
 **Read `scripts/TAGGING_RULES.md` in full before tagging anything** — it
 defines every theme, relation type (role), and the weight conventions this
@@ -23,9 +23,13 @@ process depends on.
 2 produce) and every creature-subtype produce edge (Bandit, Human, ... weight
 2) for every applicable card — the zero-judgment stuff, so you don't hand-type
 it. This means **presence in `fin_relations.json` no longer means "reviewed"**
-— most cards now have an entry that's mechanical-only. The `reviewed: true`
+— most cards now have an entry that's mechanical-only. The `reviewed: "human"`
 field on an entry is the real marker now; see step 1 and step 5 below, and
-TAGGING_RULES.md's "Main types are prefilled" section.
+TAGGING_RULES.md's "Main types are prefilled" section. (2026-08-30: `reviewed`
+became a shared ladder — `false` -> `"script"` -> `"agent"` -> `"human"` —
+across FIN and every historical set; FIN's live loop always writes `"human"`
+plus a `reviewed_at` timestamp, never the lower tiers. See
+`GLOBAL_TAGGING_RULES.md`'s "Output shape" section.)
 
 **2026-08-30: the queue+relay design (current, working).** A first attempt at
 a file-based async batch mode (agent writes drafts, a script mechanically
@@ -53,7 +57,8 @@ user wait on the agent's per-card judgment time) but splits the job cleanly:
   PURE PLUMBING: it takes the oldest un-shown/changed draft, `POST /show`s it,
   blocks on `GET /wait`, and on `{type:'allGood'}` writes straight to
   `data/fin/fin_relations.json` (merged onto whatever's already there) with
-  `reviewed: true`, removing it from `review-drafts.json`. On
+  `reviewed: 'human'` plus a `reviewed_at` timestamp, removing it from
+  `review-drafts.json`. On
   `{type:'feedback', text}` it appends to `review-responses.json` instead of
   looping itself — it has zero tagging judgment, that's entirely the agent's
   job. Start it once per session: `node scripts/review-relay.mjs`.
@@ -125,7 +130,7 @@ seconds, or after any edit you make to them):
    next un-reviewed, un-drafted card: in `data/fin/fin_scryfall.json`'s own
    list order (the Scryfall set order — white, blue, black, red, green,
    multicolor, artifact, land — NOT alphabetical; makes reviewing color-by-
-   color easier), skipping any name that's already `reviewed: true` in
+   color easier), skipping any name that already has a truthy `reviewed` in
    `data/fin/fin_relations.json` (NOT just "has an entry" — most cards have a
    mechanical-only prefill entry now, see the 2026-08-29 note above, and that
    doesn't count) AND any name already sitting in `review-drafts.json`, and
@@ -172,13 +177,14 @@ seconds, or after any edit you make to them):
      that's ambiguous or wrong, a missing weight convention, or a mechanic
      with no curated theme at all), update that doc too — future cards
      benefit, not just this one; adding a brand-new theme also means adding
-     it to `data/themes.json`.
+     it to `data/global_themes.json`.
    - **Correction plus a closing signal** ("good apart from that," "otherwise
      fine," "the rest is right," "that's it," or equivalent) means the user
      is confirming in the SAME message, not just correcting. Apply the
      correction yourself and write straight to `data/fin/fin_relations.json`
      (merge onto the card's existing entry — same merge logic the relay uses
-     on `allGood`) with `reviewed: true`, then remove the card from
+     on `allGood`) with `reviewed: 'human'` plus a `reviewed_at` timestamp,
+     then remove the card from
      `review-drafts.json`, run `npm run test` to confirm the schema still
      passes, and top the queue back up per step 1. Only fall back to the
      plain-correction path above when there's no "that's everything" signal
@@ -187,7 +193,7 @@ seconds, or after any edit you make to them):
      done with it.
 3. **You'll never see `allGood` or `{type:'stop'}` directly** — the relay
    handles `allGood` itself (writes to `fin_relations.json`, sets
-   `reviewed: true`, removes the card from `review-drafts.json`, runs
+   `reviewed: 'human'` plus `reviewed_at`, removes the card from `review-drafts.json`, runs
    `npm run test`). A card silently disappearing from `review-drafts.json`
    with no matching `review-responses.json` entry means exactly this — check
    `fin_relations.json` to confirm, same as any other `allGood`, then top the
@@ -195,7 +201,7 @@ seconds, or after any edit you make to them):
    (it exits) — if you see it's no longer running, treat that as the user
    ending the session: report how many cards got tagged this run and what's
    left (`data/fin/fin_scryfall.json`'s eligible count minus
-   `data/fin/fin_relations.json`'s `reviewed: true` count).
+   `data/fin/fin_relations.json`'s `reviewed: "human"` count).
 
 When wrapping up for the day: leave whatever's still in `review-drafts.json`
 in place (valid pre-judged proposals, safe to pick up next session — the
@@ -245,14 +251,18 @@ independently; there's no cross-agent calibration pass.
     "produce": { "graveyard": 1 },
     "consume": { "graveyard": 2 }
   },
-  "reviewed": true
+  "reviewed": "human",
+  "reviewed_at": "2026-08-30T11:32:10.000Z"
 }
 ```
 Grouped by role, then theme id -> weight (a card can have a theme id under
-several roles, and several theme ids under the same role). `reviewed: true`
-means a human has confirmed this exact entry via the loop — omit it (or leave
-it absent/false) for a mechanical-only prefill nobody's looked at yet; that's
-what step 1 checks, not mere presence. No `"card"`/`"edges"`/node-or-edge
+several roles, and several theme ids under the same role). `reviewed: "human"`
+(with `reviewed_at` set) means a human has confirmed this exact entry via the
+loop — omit `reviewed` (or leave it absent/false) for a mechanical-only
+prefill nobody's looked at yet; that's what step 1 checks, not mere presence.
+(`reviewed` is a shared ladder with the historical-sets pipeline —
+`false` -> `"script"` -> `"agent"` -> `"human"` — FIN's own loop only ever
+writes the top tier; see `GLOBAL_TAGGING_RULES.md`.) No `"card"`/`"edges"`/node-or-edge
 language at all in this file; that's the visualizer's own internal graph
 vocabulary (see `src/types.ts`), not this file's. One array, one file per set.
 `scripts/relations.test.mjs` is a structural sanity check (valid theme
@@ -263,7 +273,7 @@ only shape.
 ## Scope boundary
 
 This session's job is running the review loop and authoring
-`data/fin/fin_relations.json`, `data/themes.json` (only when adding a
+`data/fin/fin_relations.json`, `data/global_themes.json` (only when adding a
 genuinely new curated theme), `scripts/review-drafts.json`/
 `scripts/review-responses.json` (the queue files described above), and,
 when a review surfaces a genuine gap in it, `scripts/TAGGING_RULES.md`.

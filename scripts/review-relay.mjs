@@ -141,7 +141,7 @@ async function main() {
         mergedThemes[role] ??= {};
         mergedThemes[role][theme] = weight ?? 3;
       }
-      const entry = { name: next.name, themes: mergedThemes, reviewed: true };
+      const entry = { name: next.name, themes: mergedThemes, reviewed: 'human', reviewed_at: new Date().toISOString() };
       if (idx === -1) relations.push(entry);
       else relations[idx] = entry;
       await writeJson(RELATIONS, relations);

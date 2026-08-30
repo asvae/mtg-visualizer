@@ -9,7 +9,16 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 const VALID_ROLES = new Set(['produce', 'consume', 'atypical', 'grant', 'magnifier']);
-const SET_CODE = 'fin';
+// Escalating provenance ladder: false (untouched) -> 'script' (strict_baseline.py,
+// zero judgment) -> 'agent' (an agent-driven strict-review pass, no live human) ->
+// 'human' (confirmed via the live review-relay loop). See GLOBAL_TAGGING_RULES.md.
+const VALID_REVIEWED = new Set(['script', 'agent', 'human']);
+
+// Every set — FIN (the live-review set) and every historical set from the
+// oldest-to-newest sweep alike — shares one global curated theme list.
+const THEMES_FILE = 'data/global_themes.json';
+// Add a new set code here as its own pass finishes.
+const SETS = ['fin', 'lea', 'leb', 'arn'];
 
 // Same derivation as src/lib/buildGraph.ts — kept in sync by hand since this test
 // and the browser module run in different runtimes (plain Node here, no build step).
@@ -27,9 +36,10 @@ function slugify(word) {
   return word.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+for (const SET_CODE of SETS) {
 describe(`data/${SET_CODE}/${SET_CODE}_relations.json`, () => {
   it('is well-formed', async () => {
-    const themes = JSON.parse(await readFile('data/themes.json', 'utf8'));
+    const themes = JSON.parse(await readFile(THEMES_FILE, 'utf8'));
     const tags = JSON.parse(await readFile(`data/${SET_CODE}/${SET_CODE}_relations.json`, 'utf8'));
     const allRaw = JSON.parse(await readFile(`data/${SET_CODE}/${SET_CODE}_scryfall.json`, 'utf8'));
     // Same exclusions as buildGraph.ts (basic lands, digital-only Alchemy rebalances) —
@@ -58,12 +68,21 @@ describe(`data/${SET_CODE}/${SET_CODE}_relations.json`, () => {
       seen.add(entry.name);
       expect(rawNames.has(entry.name), `"${entry.name}" not found in data/${SET_CODE}/${SET_CODE}_scryfall.json`).toBe(true);
 
-      // `reviewed` marks a human-confirmed entry, as opposed to a mechanical
-      // prefill-only one (scripts/prefill-main-types.mjs) — optional (an entry
-      // without it just hasn't been through the review loop yet), but must be a
-      // real boolean when present.
+      // `reviewed` is an escalating provenance ladder — false/absent (not yet
+      // reviewed, e.g. a mechanical prefill-only entry from
+      // scripts/prefill-main-types.mjs), 'script' (strict_baseline.py resolved it
+      // with zero judgment), 'agent' (an agent-driven strict-review pass, no live
+      // human), or 'human' (confirmed via the live review-relay loop). Optional —
+      // an entry without it just hasn't been through the review loop yet.
       if ('reviewed' in entry) {
-        expect(typeof entry.reviewed, `"${entry.name}": "reviewed" must be a boolean`).toBe('boolean');
+        const r = entry.reviewed;
+        expect(
+          r === false || VALID_REVIEWED.has(r),
+          `"${entry.name}": "reviewed" must be false, 'script', 'agent', or 'human', got ${JSON.stringify(r)}`,
+        ).toBe(true);
+        if (r !== false) {
+          expect(typeof entry.reviewed_at, `"${entry.name}": "reviewed_at" must be set when "reviewed" is ${JSON.stringify(r)}`).toBe('string');
+        }
       }
 
       for (const [role, byTheme] of Object.entries(entry.themes ?? {})) {
@@ -77,3 +96,4 @@ describe(`data/${SET_CODE}/${SET_CODE}_relations.json`, () => {
     }
   });
 });
+}

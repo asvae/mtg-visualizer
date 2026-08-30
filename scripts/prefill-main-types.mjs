@@ -12,11 +12,11 @@
 // already tagged `creature: produce 3` because the card also makes extra creature
 // tokens keeps their weight; this script won't stomp it back down to 2).
 //
-// Also marks every entry that already existed before this run `reviewed: true` —
+// Also marks every entry that already existed before this run `reviewed: 'human'` —
 // a snapshot of "a human already confirmed this one via the review loop." Every
 // card gets *some* entry after this script runs (mechanical prefill, if nothing
 // else), so presence-in-file can no longer mean "reviewed" — REVIEW_PROCESS.md's
-// pick-next-card step now keys off `reviewed: true` instead. See TAGGING_RULES.md.
+// pick-next-card step now keys off a truthy `reviewed` instead. See TAGGING_RULES.md.
 //
 // Usage: node scripts/prefill-main-types.mjs <set-code>
 
@@ -45,7 +45,7 @@ function slugify(word) {
   return word.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-const themes = JSON.parse(await readFile('data/themes.json', 'utf-8'));
+const themes = JSON.parse(await readFile('data/global_themes.json', 'utf-8'));
 const themeIds = new Set(themes.map((t) => t.id));
 
 const allRaw = JSON.parse(await readFile(`data/${setCode}/${setCode}_scryfall.json`, 'utf-8'));
@@ -61,7 +61,10 @@ const byName = new Map(relations.map((e) => [e.name, e]));
 
 // Snapshot BEFORE any mutation — these are the entries a human already reviewed
 // via the live loop, as opposed to whatever this script is about to add.
-for (const entry of relations) entry.reviewed = true;
+for (const entry of relations) {
+  entry.reviewed = 'human';
+  entry.reviewed_at ??= new Date().toISOString(); // don't stomp the real confirmation time on a re-run
+}
 
 let addedCreature = 0;
 let addedLand = 0;

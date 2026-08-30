@@ -1,0 +1,358 @@
+[
+  {
+    "id": "saga",
+    "label": "Saga"
+  },
+  {
+    "id": "graveyard",
+    "label": "Graveyard"
+  },
+  {
+    "id": "counters",
+    "label": "+1/+1 Counter"
+  },
+  {
+    "id": "artifacts",
+    "label": "Artifact"
+  },
+  {
+    "id": "sacrifice",
+    "label": "Sacrifice"
+  },
+  {
+    "id": "exile",
+    "label": "Exile"
+  },
+  {
+    "id": "equipment",
+    "label": "Equipment"
+  },
+  {
+    "id": "discard",
+    "label": "Discard"
+  },
+  {
+    "id": "draw",
+    "label": "Draw"
+  },
+  {
+    "id": "flying",
+    "label": "Flying"
+  },
+  {
+    "id": "deathtouch",
+    "label": "Deathtouch"
+  },
+  {
+    "id": "flash",
+    "label": "Flash"
+  },
+  {
+    "id": "vigilance",
+    "label": "Vigilance"
+  },
+  {
+    "id": "ward",
+    "label": "Ward"
+  },
+  {
+    "id": "reach",
+    "label": "Reach"
+  },
+  {
+    "id": "menace",
+    "label": "Menace"
+  },
+  {
+    "id": "haste",
+    "label": "Haste"
+  },
+  {
+    "id": "trample",
+    "label": "Trample"
+  },
+  {
+    "id": "face-damage",
+    "label": "Face Damage"
+  },
+  {
+    "id": "damage-redirection",
+    "label": "Damage Redirection"
+  },
+  {
+    "id": "dragon",
+    "label": "Dragon"
+  },
+  {
+    "id": "enchantment",
+    "label": "Enchantment"
+  },
+  {
+    "id": "creature",
+    "label": "Creature"
+  },
+  {
+    "id": "lifegain",
+    "label": "Lifegain"
+  },
+  {
+    "id": "instant",
+    "label": "Instant"
+  },
+  {
+    "id": "sorcery",
+    "label": "Sorcery"
+  },
+  {
+    "id": "planeswalker",
+    "label": "Planeswalker"
+  },
+  {
+    "id": "battle",
+    "label": "Battle"
+  },
+  {
+    "id": "landfall",
+    "label": "Landfall"
+  },
+  {
+    "id": "flashback",
+    "label": "Flashback"
+  },
+  {
+    "id": "cast-from-graveyard",
+    "label": "Cast from Graveyard"
+  },
+  {
+    "id": "combat-trick",
+    "label": "Combat Trick"
+  },
+  {
+    "id": "additional-combat",
+    "label": "Additional Combat"
+  },
+  {
+    "id": "treasure",
+    "label": "Treasure"
+  },
+  {
+    "id": "mill",
+    "label": "Mill"
+  },
+  {
+    "id": "transform",
+    "label": "Transform"
+  },
+  {
+    "id": "double-faced",
+    "label": "Double-Faced Card"
+  },
+  {
+    "id": "towns",
+    "label": "Town"
+  },
+  {
+    "id": "vehicles",
+    "label": "Vehicle"
+  },
+  {
+    "id": "land",
+    "label": "Land"
+  },
+  {
+    "id": "legendary",
+    "label": "Legendary"
+  },
+  {
+    "id": "mana",
+    "label": "Mana"
+  },
+  {
+    "id": "removal",
+    "label": "Removal"
+  },
+  {
+    "id": "bounce",
+    "label": "Bounce"
+  },
+  {
+    "id": "token",
+    "label": "Token"
+  },
+  {
+    "id": "copy",
+    "label": "Copy"
+  },
+  {
+    "id": "lockdown",
+    "label": "Lockdown"
+  },
+  {
+    "id": "tutor",
+    "label": "Tutor"
+  },
+  {
+    "id": "attack",
+    "label": "Attack"
+  },
+  {
+    "id": "etb",
+    "label": "ETB"
+  },
+  {
+    "id": "mana-denial",
+    "label": "Mana Denial"
+  },
+  {
+    "id": "damage-prevention",
+    "label": "Damage Prevention"
+  },
+  {
+    "id": "tap",
+    "label": "Tap"
+  },
+  {
+    "id": "indestructible",
+    "label": "Indestructible"
+  },
+  {
+    "id": "hexproof",
+    "label": "Hexproof"
+  },
+  {
+    "id": "food",
+    "label": "Food"
+  },
+  {
+    "id": "commandeer",
+    "label": "Commandeer"
+  },
+  {
+    "id": "cost-reduction",
+    "label": "Cost Reduction"
+  },
+  {
+    "id": "life-loss",
+    "label": "Life Loss"
+  },
+  {
+    "id": "alt-win",
+    "label": "Alternate Win Condition"
+  },
+  {
+    "id": "extra-turns",
+    "label": "Extra Turns"
+  },
+  {
+    "id": "forced-block",
+    "label": "Forced Block"
+  },
+  {
+    "id": "first-strike",
+    "label": "First Strike"
+  },
+  {
+    "id": "scry",
+    "label": "Scry"
+  },
+  {
+    "id": "surveil",
+    "label": "Surveil"
+  },
+  {
+    "id": "aura",
+    "label": "Aura"
+  },
+  {
+    "id": "unblockable",
+    "label": "Unblockable"
+  },
+  {
+    "id": "untap",
+    "label": "Untap"
+  },
+  {
+    "id": "kraken",
+    "label": "Kraken"
+  },
+  {
+    "id": "serpent",
+    "label": "Serpent"
+  },
+  {
+    "id": "board-wipe",
+    "label": "Board Wipe"
+  },
+  {
+    "id": "devotion",
+    "label": "Devotion"
+  },
+  {
+    "id": "regeneration",
+    "label": "Regeneration"
+  },
+  {
+    "id": "banding",
+    "label": "Banding"
+  },
+  {
+    "id": "protection",
+    "label": "Protection"
+  },
+  {
+    "id": "defender",
+    "label": "Defender"
+  },
+  {
+    "id": "forced-attack",
+    "label": "Forced Attack"
+  },
+  {
+    "id": "anthem",
+    "label": "Anthem"
+  },
+  {
+    "id": "firebreathing",
+    "label": "Firebreathing"
+  },
+  {
+    "id": "color-change",
+    "label": "Color Change"
+  },
+  {
+    "id": "ante",
+    "label": "Ante"
+  },
+  {
+    "id": "other-counters",
+    "label": "Other Counters"
+  },
+  {
+    "id": "landwalk",
+    "label": "Landwalk"
+  },
+  {
+    "id": "cost-increase",
+    "label": "Cost Increase"
+  },
+  {
+    "id": "land-type-change",
+    "label": "Land Type Change"
+  },
+  {
+    "id": "golem",
+    "label": "Golem"
+  },
+  {
+    "id": "job-select",
+    "label": "Job Select"
+  },
+  {
+    "id": "tiered",
+    "label": "Tiered Magic"
+  },
+  {
+    "id": "hero",
+    "label": "Hero"
+  }
+]

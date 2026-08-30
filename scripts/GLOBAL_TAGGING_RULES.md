@@ -1,94 +1,57 @@
-# Card tagging rules
+# Global card tagging rules
 
-Rules for tagging one Magic: the Gathering card against the FIN set's curated
-theme list. Applied by an agent reading the card directly — no regex, no code.
-Read this whole document, then follow "Process" at the bottom for each card.
+Rules for tagging any Magic: the Gathering card, from any real set across the
+game's full history, against the curated global theme list
+(`data/global_themes.json`). This file is set-agnostic by design — it's what
+an agent updating tagging rules is expected to know: the full landscape of
+real Magic mechanics, not just what one set introduced. A per-set review
+agent instead gets a short, set-specific instructions doc (that set's own
+idiosyncrasies, new-to-this-set mechanics not yet in this file, naming
+quirks) plus a pointer back here for everything general.
+
+This file started as a fork of the FIN custom set's `TAGGING_RULES.md` (a
+Final Fantasy crossover fan set) — nearly everything in that document turned
+out to already be generic, real-Magic-applicable content (Flying, Saga,
+Equipment, Landfall, Devotion, Towns, Vehicles, ...); only its Job Select,
+Hero, and Tiered Magic sections were FIN-original fictional mechanics, and
+those were dropped here. FIN's own `TAGGING_RULES.md` keeps those three plus
+its own pipeline notes (prefill script, review process) as a small overlay
+on top of this file.
 
 ## Why prose instead of regex
 
-A regex tagger was tried first and removed — 306 cards, tagged once, reviewed
-once by a human doesn't need "instant, free, deterministic re-runs," which is
-the only thing regex bought. What it cost instead: real time spent debugging
-regex-specific failure modes that have nothing to do with card logic (a self-
-match silently suppressing an unrelated regex test, two patterns matching the
-same substring and double-counting, a naive mention-counter over-counting
-reminder text). Reading the card and judging it directly doesn't have those
-failure modes.
+A regex tagger doesn't scale across 30+ years of wildly different templating
+conventions (old "interrupt" vs modern instant-speed abilities, pre-2000s
+"summon" type lines vs modern "Creature — X", reminder text that's been
+reworded release over release for the same keyword). Reading the card and
+judging it against real rules text directly avoids the class of failure a
+regex/mention-counter approach hits (self-matches, overlapping patterns,
+reminder-text double-counting).
 
 ## Creature types
 
-Creature subtypes (Human, Goblin, Vampire, ...) get their THEME auto-generated —
-`src/lib/buildGraph.ts` derives the id/label for every subtype straight from
-every card's type line (a purely structural fact, no judgment involved), so
-the theme exists whether or not anyone's tagged it yet. `data/type_themes.json`
-is the persisted list of these — check it (or the type_line itself) for the
-exact id to use (e.g. "Goblin" -> `goblin`).
+Creature subtypes (Human, Goblin, Vampire, Elemental, ...) get their THEME
+auto-generated from the card's own type line — the theme exists whether or
+not anyone's tagged it yet; check the app's derived type-theme list (or the
+type line itself) for the exact id to use (e.g. "Goblin" -> `goblin`).
 
 **Exception: a card's text names a creature type with no matching card in
 the CURRENT set.** A payoff like "creatures named X, Y, or Z" or "if a Kraken
-attacks" can reference a type this set never actually prints a creature of
-(nothing stops a card's rules text from mentioning any type — Magic isn't
-scoped to one set). Since auto-generation only derives an id from a type
-line that actually exists in THIS set's card data, that type has no theme id
-to tag with. 2026-08-30: rather than skip it, manually curate the type into
-`data/global_themes.json` (same precedent as Planeswalker/Battle/Copy/Tokens — a
-theme kept even with zero current instances, ready for a future set where
-that type gets real cards). This is the one case creature-subtype ids get
-added to `data/global_themes.json` by hand instead of purely auto-generating.
-
-## Main types are prefilled — check, don't retype
-
-`scripts/prefill-main-types.mjs` bulk-writes the zero-judgment baseline into
-`data/fin/fin_relations.json` for every applicable card, so it's already there
-before you ever open the card: self-identity **Creature** and **Land** (both
-curated, weight 2 produce) and every creature-subtype's own self-identity
-(weight 2 produce, same scale). It only ever ADDS a role+theme pair that isn't
-already present — it never overwrites an existing weight, so if you've already
-judged a card's `creature`/`land`/subtype edge differently (e.g. weight 3
-because the card also makes MORE of them), your call stands.
-
-Your job per card is to check the prefill, not redo it: confirm the weight is
-actually right (bump to 3 if the card creates additional instances, per the
-self-identity scale below), then add whatever the prefill can't know —
-consume/atypical/grant/magnifier edges (a payoff like "Goblins you control get
-+1/+0" is a normal consume edge on that type's id), and every other curated
-theme the card's actual text triggers. A card with NO entry at all yet (no
-creature/land/subtype to prefill, e.g. a plain instant) still needs the full
-read-and-judge process below, same as ever — prefill only ever adds to what
-would otherwise need review, it never substitutes for it. **Whichever the
-case, don't forget to set `"reviewed": "human"` plus a `"reviewed_at"`
-timestamp** on the entry once you're actually confirming it (see
-`REVIEW_PROCESS.md`) — that's what distinguishes "a human looked at this"
-from "prefill script touched this," now that every applicable card has SOME
-entry. (`reviewed` is a shared escalating ladder — `false` -> `"script"` ->
-`"agent"` -> `"human"` — see `GLOBAL_TAGGING_RULES.md`'s "Output shape"
-section for the full tier definitions; FIN's live loop only ever writes the
-top tier, `"human"`.)
-
-**No exceptions on structural self-identity tags.** Only Creature and Land
-get prefilled — every other structural type on the card's own type line
-(Legendary supertype, Artifact, Enchantment, Instant, Sorcery, Planeswalker,
-Battle, Town, Vehicle) must be checked and tagged by hand, EVERY time, even
-on a card whose name/theme makes it "obviously" something else (a Legendary
-creature buried in a long ability-text card is exactly the case that gets
-missed). Read the FULL type line (both faces for a DFC) before finishing a
-card, not just the ability text. 2026-08-30: a bulk-drafting pass missed
-Legendary on 24 cards and Artifacts/Enchantment on a few more (all caught
-only via a full-set audit after the user flagged one instance) — check
-every applicable structural type explicitly rather than relying on having
-"probably already noticed" it while reading the ability text.
-
-The curated themes below sometimes overlap a creature type in spirit (Dragon,
-Saga) — those stay curated (they have real produce/consume rules beyond bare
-self-identity); `buildGraph.ts` (and the prefill script) skip generating/
-writing an auto-theme whose id would collide with one, so there's never two
-ids for the same concept.
+attacks" can reference a type this set never actually prints a creature of.
+Since auto-generation only derives an id from a type line that actually
+exists in THIS set's card data, that type has no theme id to tag with yet —
+manually curate it into the theme list instead (same precedent as
+Planeswalker/Battle/Copy/Tokens: a theme kept even with zero current
+instances, ready for a set where that type gets real cards). This is the one
+case creature-subtype ids get added to the curated theme list by hand
+instead of purely auto-generating.
 
 ## Output shape
 
 For each card, decide which curated themes below apply, and via which
 relation type(s) (see next section). Write the result grouped by role, then
-theme id, to weight — matching `data/fin/fin_relations.json`:
+theme id, to weight — one entry per card, matching
+`data/<set>/<set>_relations.json`:
 
 ```jsonc
 {
@@ -97,26 +60,35 @@ theme id, to weight — matching `data/fin/fin_relations.json`:
     "produce": { "graveyard": 1 },
     "consume": { "graveyard": 2 }
   },
-  "reviewed": "human",
-  "reviewed_at": "2026-08-30T11:32:10.000Z"
+  "reviewed": "agent",
+  "reviewed_at": "2026-08-30T16:20:00.000Z"
 }
 ```
 
 There's no "no theme" outcome to assign — `atypical` (see below) is generous
 enough that a genuinely themeless card shouldn't come up in practice. If one
-somehow does, still write an entry for it (`{ "themes": {}, "reviewed": "human",
-"reviewed_at": "..." }` — empty themes, but present and marked reviewed)
-rather than leaving it out.
-`reviewed: "human"` (with `reviewed_at` set) is what marks a card as actually
-reviewed now (see `REVIEW_PROCESS.md`'s card-selection step) — presence
-alone no longer means that, since `scripts/prefill-main-types.mjs` gives
-most cards a mechanical-only entry with no `reviewed` field at all. Cards
-with no entry at all show as "Not Processed" in the UI — that's a
-pending-review marker `buildGraph.ts` adds automatically, not something you
-write. (`reviewed` is a shared escalating ladder across FIN and every
-historical set — `false` -> `"script"` -> `"agent"` -> `"human"` — see
-`GLOBAL_TAGGING_RULES.md` for the full tier definitions; FIN's live loop
-only ever writes the top tier.)
+somehow does, still write an entry for it (`{ "themes": {}, "reviewed": "agent",
+"reviewed_at": "..." }` — empty themes, but present and marked reviewed) rather
+than leaving it out.
+
+`reviewed` is an escalating provenance ladder, not a plain boolean:
+
+- `false` / absent — not yet reviewed (a fresh draft, or a mechanical-only
+  prefill entry).
+- `"script"` — resolved with zero judgment by `strict_baseline.py` alone (a
+  vanilla or keyword-only card with nothing left to tag once keyword lines
+  and reminder text are stripped).
+- `"agent"` — a full agent-driven strict-review pass confirmed it (see
+  `HISTORICAL_SETS_PROCESS.md` step 8) — no live human involved.
+- `"human"` — confirmed by an actual person via the live review-relay loop
+  (see `REVIEW_PROCESS.md`) — the highest tier.
+
+Whenever `reviewed` is anything but `false`, also write `reviewed_at` — an
+ISO 8601 timestamp of when that tier was reached. This is what lets anyone
+tell where a card, set, or the whole pool actually stands in the pipeline.
+Never downgrade an existing tier (don't overwrite a `"human"` entry with
+`"agent"` just because an unrelated script touched the file) — only add or
+upgrade.
 
 ## Relation types (role)
 
@@ -158,9 +130,9 @@ A condition on an ability ("if you control...", "as long as...") isn't its own
 role — tag whatever produce/consume/grant/magnifier the ability's core effect
 is, regardless of the condition gating it.
 
-A DFC's two faces are one card — read both faces' full oracle text together
-before deciding; a relation established by either face counts for the whole
-card.
+A DFC's two faces (or a split/flip/adventure/meld card's two halves) are one
+card — read all of it together before deciding; a relation established by
+either half counts for the whole card.
 
 ## Weight (1-3): how central this relation is to the card
 
@@ -188,10 +160,10 @@ keyword) — use this three-tier scale instead of the general one:
   also creates more).
 
 **Saga** is the one self-identity-shaped exception: being a Saga at all is
-weight **1** (a light contribution — nearly every Saga in the set only
-supplies its own single lore-counter mechanic, nothing reads "how many Sagas
-you control"). Genuine Saga-count payoff language, if it ever shows up, scores
-via the general incremental scale instead.
+weight **1** (a light contribution — most Sagas only supply their own single
+lore-counter mechanic, nothing reads "how many Sagas you control"). Genuine
+Saga-count payoff language, if it shows up, scores via the general
+incremental scale instead.
 
 **Grant edges** default to weight **3** — extending an ability to every other
 permanent you control (an Equipment's bonus, a card that grants everything a
@@ -203,35 +175,9 @@ up incrementally.
 Each theme: what genuinely counts as produce, what counts as consume, and any
 other special notes accumulated from review. If a theme has no entry for a
 role below, that role generally doesn't apply to it (e.g. Removal has no
-consume side — nothing in this set reads back "how much removal you've done").
+consume side — nothing found so far reads back "how much removal you've
+done").
 
-- **Job Select** (`job-select`) — produce: creates a Hero creature token via
-  the Job Select mechanic SPECIFICALLY — the card's own text must actually
-  say "Job select" (always an Equipment keyword ability in this set so far:
-  "Job select (When this Equipment enters, create a 1/1 colorless Hero
-  creature token, then attach this to it.)"). A card that creates a Hero
-  token some OTHER way (a plain ETB trigger with no "Job select" text) gets
-  Hero produce only, not Job Select — don't tag Job Select just because a
-  Hero token shows up. consume: genuine payoff language reading "Heroes
-  you control," "for each Hero," "another Hero," or a Hero-triggered ability.
-  Bare mentions of "Hero" (including Job Select's own reminder text) don't
-  count as consume on their own — only real payoff language does.
-  Rule of thumb for a Job Select card's OWN equip bonus (whatever it grants
-  the equipped creature — a type, an ability, a stat line, a triggered
-  ability that itself reads back some OTHER resource like draws): tag EVERY
-  theme the bonus touches with BOTH grant AND whichever of produce/consume
-  that theme's own relation actually is (produce for "becomes a Wizard"/
-  "gets counters"; consume for "whenever you draw your Nth card" — that's
-  reading the Draw resource, not producing draws). This applies theme-by-
-  theme, not just to the bonus as a whole — a triggered ability that both
-  reacts to its own attack AND produces life gain gets Attack (grant+
-  consume, the trigger's own shape) AND Lifegain (grant+produce, what the
-  trigger actually generates), not just one or the other. The non-grant role
-  applies because Job Select auto-attaches on ETB — the bonus is live
-  immediately, unconditionally, as part of what this card does on entry.
-  grant because the underlying mechanic (equip) still exists — the same
-  bonus can later move to a different creature via a manual re-equip, same
-  as any other Equipment.
 - **Saga** (`saga`) — self-identity: the card's type line includes Saga
   (weight 1, see above). produce: puts/adds a lore counter. consume: genuine
   "Saga you control" / "Saga cards/spells you..." / Saga-triggered payoff
@@ -261,7 +207,10 @@ consume side — nothing in this set reads back "how much removal you've done").
   "sacrifice ... : add/create/draw/deal/gain/search"), or "sacrifice after"
   (a Saga-style forced sacrifice that's the card's own payoff). consume: an
   additional cost that REQUIRES sacrificing something to cast/activate, or
-  "sacrifice a/an/another/target/this [permanent]."
+  "sacrifice a/an/another/target/this [permanent]" (an edict-style forced
+  sacrifice the card causes for another player also matches this consume
+  wording literally, even though it "causes" the event — tag it consume,
+  matching the phrase, not produce).
 - **Exile** (`exile`) — produce: exiles the top of a library, a target, "you
   may exile," or exiles a card from somewhere. consume: reads cards you've
   exiled, an "exile zone," playing from among exiled cards, or casting from
@@ -279,7 +228,7 @@ consume side — nothing in this set reads back "how much removal you've done").
   be blocked this turn," weight 2) or `grant` if it's an ONGOING ability of
   an Equipment/aura (persists across re-equips/re-attaching, weight 2-3,
   same convention as Flying). Distinct from Menace (needing two-or-more
-  blockers, not zero). Added 2026-08-30.
+  blockers, not zero).
 - **Aura** (`aura`) — the Enchantment-side counterpart to Equipment. self-
   identity: the card's type line includes Aura — role is **produce**, weight
   2 (in addition to Enchantment's own self-identity produce — both apply,
@@ -288,7 +237,7 @@ consume side — nothing in this set reads back "how much removal you've done").
   Equipment. consume: genuine Aura-count payoff ("for each Aura you
   control," "another Aura") — the boilerplate describing its own attached
   effect ("enchanted creature gets/has...") doesn't count, same as
-  Equipment's non-boilerplate rule. Added 2026-08-30.
+  Equipment's non-boilerplate rule.
 - **Discard** (`discard`) — produce: makes a player/opponent discard, discards
   a card at random, or a "draw ..., then discard a card" looting/rummaging
   effect (you're generating the discard yourself here, same as making an
@@ -302,17 +251,16 @@ consume side — nothing in this set reads back "how much removal you've done").
   you've drawn," or "if you've drawn."
 - **Flying** (`flying`) — self-identity: the card has the Flying keyword
   itself (weight 2, see self-identity scale). produce: grants flying to
-  another creature ONE TIME (weight 1) — e.g. Job Select's auto-attach ETB
-  bonus — or grants/has flying on more than one creature (weight 3). A
-  *temporary* ("until end of turn") grant stays weight 1 even if it can
-  repeat (e.g. across multiple Saga chapters) — the self-identity "3 = more
-  than one" bump is for permanently having/creating more than one flyer, not
-  for a repeatable one-shot buff. grant:
-  when the grant is an ONGOING ability of an Equipment/aura (persists across
-  re-equips, not a one-shot ETB effect) — weight 2, same produce+grant
-  duality as the newer keyword themes below. consume: "creatures with flying,"
-  "flying creatures you
-  control," or blocking restricted to flying creatures.
+  another creature ONE TIME (weight 1) — e.g. an auto-attach ETB bonus — or
+  grants/has flying on more than one creature (weight 3). A *temporary*
+  ("until end of turn") grant stays weight 1 even if it can repeat (e.g.
+  across multiple Saga chapters) — the self-identity "3 = more than one"
+  bump is for permanently having/creating more than one flyer, not for a
+  repeatable one-shot buff. grant: when the grant is an ONGOING ability of an
+  Equipment/aura (persists across re-equips, not a one-shot ETB effect) —
+  weight 2, same produce+grant duality as the other keyword themes below.
+  consume: "creatures with flying," "flying creatures you control," or
+  blocking restricted to flying creatures.
 - **Deathtouch** (`deathtouch`) — self-identity: the card has the Deathtouch
   keyword itself (weight 2). grant: gives deathtouch to another creature;
   consume: genuine payoff language reading creatures with deathtouch. Keep
@@ -323,14 +271,20 @@ consume side — nothing in this set reads back "how much removal you've done").
   though it had flash. consume: genuine payoff language that reads spells or
   permanents cast at instant speed or outside their controller's own turn.
 - **Vigilance** (`vigilance`) / **Ward** (`ward`) / **Reach** (`reach`) /
-  **Menace** (`menace`) / **Haste** (`haste`) / **Trample** (`trample`) —
-  self-identity: the card has the named keyword itself (produce, weight 2).
-  grant: gives that keyword to another permanent. consume: genuine payoff
-  language that reads cards with the named keyword. These remain useful
-  across sets even when the current set has few internal payoffs.
-  Vigilance specifically also gets **Attack produce, weight 1**: it doesn't
-  tap to attack, so it can attack freely/repeatedly without giving up
-  blocking — a light Attack-theme touch on any card that has Vigilance.
+  **Menace** (`menace`) / **Haste** (`haste`) / **Trample** (`trample`) /
+  **Indestructible** (`indestructible`) / **Hexproof** (`hexproof`) /
+  **First Strike** (`first-strike`) — self-identity: the card has the named
+  keyword itself (produce, weight 2). grant: gives that keyword to another
+  permanent — weight 1 for a temporary ("until end of turn") one-shot grant,
+  weight 2 for an ongoing grant (an Equipment/aura ability that applies "as
+  long as equipped/enchanted," persisting across re-attach). consume: genuine
+  payoff language that reads permanents with the named keyword. These remain
+  useful across sets even when a given set has few internal payoffs.
+  Hexproof is distinct from Ward (a tax/penalty on targeting) — Hexproof
+  prevents targeting outright. Vigilance specifically also gets **Attack
+  produce, weight 1**: it doesn't tap to attack, so it can attack freely/
+  repeatedly without giving up blocking — a light Attack-theme touch on any
+  card that has Vigilance.
 - **Face Damage** (`face-damage`) — produce: deals damage (a fixed amount, X,
   "that much," or damage equal to some value) directly to an opponent or each
   opponent. No consume side.
@@ -368,15 +322,14 @@ consume side — nothing in this set reads back "how much removal you've done").
   type line IS that type (weight 2, see self-identity scale) — same
   treatment as Artifacts/Creature/Enchantment/Legendary. consume: genuine
   payoff language reading "whenever you cast an instant/sorcery/etc. spell,"
-  cost reduction for that spell type, or similar. (Split out from a single
-  "Noncreature Spells" theme — that was diluting signal by lumping "cares
-  about instants/sorceries specifically" together with "cares about any
-  noncreature spell at all." A payoff phrased generically as "whenever you
-  cast a noncreature spell" should tag EVERY applicable noncreature-spell-
-  type theme as consume, including Artifacts/Enchantment, not a single
-  catch-all. This set has zero Planeswalkers/Battles, but the themes are
-  kept anyway — same reasoning as Tokens: cheap to keep for cross-set
-  consistency even with nothing to tag yet.)
+  cost reduction for that spell type, or similar. A payoff phrased generically
+  as "whenever you cast a noncreature spell" should tag EVERY applicable
+  noncreature-spell-type theme as consume (Instant, Sorcery, Artifacts,
+  Enchantment, Planeswalker, Battle), not a single catch-all "noncreature
+  spells" theme — that dilutes signal by lumping "cares about instants/
+  sorceries specifically" together with "cares about any noncreature spell
+  at all." Keep Planeswalker/Battle even in an era/set with none printed yet
+  — same reasoning as Tokens: cheap to keep for cross-set consistency.
 - **Landfall** (`landfall`) — self-identity: the card literally has the
   Landfall mechanic — role is **consume** (it reacts to a land entering, it
   doesn't produce lands itself). consume (general): "whenever a land ...
@@ -391,19 +344,16 @@ consume side — nothing in this set reads back "how much removal you've done").
 - **Flashback** (`flashback`) — self-identity: the card literally has
   Flashback (produce, weight 2).
 - **Cast from Graveyard** (`cast-from-graveyard`) — produce: the card ITSELF
-  can be cast from a graveyard (Flashback and similar) — it's generating
-  that cast-from-graveyard event for itself, not reading an external
-  resource. consume: the card lets ANOTHER card be cast from a graveyard —
-  that's genuinely reading/using an external object.
+  can be cast from a graveyard (Flashback, Aftermath, Disturb, Unearth, Escape
+  and similar) — it's generating that cast-from-graveyard event for itself,
+  not reading an external resource. consume: the card lets ANOTHER card be
+  cast from a graveyard — that's genuinely reading/using an external object.
 - **Combat Trick** (`combat-trick`) — produce: an instant-speed temporary
   boost or protective effect that improves creatures during combat. This is
   the established Magic term for effects such as an instant giving attacking
   creatures +2/+0 until end of turn.
 - **Additional Combat** (`additional-combat`) — produce: creates an additional
   combat phase. Keep distinct from effects that create an entire extra turn.
-- **Tiered Magic** (`tiered`) — self-identity: the card has the Tiered
-  mechanic — role **produce** only (choosing a tier and paying an additional
-  cost doesn't read or consume anything external).
 - **Treasure** (`treasure`) — produce: creates a Treasure. consume:
   sacrifices a Treasure, or "Treasure you control."
 - **Food** (`food`) — produce: creates a Food token. consume: sacrifices a
@@ -417,11 +367,12 @@ consume side — nothing in this set reads back "how much removal you've done").
   becomes a new form; it doesn't read/consume anything the way a Saga reads
   its own lore counter). This is the ABILITY/mechanic, distinct from...
 - **Double-Faced Cards** (`double-faced`) — purely structural: the card is
-  physically two-faced (Scryfall layout `transform`), independent of what its
-  ability text says. Role **produce** only, no text to scan — being a DFC
-  alone doesn't read/consume anything. (A future set could have transform
-  triggers with no DFC, or DFCs — modal, meld — that never mention
-  "transform," which is why this is a separate theme from Transform above.)
+  physically two-faced (Scryfall layout `transform`, `modal_dfc`, or
+  `meld`), independent of what its ability text says. Role **produce** only,
+  no text to scan — being a DFC alone doesn't read/consume anything. (A
+  transform trigger with no DFC, or a DFC — modal, meld — that never
+  mentions "transform," is why this is a separate theme from Transform
+  above.)
 - **Towns** (`towns`) — self-identity: type line includes Town (weight 2).
   produce: searches a library for a Town card, or "Town cards with different
   names" (weight 1 for the search/tutor case). consume: "Affinity for Towns,"
@@ -431,16 +382,16 @@ consume side — nothing in this set reads back "how much removal you've done").
   consume: "Vehicles you control," or "crewed by."
 - **Land** (`land`) — self-identity: the card's type line includes Land
   (weight 2, see self-identity scale) — the card itself IS a land (basic
-  lands are filtered out of the whole set entirely, so this only ever applies
-  to a nonbasic land card: one with an ETB-tapped clause, a tap ability, a
-  triggered ability, etc.). Also covers ramp/land-count, merged in rather than
-  a separate theme: produce — searches a library for a (basic) land card, or
-  lets you play an additional land (weight 1 for the search/tutor case, same
-  self-identity scale as Towns/Vehicles).
-  consume — "seven or more lands," "number of lands you control," or "for
-  each land you control." Nothing to do with Landfall (that's reacting to
-  ANOTHER land entering) — a card can independently be a land, fetch/ramp
-  lands, and/or care about landfall; tag whichever actually apply.
+  lands typically aren't worth tagging at all — no card text to judge — so
+  this only really applies to a nonbasic land card: one with an ETB-tapped
+  clause, a tap ability, a triggered ability, etc.). Also covers ramp/
+  land-count, merged in rather than a separate theme: produce — searches a
+  library for a (basic) land card, or lets you play an additional land
+  (weight 1 for the search/tutor case, same self-identity scale as Towns/
+  Vehicles). consume — "seven or more lands," "number of lands you control,"
+  or "for each land you control." Nothing to do with Landfall (that's
+  reacting to ANOTHER land entering) — a card can independently be a land,
+  fetch/ramp lands, and/or care about landfall; tag whichever actually apply.
 - **Legendary** (`legendary`) — self-identity: the card's supertype line
   includes Legendary (weight 2, see self-identity scale). produce: creates a
   legendary token/permanent (weight 1, temporary-instance case). consume:
@@ -476,11 +427,11 @@ consume side — nothing in this set reads back "how much removal you've done").
   player sacrifices/loses creatures, not just an opponent) is different from
   that self-blink exclusion and still counts as Removal — a board wipe
   devastates whoever has the bigger board (usually the opponent), it isn't
-  a deliberate self-serving value engine. No
-  consume side in this set — removal is something a card DOES, not a
-  resource read back. If a genuine payoff shows up during review (e.g.
-  "whenever a creature an opponent controls dies"), that's real signal worth
-  adding a consume rule for then, not something to invent speculatively now.
+  a deliberate self-serving value engine. No consume side found so far —
+  removal is something a card DOES, not a resource read back. If a genuine
+  payoff shows up during review (e.g. "whenever a creature an opponent
+  controls dies"), that's real signal worth adding a consume rule for then,
+  not something to invent speculatively now.
 - **Board Wipe** (`board-wipe`) — produce only: destroys, exiles, sacrifices,
   or otherwise removes MULTIPLE creatures/permanents at once (three or
   more, "all," "each," or a symmetric/proportional mass effect) — tag
@@ -489,12 +440,11 @@ consume side — nothing in this set reads back "how much removal you've done").
   wipe (sacrifice half, rounded down, opponent's choice of which) is
   genuine but narrower than a total "destroy all creatures" — weight scales
   with how complete/unconditional the wipe is (weight 1 for partial/
-  choice-based, up to 3 for an unconditional full wipe). Added 2026-08-30.
+  choice-based, up to 3 for an unconditional full wipe).
 - **Devotion** (`devotion`) — consume only: an effect scales off your
   devotion to a color (counting colored mana symbols in the mana costs of
-  permanents you control). No produce side — nothing in this set generates
-  devotion as a deliberate effect, it's just a passive count read back.
-  Added 2026-08-30.
+  permanents you control). No produce side — devotion is a passive count
+  read back, not a deliberately generated effect.
 - **Bounce** (`bounce`) — produce: returns a permanent on the
   battlefield to its owner's hand. This includes returning your own permanent
   for reuse as well as bouncing an opponent's permanent; the latter can also
@@ -502,17 +452,19 @@ consume side — nothing in this set reads back "how much removal you've done").
   graveyard to hand is Graveyard consumption, not Bounce.
 - **Tokens** (`token`) — produce only: creates one or more tokens of ANY
   type (creature, artifact, treasure, etc.) — this is a cross-cutting axis
-  on top of the type-specific themes (a Hero creature token counts for both
-  Creature and Tokens). No consume side found in this set (0 cards read
-  "tokens you control" as a payoff) — a light/weak theme by design, worth
-  keeping for cross-set analysis even if this set alone doesn't pay it off.
+  on top of the type-specific themes (a creature token counts for both
+  Creature and Tokens).
 - **Copy** (`copy`) — produce: copies a spell, ability, card, permanent, or
   creates a token that's a copy. consume: reads or changes an existing copy
   specifically. Copying is weight 3 when it is the card's defining repeated
   engine, even if the resulting object is modified from the original.
 - **Lockdown** (`lockdown`) — produce only: taps down an opponent's
-  permanent(s), or puts a stun counter on something. No consume side —
-  nothing in this set reads back "how much you've tapped down."
+  permanent(s), puts a stun counter on something, or otherwise keeps a
+  permanent from untapping/being useful (a static "doesn't untap during
+  its controller's untap step" replacement effect achieves the same
+  practical lockout as an active tap-down, even though the verb differs —
+  tag it Lockdown too, don't withhold just because nothing is actively
+  "tapping" anything on resolution).
 - **Tutor** (`tutor`) — produce only: searches your library (or looks at the
   top N cards) for a specific card or card type and puts it into hand or onto
   the battlefield. Also covers Scry/Surveil (weight 1) — looking at the top
@@ -524,30 +476,28 @@ consume side — nothing in this set reads back "how much removal you've done").
   Scry/Surveil represent the mechanic itself; a card doing one of these gets
   all of the applicable tags, not just one. A cross-cutting axis like Tokens,
   on top of whatever type-specific theme also applies — tutoring a land also
-  gets Lands-Count/
-  Ramp produce, tutoring a Town also gets Towns produce, etc.
+  gets Land produce, tutoring a Town also gets Towns produce, etc.
 - **Scry** (`scry`) — produce: the card itself has Scry N (look at the top N
   cards of your library, put any number on the bottom, the rest back on top
   in any order). consume: genuine payoff language reading "whenever you
   scry." Distinct from Surveil (Scry can only reorder/bottom, never puts
   cards in the graveyard) — a card with "whenever you scry or surveil" gets
-  BOTH as consume. Added 2026-08-30.
+  BOTH as consume.
 - **Surveil** (`surveil`) — produce: the card itself has Surveil N (look at
   the top N cards, put any number into the graveyard, the rest back on top
   in any order). consume: genuine payoff language reading "whenever you
   surveil." Keep Tutor (weight 1) and Graveyard (weight 1, for the
   put-into-graveyard option) tagged alongside this on the same card — see
-  Tutor's note above. Added 2026-08-30.
+  Tutor's note above.
 - **Attack** (`attack`) — role is **consume** (it reacts to a creature
   attacking, same shape as Landfall reacting to a land entering; it doesn't
   produce attacks). Covers BOTH: a "whenever ~ attacks" trigger on itself,
   AND a trigger reacting to ANOTHER qualifying creature attacking (e.g.
   "whenever a Dragon attacks," "whenever a creature you control attacks") —
-  same 2026-08-30 broadening as ETB, don't restrict to self-only. General
-  scale for weight — the repeat-trigger bump usually applies (weight 2+)
-  for an unconditional/broad trigger; a narrower one (gated to specific
-  creature types, or only active for a limited window like a Saga chapter)
-  can stay at 1.
+  don't restrict to self-only. General scale for weight — the repeat-trigger
+  bump usually applies (weight 2+) for an unconditional/broad trigger; a
+  narrower one (gated to specific creature types, or only active for a
+  limited window like a Saga chapter) can stay at 1.
 - **ETB** (`etb`) — consume: reacts to a permanent entering the battlefield,
   same shape as Landfall/Attack. Covers BOTH: an UNCONDITIONAL "when this
   enters" trigger on itself (fixed weight **2**), AND "whenever another
@@ -556,15 +506,12 @@ consume side — nothing in this set reads back "how much removal you've done").
   card CAUSES a permanent (itself or another) to enter the battlefield
   outside a normal cast — a blink, reanimation, or "return it to the
   battlefield" effect — which feeds every other permanent's own ETB
-  triggers, same shape as Landfall's produce side. 2026-08-30: broadened
-  from self-only — "enters" triggers reacting to OTHER permanents are just
-  as much an ETB relation, don't skip them. The one carve-out: a trigger
-  reacting SPECIFICALLY to a land entering is Landfall's exclusive domain,
-  not also ETB (don't double-tag land-entering triggers under both) — ETB
-  covers non-land permanents entering. Still
-  excludes a trigger gated behind an actual condition (e.g. "if you control
-  three or more creatures") — that's a different, conditional relationship,
-  not a bare ETB reaction.
+  triggers, same shape as Landfall's produce side. The one carve-out: a
+  trigger reacting SPECIFICALLY to a land entering is Landfall's exclusive
+  domain, not also ETB (don't double-tag land-entering triggers under both)
+  — ETB covers non-land permanents entering. Still excludes a trigger gated
+  behind an actual condition (e.g. "if you control three or more creatures")
+  — that's a different, conditional relationship, not a bare ETB reaction.
 - **Mana Denial** (`mana-denial`) — produce: disables, disrupts, or weakens an
   opponent's land/mana source without literally destroying/exiling/bouncing
   it (that would be Removal instead) — e.g. stripping a land's types and
@@ -578,28 +525,8 @@ consume side — nothing in this set reads back "how much removal you've done").
   condition (a targeting restriction, a cost reduction, etc.) — distinct from
   Lockdown, which is about CAUSING something to tap, not reading its state.
 - **Untap** (`untap`) — produce: untaps a permanent (yours or otherwise) as
-  an effect — the opposite of Lockdown. Follow the Job Select equip-bonus
-  duality when it's a granted ability (grant + produce, same as Cleric/
-  Lifegain elsewhere). Added 2026-08-30.
-- **Indestructible** (`indestructible`) — self-identity: the card has the
-  Indestructible keyword itself (produce, weight 2). grant: gives
-  Indestructible to another permanent. consume: genuine payoff reading
-  permanents with Indestructible.
-- **Hexproof** (`hexproof`) — self-identity: the card has the Hexproof
-  keyword itself (produce, weight 2). grant: gives Hexproof to another
-  permanent. consume: genuine payoff reading permanents with Hexproof.
-  Distinct from Ward (a tax/penalty on targeting) — Hexproof prevents
-  targeting outright.
-- **First Strike** (`first-strike`) — self-identity: the card has the First
-  Strike keyword itself (produce, weight 2). grant: gives First Strike to
-  another permanent — weight 1 for a temporary ("until end of turn")
-  one-shot grant, weight 2 for an ongoing grant (an Equipment ability that
-  applies "as long as equipped," persisting across re-equip), same temporal
-  split as Flying. consume: genuine payoff reading permanents with First
-  Strike. Added 2026-08-30 — this keyword theme was simply missing from the
-  otherwise-complete Deathtouch/Flash/Vigilance/Ward/Reach/Menace/Haste/
-  Trample/Indestructible/Hexproof list; caught via two independent cards in
-  a bulk-drafting pass both flagging its absence.
+  an effect — the opposite of Lockdown. Follow the equip-bonus grant/produce
+  duality (see `grant` above) when it's a granted ability.
 - **Life Loss** (`life-loss`) — produce: a player (self or an opponent) loses
   life directly as a stated effect — "you lose that much life," "loses life
   equal to X" — as opposed to being dealt damage (that's Face Damage/Removal
@@ -607,25 +534,18 @@ consume side — nothing in this set reads back "how much removal you've done").
   consume: genuine payoff language reading "whenever a player/opponent loses
   life." Weight per the general scale; a repeated trigger (an attack/upkeep/
   combat-damage clause) usually earns at least 2, a narrow one-time or
-  heavily-conditional instance stays 1. Added 2026-08-30, surfaced by a
-  bulk-drafting pass — recurred independently across 6 different cards, a
-  clear enough pattern (this set's "black aggro drawback/payoff" axis) to
-  warrant a dedicated theme rather than leaving each instance untagged.
+  heavily-conditional instance stays 1.
 - **Alternate Win Condition** (`alt-win`) — produce only: a card creates a
   way to win (or make an opponent lose) the game that isn't reducing life to
   0 through normal damage — "that player loses the game," "you win the
   game." Rare and always the card's defining purpose when present — weight
-  3. Added 2026-08-30, surfaced by a bulk-drafting pass (two independent
-  cards).
+  3.
 - **Extra Turns** (`extra-turns`) — produce only: takes an additional turn,
   or an additional phase/step within the current turn (e.g. "there is an
   additional end step after this step," "take an extra turn after this
   one"). Weight per the general scale — a heavily gated/conditional instance
   (only the first end step of the turn, an expensive one-time transform)
   stays low (1-2); an unconditional recurring extra-turn engine would be 3.
-  Added 2026-08-30, surfaced by a bulk-drafting pass (two independent
-  cards covering both the "extra phase" and "extra turn" shape of the same
-  underlying mechanic).
 - **Forced Block** (`forced-block`) — produce (or grant, when it's an
   Equipment/aura extending the effect to the equipped/enchanted creature —
   same convention as Equipment's other bonuses): forces a creature to be
@@ -634,8 +554,7 @@ consume side — nothing in this set reads back "how much removal you've done").
   blockers, and distinct from an evasion effect making YOUR creature harder
   to block). Weight 2 typical: a one-shot ETB-triggered instance and an
   ongoing "as long as attacking" Equipment grant are both a genuine, if
-  narrow, effect. Added 2026-08-30, surfaced by a bulk-drafting pass (two
-  independent cards, both Equipment).
+  narrow, effect.
 - **Commandeer** (`commandeer`) — produce only: causes a permanent to change
   controller, in EITHER direction — taking an opponent's permanent (a
   "Threaten"/Control Magic effect) or giving your own permanent away (a
@@ -649,15 +568,108 @@ consume side — nothing in this set reads back "how much removal you've done").
   less to cast (a flat amount, for a specific color/type, or conditionally).
   Weight 1 when scoped to a subset of spells (e.g. "White spells you cast
   cost {1} less") — genuine but narrow. General scale otherwise.
+- **Kraken** (`kraken`) / **Serpent** (`serpent`) — precedent examples of the
+  creature-types exception above: pre-curated so a card that NAMES the type
+  (without the current set printing one) still has a valid theme id.
+- **Regeneration** (`regeneration`) — produce: the card itself can be
+  regenerated by its OWN activated ability ("{G}: Regenerate this
+  creature") — the ability lives on the permanent that benefits. `grant`:
+  an Aura/Equipment/spell extends a regeneration ability to ANOTHER
+  creature (an Aura's own attached ability granting "{G}: Regenerate
+  enchanted creature" is `grant`, same test as the other keyword themes —
+  the Aura itself can't be regenerated, only what it's attached to). No
+  self-identity scale (it's an ability a card HAS, not a type it IS) and no
+  consume side found so far — general 1-3 scale, typically 2 for produce,
+  3 for a grant that's the card's whole function (matching the Grant-edges-
+  default-3 convention).
+- **Banding** (`banding`) — self-identity: the card has the Banding keyword
+  itself (produce, weight 2). grant: gives banding to another creature (an
+  Equipment/effect that grants it). Real, historic keyword — deprecated in
+  new card design but still legal and printed on old cards; keep even in an
+  era with few payoffs, same reasoning as Deathtouch/Ward elsewhere.
+- **Protection** (`protection`) — self-identity: the card has Protection
+  from a color/quality itself (produce, weight 2). grant: gives protection
+  to another permanent — historically very common via Auras (a "Ward" Aura
+  cycle, pre-dating and unrelated to the modern `ward` keyword — see the
+  naming-trap note under set-specific instructions when a set's own card
+  names collide with a different modern keyword). consume: genuine payoff
+  language reading creatures with protection.
+- **Defender** (`defender`) — self-identity: the card has the Defender
+  keyword itself (produce, weight 2) — "this creature can't attack." A rare
+  card that lets a Defender attack anyway is an `atypical` case on this
+  theme, not a role of its own.
+- **Forced Attack** (`forced-attack`) — produce: the card (or a creature it
+  affects) must attack each combat if able — "this creature attacks each
+  combat if able." `grant` when it's extended to another creature (an
+  Equipment/Aura/effect), same convention as other keyword-shaped themes.
+- **Anthem** (`anthem`) — produce: a static effect that boosts (or shrinks)
+  power/toughness for a GROUP of creatures at once — all creatures, all of
+  a color, all of a type, "creatures you control" — as opposed to a single
+  targeted pump (that's Combat Trick) or a permanent per-creature +1/+1
+  counter (that's Counters). Applies whether the boost is friendly-only or
+  fully symmetric ("Bad Moon" boosts every black creature in play, not just
+  the caster's). Weight per general scale; an unconditional board-wide
+  anthem is usually 3.
+- **Firebreathing** (`firebreathing`) — produce: a repeatable ACTIVATED
+  ability that pumps power and/or toughness for a cost ("{R}: This creature
+  gets +1/+0"), named after the original card Firebreathing that first did
+  this. Distinct from Anthem (static, no activation) and Combat Trick
+  (instant-speed, not an ability the permanent itself has).
+- **Color Change** (`color-change`) — produce: changes what color(s) a spell
+  or permanent is, or rewrites which color word a rule/ability on it refers
+  to (Alpha's "-lace" cycle, and effects like Sleight of Mind that swap a
+  color reference). Used both for mana-fixing/protection-dodging and for
+  denial (disabling something that cares about the original color).
+- **Ante** (`ante`) — produce only: the card's own cost/effect involves
+  antusing cards (each player puts a card at risk, winner takes it) — a
+  real, historic mechanic restricted to Magic's earliest sets and long
+  discontinued in new card design for legal reasons (not legal in
+  tournament play), but still real oracle text on old cards.
+- **Other Counters** (`other-counters`) — produce: puts one or more counters
+  of a type OTHER than +1/+1 on something (mire counters, vitality
+  counters, charge counters, etc. — the dedicated `counters` theme is
+  scoped to +1/+1 counters specifically). consume: reads a non-+1/+1
+  counter count already present. A card that uses several distinct
+  non-+1/+1 counter types across history all share this one theme — don't
+  invent a new theme per counter-type name unless a SPECIFIC counter type
+  recurs enough to deserve its own dedicated theme (matching how +1/+1
+  counters already got their own split-out theme for exactly that reason).
+- **Landwalk** (`landwalk`) — self-identity: the card has a landwalk ability
+  itself (Swampwalk, Islandwalk, Mountainwalk, Forestwalk, Plainswalk, or a
+  nonbasic-land-type walk) — produce, weight 2. `grant`: gives a landwalk
+  ability to another creature. Distinct from Unblockable (landwalk depends
+  on the DEFENDING player's board, not a blanket "can't be blocked"), and
+  from Menace/Fear-style restricted-blocking (those restrict WHICH
+  creatures can block, landwalk can make blocking flatly impossible when
+  its condition is met).
+- **Cost Increase** (`cost-increase`) — produce only: makes a spell or
+  ability cost MORE to cast/activate — a tax effect, the inverse of Cost
+  Reduction. Weight per general scale; scoped-to-opponents-only taxes are
+  usually more central to the card's design than a blanket tax on everyone.
+- **Land Type Change** (`land-type-change`) — produce: changes what
+  basic-land-type(s) a land has (retypes a land to a Forest, adds a type
+  without removing the original, strips existing types) — distinct from
+  Land's own ramp/search definition (this doesn't fetch or count lands, it
+  rewrites what type an EXISTING land already has). Used both for
+  mana-fixing (turning a land into a color you need) and denial (removing
+  a land's usefulness to whoever controls it).
+- **Golem** (`golem`) — precedent example of the creature-types exception
+  (see "Creature types" above): pre-curated for cards whose ability text
+  temporarily turns something into a Golem without a matching type line in
+  the current set.
 
 ## Process (per card)
 
-1. Read the card's full oracle text (both faces if it's a DFC), type line,
-   rarity, and keywords.
+1. Read the card's full oracle text (both faces if it's a DFC/split/
+   adventure/meld card), type line, rarity, and keywords.
 2. Check structural facts first — type line (Artifact/Creature/Enchantment/
-   Land Town/Vehicle/Saga), keywords (Flying/Lifelink), layout (transform).
+   Land/Town/Vehicle/Saga), keywords (Flying/Lifelink), layout (transform).
    These often directly answer a theme's self-identity question before you
-   even read the ability text closely.
+   even read the ability text closely. **No exceptions on structural
+   self-identity tags** — every applicable structural type on the card's own
+   type line must be checked and tagged, even on a card whose name/theme
+   makes it "obviously" something else. Read the FULL type line before
+   finishing a card, not just the ability text.
 3. Read every ability line and check it against the theme list above — decide
    produce/consume/grant/magnifier per theme that applies. A single line can
    trigger more than one theme, and more than one role.
@@ -668,9 +680,25 @@ consume side — nothing in this set reads back "how much removal you've done").
 5. Weight each relation per the conventions above.
 6. When uncertain between forcing a produce/consume guess and tagging
    atypical, prefer atypical — it's a legitimate "worth a second look" signal
-   for the human reviewer, not a failure state.
-7. Write the result to `data/fin/fin_relations.json`, `"reviewed": "human"`
-   plus `"reviewed_at"` included
-   (or, if driving the interactive review loop, append it to
-   `scripts/review-drafts.json` instead — see `scripts/REVIEW_PROCESS.md`)
-   and move on.
+   for a strict reviewer pass, not a failure state. If genuinely uncertain
+   about a JUDGMENT CALL (not just produce/consume/atypical, but whether the
+   rule itself is right), still tag it your best guess per the rules as they
+   stand, but log it to that set's standoffs doc for later discussion — see
+   the set review process doc.
+7. Write the result to that set's `data/<set>/<set>_relations.json`. Leave
+   `reviewed` false/absent on first draft; a strict reviewer pass sets it to
+   `"agent"` (plus a `reviewed_at` timestamp) once every entry in the set has
+   been checked against this document with no outstanding issues.
+
+## When a set introduces something new
+
+If a card's mechanic genuinely doesn't fit ANY theme above (a new keyword
+mechanic this file hasn't seen before, not just a new flavor of an existing
+one) — that's the signal to ADD a new theme here, not to force-fit it or
+invent a set-scoped one-off. Update this file (new theme entry, updated
+`data/global_themes.json`), note what set/card surfaced it, and only then
+tag the card properly. A mechanic that's clearly set-specific FLAVOR on an
+existing pattern (a new keyword name for something that's mechanically
+identical to gaining/losing an existing theme's resource) doesn't need a new
+theme — reuse the existing one and note the keyword-name mapping in that
+set's own review instructions doc, so future sets recognize it too.

@@ -51,7 +51,7 @@ const history = ref<HistoryEntry[]>([]);
 const historyEl = ref<HTMLElement | null>(null);
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-async function poll() {
+async function poll(): Promise<boolean> {
   try {
     const res = await fetch(`${SERVER}/state`);
     const s = await res.json();
@@ -64,14 +64,19 @@ async function poll() {
       cardName.value = s.card;
       feedbackText.value = '';
     }
+    return true;
   } catch {
-    // review-server not running / transient network hiccup — just retry next tick
+    // review-server not running / transient network hiccup
+    return false;
   }
 }
 
-onMounted(() => {
-  poll();
-  pollTimer = setInterval(poll, 600);
+onMounted(async () => {
+  // Only keep polling once the server's actually there — otherwise this panel
+  // (mounted on every load whenever VITE_ENABLE_REVIEW is set, review session
+  // or not) would spam connection-refused requests to localhost:8787 forever.
+  // A real review session starting later just needs a page reload.
+  if (await poll()) pollTimer = setInterval(poll, 600);
 });
 onBeforeUnmount(() => {
   if (pollTimer) clearInterval(pollTimer);

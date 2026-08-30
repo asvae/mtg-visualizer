@@ -9,7 +9,8 @@
         "mana": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Absolute Virtue",
@@ -22,7 +23,8 @@
         "warrior": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Adelbert Steiner",
@@ -38,7 +40,8 @@
         "knight": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Adventurer's Airship",
@@ -56,7 +59,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Adventurer's Inn",
@@ -70,7 +74,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Aerith Gainsborough",
@@ -89,7 +94,8 @@
         "legendary": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Aerith Rescue Mission",
@@ -101,7 +107,8 @@
         "sorcery": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Aettir and Priwen",
@@ -112,7 +119,8 @@
         "equipment": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ahriman",
@@ -131,7 +139,8 @@
         "artifacts": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Airship Crash",
@@ -144,7 +153,8 @@
         "graveyard": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Al Bhed Salvagers",
@@ -161,7 +171,8 @@
         "artifacts": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ambrosia Whiteheart",
@@ -178,7 +189,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ancient Adamantoise",
@@ -197,7 +209,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ardyn, the Usurper",
@@ -223,7 +236,8 @@
         "graveyard": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ashe, Princess of Dalmasca",
@@ -241,7 +255,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Balamb Garden, SeeD Academy // Balamb Garden, Airborne",
@@ -265,7 +280,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Balamb T-Rexaur",
@@ -284,7 +300,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Balthier and Fran",
@@ -301,7 +318,8 @@
         "vehicles": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Baron, Airship Kingdom",
@@ -312,7 +330,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Barret Wallace",
@@ -331,7 +350,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Bartz and Boko",
@@ -348,7 +368,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Beatrix, Loyal General",
@@ -366,7 +387,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Black Waltz No. 3",
@@ -388,7 +410,8 @@
         "battle": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Blazing Bomb",
@@ -409,7 +432,8 @@
         "battle": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Cactuar",
@@ -435,7 +459,8 @@
         "graveyard": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Cecil, Dark Knight // Cecil, Redeemed Paladin",
@@ -459,7 +484,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Choco, Seeker of Paradise",
@@ -524,7 +550,8 @@
         "devotion": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Clive's Hideaway",
@@ -579,7 +606,8 @@
         "equipment": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Cloud, Planet's Champion",
@@ -617,7 +645,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Coeurl",
@@ -629,7 +658,8 @@
         "lockdown": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Coliseum Behemoth",
@@ -656,7 +686,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Crystal Fragments // Summon: Alexander",
@@ -676,7 +707,8 @@
         "damage-prevention": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Dark Confidant",
@@ -689,7 +721,8 @@
         "life-loss": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Delivery Moogle",
@@ -706,7 +739,8 @@
         "graveyard": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Demon Wall",
@@ -767,7 +801,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Dragoon's Wyvern",
@@ -783,7 +818,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Dwarven Castle Guard",
@@ -799,7 +835,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Eden, Seat of the Sanctum",
@@ -941,7 +978,8 @@
         "equipment": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Freya Crescent",
@@ -976,7 +1014,8 @@
         "artifacts": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Gaelicat",
@@ -992,7 +1031,8 @@
         "artifacts": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Gaius van Baelsar",
@@ -1143,7 +1183,8 @@
         "legendary": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Gohn, Town of Ruin",
@@ -1154,7 +1195,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Golbez, Crystal Collector",
@@ -1187,7 +1229,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Goobbue Gardener",
@@ -1199,7 +1242,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Gran Pulse Ochu",
@@ -1225,7 +1269,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Hecteyes",
@@ -1335,7 +1380,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Insomnia, Crown City",
@@ -1346,7 +1392,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Iron Giant",
@@ -1361,7 +1408,8 @@
         "trample": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ishgard, the Holy See // Faith & Grief",
@@ -1481,7 +1529,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Joshua, Phoenix's Dominant // Phoenix, Warden of Fire",
@@ -1543,7 +1592,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Kain, Traitorous Dragoon",
@@ -1560,7 +1610,8 @@
         "life-loss": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Kefka, Court Mage // Kefka, Ruler of Ruin",
@@ -1616,7 +1667,8 @@
         "wizard": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Lightning, Army of One",
@@ -1690,7 +1742,8 @@
         "discard": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Loporrit Scout",
@@ -1705,7 +1758,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Magic Pot",
@@ -1738,7 +1792,8 @@
         "artifacts": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Malboro",
@@ -1775,7 +1830,8 @@
         "surveil": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Midgar, City of Mako // Reactor Raid",
@@ -1809,7 +1865,8 @@
         "cleric": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Mysidian Elder",
@@ -2036,7 +2093,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ragnarok, Divine Deliverance",
@@ -2148,7 +2206,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Rosa, Resolute White Mage",
@@ -2181,7 +2240,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Rydia, Summoner of Mist",
@@ -2218,7 +2278,8 @@
         "landfall": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Sahagin",
@@ -2294,7 +2355,8 @@
         "landfall": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Scorpion Sentinel",
@@ -2309,7 +2371,8 @@
         "land": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Seifer Almasy",
@@ -2409,7 +2472,8 @@
         "legendary": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Shambling Cie'th",
@@ -2461,7 +2525,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Shinra Reinforcements",
@@ -2501,7 +2566,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark",
@@ -2583,7 +2649,8 @@
         "creature": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Squall, SeeD Mercenary",
@@ -2612,7 +2679,8 @@
         "life-loss": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Stiltzkin, Moogle Merchant",
@@ -2626,7 +2694,8 @@
         "commandeer": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Summon: Anima",
@@ -2659,7 +2728,8 @@
         "removal": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Summon: Brynhildr",
@@ -2695,7 +2765,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Summon: Esper Ramuh",
@@ -2803,7 +2874,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Summon: Leviathan",
@@ -2829,7 +2901,8 @@
         "serpent": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Summon: Primal Garuda",
@@ -2846,7 +2919,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Summon: Primal Odin",
@@ -2881,7 +2955,8 @@
         "tap": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Summon: Titan",
@@ -2960,7 +3035,8 @@
         "saga": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "The Emperor of Palamecia // The Lord Master of Hell",
@@ -3142,7 +3218,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ultima, Origin of Oblivion",
@@ -3161,7 +3238,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ultimecia, Temporal Threat",
@@ -3237,7 +3315,8 @@
         "treasure": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Vaan, Street Thief",
@@ -3308,7 +3387,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
@@ -3334,7 +3414,8 @@
         "indestructible": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Vincent Valentine // Galian Beast",
@@ -3378,7 +3459,8 @@
         "battle": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Weapons Vendor",
@@ -3394,7 +3476,8 @@
         "equipment": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Windurst, Federation Center",
@@ -3405,7 +3488,8 @@
         "mana": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Xande, Dark Mage",
@@ -3421,7 +3505,8 @@
         "graveyard": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Y'shtola Rhul",
@@ -3435,7 +3520,8 @@
         "extra-turns": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Yuna, Hope of Spira",
@@ -3480,7 +3566,8 @@
         "indestructible": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Zanarkand, Ancient Metropolis // Lasting Fayth",
@@ -3582,7 +3669,8 @@
         "sacrifice": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Auron's Inspiration",
@@ -3594,7 +3682,8 @@
         "instant": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Bard's Bow",
@@ -3617,7 +3706,8 @@
         "etb": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Astrologian's Planisphere",
@@ -3647,7 +3737,8 @@
         "battle": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Battle Menu",
@@ -3662,7 +3753,8 @@
         "token": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Black Mage's Rod",
@@ -3690,7 +3782,8 @@
         "face-damage": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "The Crystal's Chosen",
@@ -3703,7 +3796,8 @@
         "counters": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Dragoon's Lance",
@@ -3725,7 +3819,8 @@
         "flying": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Fate of the Sun-Cryst",
@@ -3739,7 +3834,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Machinist's Arsenal",
@@ -3761,7 +3857,8 @@
         "artifacts": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "From Father to Son",
@@ -3777,7 +3874,8 @@
         "cast-from-graveyard": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Magitek Armor",
@@ -3794,7 +3892,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Moogles' Valor",
@@ -3811,7 +3910,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Paladin's Arms",
@@ -3833,7 +3933,8 @@
         "knight": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Phoenix Down",
@@ -3847,7 +3948,8 @@
         "creature": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Restoration Magic",
@@ -3861,7 +3963,8 @@
         "indestructible": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Slash of Light",
@@ -3875,7 +3978,8 @@
         "equipment": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ultima",
@@ -3886,7 +3990,8 @@
         "board-wipe": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "White Auracite",
@@ -3898,7 +4003,8 @@
         "mana": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "White Mage's Staff",
@@ -3919,7 +4025,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "You're Not Alone",
@@ -3932,7 +4039,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "The Wind Crystal",
@@ -3951,7 +4059,8 @@
         "creature": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Combat Tutorial",
@@ -3962,7 +4071,8 @@
         "counters": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Dreams of Laguna",
@@ -3977,7 +4087,8 @@
         "surveil": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Syncopate",
@@ -3988,7 +4099,8 @@
         "exile": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Overkill",
@@ -3998,7 +4110,8 @@
         "removal": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Sephiroth's Intervention",
@@ -4009,7 +4122,8 @@
         "instant": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Thunder Magic",
@@ -4020,7 +4134,8 @@
         "removal": 3
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Monk's Fist",
@@ -4037,7 +4152,8 @@
         "monk": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "World Map",
@@ -4049,7 +4165,8 @@
         "sacrifice": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Judgment Bolt",
@@ -4063,7 +4180,8 @@
         "equipment": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Cargo Ship",
@@ -4082,7 +4200,8 @@
         "artifacts": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Eject",
@@ -4094,7 +4213,8 @@
         "draw": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Stuck in Summoner's Sanctum",
@@ -4109,7 +4229,8 @@
         "artifacts": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Swallowed by Leviathan",
@@ -4125,7 +4246,8 @@
         "graveyard": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Ice Magic",
@@ -4137,7 +4259,8 @@
         "removal": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Memories Returning",
@@ -4150,7 +4273,8 @@
         "tutor": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Sage's Nouliths",
@@ -4173,7 +4297,8 @@
         "attack": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Vincent's Limit Break",
@@ -4184,7 +4309,8 @@
         "instant": 2
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Fire Magic",
@@ -4196,7 +4322,8 @@
         "board-wipe": 1
       }
     },
-    "reviewed": true
+    "reviewed": "human",
+    "reviewed_at": "2026-08-30T10:57:42.000Z"
   },
   {
     "name": "Nibelheim Aflame",

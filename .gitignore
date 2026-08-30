@@ -11,3 +11,11 @@ dist/
 # real source of truth once a card's confirmed).
 scripts/review-drafts.json
 scripts/review-responses.json
+
+# Local Netlify folder
+.netlify
+deno.lock
+
+# Regenerable Scryfall bulk-data downloads (historical-sets pipeline
+# intermediate) — 75MB+/24MB, not source, shouldn't bloat repo history.
+data/*.jsonl.gz

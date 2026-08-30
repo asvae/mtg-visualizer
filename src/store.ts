@@ -1,11 +1,21 @@
-import { reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
+import { computed, reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
 import type { CardData, GraphFile, Role, ThemeData } from './types';
 import { COLOR_ORDER, RARITY_ORDER } from './lib/constants';
 import { availableRarities as computeAvailableRarities, availableTypes as computeAvailableTypes, computeWeakThemeIds } from './lib/filters';
 import { DEFAULT_FORCES, type ForceConfig } from './lib/graphRenderer';
 import { buildGraph, type RelationsEntry, type ScryfallCard, type TokensById } from './lib/buildGraph';
 
-const SET_CODE = 'fin';
+// "sf" (scryfall filter) URL param — the "scryfall filter" leg of the 3-part
+// URL scheme (internal filter = colors/rarities/types/themes, selection =
+// focus/card, both already existing). Read raw here (module scope, not via
+// readUrlParam below) since a Scryfall query is a single string, not a
+// comma-split list. When present, load() resolves it against /api/cards
+// instead of the static per-set files — see load() below.
+const scryfallQuery = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('sf') : null;
+// Namespaces every distinct query into its own storage bucket instead of
+// clobbering the main "fin" explorer's saved filters, or having every query
+// share one "query" bucket and stomp on each other's saved state.
+const SET_CODE = scryfallQuery ? `q:${scryfallQuery}` : 'fin';
 const STORAGE_KEY = `mtg-visualizer-filters-${SET_CODE}`;
 const FORCES_STORAGE_KEY = `mtg-visualizer-forces-${SET_CODE}`;
 const SEARCH_STORAGE_KEY = `mtg-visualizer-search-${SET_CODE}`;
@@ -37,12 +47,23 @@ function loadSavedFilters(): SavedFilters | null {
 // never clobber each other's keys, and any unrelated param a host page adds
 // survives untouched. `replaceState`, not `pushState` — every filter tweak
 // shouldn't spam the browser's back-button history.
-function updateUrlParams(updates: Record<string, string>) {
+// A null value deletes that param instead of setting it — used to omit a
+// filter category entirely from the URL when it matches its own default (see
+// isFullSelection below), so e.g. "Reset filters" produces an empty query
+// string instead of one that spells out every id.
+function updateUrlParams(updates: Record<string, string | null>) {
   if (typeof window === 'undefined') return;
   const params = new URLSearchParams(window.location.search);
-  for (const [key, value] of Object.entries(updates)) params.set(key, value);
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === null) params.delete(key);
+    else params.set(key, value);
+  }
   const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
   window.history.replaceState(window.history.state, '', newUrl);
+}
+
+function isFullSelection(selected: Set<string>, full: string[]): boolean {
+  return selected.size === full.length && full.every((id) => selected.has(id));
 }
 
 function readUrlParam(key: string): string[] | null {
@@ -77,6 +98,14 @@ export interface HoveredTheme {
 export function createStore() {
   const graph = shallowRef<GraphFile | null>(null);
   const loadError = ref<string | null>(null);
+  // True from just before load()'s first fetch until it settles (success or
+  // error) — App.vue shows a loading overlay while this is true. Starts true
+  // (not false) so the overlay is up from first paint, not just after
+  // onMounted() calls load() a tick later.
+  const loading = ref(true);
+  // Non-blocking, distinct from loadError: the graph still loaded fine, this
+  // just says the "sf" query matched more cards than /api/cards will return.
+  const dataWarning = ref<string | null>(null);
 
   const selectedThemes = reactive(new Set<string>());
   const selectedColors = reactive(new Set<string>());
@@ -88,6 +117,9 @@ export function createStore() {
   // not persisted, and compounds with search in the graph's highlight/dim pass.
   const themeSelection = reactive(new Set<string>());
   function toggleThemeSelection(themeId: string, additive: boolean) {
+    // Theme and card selection are one unified "selection" concept — selecting
+    // either kind always clears the other, so at most one type is ever active.
+    cardSelection.clear();
     if (additive) {
       if (themeSelection.has(themeId)) themeSelection.delete(themeId);
       else themeSelection.add(themeId);
@@ -108,6 +140,7 @@ export function createStore() {
   // of calling this at all) — never reaches here.
   const cardSelection = reactive(new Set<string>());
   function toggleCardSelection(cardId: string, additive: boolean) {
+    themeSelection.clear(); // see toggleThemeSelection — one unified selection concept
     if (additive) {
       if (cardSelection.has(cardId)) cardSelection.delete(cardId);
       else cardSelection.add(cardId);
@@ -240,13 +273,17 @@ export function createStore() {
   // everything (see ChecklistSection.vue's local selectAll — unaffected by this).
   // Weak/strong is computed against whatever colors/rarities/types are ALREADY
   // selected, so this only makes sense called after those three are set.
+  // Judged against whatever colors/rarities/types are ALREADY selected — also
+  // used by the URL-omission check below, so a shared link's "default theme
+  // set" always means "default given this link's own color/rarity/type filters".
+  function computeDefaultThemeIds(data: GraphFile): string[] {
+    const weakThemeIds = computeWeakThemeIds(data, { selectedColors, selectedRarities, selectedTypes });
+    return data.themes.filter((t) => !weakThemeIds.has(t.id)).map((t) => t.id);
+  }
   function selectDefaultThemes() {
     selectedThemes.clear();
     if (!graph.value) return;
-    const weakThemeIds = computeWeakThemeIds(graph.value, { selectedColors, selectedRarities, selectedTypes });
-    for (const t of graph.value.themes) {
-      if (!weakThemeIds.has(t.id)) selectedThemes.add(t.id);
-    }
+    for (const id of computeDefaultThemeIds(graph.value)) selectedThemes.add(id);
   }
 
   function resetFilters() {
@@ -256,73 +293,115 @@ export function createStore() {
     selectDefaultThemes();
   }
 
+  // Single derived snapshot of everything that mirrors into the URL — a plain
+  // getter (nothing here is ever assigned to directly; components mutate the
+  // underlying reactive Sets, this just reflects them) recomputed whenever any
+  // dependency changes, watched once below instead of one imperative
+  // updateUrlParams() call per call site. A category comes out `null` (which
+  // updateUrlParams deletes rather than sets) whenever it matches its own
+  // default — full colors/rarities/types, default-strong themes, no
+  // focus/card selection — so "Reset filters" (or a first-ever visit)
+  // produces an empty query string instead of one spelling out every id.
+  const urlParamState = computed<Record<string, string | null>>(() => ({
+    colors: isFullSelection(selectedColors, COLOR_ORDER) ? null : [...selectedColors].join(','),
+    rarities: isFullSelection(selectedRarities, availableRarities.value) ? null : [...selectedRarities].join(','),
+    types: isFullSelection(selectedTypes, availableTypes.value) ? null : [...selectedTypes].join(','),
+    themes:
+      graph.value && isFullSelection(selectedThemes, computeDefaultThemeIds(graph.value))
+        ? null
+        : [...selectedThemes].join(','),
+    focus: themeSelection.size ? [...themeSelection].join(',') : null,
+    card: cardSelection.size ? [...cardSelection].join(',') : null,
+  }));
+
   function applySavedFilters(data: GraphFile, rarities: string[], types: string[]) {
     const stored = loadSavedFilters();
     // A URL query param, when present, wins over whatever's in localStorage for
     // that one key — an explicit/shared URL is a more deliberate statement of
-    // intent than whatever was left over from a previous visit. Absent params
-    // fall back to the stored value per-key, not all-or-nothing.
+    // intent than whatever was left over from a previous visit. A category
+    // absent from BOTH the URL and localStorage means "unconstrained" (every
+    // color/rarity/type, default-strong themes), not "select nothing" — a link
+    // that only constrains e.g. colors+themes (the landing page's archetype
+    // links) should leave rarities/types open, even for a first-time visitor
+    // with no localStorage yet.
     const urlColors = readUrlParam('colors');
     const urlRarities = readUrlParam('rarities');
     const urlTypes = readUrlParam('types');
     const urlThemes = readUrlParam('themes');
-    const saved: SavedFilters | null =
-      stored || urlColors || urlRarities || urlTypes || urlThemes
-        ? {
-            colors: urlColors ?? stored?.colors ?? [],
-            rarities: urlRarities ?? stored?.rarities ?? [],
-            types: urlTypes ?? stored?.types ?? [],
-            themes: urlThemes ?? stored?.themes ?? [],
-            // A URL's theme list is a literal, self-contained snapshot: every
-            // theme currently in the graph counts as "known" to it, so anything
-            // NOT listed lands as "known but unchecked" below, not "unknown, so
-            // default it on" — the bug this used to have was passing `urlThemes`
-            // itself here, which made every OTHER theme look unknown and get
-            // selected anyway, silently ignoring the URL's actual theme list.
-            knownThemeIds: urlThemes ? data.themes.map((t) => t.id) : stored?.knownThemeIds,
-          }
-        : null;
-    if (!saved) return false;
+    if (!stored && urlColors === null && urlRarities === null && urlTypes === null && urlThemes === null) {
+      return false; // nothing specified anywhere — caller applies its own full defaults
+    }
 
     const validColors = new Set(COLOR_ORDER);
     selectedColors.clear();
-    saved.colors.filter((c) => validColors.has(c)).forEach((c) => selectedColors.add(c));
+    (urlColors ?? stored?.colors ?? COLOR_ORDER).filter((c) => validColors.has(c)).forEach((c) => selectedColors.add(c));
 
     const validRarities = new Set(rarities);
     selectedRarities.clear();
-    saved.rarities.filter((r) => validRarities.has(r)).forEach((r) => selectedRarities.add(r));
+    (urlRarities ?? stored?.rarities ?? rarities).filter((r) => validRarities.has(r)).forEach((r) => selectedRarities.add(r));
 
     const validTypes = new Set(types);
     selectedTypes.clear();
-    saved.types.filter((t) => validTypes.has(t)).forEach((t) => selectedTypes.add(t));
+    (urlTypes ?? stored?.types ?? types).filter((t) => validTypes.has(t)).forEach((t) => selectedTypes.add(t));
 
-    // A theme not present in `saved.themes` is ambiguous on its own — explicitly
-    // unchecked, or introduced since the save was made (a newly reviewed theme,
-    // or one of the auto-derived creature-type themes)? `knownThemeIds` (every
-    // theme id that existed at save time) resolves it: known-but-unchecked stays
-    // off, but anything brand new defaults on, same as a first-ever visit — it
-    // shouldn't take a manual re-check just because it didn't exist yet.
-    const knownThemeIds = new Set(saved.knownThemeIds ?? saved.themes);
-    const savedCheckedThemeIds = new Set(saved.themes);
-    selectedThemes.clear();
-    for (const t of data.themes) {
-      if (!knownThemeIds.has(t.id) || savedCheckedThemeIds.has(t.id)) selectedThemes.add(t.id);
+    // Themes depend on colors/rarities/types above already being resolved
+    // (computeDefaultThemeIds judges weak/strong against them).
+    if (urlThemes === null && !stored?.themes) {
+      selectDefaultThemes();
+    } else {
+      // A URL's theme list is a literal, self-contained snapshot: every theme
+      // currently in the graph counts as "known" to it, so anything NOT listed
+      // lands as "known but unchecked" below, not "unknown, so default it on"
+      // — the bug this used to have was passing `urlThemes` itself here, which
+      // made every OTHER theme look unknown and get selected anyway, silently
+      // ignoring the URL's actual theme list.
+      const savedThemes = urlThemes ?? stored?.themes ?? [];
+      const knownThemeIds = new Set(urlThemes ? data.themes.map((t) => t.id) : (stored?.knownThemeIds ?? savedThemes));
+      const savedCheckedThemeIds = new Set(savedThemes);
+      selectedThemes.clear();
+      for (const t of data.themes) {
+        if (!knownThemeIds.has(t.id) || savedCheckedThemeIds.has(t.id)) selectedThemes.add(t.id);
+      }
     }
 
     return true;
   }
 
   async function load() {
+    loading.value = true;
     try {
       // Raw pieces only — no pre-built graph file. The visualizer assembles cards/
       // themes/edges itself (see src/lib/buildGraph.ts); tokens are optional (a
       // missing fetch:tokens run just means no hover images, not a load failure).
-      const [themes, raw, relations, tokensById]: [ThemeData[], ScryfallCard[], RelationsEntry[], TokensById] = await Promise.all([
-        fetch('/themes.json').then((r) => r.json()),
-        fetch(`/${SET_CODE}/${SET_CODE}_scryfall.json`).then((r) => r.json()),
-        fetch(`/${SET_CODE}/${SET_CODE}_relations.json`).then((r) => r.json()),
-        fetch(`/${SET_CODE}/${SET_CODE}_tokens_scryfall.json`).then((r) => (r.ok ? r.json() : {})),
-      ]);
+      let themes: ThemeData[];
+      let raw: ScryfallCard[];
+      let relations: RelationsEntry[];
+      let tokensById: TokensById;
+      if (scryfallQuery !== null) {
+        // Query mode: resolve against the Netlify function instead of the
+        // static per-set files — see netlify/functions/cards.mts. No token
+        // images in this mode (function doesn't fetch them), so no hover art.
+        const res = await fetch(`/api/cards?q=${encodeURIComponent(scryfallQuery)}`);
+        const body = await res.json();
+        if (!res.ok) {
+          loadError.value = body.error || `query failed (${res.status})`;
+          return;
+        }
+        themes = body.themes;
+        raw = body.cards;
+        relations = body.relations;
+        tokensById = {};
+        dataWarning.value = body.truncated
+          ? `Showing ${body.cards.length} of ${body.totalCards} matching cards — narrow your search to see the rest.`
+          : null;
+      } else {
+        [themes, raw, relations, tokensById] = await Promise.all([
+          fetch('/global_themes.json').then((r) => r.json()),
+          fetch(`/${SET_CODE}/${SET_CODE}_scryfall.json`).then((r) => r.json()),
+          fetch(`/${SET_CODE}/${SET_CODE}_relations.json`).then((r) => r.json()),
+          fetch(`/${SET_CODE}/${SET_CODE}_tokens_scryfall.json`).then((r) => (r.ok ? r.json() : {})),
+        ]);
+      }
       const data: GraphFile = buildGraph(SET_CODE, raw, tokensById, relations, themes);
       graph.value = data;
 
@@ -355,62 +434,43 @@ export function createStore() {
       // Reflects the just-resolved state back into the URL immediately, so
       // copying the address bar right after load already gives a complete,
       // shareable snapshot — not just whatever the user changes from here.
-      updateUrlParams({
-        colors: [...selectedColors].join(','),
-        rarities: [...selectedRarities].join(','),
-        types: [...selectedTypes].join(','),
-        themes: [...selectedThemes].join(','),
-        focus: [...themeSelection].join(','),
-        card: [...cardSelection].join(','),
-      });
+      updateUrlParams(urlParamState.value);
     } catch (err) {
       loadError.value = err instanceof Error ? err.message : String(err);
+    } finally {
+      loading.value = false;
     }
   }
 
   // Called synchronously during setup (not inside the async load()), so this watcher
-  // is properly tied to the component's effect scope.
-  watch(
-    () => [...selectedColors, ...selectedRarities, ...selectedTypes, ...selectedThemes],
-    () => {
-      if (!readyToPersist) return;
-      const payload: SavedFilters = {
-        colors: [...selectedColors],
-        rarities: [...selectedRarities],
-        types: [...selectedTypes],
-        themes: [...selectedThemes],
-        knownThemeIds: graph.value?.themes.map((t) => t.id) ?? [],
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      } catch {
-        // storage full/blocked (e.g. private browsing) — filters just won't persist
-      }
-      updateUrlParams({
-        colors: payload.colors.join(','),
-        rarities: payload.rarities.join(','),
-        types: payload.types.join(','),
-        themes: payload.themes.join(','),
-      });
+  // is properly tied to the component's effect scope. One watcher for all six URL
+  // keys (colors/rarities/types/themes/focus/card) — urlParamState above already
+  // did the work of deciding what each one should be; this just applies it,
+  // gated on readyToPersist so nothing writes to the URL/localStorage mid-load
+  // before selections have settled (the tail of load() does that first sync).
+  watch(urlParamState, (updates) => {
+    if (!readyToPersist) return;
+    const payload: SavedFilters = {
+      colors: [...selectedColors],
+      rarities: [...selectedRarities],
+      types: [...selectedTypes],
+      themes: [...selectedThemes],
+      knownThemeIds: graph.value?.themes.map((t) => t.id) ?? [],
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // storage full/blocked (e.g. private browsing) — filters just won't persist
     }
-  );
-
-  // Clicked-theme/card highlights, mirrored to the URL only — not localStorage,
-  // not search (see updateUrlParams above). Doesn't need the readyToPersist
-  // guard: both start empty either way (nothing to accidentally clobber pre-load).
-  watch(
-    () => [...themeSelection],
-    (ids) => updateUrlParams({ focus: ids.join(',') })
-  );
-  watch(
-    () => [...cardSelection],
-    (ids) => updateUrlParams({ card: ids.join(',') })
-  );
+    updateUrlParams(updates);
+  });
 
   return {
     setCode: SET_CODE,
     graph,
     loadError,
+    loading,
+    dataWarning,
     load,
     selectedThemes,
     selectedColors,

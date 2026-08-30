@@ -19,7 +19,7 @@ if (!query) {
 
 const raw = JSON.parse(await readFile('data/fin/fin_scryfall.json', 'utf8'));
 const relations = JSON.parse(await readFile('data/fin/fin_relations.json', 'utf8'));
-const themes = JSON.parse(await readFile('data/themes.json', 'utf8'));
+const themes = JSON.parse(await readFile('data/global_themes.json', 'utf8'));
 const relationsByName = new Map(relations.map((t) => [t.name, t]));
 const themeLabelById = new Map(themes.map((t) => [t.id, t.label]));
 
