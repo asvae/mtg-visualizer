@@ -3,7 +3,7 @@ import { inject, computed, ref, watch, nextTick } from 'vue';
 import { computePosition, offset, flip, shift, type VirtualElement } from '@floating-ui/dom';
 import { StoreKey, type HoveredCard, type HoveredTheme } from '../store';
 import { ROLES } from '../types';
-import { describeRelation, groupChipsByVerb } from '../lib/relations';
+import { describeRelation, groupChipsByVerb, ROLE_VERB } from '../lib/relations';
 import CardMediaRelations from './CardMediaRelations.vue';
 
 const store = inject(StoreKey)!;
@@ -79,7 +79,7 @@ const relationChips = computed(() => {
   if (!cardTooltip.value) return [];
   return cardTooltip.value.themeEdges.flatMap((te) => {
     const label = themeLabelById.value.get(te.themeId) ?? te.themeId;
-    return describeRelation(label, te.role, te.modifiers).map((chip, i) => ({ ...chip, key: `${te.themeId}-${i}` }));
+    return describeRelation(label, te.role, te.weight).map((chip, i) => ({ ...chip, key: `${te.themeId}-${i}` }));
   });
 });
 
@@ -91,20 +91,39 @@ const chipColumns = computed(() => groupChipsByVerb(relationChips.value));
 function themeTotal(rc: Record<string, number>) {
   return ROLES.reduce((sum, r) => sum + (rc[r] ?? 0), 0);
 }
+
+// One row per role that actually has any cards — excludes zero-count roles
+// instead of always showing all of them.
+const themeRoleGroups = computed(() => {
+  if (!themeTooltip.value) return [];
+  const rc = themeTooltip.value.theme.roleCounts;
+  return ROLES.filter((r) => (rc[r] ?? 0) > 0).map((r) => ({
+    role: r,
+    verb: ROLE_VERB[r],
+    colorClass: `chip-${r}`,
+    count: rc[r] ?? 0,
+  }));
+});
 </script>
 
 <template>
   <div ref="tooltipEl" class="tooltip" :class="{ hidden: !store.hovered.value, wide: isWide }" :style="{ left: `${tipX}px`, top: `${tipY}px` }">
     <template v-if="cardTooltip">
-      <CardMediaRelations :images="cardTooltip.card.images" :tokens="cardTooltip.card.tokens" :columns="chipColumns" @image-load="updatePosition" />
+      <CardMediaRelations
+        :images="cardTooltip.card.images"
+        :tokens="cardTooltip.card.tokens"
+        :columns="chipColumns"
+        @image-load="updatePosition"
+      />
     </template>
     <template v-else-if="themeTooltip">
       <div class="name">{{ themeTooltip.theme.label }}</div>
       <div class="badges">{{ themeTotal(themeTooltip.theme.roleCounts) }} cards</div>
-      <div class="badges" style="margin-top: 6px">
-        <span style="color: var(--produce)">● Produce {{ themeTooltip.theme.roleCounts.produce }}</span><br />
-        <span style="color: var(--consume)">● Consume {{ themeTooltip.theme.roleCounts.consume }}</span><br />
-        <span style="color: var(--atypical)">● Atypical {{ themeTooltip.theme.roleCounts.atypical }}</span>
+      <div class="theme-role-list">
+        <div class="theme-role-row" v-for="g in themeRoleGroups" :key="g.role">
+          <span class="chip-dot" :class="g.colorClass"></span>
+          <strong>{{ g.verb }}</strong>: {{ g.count }}
+        </div>
       </div>
     </template>
   </div>
@@ -144,4 +163,33 @@ function themeTotal(rc: Record<string, number>) {
   color: var(--muted);
   margin-top: 2px;
 }
+
+/* Simple list — one row per relation type, dot + bold verb + count. */
+.theme-role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.theme-role-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chip-dot.chip-produce { background: var(--produce); }
+.chip-dot.chip-consume { background: var(--consume); }
+.chip-dot.chip-atypical { background: var(--atypical); }
+.chip-dot.chip-magnifier { background: var(--magnifier); }
+.chip-dot.chip-grant { background: var(--grant); }
 </style>

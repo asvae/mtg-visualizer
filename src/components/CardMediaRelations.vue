@@ -1,49 +1,47 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { RelationColumn } from '../lib/relations';
 
-const props = defineProps<{
+withDefaults(defineProps<{
   images: string[];
   tokens: { name: string; image: string }[];
   columns: RelationColumn[];
-}>();
+  showMedia?: boolean;
+  showRelations?: boolean;
+}>(), {
+  showMedia: true,
+  showRelations: true,
+});
 
 defineEmits<{ (e: 'imageLoad'): void }>();
-
-// Computed algebraically from the CSS constants below (card width, gap, divider
-// width) rather than measured from the rendered DOM — every child in .card-media
-// is a fixed size, so its total width is fully determined by how many images/
-// tokens there are. Binding .chip-columns to this exact value is what makes it
-// match the card row's width instead of shrinking/growing to its own content.
-const CARD_WIDTH = 220;
-const GAP = 6;
-const DIVIDER_WIDTH = 1;
-const mediaWidth = computed(() => {
-  const hasTokens = props.tokens.length > 0;
-  const childCount = props.images.length + props.tokens.length + (hasTokens ? 1 : 0);
-  if (childCount === 0) return 0;
-  const childrenWidth = (props.images.length + props.tokens.length) * CARD_WIDTH + (hasTokens ? DIVIDER_WIDTH : 0);
-  return childrenWidth + (childCount - 1) * GAP;
-});
 </script>
 
 <template>
-  <div class="card-media">
+  <div class="card-media" v-if="showMedia">
     <img v-for="(src, i) in images" :key="'face' + i" :src="src" alt="" @load="$emit('imageLoad')" />
     <div class="token-divider" v-if="tokens.length"></div>
     <img v-for="(t, i) in tokens" :key="'token' + i" :src="t.image" :alt="t.name" @load="$emit('imageLoad')" />
   </div>
-  <!-- Same width as .card-media above (see mediaWidth) — cards that don't fit
-       scroll (.card-media's overflow-x: auto); relation groups that don't fit
-       wrap onto another row instead (flex-wrap: wrap below), never stretching
-       this container wider than the card row itself. -->
-  <div class="chip-columns" v-if="columns.length" :style="{ width: mediaWidth + 'px' }">
+  <!-- Each .chip-column has the same flex-basis as one card image (220px, see
+       .card-media > img below) — that's what makes a row of columns line up with
+       the card row above it: N columns take the same width as N images. Cards
+       that don't fit scroll (.card-media's overflow-x: auto); columns that don't
+       fit wrap onto another row instead (flex-wrap: wrap below). -->
+  <div class="chip-columns" v-if="showRelations && columns.length">
     <div class="chip-column" v-for="col in columns" :key="col.verb">
       <div class="chip-col-header">
         <span class="chip-dot" :class="col.colorClass"></span>
         <strong>{{ col.verb }}:</strong>
       </div>
-      <span class="chip-col-theme" v-for="theme in col.themes" :key="theme">{{ theme }}</span>
+      <span class="chip-col-theme" v-for="theme in col.themes" :key="theme.label">
+        <span
+          class="weight-meter"
+          :aria-label="`${theme.weight === 1 ? 'Light' : theme.weight === 2 ? 'Medium' : 'Strong'} theme connection`"
+          role="img"
+        >
+          <i v-for="level in 3" :key="level" :class="{ filled: level <= theme.weight }"></i>
+        </span>
+        <span>{{ theme.label }}</span>
+      </span>
     </div>
   </div>
 </template>
@@ -92,7 +90,7 @@ const mediaWidth = computed(() => {
   flex-direction: column;
   align-items: flex-start;
   gap: 3px;
-  min-width: 0;
+  flex: 0 0 220px; /* same basis as .card-media > img — N columns = N image widths */
   max-width: 100%;
   background: #14151a;
   border: 1px solid #3a3d4a;
@@ -119,11 +117,14 @@ const mediaWidth = computed(() => {
 .chip-dot.chip-produce { background: var(--produce); }
 .chip-dot.chip-consume { background: var(--consume); }
 .chip-dot.chip-atypical { background: var(--atypical); }
-.chip-dot.chip-magnifier { background: var(--mod-magnifier); }
-.chip-dot.chip-granter { background: var(--mod-granter); }
-.chip-dot.chip-conditional { background: var(--mod-conditional); }
+.chip-dot.chip-magnifier { background: var(--magnifier); }
+.chip-dot.chip-grant { background: var(--grant); }
 
 .chip-col-theme {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
   font-size: 11px;
   color: var(--text);
   font-weight: 600;
@@ -131,7 +132,24 @@ const mediaWidth = computed(() => {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* Lines up with the header's "Verb:" text, not its dot (8px dot + 5px gap). */
-  margin-left: 13px;
 }
+
+.weight-meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.weight-meter i {
+  display: block;
+  width: 2px;
+  height: 6px;
+  border-radius: 1px;
+  background: #35373f;
+}
+
+.weight-meter i:nth-child(2) { height: 8px; }
+.weight-meter i:nth-child(3) { height: 10px; }
+.weight-meter i.filled { background: var(--muted); }
 </style>

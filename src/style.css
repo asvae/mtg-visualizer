@@ -19,10 +19,8 @@
   --produce: #2ecc71;
   --consume: #3498db;
   --atypical: #888;
-  --power: #f2d024;
-  --mod-conditional: #9b59b6;
-  --mod-magnifier: #ff4fa3;
-  --mod-granter: #00bcd4;
+  --magnifier: #ff4fa3;
+  --grant: #00bcd4;
 }
 
 * {

@@ -1,43 +1,36 @@
-import type { Modifier, Role } from '../types';
+import type { Role } from '../types';
 
-// One edge can produce more than one chip: the base action ("Magnifies Lifegain
-// Payoff") plus, when conditional, a separate "Depends on X" chip rather than an
-// adverb glued onto the verb — conditionality is its own relation, not a footnote
-// on another one. colorClass matches the edge's own color for that relation type,
-// so a chip and the line it corresponds to in the graph read as the same thing.
-// Shared by the card tooltip and the card review checklist so both describe a
-// card's relations identically.
+// Every relation type is its own independent role now (produce/consume/atypical/
+// grant/magnifier) — a card gets one edge per type that applies, same as
+// produce+consume already coexisted as two edges. No more a role plus an
+// orthogonal "modifiers" array layered on top of it. colorClass matches the
+// edge's own color for that relation type, so a chip and the line it corresponds
+// to in the graph read as the same thing. Shared by the card tooltip, the card
+// lookup dropdown, and the review session so all three describe a card's
+// relations identically.
 export const ROLE_VERB: Record<Role, string> = {
   produce: 'Produces',
   consume: 'Consumes',
   atypical: 'Relates to',
-};
-export const MODIFIER_VERB: Partial<Record<Modifier, string>> = {
+  grant: 'Grants',
   magnifier: 'Magnifies',
-  granter: 'Grants',
 };
 
 export interface RelationChip {
   verb: string;
   theme: string;
   colorClass: string;
+  weight: number;
 }
 
-export function describeRelation(themeLabel: string, role: Role, modifiers: Modifier[]): RelationChip[] {
-  const primaryModifier = modifiers.find((m) => m !== 'conditional');
-  const verb = primaryModifier ? MODIFIER_VERB[primaryModifier]! : ROLE_VERB[role];
-  const colorClass = primaryModifier ? `chip-${primaryModifier}` : `chip-${role}`;
-  const chips: RelationChip[] = [{ verb, theme: themeLabel, colorClass }];
-  if (modifiers.includes('conditional')) {
-    chips.push({ verb: 'Depends on', theme: themeLabel, colorClass: 'chip-conditional' });
-  }
-  return chips;
+export function describeRelation(themeLabel: string, role: Role, weight = 1): RelationChip[] {
+  return [{ verb: ROLE_VERB[role], theme: themeLabel, colorClass: `chip-${role}`, weight }];
 }
 
 export interface RelationColumn {
   verb: string;
   colorClass: string;
-  themes: string[];
+  themes: { label: string; weight: number }[];
 }
 
 // Groups a flat chip list into one entry per verb (relation type), in order of
@@ -50,7 +43,7 @@ export function groupChipsByVerb(chips: RelationChip[]): RelationColumn[] {
       byVerb.set(chip.verb, { verb: chip.verb, colorClass: chip.colorClass, themes: [] });
       order.push(chip.verb);
     }
-    byVerb.get(chip.verb)!.themes.push(chip.theme);
+    byVerb.get(chip.verb)!.themes.push({ label: chip.theme, weight: chip.weight });
   }
   return order.map((v) => byVerb.get(v)!);
 }

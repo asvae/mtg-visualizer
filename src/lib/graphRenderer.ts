@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
-import type { CardData, GraphFile, Modifier, Role, ThemeData } from '../types';
-import { COLOR_MAP, COLORLESS, RARITY_COLOR, MODIFIER_COLOR } from './constants';
+import type { CardData, GraphFile, Role, ThemeData } from '../types';
+import { ROLES } from '../types';
+import { COLOR_MAP, COLORLESS, RARITY_COLOR } from './constants';
 import { passesAttrFilters, computeWeakThemeIds, type AttrFilters } from './filters';
 
 type CardNode = CardData & { kind: 'card'; isWeakOnly: boolean } & d3.SimulationNodeDatum;
@@ -9,9 +10,17 @@ type ThemeNode = ThemeData & { kind: 'theme'; roleCounts: Record<Role, number>; 
 // on whether it's weak or strong — see the comment above anchorLinkForce.
 type AnchorNode = { kind: 'anchor'; id: string } & d3.SimulationNodeDatum;
 type SimNode = CardNode | ThemeNode | AnchorNode;
-type SimLink = d3.SimulationLinkDatum<SimNode> & { role: Role; weight: number; modifiers: Modifier[] };
+type SimLink = d3.SimulationLinkDatum<SimNode> & { role: Role; weight: number };
 
 const DASH_PATTERN = '5 5';
+
+function emptyRoleCounts(): Record<Role, number> {
+  return Object.fromEntries(ROLES.map((r) => [r, 0])) as Record<Role, number>;
+}
+
+function roleCountsTotal(rc: Record<Role, number>): number {
+  return ROLES.reduce((sum, r) => sum + rc[r], 0);
+}
 
 export interface GraphFilters extends AttrFilters {
   selectedThemes: ReadonlySet<string>;
@@ -56,7 +65,7 @@ export const DEFAULT_FORCES: ForceConfig = {
 };
 
 export interface GraphHandlers {
-  onCardHover(card: CardData, themeEdges: { themeId: string; role: Role; modifiers: Modifier[] }[], event: MouseEvent): void;
+  onCardHover(card: CardData, themeEdges: { themeId: string; role: Role; weight: number }[], event: MouseEvent): void;
   onThemeHover(theme: ThemeData & { roleCounts: Record<Role, number> }, event: MouseEvent): void;
   onHoverMove(event: MouseEvent): void;
   onHoverEnd(): void;
@@ -121,21 +130,6 @@ function renderRarityLabel(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
   });
 }
 
-// Halo ring encodes overall card power (0-3), independent of the color-sector fill,
-// the rarity label, and the mana-value-based radius. Omitted at power 0.
-function renderCardHalo(
-  sel: d3.Selection<SVGGElement, CardNode, any, any>,
-  cardRadius: (c: CardData) => number,
-  haloWidth: d3.ScaleLinear<number, number>
-) {
-  sel.each(function (d) {
-    const w = haloWidth(d.power ?? 0);
-    if (w <= 0) return;
-    const rad = cardRadius(d);
-    d3.select(this).append('circle').attr('class', 'card-halo').attr('r', rad + 2 + w / 2).attr('stroke-width', w);
-  });
-}
-
 function drag(simulation: d3.Simulation<SimNode, SimLink>) {
   function dragstarted(event: any, d: SimNode) {
     if (!event.active) simulation.alphaTarget(0.2).restart();
@@ -163,11 +157,11 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   const width = svgEl.clientWidth || window.innerWidth;
   const height = svgEl.clientHeight || window.innerHeight - 60;
 
-  const themeEdgesByCard = new Map<string, { themeId: string; role: Role; modifiers: Modifier[] }[]>();
+  const themeEdgesByCard = new Map<string, { themeId: string; role: Role; weight: number }[]>();
   const cardIdsByTheme = new Map<string, Set<string>>();
   for (const e of graph.edges) {
     if (!themeEdgesByCard.has(e.card)) themeEdgesByCard.set(e.card, []);
-    themeEdgesByCard.get(e.card)!.push({ themeId: e.theme, role: e.role, modifiers: e.modifiers });
+    themeEdgesByCard.get(e.card)!.push({ themeId: e.theme, role: e.role, weight: e.weight });
     if (!cardIdsByTheme.has(e.theme)) cardIdsByTheme.set(e.theme, new Set());
     cardIdsByTheme.get(e.theme)!.add(e.card);
   }
@@ -182,7 +176,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   let weakThemeIds = new Set<string>();
   const themeNodeById = new Map<string, ThemeNode>();
   for (const t of graph.themes) {
-    themeNodeById.set(t.id, { ...t, kind: 'theme', roleCounts: { produce: 0, consume: 0, atypical: 0 }, isWeak: false });
+    themeNodeById.set(t.id, { ...t, kind: 'theme', roleCounts: emptyRoleCounts(), isWeak: false });
   }
   // A card whose EVERY tie is to a weak theme has no strong-theme link pulling it
   // toward center — it needs zero gravity too (see gravityFor below), or its own
@@ -219,15 +213,13 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   const cardRadius = makeCardRadius(radiusScale);
 
   const edgeStrokeWidth = d3.scaleLinear().domain([1, 3]).range([1, 3.4]).clamp(true);
-  const cardHaloWidth = d3.scaleLinear().domain([0, 3]).range([0, 3.5]).clamp(true);
 
   // Domain recalibrated live inside render() (see there) from the same
   // currently-filtered roleCounts snapshot — never from the full unfiltered graph.
   // Placeholder [0, 1] here is corrected before the first paint.
   const themeRadius = d3.scaleSqrt().domain([0, 1]).range([20, 65]);
   function themeNodeRadius(t: ThemeNode): number {
-    const rc = t.roleCounts;
-    return themeRadius(rc.produce + rc.consume + rc.atypical);
+    return themeRadius(roleCountsTotal(t.roleCounts));
   }
 
   const svg = d3.select(svgEl);
@@ -412,7 +404,16 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
 
     const activeCardIdSet = new Set(activeCardNodes.map((c) => c.id));
     const visibleEdges = activeEdges.filter((e) => activeCardIdSet.has(e.card));
-    const activeLinks: SimLink[] = visibleEdges.map((e) => ({ source: e.card, target: e.theme, role: e.role, weight: e.weight, modifiers: e.modifiers }));
+    const activeLinks: SimLink[] = visibleEdges.map((e) => ({ source: e.card, target: e.theme, role: e.role, weight: e.weight }));
+
+    // How many edges tie this exact card to this exact theme (e.g. a card that both
+    // produces AND consumes the same theme) — more than one is itself worth flagging
+    // visually, regardless of what either individual role's own dash rule says.
+    const pairEdgeCount = new Map<string, number>();
+    for (const e of visibleEdges) {
+      const key = `${e.card}->${e.theme}`;
+      pairEdgeCount.set(key, (pairEdgeCount.get(key) ?? 0) + 1);
+    }
 
     // A theme left with zero visible cards after color/rarity/type filters is pure
     // noise — drop its node entirely even if its checkbox is still checked, rather
@@ -427,8 +428,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     // unfiltered set. Mutating the persistent ThemeNode objects in place means the
     // hover handler (which reads the same object) picks this up automatically.
     for (const t of graph.themes) {
-      const rc: Record<Role, number> = { produce: 0, consume: 0, atypical: 0 };
-      themeNodeById.get(t.id)!.roleCounts = rc;
+      themeNodeById.get(t.id)!.roleCounts = emptyRoleCounts();
     }
     for (const e of visibleEdges) {
       themeNodeById.get(e.theme)!.roleCounts[e.role]++;
@@ -436,13 +436,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     // Bubble size stays calibrated against whatever's currently visible, not a
     // fixed reference from the full unfiltered graph — otherwise sizes would look
     // arbitrary/uncalibrated relative to a heavily filtered-down set.
-    const maxRoleTotal = Math.max(
-      1,
-      ...graph.themes.map((t) => {
-        const rc = themeNodeById.get(t.id)!.roleCounts;
-        return rc.produce + rc.consume + rc.atypical;
-      })
-    );
+    const maxRoleTotal = Math.max(1, ...graph.themes.map((t) => roleCountsTotal(themeNodeById.get(t.id)!.roleCounts)));
     themeRadius.domain([0, maxRoleTotal]);
 
     // Weak/strong is recomputed from whatever the color/rarity/type filters
@@ -466,25 +460,21 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       .join((enter) => {
         const g = enter.append('g').attr('class', 'link');
         g.append('line').attr('class', (d) => `link-base link-${d.role}`);
-        g.append('line').attr('class', 'link-modifier');
         g.each(function (d) {
-          const sel = d3.select(this);
           const width = edgeStrokeWidth(d.weight);
-          const needsDash = d.role === 'atypical' || d.modifiers.length > 0;
-          sel
+          // Solid = a core resource flow (produce/consume); dashed = every other
+          // relation type (atypical, and the former "modifiers" — grant/
+          // magnifier — now that each is its own full-fledged role). Also dashed,
+          // regardless of role, whenever this card ties to this theme via more
+          // than one edge (e.g. both produce AND consume the same theme) — that's
+          // its own signal worth flagging visually.
+          const multiEdge = (pairEdgeCount.get(`${d.source}->${d.target}`) ?? 1) > 1;
+          const needsDash = multiEdge || (d.role !== 'produce' && d.role !== 'consume');
+          d3.select(this)
             .select('line.link-base')
             .attr('stroke-width', width)
             .attr('opacity', 0.55)
             .attr('stroke-dasharray', needsDash ? DASH_PATTERN : null);
-          const modColor = d.modifiers.length ? MODIFIER_COLOR[d.modifiers[0]] : null;
-          sel
-            .select('line.link-modifier')
-            .attr('stroke', modColor)
-            .attr('stroke-width', width)
-            .attr('opacity', 0.55)
-            .attr('stroke-dasharray', DASH_PATTERN)
-            .attr('stroke-dashoffset', 5)
-            .style('display', modColor ? 'inline' : 'none');
         });
         return g;
       });
@@ -517,7 +507,6 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
           .on('click', (_event, d) => handlers.onCardClick(d));
         renderCardShape(g, cardRadius);
         renderRarityLabel(g);
-        renderCardHalo(g, cardRadius, cardHaloWidth);
         return g;
       });
 
@@ -536,16 +525,19 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     refreshHighlight();
   }
 
-  // Search text and clicked-theme selection feed the SAME highlight pass — they
-  // compound rather than fight each other: matches from any source (and their
-  // direct neighbors) glow, everything else dims. Dimming instead of hiding keeps
-  // context while pointing at relevance.
+  // Search text, clicked-theme selection, and a single pinned "lookup" card (the
+  // card-lookup dropdown) all feed the SAME highlight pass — they compound rather
+  // than fight each other: matches from any source (and their direct neighbors)
+  // glow, everything else dims. Dimming instead of hiding keeps context while
+  // pointing at relevance.
+  let lookupCardId: string | null = null;
   function refreshHighlight() {
     const q = searchQuery.trim().toLowerCase();
     const hasSearch = q.length > 0;
     const hasSelection = themeSelection.size > 0;
+    const hasLookup = lookupCardId != null;
 
-    if (!hasSearch && !hasSelection) {
+    if (!hasSearch && !hasSelection && !hasLookup) {
       cardG.classed('search-match', false).classed('search-dim', false);
       themeG.classed('search-match', false).classed('search-dim', false);
       link.classed('search-dim', false);
@@ -558,23 +550,38 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       for (const c of graph.cards) if (c.name.toLowerCase().includes(q)) matchedCardIds.add(c.id);
       for (const t of graph.themes) if (t.label.toLowerCase().includes(q)) matchedThemeIds.add(t.id);
     }
+    if (lookupCardId) matchedCardIds.add(lookupCardId);
 
-    const relevantCardIds = new Set(matchedCardIds);
+    // A card can become relevant two different ways, and links behave differently
+    // depending on which one applies:
+    //  - directly matched (by name search, or the card-lookup pin) — show ALL of
+    //    its links, including to non-matched themes; the point of matching a card
+    //    is seeing everything it connects to.
+    //  - only reachable via a matched THEME (a click, or a theme-name search hit)
+    //    — show just the link(s) back to that matched theme, not the card's other
+    //    edges to unrelated themes. Otherwise clicking one theme lights up every
+    //    edge of every card it touches, including edges that have nothing to do
+    //    with the theme that was actually clicked.
+    const cardIdsFromCardMatch = new Set(matchedCardIds);
+    const cardIdsFromThemeMatch = new Set<string>();
     const relevantThemeIds = new Set(matchedThemeIds);
     for (const cardId of matchedCardIds) {
       for (const { themeId } of themeEdgesByCard.get(cardId) ?? []) relevantThemeIds.add(themeId);
     }
     for (const themeId of matchedThemeIds) {
-      for (const cardId of cardIdsByTheme.get(themeId) ?? []) relevantCardIds.add(cardId);
+      for (const cardId of cardIdsByTheme.get(themeId) ?? []) cardIdsFromThemeMatch.add(cardId);
     }
+    const relevantCardIds = new Set([...cardIdsFromCardMatch, ...cardIdsFromThemeMatch]);
 
     cardG.classed('search-match', (d) => matchedCardIds.has(d.id)).classed('search-dim', (d) => !relevantCardIds.has(d.id));
     themeG.classed('search-match', (d) => matchedThemeIds.has(d.id)).classed('search-dim', (d) => !relevantThemeIds.has(d.id));
-    // Only the CARD end needs to be relevant — a selected/matched theme's cards
-    // show ALL of their links, including to other (non-selected) themes, not just
-    // the one edge back to the selected theme. That's the whole point of seeing a
-    // card highlighted: what else it connects to.
-    link.classed('search-dim', (d) => !relevantCardIds.has((d.source as SimNode).id));
+    link.classed('search-dim', (d) => {
+      const cardId = (d.source as SimNode).id;
+      const themeId = (d.target as SimNode).id;
+      if (cardIdsFromCardMatch.has(cardId)) return false;
+      if (cardIdsFromThemeMatch.has(cardId) && matchedThemeIds.has(themeId)) return false;
+      return true;
+    });
   }
 
   function applySearch(query: string) {
@@ -584,6 +591,11 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
 
   function setThemeSelection(ids: ReadonlySet<string>) {
     themeSelection = new Set(ids);
+    refreshHighlight();
+  }
+
+  function setLookupHighlight(cardId: string | null) {
+    lookupCardId = cardId;
     refreshHighlight();
   }
 
@@ -636,5 +648,5 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     svg.selectAll('*').remove();
   }
 
-  return { render, applySearch, setThemeSelection, setForces, getForces, resetLayout, destroy };
+  return { render, applySearch, setThemeSelection, setLookupHighlight, setForces, getForces, resetLayout, destroy };
 }

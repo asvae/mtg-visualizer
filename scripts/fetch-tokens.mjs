@@ -1,7 +1,8 @@
 // Fetches image data for every token a set's cards can create (via each card's
-// Scryfall `all_parts` field) and caches it to data/<set>_tokens.json: a map of
-// token id -> { name, image }. Tokens aren't returned by the main set search, and
-// aren't embedded inline on the creating card, so this is a separate small pass.
+// Scryfall `all_parts` field) and caches it to data/<set>/<set>_tokens_scryfall.json:
+// a map of token id -> { name, image }. Tokens aren't returned by the main set
+// search, and aren't embedded inline on the creating card, so this is a
+// separate small pass.
 // Usage: node scripts/fetch-tokens.mjs fin
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -18,7 +19,7 @@ function tokenImage(card) {
   return face ? face.image_uris.normal : null;
 }
 
-const cards = JSON.parse(await readFile(`data/${setCode}_cards.json`, 'utf-8'));
+const cards = JSON.parse(await readFile(`data/${setCode}/${setCode}_scryfall.json`, 'utf-8'));
 
 const tokenIds = new Set();
 for (const c of cards) {
@@ -45,5 +46,5 @@ for (let i = 0; i < ids.length; i += 75) {
   if (i + 75 < ids.length) await new Promise((r) => setTimeout(r, 100));
 }
 
-await writeFile(`data/${setCode}_tokens.json`, JSON.stringify(tokens, null, 2));
-console.log(`Fetched ${Object.keys(tokens).length}/${ids.length} tokens -> data/${setCode}_tokens.json`);
+await writeFile(`data/${setCode}/${setCode}_tokens_scryfall.json`, JSON.stringify(tokens, null, 2));
+console.log(`Fetched ${Object.keys(tokens).length}/${ids.length} tokens -> data/${setCode}/${setCode}_tokens_scryfall.json`);

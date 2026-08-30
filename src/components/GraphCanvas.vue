@@ -67,6 +67,10 @@ onMounted(() => {
     (ids) => renderer!.setThemeSelection(new Set(ids))
   );
   watch(
+    () => store.lookupHighlightCardId.value,
+    (id) => renderer!.setLookupHighlight(id)
+  );
+  watch(
     () => [
       store.themeCharge.value,
       store.cardCharge.value,
@@ -172,13 +176,6 @@ svg#graph {
   stroke: #000;
   stroke-width: 2.5px;
   stroke-linejoin: round;
-  pointer-events: none;
-}
-
-.card-halo {
-  fill: none;
-  stroke: var(--power);
-  opacity: 0.85;
   pointer-events: none;
 }
 

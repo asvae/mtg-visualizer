@@ -1,4 +1,5 @@
-// Fetches all cards for a set code from Scryfall and caches them to data/<set>_cards.json
+// Fetches all cards for a set code from Scryfall and caches them to
+// data/<set>/<set>_scryfall.json
 // Usage: node scripts/fetch-set.mjs fin
 
 import { writeFile, mkdir } from 'node:fs/promises';
@@ -33,6 +34,6 @@ async function fetchSet(code) {
 }
 
 const cards = await fetchSet(setCode);
-await mkdir('data', { recursive: true });
-await writeFile(`data/${setCode}_cards.json`, JSON.stringify(cards, null, 2));
-console.log(`Fetched ${cards.length} cards for set "${setCode}" -> data/${setCode}_cards.json`);
+await mkdir(`data/${setCode}`, { recursive: true });
+await writeFile(`data/${setCode}/${setCode}_scryfall.json`, JSON.stringify(cards, null, 2));
+console.log(`Fetched ${cards.length} cards for set "${setCode}" -> data/${setCode}/${setCode}_scryfall.json`);

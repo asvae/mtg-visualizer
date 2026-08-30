@@ -1,4 +1,5 @@
 import type { CardData, EdgeData, GraphFile, Role } from '../types';
+import { ROLES } from '../types';
 import { CORE_TYPES } from './constants';
 
 export function cardColors(c: CardData): string[] {
@@ -90,7 +91,7 @@ export function computeFacetCounts(graph: GraphFile, f: FullFilters): FacetCount
 // color/rarity/type filters — see computeWeakThemeIds below for why this matters.
 export function computeRoleCountsByTheme(graph: GraphFile, f?: AttrFilters): Map<string, Record<Role, number>> {
   const map = new Map<string, Record<Role, number>>();
-  for (const t of graph.themes) map.set(t.id, { produce: 0, consume: 0, atypical: 0 });
+  for (const t of graph.themes) map.set(t.id, Object.fromEntries(ROLES.map((r) => [r, 0])) as Record<Role, number>);
   const passingCardIds = f ? new Set(graph.cards.filter((c) => passesAttrFilters(c, f)).map((c) => c.id)) : null;
   for (const e of graph.edges) {
     if (passingCardIds && !passingCardIds.has(e.card)) continue;
@@ -106,9 +107,17 @@ export function computeRoleCountsByTheme(graph: GraphFile, f?: AttrFilters): Map
 // edge, or a genuine mix of produce AND consume, signals real two-sided structure —
 // not weak. Single source of truth shared by the graph renderer (which banishes weak
 // themes to an outer orbit) and the filter panel (bolds strong themes, offers "Strong").
+//
+// grant/magnifier count as producer-side (an Equipment's self-granted bonus, or
+// amplifying a resource, is generating supply the same way a plain produce edge
+// is — matches how these used to be tagged before grant/magnifier became their
+// own roles: role: 'produce', modifiers: ['granter']).
 export function isPureOneSided(rc: Record<Role, number>): boolean {
-  const isPureProduce = rc.produce > 0 && rc.consume === 0 && rc.atypical === 0;
-  const isPureConsume = rc.consume > 0 && rc.produce === 0 && rc.atypical === 0;
+  const producers = rc.produce + rc.grant + rc.magnifier;
+  const consumers = rc.consume;
+  const breaksPurity = rc.atypical > 0;
+  const isPureProduce = producers > 0 && consumers === 0 && !breaksPurity;
+  const isPureConsume = consumers > 0 && producers === 0 && !breaksPurity;
   return isPureProduce || isPureConsume;
 }
 
@@ -123,11 +132,12 @@ export function computeWeakThemeIds(graph: GraphFile, f: AttrFilters): Set<strin
   for (const t of graph.themes) {
     if (isPureOneSided(roleCounts.get(t.id)!)) weak.add(t.id);
   }
-  // "No Theme" is the synthetic catch-all for untagged cards — every edge into it is
-  // a manufactured 'atypical' placeholder (see tag-cards.mjs), so the strict
-  // one-sided test above never fires for it even though it's the clearest case of
-  // "no real synergy" there is. Always weak, regardless of role mix.
-  if (graph.themes.some((t) => t.id === 'no-theme')) weak.add('no-theme');
+  // "Not Processed" is the synthetic catch-all for cards with no review entry yet —
+  // every edge into it is a manufactured 'atypical' placeholder (see
+  // src/lib/buildGraph.ts), so the strict one-sided test above never fires for
+  // it even though it's the clearest case of "no real signal yet" there is.
+  // Always weak, regardless of role mix.
+  if (graph.themes.some((t) => t.id === 'not-processed')) weak.add('not-processed');
   return weak;
 }
 

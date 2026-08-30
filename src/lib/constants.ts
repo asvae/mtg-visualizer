@@ -20,12 +20,3 @@ export const RARITY_COLOR: Record<string, string> = {
 };
 
 export const CORE_TYPES = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Land', 'Planeswalker', 'Battle', 'Kindred'];
-
-// Distinct from role colors (produce/consume/atypical), rarity colors, and the
-// power-halo gold — modifiers are an orthogonal dimension rendered as a second dash
-// color alongside the role color.
-export const MODIFIER_COLOR: Record<string, string> = {
-  conditional: '#9b59b6', // purple
-  magnifier: '#ff4fa3', // pink
-  granter: '#00bcd4', // cyan
-};

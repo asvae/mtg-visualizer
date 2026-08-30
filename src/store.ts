@@ -1,8 +1,9 @@
 import { reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
-import type { CardData, GraphFile, Modifier, Role, ThemeData } from './types';
+import type { CardData, GraphFile, Role, ThemeData } from './types';
 import { COLOR_ORDER, RARITY_ORDER } from './lib/constants';
 import { availableRarities as computeAvailableRarities, availableTypes as computeAvailableTypes } from './lib/filters';
 import { DEFAULT_FORCES, type ForceConfig } from './lib/graphRenderer';
+import { buildGraph, type RelationsEntry, type ScryfallCard, type TokensById } from './lib/buildGraph';
 
 const SET_CODE = 'fin';
 const STORAGE_KEY = `mtg-visualizer-filters-${SET_CODE}`;
@@ -14,6 +15,10 @@ interface SavedFilters {
   rarities: string[];
   types: string[];
   themes: string[];
+  // Every theme id that existed at save time — lets a restore tell "explicitly
+  // unchecked" apart from "didn't exist yet" for themes not in `themes` above.
+  // Optional so filters saved before this field existed don't crash on load.
+  knownThemeIds?: string[];
 }
 
 function loadSavedFilters(): SavedFilters | null {
@@ -23,6 +28,29 @@ function loadSavedFilters(): SavedFilters | null {
   } catch {
     return null; // corrupt/blocked storage — fall back to defaults, never throw
   }
+}
+
+// Two-way URL query sync for the attribute/theme filters and the clicked-theme
+// selection — deliberately NOT search (search stays localStorage-only, see
+// searchQuery below). Merges into whatever's already in the URL rather than
+// replacing it wholesale, so the two watchers below (filters, theme selection)
+// never clobber each other's keys, and any unrelated param a host page adds
+// survives untouched. `replaceState`, not `pushState` — every filter tweak
+// shouldn't spam the browser's back-button history.
+function updateUrlParams(updates: Record<string, string>) {
+  if (typeof window === 'undefined') return;
+  const params = new URLSearchParams(window.location.search);
+  for (const [key, value] of Object.entries(updates)) params.set(key, value);
+  const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+  window.history.replaceState(window.history.state, '', newUrl);
+}
+
+function readUrlParam(key: string): string[] | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has(key)) return null;
+  const raw = params.get(key)!;
+  return raw ? raw.split(',') : [];
 }
 
 function loadSavedForces(): Partial<ForceConfig> | null {
@@ -37,7 +65,7 @@ function loadSavedForces(): Partial<ForceConfig> | null {
 export interface HoveredCard {
   kind: 'card';
   card: CardData;
-  themeEdges: { themeId: string; role: Role; modifiers: Modifier[] }[];
+  themeEdges: { themeId: string; role: Role; weight: number }[];
 }
 export interface HoveredTheme {
   kind: 'theme';
@@ -94,6 +122,12 @@ export function createStore() {
   const panelOpen = ref(false);
   const legendOpen = ref(false);
   const physicsOpen = ref(false);
+  const reviewSessionOpen = ref(false);
+
+  // Set by the review panel to whichever card it's currently showing — GraphCanvas
+  // watches this and highlights that card on the graph, same mechanism search
+  // uses. Ephemeral (not persisted): null whenever nothing's under review.
+  const lookupHighlightCardId = ref<string | null>(null);
 
   // Restored synchronously (no graph/network dependency, unlike the filter Sets),
   // so sliders reflect the saved values from the very first render.
@@ -192,7 +226,28 @@ export function createStore() {
   }
 
   function applySavedFilters(data: GraphFile, rarities: string[], types: string[]) {
-    const saved = loadSavedFilters();
+    const stored = loadSavedFilters();
+    // A URL query param, when present, wins over whatever's in localStorage for
+    // that one key — an explicit/shared URL is a more deliberate statement of
+    // intent than whatever was left over from a previous visit. Absent params
+    // fall back to the stored value per-key, not all-or-nothing.
+    const urlColors = readUrlParam('colors');
+    const urlRarities = readUrlParam('rarities');
+    const urlTypes = readUrlParam('types');
+    const urlThemes = readUrlParam('themes');
+    const saved: SavedFilters | null =
+      stored || urlColors || urlRarities || urlTypes || urlThemes
+        ? {
+            colors: urlColors ?? stored?.colors ?? [],
+            rarities: urlRarities ?? stored?.rarities ?? [],
+            types: urlTypes ?? stored?.types ?? [],
+            themes: urlThemes ?? stored?.themes ?? [],
+            // A URL's theme list is a literal, self-contained snapshot — skip the
+            // "unknown themes default on" treatment below for it (only relevant to
+            // localStorage's own gradual-drift problem, see the comment there).
+            knownThemeIds: urlThemes ? urlThemes : stored?.knownThemeIds,
+          }
+        : null;
     if (!saved) return false;
 
     const validColors = new Set(COLOR_ORDER);
@@ -207,17 +262,34 @@ export function createStore() {
     selectedTypes.clear();
     saved.types.filter((t) => validTypes.has(t)).forEach((t) => selectedTypes.add(t));
 
-    const validThemeIds = new Set(data.themes.map((t) => t.id));
+    // A theme not present in `saved.themes` is ambiguous on its own — explicitly
+    // unchecked, or introduced since the save was made (a newly reviewed theme,
+    // or one of the auto-derived creature-type themes)? `knownThemeIds` (every
+    // theme id that existed at save time) resolves it: known-but-unchecked stays
+    // off, but anything brand new defaults on, same as a first-ever visit — it
+    // shouldn't take a manual re-check just because it didn't exist yet.
+    const knownThemeIds = new Set(saved.knownThemeIds ?? saved.themes);
+    const savedCheckedThemeIds = new Set(saved.themes);
     selectedThemes.clear();
-    saved.themes.filter((id) => validThemeIds.has(id)).forEach((id) => selectedThemes.add(id));
+    for (const t of data.themes) {
+      if (!knownThemeIds.has(t.id) || savedCheckedThemeIds.has(t.id)) selectedThemes.add(t.id);
+    }
 
     return true;
   }
 
   async function load() {
     try {
-      const res = await fetch(`/${SET_CODE}_graph.json`);
-      const data: GraphFile = await res.json();
+      // Raw pieces only — no pre-built graph file. The visualizer assembles cards/
+      // themes/edges itself (see src/lib/buildGraph.ts); tokens are optional (a
+      // missing fetch:tokens run just means no hover images, not a load failure).
+      const [themes, raw, relations, tokensById]: [ThemeData[], ScryfallCard[], RelationsEntry[], TokensById] = await Promise.all([
+        fetch('/themes.json').then((r) => r.json()),
+        fetch(`/${SET_CODE}/${SET_CODE}_scryfall.json`).then((r) => r.json()),
+        fetch(`/${SET_CODE}/${SET_CODE}_relations.json`).then((r) => r.json()),
+        fetch(`/${SET_CODE}/${SET_CODE}_tokens_scryfall.json`).then((r) => (r.ok ? r.json() : {})),
+      ]);
+      const data: GraphFile = buildGraph(SET_CODE, raw, tokensById, relations, themes);
       graph.value = data;
 
       const rarities = computeAvailableRarities(data, RARITY_ORDER);
@@ -232,7 +304,25 @@ export function createStore() {
         types.forEach((t) => selectedTypes.add(t));
         data.themes.forEach((t) => selectedThemes.add(t.id));
       }
+
+      // The clicked-theme highlight is URL-only (no localStorage) — a link either
+      // carries it or it starts empty, same as visiting fresh.
+      const themeIds = new Set(data.themes.map((t) => t.id));
+      for (const id of readUrlParam('focus') ?? []) {
+        if (themeIds.has(id)) themeSelection.add(id);
+      }
+
       readyToPersist = true;
+      // Reflects the just-resolved state back into the URL immediately, so
+      // copying the address bar right after load already gives a complete,
+      // shareable snapshot — not just whatever the user changes from here.
+      updateUrlParams({
+        colors: [...selectedColors].join(','),
+        rarities: [...selectedRarities].join(','),
+        types: [...selectedTypes].join(','),
+        themes: [...selectedThemes].join(','),
+        focus: [...themeSelection].join(','),
+      });
     } catch (err) {
       loadError.value = err instanceof Error ? err.message : String(err);
     }
@@ -249,13 +339,28 @@ export function createStore() {
         rarities: [...selectedRarities],
         types: [...selectedTypes],
         themes: [...selectedThemes],
+        knownThemeIds: graph.value?.themes.map((t) => t.id) ?? [],
       };
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       } catch {
         // storage full/blocked (e.g. private browsing) — filters just won't persist
       }
+      updateUrlParams({
+        colors: payload.colors.join(','),
+        rarities: payload.rarities.join(','),
+        types: payload.types.join(','),
+        themes: payload.themes.join(','),
+      });
     }
+  );
+
+  // Clicked-theme highlight, mirrored to the URL only — not localStorage, not
+  // search (see updateUrlParams above). Doesn't need the readyToPersist guard:
+  // it starts empty either way (nothing to accidentally clobber pre-load).
+  watch(
+    () => [...themeSelection],
+    (ids) => updateUrlParams({ focus: ids.join(',') })
   );
 
   return {
@@ -276,6 +381,8 @@ export function createStore() {
     panelOpen,
     legendOpen,
     physicsOpen,
+    reviewSessionOpen,
+    lookupHighlightCardId,
     themeCharge,
     cardCharge,
     gravity,

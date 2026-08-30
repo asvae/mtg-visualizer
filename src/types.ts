@@ -1,5 +1,7 @@
-export type Role = 'produce' | 'consume' | 'atypical';
-export type Modifier = 'conditional' | 'magnifier' | 'granter';
+// Every relation type is a flat, independent role — a card gets a separate edge
+// per relation type that applies (same as produce/consume have always coexisted
+// as two edges), rather than a role plus an orthogonal "modifiers" array on it.
+export type Role = 'produce' | 'consume' | 'atypical' | 'grant' | 'magnifier';
 
 export interface CardData {
   id: string;
@@ -13,7 +15,6 @@ export interface CardData {
   tokens: { name: string; image: string }[];
   scryfallUri: string;
   keywords: string[];
-  power: number;
 }
 
 export interface ThemeData {
@@ -26,7 +27,6 @@ export interface EdgeData {
   theme: string;
   role: Role;
   weight: number;
-  modifiers: Modifier[];
 }
 
 export interface GraphFile {
@@ -36,4 +36,4 @@ export interface GraphFile {
   edges: EdgeData[];
 }
 
-export const ROLES: Role[] = ['produce', 'consume', 'atypical'];
+export const ROLES: Role[] = ['produce', 'consume', 'atypical', 'grant', 'magnifier'];

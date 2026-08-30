@@ -1,0 +1,5335 @@
+[
+  {
+    "name": "A Realm Reborn",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "grant": {
+        "mana": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Absolute Virtue",
+    "themes": {
+      "produce": {
+        "flying": 2,
+        "creature": 2,
+        "legendary": 2,
+        "avatar": 2,
+        "warrior": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Adelbert Steiner",
+    "themes": {
+      "consume": {
+        "equipment": 2
+      },
+      "produce": {
+        "creature": 2,
+        "lifegain": 2,
+        "legendary": 2,
+        "human": 2,
+        "knight": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Adventurer's Airship",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "discard": 2,
+        "draw": 2,
+        "flying": 2,
+        "creature": 1,
+        "vehicles": 2
+      },
+      "consume": {
+        "attack": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Adventurer's Inn",
+    "themes": {
+      "produce": {
+        "lifegain": 1,
+        "towns": 2,
+        "land": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Aerith Gainsborough",
+    "themes": {
+      "produce": {
+        "counters": 3,
+        "creature": 2,
+        "lifegain": 2,
+        "legendary": 2,
+        "human": 2,
+        "cleric": 2
+      },
+      "consume": {
+        "creature": 2,
+        "lifegain": 2,
+        "legendary": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Aerith Rescue Mission",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "token": 3,
+        "lockdown": 3,
+        "sorcery": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Aettir and Priwen",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "equipment": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ahriman",
+    "themes": {
+      "produce": {
+        "flying": 2,
+        "deathtouch": 2,
+        "sacrifice": 2,
+        "draw": 2,
+        "eye": 2,
+        "horror": 2,
+        "creature": 2
+      },
+      "consume": {
+        "creature": 1,
+        "artifacts": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Airship Crash",
+    "themes": {
+      "produce": {
+        "removal": 3,
+        "instant": 2,
+        "discard": 1,
+        "draw": 1,
+        "graveyard": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Al Bhed Salvagers",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "lifegain": 2,
+        "human": 2,
+        "artificer": 2,
+        "warrior": 2
+      },
+      "consume": {
+        "creature": 1,
+        "artifacts": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ambrosia Whiteheart",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bird": 2,
+        "flash": 2,
+        "bounce": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "landfall": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ancient Adamantoise",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "treasure": 3,
+        "exile": 1,
+        "vigilance": 2,
+        "ward": 2,
+        "damage-redirection": 3,
+        "turtle": 2,
+        "attack": 1
+      },
+      "consume": {
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ardyn, the Usurper",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "demon": 1,
+        "copy": 3,
+        "exile": 2,
+        "legendary": 2,
+        "elder": 2,
+        "human": 2,
+        "noble": 2,
+        "token": 3
+      },
+      "grant": {
+        "demon": 3,
+        "lifegain": 2,
+        "menace": 2,
+        "haste": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ashe, Princess of Dalmasca",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "artifacts": 1,
+        "legendary": 2,
+        "human": 2,
+        "rebel": 2,
+        "noble": 2,
+        "tutor": 1
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Balamb Garden, SeeD Academy // Balamb Garden, Airborne",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "legendary": 1,
+        "artifacts": 1,
+        "vehicles": 2,
+        "flying": 2,
+        "draw": 2,
+        "creature": 1
+      },
+      "consume": {
+        "towns": 2,
+        "creature": 1,
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Balamb T-Rexaur",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dinosaur": 2,
+        "lifegain": 1,
+        "discard": 1,
+        "land": 1,
+        "trample": 2,
+        "tutor": 1,
+        "graveyard": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Balthier and Fran",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "rabbit": 2,
+        "reach": 2,
+        "additional-combat": 3,
+        "legendary": 2
+      },
+      "consume": {
+        "vehicles": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Baron, Airship Kingdom",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Barret Wallace",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "rebel": 2,
+        "reach": 2,
+        "face-damage": 3,
+        "legendary": 2
+      },
+      "consume": {
+        "equipment": 3,
+        "creature": 3,
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Bartz and Boko",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "bird": 2,
+        "legendary": 2,
+        "removal": 2
+      },
+      "consume": {
+        "bird": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Beatrix, Loyal General",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "legendary": 2,
+        "vigilance": 2,
+        "attack": 1
+      },
+      "consume": {
+        "equipment": 2,
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Black Waltz No. 3",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wizard": 2,
+        "legendary": 2,
+        "flying": 2,
+        "deathtouch": 2,
+        "face-damage": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Blazing Bomb",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2,
+        "counters": 2,
+        "sacrifice": 2,
+        "removal": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Cactuar",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2,
+        "trample": 2,
+        "bounce": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Capital City",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2,
+        "draw": 1,
+        "discard": 1,
+        "graveyard": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Cecil, Dark Knight // Cecil, Redeemed Paladin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "legendary": 2,
+        "double-faced": 2,
+        "transform": 2,
+        "deathtouch": 2,
+        "lifegain": 2,
+        "life-loss": 2,
+        "untap": 1
+      },
+      "grant": {
+        "indestructible": 3
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Choco, Seeker of Paradise",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bird": 2,
+        "legendary": 2,
+        "land": 1,
+        "graveyard": 1,
+        "tutor": 1
+      },
+      "consume": {
+        "bird": 2,
+        "landfall": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Cid, Timeless Artificer",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "artificer": 2,
+        "legendary": 2,
+        "draw": 1,
+        "discard": 1,
+        "graveyard": 1
+      },
+      "consume": {
+        "artifacts": 2,
+        "job-select": 2,
+        "artificer": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Clive, Ifrit's Dominant // Ifrit, Warden of Inferno",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "warrior": 2,
+        "demon": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "discard": 2,
+        "draw": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "exile": 1,
+        "removal": 2,
+        "mana": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "devotion": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Clive's Hideaway",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2,
+        "exile": 2
+      },
+      "consume": {
+        "exile": 2,
+        "legendary": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Cloud of Darkness",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "avatar": 2,
+        "legendary": 2,
+        "flying": 2,
+        "removal": 3
+      },
+      "consume": {
+        "graveyard": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Cloud, Midgar Mercenary",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "mercenary": 2,
+        "legendary": 2,
+        "equipment": 1,
+        "tutor": 2
+      },
+      "consume": {
+        "etb": 2,
+        "equipment": 2
+      },
+      "magnifier": {
+        "equipment": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Cloud, Planet's Champion",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "mercenary": 2,
+        "indestructible": 2,
+        "legendary": 2
+      },
+      "atypical": {
+        "equipment": 1,
+        "cost-reduction": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Cloudbound Moogle",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "moogle": 2,
+        "flying": 2,
+        "counters": 1,
+        "discard": 1,
+        "land": 1,
+        "tutor": 1,
+        "graveyard": 1
+      },
+      "consume": {
+        "etb": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Coeurl",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "cat": 2,
+        "beast": 2,
+        "lockdown": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Coliseum Behemoth",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "beast": 2,
+        "trample": 2,
+        "removal": 2,
+        "draw": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Crossroads Village",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Crystal Fragments // Summon: Alexander",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "construct": 1,
+        "artifacts": 2,
+        "equipment": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "enchantment": 1,
+        "saga": 1,
+        "flying": 1,
+        "lockdown": 2,
+        "exile": 1,
+        "damage-prevention": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Dark Confidant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "draw": 2,
+        "life-loss": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Delivery Moogle",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "moogle": 2,
+        "flying": 2,
+        "artifacts": 1,
+        "tutor": 2
+      },
+      "consume": {
+        "etb": 2,
+        "graveyard": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Demon Wall",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "demon": 2,
+        "wall": 2,
+        "artifacts": 2,
+        "menace": 2,
+        "counters": 2
+      },
+      "consume": {
+        "counters": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Diamond Weapon",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2,
+        "artifacts": 2,
+        "legendary": 2,
+        "reach": 2,
+        "cost-reduction": 1,
+        "damage-prevention": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Dion, Bahamut's Dominant // Bahamut, Warden of Light",
+    "themes": {
+      "produce": {
+        "legendary": 2,
+        "creature": 3,
+        "knight": 3,
+        "flying": 3,
+        "transform": 2,
+        "double-faced": 2,
+        "enchantment": 2,
+        "dragon": 2,
+        "saga": 1,
+        "counters": 3,
+        "removal": 2,
+        "token": 2,
+        "exile": 1
+      },
+      "consume": {
+        "knight": 2,
+        "etb": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Dragoon's Wyvern",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "drake": 2,
+        "flying": 2,
+        "hero": 2,
+        "token": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Dwarven Castle Guard",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "dwarf": 2,
+        "soldier": 2,
+        "hero": 2,
+        "token": 2
+      },
+      "consume": {
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Eden, Seat of the Sanctum",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2,
+        "mill": 1,
+        "sacrifice": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Edgar, King of Figaro",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "artificer": 2,
+        "noble": 2,
+        "legendary": 2,
+        "draw": 2
+      },
+      "consume": {
+        "etb": 2,
+        "artifacts": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Emet-Selch, Unsundered // Hades, Sorcerer of Eld",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elder": 2,
+        "wizard": 2,
+        "avatar": 2,
+        "legendary": 2,
+        "vigilance": 2,
+        "attack": 1,
+        "draw": 2,
+        "discard": 2,
+        "exile": 2
+      },
+      "consume": {
+        "attack": 2,
+        "etb": 2,
+        "graveyard": 2,
+        "cast-from-graveyard": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Esper Origins // Summon: Esper Maduin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2,
+        "sorcery": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "flashback": 2,
+        "double-faced": 2,
+        "transform": 2,
+        "exile": 1,
+        "graveyard": 1,
+        "lifegain": 1,
+        "mana": 1,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "grant": {
+        "trample": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Exdeath, Void Warlock // Neo Exdeath, Dimension's End",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "spirit": 2,
+        "warlock": 2,
+        "avatar": 2,
+        "legendary": 2,
+        "trample": 2,
+        "lifegain": 1,
+        "transform": 2,
+        "double-faced": 2
+      },
+      "consume": {
+        "etb": 2,
+        "graveyard": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Fang, Fearless l'Cie",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warrior": 2,
+        "legendary": 2,
+        "draw": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Firion, Wild Rose Warrior",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "rebel": 2,
+        "warrior": 2,
+        "haste": 3,
+        "copy": 2,
+        "token": 1,
+        "equipment": 1,
+        "artifacts": 1,
+        "legendary": 2,
+        "sacrifice": 1
+      },
+      "consume": {
+        "equipment": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Freya Crescent",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "rat": 2,
+        "knight": 2,
+        "flying": 2,
+        "mana": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "equipment": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "G'raha Tia",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "cat": 2,
+        "archer": 2,
+        "legendary": 2,
+        "reach": 2,
+        "draw": 2
+      },
+      "consume": {
+        "creature": 2,
+        "artifacts": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Gaelicat",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "cat": 2,
+        "flying": 2,
+        "vigilance": 2,
+        "attack": 1
+      },
+      "consume": {
+        "artifacts": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Gaius van Baelsar",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "etb": 2,
+        "sacrifice": 3,
+        "creature": 1,
+        "enchantment": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Garland, Knight of Cornelia // Chaos, the Endless",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "demon": 2,
+        "legendary": 2,
+        "flying": 2,
+        "mill": 2,
+        "graveyard": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "graveyard": 2,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Garnet, Princess of Alexandria",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "cleric": 2,
+        "legendary": 2,
+        "lifegain": 2,
+        "counters": 2
+      },
+      "consume": {
+        "attack": 2,
+        "saga": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Gigantoad",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "frog": 2
+      },
+      "consume": {
+        "land": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Gilgamesh, Master-at-Arms",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "samurai": 2,
+        "equipment": 3,
+        "tutor": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "etb": 2,
+        "attack": 2,
+        "samurai": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Giott, King of the Dwarves",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dwarf": 2,
+        "noble": 2,
+        "legendary": 2,
+        "discard": 2,
+        "draw": 2
+      },
+      "consume": {
+        "dwarf": 2,
+        "equipment": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Gladiolus Amicitia",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warrior": 2,
+        "legendary": 2,
+        "land": 1,
+        "tutor": 1,
+        "landfall": 2
+      },
+      "consume": {
+        "etb": 2,
+        "landfall": 2
+      },
+      "grant": {
+        "trample": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Gogo, Master of Mimicry",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wizard": 2,
+        "copy": 3,
+        "legendary": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Gohn, Town of Ruin",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Golbez, Crystal Collector",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "legendary": 2,
+        "mill": 2,
+        "graveyard": 2,
+        "life-loss": 1,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "artifacts": 3,
+        "graveyard": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Gongaga, Reactor Town",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Goobbue Gardener",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2,
+        "beast": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Gran Pulse Ochu",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2,
+        "beast": 2,
+        "deathtouch": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Guadosalam, Farplane Gateway",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Hecteyes",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "ooze": 2,
+        "horror": 2,
+        "discard": 3
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Hill Gigas",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "giant": 2,
+        "trample": 2,
+        "haste": 2,
+        "land": 1,
+        "tutor": 1,
+        "discard": 1,
+        "graveyard": 1
+      },
+      "consume": {
+        "discard": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Hope Estheim",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "legendary": 2,
+        "lifegain": 2,
+        "mill": 2,
+        "graveyard": 2
+      },
+      "consume": {
+        "lifegain": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ice Flan",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2,
+        "ooze": 2,
+        "lockdown": 2,
+        "land": 1,
+        "tutor": 1,
+        "discard": 1,
+        "graveyard": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ignis Scientia",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "advisor": 2,
+        "legendary": 2,
+        "land": 1,
+        "tutor": 1,
+        "exile": 2,
+        "food": 2,
+        "token": 1,
+        "landfall": 2
+      },
+      "consume": {
+        "etb": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Il Mheg Pixie",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "faerie": 2,
+        "flying": 2,
+        "graveyard": 1,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Insomnia, Crown City",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Iron Giant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "demon": 2,
+        "artifacts": 2,
+        "reach": 2,
+        "vigilance": 2,
+        "attack": 1,
+        "trample": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ishgard, the Holy See // Faith & Grief",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "sorcery": 2,
+        "mana": 2
+      },
+      "consume": {
+        "graveyard": 2
+      },
+      "atypical": {
+        "artifacts": 2,
+        "enchantment": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Item Shopkeep",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "citizen": 2
+      },
+      "consume": {
+        "attack": 2,
+        "equipment": 2
+      },
+      "grant": {
+        "menace": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Jecht, Reluctant Guardian // Braska's Final Aeon",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warrior": 2,
+        "nightmare": 2,
+        "legendary": 2,
+        "double-faced": 2,
+        "transform": 2,
+        "menace": 2,
+        "saga": 1,
+        "discard": 2,
+        "draw": 2,
+        "exile": 2,
+        "enchantment": 2
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Jenova, Ancient Calamity",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "alien": 2,
+        "legendary": 2,
+        "counters": 3,
+        "draw": 2
+      },
+      "grant": {
+        "mutant": 2
+      },
+      "consume": {
+        "mutant": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Jidoor, Aristocratic Capital // Overture",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "sorcery": 2,
+        "mana": 2,
+        "mill": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Jill, Shiva's Dominant // Shiva, Warden of Ice",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "warrior": 2,
+        "elemental": 2,
+        "legendary": 2,
+        "bounce": 2,
+        "removal": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "saga": 1,
+        "lockdown": 2,
+        "mana-denial": 1,
+        "enchantment": 2,
+        "unblockable": 2,
+        "exile": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Joshua, Phoenix's Dominant // Phoenix, Warden of Fire",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "wizard": 2,
+        "phoenix": 2,
+        "legendary": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "transform": 2,
+        "double-faced": 2,
+        "draw": 2,
+        "discard": 2,
+        "exile": 3,
+        "face-damage": 2,
+        "flying": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "etb": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Judge Magister Gabranth",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "advisor": 2,
+        "knight": 2,
+        "legendary": 2,
+        "menace": 2,
+        "counters": 2
+      },
+      "consume": {
+        "creature": 2
+      },
+      "atypical": {
+        "artifacts": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Jumbo Cactuar",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Kain, Traitorous Dragoon",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "legendary": 2,
+        "flying": 2,
+        "commandeer": 3,
+        "draw": 2,
+        "treasure": 2,
+        "life-loss": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Kefka, Court Mage // Kefka, Ruler of Ruin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "avatar": 2,
+        "legendary": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "flying": 2,
+        "discard": 2,
+        "draw": 3
+      },
+      "consume": {
+        "attack": 2,
+        "etb": 2,
+        "life-loss": 3
+      },
+      "atypical": {
+        "removal": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Kuja, Genome Sorcerer // Trance Kuja, Fate Defied",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "human": 2,
+        "mutant": 2,
+        "wizard": 3,
+        "avatar": 2,
+        "legendary": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "token": 1,
+        "face-damage": 2
+      },
+      "consume": {
+        "wizard": 2,
+        "instant": 1,
+        "sorcery": 1,
+        "artifacts": 1,
+        "enchantment": 1,
+        "planeswalker": 1,
+        "battle": 1
+      },
+      "magnifier": {
+        "wizard": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Lightning, Army of One",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "legendary": 2,
+        "trample": 2,
+        "lifegain": 2
+      },
+      "magnifier": {
+        "face-damage": 2,
+        "removal": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Lightning, Security Sergeant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "menace": 2,
+        "exile": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "exile": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Lindblum, Industrial Regency // Mage Siege",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "instant": 2,
+        "mana": 2,
+        "creature": 1,
+        "token": 1,
+        "face-damage": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Locke Cole",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "rogue": 2,
+        "legendary": 2,
+        "deathtouch": 2,
+        "lifegain": 2,
+        "draw": 2,
+        "discard": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Loporrit Scout",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "rabbit": 2,
+        "scout": 2
+      },
+      "consume": {
+        "creature": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Magic Pot",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "goblin": 2,
+        "construct": 2,
+        "artifacts": 2,
+        "treasure": 2,
+        "exile": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Magitek Infantry",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "robot": 2,
+        "soldier": 2,
+        "artifacts": 2,
+        "tutor": 2
+      },
+      "consume": {
+        "artifacts": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Malboro",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2,
+        "horror": 2,
+        "discard": 2,
+        "exile": 2,
+        "land": 1,
+        "tutor": 1,
+        "graveyard": 1
+      },
+      "consume": {
+        "etb": 2,
+        "discard": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Matoya, Archon Elder",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warlock": 2,
+        "legendary": 2,
+        "draw": 2
+      },
+      "consume": {
+        "scry": 3,
+        "surveil": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Midgar, City of Mako // Reactor Raid",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "sorcery": 2,
+        "mana": 2,
+        "sacrifice": 2,
+        "draw": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Minwu, White Mage",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "cleric": 2,
+        "legendary": 2,
+        "vigilance": 2,
+        "attack": 1,
+        "lifegain": 2,
+        "counters": 2
+      },
+      "consume": {
+        "lifegain": 2,
+        "cleric": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Mysidian Elder",
+    "themes": {
+      "produce": {
+        "creature": 1,
+        "human": 2,
+        "wizard": 3,
+        "token": 1,
+        "face-damage": 2
+      },
+      "consume": {
+        "etb": 2,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Namazu Trader",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "fish": 2,
+        "citizen": 2,
+        "treasure": 2,
+        "sacrifice": 2,
+        "graveyard": 1,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "etb": 2,
+        "attack": 2,
+        "artifacts": 1,
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Noctis, Prince of Lucis",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "legendary": 2,
+        "lifegain": 2,
+        "life-loss": 1
+      },
+      "consume": {
+        "cast-from-graveyard": 3,
+        "graveyard": 2,
+        "artifacts": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Omega, Heartless Evolution",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "robot": 2,
+        "legendary": 2,
+        "artifacts": 2,
+        "lockdown": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "land": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Prompto Argentum",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "scout": 2,
+        "treasure": 2,
+        "token": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "PuPu UFO",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "construct": 2,
+        "alien": 2,
+        "artifacts": 2,
+        "flying": 2,
+        "land": 1,
+        "landfall": 2
+      },
+      "consume": {
+        "towns": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Qiqirn Merchant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "beast": 2,
+        "citizen": 2,
+        "draw": 2,
+        "discard": 2,
+        "sacrifice": 2
+      },
+      "consume": {
+        "towns": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Queen Brahne",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "human": 2,
+        "noble": 2,
+        "wizard": 1,
+        "token": 2,
+        "face-damage": 1,
+        "legendary": 2
+      },
+      "consume": {
+        "attack": 2,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Quina, Qu Gourmet",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "qu": 2,
+        "legendary": 2,
+        "frog": 1,
+        "counters": 2
+      },
+      "magnifier": {
+        "token": 3
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Quistis Trepe",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "legendary": 2,
+        "exile": 1
+      },
+      "consume": {
+        "etb": 2,
+        "cast-from-graveyard": 3,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Qutrub Forayer",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "zombie": 2,
+        "horror": 2,
+        "removal": 2,
+        "exile": 2
+      },
+      "consume": {
+        "etb": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Rabanastre, Royal City",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ragnarok, Divine Deliverance",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "beast": 2,
+        "avatar": 2,
+        "legendary": 2,
+        "reach": 2,
+        "vigilance": 2,
+        "attack": 1,
+        "menace": 2,
+        "trample": 2,
+        "haste": 2,
+        "removal": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Raubahn, Bull of Ala Mhigo",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warrior": 2,
+        "ward": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "attack": 2,
+        "equipment": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Relentless X-ATM092",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "robot": 2,
+        "spider": 2,
+        "artifacts": 2,
+        "menace": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Reno and Rude",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "assassin": 2,
+        "legendary": 2,
+        "menace": 2,
+        "exile": 2,
+        "sacrifice": 2
+      },
+      "consume": {
+        "exile": 2,
+        "artifacts": 1,
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Rinoa Heartilly",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "human": 2,
+        "rebel": 2,
+        "warlock": 2,
+        "legendary": 3,
+        "token": 1
+      },
+      "consume": {
+        "creature": 2,
+        "etb": 2,
+        "attack": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Rook Turret",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "construct": 2,
+        "artifacts": 2,
+        "flying": 2,
+        "draw": 2,
+        "discard": 2
+      },
+      "consume": {
+        "artifacts": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Rosa, Resolute White Mage",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "cleric": 2,
+        "reach": 2,
+        "counters": 2,
+        "lifegain": 1,
+        "legendary": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Rufus Shinra",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "human": 2,
+        "noble": 2,
+        "legendary": 3,
+        "token": 1,
+        "dog": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Rydia, Summoner of Mist",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "shaman": 2,
+        "legendary": 2,
+        "draw": 2,
+        "discard": 2
+      },
+      "consume": {
+        "landfall": 2,
+        "saga": 2,
+        "graveyard": 2
+      },
+      "grant": {
+        "haste": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sabotender",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2,
+        "reach": 2,
+        "face-damage": 2
+      },
+      "consume": {
+        "landfall": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Sahagin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "merfolk": 2,
+        "warrior": 2,
+        "counters": 2,
+        "unblockable": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sandworm",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "worm": 2,
+        "haste": 2,
+        "removal": 2,
+        "land": 1,
+        "tutor": 1,
+        "landfall": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sazh Katzroy",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "pilot": 2,
+        "legendary": 2,
+        "land": 1,
+        "bird": 1,
+        "tutor": 1,
+        "counters": 2
+      },
+      "consume": {
+        "etb": 2,
+        "attack": 3
+      },
+      "magnifier": {
+        "counters": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sazh's Chocobo",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bird": 2,
+        "counters": 2
+      },
+      "consume": {
+        "landfall": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Scorpion Sentinel",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "robot": 2,
+        "scorpion": 2,
+        "artifacts": 2
+      },
+      "consume": {
+        "land": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Seifer Almasy",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "exile": 1,
+        "legendary": 2
+      },
+      "consume": {
+        "attack": 2,
+        "cast-from-graveyard": 2,
+        "graveyard": 2,
+        "instant": 2,
+        "sorcery": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "avatar": 2,
+        "soldier": 2,
+        "angel": 2,
+        "nightmare": 2,
+        "sacrifice": 3,
+        "draw": 2,
+        "lifegain": 2,
+        "flying": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "attack": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sephiroth, Planet's Heir",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "avatar": 2,
+        "soldier": 2,
+        "vigilance": 2,
+        "attack": 1,
+        "removal": 2,
+        "counters": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "etb": 2,
+        "creature": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Serah Farron // Crystallized Serah",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "citizen": 2,
+        "legendary": 2,
+        "cost-reduction": 1,
+        "artifacts": 2,
+        "transform": 2,
+        "double-faced": 2
+      },
+      "consume": {
+        "legendary": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Seymour Flux",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "spirit": 2,
+        "avatar": 2,
+        "draw": 2,
+        "counters": 2,
+        "life-loss": 1,
+        "legendary": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Shambling Cie'th",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "mutant": 2,
+        "horror": 2
+      },
+      "consume": {
+        "graveyard": 2,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Shantotto, Tactician Magician",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dwarf": 2,
+        "wizard": 2,
+        "legendary": 2,
+        "draw": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sharlayan, Nation of Scholars",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Shinra Reinforcements",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "graveyard": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sidequest: Catch a Fish // Cooking Campsite",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "enchantment": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "tutor": 1,
+        "artifacts": 1,
+        "creature": 1,
+        "token": 1,
+        "mana": 2,
+        "sacrifice": 2,
+        "counters": 2,
+        "food": 1
+      },
+      "consume": {
+        "artifacts": 1,
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "enchantment": 2,
+        "dragon": 2,
+        "removal": 2,
+        "treasure": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "indestructible": 1,
+        "legendary": 2
+      },
+      "consume": {
+        "etb": 2,
+        "sacrifice": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sidequest: Raise a Chocobo // Black Chocobo",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "bird": 3,
+        "enchantment": 2,
+        "double-faced": 2,
+        "transform": 2,
+        "token": 2,
+        "land": 1,
+        "tutor": 1,
+        "landfall": 2
+      },
+      "consume": {
+        "etb": 2,
+        "bird": 2,
+        "landfall": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sin, Spira's Punishment",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "leviathan": 2,
+        "avatar": 2,
+        "legendary": 2,
+        "flying": 2,
+        "exile": 2,
+        "copy": 3,
+        "token": 1
+      },
+      "consume": {
+        "attack": 2,
+        "etb": 2,
+        "graveyard": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Snow Villiers",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "rebel": 2,
+        "monk": 2,
+        "legendary": 2,
+        "vigilance": 2,
+        "attack": 1
+      },
+      "consume": {
+        "creature": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Squall, SeeD Mercenary",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "mercenary": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "attack": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Starting Town",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2,
+        "life-loss": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Stiltzkin, Moogle Merchant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "moogle": 2,
+        "legendary": 2,
+        "lifegain": 2,
+        "draw": 2,
+        "commandeer": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Summon: Anima",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "horror": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "sacrifice": 1,
+        "draw": 2,
+        "removal": 2,
+        "menace": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: Bahamut",
+    "themes": {
+      "produce": {
+        "saga": 1,
+        "sacrifice": 1,
+        "draw": 1,
+        "flying": 2,
+        "face-damage": 1,
+        "dragon": 2,
+        "enchantment": 2,
+        "creature": 2,
+        "removal": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Summon: Brynhildr",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "knight": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "exile": 1
+      },
+      "consume": {
+        "exile": 2,
+        "creature": 2
+      },
+      "grant": {
+        "haste": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: Choco/Mog",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bird": 2,
+        "moogle": 2,
+        "enchantment": 2,
+        "saga": 1
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Summon: Esper Ramuh",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wizard": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "removal": 2
+      },
+      "consume": {
+        "graveyard": 2,
+        "wizard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: Fat Chocobo",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "bird": 3,
+        "enchantment": 2,
+        "saga": 1,
+        "token": 2
+      },
+      "grant": {
+        "trample": 3
+      },
+      "atypical": {
+        "landfall": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: Fenrir",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wolf": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "land": 1,
+        "tutor": 1,
+        "counters": 1,
+        "draw": 2,
+        "landfall": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: G.F. Cerberus",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dog": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "graveyard": 1,
+        "copy": 3,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: G.F. Ifrit",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "demon": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "discard": 2,
+        "draw": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: Knights of Round",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "knight": 3,
+        "enchantment": 2,
+        "saga": 1,
+        "token": 3,
+        "indestructible": 2
+      },
+      "grant": {
+        "indestructible": 3
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Summon: Leviathan",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "leviathan": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "sacrifice": 1,
+        "bounce": 2,
+        "removal": 2,
+        "draw": 2,
+        "ward": 2
+      },
+      "consume": {
+        "leviathan": 2,
+        "merfolk": 1,
+        "octopus": 1,
+        "creature": 1,
+        "attack": 1,
+        "kraken": 1,
+        "serpent": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Summon: Primal Garuda",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "harpy": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "removal": 2,
+        "flying": 1
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Summon: Primal Odin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "knight": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "sacrifice": 1,
+        "removal": 2,
+        "draw": 1,
+        "alt-win": 3,
+        "life-loss": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summon: Shiva",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elemental": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "sacrifice": 1,
+        "lockdown": 2,
+        "draw": 2
+      },
+      "consume": {
+        "tap": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Summon: Titan",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "giant": 2,
+        "enchantment": 2,
+        "saga": 1,
+        "reach": 2,
+        "trample": 2,
+        "mill": 2,
+        "graveyard": 1
+      },
+      "consume": {
+        "graveyard": 2,
+        "land": 2
+      },
+      "grant": {
+        "trample": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Tellah, Great Sage",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "human": 2,
+        "wizard": 2,
+        "legendary": 2,
+        "hero": 1,
+        "token": 1,
+        "draw": 2,
+        "face-damage": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "sacrifice": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Terra, Magical Adept // Esper Terra",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "warrior": 2,
+        "legendary": 2,
+        "enchantment": 3,
+        "saga": 1,
+        "transform": 2,
+        "double-faced": 2,
+        "flying": 2,
+        "mill": 2,
+        "graveyard": 2,
+        "copy": 3,
+        "sacrifice": 2,
+        "mana": 3,
+        "exile": 2
+      },
+      "grant": {
+        "haste": 1
+      },
+      "consume": {
+        "enchantment": 2,
+        "saga": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "The Emperor of Palamecia // The Lord Master of Hell",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "wizard": 2,
+        "demon": 2,
+        "legendary": 2,
+        "mana": 1,
+        "counters": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "face-damage": 2
+      },
+      "consume": {
+        "counters": 1,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2,
+        "graveyard": 2,
+        "attack": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Gold Saucer",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2,
+        "treasure": 1,
+        "draw": 2
+      },
+      "consume": {
+        "artifacts": 2,
+        "sacrifice": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Wandering Minstrel",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "human": 2,
+        "bard": 2,
+        "legendary": 2,
+        "elemental": 1,
+        "token": 2,
+        "combat-trick": 1
+      },
+      "atypical": {
+        "land": 1
+      },
+      "consume": {
+        "towns": 3,
+        "creature": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Tidus, Blitzball Star",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warrior": 2,
+        "legendary": 2,
+        "counters": 2,
+        "lockdown": 2
+      },
+      "consume": {
+        "artifacts": 2,
+        "attack": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Tifa Lockhart",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "monk": 2,
+        "legendary": 2,
+        "trample": 2
+      },
+      "consume": {
+        "landfall": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Tonberry",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "salamander": 2,
+        "horror": 2,
+        "lockdown": 1,
+        "deathtouch": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Torgal, A Fine Hound",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wolf": 2,
+        "legendary": 2,
+        "counters": 2,
+        "mana": 2
+      },
+      "consume": {
+        "human": 2,
+        "wolf": 2,
+        "dog": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Town Greeter",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "citizen": 2,
+        "mill": 2,
+        "graveyard": 1,
+        "land": 1,
+        "towns": 1,
+        "lifegain": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Traveling Chocobo",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "bird": 2,
+        "land": 1
+      },
+      "atypical": {
+        "bird": 2
+      },
+      "magnifier": {
+        "landfall": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Treno, Dark City",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ultima, Origin of Oblivion",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "god": 2,
+        "legendary": 2,
+        "flying": 2,
+        "mana-denial": 1
+      },
+      "consume": {
+        "attack": 2
+      },
+      "magnifier": {
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ultimecia, Temporal Threat",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warlock": 2,
+        "lockdown": 2,
+        "draw": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ultimecia, Time Sorceress // Ultimecia, Omnipotent",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warlock": 2,
+        "nightmare": 2,
+        "legendary": 2,
+        "graveyard": 2,
+        "mill": 2,
+        "exile": 2,
+        "menace": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "extra-turns": 2,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "graveyard": 2,
+        "attack": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ultros, Obnoxious Octopus",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "octopus": 2,
+        "legendary": 2,
+        "lockdown": 2,
+        "counters": 2
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Undercity Dire Rat",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "rat": 2,
+        "treasure": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Vaan, Street Thief",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "scout": 2,
+        "exile": 2,
+        "treasure": 2,
+        "counters": 2,
+        "token": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "scout": 2,
+        "rogue": 2,
+        "exile": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Valkyrie Aerial Unit",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "construct": 2,
+        "artifacts": 2,
+        "cost-reduction": 1,
+        "flying": 2,
+        "graveyard": 1,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "artifacts": 2,
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Vanille, Cheerful l'Cie",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "cleric": 2,
+        "legendary": 2,
+        "mill": 1,
+        "graveyard": 1,
+        "exile": 1
+      },
+      "consume": {
+        "etb": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Vector, Imperial Capital",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elder": 2,
+        "wizard": 2,
+        "god": 2,
+        "legendary": 2,
+        "draw": 3,
+        "exile": 2,
+        "removal": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "indestructible": 2,
+        "counters": 2
+      },
+      "consume": {
+        "legendary": 3
+      },
+      "grant": {
+        "indestructible": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Vincent Valentine // Galian Beast",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "assassin": 2,
+        "werewolf": 2,
+        "beast": 2,
+        "counters": 3,
+        "transform": 2,
+        "double-faced": 2,
+        "trample": 2,
+        "lifegain": 2,
+        "legendary": 2,
+        "etb": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Vivi Ornitier",
+    "themes": {
+      "produce": {
+        "mana": 2,
+        "counters": 3,
+        "face-damage": 2,
+        "wizard": 2,
+        "legendary": 2,
+        "creature": 2
+      },
+      "consume": {
+        "instant": 3,
+        "sorcery": 3,
+        "artifacts": 3,
+        "enchantment": 3,
+        "planeswalker": 3,
+        "battle": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Weapons Vendor",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "artificer": 2,
+        "draw": 2
+      },
+      "consume": {
+        "etb": 2,
+        "equipment": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Windurst, Federation Center",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "mana": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Xande, Dark Mage",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "menace": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "graveyard": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Y'shtola Rhul",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "cat": 2,
+        "druid": 2,
+        "legendary": 2,
+        "exile": 2,
+        "extra-turns": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Yuna, Hope of Spira",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "cleric": 2,
+        "legendary": 2,
+        "trample": 2,
+        "ward": 2,
+        "lifegain": 3
+      },
+      "grant": {
+        "trample": 2,
+        "ward": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "enchantment": 3,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Zack Fair",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "soldier": 2,
+        "legendary": 2,
+        "counters": 1
+      },
+      "consume": {
+        "counters": 1,
+        "equipment": 1,
+        "sacrifice": 2
+      },
+      "grant": {
+        "indestructible": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Zanarkand, Ancient Metropolis // Lasting Fayth",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "towns": 2,
+        "sorcery": 2,
+        "mana": 2,
+        "creature": 1,
+        "token": 1,
+        "hero": 2,
+        "counters": 2
+      },
+      "consume": {
+        "land": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Zell Dincht",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "monk": 2,
+        "land": 1,
+        "bounce": 2,
+        "landfall": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "land": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Zenos yae Galvus // Shinryu, Transcendent Rival",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "warrior": 2,
+        "dragon": 2,
+        "removal": 2,
+        "transform": 2,
+        "double-faced": 2,
+        "flying": 2,
+        "alt-win": 3,
+        "legendary": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Zidane, Tantalus Thief",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "mutant": 2,
+        "scout": 2,
+        "legendary": 2,
+        "commandeer": 3,
+        "treasure": 2,
+        "lifegain": 1,
+        "untap": 1
+      },
+      "consume": {
+        "etb": 2
+      },
+      "grant": {
+        "haste": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Zodiark, Umbral God",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "god": 2,
+        "indestructible": 2,
+        "sacrifice": 2,
+        "counters": 3,
+        "legendary": 2,
+        "removal": 3,
+        "board-wipe": 1
+      },
+      "consume": {
+        "etb": 2,
+        "sacrifice": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Auron's Inspiration",
+    "themes": {
+      "produce": {
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "combat-trick": 3,
+        "instant": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Bard's Bow",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "token": 2,
+        "equipment": 2,
+        "reach": 2,
+        "bard": 2
+      },
+      "grant": {
+        "reach": 2,
+        "bard": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Astrologian's Planisphere",
+    "themes": {
+      "produce": {
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "equipment": 2,
+        "wizard": 2,
+        "counters": 2,
+        "artifacts": 2
+      },
+      "grant": {
+        "wizard": 2,
+        "counters": 2,
+        "draw": 2
+      },
+      "consume": {
+        "draw": 2,
+        "etb": 2,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Battle Menu",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "knight": 2,
+        "combat-trick": 2,
+        "removal": 2,
+        "lifegain": 1,
+        "instant": 2,
+        "token": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Black Mage's Rod",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "equipment": 2,
+        "wizard": 2,
+        "face-damage": 2
+      },
+      "consume": {
+        "etb": 2,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      },
+      "grant": {
+        "wizard": 2,
+        "face-damage": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "The Crystal's Chosen",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "creature": 3,
+        "token": 3,
+        "hero": 3,
+        "counters": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Dragoon's Lance",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "equipment": 2,
+        "knight": 2,
+        "flying": 1
+      },
+      "consume": {
+        "etb": 2
+      },
+      "grant": {
+        "knight": 2,
+        "flying": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Fate of the Sun-Cryst",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      },
+      "consume": {
+        "tap": 1,
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Machinist's Arsenal",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "equipment": 2,
+        "artificer": 2
+      },
+      "consume": {
+        "etb": 2,
+        "artifacts": 2
+      },
+      "grant": {
+        "artificer": 2,
+        "artifacts": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "From Father to Son",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "vehicles": 1,
+        "tutor": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2
+      },
+      "consume": {
+        "cast-from-graveyard": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Magitek Armor",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "vehicles": 2,
+        "hero": 2,
+        "token": 2,
+        "creature": 2
+      },
+      "consume": {
+        "etb": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Moogles' Valor",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "creature": 3,
+        "token": 3,
+        "moogle": 3,
+        "lifegain": 3,
+        "indestructible": 3
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Paladin's Arms",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "equipment": 2,
+        "ward": 2,
+        "knight": 2
+      },
+      "consume": {
+        "etb": 2
+      },
+      "grant": {
+        "ward": 2,
+        "knight": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Phoenix Down",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "exile": 3
+      },
+      "consume": {
+        "graveyard": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Restoration Magic",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "tiered": 2,
+        "combat-trick": 2,
+        "lifegain": 2,
+        "hexproof": 3,
+        "indestructible": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Slash of Light",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      },
+      "consume": {
+        "creature": 2,
+        "equipment": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ultima",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "board-wipe": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "White Auracite",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "exile": 2,
+        "removal": 2,
+        "mana": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "White Mage's Staff",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "job-select": 2,
+        "cleric": 2,
+        "lifegain": 2
+      },
+      "grant": {
+        "cleric": 2,
+        "attack": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "You're Not Alone",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "The Wind Crystal",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "lifegain": 3,
+        "flying": 3,
+        "cost-reduction": 1
+      },
+      "magnifier": {
+        "lifegain": 3
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Combat Tutorial",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "draw": 2,
+        "counters": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Dreams of Laguna",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "graveyard": 1,
+        "draw": 1,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "tutor": 1,
+        "surveil": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Syncopate",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3,
+        "exile": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Overkill",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Sephiroth's Intervention",
+    "themes": {
+      "produce": {
+        "removal": 3,
+        "lifegain": 1,
+        "instant": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Thunder Magic",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "tiered": 2,
+        "removal": 3
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Monk's Fist",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "monk": 2
+      },
+      "grant": {
+        "monk": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "World Map",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "land": 1,
+        "tutor": 2,
+        "sacrifice": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Judgment Bolt",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3,
+        "face-damage": 2
+      },
+      "consume": {
+        "equipment": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Cargo Ship",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "vehicles": 2,
+        "flying": 2,
+        "vigilance": 2,
+        "attack": 1,
+        "creature": 1,
+        "mana": 1
+      },
+      "consume": {
+        "creature": 1,
+        "artifacts": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Eject",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "bounce": 2,
+        "removal": 2,
+        "draw": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Stuck in Summoner's Sanctum",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "flash": 2,
+        "lockdown": 3
+      },
+      "atypical": {
+        "artifacts": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Swallowed by Leviathan",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3,
+        "graveyard": 1,
+        "tutor": 1,
+        "surveil": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Ice Magic",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "tiered": 3,
+        "bounce": 2,
+        "removal": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Memories Returning",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "draw": 3,
+        "tutor": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Sage's Nouliths",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "job-select": 2,
+        "creature": 1,
+        "token": 1,
+        "cleric": 1,
+        "untap": 2
+      },
+      "grant": {
+        "attack": 3,
+        "cleric": 3,
+        "untap": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Vincent's Limit Break",
+    "themes": {
+      "produce": {
+        "tiered": 2,
+        "combat-trick": 3,
+        "instant": 2
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Fire Magic",
+    "themes": {
+      "produce": {
+        "tiered": 2,
+        "instant": 2,
+        "removal": 2,
+        "board-wipe": 1
+      }
+    },
+    "reviewed": true
+  },
+  {
+    "name": "Nibelheim Aflame",
+    "themes": {
+      "produce": {
+        "removal": 2,
+        "discard": 2,
+        "draw": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "sorcery": 2,
+        "board-wipe": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Random Encounter",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "mill": 2,
+        "graveyard": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "bounce": 2
+      },
+      "atypical": {
+        "creature": 3
+      },
+      "grant": {
+        "haste": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Summoner's Grimoire",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "token": 2,
+        "shaman": 1
+      },
+      "consume": {
+        "etb": 2,
+        "attack": 2
+      },
+      "grant": {
+        "shaman": 2,
+        "attack": 2
+      },
+      "atypical": {
+        "creature": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ether",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 2,
+        "exile": 1,
+        "copy": 2
+      },
+      "consume": {
+        "instant": 1,
+        "sorcery": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Louisoix's Sacrifice",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      },
+      "consume": {
+        "sacrifice": 2
+      },
+      "atypical": {
+        "legendary": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Lunar Whale",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "vehicles": 2,
+        "legendary": 2,
+        "flying": 2,
+        "creature": 1
+      },
+      "consume": {
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Magic Damper",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 2,
+        "untap": 1
+      },
+      "grant": {
+        "hexproof": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Prima Vista",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "vehicles": 2,
+        "legendary": 2,
+        "flying": 2,
+        "creature": 1
+      },
+      "consume": {
+        "creature": 1,
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Stolen Uniform",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "commandeer": 3
+      },
+      "atypical": {
+        "equipment": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Thief's Knife",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "job-select": 2,
+        "creature": 1,
+        "token": 1,
+        "draw": 2,
+        "rogue": 1
+      },
+      "grant": {
+        "draw": 3,
+        "rogue": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Phantom Train",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "vehicles": 2,
+        "trample": 2,
+        "sacrifice": 2,
+        "counters": 2,
+        "creature": 1,
+        "spirit": 1
+      },
+      "consume": {
+        "artifacts": 1,
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Fire Crystal",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "cost-reduction": 1,
+        "copy": 2,
+        "token": 1,
+        "creature": 1
+      },
+      "grant": {
+        "haste": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Haste Magic",
+    "themes": {
+      "produce": {
+        "combat-trick": 2,
+        "exile": 2,
+        "instant": 2
+      },
+      "grant": {
+        "haste": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Laughing Mad",
+    "themes": {
+      "consume": {
+        "discard": 2
+      },
+      "produce": {
+        "draw": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "instant": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Red Mage's Rapier",
+    "themes": {
+      "produce": {
+        "equipment": 2,
+        "artifacts": 2,
+        "job-select": 2,
+        "creature": 1,
+        "token": 1,
+        "wizard": 1
+      },
+      "grant": {
+        "wizard": 3,
+        "instant": 3,
+        "sorcery": 3,
+        "artifacts": 3,
+        "enchantment": 3
+      },
+      "consume": {
+        "instant": 2,
+        "sorcery": 2,
+        "artifacts": 2,
+        "enchantment": 2,
+        "planeswalker": 2,
+        "battle": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Samurai's Katana",
+    "themes": {
+      "produce": {
+        "equipment": 2,
+        "artifacts": 2,
+        "job-select": 2,
+        "creature": 1,
+        "token": 1,
+        "samurai": 1
+      },
+      "grant": {
+        "trample": 3,
+        "haste": 3,
+        "samurai": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sidequest: Play Blitzball // World Champion, Celestial Weapon",
+    "themes": {
+      "produce": {
+        "double-faced": 2,
+        "transform": 3,
+        "enchantment": 2,
+        "legendary": 2,
+        "artifacts": 2,
+        "equipment": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sorceress's Schemes",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "mana": 1
+      },
+      "consume": {
+        "graveyard": 2,
+        "exile": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Unexpected Request",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "commandeer": 3,
+        "untap": 1
+      },
+      "grant": {
+        "haste": 2
+      },
+      "consume": {
+        "equipment": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Chocobo Racetrack",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 1,
+        "bird": 1,
+        "token": 2
+      },
+      "consume": {
+        "landfall": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Clash of the Eikons",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 2,
+        "saga": 2
+      },
+      "atypical": {
+        "saga": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Galuf's Final Act",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 1
+      },
+      "grant": {
+        "counters": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Gysahl Greens",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "creature": 1,
+        "bird": 1,
+        "token": 2,
+        "flashback": 2
+      },
+      "atypical": {
+        "landfall": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Masamune",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "legendary": 2
+      },
+      "grant": {
+        "forced-block": 2,
+        "first-strike": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Relm's Sketching",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "copy": 3,
+        "token": 2,
+        "artifacts": 1,
+        "creature": 1,
+        "land": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Retrieve the Esper",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "token": 2,
+        "artifacts": 1,
+        "creature": 1,
+        "robot": 1,
+        "warrior": 1,
+        "counters": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sidequest: Card Collection // Magicked Card",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "artifacts": 2,
+        "vehicles": 2,
+        "double-faced": 2,
+        "transform": 2,
+        "draw": 2,
+        "discard": 2,
+        "flying": 2,
+        "creature": 1
+      },
+      "consume": {
+        "creature": 1,
+        "etb": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Sleep Magic",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "lockdown": 3,
+        "aura": 2
+      },
+      "consume": {
+        "sacrifice": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Travel the Overworld",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "cost-reduction": 1,
+        "draw": 3
+      },
+      "consume": {
+        "towns": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Water Crystal",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "cost-reduction": 1,
+        "mill": 2
+      },
+      "magnifier": {
+        "mill": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Circle of Power",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "draw": 2,
+        "creature": 1,
+        "wizard": 1,
+        "token": 1,
+        "lifegain": 3,
+        "face-damage": 1
+      },
+      "consume": {
+        "wizard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Cornered by Black Mages",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "creature": 1,
+        "wizard": 1,
+        "token": 1,
+        "face-damage": 1
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Dark Knight's Greatsword",
+    "themes": {
+      "produce": {
+        "equipment": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "knight": 2,
+        "life-loss": 1,
+        "artifacts": 2
+      },
+      "grant": {
+        "knight": 2
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Darkness Crystal",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "cost-reduction": 1,
+        "exile": 2,
+        "lifegain": 2,
+        "counters": 1
+      },
+      "consume": {
+        "exile": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Final Days",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "creature": 3,
+        "horror": 3,
+        "token": 3,
+        "flashback": 2,
+        "cast-from-graveyard": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Poison the Waters",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 2,
+        "discard": 2,
+        "board-wipe": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Resentful Revelation",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "graveyard": 2,
+        "mill": 2,
+        "draw": 2,
+        "flashback": 2,
+        "cast-from-graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Call the Mountain Chocobo",
+    "themes": {
+      "produce": {
+        "land": 1,
+        "tutor": 1,
+        "creature": 1,
+        "token": 1,
+        "flashback": 2,
+        "cast-from-graveyard": 2,
+        "sorcery": 2
+      },
+      "consume": {
+        "landfall": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Choco-Comet",
+    "themes": {
+      "produce": {
+        "face-damage": 2,
+        "removal": 2,
+        "creature": 1,
+        "token": 1,
+        "sorcery": 2
+      },
+      "consume": {
+        "landfall": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Coral Sword",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "flash": 2,
+        "combat-trick": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Opera Love Song",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "exile": 2,
+        "combat-trick": 2
+      },
+      "consume": {
+        "exile": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Suplex",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "exile": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Triple Triad",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "exile": 3
+      },
+      "consume": {
+        "exile": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Chocobo Kick",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "bounce": 2
+      },
+      "magnifier": {
+        "removal": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Earth Crystal",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "cost-reduction": 1,
+        "counters": 2
+      },
+      "magnifier": {
+        "counters": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Prishe's Wanderings",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "land": 1,
+        "towns": 1,
+        "tutor": 1,
+        "counters": 1,
+        "landfall": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Rydia's Return",
+    "themes": {
+      "produce": {
+        "sorcery": 2
+      },
+      "consume": {
+        "creature": 2,
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Tifa's Limit Break",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "tiered": 2,
+        "combat-trick": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Buster Sword",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "draw": 2
+      },
+      "grant": {
+        "draw": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Instant Ramen",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "food": 2,
+        "flash": 2,
+        "draw": 2,
+        "sacrifice": 2,
+        "lifegain": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Lion Heart",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "removal": 2,
+        "face-damage": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Magitek Scythe",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2
+      },
+      "consume": {
+        "etb": 2
+      },
+      "grant": {
+        "forced-block": 2,
+        "first-strike": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Evil Reawakened",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "counters": 1
+      },
+      "consume": {
+        "graveyard": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Fight On!",
+    "themes": {
+      "produce": {
+        "instant": 2
+      },
+      "consume": {
+        "graveyard": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ninja's Blades",
+    "themes": {
+      "produce": {
+        "equipment": 2,
+        "job-select": 2,
+        "hero": 2,
+        "creature": 1,
+        "draw": 2,
+        "discard": 2,
+        "life-loss": 2,
+        "artifacts": 2
+      },
+      "consume": {
+        "etb": 2
+      },
+      "grant": {
+        "draw": 2,
+        "discard": 2,
+        "life-loss": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Vayne's Treachery",
+    "themes": {
+      "produce": {
+        "sacrifice": 2,
+        "removal": 3,
+        "instant": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Light of Judgment",
+    "themes": {
+      "produce": {
+        "removal": 3,
+        "instant": 2
+      },
+      "atypical": {
+        "equipment": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Self-Destruct",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3,
+        "face-damage": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Warrior's Sword",
+    "themes": {
+      "produce": {
+        "equipment": 2,
+        "artifacts": 2,
+        "job-select": 2,
+        "creature": 1,
+        "token": 1,
+        "warrior": 1
+      },
+      "grant": {
+        "warrior": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Blitzball Shot",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      },
+      "grant": {
+        "trample": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Commune with Beavers",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "tutor": 1,
+        "artifacts": 1,
+        "creature": 1,
+        "land": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Reach the Horizon",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "land": 1,
+        "towns": 1,
+        "tutor": 1,
+        "landfall": 3
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ride the Shoopuf",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "counters": 2,
+        "creature": 1,
+        "beast": 1
+      },
+      "consume": {
+        "landfall": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Blitzball",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mana": 2,
+        "sacrifice": 2,
+        "draw": 2
+      },
+      "atypical": {
+        "legendary": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Elixir",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "exile": 1,
+        "lifegain": 2
+      },
+      "consume": {
+        "graveyard": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Excalibur II",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "legendary": 2
+      },
+      "consume": {
+        "lifegain": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Genji Glove",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "additional-combat": 3
+      },
+      "consume": {
+        "attack": 2
+      },
+      "grant": {
+        "attack": 2,
+        "untap": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Lunatic Pandora",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "graveyard": 1,
+        "mill": 1,
+        "sacrifice": 2,
+        "removal": 2,
+        "tutor": 1,
+        "surveil": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "The Regalia",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "vehicles": 2,
+        "haste": 2,
+        "land": 2,
+        "tutor": 2,
+        "creature": 1
+      },
+      "consume": {
+        "attack": 2,
+        "creature": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ring of the Lucii",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "legendary": 2,
+        "mana": 2,
+        "lockdown": 2,
+        "life-loss": 1
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Deadly Embrace",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "draw": 2
+      },
+      "consume": {
+        "creature": 2
+      }
+    },
+    "reviewed": false
+  },
+  {
+    "name": "Ultima Weapon",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "equipment": 2,
+        "legendary": 2
+      },
+      "grant": {
+        "attack": 3,
+        "removal": 3
+      }
+    },
+    "reviewed": false
+  }
+]

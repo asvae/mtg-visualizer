@@ -4,6 +4,11 @@ import { StoreKey } from '../store';
 import PhysicsControls from './PhysicsControls.vue';
 import { useFloatingDropdown } from '../composables/useFloatingDropdown';
 
+// The review panel is a tagging-workflow tool, not something an end visitor to a
+// deployed copy of the app should see — gated behind an env var so it can stay on
+// locally while a hosted deployment omits it (VITE_ENABLE_REVIEW unset there).
+const reviewEnabled = import.meta.env.VITE_ENABLE_REVIEW === '1';
+
 const store = inject(StoreKey)!;
 
 const legendButton = ref<HTMLElement | null>(null);
@@ -24,28 +29,48 @@ useFloatingDropdown(legendButton, legendPanel, store.legendOpen);
     </h1>
     <div class="icon-group">
       <PhysicsControls />
+      <button
+        v-if="reviewEnabled"
+        id="review-toggle"
+        class="icon-btn"
+        aria-label="Card review session"
+        @click="store.reviewSessionOpen.value = !store.reviewSessionOpen.value"
+      >
+        🧾
+      </button>
       <div class="icon-dropdown">
         <button ref="legendButton" id="legend-toggle" class="icon-btn" aria-label="Show legend" @click="store.legendOpen.value = !store.legendOpen.value">?</button>
         <div ref="legendPanel" id="legend" class="legend-dropdown" :class="{ hidden: !store.legendOpen.value }">
-          <div class="item"><span class="swatch" style="background: var(--produce)"></span>Produces</div>
-          <div class="item"><span class="swatch" style="background: var(--consume)"></span>Consumes</div>
-          <div class="item"><span class="swatch dashed"></span>Atypical</div>
-          <div class="item">Thicker edge = stronger theme tie</div>
-          <div class="item"><span class="node-swatch node-theme-weak"></span>Weak theme (no real synergy — pushed to the edges)</div>
-          <div class="item"><span class="swatch-halo"></span>Ring = card power</div>
-          <div class="item">Letter = rarity (U/R/M, commons unmarked)</div>
-          <div class="item">
-            <span class="swatch" style="background: repeating-linear-gradient(90deg, var(--mod-conditional) 0 4px, transparent 4px 7px)"></span>
-            Conditional
+          <div class="legend-section-title">Relations</div>
+          <div class="item" title="Generates or creates more of this theme's resource.">
+            <span class="swatch" style="background: var(--produce)"></span>Produces
+            <span class="help-icon">?</span>
           </div>
-          <div class="item">
-            <span class="swatch" style="background: repeating-linear-gradient(90deg, var(--mod-magnifier) 0 4px, transparent 4px 7px)"></span>
+          <div class="item" title="Reads or reacts to this theme's resource that's already present.">
+            <span class="swatch" style="background: var(--consume)"></span>Consumes
+            <span class="help-icon">?</span>
+          </div>
+          <div class="item" title="Relates to the theme but doesn't cleanly produce, consume, grant, or magnify it.">
+            <span class="swatch dashed"></span>Atypical
+            <span class="help-icon">?</span>
+          </div>
+          <div class="item" title="Extends an ability to another permanent rather than using it itself.">
+            <span class="swatch" style="background: repeating-linear-gradient(90deg, var(--grant) 0 4px, transparent 4px 7px)"></span>
+            Grant
+            <span class="help-icon">?</span>
+          </div>
+          <div class="item" title="Doubles or amplifies an effect that's already happening.">
+            <span class="swatch" style="background: repeating-linear-gradient(90deg, var(--magnifier) 0 4px, transparent 4px 7px)"></span>
             Magnifier
+            <span class="help-icon">?</span>
           </div>
-          <div class="item">
-            <span class="swatch" style="background: repeating-linear-gradient(90deg, var(--mod-granter) 0 4px, transparent 4px 7px)"></span>
-            Granter
-          </div>
+
+          <div class="legend-divider"></div>
+          <div class="legend-section-title">Graph</div>
+          <div class="item">Thicker edge = stronger theme tie</div>
+          <div class="item">Dashed edge = also atypical, grant, or magnifier — or the card ties to that theme via more than one relation</div>
+          <div class="item"><span class="node-swatch node-theme-weak"></span>Weak theme (no real synergy — pushed to the edges)</div>
+          <div class="item">Letter = rarity (U/R/M, commons unmarked)</div>
         </div>
       </div>
     </div>
@@ -147,6 +172,29 @@ header h1 {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  cursor: default;
+}
+
+.item[title] {
+  cursor: help;
+}
+
+.help-icon {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.legend-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.legend-divider {
+  border-top: 1px solid #3a3d4a;
+  margin: 2px 0;
 }
 
 .swatch {
@@ -173,13 +221,5 @@ header h1 {
   border-style: dashed;
   border-color: #4a4d5c;
   opacity: 0.75;
-}
-
-.swatch-halo {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid var(--power);
-  flex-shrink: 0;
 }
 </style>
