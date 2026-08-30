@@ -40,14 +40,21 @@ onMounted(() => {
     onHoverEnd() {
       store.hovered.value = null;
     },
-    onCardClick(card) {
-      window.open(card.scryfallUri, '_blank');
+    onCardClick(card, event) {
+      // Ctrl/Cmd-click opens Scryfall (a "look this up externally" gesture) —
+      // everything else is a plain select, same shift-to-add convention as themes.
+      if (event.ctrlKey || event.metaKey) {
+        window.open(card.scryfallUri, '_blank');
+        return;
+      }
+      store.toggleCardSelection(card.id, event.shiftKey);
     },
     onThemeClick(theme, event) {
       store.toggleThemeSelection(theme.id, event.shiftKey);
     },
     onBackgroundClick() {
       store.themeSelection.clear();
+      store.cardSelection.clear();
     },
   });
   renderer.render(currentFilters());
@@ -62,9 +69,19 @@ onMounted(() => {
     () => store.searchQuery.value,
     (q) => renderer!.applySearch(q)
   );
+  // immediate: true on both — the URL can already have `focus`/`card` populated
+  // by the time this component mounts (store.load() resolves those synchronously
+  // before Vue even flushes the v-if that mounts this component), so without it
+  // a shared link's highlight silently wouldn't show until the user interacted.
   watch(
     () => [...store.themeSelection],
-    (ids) => renderer!.setThemeSelection(new Set(ids))
+    (ids) => renderer!.setThemeSelection(new Set(ids)),
+    { immediate: true }
+  );
+  watch(
+    () => [...store.cardSelection],
+    (ids) => renderer!.setCardSelection(new Set(ids)),
+    { immediate: true }
   );
   watch(
     () => store.lookupHighlightCardId.value,

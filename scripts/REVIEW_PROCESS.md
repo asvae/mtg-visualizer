@@ -77,10 +77,15 @@ npm run review-server            # control-plane for the review panel, http://lo
 node scripts/review-relay.mjs    # plumbing between review-drafts.json/review-responses.json and the panel
 ```
 
-Open the app, click the 🧾 icon in the header to open the review session
-panel — that's what the user watches while you drive the loop below. At the
-end of a review session, stop `review-relay.mjs` and `review-server.mjs`
-(`kill` the node processes) — restart both next time per the above.
+Open the app at **http://localhost:5173/app/** (`/` is now a separate static
+archetype-landing page, not the visualizer — see index.html/vite.config.js;
+the review panel only lives under `/app/`), click the 🧾 icon in the header to
+open the review session panel — that's what the user watches while you drive
+the loop below. That icon only renders when `VITE_ENABLE_REVIEW=1` is set
+(see `.env.example`) — it's already set in the local `.env`, nothing to do
+unless it's missing. At the end of a review session, stop `review-relay.mjs`
+and `review-server.mjs` (`kill` the node processes) — restart both next time
+per the above.
 
 ## Protocol (scripts/review-server.mjs)
 

@@ -1,7 +1,7 @@
 import { reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
 import type { CardData, GraphFile, Role, ThemeData } from './types';
 import { COLOR_ORDER, RARITY_ORDER } from './lib/constants';
-import { availableRarities as computeAvailableRarities, availableTypes as computeAvailableTypes } from './lib/filters';
+import { availableRarities as computeAvailableRarities, availableTypes as computeAvailableTypes, computeWeakThemeIds } from './lib/filters';
 import { DEFAULT_FORCES, type ForceConfig } from './lib/graphRenderer';
 import { buildGraph, type RelationsEntry, type ScryfallCard, type TokensById } from './lib/buildGraph';
 
@@ -98,6 +98,26 @@ export function createStore() {
     } else {
       themeSelection.clear();
       themeSelection.add(themeId); // plain click replaces the selection
+    }
+  }
+
+  // Click-to-select highlight on card nodes — same mechanics/mechanism as
+  // themeSelection above (ephemeral, compounds with search/theme-selection in the
+  // graph's highlight pass, mirrored to the URL below but NOT to localStorage).
+  // Ctrl/Cmd-click is handled entirely in GraphCanvas.vue (opens Scryfall instead
+  // of calling this at all) — never reaches here.
+  const cardSelection = reactive(new Set<string>());
+  function toggleCardSelection(cardId: string, additive: boolean) {
+    if (additive) {
+      if (cardSelection.has(cardId)) cardSelection.delete(cardId);
+      else cardSelection.add(cardId);
+      return;
+    }
+    if (cardSelection.size === 1 && cardSelection.has(cardId)) {
+      cardSelection.clear(); // clicking the sole selected card again deselects it
+    } else {
+      cardSelection.clear();
+      cardSelection.add(cardId); // plain click replaces the selection
     }
   }
 
@@ -213,16 +233,27 @@ export function createStore() {
     selectedTypes.clear();
     availableTypes.value.forEach((t) => selectedTypes.add(t));
   }
-  function selectAllThemes() {
+  // The default/reset theme selection is strong themes only, not literally every
+  // theme — weak ones (strictly one-sided produce-only or consume-only, no real
+  // two-sided synergy: see isPureOneSided) are clutter until the user explicitly
+  // asks for them via the checklist's own "All" button, which still does select
+  // everything (see ChecklistSection.vue's local selectAll — unaffected by this).
+  // Weak/strong is computed against whatever colors/rarities/types are ALREADY
+  // selected, so this only makes sense called after those three are set.
+  function selectDefaultThemes() {
     selectedThemes.clear();
-    graph.value?.themes.forEach((t) => selectedThemes.add(t.id));
+    if (!graph.value) return;
+    const weakThemeIds = computeWeakThemeIds(graph.value, { selectedColors, selectedRarities, selectedTypes });
+    for (const t of graph.value.themes) {
+      if (!weakThemeIds.has(t.id)) selectedThemes.add(t.id);
+    }
   }
 
   function resetFilters() {
     selectAllColors();
     selectAllRarities();
     selectAllTypes();
-    selectAllThemes();
+    selectDefaultThemes();
   }
 
   function applySavedFilters(data: GraphFile, rarities: string[], types: string[]) {
@@ -242,10 +273,13 @@ export function createStore() {
             rarities: urlRarities ?? stored?.rarities ?? [],
             types: urlTypes ?? stored?.types ?? [],
             themes: urlThemes ?? stored?.themes ?? [],
-            // A URL's theme list is a literal, self-contained snapshot — skip the
-            // "unknown themes default on" treatment below for it (only relevant to
-            // localStorage's own gradual-drift problem, see the comment there).
-            knownThemeIds: urlThemes ? urlThemes : stored?.knownThemeIds,
+            // A URL's theme list is a literal, self-contained snapshot: every
+            // theme currently in the graph counts as "known" to it, so anything
+            // NOT listed lands as "known but unchecked" below, not "unknown, so
+            // default it on" — the bug this used to have was passing `urlThemes`
+            // itself here, which made every OTHER theme look unknown and get
+            // selected anyway, silently ignoring the URL's actual theme list.
+            knownThemeIds: urlThemes ? data.themes.map((t) => t.id) : stored?.knownThemeIds,
           }
         : null;
     if (!saved) return false;
@@ -298,18 +332,23 @@ export function createStore() {
       availableTypes.value = types;
 
       if (!applySavedFilters(data, rarities, types)) {
-        // No saved filters (first visit) — default to everything selected.
+        // No saved filters (first visit) — default to every color/rarity/type,
+        // but only strong themes (see selectDefaultThemes above).
         selectAllColors();
         rarities.forEach((r) => selectedRarities.add(r));
         types.forEach((t) => selectedTypes.add(t));
-        data.themes.forEach((t) => selectedThemes.add(t.id));
+        selectDefaultThemes();
       }
 
-      // The clicked-theme highlight is URL-only (no localStorage) — a link either
-      // carries it or it starts empty, same as visiting fresh.
+      // The clicked-theme/card highlights are URL-only (no localStorage) — a link
+      // either carries them or they start empty, same as visiting fresh.
       const themeIds = new Set(data.themes.map((t) => t.id));
       for (const id of readUrlParam('focus') ?? []) {
         if (themeIds.has(id)) themeSelection.add(id);
+      }
+      const cardIds = new Set(data.cards.map((c) => c.id));
+      for (const id of readUrlParam('card') ?? []) {
+        if (cardIds.has(id)) cardSelection.add(id);
       }
 
       readyToPersist = true;
@@ -322,6 +361,7 @@ export function createStore() {
         types: [...selectedTypes].join(','),
         themes: [...selectedThemes].join(','),
         focus: [...themeSelection].join(','),
+        card: [...cardSelection].join(','),
       });
     } catch (err) {
       loadError.value = err instanceof Error ? err.message : String(err);
@@ -355,12 +395,16 @@ export function createStore() {
     }
   );
 
-  // Clicked-theme highlight, mirrored to the URL only — not localStorage, not
-  // search (see updateUrlParams above). Doesn't need the readyToPersist guard:
-  // it starts empty either way (nothing to accidentally clobber pre-load).
+  // Clicked-theme/card highlights, mirrored to the URL only — not localStorage,
+  // not search (see updateUrlParams above). Doesn't need the readyToPersist
+  // guard: both start empty either way (nothing to accidentally clobber pre-load).
   watch(
     () => [...themeSelection],
     (ids) => updateUrlParams({ focus: ids.join(',') })
+  );
+  watch(
+    () => [...cardSelection],
+    (ids) => updateUrlParams({ card: ids.join(',') })
   );
 
   return {
@@ -374,6 +418,8 @@ export function createStore() {
     selectedTypes,
     themeSelection,
     toggleThemeSelection,
+    cardSelection,
+    toggleCardSelection,
     availableRarities,
     availableTypes,
     resetFilters,

@@ -69,7 +69,7 @@ export interface GraphHandlers {
   onThemeHover(theme: ThemeData & { roleCounts: Record<Role, number> }, event: MouseEvent): void;
   onHoverMove(event: MouseEvent): void;
   onHoverEnd(): void;
-  onCardClick(card: CardData): void;
+  onCardClick(card: CardData, event: MouseEvent): void;
   onThemeClick(theme: ThemeData, event: MouseEvent): void;
   onBackgroundClick(): void;
 }
@@ -226,12 +226,21 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   svg.selectAll('*').remove();
 
   const root = svg.append('g');
-  svg.call(
-    d3
-      .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.15, 6])
-      .on('zoom', (event) => root.attr('transform', event.transform))
-  );
+  const zoomBehavior = d3
+    .zoom<SVGSVGElement, unknown>()
+    .scaleExtent([0.15, 6])
+    .on('zoom', (event) => root.attr('transform', event.transform));
+  svg.call(zoomBehavior);
+  // Starts zoomed out instead of at 100% — the force layout spreads cards/themes
+  // well beyond one screenful, so a fresh load previously showed just whatever
+  // happened to be near the top-left corner at identity transform. A fixed
+  // initial scale (rather than fitting to the simulation's current bounds) is
+  // deliberate: node positions are still actively moving/settling this early
+  // (alpha just started), so "fit to bounds right now" would itself be an
+  // arbitrary, jumpy target — scaled around the viewport's own center, which is
+  // where the anchor points (and so the bulk of the graph) actually sit.
+  const INITIAL_ZOOM = 0.35;
+  svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(INITIAL_ZOOM).translate(-width / 2, -height / 2));
   // Clicking anywhere that isn't a card/theme node clears the theme selection —
   // including edge lines and empty space alike. The graph is dense enough that a
   // literal empty-pixel hit (checking event.target === svgEl) would rarely land;
@@ -390,6 +399,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
 
   let searchQuery = '';
   let themeSelection = new Set<string>();
+  let cardSelection = new Set<string>();
 
   function render(filters: GraphFilters) {
     const activeEdges = graph.edges.filter((e) => filters.selectedThemes.has(e.theme));
@@ -504,7 +514,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
           .on('mouseenter', (event, d) => handlers.onCardHover(d, themeEdgesByCard.get(d.id) ?? [], event))
           .on('mousemove', (event) => handlers.onHoverMove(event))
           .on('mouseleave', () => handlers.onHoverEnd())
-          .on('click', (_event, d) => handlers.onCardClick(d));
+          .on('click', (event, d) => handlers.onCardClick(d, event));
         renderCardShape(g, cardRadius);
         renderRarityLabel(g);
         return g;
@@ -536,15 +546,19 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     const hasSearch = q.length > 0;
     const hasSelection = themeSelection.size > 0;
     const hasLookup = lookupCardId != null;
+    const hasCardSelection = cardSelection.size > 0;
 
-    if (!hasSearch && !hasSelection && !hasLookup) {
+    if (!hasSearch && !hasSelection && !hasLookup && !hasCardSelection) {
       cardG.classed('search-match', false).classed('search-dim', false);
       themeG.classed('search-match', false).classed('search-dim', false);
       link.classed('search-dim', false);
       return;
     }
 
-    const matchedCardIds = new Set<string>();
+    // Clicked cards behave exactly like a search/lookup match — see the comment
+    // below on cardIdsFromCardMatch: full connectivity shown, not just the
+    // theme(s) that happen to also be selected.
+    const matchedCardIds = new Set<string>(cardSelection);
     const matchedThemeIds = new Set<string>(themeSelection);
     if (hasSearch) {
       for (const c of graph.cards) if (c.name.toLowerCase().includes(q)) matchedCardIds.add(c.id);
@@ -591,6 +605,11 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
 
   function setThemeSelection(ids: ReadonlySet<string>) {
     themeSelection = new Set(ids);
+    refreshHighlight();
+  }
+
+  function setCardSelection(ids: ReadonlySet<string>) {
+    cardSelection = new Set(ids);
     refreshHighlight();
   }
 
@@ -648,5 +667,5 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     svg.selectAll('*').remove();
   }
 
-  return { render, applySearch, setThemeSelection, setLookupHighlight, setForces, getForces, resetLayout, destroy };
+  return { render, applySearch, setThemeSelection, setCardSelection, setLookupHighlight, setForces, getForces, resetLayout, destroy };
 }

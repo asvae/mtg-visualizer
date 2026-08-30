@@ -152,11 +152,15 @@ npm run test
   color/rarity/type filters) get pulled toward a separate anchor point so
   thin/no-synergy themes don't visually compete with real hubs.
 - **`src/store.ts`** — central reactive store (provide/inject). Filters
-  (colors/rarities/types/themes) and the clicked-theme selection two-way sync
-  to the URL query string (`?colors=...&rarities=...&types=...&themes=...&focus=...`)
-  as well as `localStorage` (filters only, not the theme click) per set code —
-  a filtered view is shareable via URL. Search and physics slider values persist
-  to `localStorage` only, deliberately not the URL. Hover state is ephemeral.
+  (colors/rarities/types/themes), the clicked-theme selection, and the
+  clicked-card selection two-way sync to the URL query string
+  (`?colors=...&rarities=...&types=...&themes=...&focus=...&card=...`) as well
+  as `localStorage` (filters only, not the click selections) per set code — a
+  filtered/selected view is shareable via URL. Clicking a card highlights its
+  connected themes (same mechanism as clicking a theme, mirrored); Ctrl/Cmd-
+  click opens it on Scryfall instead of selecting it. Search and physics
+  slider values persist to `localStorage` only, deliberately not the URL.
+  Hover state is ephemeral.
 - **`src/lib/filters.ts`** — pure functions over the graph file: faceted
   counts, weak-theme classification, attribute-filter predicates. No Vue/D3
   dependency, so these are unit-testable in isolation from rendering.

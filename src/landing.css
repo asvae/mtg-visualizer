@@ -1,0 +1,164 @@
+/* Standalone landing page — no Vue, no shared state with the app, so this is a
+   plain, self-contained stylesheet rather than component-scoped CSS. Palette
+   matches src/style.css's :root tokens so the two pages read as one product,
+   duplicated rather than imported since this page never loads any Vue/app code. */
+:root {
+  color-scheme: dark;
+  --bg: #14151a;
+  --panel: #1e2028;
+  --text: #e6e6e6;
+  --muted: #9aa0aa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 56px 24px 24px;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 0 0 12px;
+}
+
+.hero p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 640px;
+}
+
+.hero a {
+  color: var(--text);
+}
+
+.explore-all {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.explore-all:hover {
+  color: var(--text);
+  border-bottom-color: var(--muted);
+}
+
+.archetype-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.archetype-card {
+  position: relative;
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 5 / 4;
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid #3a3d4a;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.archetype-card:hover {
+  transform: translateY(-3px);
+  border-color: #6c7086;
+}
+
+.archetype-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.archetype-card::after {
+  /* Gradient scrim so the card body's text stays legible over any art. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 11, 14, 0.95) 0%, rgba(10, 11, 14, 0.55) 45%, rgba(10, 11, 14, 0.05) 75%);
+}
+
+.card-body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px;
+  z-index: 1;
+}
+
+.pips {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.pip {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #ffffff60;
+  flex-shrink: 0;
+}
+
+.pip-W { background: #f4eddc; }
+.pip-U { background: #0e68ab; }
+.pip-B { background: #4b4a4d; }
+.pip-R { background: #d3202a; }
+.pip-G { background: #00733e; }
+
+.card-body h2 {
+  font-size: 18px;
+  margin: 0 0 6px;
+}
+
+.card-body p {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #d6d8dc;
+  margin: 0;
+}
+
+.card-body .go {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0.85;
+}
+
+.archetype-card:hover .go {
+  opacity: 1;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  padding: 24px;
+}

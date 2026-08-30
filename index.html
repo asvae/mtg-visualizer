@@ -3,10 +3,124 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MTG Set Graph</title>
+    <title>FINAL FANTASY Draft Archetypes</title>
+    <link rel="stylesheet" href="/src/landing.css" />
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <header class="hero">
+      <h1>FINAL FANTASY Draft Archetypes</h1>
+      <p>
+        Ten two-color strategies, straight from the
+        <a href="https://magic.wizards.com/en/news/feature/final-fantasy-prerelease-guide" target="_blank" rel="noopener">official prerelease guide</a>.
+        Pick the one that looks fun — it opens the card/theme graph pre-filtered to it.
+      </p>
+      <a class="explore-all" href="/app/">Or explore the full graph &rarr;</a>
+    </header>
+
+    <main class="archetype-grid">
+      <a class="archetype-card" href="/app/?colors=W,U&themes=artifacts,equipment,treasure">
+        <img src="https://cards.scryfall.io/art_crop/front/a/a/aa851d68-a7a4-48c0-9cd7-d3d2e079f3a1.jpg?1783906562" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-W"></span><span class="pip pip-U"></span></div>
+          <h2>White&ndash;Blue Artifacts</h2>
+          <p>Assemble a massive board of artifacts &mdash; artifact creatures, Equipment, Treasures, and more.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=U,B&themes=graveyard,extra-turns,draw,discard">
+        <img src="https://cards.scryfall.io/art_crop/front/5/7/572feb8c-6976-40a8-8a34-b4db836cca56.jpg?1783906565" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-U"></span><span class="pip pip-B"></span></div>
+          <h2>Blue&ndash;Black Control</h2>
+          <p>Grind out value from the graveyard, draw while discarding the spares, then close it out with extra turns.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=B,R&themes=instant,sorcery,face-damage,wizard">
+        <img src="https://cards.scryfall.io/art_crop/front/f/e/fe86e41b-b0f6-4aa1-8827-c095c721f304.jpg?1783906575" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-B"></span><span class="pip pip-R"></span></div>
+          <h2>Black&ndash;Red Black Mage Aggro</h2>
+          <p>Cast noncreature spells straight at your opponent's face &mdash; Wizard tokens turn every spell into damage.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=R,G&themes=landfall,land,saga">
+        <img src="https://cards.scryfall.io/art_crop/front/9/9/99450143-6ab5-463d-9e04-e8e6703a8b92.jpg?1783906564" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-R"></span><span class="pip pip-G"></span></div>
+          <h2>Red&ndash;Green Landfall Aggro</h2>
+          <p>Turn every land drop into tide-turning territory with aggressive landfall triggers and Saga creatures.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=G,W&themes=token,counters,creature">
+        <img src="https://cards.scryfall.io/art_crop/front/b/8/b883df14-8d7b-4f6a-9a6a-2f71f5b6ddda.jpg?1783906571" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-G"></span><span class="pip pip-W"></span></div>
+          <h2>Green&ndash;White Go Wide</h2>
+          <p>Flood the board with creature tokens, then swing with all of them at once.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=W,B&themes=sacrifice,token,lifegain">
+        <img src="https://cards.scryfall.io/art_crop/front/f/5/f5fff00b-c9a0-4e90-abc0-349f8716c885.jpg?1783906564" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-W"></span><span class="pip pip-B"></span></div>
+          <h2>White&ndash;Black Sacrifice</h2>
+          <p>Convert your own permanents into a resource, then cash in the payoffs.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=U,R&themes=instant,sorcery,tiered,flashback">
+        <img src="https://cards.scryfall.io/art_crop/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.jpg?1783906563" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-U"></span><span class="pip pip-R"></span></div>
+          <h2>Blue&ndash;Red Big Noncreatures</h2>
+          <p>Cast expensive, high-impact spells for maximum value, tiered magic and flashback included.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=B,G&themes=graveyard,cast-from-graveyard,mill">
+        <img src="https://cards.scryfall.io/art_crop/front/1/b/1b4bab87-4000-461d-8b58-d34928fee305.jpg?1783906576" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-B"></span><span class="pip pip-G"></span></div>
+          <h2>Black&ndash;Green Graveyard Value</h2>
+          <p>Stock the graveyard with permanents, then get more out of them dead than alive.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=R,W&themes=equipment,job-select,hero">
+        <img src="https://cards.scryfall.io/art_crop/front/e/4/e42c7d9d-8685-415b-8c5d-6ab2165863b9.jpg?1783906559" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-R"></span><span class="pip pip-W"></span></div>
+          <h2>Red&ndash;White Equipment Aggro</h2>
+          <p>Deck out your creatures with gear and lean on Job Select tokens for a steady stream of bodies to equip.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+
+      <a class="archetype-card" href="/app/?colors=G,U&themes=towns,land,mana">
+        <img src="https://cards.scryfall.io/art_crop/front/a/b/ab4f9721-5b2c-4371-98a5-3f6714265e57.jpg?1783906569" alt="" loading="lazy" />
+        <div class="card-body">
+          <div class="pips"><span class="pip pip-G"></span><span class="pip pip-U"></span></div>
+          <h2>Green&ndash;Blue Town Ramp</h2>
+          <p>Use Towns to squeeze extra value out of your lands while ramping into a powerful late game.</p>
+          <span class="go">Explore &rarr;</span>
+        </div>
+      </a>
+    </main>
+
+    <footer>
+      Card art &copy; Wizards of the Coast / Square Enix, via Scryfall. Fan-made tool, not affiliated with either.
+    </footer>
   </body>
 </html>

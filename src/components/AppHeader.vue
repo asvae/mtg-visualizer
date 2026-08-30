@@ -71,6 +71,7 @@ useFloatingDropdown(legendButton, legendPanel, store.legendOpen);
           <div class="item">Dashed edge = also atypical, grant, or magnifier — or the card ties to that theme via more than one relation</div>
           <div class="item"><span class="node-swatch node-theme-weak"></span>Weak theme (no real synergy — pushed to the edges)</div>
           <div class="item">Letter = rarity (U/R/M, commons unmarked)</div>
+          <div class="item">Click a card to highlight its themes, Ctrl/Cmd-click to open it on Scryfall</div>
         </div>
       </div>
     </div>
