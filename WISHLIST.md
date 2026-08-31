@@ -33,7 +33,24 @@ Consider reserving visual segments, lanes, or other regions for specific
 relation types so the graph remains clear when several kinds of connections
 are visible at once.
 
-## 5. Contextual card-value analysis
+## 5. Descriptive, directional relations
+
+Describe direct card-to-card relations in plain language from the perspective
+of Card A as affected or supported by Card B. For example:
+
+- **Gets +1/+1 when B is cast:** casting Card B gives Card A +1/+1.
+- **Can produce mana to cast:** Card B can produce mana that helps cast Card
+  A.
+
+These relations should support directionality because Card B helping Card A
+does not necessarily mean that Card A helps Card B. Their strength could also
+be balanced or weighted against the cards' costs.
+
+This may also help explain combos. A graph could expose circular chains where
+cards repeatedly enable, trigger, or benefit one another, making combo loops
+and their individual steps easier to observe.
+
+## 6. Contextual card-value analysis
 
 Analyze a card's general value according to what the user needs, such as:
 
@@ -42,17 +59,17 @@ Analyze a card's general value according to what the user needs, such as:
 - Commander
 - Other relevant formats or contexts
 
-## 6. Prices and marketplaces
+## 7. Prices and marketplaces
 
 Potentially show prices and marketplace links. It is not yet clear whether
 this is generally useful enough to prioritize.
 
-## 7. Landing page and navigation
+## 8. Landing page and navigation
 
 Create a polished, SEO-friendly landing page with clear navigation through
 the app's different modes and features.
 
-## 8. Promotion and education
+## 9. Promotion and education
 
 Advertise the app and make a learning video demonstrating how it helps people
 understand cards, themes, and decks.
@@ -60,7 +77,7 @@ understand cards, themes, and decks.
 One possible visual concept: magnetic stickers and physical cards being
 placed on a whiteboard to mirror the visualizer's relationship graph.
 
-## 9. Persistence and accounts
+## 10. Persistence and accounts
 
 Maybe add persistence and user accounts eventually, but not in the near
 term.

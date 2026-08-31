@@ -22,29 +22,26 @@ const facetCounts = computed(() => {
   return computeFacetCounts(store.graph.value, { ...attrFilters.value, selectedThemes: store.selectedThemes });
 });
 
-// Zero-count items are hidden (they can't match anything under the other axes'
-// current selection) — the underlying selectedColors/etc. Set is untouched, so a
-// hidden-but-checked item just stays checked and reappears once its count recovers.
+// Every option always shows — the list itself is static (every color/rarity/type
+// that exists anywhere in this set), only the live count next to each one moves
+// with the other axes' current selection. Hiding zero-count options used to make
+// "All"/bulk-select silently unable to re-select them (ChecklistSection's All only
+// ever operates on the `items` it's handed) and made a reset that legitimately
+// zeroes another axis look like data vanished instead of "nothing matches right now".
 const colorItems = computed(() =>
-  COLOR_ORDER.map((c) => ({ id: c, label: COLOR_LABEL[c]!, dotColor: c === 'C' ? COLORLESS : COLOR_MAP[c]!, count: facetCounts.value.colors[c] ?? 0 })).filter(
-    (it) => it.count > 0
-  )
+  COLOR_ORDER.map((c) => ({ id: c, label: COLOR_LABEL[c]!, dotColor: c === 'C' ? COLORLESS : COLOR_MAP[c]!, count: facetCounts.value.colors[c] ?? 0 }))
 );
 
 const rarityItems = computed(() =>
-  store.availableRarities.value
-    .map((r) => ({
-      id: r,
-      label: r.charAt(0).toUpperCase() + r.slice(1),
-      dotColor: RARITY_COLOR[r]!,
-      count: facetCounts.value.rarities[r] ?? 0,
-    }))
-    .filter((it) => it.count > 0)
+  store.availableRarities.value.map((r) => ({
+    id: r,
+    label: r.charAt(0).toUpperCase() + r.slice(1),
+    dotColor: RARITY_COLOR[r]!,
+    count: facetCounts.value.rarities[r] ?? 0,
+  }))
 );
 
-const typeItems = computed(() =>
-  store.availableTypes.value.map((t) => ({ id: t, label: t, count: facetCounts.value.types[t] ?? 0 })).filter((it) => it.count > 0)
-);
+const typeItems = computed(() => store.availableTypes.value.map((t) => ({ id: t, label: t, count: facetCounts.value.types[t] ?? 0 })));
 
 // Reactively recomputes whenever the color/rarity/type Sets change — Vue's
 // collection reactivity tracks .has()/iteration on these Sets automatically, so this
@@ -63,7 +60,6 @@ const themeItems = computed(() => {
   if (!store.graph.value) return [];
   return [...store.graph.value.themes]
     .map((t) => ({ id: t.id, label: t.label, count: themeCounts.value[t.id] ?? 0, weak: weakThemeIds.value.has(t.id) }))
-    .filter((t) => t.count > 0)
     // Strong themes first (alphabetical within each group), weak ones after —
     // matches the "Strong" bulk-select and bold styling: the themes worth building
     // a mental model of come first, the thin/no-synergy ones trail behind.
