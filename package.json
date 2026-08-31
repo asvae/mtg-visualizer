@@ -8,6 +8,7 @@
     "fetch:tokens": "node scripts/fetch-tokens.mjs",
     "derive:types": "node scripts/derive-type-themes.mjs",
     "prefill:types": "node scripts/prefill-main-types.mjs",
+    "set-status": "node scripts/generate-set-status.mjs",
     "dev": "nuxt dev",
     "build": "nuxt build",
     "preview": "nuxt preview",

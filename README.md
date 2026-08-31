@@ -21,6 +21,11 @@ Built with [Nuxt 4](https://nuxt.com) + [Nuxt UI](https://ui.nuxt.com)
 server rendering), while the landing page (`/`) is prerendered normally so it
 stays crawlable/shareable.
 
+## Versioning
+
+Manual [SemVer](https://semver.org/), bumped by hand in `package.json` +
+[`CHANGELOG.md`](CHANGELOG.md) — no automated release tooling.
+
 ## Quick start
 
 ```

@@ -144,6 +144,38 @@ downloads. Concretely:
   entry for each set as its pass finishes. Also validates
   `tagging/card-enrichment-status.json`'s shape.
 
+## Card identity: name, not oracle_id
+
+Every card data file (`data/global_relations.json`, `tagging/card-enrichment-
+status.json`, `tagging/sets/<code>/<code>_relations.json`) keys by Scryfall
+**name**, never `oracle_id`. This was raised and confirmed with the user
+2026-08-31 (given a set can legitimately contain multiple rows for the same
+name — e.g. `arn`'s 14 reprinted-with-a-new-collector-number cards — and
+Scryfall itself treats each printing as its own row) rather than assumed
+silently:
+
+- Verified across the full history in `tagging/scryfall-bulk/default-cards-
+  *.jsonl.gz` (117,608 rows; 39,370 in-scope printings — expansion/core,
+  non-basic, non-digital — 26,352 unique names): **zero names map to more
+  than one `oracle_id`.** Not just luck-of-the-data — backed by Wizards'
+  actual real-paper-Magic naming policy (no two different card designs ever
+  share an exact name).
+- `flavor_name` (e.g. Ikoria's Godzilla-crossover alt names — "Yidaro,
+  Wandering Monster" is also sold as "Godzilla, Doom Inevitable") is cosmetic
+  and never used as identity here.
+- Re-keying to `oracle_id` was considered and rejected: it would only harden
+  `tagging/card-enrichment-status.json` in isolation, while
+  `data/global_relations.json`/every `_relations.json` and `buildGraph.ts`'s
+  merge logic all join by name already — fixing the assumption for real
+  would mean migrating all of them, for a collision rate that's currently
+  zero and now actively guarded against instead.
+- **The actual safety net**: `scripts/generate-set-status.mjs`'s
+  `inScopeCardNames()` asserts this invariant per set it processes (throws
+  loudly if a name ever maps to 2+ `oracle_id`s) rather than trusting it
+  blindly. If that ever fires, it means two genuinely different card designs
+  collided under one name — stop and handle that pair manually, don't just
+  suppress the error.
+
 ## Per-set process
 
 1. **Determine the next set.** Sets in scope: Scryfall `set_type` in
