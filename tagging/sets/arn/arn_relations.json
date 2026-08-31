@@ -1,0 +1,930 @@
+[
+  {
+    "name": "Abu Ja'far",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "removal": 3,
+        "board-wipe": 1
+      },
+      "consume": {
+        "creature": 2
+      }
+    }
+  },
+  {
+    "name": "Aladdin",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "rogue": 2,
+        "commandeer": 3
+      }
+    }
+  },
+  {
+    "name": "Aladdin's Lamp",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "draw": 2,
+        "tutor": 3
+      }
+    }
+  },
+  {
+    "name": "Aladdin's Ring",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "removal": 3,
+        "face-damage": 3
+      }
+    }
+  },
+  {
+    "name": "Ali Baba",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "rogue": 2,
+        "lockdown": 2
+      }
+    }
+  },
+  {
+    "name": "Ali from Cairo",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "damage-prevention": 3
+      }
+    }
+  },
+  {
+    "name": "Army of Allah",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Bazaar of Baghdad",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "draw": 2,
+        "discard": 3,
+        "graveyard": 2
+      }
+    }
+  },
+  {
+    "name": "Bird Maiden",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "bird": 2,
+        "flying": 2
+      }
+    }
+  },
+  {
+    "name": "Bottle of Suleiman",
+    "themes": {
+      "produce": {
+        "artifacts": 3,
+        "token": 3,
+        "creature": 1,
+        "djinn": 1,
+        "flying": 1
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    }
+  },
+  {
+    "name": "Brass Man",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "construct": 2,
+        "lockdown": 2,
+        "untap": 2
+      }
+    }
+  },
+  {
+    "name": "Camel",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "camel": 2,
+        "banding": 2,
+        "damage-prevention": 2
+      }
+    }
+  },
+  {
+    "name": "City in a Bottle",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "removal": 3,
+        "board-wipe": 2
+      },
+      "consume": {
+        "sacrifice": 3
+      },
+      "atypical": {
+        "cost-increase": 2
+      }
+    }
+  },
+  {
+    "name": "City of Brass",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 3
+      }
+    }
+  },
+  {
+    "name": "Cuombajj Witches",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "removal": 2,
+        "face-damage": 2
+      }
+    }
+  },
+  {
+    "name": "Cyclone",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "other-counters": 3,
+        "removal": 3,
+        "board-wipe": 3,
+        "face-damage": 3
+      },
+      "consume": {
+        "other-counters": 3,
+        "sacrifice": 2
+      }
+    }
+  },
+  {
+    "name": "Dancing Scimitar",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "spirit": 2,
+        "flying": 2
+      }
+    }
+  },
+  {
+    "name": "Dandân",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "fish": 2
+      },
+      "consume": {
+        "land": 2,
+        "sacrifice": 1
+      }
+    }
+  },
+  {
+    "name": "Desert",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 2,
+        "removal": 1
+      },
+      "consume": {
+        "attack": 1
+      }
+    }
+  },
+  {
+    "name": "Desert Nomads",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "nomad": 2,
+        "landwalk": 2,
+        "damage-prevention": 2
+      }
+    }
+  },
+  {
+    "name": "Desert Twister",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3
+      }
+    }
+  },
+  {
+    "name": "Diamond Valley",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "lifegain": 3
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    }
+  },
+  {
+    "name": "Drop of Honey",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "removal": 3
+      },
+      "consume": {
+        "creature": 2,
+        "sacrifice": 1
+      }
+    }
+  },
+  {
+    "name": "Ebony Horse",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "untap": 2,
+        "damage-prevention": 3
+      },
+      "consume": {
+        "attack": 1
+      }
+    }
+  },
+  {
+    "name": "El-Hajjâj",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "lifegain": 3
+      }
+    }
+  },
+  {
+    "name": "Elephant Graveyard",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 1
+      },
+      "grant": {
+        "regeneration": 3
+      },
+      "consume": {
+        "elephant": 2
+      }
+    }
+  },
+  {
+    "name": "Erg Raiders",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "warrior": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Erhnam Djinn",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "djinn": 2
+      },
+      "grant": {
+        "landwalk": 2
+      }
+    }
+  },
+  {
+    "name": "Eye for an Eye",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "face-damage": 3
+      },
+      "atypical": {
+        "damage-redirection": 2
+      }
+    }
+  },
+  {
+    "name": "Fishliver Oil",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "landwalk": 3
+      }
+    }
+  },
+  {
+    "name": "Flying Carpet",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "grant": {
+        "flying": 1
+      }
+    }
+  },
+  {
+    "name": "Flying Men",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "flying": 2
+      }
+    }
+  },
+  {
+    "name": "Ghazbán Ogre",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "ogre": 2,
+        "commandeer": 3
+      }
+    }
+  },
+  {
+    "name": "Giant Tortoise",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "turtle": 2
+      },
+      "consume": {
+        "tap": 2
+      }
+    }
+  },
+  {
+    "name": "Guardian Beast",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "beast": 2
+      },
+      "consume": {
+        "tap": 2,
+        "artifacts": 3
+      },
+      "grant": {
+        "indestructible": 3
+      },
+      "atypical": {
+        "commandeer": 2
+      }
+    }
+  },
+  {
+    "name": "Hasran Ogress",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "ogre": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Hurr Jackal",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "jackal": 2
+      },
+      "atypical": {
+        "regeneration": 2
+      }
+    }
+  },
+  {
+    "name": "Ifh-Bíff Efreet",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "efreet": 2,
+        "flying": 2,
+        "removal": 3,
+        "board-wipe": 2,
+        "face-damage": 3
+      },
+      "consume": {
+        "flying": 2
+      }
+    }
+  },
+  {
+    "name": "Island Fish Jasconius",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "fish": 2,
+        "lockdown": 2,
+        "untap": 2
+      },
+      "consume": {
+        "land": 2,
+        "sacrifice": 1
+      }
+    }
+  },
+  {
+    "name": "Island of Wak-Wak",
+    "themes": {
+      "produce": {
+        "land": 2
+      },
+      "consume": {
+        "flying": 2,
+        "attack": 1
+      }
+    }
+  },
+  {
+    "name": "Jandor's Ring",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "graveyard": 1,
+        "draw": 2
+      },
+      "consume": {
+        "discard": 2
+      }
+    }
+  },
+  {
+    "name": "Jandor's Saddlebags",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "untap": 3
+      }
+    }
+  },
+  {
+    "name": "Jeweled Bird",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "ante": 3,
+        "graveyard": 2,
+        "draw": 2
+      }
+    }
+  },
+  {
+    "name": "Jihad",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "anthem": 3
+      },
+      "consume": {
+        "sacrifice": 1
+      }
+    }
+  },
+  {
+    "name": "Junún Efreet",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "efreet": 2,
+        "flying": 2
+      },
+      "consume": {
+        "sacrifice": 2
+      }
+    }
+  },
+  {
+    "name": "Juzám Djinn",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "djinn": 2
+      }
+    }
+  },
+  {
+    "name": "Khabál Ghoul",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "zombie": 2,
+        "counters": 3
+      },
+      "consume": {
+        "creature": 3
+      }
+    }
+  },
+  {
+    "name": "King Suleiman",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "noble": 2,
+        "removal": 3
+      },
+      "consume": {
+        "djinn": 2,
+        "efreet": 2
+      }
+    }
+  },
+  {
+    "name": "Kird Ape",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "ape": 2
+      },
+      "consume": {
+        "land": 2
+      }
+    }
+  },
+  {
+    "name": "Library of Alexandria",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 1,
+        "draw": 2
+      }
+    }
+  },
+  {
+    "name": "Magnetic Mountain",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "lockdown": 3,
+        "untap": 1
+      },
+      "consume": {
+        "creature": 2
+      }
+    }
+  },
+  {
+    "name": "Merchant Ship",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "attack": 2,
+        "land": 2,
+        "sacrifice": 1
+      }
+    }
+  },
+  {
+    "name": "Metamorphosis",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "mana": 3
+      },
+      "consume": {
+        "sacrifice": 3,
+        "creature": 1
+      }
+    }
+  },
+  {
+    "name": "Mijae Djinn",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "djinn": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Moorish Cavalry",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "knight": 2,
+        "trample": 2
+      }
+    }
+  },
+  {
+    "name": "Nafs Asp",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "snake": 2,
+        "life-loss": 2
+      }
+    }
+  },
+  {
+    "name": "Oasis",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "damage-prevention": 2
+      }
+    }
+  },
+  {
+    "name": "Old Man of the Sea",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "djinn": 2,
+        "commandeer": 3
+      },
+      "consume": {
+        "tap": 3
+      }
+    }
+  },
+  {
+    "name": "Oubliette",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "removal": 3,
+        "lockdown": 1
+      },
+      "consume": {
+        "etb": 2
+      }
+    }
+  },
+  {
+    "name": "Piety",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "combat-trick": 3
+      }
+    }
+  },
+  {
+    "name": "Pyramids",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "removal": 2
+      },
+      "consume": {
+        "aura": 1
+      },
+      "atypical": {
+        "indestructible": 2
+      }
+    }
+  },
+  {
+    "name": "Repentant Blacksmith",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "protection": 2
+      }
+    }
+  },
+  {
+    "name": "Ring of Ma'rûf",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "exile": 2
+      },
+      "atypical": {
+        "tutor": 3
+      }
+    }
+  },
+  {
+    "name": "Rukh Egg",
+    "themes": {
+      "produce": {
+        "creature": 3,
+        "bird": 3,
+        "egg": 2,
+        "token": 3,
+        "flying": 1,
+        "etb": 2
+      }
+    }
+  },
+  {
+    "name": "Sandals of Abdallah",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "grant": {
+        "landwalk": 1
+      }
+    }
+  },
+  {
+    "name": "Sandstorm",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 2,
+        "board-wipe": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Serendib Djinn",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "djinn": 2,
+        "flying": 2
+      },
+      "consume": {
+        "sacrifice": 3,
+        "land": 2
+      }
+    }
+  },
+  {
+    "name": "Serendib Efreet",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "efreet": 2,
+        "flying": 2
+      }
+    }
+  },
+  {
+    "name": "Shahrazad",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "life-loss": 3
+      }
+    }
+  },
+  {
+    "name": "Sindbad",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "draw": 2,
+        "discard": 2,
+        "graveyard": 1
+      },
+      "consume": {
+        "land": 1
+      }
+    }
+  },
+  {
+    "name": "Singing Tree",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "plant": 2
+      },
+      "consume": {
+        "attack": 1
+      }
+    }
+  },
+  {
+    "name": "Sorceress Queen",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "wizard": 2,
+        "sorcerer": 2
+      }
+    }
+  },
+  {
+    "name": "Stone-Throwing Devils",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "devil": 2,
+        "first-strike": 2
+      }
+    }
+  },
+  {
+    "name": "Unstable Mutation",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "grant": {
+        "other-counters": 3
+      }
+    }
+  },
+  {
+    "name": "War Elephant",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "elephant": 2,
+        "banding": 2,
+        "trample": 2
+      }
+    }
+  },
+  {
+    "name": "Wyluli Wolf",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "wolf": 2
+      },
+      "grant": {
+        "combat-trick": 2
+      }
+    }
+  },
+  {
+    "name": "Ydwen Efreet",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "efreet": 2
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  }
+]

@@ -18,9 +18,9 @@ failure modes.
 ## Creature types
 
 Creature subtypes (Human, Goblin, Vampire, ...) get their THEME auto-generated —
-`src/lib/buildGraph.ts` derives the id/label for every subtype straight from
+`app/lib/buildGraph.ts` derives the id/label for every subtype straight from
 every card's type line (a purely structural fact, no judgment involved), so
-the theme exists whether or not anyone's tagged it yet. `data/type_themes.json`
+the theme exists whether or not anyone's tagged it yet. `tagging/type_themes.json`
 is the persisted list of these — check it (or the type_line itself) for the
 exact id to use (e.g. "Goblin" -> `goblin`).
 
@@ -56,14 +56,16 @@ theme the card's actual text triggers. A card with NO entry at all yet (no
 creature/land/subtype to prefill, e.g. a plain instant) still needs the full
 read-and-judge process below, same as ever — prefill only ever adds to what
 would otherwise need review, it never substitutes for it. **Whichever the
-case, don't forget to set `"reviewed": "human"` plus a `"reviewed_at"`
-timestamp** on the entry once you're actually confirming it (see
-`REVIEW_PROCESS.md`) — that's what distinguishes "a human looked at this"
-from "prefill script touched this," now that every applicable card has SOME
-entry. (`reviewed` is a shared escalating ladder — `false` -> `"script"` ->
-`"agent"` -> `"human"` — see `GLOBAL_TAGGING_RULES.md`'s "Output shape"
-section for the full tier definitions; FIN's live loop only ever writes the
-top tier, `"human"`.)
+case, don't forget to set `{ "enrichment": "ai", "review": "human" }`** for
+that card's name in `tagging/card-enrichment-status.json` once you're
+actually confirming it (see `REVIEW_PROCESS.md`) — that's what distinguishes
+"a human looked at this" from "prefill script touched this," now that every
+applicable card has SOME entry in `fin_relations.json`. This status file, not
+anything inside `fin_relations.json` itself, is the real marker — see
+`GLOBAL_TAGGING_RULES.md`'s "Output shape" section for the full
+enrichment/review model. `review-relay.mjs` already does this automatically
+on `allGood`; only set it by hand if you're writing straight to
+`fin_relations.json` outside that loop.
 
 **No exceptions on structural self-identity tags.** Only Creature and Land
 get prefilled — every other structural type on the card's own type line
@@ -96,27 +98,31 @@ theme id, to weight — matching `data/fin/fin_relations.json`:
   "themes": {
     "produce": { "graveyard": 1 },
     "consume": { "graveyard": 2 }
-  },
-  "reviewed": "human",
-  "reviewed_at": "2026-08-30T11:32:10.000Z"
+  }
 }
 ```
 
 There's no "no theme" outcome to assign — `atypical` (see below) is generous
 enough that a genuinely themeless card shouldn't come up in practice. If one
-somehow does, still write an entry for it (`{ "themes": {}, "reviewed": "human",
-"reviewed_at": "..." }` — empty themes, but present and marked reviewed)
-rather than leaving it out.
-`reviewed: "human"` (with `reviewed_at` set) is what marks a card as actually
-reviewed now (see `REVIEW_PROCESS.md`'s card-selection step) — presence
-alone no longer means that, since `scripts/prefill-main-types.mjs` gives
-most cards a mechanical-only entry with no `reviewed` field at all. Cards
-with no entry at all show as "Not Processed" in the UI — that's a
+somehow does, still write an entry for it (`{ "themes": {} }` — empty themes,
+but present) rather than leaving it out.
+
+**`fin_relations.json` never carries a `reviewed` field (2026-08-31)** — that
+lives entirely in `tagging/card-enrichment-status.json`, keyed by card name,
+outside `data/` so review bookkeeping never ships alongside what
+`public/fin` actually serves. A card's real review status there —
+`{ "enrichment": "ai", "review": "human" }` once a person has confirmed it
+via the review loop, vs. `{ "enrichment": "script", "review": "none" }` for
+a mechanical-only prefill nobody's judged yet — is the real marker (see
+`REVIEW_PROCESS.md`'s card-selection step), NOT presence in
+`fin_relations.json` itself, since `scripts/prefill-main-types.mjs` gives
+most cards a mechanical-only entry there regardless. Cards with no entry at
+all in `fin_relations.json` show as "Not Processed" in the UI — that's a
 pending-review marker `buildGraph.ts` adds automatically, not something you
-write. (`reviewed` is a shared escalating ladder across FIN and every
-historical set — `false` -> `"script"` -> `"agent"` -> `"human"` — see
-`GLOBAL_TAGGING_RULES.md` for the full tier definitions; FIN's live loop
-only ever writes the top tier.)
+write. (The enrichment/review model is shared across FIN and every
+historical set — see `GLOBAL_TAGGING_RULES.md`'s "Output shape" section for
+the full definitions; FIN's live loop only ever writes the top tier,
+`review: "human"`.)
 
 ## Relation types (role)
 
@@ -669,8 +675,11 @@ consume side — nothing in this set reads back "how much removal you've done").
 6. When uncertain between forcing a produce/consume guess and tagging
    atypical, prefer atypical — it's a legitimate "worth a second look" signal
    for the human reviewer, not a failure state.
-7. Write the result to `data/fin/fin_relations.json`, `"reviewed": "human"`
-   plus `"reviewed_at"` included
+7. Write the result to `data/fin/fin_relations.json` (no `reviewed` field —
+   see "Output shape" above), and set
+   `{ "enrichment": "ai", "review": "human" }` for that name in
+   `tagging/card-enrichment-status.json`
    (or, if driving the interactive review loop, append it to
-   `scripts/review-drafts.json` instead — see `scripts/REVIEW_PROCESS.md`)
+   `scripts/review-drafts.json` instead — see `scripts/REVIEW_PROCESS.md`,
+   whose relay already does both writes for you on `allGood`)
    and move on.

@@ -1,0 +1,278 @@
+[
+  {
+    "id": "advisor",
+    "label": "Advisor"
+  },
+  {
+    "id": "alien",
+    "label": "Alien"
+  },
+  {
+    "id": "angel",
+    "label": "Angel"
+  },
+  {
+    "id": "archer",
+    "label": "Archer"
+  },
+  {
+    "id": "artificer",
+    "label": "Artificer"
+  },
+  {
+    "id": "assassin",
+    "label": "Assassin"
+  },
+  {
+    "id": "avatar",
+    "label": "Avatar"
+  },
+  {
+    "id": "bard",
+    "label": "Bard"
+  },
+  {
+    "id": "beast",
+    "label": "Beast"
+  },
+  {
+    "id": "bird",
+    "label": "Bird"
+  },
+  {
+    "id": "cat",
+    "label": "Cat"
+  },
+  {
+    "id": "citizen",
+    "label": "Citizen"
+  },
+  {
+    "id": "cleric",
+    "label": "Cleric"
+  },
+  {
+    "id": "construct",
+    "label": "Construct"
+  },
+  {
+    "id": "demon",
+    "label": "Demon"
+  },
+  {
+    "id": "dinosaur",
+    "label": "Dinosaur"
+  },
+  {
+    "id": "dog",
+    "label": "Dog"
+  },
+  {
+    "id": "drake",
+    "label": "Drake"
+  },
+  {
+    "id": "druid",
+    "label": "Druid"
+  },
+  {
+    "id": "dwarf",
+    "label": "Dwarf"
+  },
+  {
+    "id": "elder",
+    "label": "Elder"
+  },
+  {
+    "id": "elemental",
+    "label": "Elemental"
+  },
+  {
+    "id": "eye",
+    "label": "Eye"
+  },
+  {
+    "id": "faerie",
+    "label": "Faerie"
+  },
+  {
+    "id": "fish",
+    "label": "Fish"
+  },
+  {
+    "id": "frog",
+    "label": "Frog"
+  },
+  {
+    "id": "giant",
+    "label": "Giant"
+  },
+  {
+    "id": "goblin",
+    "label": "Goblin"
+  },
+  {
+    "id": "god",
+    "label": "God"
+  },
+  {
+    "id": "harpy",
+    "label": "Harpy"
+  },
+  {
+    "id": "horror",
+    "label": "Horror"
+  },
+  {
+    "id": "human",
+    "label": "Human"
+  },
+  {
+    "id": "knight",
+    "label": "Knight"
+  },
+  {
+    "id": "leviathan",
+    "label": "Leviathan"
+  },
+  {
+    "id": "mercenary",
+    "label": "Mercenary"
+  },
+  {
+    "id": "merfolk",
+    "label": "Merfolk"
+  },
+  {
+    "id": "monk",
+    "label": "Monk"
+  },
+  {
+    "id": "moogle",
+    "label": "Moogle"
+  },
+  {
+    "id": "mutant",
+    "label": "Mutant"
+  },
+  {
+    "id": "nightmare",
+    "label": "Nightmare"
+  },
+  {
+    "id": "noble",
+    "label": "Noble"
+  },
+  {
+    "id": "octopus",
+    "label": "Octopus"
+  },
+  {
+    "id": "ooze",
+    "label": "Ooze"
+  },
+  {
+    "id": "phoenix",
+    "label": "Phoenix"
+  },
+  {
+    "id": "pilot",
+    "label": "Pilot"
+  },
+  {
+    "id": "plant",
+    "label": "Plant"
+  },
+  {
+    "id": "qu",
+    "label": "Qu"
+  },
+  {
+    "id": "rabbit",
+    "label": "Rabbit"
+  },
+  {
+    "id": "rat",
+    "label": "Rat"
+  },
+  {
+    "id": "rebel",
+    "label": "Rebel"
+  },
+  {
+    "id": "robot",
+    "label": "Robot"
+  },
+  {
+    "id": "rogue",
+    "label": "Rogue"
+  },
+  {
+    "id": "salamander",
+    "label": "Salamander"
+  },
+  {
+    "id": "samurai",
+    "label": "Samurai"
+  },
+  {
+    "id": "scorpion",
+    "label": "Scorpion"
+  },
+  {
+    "id": "scout",
+    "label": "Scout"
+  },
+  {
+    "id": "shaman",
+    "label": "Shaman"
+  },
+  {
+    "id": "soldier",
+    "label": "Soldier"
+  },
+  {
+    "id": "spider",
+    "label": "Spider"
+  },
+  {
+    "id": "spirit",
+    "label": "Spirit"
+  },
+  {
+    "id": "turtle",
+    "label": "Turtle"
+  },
+  {
+    "id": "wall",
+    "label": "Wall"
+  },
+  {
+    "id": "warlock",
+    "label": "Warlock"
+  },
+  {
+    "id": "warrior",
+    "label": "Warrior"
+  },
+  {
+    "id": "werewolf",
+    "label": "Werewolf"
+  },
+  {
+    "id": "wizard",
+    "label": "Wizard"
+  },
+  {
+    "id": "wolf",
+    "label": "Wolf"
+  },
+  {
+    "id": "worm",
+    "label": "Worm"
+  },
+  {
+    "id": "zombie",
+    "label": "Zombie"
+  }
+]

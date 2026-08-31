@@ -51,7 +51,7 @@ instead of purely auto-generating.
 For each card, decide which curated themes below apply, and via which
 relation type(s) (see next section). Write the result grouped by role, then
 theme id, to weight — one entry per card, matching
-`data/<set>/<set>_relations.json`:
+`<set>_relations.json`:
 
 ```jsonc
 {
@@ -59,36 +59,62 @@ theme id, to weight — one entry per card, matching
   "themes": {
     "produce": { "graveyard": 1 },
     "consume": { "graveyard": 2 }
-  },
-  "reviewed": "agent",
-  "reviewed_at": "2026-08-30T16:20:00.000Z"
+  }
 }
 ```
 
 There's no "no theme" outcome to assign — `atypical` (see below) is generous
 enough that a genuinely themeless card shouldn't come up in practice. If one
-somehow does, still write an entry for it (`{ "themes": {}, "reviewed": "agent",
-"reviewed_at": "..." }` — empty themes, but present and marked reviewed) rather
-than leaving it out.
+somehow does, still write an entry for it (`{ "themes": {} }` — empty themes,
+but present) rather than leaving it out.
 
-`reviewed` is an escalating provenance ladder, not a plain boolean:
+**Enrichment/review status is NOT part of this file at all (2026-08-31).** A
+relations entry NEVER carries a `reviewed` (or `reviewed_at`) field — that
+would mix in-development bookkeeping into data some sets (FIN, under
+`data/fin/`) actually ship to end users via `public/fin`. Instead, every
+card's status lives by NAME in one place, entirely outside `data/`:
+`tagging/card-enrichment-status.json` — a flat object, not an array:
 
-- `false` / absent — not yet reviewed (a fresh draft, or a mechanical-only
-  prefill entry).
-- `"script"` — resolved with zero judgment by `strict_baseline.py` alone (a
-  vanilla or keyword-only card with nothing left to tag once keyword lines
-  and reminder text are stripped).
-- `"agent"` — a full agent-driven strict-review pass confirmed it (see
-  `HISTORICAL_SETS_PROCESS.md` step 8) — no live human involved.
-- `"human"` — confirmed by an actual person via the live review-relay loop
-  (see `REVIEW_PROCESS.md`) — the highest tier.
+```jsonc
+{
+  "Pack Leader": { "enrichment": "ai", "review": "human" },
+  "Some Vanilla Bear": { "enrichment": "script", "review": "none" }
+}
+```
 
-Whenever `reviewed` is anything but `false`, also write `reviewed_at` — an
-ISO 8601 timestamp of when that tier was reached. This is what lets anyone
-tell where a card, set, or the whole pool actually stands in the pipeline.
-Never downgrade an existing tier (don't overwrite a `"human"` entry with
-`"agent"` just because an unrelated script touched the file) — only add or
-upgrade.
+Two independent axes, not one ladder:
+
+- **`enrichment`** — how the THEME DATA itself was produced: `"none"` (no
+  entry / nothing tagged yet), `"script"` (`strict_baseline.py`'s
+  zero-judgment structural facts, or a mechanical-only prefill from
+  `scripts/prefill-main-types.mjs`), `"ai"` (an agent or Codex actually read
+  the card and made judgment calls), or `"human"` (a person hand-authored
+  the tags directly — rare in practice, but a valid outcome).
+- **`review`** — whether that data has since been independently checked:
+  `"none"` (nobody's verified it), `"ai"` (a separate agent-driven
+  strict-review pass confirmed it — see `HISTORICAL_SETS_PROCESS.md` step
+  8), or `"human"` (confirmed by an actual person via the live review-relay
+  loop — see `REVIEW_PROCESS.md`). There's no `"script"` review tier — a
+  script can draft, but reviewing is inherently a judgment act.
+
+A card only gets an entry in this file once it's past the default
+(`enrichment: "none"`) — omit cards nobody's touched yet, same principle as
+never writing a themeless-and-unreviewed relations entry. Never downgrade an
+existing entry (don't overwrite `review: "human"` with `review: "ai"` just
+because an unrelated script ran) — only add or upgrade. If you're unsure
+which tier applies, take the leftmost (most conservative) one you're
+actually confident in — false claims of a higher tier are worse than an
+honest lower one.
+
+**A name's status can legitimately outrun what `data/global_relations.json`
+itself shows for that name.** FIN is real, currently-printed Magic — some of
+its card names may already have `review: "human"` status here (via
+`data/fin/fin_relations.json`) while `global_relations.json`'s own entry for
+that same name is still just the historical sweep's untouched structural
+baseline, because FIN hasn't been chronologically merged into the sweep yet
+(see `HISTORICAL_SETS_PROCESS.md`'s "How this relates to FIN" section). When
+in doubt about which payload is authoritative for a given name, check
+`data/fin/fin_relations.json` first.
 
 ## Relation types (role)
 
@@ -568,9 +594,15 @@ done").
   less to cast (a flat amount, for a specific color/type, or conditionally).
   Weight 1 when scoped to a subset of spells (e.g. "White spells you cast
   cost {1} less") — genuine but narrow. General scale otherwise.
-- **Kraken** (`kraken`) / **Serpent** (`serpent`) — precedent examples of the
-  creature-types exception above: pre-curated so a card that NAMES the type
-  (without the current set printing one) still has a valid theme id.
+- **Kraken** (`kraken`) / **Serpent** (`serpent`) / **Assembly-Worker**
+  (`assembly-worker`) / **Tetravite** (`tetravite`) — precedent examples of
+  the creature-types exception above: pre-curated so a card that NAMES the
+  type (without the current set printing one on an actual card face) still
+  has a valid theme id. Assembly-Worker and Tetravite came from Antiquities
+  (`atq`) — Mishra's Factory's activated ability turns itself into an
+  Assembly-Worker creature, and Tetravus creates Tetravite tokens, but
+  neither type is ever the printed `type_line` of any real card in that
+  set's own data (tokens aren't part of the extracted card list).
 - **Regeneration** (`regeneration`) — produce: the card itself can be
   regenerated by its OWN activated ability ("{G}: Regenerate this
   creature") — the ability lives on the permanent that benefits. `grant`:
@@ -685,10 +717,15 @@ done").
    rule itself is right), still tag it your best guess per the rules as they
    stand, but log it to that set's standoffs doc for later discussion — see
    the set review process doc.
-7. Write the result to that set's `data/<set>/<set>_relations.json`. Leave
-   `reviewed` false/absent on first draft; a strict reviewer pass sets it to
-   `"agent"` (plus a `reviewed_at` timestamp) once every entry in the set has
-   been checked against this document with no outstanding issues.
+7. Write the result to that set's `<set>_relations.json` (historical sets:
+   `tagging/sets/<code>/<code>_relations.json`; FIN: `data/fin/fin_relations.json`).
+   Don't write a `reviewed` field on the entry at all — a fresh draft simply
+   has no `tagging/card-enrichment-status.json` entry yet for that name (or
+   one with `review: "none"`). Once a strict reviewer pass checks every entry
+   in the set against this document with no outstanding issues, set
+   `review: "ai"` for each of those names in
+   `tagging/card-enrichment-status.json` (`enrichment: "ai"` too, if not
+   already set from the drafting step).
 
 ## When a set introduces something new
 

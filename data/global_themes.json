@@ -280,6 +280,14 @@
     "label": "Serpent"
   },
   {
+    "id": "assembly-worker",
+    "label": "Assembly-Worker"
+  },
+  {
+    "id": "tetravite",
+    "label": "Tetravite"
+  },
+  {
     "id": "board-wipe",
     "label": "Board Wipe"
   },

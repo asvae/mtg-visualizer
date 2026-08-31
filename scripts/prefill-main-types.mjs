@@ -12,11 +12,13 @@
 // already tagged `creature: produce 3` because the card also makes extra creature
 // tokens keeps their weight; this script won't stomp it back down to 2).
 //
-// Also marks every entry that already existed before this run `reviewed: 'human'` —
-// a snapshot of "a human already confirmed this one via the review loop." Every
-// card gets *some* entry after this script runs (mechanical prefill, if nothing
-// else), so presence-in-file can no longer mean "reviewed" — REVIEW_PROCESS.md's
-// pick-next-card step now keys off a truthy `reviewed` instead. See TAGGING_RULES.md.
+// 2026-08-31: no longer touches `reviewed` at all — that field doesn't exist on
+// relations entries anymore. Enrichment/review status lives entirely in
+// tagging/card-enrichment-status.json, decoupled from this file's mutations. A
+// brand-new mechanical-only entry this run creates gets a `script`/`none` status
+// entry there (if nothing better is already recorded for that name) — a
+// pre-existing entry's status is untouched, since whatever review it already went
+// through happened independently of prefill ever running.
 //
 // Usage: node scripts/prefill-main-types.mjs <set-code>
 
@@ -28,7 +30,7 @@ if (!setCode) {
   process.exit(1);
 }
 
-// Same derivation as src/lib/buildGraph.ts — kept in sync by hand since this
+// Same derivation as app/lib/buildGraph.ts — kept in sync by hand since this
 // script and the browser module run in different runtimes (plain Node here,
 // no build step).
 function creatureSubtypes(card) {
@@ -45,25 +47,41 @@ function slugify(word) {
   return word.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+// FIN's data lives under data/ (actually served); every historical set lives
+// under tagging/sets/ (dev-only, never served) — try both.
+async function findSetDir(code) {
+  for (const dir of [`data/${code}`, `tagging/sets/${code}`]) {
+    try {
+      await readFile(`${dir}/${code}_scryfall.json`, 'utf-8');
+      return dir;
+    } catch {
+      // try next
+    }
+  }
+  throw new Error(`No ${code}_scryfall.json found under data/${code}/ or tagging/sets/${code}/`);
+}
+
 const themes = JSON.parse(await readFile('data/global_themes.json', 'utf-8'));
 const themeIds = new Set(themes.map((t) => t.id));
 
-const allRaw = JSON.parse(await readFile(`data/${setCode}/${setCode}_scryfall.json`, 'utf-8'));
+const dir = await findSetDir(setCode);
+const allRaw = JSON.parse(await readFile(`${dir}/${setCode}_scryfall.json`, 'utf-8'));
 const raw = allRaw.filter((c) => !(c.type_line || '').includes('Basic') && !c.digital);
 
 let relations = [];
 try {
-  relations = JSON.parse(await readFile(`data/${setCode}/${setCode}_relations.json`, 'utf-8'));
+  relations = JSON.parse(await readFile(`${dir}/${setCode}_relations.json`, 'utf-8'));
 } catch {
   // no existing file — every card starts fresh
 }
 const byName = new Map(relations.map((e) => [e.name, e]));
 
-// Snapshot BEFORE any mutation — these are the entries a human already reviewed
-// via the live loop, as opposed to whatever this script is about to add.
-for (const entry of relations) {
-  entry.reviewed = 'human';
-  entry.reviewed_at ??= new Date().toISOString(); // don't stomp the real confirmation time on a re-run
+const STATUS_PATH = 'tagging/card-enrichment-status.json';
+let status = {};
+try {
+  status = JSON.parse(await readFile(STATUS_PATH, 'utf-8'));
+} catch {
+  // no existing file yet
 }
 
 let addedCreature = 0;
@@ -87,6 +105,7 @@ for (const c of raw) {
     byName.set(c.name, entry);
     relations.push(entry);
     newEntries++;
+    status[c.name] ??= { enrichment: 'script', review: 'none' };
   }
   entry.themes.produce ??= {};
   for (const [id, weight, counter] of facts) {
@@ -99,7 +118,8 @@ for (const c of raw) {
 }
 
 relations.sort((a, b) => a.name.localeCompare(b.name));
-await writeFile(`data/${setCode}/${setCode}_relations.json`, JSON.stringify(relations, null, 2));
+await writeFile(`${dir}/${setCode}_relations.json`, JSON.stringify(relations, null, 2));
+await writeFile(STATUS_PATH, JSON.stringify(status, null, 2) + '\n');
 
-console.log(`data/${setCode}/${setCode}_relations.json: ${relations.length} entries (${newEntries} new, mechanical-only)`);
+console.log(`${dir}/${setCode}_relations.json: ${relations.length} entries (${newEntries} new, mechanical-only)`);
 console.log(`Added: creature ${addedCreature}, land ${addedLand}, creature-subtype ${addedSubtype}`);

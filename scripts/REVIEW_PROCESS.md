@@ -13,7 +13,7 @@ card against `scripts/TAGGING_RULES.md`, confirmed or corrected by the user,
 one card at a time. That file — not any code — is the actual source of truth
 the visualizer reads from (fetched directly, along with
 `data/fin/fin_scryfall.json` and `data/global_themes.json`, and assembled into a
-graph client-side by `src/lib/buildGraph.ts` — no build step, just refresh).
+graph client-side by `app/lib/buildGraph.ts` — no build step, just refresh).
 **Read `scripts/TAGGING_RULES.md` in full before tagging anything** — it
 defines every theme, relation type (role), and the weight conventions this
 process depends on.
@@ -23,13 +23,16 @@ process depends on.
 2 produce) and every creature-subtype produce edge (Bandit, Human, ... weight
 2) for every applicable card — the zero-judgment stuff, so you don't hand-type
 it. This means **presence in `fin_relations.json` no longer means "reviewed"**
-— most cards now have an entry that's mechanical-only. The `reviewed: "human"`
-field on an entry is the real marker now; see step 1 and step 5 below, and
-TAGGING_RULES.md's "Main types are prefilled" section. (2026-08-30: `reviewed`
-became a shared ladder — `false` -> `"script"` -> `"agent"` -> `"human"` —
-across FIN and every historical set; FIN's live loop always writes `"human"`
-plus a `reviewed_at` timestamp, never the lower tiers. See
-`GLOBAL_TAGGING_RULES.md`'s "Output shape" section.)
+— most cards now have an entry that's mechanical-only. **2026-08-31: review
+status moved entirely out of `fin_relations.json`** into
+`tagging/card-enrichment-status.json`, keyed by card name, so review
+bookkeeping never ships to users alongside what `public/fin` actually
+serves. A name's `{ "enrichment": "ai", "review": "human" }` entry there is
+the real marker now; see step 1 and step 5 below, and TAGGING_RULES.md's
+"Main types are prefilled" section. (The enrichment/review model is shared
+across FIN and every historical set; FIN's live loop always writes
+`enrichment: "ai"` / `review: "human"` — the top tier on both axes. See
+`GLOBAL_TAGGING_RULES.md`'s "Output shape" section for the full model.)
 
 **2026-08-30: the queue+relay design (current, working).** A first attempt at
 a file-based async batch mode (agent writes drafts, a script mechanically
@@ -56,8 +59,10 @@ user wait on the agent's per-card judgment time) but splits the job cleanly:
   with Bash `run_in_background`, NOT by the agent's own request loop) that is
   PURE PLUMBING: it takes the oldest un-shown/changed draft, `POST /show`s it,
   blocks on `GET /wait`, and on `{type:'allGood'}` writes straight to
-  `data/fin/fin_relations.json` (merged onto whatever's already there) with
-  `reviewed: 'human'` plus a `reviewed_at` timestamp, removing it from
+  `data/fin/fin_relations.json` (merged onto whatever's already there, themes
+  only — no review status in that file), sets
+  `{ enrichment: 'ai', review: 'human' }` for that name in
+  `tagging/card-enrichment-status.json`, and removes it from
   `review-drafts.json`. On
   `{type:'feedback', text}` it appends to `review-responses.json` instead of
   looping itself — it has zero tagging judgment, that's entirely the agent's
@@ -77,18 +82,18 @@ desync bug this design fixes.
 Three processes must be running:
 
 ```
-npm run dev                      # Vite dev server, http://localhost:5173
+npm run dev                      # Nuxt dev server, http://localhost:3000
 npm run review-server            # control-plane for the review panel, http://localhost:8787
 node scripts/review-relay.mjs    # plumbing between review-drafts.json/review-responses.json and the panel
 ```
 
-Open the app at **http://localhost:5173/app/** (`/` is now a separate static
-archetype-landing page, not the visualizer — see index.html/vite.config.js;
-the review panel only lives under `/app/`), click the 🧾 icon in the header to
-open the review session panel — that's what the user watches while you drive
-the loop below. That icon only renders when `VITE_ENABLE_REVIEW=1` is set
-(see `.env.example`) — it's already set in the local `.env`, nothing to do
-unless it's missing. At the end of a review session, stop `review-relay.mjs`
+Open the app at **http://localhost:3000/app** (`/` is a separate landing page,
+not the visualizer — see `app/pages/index.vue`; the review panel only lives
+under `/app`), click the 🧾 icon in the header to open the review session
+panel — that's what the user watches while you drive the loop below. That
+icon only renders when `NUXT_PUBLIC_ENABLE_REVIEW=true` is set (see
+`.env.example`) — it's already set in the local `.env`, nothing to do unless
+it's missing. At the end of a review session, stop `review-relay.mjs`
 and `review-server.mjs` (`kill` the node processes) — restart both next time
 per the above.
 
@@ -130,23 +135,23 @@ seconds, or after any edit you make to them):
    next un-reviewed, un-drafted card: in `data/fin/fin_scryfall.json`'s own
    list order (the Scryfall set order — white, blue, black, red, green,
    multicolor, artifact, land — NOT alphabetical; makes reviewing color-by-
-   color easier), skipping any name that already has a truthy `reviewed` in
-   `data/fin/fin_relations.json` (NOT just "has an entry" — most cards have a
-   mechanical-only prefill entry now, see the 2026-08-29 note above, and that
-   doesn't count) AND any name already sitting in `review-drafts.json`, and
-   skipping basic lands / digital-only Alchemy rebalances, same as
-   `src/lib/buildGraph.ts` does: they're excluded from the visualizer
-   entirely, so tagging one produces an entry nothing ever reads (this bit a
-   review session once — `fin_scryfall.json` had a stray `digital: true` "A-"
-   card slip through fetch-set.mjs's own exclusion query; re-fetching fixed
-   the data, but pick-next-card should never trust the raw file alone):
+   color easier), skipping any name whose `tagging/card-enrichment-status.json`
+   entry already has `review: "human"` (NOT just "has an entry in
+   `fin_relations.json`" — most cards have a mechanical-only prefill entry
+   now, see the 2026-08-29 note above, and that doesn't count) AND any name
+   already sitting in `review-drafts.json`, and skipping basic lands /
+   digital-only Alchemy rebalances, same as `app/lib/buildGraph.ts` does:
+   they're excluded from the visualizer entirely, so tagging one produces an
+   entry nothing ever reads (this bit a review session once —
+   `fin_scryfall.json` had a stray `digital: true` "A-" card slip through
+   fetch-set.mjs's own exclusion query; re-fetching fixed the data, but
+   pick-next-card should never trust the raw file alone):
    ```js
    const cards = require('./data/fin/fin_scryfall.json')
      .filter(c => !(c.type_line || '').includes('Basic') && !c.digital);
-   const relations = require('./data/fin/fin_relations.json');
-   const reviewed = new Set(relations.filter(t => t.reviewed).map(t => t.name));
+   const status = require('./tagging/card-enrichment-status.json');
    const drafted = new Set(require('./scripts/review-drafts.json').map(d => d.name));
-   const next = cards.map(c => c.name).find(n => !reviewed.has(n) && !drafted.has(n));
+   const next = cards.map(c => c.name).find(n => status[n]?.review !== 'human' && !drafted.has(n));
    ```
    **Inspect it:** `node scripts/review-card.mjs "<name>"` — prints full
    oracle text (both faces for DFCs) plus its current relations (`atypical:
@@ -183,8 +188,9 @@ seconds, or after any edit you make to them):
      is confirming in the SAME message, not just correcting. Apply the
      correction yourself and write straight to `data/fin/fin_relations.json`
      (merge onto the card's existing entry — same merge logic the relay uses
-     on `allGood`) with `reviewed: 'human'` plus a `reviewed_at` timestamp,
-     then remove the card from
+     on `allGood`, themes only), set
+     `{ enrichment: 'ai', review: 'human' }` for that name in
+     `tagging/card-enrichment-status.json`, then remove the card from
      `review-drafts.json`, run `npm run test` to confirm the schema still
      passes, and top the queue back up per step 1. Only fall back to the
      plain-correction path above when there's no "that's everything" signal
@@ -192,16 +198,18 @@ seconds, or after any edit you make to them):
    - Either way, remove the handled entry from `review-responses.json` when
      done with it.
 3. **You'll never see `allGood` or `{type:'stop'}` directly** — the relay
-   handles `allGood` itself (writes to `fin_relations.json`, sets
-   `reviewed: 'human'` plus `reviewed_at`, removes the card from `review-drafts.json`, runs
-   `npm run test`). A card silently disappearing from `review-drafts.json`
-   with no matching `review-responses.json` entry means exactly this — check
-   `fin_relations.json` to confirm, same as any other `allGood`, then top the
-   queue back up per step 1. `{type:'stop'}` ends the relay process itself
-   (it exits) — if you see it's no longer running, treat that as the user
-   ending the session: report how many cards got tagged this run and what's
-   left (`data/fin/fin_scryfall.json`'s eligible count minus
-   `data/fin/fin_relations.json`'s `reviewed: "human"` count).
+   handles `allGood` itself (writes themes to `fin_relations.json`, sets
+   `{ enrichment: 'ai', review: 'human' }` in
+   `tagging/card-enrichment-status.json`, removes the card from
+   `review-drafts.json`, runs `npm run test`). A card silently disappearing
+   from `review-drafts.json` with no matching `review-responses.json` entry
+   means exactly this — check `fin_relations.json` to confirm, same as any
+   other `allGood`, then top the queue back up per step 1. `{type:'stop'}`
+   ends the relay process itself (it exits) — if you see it's no longer
+   running, treat that as the user ending the session: report how many
+   cards got tagged this run and what's left (`data/fin/fin_scryfall.json`'s
+   eligible count minus the number of FIN names with `review: "human"` in
+   `tagging/card-enrichment-status.json`).
 
 When wrapping up for the day: leave whatever's still in `review-drafts.json`
 in place (valid pre-judged proposals, safe to pick up next session — the
@@ -242,7 +250,7 @@ reflexive hedging. When multiple agents draft in parallel (e.g. a bulk-
 drafting pass covering many cards at once), each judges its own confidence
 independently; there's no cross-agent calibration pass.
 
-## Tags file format (`data/<set>/<set>_relations.json`)
+## Tags file format (`data/fin/fin_relations.json`)
 
 ```jsonc
 {
@@ -250,25 +258,27 @@ independently; there's no cross-agent calibration pass.
   "themes": {
     "produce": { "graveyard": 1 },
     "consume": { "graveyard": 2 }
-  },
-  "reviewed": "human",
-  "reviewed_at": "2026-08-30T11:32:10.000Z"
+  }
 }
 ```
 Grouped by role, then theme id -> weight (a card can have a theme id under
-several roles, and several theme ids under the same role). `reviewed: "human"`
-(with `reviewed_at` set) means a human has confirmed this exact entry via the
-loop — omit `reviewed` (or leave it absent/false) for a mechanical-only
-prefill nobody's looked at yet; that's what step 1 checks, not mere presence.
-(`reviewed` is a shared ladder with the historical-sets pipeline —
-`false` -> `"script"` -> `"agent"` -> `"human"` — FIN's own loop only ever
-writes the top tier; see `GLOBAL_TAGGING_RULES.md`.) No `"card"`/`"edges"`/node-or-edge
-language at all in this file; that's the visualizer's own internal graph
-vocabulary (see `src/types.ts`), not this file's. One array, one file per set.
+several roles, and several theme ids under the same role). No `reviewed`
+field lives here at all (2026-08-31) — a human confirming this exact entry
+via the loop is instead recorded as `{ "enrichment": "ai", "review": "human" }`
+for that name in `tagging/card-enrichment-status.json`, entirely outside
+`data/` so review bookkeeping never ships to users alongside what
+`public/fin` serves. Omit a status entry (or leave `review: "none"`) for a
+mechanical-only prefill nobody's looked at yet; that's what step 1 checks,
+not mere presence in `fin_relations.json`. (The enrichment/review model is
+shared with the historical-sets pipeline — see `GLOBAL_TAGGING_RULES.md`'s
+"Output shape" section — FIN's own loop only ever writes the top tier on
+both axes.) No `"card"`/`"edges"`/node-or-edge language at all in this file;
+that's the visualizer's own internal graph vocabulary (see `app/types.ts`),
+not this file's. One array, one file per set.
 `scripts/relations.test.mjs` is a structural sanity check (valid theme
 ids/roles/weight range, no duplicate names, every name exists in
-`<set>_scryfall.json`) — it doesn't (and can't) check tagging correctness,
-only shape.
+`<set>_scryfall.json`, no stray `reviewed` field) — it doesn't (and can't)
+check tagging correctness, only shape.
 
 ## Scope boundary
 
@@ -285,7 +295,7 @@ clearly calls for that kind of change, say so rather than making it here.
 
 Creature subtypes (Human, Goblin, ...) are in scope for tagging, same as any
 curated theme — see `TAGGING_RULES.md`'s "Creature types". The theme id/label
-is auto-generated (client-side, `src/lib/buildGraph.ts`), AND the baseline
+is auto-generated (client-side, `app/lib/buildGraph.ts`), AND the baseline
 self-identity produce edge (weight 2) is now mechanically prefilled too (see
 the 2026-08-29 note above) — you don't need to add that from scratch. What's
 still your judgment call: bumping the weight when warranted, and any

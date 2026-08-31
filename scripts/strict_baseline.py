@@ -14,13 +14,17 @@ prose to know WHO benefits), never a weight-3 "more than one" bump (needs
 prose to know if the card also creates additional instances). Anything
 beyond this baseline is left for an agent's read-and-judge pass.
 
-A card additionally gets marked fully `reviewed: 'script'` (plus a
-`reviewed_at` timestamp) by this script alone -- no agent needed -- if,
-after removing every keyword-ability line/segment and all parenthetical
-reminder text, its oracle_text has nothing left. That is the "no more
-themes to explore" case: a vanilla or keyword-only card. `reviewed` is an
-escalating ladder -- false -> 'script' -> 'agent' -> 'human' -- see
-GLOBAL_TAGGING_RULES.md's "Output shape" section.
+This script never writes enrichment/review status into its own output --
+that lives entirely in tagging/card-enrichment-status.json now (2026-08-31),
+decoupled from theme data (see GLOBAL_TAGGING_RULES.md's "Output shape"
+section for the full enrichment/review model). Instead, every card this
+script actually produced anything for (structural facts, or determined to be
+"no more themes to explore" -- a vanilla/keyword-only card once every
+keyword-ability line/segment and parenthetical reminder text is stripped
+from its oracle_text) also gets written to a companion
+`<output>.status.json` mapping name -> {"enrichment": "script", "review":
+"none"} -- merge that into tagging/card-enrichment-status.json by hand
+(never downgrade an existing higher tier there).
 
 Usage:
   python3 scripts/strict_baseline.py <path-to-oracle-or-set-cards.json[.gz]> <output.json>
@@ -29,7 +33,6 @@ import sys
 import json
 import gzip
 import re
-from datetime import datetime, timezone
 
 KEYWORD_TO_THEME = {
     'flying': 'flying',
@@ -186,7 +189,7 @@ def main():
     cards = load_cards(in_path)
 
     results = []
-    run_timestamp = datetime.now(timezone.utc).isoformat()
+    status = {}
     stats = {'total': 0, 'skipped_set_type': 0, 'skipped_basic': 0, 'fully_resolved': 0, 'partial': 0}
     for card in cards:
         if set_types is not None and card.get('set_type') not in set_types:
@@ -201,18 +204,24 @@ def main():
         if produce:
             entry['themes']['produce'] = produce
         if resolved:
-            entry['reviewed'] = 'script'
-            entry['reviewed_at'] = run_timestamp
             stats['fully_resolved'] += 1
         else:
-            entry['reviewed'] = False
             stats['partial'] += 1
         results.append(entry)
+        if produce or resolved:
+            status[card['name']] = {'enrichment': 'script', 'review': 'none'}
 
     json.dump(results, open(out_path, 'w'), indent=2)
     with open(out_path, 'a') as f:
         f.write('\n')
+
+    status_path = out_path.rsplit('.json', 1)[0] + '.status.json'
+    json.dump(status, open(status_path, 'w'), indent=2)
+    with open(status_path, 'a') as f:
+        f.write('\n')
+
     print(json.dumps(stats, indent=2))
+    print(f'Wrote {len(status)} enrichment-status entries to {status_path} -- merge by hand into tagging/card-enrichment-status.json.')
 
 
 if __name__ == '__main__':

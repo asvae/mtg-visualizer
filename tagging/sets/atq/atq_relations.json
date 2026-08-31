@@ -1,0 +1,1127 @@
+[
+  {
+    "name": "Yawgmoth Demon",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "phyrexian": 2,
+        "demon": 2,
+        "flying": 2,
+        "first-strike": 2,
+        "sacrifice": 2
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Colossus of Sardia",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "golem": 2,
+        "trample": 2,
+        "lockdown": 2,
+        "untap": 2
+      }
+    }
+  },
+  {
+    "name": "Dragon Engine",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "construct": 2,
+        "firebreathing": 3
+      }
+    }
+  },
+  {
+    "name": "Dwarven Weaponsmith",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "dwarf": 2,
+        "artificer": 2,
+        "sacrifice": 2
+      },
+      "consume": {
+        "artifacts": 3
+      },
+      "grant": {
+        "counters": 2
+      }
+    }
+  },
+  {
+    "name": "Shatterstorm",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "board-wipe": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Rakalite",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "bounce": 1
+      },
+      "grant": {
+        "damage-prevention": 3
+      }
+    }
+  },
+  {
+    "name": "Millstone",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "mill": 3,
+        "graveyard": 3
+      }
+    }
+  },
+  {
+    "name": "Damping Field",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "lockdown": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Mishra's Workshop",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 3
+      },
+      "consume": {
+        "artifacts": 1
+      }
+    }
+  },
+  {
+    "name": "Artifact Blast",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3
+      },
+      "consume": {
+        "artifacts": 2
+      }
+    }
+  },
+  {
+    "name": "Reconstruction",
+    "themes": {
+      "produce": {
+        "sorcery": 2
+      },
+      "consume": {
+        "artifacts": 2,
+        "graveyard": 3
+      }
+    }
+  },
+  {
+    "name": "Obelisk of Undoing",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "bounce": 3
+      }
+    }
+  },
+  {
+    "name": "Clockwork Avian",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "bird": 2,
+        "flying": 2,
+        "other-counters": 3
+      },
+      "consume": {
+        "other-counters": 3,
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Gate to Phyrexia",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "removal": 3
+      },
+      "consume": {
+        "sacrifice": 3,
+        "creature": 2,
+        "artifacts": 2
+      }
+    }
+  },
+  {
+    "name": "Phyrexian Gremlins",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "phyrexian": 2,
+        "gremlin": 2,
+        "lockdown": 3
+      },
+      "consume": {
+        "tap": 3,
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Atog",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "atog": 2,
+        "sacrifice": 3,
+        "firebreathing": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Circle of Protection: Artifacts",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "damage-prevention": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Tetravus",
+    "themes": {
+      "produce": {
+        "artifacts": 3,
+        "creature": 3,
+        "construct": 2,
+        "flying": 3,
+        "counters": 3,
+        "token": 3,
+        "tetravite": 3,
+        "exile": 2,
+        "etb": 2
+      },
+      "consume": {
+        "counters": 3
+      }
+    }
+  },
+  {
+    "name": "Urza's Mine",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 3
+      }
+    }
+  },
+  {
+    "name": "Yotian Soldier",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "soldier": 2,
+        "vigilance": 2,
+        "attack": 1
+      }
+    }
+  },
+  {
+    "name": "Ashnod's Transmogrant",
+    "themes": {
+      "produce": {
+        "artifacts": 3
+      },
+      "consume": {
+        "sacrifice": 2
+      },
+      "grant": {
+        "counters": 2
+      }
+    }
+  },
+  {
+    "name": "Tawnos's Weaponry",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "consume": {
+        "tap": 2
+      },
+      "grant": {
+        "combat-trick": 2
+      }
+    }
+  },
+  {
+    "name": "Candelabra of Tawnos",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "consume": {
+        "land": 2
+      },
+      "grant": {
+        "untap": 3
+      }
+    }
+  },
+  {
+    "name": "Gaea's Avenger",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "treefolk": 2
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Mishra's Factory",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 1,
+        "creature": 1,
+        "artifacts": 1,
+        "assembly-worker": 1
+      },
+      "consume": {
+        "assembly-worker": 2
+      },
+      "grant": {
+        "combat-trick": 2
+      }
+    },
+    "note": "Its temporary land-to-creature transformation is the first man-land in the chronological sweep; no dedicated man-land theme exists yet."
+  },
+  {
+    "name": "Urza's Miter",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "draw": 2
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Urza's Avenger",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "shapeshifter": 2,
+        "banding": 1,
+        "flying": 1,
+        "first-strike": 1,
+        "trample": 1
+      }
+    }
+  },
+  {
+    "name": "Armageddon Clock",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "other-counters": 3,
+        "face-damage": 3
+      },
+      "consume": {
+        "other-counters": 3
+      }
+    }
+  },
+  {
+    "name": "Weakstone",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "anthem": 3
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Urza's Tower",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 3
+      }
+    }
+  },
+  {
+    "name": "Drafna's Restoration",
+    "themes": {
+      "produce": {
+        "sorcery": 2
+      },
+      "consume": {
+        "artifacts": 3,
+        "graveyard": 3
+      }
+    }
+  },
+  {
+    "name": "Grapeshot Catapult",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "construct": 2,
+        "removal": 2
+      },
+      "consume": {
+        "flying": 2
+      }
+    }
+  },
+  {
+    "name": "Xenic Poltergeist",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "spirit": 2
+      },
+      "consume": {
+        "artifacts": 2
+      },
+      "grant": {
+        "creature": 2
+      }
+    }
+  },
+  {
+    "name": "Argothian Pixies",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "faerie": 2,
+        "damage-prevention": 3
+      },
+      "consume": {
+        "artifacts": 3
+      },
+      "atypical": {
+        "unblockable": 1
+      }
+    }
+  },
+  {
+    "name": "Titania's Song",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "consume": {
+        "artifacts": 3
+      },
+      "grant": {
+        "creature": 3
+      },
+      "atypical": {
+        "land-type-change": 2
+      }
+    },
+    "note": "It turns every noncreature artifact into a creature; grant:creature captures the result, while atypical Land Type Change marks the unsupported permanent-type-change pattern."
+  },
+  {
+    "name": "Artifact Possession",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2,
+        "face-damage": 3
+      },
+      "consume": {
+        "artifacts": 3,
+        "tap": 2
+      }
+    }
+  },
+  {
+    "name": "Ornithopter",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "thopter": 2,
+        "flying": 2
+      }
+    }
+  },
+  {
+    "name": "Jalum Tome",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "draw": 2,
+        "discard": 2,
+        "graveyard": 1
+      }
+    }
+  },
+  {
+    "name": "Urza's Power Plant",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 3
+      }
+    }
+  },
+  {
+    "name": "Orcish Mechanics",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "orc": 2,
+        "sacrifice": 2,
+        "removal": 2,
+        "face-damage": 2
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Argivian Blacksmith",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "artificer": 2
+      },
+      "consume": {
+        "artifacts": 2
+      },
+      "grant": {
+        "damage-prevention": 2
+      }
+    }
+  },
+  {
+    "name": "Clay Statue",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "golem": 2,
+        "regeneration": 2
+      }
+    }
+  },
+  {
+    "name": "Goblin Artisans",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "goblin": 2,
+        "artificer": 2,
+        "draw": 1
+      },
+      "consume": {
+        "artifacts": 1
+      }
+    },
+    "note": "The activated ability's coin flip has no curated theme; only its possible draw and artifact-spell interaction are tagged."
+  },
+  {
+    "name": "Coral Helm",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "graveyard": 1
+      },
+      "consume": {
+        "discard": 2
+      },
+      "grant": {
+        "combat-trick": 2
+      }
+    }
+  },
+  {
+    "name": "Tablet of Epityr",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Transmute Artifact",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "tutor": 3,
+        "etb": 2,
+        "graveyard": 1
+      },
+      "consume": {
+        "sacrifice": 3,
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Bronze Tablet",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "ante": 3,
+        "exile": 3
+      }
+    },
+    "note": "Its ownership-exchange effect has no curated theme: Commandeer changes control, while Bronze Tablet permanently changes ownership."
+  },
+  {
+    "name": "Cursed Rack",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "atypical": {
+        "discard": 3
+      }
+    },
+    "note": "Reducing an opponent's maximum hand size is a hand-size restriction, not a discard event; Discard is only the closest existing theme."
+  },
+  {
+    "name": "Golgothian Sylex",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "removal": 3,
+        "board-wipe": 2
+      },
+      "consume": {
+        "sacrifice": 3
+      }
+    },
+    "note": "Its mass-sacrifice is unusually scoped to cards originally printed in Antiquities."
+  },
+  {
+    "name": "Argothian Treefolk",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "treefolk": 2,
+        "damage-prevention": 3
+      },
+      "consume": {
+        "artifacts": 2
+      }
+    }
+  },
+  {
+    "name": "Mishra's War Machine",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "juggernaut": 2,
+        "banding": 2,
+        "graveyard": 1
+      },
+      "consume": {
+        "discard": 2
+      }
+    }
+  },
+  {
+    "name": "Strip Mine",
+    "themes": {
+      "produce": {
+        "land": 2,
+        "mana": 1,
+        "removal": 3
+      },
+      "consume": {
+        "sacrifice": 2,
+        "land": 2
+      }
+    }
+  },
+  {
+    "name": "Tawnos's Wand",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "grant": {
+        "unblockable": 2
+      }
+    }
+  },
+  {
+    "name": "Haunting Wind",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "face-damage": 3
+      },
+      "consume": {
+        "artifacts": 3,
+        "tap": 2
+      }
+    }
+  },
+  {
+    "name": "Ivory Tower",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 3
+      }
+    }
+  },
+  {
+    "name": "Su-Chi",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "construct": 2,
+        "mana": 2
+      },
+      "consume": {
+        "creature": 2
+      }
+    }
+  },
+  {
+    "name": "Staff of Zegon",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      }
+    }
+  },
+  {
+    "name": "Triskelion",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "construct": 2,
+        "counters": 3,
+        "removal": 3,
+        "face-damage": 3
+      },
+      "consume": {
+        "counters": 3
+      }
+    }
+  },
+  {
+    "name": "Primal Clay",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "shapeshifter": 2,
+        "flying": 1,
+        "defender": 1,
+        "wall": 1
+      }
+    }
+  },
+  {
+    "name": "Powerleech",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "lifegain": 3
+      },
+      "consume": {
+        "artifacts": 3,
+        "tap": 2
+      }
+    }
+  },
+  {
+    "name": "Ashnod's Battle Gear",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "consume": {
+        "tap": 2
+      },
+      "grant": {
+        "combat-trick": 2
+      }
+    }
+  },
+  {
+    "name": "Amulet of Kroog",
+    "themes": {
+      "produce": {
+        "artifacts": 2
+      },
+      "grant": {
+        "damage-prevention": 3
+      }
+    }
+  },
+  {
+    "name": "Wall of Spears",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "wall": 2,
+        "first-strike": 2,
+        "defender": 2
+      }
+    }
+  },
+  {
+    "name": "Mightstone",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "anthem": 3
+      },
+      "consume": {
+        "attack": 2
+      }
+    }
+  },
+  {
+    "name": "Artifact Ward",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "consume": {
+        "artifacts": 3
+      },
+      "grant": {
+        "damage-prevention": 3
+      },
+      "atypical": {
+        "unblockable": 1
+      }
+    }
+  },
+  {
+    "name": "Sage of Lat-Nam",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "artificer": 2,
+        "sacrifice": 2,
+        "draw": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Feldon's Cane",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "exile": 2
+      },
+      "consume": {
+        "graveyard": 3
+      }
+    }
+  },
+  {
+    "name": "Energy Flux",
+    "themes": {
+      "produce": {
+        "enchantment": 2
+      },
+      "consume": {
+        "artifacts": 3,
+        "sacrifice": 3
+      }
+    }
+  },
+  {
+    "name": "Martyrs of Korlis",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "damage-redirection": 3
+      },
+      "consume": {
+        "artifacts": 3,
+        "tap": 2
+      }
+    }
+  },
+  {
+    "name": "Tawnos's Coffin",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "exile": 3,
+        "removal": 3,
+        "etb": 3,
+        "counters": 1,
+        "other-counters": 1
+      },
+      "consume": {
+        "creature": 2,
+        "aura": 1,
+        "counters": 1,
+        "other-counters": 1
+      }
+    }
+  },
+  {
+    "name": "Priest of Yawgmoth",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "phyrexian": 2,
+        "human": 2,
+        "cleric": 2,
+        "sacrifice": 2,
+        "mana": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Shapeshifter",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "shapeshifter": 2
+      }
+    }
+  },
+  {
+    "name": "Ashnod's Altar",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "sacrifice": 3,
+        "mana": 3
+      },
+      "consume": {
+        "creature": 3
+      }
+    }
+  },
+  {
+    "name": "Argivian Archaeologist",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "artificer": 2
+      },
+      "consume": {
+        "artifacts": 3,
+        "graveyard": 3
+      }
+    }
+  },
+  {
+    "name": "Crumble",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "removal": 3,
+        "lifegain": 2
+      },
+      "consume": {
+        "artifacts": 2
+      }
+    }
+  },
+  {
+    "name": "Rocket Launcher",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "removal": 3,
+        "face-damage": 3
+      }
+    }
+  },
+  {
+    "name": "Onulet",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "construct": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "creature": 2
+      }
+    }
+  },
+  {
+    "name": "Reverse Polarity",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "lifegain": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Power Artifact",
+    "themes": {
+      "produce": {
+        "enchantment": 2,
+        "aura": 2
+      },
+      "consume": {
+        "artifacts": 2
+      },
+      "grant": {
+        "cost-reduction": 3
+      }
+    }
+  },
+  {
+    "name": "The Rack",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "face-damage": 3
+      },
+      "atypical": {
+        "discard": 2
+      }
+    },
+    "note": "Its damage scales from an opponent's low hand size but does not make that player discard; Discard is the closest existing theme."
+  },
+  {
+    "name": "Hurkyl's Recall",
+    "themes": {
+      "produce": {
+        "instant": 2,
+        "bounce": 3,
+        "removal": 3,
+        "board-wipe": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Urza's Chalice",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "lifegain": 2
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Battering Ram",
+    "themes": {
+      "produce": {
+        "artifacts": 2,
+        "creature": 2,
+        "construct": 2,
+        "banding": 1,
+        "removal": 2
+      },
+      "consume": {
+        "wall": 2
+      }
+    }
+  },
+  {
+    "name": "Citanul Druid",
+    "themes": {
+      "produce": {
+        "creature": 2,
+        "human": 2,
+        "druid": 2,
+        "counters": 3
+      },
+      "consume": {
+        "artifacts": 3
+      }
+    }
+  },
+  {
+    "name": "Detonate",
+    "themes": {
+      "produce": {
+        "sorcery": 2,
+        "removal": 3,
+        "face-damage": 3
+      },
+      "consume": {
+        "artifacts": 2
+      }
+    }
+  }
+]

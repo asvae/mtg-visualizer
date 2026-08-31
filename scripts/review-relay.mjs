@@ -1,7 +1,9 @@
 // Mechanical relay between the review drafts queue and the live review panel.
 // Pure plumbing, no tagging judgment: takes the oldest un-shown/changed draft
 // from review-drafts.json, POSTs it to review-server.mjs, blocks on /wait,
-// and on allGood writes straight to data/fin/fin_relations.json. Feedback that
+// and on allGood writes straight to data/fin/fin_relations.json (themes only —
+// no review status; that goes to tagging/card-enrichment-status.json instead,
+// entirely outside data/, see GLOBAL_TAGGING_RULES.md). Feedback that
 // needs actual judgment gets queued to review-responses.json instead of
 // looping here — a separate (agent) process reads that, revises the draft in
 // review-drafts.json, and this relay picks the revised version up next pass.
@@ -59,6 +61,10 @@ function request(method, path, body) {
 const DRAFTS = new URL('./review-drafts.json', import.meta.url);
 const RESPONSES = new URL('./review-responses.json', import.meta.url);
 const RELATIONS = new URL('../data/fin/fin_relations.json', import.meta.url);
+// Enrichment/review status lives entirely here now (2026-08-31), decoupled
+// from the relations data itself — never touches data/ (what's actually
+// served to users), see GLOBAL_TAGGING_RULES.md's "Output shape" section.
+const STATUS = new URL('../tagging/card-enrichment-status.json', import.meta.url);
 
 async function readJson(url, fallback) {
   try {
@@ -141,10 +147,14 @@ async function main() {
         mergedThemes[role] ??= {};
         mergedThemes[role][theme] = weight ?? 3;
       }
-      const entry = { name: next.name, themes: mergedThemes, reviewed: 'human', reviewed_at: new Date().toISOString() };
+      const entry = { name: next.name, themes: mergedThemes };
       if (idx === -1) relations.push(entry);
       else relations[idx] = entry;
       await writeJson(RELATIONS, relations);
+
+      const status = await readJson(STATUS, {});
+      status[next.name] = { enrichment: 'ai', review: 'human' };
+      await writeJson(STATUS, status);
 
       const freshDrafts = (await readJson(DRAFTS, [])).filter((d) => d.name !== next.name);
       await writeJson(DRAFTS, freshDrafts);
