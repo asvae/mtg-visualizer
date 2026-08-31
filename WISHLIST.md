@@ -81,3 +81,56 @@ placed on a whiteboard to mirror the visualizer's relationship graph.
 
 Maybe add persistence and user accounts eventually, but not in the near
 term.
+
+## 11. Extensions and integrations
+
+- Create extensions for Draftsim and Moxfield.
+- Connect to MTG Arena, potentially through an overlay.
+
+## 12. Dedicated pages
+
+- **Archetype page**
+- **Card page:** for every interaction type, show all matching cards sorted by
+  weight.
+- **Theme page:** similarly show all matching cards sorted by weight.
+
+## 13. More precisely defined weights
+
+Define weights relative to all sets by analyzing every card that does the
+same thing and placing the cards on a best-to-worst scale. The best card would
+receive a weight of 10 and the worst a weight of 0.1.
+
+Prefer rounded values. Use decimals only when they represent a meaningful
+difference; avoid implying precision for very small differences.
+
+## 14. Separate self-effects from effects on other cards
+
+Distinguish what a card does to itself from what it does to or for other
+cards. Use that distinction to provide a clearer, directional explanation of
+exactly how one card connects to another, including which card causes the
+interaction, which card is affected, and under what conditions it occurs.
+
+## 15. Comprehensive-rules coverage and relation audit
+
+Check the theme and relation model against the official Magic Comprehensive
+Rules. Confirm that themes and relations are defined consistently and account
+for unusual mechanics, rules-driven actions, state-based actions, replacement
+effects, and other edge cases.
+
+For example, represent interactions that return or otherwise save a Saga or
+planeswalker when the game rules would cause it to be sacrificed or put into
+its owner's graveyard. The explanation should identify the precise event and
+timing involved rather than reducing every such interaction to generic
+recursion or protection.
+
+## 16. Performance limits and capacity testing
+
+Profile and benchmark the application to understand its practical limits,
+including how many cards and relationships can be displayed at once while the
+interface remains responsive. Measure client-side rendering, memory use, and
+interaction latency separately from server-side processing, memory, network,
+and data-transfer load.
+
+Test representative low-, medium-, and high-density views to identify
+bottlenecks, establish useful performance budgets, and determine when the app
+should paginate, virtualize, aggregate, progressively load, or limit results.
