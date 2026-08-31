@@ -168,6 +168,12 @@ Create a recognizable favicon that fits the graph visualizer's identity and
 remains legible at small sizes. Provide the relevant browser favicon, touch
 icon, and web-app manifest variants for consistent display across platforms.
 
+### Used libraries
+
+Add an accessible place in the app that lists the main libraries, tools, and
+data sources used by the project, with links and any required license or
+attribution information.
+
 ## Integrations
 
 ### Extensions and integrations
