@@ -1,3 +1,19 @@
+import { execFileSync } from 'node:child_process';
+import packageJson from './package.json';
+
+function getBuildCommit(): string {
+  const deploymentCommit = process.env.COMMIT_REF;
+  if (deploymentCommit) return deploymentCommit.slice(0, 7);
+
+  try {
+    return execFileSync('git', ['rev-parse', '--short=7', 'HEAD'], {
+      encoding: 'utf8',
+    }).trim();
+  } catch {
+    return 'unknown';
+  }
+}
+
 // Hybrid rendering: SSR stays on by default (needed for the landing page's
 // prerendering below to actually capture real markup — a global `ssr: false`
 // disables Nuxt's whole server-render pipeline at the build level, so a
@@ -12,6 +28,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
+      appVersion: packageJson.version,
+      buildCommit: getBuildCommit(),
       // The review panel is a tagging-workflow tool, not something an end
       // visitor to a deployed copy of the app should see — override locally
       // via NUXT_PUBLIC_ENABLE_REVIEW=true in .env; unset (false) in prod.

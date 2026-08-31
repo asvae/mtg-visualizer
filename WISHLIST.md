@@ -86,6 +86,8 @@ term.
 
 - Create extensions for Draftsim and Moxfield.
 - Connect to MTG Arena, potentially through an overlay.
+- Integrate with Tabletop Simulator, such as by importing and exporting decks
+  or synchronizing a visualized deck with a tabletop session.
 
 ## 12. Dedicated pages
 
@@ -152,3 +154,66 @@ Add an application page that presents the longer-term wishlist separately
 from the project's immediate, actively planned work. Keep the distinction
 clear so exploratory ideas are not mistaken for committed or scheduled
 features.
+
+## 19. Negative synergy
+
+Represent anti-synergies within a deck: cards, themes, costs, or restrictions
+that interfere with one another or make one another less effective. Explain
+the direction and reason for each conflict rather than showing only a generic
+negative score.
+
+## 20. Enemy synergy
+
+Represent interactions with an opponent's cards and themes, including cases
+where an enemy card enables, strengthens, weakens, or otherwise changes the
+value of one of the user's cards. Keep this distinct from opposition analysis:
+an opponent's strategy can accidentally synergize with the user's plan rather
+than merely being countered by it.
+
+## 21. Computed theme groups
+
+Derive useful theme groups from structured card facts instead of requiring
+every membership to be manually tagged. Examples could include card-type and
+supertype groupings, noncreature spells, power/toughness bands, colors, mana
+values, and other mechanically knowable categories. Preserve the underlying
+specific type where useful, such as Battle or planeswalker, rather than
+collapsing every noncreature spell into one undifferentiated group.
+
+## 22. Connected theme groups
+
+Model explicit relationships between themes, including cases where one theme
+produces, consumes, enables, or benefits another. For example, blink produces
+enter-the-battlefield events, which in turn enable ETB payoffs.
+
+This is related to but distinct from computed theme groups: computed groups
+derive membership from card data, while connected groups describe semantic or
+mechanical edges between themes. A computed group may participate in these
+connections, but neither concept replaces the other.
+
+## 23. Automated UI and application testing
+
+Build broader Storybook coverage for visual components, unit tests for
+isolated behavior and graph logic, and end-to-end tests for important user
+flows. Include regression cases for dense graphs, unusual card layouts,
+imports, filtering, and relation explanations.
+
+## 24. Power/toughness and color themes
+
+Add first-class themes derived from power and toughness, including exact
+values, useful ranges, comparisons, and variable values where appropriate.
+Also add color and color-identity themes, covering monocolor, multicolor,
+colorless, and relevant combinations without requiring manual tagging.
+
+## 25. Concise card text
+
+Improve the readability of displayed card text by replacing long or repeated
+rules phrases with recognized keywords or compact labels where the meaning is
+equivalent. Preserve the original Oracle text and make it readily available so
+the simplified presentation never hides rules-relevant differences.
+
+## 26. Graph-derived scores
+
+Compute higher-level qualities such as how parasitic, central, isolated,
+replaceable, or broadly enabling a card or theme is by analyzing the relation
+graph. Define each score in understandable terms, expose the evidence behind
+it, and avoid presenting graph heuristics as objective card quality.

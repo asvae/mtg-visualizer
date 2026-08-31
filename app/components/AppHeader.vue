@@ -5,6 +5,8 @@ import { StoreKey } from '../composables/useGraphStore';
 const store = inject(StoreKey)!;
 const config = useRuntimeConfig();
 const reviewEnabled = config.public.enableReview;
+const appVersion = config.public.appVersion;
+const buildCommit = config.public.buildCommit;
 
 // Scryfall query modal — a real navigation on submit (SET_CODE/scryfallQuery
 // in useGraphStore.ts are fixed at module-load time), so `submitting` just
@@ -70,7 +72,10 @@ function submitScryfallQuery(clear = false) {
       </template>
     </UInput>
 
-    <h1 class="m-0 shrink-0 text-sm font-medium text-muted">MtG Synergy Map</h1>
+    <div class="flex shrink-0 items-baseline gap-1.5">
+      <h1 class="m-0 text-sm font-medium text-muted">MtG Synergy Map</h1>
+      <span class="text-[10px] text-muted/70">v{{ appVersion }} · {{ buildCommit }}</span>
+    </div>
 
     <div class="ml-auto flex shrink-0 items-center gap-1.5">
       <UButton

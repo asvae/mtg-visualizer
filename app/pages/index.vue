@@ -1,6 +1,10 @@
 <script setup lang="ts">
 useHead({ title: 'FINAL FANTASY Draft Archetypes' });
 
+const config = useRuntimeConfig();
+const appVersion = config.public.appVersion;
+const buildCommit = config.public.buildCommit;
+
 interface Archetype {
   colors: string[];
   themes: string;
@@ -138,7 +142,8 @@ const PIP_COLOR: Record<string, string> = {
     </main>
 
     <footer class="px-6 py-6 text-center text-[11px] text-muted">
-      Card art &copy; Wizards of the Coast / Square Enix, via Scryfall. Fan-made tool, not affiliated with either.
+      <div>Card art &copy; Wizards of the Coast / Square Enix, via Scryfall. Fan-made tool, not affiliated with either.</div>
+      <div class="mt-1 text-[10px] opacity-70">v{{ appVersion }} · {{ buildCommit }}</div>
     </footer>
   </div>
 </template>

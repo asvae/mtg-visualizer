@@ -23,6 +23,7 @@
     "@iconify-json/lucide": "^1.2.127",
     "@storybook/vue3-vite": "^10.5.10",
     "@types/d3": "^7.4.3",
+    "@types/node": "^26.4.0",
     "@vitejs/plugin-vue": "^6.0.8",
     "playwright": "^1.62.1",
     "storybook": "^10.5.10",
