@@ -21,6 +21,24 @@ Built with [Nuxt 4](https://nuxt.com) + [Nuxt UI](https://ui.nuxt.com)
 server rendering), while the landing page (`/`) is prerendered normally so it
 stays crawlable/shareable.
 
+## Scope
+
+This project is a visual tool for understanding how Magic cards function and
+relate to themes. It deliberately is not:
+
+- **A deck builder.** It may visualize an imported deck or group of cards, but
+  it does not manage deck construction, legality, recommendations, or editing.
+- **A statistics analyzer.** It explains functional relationships rather than
+  evaluating win rates, metagame shares, draw probabilities, or other gameplay
+  statistics.
+- **A card-style catalog.** Printing, frame, treatment, finish, and artwork
+  variants are outside the model unless they change how a card functions.
+- **A price or marketplace tool.** It does not track prices, financial value,
+  inventory value, or purchasing options.
+- **An account or user-data service.** It has no user accounts and does not
+  collect or persist user-submitted data on the server. Local interface state,
+  such as filters, can remain in the user's own browser storage.
+
 ## Versioning
 
 Manual [SemVer](https://semver.org/), bumped by hand in `package.json` +
