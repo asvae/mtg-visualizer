@@ -1,5 +1,8 @@
 node_modules/
 dist/
+.nuxt/
+.output/
+storybook-static/
 *.log
 .env
 .env.*
@@ -18,4 +21,4 @@ deno.lock
 
 # Regenerable Scryfall bulk-data downloads (historical-sets pipeline
 # intermediate) — 75MB+/24MB, not source, shouldn't bloat repo history.
-data/*.jsonl.gz
+tagging/scryfall-bulk/*.jsonl.gz

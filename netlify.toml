@@ -1,10 +1,7 @@
+# Nuxt's Nitro build (nuxt.config.ts sets nitro.preset = 'netlify') already
+# writes the right shape on its own — dist/ for static assets (including the
+# prerendered landing page) plus .netlify/functions-internal/ for the server
+# route(s) — so there's no publish/functions to hand-configure here; Netlify's
+# build image auto-detects a Nitro app in this shape and wires the rest.
 [build]
   command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
-
-[dev]
-  command = "npm run dev"
-  targetPort = 5173
-  publish = "dist"
-  functions = "netlify/functions"

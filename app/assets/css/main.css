@@ -1,0 +1,34 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* Dark-only palette — the app never offers a light mode (it's a dense data
+   visualizer, not a document). Values carried over from the old plain-CSS
+   :root block; still real CSS custom properties (Tailwind's @theme both
+   defines them AND generates matching bg-, text-, and border- utilities), so
+   GraphCanvas's D3-generated SVG — which Vue's template/Tailwind classes
+   never reach — can keep styling itself with plain var(--color-produce) etc.
+   in its own unscoped <style> block. */
+@theme {
+  --color-bg: #14151a;
+  --color-panel: #1e2028;
+  --color-surface: #2a2c36;
+  --color-border: #3a3d4a;
+  --color-border-subtle: #2a2c36;
+  --color-focus: #6c7086;
+  --color-text: #e6e6e6;
+  --color-muted: #9aa0aa;
+  --color-warn: #e0a030;
+
+  /* Relation-type legend colors — shared between the graph legend, edge
+     styling, and node/anchor accents. */
+  --color-produce: #2ecc71;
+  --color-consume: #3498db;
+  --color-atypical: #888888;
+  --color-magnifier: #ff4fa3;
+  --color-grant: #00bcd4;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
