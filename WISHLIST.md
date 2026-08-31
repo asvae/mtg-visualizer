@@ -145,3 +145,10 @@ part while keeping unrelated text visually distinct.
 The same mapping should work in reverse where useful: hovering highlighted
 card text could emphasize its corresponding themes and relations. Provide an
 accessible non-hover interaction for touch and keyboard users.
+
+## 18. Wishlist and immediate-plans page
+
+Add an application page that presents the longer-term wishlist separately
+from the project's immediate, actively planned work. Keep the distinction
+clear so exploratory ideas are not mistaken for committed or scheduled
+features.
