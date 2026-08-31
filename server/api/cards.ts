@@ -10,6 +10,7 @@
 // GET /api/cards?q=<scryfall search syntax>
 
 import relationsData from '../../data/global_relations.json';
+import finRelationsData from '../../data/fin/fin_relations.json';
 import themesData from '../../data/global_themes.json';
 
 // Hard cap on cards fetched/returned per query, regardless of how many the
@@ -22,7 +23,20 @@ interface RelationsEntry {
   themes: Record<string, Record<string, number>>;
 }
 
-const relationsByName = new Map<string, RelationsEntry>((relationsData as RelationsEntry[]).map((r) => [r.name, r]));
+// data/fin/fin_relations.json wins over data/global_relations.json by name —
+// FIN hasn't been chronologically merged into the historical sweep yet, so
+// global_relations.json's own FIN entries are still the untouched produce-only
+// script baseline even for names fin_relations.json has since fully reviewed
+// (produce/consume/grant/atypical/magnifier). See GLOBAL_TAGGING_RULES.md's
+// "A name's status can legitimately outrun..." note. Without this, every
+// theme reachable only through FIN cards looks purely one-sided (all
+// `produce`, no `consume`) and computeWeakThemeIds classifies it as weak —
+// which zeroes out the default/reset/"Strong" theme selection entirely for
+// any `sf=` query that resolves to FIN cards (e.g. `sf=set:fin`).
+const relationsByName = new Map<string, RelationsEntry>([
+  ...(relationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
+  ...(finRelationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
+]);
 
 interface ImageUris {
   normal: string;
