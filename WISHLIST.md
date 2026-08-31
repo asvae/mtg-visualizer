@@ -134,3 +134,14 @@ and data-transfer load.
 Test representative low-, medium-, and high-density views to identify
 bottlenecks, establish useful performance budgets, and determine when the app
 should paginate, virtualize, aggregate, progressively load, or limit results.
+
+## 17. Card-text highlights for themes and relations
+
+When the user hovers over or focuses a theme or relation, highlight the exact
+rules text on the associated card that supports that classification or
+connection. If several parts of the text contribute, highlight each relevant
+part while keeping unrelated text visually distinct.
+
+The same mapping should work in reverse where useful: hovering highlighted
+card text could emphasize its corresponding themes and relations. Provide an
+accessible non-hover interaction for touch and keyboard users.
