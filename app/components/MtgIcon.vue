@@ -2,51 +2,21 @@
 import { computed } from 'vue';
 
 // Single source of truth for every icon the card shorthand notation can use
-// (see CARD_SHORTHAND.md and data/card_shorthands.json) — Mana font class +
-// hover tooltip, plus every literal bracket word that should resolve to it.
-// `words` are exactly what should appear if icons are ever turned off (a
-// plain `[word]` -> `word` strip, no MtgIcon component involved) — real
-// casing/spelling ("tapped", "Landfall" at a sentence start), not an
-// abbreviation. A word can read differently depending on grammar (a card
-// might need "[tap]" as a noun elsewhere, not just "[tapped]") — list every
-// variant a card shorthand might use so they all render the same icon. A
-// word with no icon here (pending or unrecognized) just renders as its own
-// plain text, brackets stripped — the whole point of the bracket syntax
-// being the real English word is that this fallback always reads fine.
-// Every icon shares the same size/alignment (see .mtg-icon below) — no
-// per-icon overrides.
-// `classes` is the full class list (base font class + specific glyph class) —
-// currently always Mana font ("ms ms-xxx").
-const ICON_DEFS: { classes: string; label: string; words: string[] }[] = [
-  { classes: 'ms ms-tap', label: 'Tapped', words: ['tap', 'tapped'] },
-  { classes: 'ms ms-ability-landfall', label: 'Landfall', words: ['landfall'] },
-  { classes: 'ms ms-ability-trample', label: 'Trample', words: ['trample'] },
-  { classes: 'ms ms-ability-flash', label: 'Flash', words: ['flash'] },
-  { classes: 'ms ms-ability-lifelink', label: 'Lifelink', words: ['lifelink'] },
-  { classes: 'ms ms-flashback', label: 'Flashback', words: ['flashback'] },
-  { classes: 'ms ms-counter-plus', label: '+1/+1 counter', words: ['counter', 'counters'] },
-  { classes: 'ms ms-counter-stun', label: 'Stun counter', words: ['stun', 'stuns', 'stunned'] },
-  { classes: 'ms ms-power', label: 'Power', words: ['power'] },
-  { classes: 'ms ms-ability-vigilance', label: 'Vigilance', words: ['vigilance'] },
-  { classes: 'ms ms-ability-indestructible', label: 'Indestructible', words: ['indestructible'] },
-  { classes: 'ms ms-ability-ward', label: 'Ward', words: ['ward'] },
-  { classes: 'ms ms-ability-hexproof', label: 'Hexproof', words: ['hexproof'] },
-  { classes: 'ms ms-ability-crew', label: 'Crew', words: ['crew'] },
-  { classes: 'ms ms-ability-reach', label: 'Reach', words: ['reach'] },
-  // Mana font's actual Sorcery card-type pip — real semantic fit, unlike the
-  // borrowed-icon experiments above that got reverted (target, choose).
-  { classes: 'ms ms-sorcery', label: 'Sorcery speed only', words: ['sorcery speed only'] },
-  { classes: 'ms ms-ability-first-strike', label: 'First strike', words: ['first strike'] },
-  { classes: 'ms ms-ability-deathtouch', label: 'Deathtouch', words: ['deathtouch'] },
-  { classes: 'ms ms-ability-haste', label: 'Haste', words: ['haste'] },
-  { classes: 'ms ms-ability-menace', label: 'Menace', words: ['menace'] },
-  { classes: 'ms ms-ability-double-strike', label: 'Double strike', words: ['double strike'] },
-  { classes: 'ms ms-ability-prowess', label: 'Prowess', words: ['prowess'] },
-  { classes: 'ms ms-ability-cycling', label: 'Cycling', words: ['cycling'] },
-  { classes: 'ms ms-ability-surveil', label: 'Surveil', words: ['surveil'] },
-  { classes: 'ms ms-ability-kicker', label: 'Kicker', words: ['kicker'] },
-  { classes: 'ms ms-counter-charge', label: 'Charge counter', words: ['charge'] },
-];
+// (see CARD_SHORTHAND.md and data/card_shorthands.json). Every mana-font
+// keyword-ability/counter/stat icon that was ever added here (landfall,
+// trample, vigilance, +1/+1 counter, power, sorcery-speed pip, ...) has
+// since been tried and reverted — mana-font is a third-party recreation,
+// not an official symbol, and the visual payoff wasn't worth it. The only
+// icons that stay are Scryfall's own official ones, and those are literal
+// `{X}` mana/cost symbols out of real oracle text — handled entirely by
+// ManaSymbol.vue, not here. So ICON_DEFS is intentionally empty: every
+// bracket word this component receives just falls through to its plain-text
+// fallback below (brackets stripped either way, so a card's `[vigilance]`/
+// `[landfall]`/etc. keeps rendering correctly with zero data-file changes
+// needed — no need to "fix" existing card text when an icon goes away).
+// Re-add an entry here only for a genuine, clearly-fitting Scryfall-adjacent
+// icon if one ever turns up; don't reach for mana-font again.
+const ICON_DEFS: { classes: string; label: string; words: string[] }[] = [];
 // Lookup is case-insensitive — a card writing "[Landfall]" at a sentence
 // start and another writing "[trample]" mid-sentence both just work.
 const ICONS: Record<string, { classes: string; label: string }> = Object.fromEntries(

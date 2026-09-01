@@ -9,51 +9,9 @@ const meta: Meta<typeof MtgIcon> = {
 export default meta;
 type Story = StoryObj<typeof MtgIcon>;
 
-// Every icon MtgIcon.vue's ICON_DEFS supports, in one grid — not one story
-// per icon. "tap" is included alongside "tapped" since they're two words
-// for the same icon (see ICON_DEFS), a distinct case worth eyeballing.
-const NAMES = [
-  'tap',
-  'tapped',
-  'landfall',
-  'trample',
-  'flash',
-  'lifelink',
-  'flashback',
-  'counter',
-  'stun',
-  'power',
-  'vigilance',
-  'indestructible',
-  'ward',
-  'hexproof',
-  'crew',
-  'reach',
-  'sorcery speed only',
-  'first strike',
-  'deathtouch',
-  'haste',
-  'menace',
-  'double strike',
-  'prowess',
-  'cycling',
-  'surveil',
-  'kicker',
-  'charge',
-];
-
-export const AllIcons: Story = {
-  render: () => ({
-    components: { MtgIcon },
-    setup: () => ({ names: NAMES }),
-    template: `
-      <div style="display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; line-height: 1.6;">
-        <span v-for="name in names" :key="name">{{ name }} <MtgIcon :name="name" /></span>
-      </div>
-    `,
-  }),
-};
-
-// No entry in ICON_DEFS -> renders as its own plain text, brackets stripped
-// (a typo, or a real word just pending an icon — see MtgIcon.vue).
-export const UnknownName: Story = { args: { name: 'not-a-real-icon' } };
+// ICON_DEFS is currently empty (see MtgIcon.vue) — every mana-font
+// keyword-ability/counter/stat icon that was tried has since been reverted,
+// so any name at all just falls through to this same plain-text fallback,
+// brackets stripped. One story is all there is to show right now; re-add a
+// gallery-style story here if a real icon ever gets added back.
+export const Fallback: Story = { args: { name: 'vigilance' } };
