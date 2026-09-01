@@ -18,7 +18,10 @@ commits or tags.
   font icons, Storybook autodocs enabled for it and other components).
   Drafted through 41 of FIN's 312 cards plus one homebrew card. Along the
   way: `ManaSymbol.vue` renders literal `{X}` mana/cost symbols from real
-  oracle text automatically (no curation needed per symbol); a documented
+  oracle text as Scryfall's own official symbol SVGs, self-hosted under
+  `public/mana_symbols/` (`npm run fetch:mana-symbols`,
+  `scripts/fetch-mana-symbols.mjs`) rather than a third-party font
+  recreation — no curation needed per symbol; a documented
   em-dash convention for every trigger header; a face-separator format for
   modal DFCs/transforming cards; an orange left-border on the card page
   while a card's shorthand is `review: "ai"` (not yet human-reviewed); and

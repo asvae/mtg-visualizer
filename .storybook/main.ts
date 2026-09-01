@@ -12,6 +12,10 @@ import tailwindcss from '@tailwindcss/vite';
 // this build doesn't go through Nuxt's own Vite config.
 const config: StorybookConfig = {
   stories: ['../app/**/*.stories.@(js|ts)'],
+  // ManaSymbol.vue's stories load real files from public/mana_symbols/
+  // (symlinked to data/mana_symbols/) — Storybook doesn't serve Nuxt's
+  // public/ dir automatically, unlike the main app.
+  staticDirs: ['../public'],
   framework: {
     name: '@storybook/vue3-vite',
     options: {},

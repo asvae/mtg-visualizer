@@ -87,12 +87,18 @@ needs it.
 straight out of real oracle text — `{T}`, `{C}`, `{2}`, `{W}`, ... — is
 written exactly as Scryfall would print it, curly braces included, and
 `app/lib/shorthand.ts`'s `parseShorthand` renders it via
-`app/components/ManaSymbol.vue` as the actual Mana font glyph automatically:
-the class is just the symbol code lowercased (slash dropped for hybrid, e.g.
-`2/W` -> `ms-2w`), with `T` (tap) as the one special case. Unlike
-`ICON_DEFS`'s curated word list, this needs no entry anywhere — write the
-ability text exactly as printed and it just works. Bracket icons stay for
-our own compressed English words (`[trample]`, `[Landfall]`); curly braces
+`app/components/ManaSymbol.vue` as Scryfall's own official symbol SVG
+(self-hosted under `public/mana_symbols/`, fetched via
+`npm run fetch:mana-symbols` from
+[Scryfall's `/symbology` endpoint](https://scryfall.com/docs/api/card-symbols)
+— see `scripts/fetch-mana-symbols.mjs` and `data/mana_symbols/manifest.json`)
+— not a third-party font recreation. Covers every symbol Scryfall
+recognizes (mana costs, `{T}`/`{Q}`, `{E}`, hybrid/phyrexian, snow, `{X}`,
+...); re-run the fetch script if a new one shows up that isn't in the
+manifest yet. Unlike `ICON_DEFS`'s curated word list, this needs no entry
+anywhere — write the ability text exactly as printed and it just works.
+Bracket icons stay for our own compressed English words (`[trample]`,
+`[Landfall]`); curly braces
 are for symbols that already exist verbatim in the card's real text.
 
 ## Tokens

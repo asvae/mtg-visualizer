@@ -1,25 +1,35 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import manifest from '../../data/mana_symbols/manifest.json';
 
 // Renders a literal `{X}` mana/cost symbol straight out of real oracle text
-// (e.g. "{T}: Add {C}.") as its actual Mana font glyph — no curation needed
-// per symbol, unlike MtgIcon.vue's word-based ICON_DEFS: mana-font's class
-// names are just the symbol code lowercased, slash dropped for hybrid
-// symbols ("2/W" -> "ms-2w"), with "T" (tap) as the one special case.
+// (e.g. "{T}: Add {C}.") as Scryfall's own official symbol SVG — self-hosted
+// under public/mana_symbols/ (symlinked to data/mana_symbols/, fetched via
+// `npm run fetch:mana-symbols` from https://api.scryfall.com/symbology) —
+// rather than a third-party font recreation. `manifest.json` maps every
+// symbol code Scryfall knows about (e.g. "T", "2/W", "½") to its filename;
+// re-run the fetch script if a new symbol shows up that isn't in it yet.
 const props = defineProps<{ code: string }>();
 
-const className = computed(() => {
-  const c = props.code.toLowerCase();
-  return c === 't' ? 'ms-tap' : `ms-${c.replace('/', '')}`;
-});
+const filename = computed(() => (manifest as Record<string, string>)[props.code]);
 </script>
 
 <template>
-  <i class="ms mana-symbol" :class="className" :title="`{${code}}`" :aria-label="`{${code}}`"></i>
+  <img
+    v-if="filename"
+    class="mana-symbol"
+    :src="`/mana_symbols/${filename}`"
+    :alt="`{${code}}`"
+    :title="`{${code}}`"
+  />
+  <span v-else>{{ `{${code}}` }}</span>
 </template>
 
 <style scoped>
 .mana-symbol {
-  font-size: 0.75em;
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  vertical-align: -0.1em;
 }
 </style>

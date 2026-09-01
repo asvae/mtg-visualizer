@@ -6,6 +6,7 @@
   "scripts": {
     "fetch:set": "node scripts/fetch-set.mjs",
     "fetch:tokens": "node scripts/fetch-tokens.mjs",
+    "fetch:mana-symbols": "node scripts/fetch-mana-symbols.mjs",
     "derive:types": "node scripts/derive-type-themes.mjs",
     "prefill:types": "node scripts/prefill-main-types.mjs",
     "set-status": "node scripts/generate-set-status.mjs",
