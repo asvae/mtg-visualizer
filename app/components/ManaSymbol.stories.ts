@@ -9,22 +9,23 @@ const meta: Meta<typeof ManaSymbol> = {
 export default meta;
 type Story = StoryObj<typeof ManaSymbol>;
 
-export const Tap: Story = { args: { code: 'T' } };
-export const Untap: Story = { args: { code: 'Q' } };
-export const Generic: Story = { args: { code: '3' } };
-export const Colorless: Story = { args: { code: 'C' } };
-export const White: Story = { args: { code: 'W' } };
-export const Blue: Story = { args: { code: 'U' } };
-export const Black: Story = { args: { code: 'B' } };
-export const Red: Story = { args: { code: 'R' } };
-export const Green: Story = { args: { code: 'G' } };
-export const Snow: Story = { args: { code: 'S' } };
-export const Energy: Story = { args: { code: 'E' } };
-export const Variable: Story = { args: { code: 'X' } };
-export const Hybrid: Story = { args: { code: 'W/U' } };
-export const Phyrexian: Story = { args: { code: 'W/P' } };
-export const PhyrexianHybrid: Story = { args: { code: 'B/G/P' } };
-export const TwoGenericHybrid: Story = { args: { code: '2/W' } };
+// A representative spread of what data/mana_symbols/manifest.json covers —
+// not exhaustive (84 symbols total), just enough to eyeball that every
+// category renders: tap/untap, generic, colors, colorless, snow, energy,
+// variable, hybrid, phyrexian, phyrexian-hybrid, generic-hybrid.
+const SAMPLE_CODES = ['T', 'Q', '3', 'C', 'W', 'U', 'B', 'R', 'G', 'S', 'E', 'X', 'W/U', 'W/P', 'B/G/P', '2/W'];
+
+export const AllSymbols: Story = {
+  render: () => ({
+    components: { ManaSymbol },
+    setup: () => ({ codes: SAMPLE_CODES }),
+    template: `
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 20px;">
+        <span v-for="code in codes" :key="code" :title="code"><ManaSymbol :code="code" /></span>
+      </div>
+    `,
+  }),
+};
 
 // No entry in manifest.json (a typo, or a genuinely new Scryfall symbol —
 // re-run `npm run fetch:mana-symbols` if so) -> renders the literal

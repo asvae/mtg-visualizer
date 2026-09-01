@@ -87,12 +87,16 @@ needs it.
 straight out of real oracle text — `{T}`, `{C}`, `{2}`, `{W}`, ... — is
 written exactly as Scryfall would print it, curly braces included, and
 `app/lib/shorthand.ts`'s `parseShorthand` renders it via
-`app/components/ManaSymbol.vue` as Scryfall's own official symbol SVG
-(self-hosted under `public/mana_symbols/`, fetched via
+`app/components/ManaSymbol.vue` the same way scryfall.com renders its own
+card text: an `<abbr>` with the literal `{X}` as its (visually hidden but
+accessible) content, `title` set to Scryfall's own English description, and
+the actual glyph painted via a background-image — a base64-encoded SVG data
+URI baked directly into `data/mana_symbols/manifest.json` (one HTTP request
+up front for the whole manifest, zero per-icon requests after, same as
+Scryfall's own inlined card-symbol CSS). Fetched via
 `npm run fetch:mana-symbols` from
 [Scryfall's `/symbology` endpoint](https://scryfall.com/docs/api/card-symbols)
-— see `scripts/fetch-mana-symbols.mjs` and `data/mana_symbols/manifest.json`)
-— not a third-party font recreation. Covers every symbol Scryfall
+— see `scripts/fetch-mana-symbols.mjs`. Covers every symbol Scryfall
 recognizes (mana costs, `{T}`/`{Q}`, `{E}`, hybrid/phyrexian, snow, `{X}`,
 ...); re-run the fetch script if a new one shows up that isn't in the
 manifest yet. Unlike `ICON_DEFS`'s curated word list, this needs no entry
