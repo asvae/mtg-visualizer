@@ -36,6 +36,16 @@ const ICON_DEFS: { classes: string; label: string; words: string[] }[] = [
   // Mana font's actual Sorcery card-type pip — real semantic fit, unlike the
   // borrowed-icon experiments above that got reverted (target, choose).
   { classes: 'ms ms-sorcery', label: 'Sorcery speed only', words: ['sorcery speed only'] },
+  { classes: 'ms ms-ability-first-strike', label: 'First strike', words: ['first strike'] },
+  { classes: 'ms ms-ability-deathtouch', label: 'Deathtouch', words: ['deathtouch'] },
+  { classes: 'ms ms-ability-haste', label: 'Haste', words: ['haste'] },
+  { classes: 'ms ms-ability-menace', label: 'Menace', words: ['menace'] },
+  { classes: 'ms ms-ability-double-strike', label: 'Double strike', words: ['double strike'] },
+  { classes: 'ms ms-ability-prowess', label: 'Prowess', words: ['prowess'] },
+  { classes: 'ms ms-ability-cycling', label: 'Cycling', words: ['cycling'] },
+  { classes: 'ms ms-ability-surveil', label: 'Surveil', words: ['surveil'] },
+  { classes: 'ms ms-ability-kicker', label: 'Kicker', words: ['kicker'] },
+  { classes: 'ms ms-counter-charge', label: 'Charge counter', words: ['charge'] },
 ];
 // Lookup is case-insensitive — a card writing "[Landfall]" at a sentence
 // start and another writing "[trample]" mid-sentence both just work.

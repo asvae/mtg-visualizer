@@ -17,19 +17,30 @@ else (140 of 144 in-scope expansion/core sets) not started.
 
 ## Unfinished steps
 
-- **Card shorthand notation — working through FIN card by card, in
-  collector-number order.** `CARD_SHORTHAND.md` defines the house notation
-  (bracket icon placeholders rendered via `MtgIcon.vue`, `{X}` mana symbols
-  via `ManaSymbol.vue`, duration/em-dash/MDFC-face rules, etc.).
-  `data/card_shorthands.json` / `data/card_shorthand_status.json` cover `fin`
-  #1-41 plus one homebrew card (`Gladiolus Amicitia`), out of 312 — all but
-  `fin` #41 (`White Auracite`) are `review: "human"`. New cards are drafted
-  straight into the files with `review: "ai"` and reviewed live in the app
-  (the left border on the shorthand text is orange until a card's status
-  flips to `review: "human"`). Use the card page's Previous/Next links or
-  arrow keys (`/app/card/fin/<n>`) to keep moving through the set — next up
-  is `fin` #41, then #42 onward. For MVP, shorthand coverage is scoped to
-  FIN only — no other set is planned to get shorthand text.
+- **Card shorthand notation — full first draft of FIN, now needs the human
+  review pass.** `CARD_SHORTHAND.md` defines the house notation (bracket icon
+  placeholders rendered via `MtgIcon.vue`, `{X}` mana symbols via
+  `ManaSymbol.vue`, duration/em-dash/MDFC-face rules, etc.).
+  `data/card_shorthands.json` / `data/card_shorthand_status.json` cover 306
+  of FIN's 312 cards (the 6 basic lands have no oracle text worth
+  compressing, intentionally skipped) plus one homebrew card
+  (`Gladiolus Amicitia`). Only `fin` #1-41 are `review: "human"` so far
+  (worked through one at a time, live in the app) — #42 onward (264 cards)
+  were drafted in one large batch by parallel agents following
+  `CARD_SHORTHAND.md`'s established rules and still need the same live
+  review pass (the left border on the shorthand text is orange until a
+  card's status flips to `review: "human"`). A few things worth double-
+  checking during that pass, flagged by the drafting agents: `[Reanimate]`
+  stretched to a couple of self-return/no-tap cases outside its original
+  "target creature card ... tapped" shape; `enemy <noun>` used for plural
+  "your opponents control" too (the token was originally singular); a
+  `Job select` (bracketed) vs `Tiered` (not bracketed) inconsistency predates
+  this batch and wasn't resolved; a few one-off constructs with no existing
+  token (untap, variable-count draws, non-mana-cost Ward) were left as plain
+  English per the "don't invent tokens unilaterally" instruction the agents
+  were given. Use the card page's Previous/Next links or arrow keys
+  (`/app/card/fin/<n>`) to move through the set. For MVP, shorthand coverage
+  is scoped to FIN only — no other set is planned to get shorthand text.
 - **Card detail page decoupled from the graph store.** `/app/card/[set]/[number]`
   (same URL shape as `scryfall.com/card/<set>/<number>`) fetches its own data
   from `server/api/card/[set]/[number].ts` (Scryfall + relations + shorthand,

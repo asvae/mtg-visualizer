@@ -16,7 +16,10 @@ commits or tags.
   see [`CARD_SHORTHAND.md`](CARD_SHORTHAND.md), `data/card_shorthands.json`,
   `data/card_shorthand_status.json`, and the `MtgIcon.vue` component (Mana
   font icons, Storybook autodocs enabled for it and other components).
-  Drafted through 41 of FIN's 312 cards plus one homebrew card. Along the
+  Drafted for 306 of FIN's 312 cards (basic lands skipped, no oracle text
+  to compress) plus one homebrew card — #1-41 human-reviewed one at a time
+  live in the app, #42 onward drafted in one large batch by parallel agents
+  and still pending that same review pass. Along the
   way: `ManaSymbol.vue` renders literal `{X}` mana/cost symbols from real
   oracle text the way scryfall.com renders its own — official symbol SVGs
   inlined as base64 data URIs (`data/mana_symbols/manifest.json`, via
