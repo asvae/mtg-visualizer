@@ -2,14 +2,12 @@
 import { provide, onMounted, watch } from 'vue';
 import { useGraphStore, StoreKey } from '../composables/useGraphStore';
 
-useHead({ title: 'MtG Synergy Map' });
-
-// Gates the review panel (and its polling against review-server.mjs) from
-// even mounting on a deployment that doesn't set NUXT_PUBLIC_ENABLE_REVIEW,
-// not just hiding its toggle button.
-const config = useRuntimeConfig();
-const reviewEnabled = config.public.enableReview;
-
+// Owns the store — kept alive across navigation between the graph view
+// (pages/app/index.vue) and the card detail page (pages/app/card/[set]/[number].vue),
+// since Nuxt keeps a layout mounted across route changes that use the same
+// layout name; only the page slotted into it remounts. Avoids re-fetching
+// the whole graph (and re-resolving scryfall-query mode) on every navigation
+// between them.
 const store = useGraphStore();
 provide(StoreKey, store);
 onMounted(() => store.load());
@@ -29,17 +27,7 @@ watch(
 <template>
   <div class="flex h-screen flex-col">
     <AppHeader />
-    <div class="relative flex min-h-0 flex-1">
-      <FilterPanel />
-      <GraphCanvas v-if="store.graph.value" :graph="store.graph.value" />
-      <div v-else-if="store.loading.value" class="flex flex-1 items-center justify-center">
-        <div
-          class="size-8 animate-spin rounded-full border-[3px] border-border border-t-produce"
-          aria-hidden="true"
-        ></div>
-      </div>
-      <ReviewSession v-if="reviewEnabled" />
-    </div>
+    <slot />
     <TooltipView />
   </div>
 </template>

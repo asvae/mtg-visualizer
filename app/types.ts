@@ -15,6 +15,11 @@ export interface CardData {
   tokens: { name: string; image: string }[];
   scryfallUri: string;
   keywords: string[];
+  // Scryfall's own set/collector-number identity — the card detail page is
+  // routed by these (/app/card/[set]/[number]), same URL shape as
+  // scryfall.com/card/<set>/<number>, so prev/next is a plain ±1.
+  set: string;
+  collectorNumber: string;
 }
 
 export interface ThemeData {

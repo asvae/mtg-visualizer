@@ -3,50 +3,24 @@ import type { RelationColumn } from '../lib/relations';
 
 withDefaults(
   defineProps<{
-    images: string[];
-    tokens: { name: string; image: string }[];
     columns: RelationColumn[];
-    showMedia?: boolean;
-    showRelations?: boolean;
     // ReviewSession's "relations to remove" list — reads as a removal, not
     // just another relations list, so it needs to look distinct even though
     // it's the exact same column/chip markup.
     removed?: boolean;
   }>(),
   {
-    showMedia: true,
-    showRelations: true,
     removed: false,
   }
 );
-
-defineEmits<{ (e: 'imageLoad'): void }>();
 </script>
 
 <template>
-  <!-- One single row: front face, back face (if any), a divider, then each token —
-       every image the same fixed size, regardless of how many are in the row.
-       Fixed-size images mean this row grows wider as more faces/tokens show up
-       rather than shrinking to fit — scrolls in the rare case a card has more
-       images than the container can fit. -->
-  <div v-if="showMedia" class="flex items-start gap-1.5 overflow-x-auto">
-    <img v-for="(src, i) in images" :key="'face' + i" :src="src" alt="" class="block w-[220px] min-w-0 shrink-0 rounded-md" @load="$emit('imageLoad')" />
-    <div v-if="tokens.length" class="w-px shrink-0 self-stretch bg-border"></div>
-    <img
-      v-for="(t, i) in tokens"
-      :key="'token' + i"
-      :src="t.image"
-      :alt="t.name"
-      class="block w-[220px] min-w-0 shrink-0 rounded-md"
-      @load="$emit('imageLoad')"
-    />
-  </div>
-
-  <!-- Each column has the same flex-basis as one card image (220px) above — that's
-       what makes a row of columns line up with the card row above it: N columns
-       take the same width as N images. Columns that don't fit wrap onto another
-       row instead of scrolling. -->
-  <div v-if="showRelations && columns.length" class="mt-2 flex max-w-full flex-wrap gap-1.5">
+  <!-- Each column has the same flex-basis as one card image (220px) — that's
+       what makes a row of columns line up with a card media row above it: N
+       columns take the same width as N images. Columns that don't fit wrap
+       onto another row instead of scrolling. -->
+  <div v-if="columns.length" class="mt-2 flex max-w-full flex-wrap gap-1.5">
     <div
       v-for="col in columns"
       :key="col.verb"

@@ -113,7 +113,8 @@ const themeRoleGroups = computed(() => {
     :style="{ left: `${tipX}px`, top: `${tipY}px`, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }"
   >
     <template v-if="cardTooltip">
-      <CardMediaRelations :images="cardTooltip.card.images" :tokens="cardTooltip.card.tokens" :columns="chipColumns" @image-load="updatePosition" />
+      <CardMedia :images="cardTooltip.card.images" :tokens="cardTooltip.card.tokens" @image-load="updatePosition" />
+      <CardRelations :columns="chipColumns" />
     </template>
     <template v-else-if="themeTooltip">
       <div class="mt-1.5 text-[13px] font-semibold">{{ themeTooltip.theme.label }}</div>

@@ -1,18 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import CardMediaRelations from './CardMediaRelations.vue';
+import CardRelations from './CardRelations.vue';
 
-const meta: Meta<typeof CardMediaRelations> = {
-  title: 'Components/CardMediaRelations',
-  component: CardMediaRelations,
-  args: {
-    images: [],
-    tokens: [],
-    showMedia: false,
-  },
+const meta: Meta<typeof CardRelations> = {
+  title: 'Components/CardRelations',
+  component: CardRelations,
 };
 
 export default meta;
-type Story = StoryObj<typeof CardMediaRelations>;
+type Story = StoryObj<typeof CardRelations>;
 
 // The three weight levels stacked in one column — this is the "bar" element
 // under discussion: three ascending bars per theme row, filled up to `weight`

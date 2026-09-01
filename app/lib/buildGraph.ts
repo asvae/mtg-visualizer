@@ -38,6 +38,8 @@ export interface ScryfallCard {
   image_uris?: { normal: string };
   card_faces?: { colors?: string[]; type_line?: string; keywords?: string[]; image_uris?: { normal: string } }[];
   all_parts?: { id: string; component: string }[];
+  set?: string;
+  collector_number?: string;
 }
 
 export type TokensById = Record<string, { name: string; image: string | null }>;
@@ -48,7 +50,7 @@ export interface RelationsEntry {
 }
 
 // Evergreen / combat keywords -> rendered as badges on the card node, not graph edges.
-const BADGE_KEYWORDS = new Set([
+export const BADGE_KEYWORDS = new Set([
   'Flying', 'Trample', 'Vigilance', 'Reach', 'Menace', 'Deathtouch', 'Haste',
   'Lifelink', 'Ward', 'Indestructible', 'Flash', 'Crew', 'First strike', 'Double strike',
   'Hexproof', 'Defender',
@@ -57,18 +59,18 @@ const BADGE_KEYWORDS = new Set([
 // Single-faced (and split/adventure, which share one image at the top level) cards
 // return one URL; true double-faced cards (each face has its own image_uris) return
 // both, front first, so the UI can show both sides on hover.
-function cardImages(card: ScryfallCard): string[] {
+export function cardImages(card: ScryfallCard): string[] {
   if (card.image_uris) return [card.image_uris.normal];
   return (card.card_faces || []).filter((f) => f.image_uris).map((f) => f.image_uris!.normal);
 }
 
-function cardKeywords(card: ScryfallCard): string[] {
+export function cardKeywords(card: ScryfallCard): string[] {
   const kws = new Set(card.keywords || []);
   for (const f of card.card_faces || []) for (const k of f.keywords || []) kws.add(k);
   return [...kws];
 }
 
-function cardTokens(card: ScryfallCard, tokensById: TokensById): { name: string; image: string }[] {
+export function cardTokens(card: ScryfallCard, tokensById: TokensById): { name: string; image: string }[] {
   const seen = new Set<string>();
   const tokens: { name: string; image: string }[] = [];
   for (const p of card.all_parts || []) {
@@ -86,7 +88,7 @@ function cardTokens(card: ScryfallCard, tokensById: TokensById): { name: string;
 // creature type still counts. Only faces whose own type line includes
 // "Creature" contribute — an Instant/Sorcery/Enchantment subtype (Arcane,
 // Curse, Saga...) isn't a creature type and isn't what this is for.
-function creatureSubtypes(card: ScryfallCard): string[] {
+export function creatureSubtypes(card: ScryfallCard): string[] {
   const faces = card.card_faces?.length ? card.card_faces : [card];
   const subtypes = new Set<string>();
   for (const f of faces) {
@@ -97,7 +99,7 @@ function creatureSubtypes(card: ScryfallCard): string[] {
   return [...subtypes];
 }
 
-function slugify(word: string): string {
+export function slugify(word: string): string {
   return word.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
@@ -145,6 +147,8 @@ export function buildGraph(
     tokens: cardTokens(c, tokensById),
     scryfallUri: c.scryfall_uri,
     keywords: cardKeywords(c).filter((k) => BADGE_KEYWORDS.has(k)),
+    set: c.set || '',
+    collectorNumber: c.collector_number || '',
   }));
 
   const edges: EdgeData[] = [];

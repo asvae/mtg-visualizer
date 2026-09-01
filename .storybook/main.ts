@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // Plain Vue+Vite framework, not Nuxt — there's no published Nuxt framework
 // preset, and the components worth story-ing (presentational ones like
-// CardMediaRelations.vue) don't touch Nuxt-specific APIs anyway, just plain
+// CardRelations.vue) don't touch Nuxt-specific APIs anyway, just plain
 // props/emits + Tailwind classes. @storybook/vue3-vite only wires the story
 // decorator/template compilation, NOT actual .vue SFC compilation — without
 // @vitejs/plugin-vue added by hand here, .vue files 404/fail to transform
@@ -16,9 +16,19 @@ const config: StorybookConfig = {
     name: '@storybook/vue3-vite',
     options: {},
   },
+  // Not bundled into @storybook/vue3-vite by default (unlike older
+  // "essentials" days) — has to be registered explicitly. Its default docs
+  // generation targets stories tagged "autodocs" (see preview.ts, which
+  // applies that tag globally).
+  addons: ['@storybook/addon-docs'],
   async viteFinal(viteConfig) {
     viteConfig.plugins ??= [];
     viteConfig.plugins.push(vue(), tailwindcss());
+    // Repo lives on /mnt/c (WSL's DrvFs mount) — inotify doesn't reliably
+    // fire there, so Vite's default watcher misses saves. See nuxt.config.ts
+    // for the same fix on the main app's dev server.
+    viteConfig.server ??= {};
+    viteConfig.server.watch = { usePolling: true, interval: 300 };
     return viteConfig;
   },
 };

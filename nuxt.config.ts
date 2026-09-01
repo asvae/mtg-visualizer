@@ -25,7 +25,7 @@ function getBuildCommit(): string {
 export default defineNuxtConfig({
   compatibilityDate: '2026-08-31',
   modules: ['@nuxt/ui'],
-  css: ['~/assets/css/main.css'],
+  css: ['mana-font/css/mana.min.css', '~/assets/css/main.css'],
   runtimeConfig: {
     public: {
       appVersion: packageJson.version,
@@ -42,9 +42,26 @@ export default defineNuxtConfig({
     // not just an empty SPA shell.
     '/': { prerender: true },
     // Graph app: pure client-side D3/canvas, SPA-only (see comment above).
+    // Both the exact path and everything under it (e.g. the card detail
+    // page) need this — the store they all share reads window.location/
+    // localStorage regardless of which one is current.
     '/app': { ssr: false },
+    '/app/**': { ssr: false },
   },
   nitro: {
     preset: 'netlify',
+  },
+  // Repo lives on /mnt/c (WSL's DrvFs mount of the Windows filesystem) —
+  // inotify doesn't reliably fire for changes there, so Vite's default
+  // watcher silently misses saves until something else forces a rebuild
+  // (e.g. a full dev-server restart). Polling instead of relying on inotify
+  // fixes that at the cost of a bit of CPU.
+  vite: {
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 300,
+      },
+    },
   },
 });

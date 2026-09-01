@@ -60,6 +60,8 @@ interface ScryfallCard {
   digital?: boolean;
   image_uris?: ImageUris;
   card_faces?: CardFace[];
+  set?: string;
+  collector_number?: string;
 }
 
 // Strips a raw Scryfall card down to only the fields buildGraph.ts reads —
@@ -83,6 +85,8 @@ function minimalCard(c: ScryfallCard) {
       keywords: f.keywords,
       image_uris: f.image_uris ? { normal: f.image_uris.normal } : undefined,
     })),
+    set: c.set,
+    collector_number: c.collector_number,
   };
 }
 

@@ -7,6 +7,28 @@ commits or tags.
 
 ## [Unreleased]
 
+- Added a standalone card detail page: `/api/card/[set]/[number]` (Scryfall + relations
+  + shorthand in one request) replaces `/app/card/[set]/[number]`'s dependency on the
+  client-side graph store, so a direct link works without visiting `/app`
+  first. `CardMediaRelations.vue` split into `CardMedia.vue`/`CardRelations.vue`
+  to support this.
+- Added the card shorthand notation system for homebrew card text —
+  see [`CARD_SHORTHAND.md`](CARD_SHORTHAND.md), `data/card_shorthands.json`,
+  `data/card_shorthand_status.json`, and the `MtgIcon.vue` component (Mana
+  font icons, Storybook autodocs enabled for it and other components).
+  Drafted through 41 of FIN's 312 cards plus one homebrew card. Along the
+  way: `ManaSymbol.vue` renders literal `{X}` mana/cost symbols from real
+  oracle text automatically (no curation needed per symbol); a documented
+  em-dash convention for every trigger header; a face-separator format for
+  modal DFCs/transforming cards; an orange left-border on the card page
+  while a card's shorthand is `review: "ai"` (not yet human-reviewed); and
+  several MTG-community-standard verbs adopted as tokens (`[Reanimate]`,
+  `[Donate]`, `[bounce]`, `burns`, `stuns`). Two borrowed stand-in icons
+  (Keyrune's Ixalan symbol for "target", mana-font's "d" glyph for a modal's
+  "Choose one —") were tried and reverted — both stay plain text.
+- Fixed dev-server/Storybook HMR silently missing file changes on WSL's
+  DrvFs mount — Vite watchers now use polling (`nuxt.config.ts`,
+  `.storybook/main.ts`).
 - Added `scripts/generate-set-status.mjs` (`npm run set-status`), regenerating
   [`SET_STATUS.md`](SET_STATUS.md) — per-set enrichment/review status, cross-
   referenced from `tagging/card-enrichment-status.json`.

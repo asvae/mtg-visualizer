@@ -130,6 +130,14 @@ replaceable, or broadly enabling a card or theme is by analyzing the relation
 graph. Define each score in understandable terms, expose the evidence behind
 it, and avoid presenting graph heuristics as objective card quality.
 
+### No-weights mode
+
+A mode that drops relation/theme weighting (produce/consume strength, node
+sizing, anything implying a card or theme is "strong") entirely. Some users
+want to judge strength themselves and only want help grouping themes and
+finding cards that share them — not a tool that editorializes about what's
+good.
+
 ## Application experience
 
 ### Landing page and navigation

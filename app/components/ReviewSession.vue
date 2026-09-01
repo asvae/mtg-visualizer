@@ -234,12 +234,12 @@ const CONFIDENCE_CLASSES: Record<'low' | 'mid' | 'high', string> = {
       <div class="text-sm font-bold max-sm:text-[17px]">{{ cardName }}</div>
       <section v-if="currentCard" class="flex flex-col gap-1.5">
         <h3 class="m-0 text-xs tracking-wide text-muted uppercase max-sm:text-[13px]">Cards</h3>
-        <CardMediaRelations :images="currentCard.images" :tokens="currentCard.tokens" :columns="[]" :show-relations="false" />
+        <CardMedia :images="currentCard.images" :tokens="currentCard.tokens" />
       </section>
 
       <section class="flex flex-col gap-1.5">
         <h3 class="m-0 text-xs tracking-wide text-muted uppercase max-sm:text-[13px]">Relations <span class="font-normal">(current)</span></h3>
-        <CardMediaRelations v-if="currentCard && currentColumns.length" :images="[]" :tokens="[]" :columns="currentColumns" :show-media="false" />
+        <CardRelations v-if="currentCard && currentColumns.length" :columns="currentColumns" />
         <div v-else class="text-[11px] text-muted italic">None</div>
       </section>
 
@@ -284,11 +284,11 @@ const CONFIDENCE_CLASSES: Record<'low' | 'mid' | 'high', string> = {
               </div>
               <section v-if="pendingAddColumns.length" class="flex flex-col gap-1.5">
                 <h3 class="m-0 text-xs tracking-wide text-muted uppercase">Relations to add</h3>
-                <CardMediaRelations :images="[]" :tokens="[]" :columns="pendingAddColumns" :show-media="false" />
+                <CardRelations :columns="pendingAddColumns" />
               </section>
               <section v-if="pendingRemoveColumns.length" class="flex flex-col gap-1.5">
                 <h3 class="m-0 text-xs tracking-wide text-muted uppercase">Relations to remove</h3>
-                <CardMediaRelations :images="[]" :tokens="[]" :columns="pendingRemoveColumns" :show-media="false" removed />
+                <CardRelations :columns="pendingRemoveColumns" removed />
               </section>
               <div v-if="!pendingAddColumns.length && !pendingRemoveColumns.length" class="text-[11px] text-muted italic">
                 No relation changes proposed

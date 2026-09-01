@@ -42,12 +42,15 @@ onMounted(() => {
     },
     onCardClick(card, event) {
       // Ctrl/Cmd-click opens Scryfall (a "look this up externally" gesture) —
-      // everything else is a plain select, same shift-to-add convention as themes.
+      // everything else navigates to that card's own page instead of
+      // selecting it on the graph (click-to-select is off for now; see
+      // store.cardSelection/toggleCardSelection, left in place but unused
+      // here — not removed, just not wired to this click anymore).
       if (event.ctrlKey || event.metaKey) {
         window.open(card.scryfallUri, '_blank');
         return;
       }
-      store.toggleCardSelection(card.id, event.shiftKey);
+      navigateTo(`/app/card/${card.set}/${card.collectorNumber}`);
     },
     onThemeClick(theme, event) {
       store.toggleThemeSelection(theme.id, event.shiftKey);
@@ -138,7 +141,14 @@ onMounted(() => {
   );
 });
 
-onBeforeUnmount(() => renderer?.destroy());
+onBeforeUnmount(() => {
+  renderer?.destroy();
+  // Navigating away (e.g. clicking a card to its detail page) unmounts this
+  // component without ever firing the SVG's own mouseleave — without this,
+  // TooltipView (which lives in the layout, outside this component) keeps
+  // showing whatever was last hovered.
+  store.hovered.value = null;
+});
 </script>
 
 <template>
