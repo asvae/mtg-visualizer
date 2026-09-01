@@ -26,7 +26,7 @@ English; don't force a new abbreviation onto it.
   for each Equipment you control," not "This creature gets...".
 - Every trigger header uses an em dash ("—"), never a colon — matches real
   templating's own "Landfall — Whenever..." style. `[Enter] —`, `[Attacks] —`,
-  `[Dies] —`, `[You heal] —`, `[Landfall] —`, Saga chapter numbers, and a
+  `[Dies] —`, `[Heal] —`, `[Landfall] —`, Saga chapter numbers, and a
   modal's `Choose one —` are all the same one convention, not several
   different ones. `[Flashback]` is neither a trigger nor a cost:effect
   activated ability, so it doesn't get a dash — just `[Flashback] {cost}.`
@@ -112,7 +112,9 @@ are for symbols that already exist verbatim in the card's real text.
 | `[Enter] —` | "When this creature enters," |
 | `[Attacks] —` | "Whenever this creature attacks," |
 | `[Dies] —` | "When this creature dies," |
-| `[You heal] —` | "Whenever you gain life," |
+| `[Heal] —` | "Whenever you gain life," |
+| `Any [heal] —` | "Whenever a player gains life," (no "you" — any player, not specifically you) |
+| `Enemy [heal] —` | "Whenever an opponent gains life," — same `Any`/`Enemy` qualifier pattern as the phase triggers above |
 | `[Landfall] —` | "Landfall — Whenever a land you control enters," |
 | `ramp` | "search your library for a land card, put it onto the battlefield, then shuffle" — tapped/untapped is *not* implied, state it separately |
 | `[tutor] <type>` | "search your library for a \<type\> card, reveal it, put it into your hand, then shuffle" — hand, not battlefield; see `ramp` for the land-to-battlefield case |
