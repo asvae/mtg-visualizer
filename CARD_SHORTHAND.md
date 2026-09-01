@@ -150,6 +150,12 @@ Use `your <noun>` by default — don't spell out "\<noun\> you control" just bec
 | `is a <type>` (no qualifier) | "is a \<type\> in addition to its other types" — additive is the default, no "additionally" needed |
 | `loses other types` | states explicitly when a type change actually replaces the permanent's other types, the non-default case |
 | `End the turn` | Ultima's own named keyword action — kept verbatim, its reminder text dropped |
+| `[Upkeep] —` | "At the beginning of your upkeep," |
+| `[Draw step] —` | "At the beginning of your draw step," — never shortened further to `[Draw]`; that word is already the draw-a-card action token and the two would collide |
+| `[End step] —` | "At the beginning of your end step," |
+| `[Combat] —` | "At the beginning of combat" (on your turn) — this one covers *only* that specific trigger point, not declare attackers/blockers, end of combat, or any other combat sub-step; those stay spelled out in full |
+| `Any [upkeep\|draw step\|end step\|combat] —` | "At the beginning of each \<phase\>" (every player's, not just yours) |
+| `Enemy [upkeep\|draw step\|end step\|combat] —` | "At the beginning of an opponent's \<phase\>" — same "enemy" qualifier as `enemy <noun>`, itself never bracketed |
 
 Saga chapter lines (`I —`, `II —`, `III —`) use the same em dash as every
 other trigger header (see Rules above) — a chapter number is just another
