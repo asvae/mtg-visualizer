@@ -17,9 +17,12 @@ commits or tags.
   `data/card_shorthand_status.json`, and the `MtgIcon.vue` component (Mana
   font icons, Storybook autodocs enabled for it and other components).
   Drafted for 306 of FIN's 312 cards (basic lands skipped, no oracle text
-  to compress) plus one homebrew card — #1-41 human-reviewed one at a time
-  live in the app, #42 onward drafted in one large batch by parallel agents
-  and still pending that same review pass. Along the
+  to compress) plus one homebrew card — #1-50 human-reviewed one at a time
+  live in the app, #51 onward drafted in one large batch by parallel agents
+  and still pending that same review pass. Fixed `parseShorthand` mistaking
+  an em dash inside a quoted granted-ability string (e.g. `has "Attacks —
+  you gain 1 life,"`) for the line's own trigger-header dash and italicizing
+  too much of the line. Along the
   way: `ManaSymbol.vue` renders literal `{X}` mana/cost symbols from real
   oracle text the way scryfall.com renders its own — official symbol SVGs
   inlined as base64 data URIs (`data/mana_symbols/manifest.json`, via
@@ -33,6 +36,9 @@ commits or tags.
   `[Donate]`, `[bounce]`, `burns`, `stuns`). Two borrowed stand-in icons
   (Keyrune's Ixalan symbol for "target", mana-font's "d" glyph for a modal's
   "Choose one —") were tried and reverted — both stay plain text.
+- Hid the relations panel on the card detail page for now — `CardRelations.vue`
+  is unmounted from `/app/card/[set]/[number]`, but the edges/themes fetch
+  and chip-grouping it depends on are untouched, so it's a one-line revert.
 - Fixed dev-server/Storybook HMR silently missing file changes on WSL's
   DrvFs mount — Vite watchers now use polling (`nuxt.config.ts`,
   `.storybook/main.ts`).

@@ -110,7 +110,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
           /><span v-else :class="{ italic: seg.italic }">{{ seg.text }}</span></template
         >
       </p>
-      <CardRelations :columns="chipColumns" />
       <a :href="card.scryfallUri" target="_blank" rel="noopener" class="mt-3 inline-block text-xs text-muted hover:text-text">
         View on Scryfall &rarr;
       </a>

@@ -24,8 +24,8 @@ else (140 of 144 in-scope expansion/core sets) not started.
   `data/card_shorthands.json` / `data/card_shorthand_status.json` cover 306
   of FIN's 312 cards (the 6 basic lands have no oracle text worth
   compressing, intentionally skipped) plus one homebrew card
-  (`Gladiolus Amicitia`). Only `fin` #1-41 are `review: "human"` so far
-  (worked through one at a time, live in the app) — #42 onward (264 cards)
+  (`Gladiolus Amicitia`). Only `fin` #1-50 are `review: "human"` so far
+  (worked through one at a time, live in the app) — #51 onward (255 cards)
   were drafted in one large batch by parallel agents following
   `CARD_SHORTHAND.md`'s established rules and still need the same live
   review pass (the left border on the shorthand text is orange until a
@@ -33,9 +33,8 @@ else (140 of 144 in-scope expansion/core sets) not started.
   checking during that pass, flagged by the drafting agents: `[Reanimate]`
   stretched to a couple of self-return/no-tap cases outside its original
   "target creature card ... tapped" shape; `enemy <noun>` used for plural
-  "your opponents control" too (the token was originally singular); a
-  `Job select` (bracketed) vs `Tiered` (not bracketed) inconsistency predates
-  this batch and wasn't resolved; a few one-off constructs with no existing
+  "your opponents control" too (the token was originally singular); a few
+  one-off constructs with no existing
   token (untap, variable-count draws, non-mana-cost Ward) were left as plain
   English per the "don't invent tokens unilaterally" instruction the agents
   were given. Use the card page's Previous/Next links or arrow keys

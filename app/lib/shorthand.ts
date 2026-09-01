@@ -32,7 +32,13 @@ export function parseShorthand(source: string): ShorthandSegment[] {
   const lines = source.split('\n');
   const segments: ShorthandSegment[] = [];
   lines.forEach((line, i) => {
-    const dashIndex = line.indexOf(' — ');
+    // A line's *own* trigger header must come before any quoted granted-ability
+    // text — otherwise an em dash inside the quotes (e.g. `has "Attacks —
+    // you gain 1 life,"`) gets mistaken for this line's header and italicizes
+    // everything up to it.
+    const quoteIndex = line.indexOf('"');
+    const rawDashIndex = line.indexOf(' — ');
+    const dashIndex = rawDashIndex !== -1 && (quoteIndex === -1 || rawDashIndex < quoteIndex) ? rawDashIndex : -1;
     if (dashIndex === -1) {
       segments.push(...tokenize(line, false));
     } else {

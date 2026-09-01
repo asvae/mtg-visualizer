@@ -23,8 +23,36 @@ English; don't force a new abbreviation onto it.
 - Technical rules analysis only — exclude lore/flavor. A card's own named
   sub-ability (e.g. a Saga chapter's "Mega Flare" or an activated ability's
   flavor name) isn't kept; describe the effect, not what the card calls it.
-- A static ability describing the card itself drops the subject: "Gets +1/+1
-  for each Equipment you control," not "This creature gets...".
+- A static ability describing the card itself drops the subject *and* the
+  verb when it's a bare `+N/+M` stat line: "+1/+1 for each Equipment you
+  control," not "This creature gets..." or even "Gets +1/+1...". Same for
+  any other verb whose subject is this permanent and has been dropped
+  (right after a trigger header, a Saga chapter number, or at the very
+  start of the card's text) — use the imperative/base form, not
+  third-person "-s": "Burn each opponent for...", "Gain \"Whenever...\"",
+  not "Burns"/"Gains". This is purely about whether a subject is actually
+  present, not position: once a real subject shows up ("it", "this token",
+  "target creature you control", "each other Bird you control", ...) the
+  verb takes its normal third-person "-s" again — "it \[burns\]", "this
+  token \[burns\]", not "it \[burn\]". A bare `+N/+M` line only drops the
+  subject/verb when the earlier sentence's subject still obviously applies —
+  a later "instead" clause replacing a previously-named target's bonus needs
+  its pronoun back: "Target creature gets +2/+2 for this turn. If you
+  control three or more creatures, it gets +4/+4 instead." (not "...,
+  +4/+4 instead.").
+- No `N+` notation ("power 4+") — spell out "N or greater" ("power 4 or
+  greater") in the text itself.
+- A conditional stat pump leads with the `+N/+M`, condition trails: "+2/+0
+  while you control two or more artifacts," not "While you control two or
+  more artifacts, gets +2/+0." — same "no verb before +N/+M" rule as above,
+  just also reordered so the pump is the first thing read.
+- "Cast via flashback" ≠ "cast from graveyard" — flashback is one way to
+  cast from graveyard, not the only one, so a condition checking *how the
+  spell got cast* uses the real wording: "If cast from graveyard,..."
+  (matches actual WotC templating), never "if cast via flashback."
+- A Saga's keyword abilities (e.g. `[Flying]`) go on their own line at the
+  *top* of the Saga section, before the chapter lines — not trailing after
+  the last chapter.
 - Every trigger header uses an em dash ("—"), never a colon — matches real
   templating's own "Landfall — Whenever..." style. `[Enter] —`, `[Attacks] —`,
   `[Dies] —`, `[Heal] —`, `[Landfall] —`, Saga chapter numbers, and a
@@ -105,18 +133,20 @@ the ability text exactly as printed and it just works, no curation needed.
 | `[optional]` (or `[you may]`) | "you may" |
 | `[bounce] <target>` | "return <target> to its owner's hand" |
 | `[Reanimate] <target> tapped` | "return target creature card from your graveyard to the battlefield tapped" — a specific, already-targeted graveyard card, not a search (distinct from `[tutor]`/`[dig]`); real MTG community term for this exact effect |
-| `N+` | "N or greater" |
 | `+N/+M` | a stat pump — carries no implied duration (see Duration below) |
 | `for this turn` | equivalent to official "until end of turn" wording — marks a temporary effect |
 | `burns <target> for <amount>` | "deals <amount> damage to <target>" — noncombat damage only, not a combat-damage description |
 | `stuns <target>` | "puts a stun counter on <target>" — a stun counter's only rules effect is the untap-prevention static ability, so this is unambiguous |
 | `another <noun>` | excludes the source permanent itself |
-| `your <noun>` | "<noun> you control" — not "you own"; spell out "control" explicitly on the rare card where the ownership/control distinction actually matters |
-| `each your <noun>` | "each <noun> you control" (this reverses an earlier call to always spell out "each of your \<noun\>s" — the shorter form is the current standard) |
+| `Your <noun(s)> <verb>...` | kept, unabbreviated — this is real MTG anthem-effect idiom ("Your Wizards get +1/+0," "Your creatures gain \[flying\]"), used whenever `<noun>` is the **grammatical subject** of a static/continuous effect or a triggered ability's *result* clause. Never a compression, so it was never a candidate for retirement. |
+| `<noun> you control` | used instead of `Your <noun>` everywhere `<noun>` is *not* the clause's subject — a trigger's condition ("Whenever another creature you control dies," "Whenever a Human you control attacks"), a count ("for each artifact you control," "damage equal to the number of creatures you control"), or a target restriction ("target creature you control," "attach target Equipment you control to..."). Real MTG templating overwhelmingly uses "you control" in exactly these three spots and "Your \<noun\>" in exactly none of them — that's the dividing line, not a stylistic preference. An earlier attempt at a single universal `your <noun>` token (and later `each your <noun>`) covering *all* of the above was tried and reverted for reading badly in the non-subject spots ("each your Cleric," "on your another target creature," "for each your artifact") — the fix wasn't a better token, it was recognizing these were never the same construction. |
 | `[Donate] <target> to <target>` | "target opponent gains control of <target>" — the real MTG community term (whole deck archetype named after it), avoids reusing the official "Gift" keyword (a different, real mechanic) |
 | `[tutor] and/or [dig] <type>` | "search your library and/or graveyard for a \<type\> card, reveal it, put it into your hand" — `[dig]` alone means graveyard only, never needs a shuffle; combine with `[tutor]` for "library and/or graveyard" and add "shuffle if you [tutored]" since only the library side needs one |
 | `X = <thing>` | "where X is the number of <thing>" |
 | `Copy <thing> to <target>` | "put the same number of <thing> onto <target> as are on this permanent" |
+| `Sacrifice:` (a cost) | "Sacrifice this creature:" — the sacrificed permanent is this card itself by default in a cost; state a different object explicitly when it isn't ("Sacrifice a creature:") |
+| `Spend only on <Type> or <type-specific> abilities.` | "Spend this mana only to cast a \<Type\> spell or activate an ability of a \<Type\> source." Spells-or-abilities is the more common real case for a permanent-type mana restriction (checked against the full Scryfall pool: 19 vs. 9 over spells-only for artifact/Equipment), but not by enough of a margin to justify a silent implied-scope shortcut — so both halves stay explicit rather than compressing to a bare "Spend only on \<Type\>." that would have to be memorized as secretly covering abilities too. Use "Spend only on \<Type\> spells." for the genuinely spells-only case (e.g. Mishra's Workshop). |
+| `Put <this card's counters> and attach <Equipment> to <target>` | combines a counter-copy and an Equipment-reattach into one sentence when a card does both at once, sharing one trailing "to it" — "Put this creature's counters and attach Equipment to it." instead of two separate "Copy...counters...then attach...Equipment" sentences. Keeps "attach" (not "put") for the Equipment half — Equipment is attached, not put onto a creature. |
 | `[Draw]` (optionally followed by a number) | "draw a card" — the count is omitted when it's exactly one; state it only for two or more, e.g. `[Draw] 2` |
 | `[Sorcery speed only]` | "Activate only as a sorcery" — a real reworded compression (not just the bare keyword), so it stays bracketed even with no icon |
 | `enemy <noun>` | "\<noun\> an opponent controls" |
@@ -196,10 +226,10 @@ Gladiolus Amicitia (homebrew), as stored in `data/card_shorthands.json`:
 Summon: Bahamut (`fin`, #1), a Saga:
 
 ```
+Flying
 I, II — Destroy up to one target nonland permanent.
 III — [Draw] 2.
-IV — Burns each opponent for the total mana value of your other permanents.
-Flying
+IV — Burn each opponent for the total mana value of other permanents you control.
 ```
 
 Aerith Rescue Mission (`fin`, #5), a modal sorcery:

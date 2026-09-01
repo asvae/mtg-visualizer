@@ -165,47 +165,47 @@
   },
   "White Auracite": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "White Mage's Staff": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Wind Crystal": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "You're Not Alone": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Zack Fair": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Astrologian's Planisphere": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Cargo Ship": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Combat Tutorial": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Dragoon's Wyvern": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Dreams of Laguna": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Edgar, King of Figaro": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Eject": {
     "shorthand": "ai",
@@ -261,7 +261,7 @@
   },
   "Qiqirn Merchant": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Quistis Trepe": {
     "shorthand": "ai",
@@ -273,7 +273,7 @@
   },
   "Retrieve the Esper": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Rook Turret": {
     "shorthand": "ai",
@@ -281,7 +281,7 @@
   },
   "Sage's Nouliths": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Sahagin": {
     "shorthand": "ai",
@@ -289,7 +289,7 @@
   },
   "Scorpion Sentinel": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Sidequest: Card Collection // Magicked Card": {
     "shorthand": "ai",
@@ -301,7 +301,7 @@
   },
   "Stolen Uniform": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Stuck in Summoner's Sanctum": {
     "shorthand": "ai",
@@ -309,7 +309,7 @@
   },
   "Summon: Leviathan": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Summon: Shiva": {
     "shorthand": "ai",
@@ -325,7 +325,7 @@
   },
   "Thief's Knife": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Travel the Overworld": {
     "shorthand": "ai",
@@ -353,7 +353,7 @@
   },
   "Al Bhed Salvagers": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Ardyn, the Usurper": {
     "shorthand": "ai",
@@ -361,19 +361,19 @@
   },
   "Black Mage's Rod": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Cecil, Dark Knight // Cecil, Redeemed Paladin": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Circle of Power": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Cornered by Black Mages": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Dark Confidant": {
     "shorthand": "ai",
@@ -381,7 +381,7 @@
   },
   "Dark Knight's Greatsword": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Darkness Crystal": {
     "shorthand": "ai",
@@ -409,7 +409,7 @@
   },
   "The Final Days": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Gaius van Baelsar": {
     "shorthand": "ai",
@@ -421,7 +421,7 @@
   },
   "Jecht, Reluctant Guardian // Braska's Final Aeon": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Kain, Traitorous Dragoon": {
     "shorthand": "ai",
@@ -437,7 +437,7 @@
   },
   "Ninja's Blades": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Overkill": {
     "shorthand": "ai",
@@ -485,11 +485,11 @@
   },
   "Summon: Anima": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Summon: Primal Odin": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Tonberry": {
     "shorthand": "ai",
@@ -521,7 +521,7 @@
   },
   "Barret Wallace": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Blazing Bomb": {
     "shorthand": "ai",
@@ -557,7 +557,7 @@
   },
   "Freya Crescent": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Gilgamesh, Master-at-Arms": {
     "shorthand": "ai",
@@ -585,11 +585,11 @@
   },
   "Mysidian Elder": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Nibelheim Aflame": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Opera Love Song": {
     "shorthand": "ai",
@@ -601,7 +601,7 @@
   },
   "Queen Brahne": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Random Encounter": {
     "shorthand": "ai",
@@ -613,15 +613,15 @@
   },
   "Red Mage's Rapier": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Sabotender": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Samurai's Katana": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Sandworm": {
     "shorthand": "ai",
@@ -633,7 +633,7 @@
   },
   "Self-Destruct": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Sidequest: Play Blitzball // World Champion, Celestial Weapon": {
     "shorthand": "ai",
@@ -649,7 +649,7 @@
   },
   "Summon: Esper Ramuh": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Summon: G.F. Cerberus": {
     "shorthand": "ai",
@@ -677,15 +677,15 @@
   },
   "Vaan, Street Thief": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Warrior's Sword": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Zell Dincht": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Airship Crash": {
     "shorthand": "ai",
@@ -693,7 +693,7 @@
   },
   "Ancient Adamantoise": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Balamb T-Rexaur": {
     "shorthand": "ai",
@@ -701,11 +701,11 @@
   },
   "Bard's Bow": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Bartz and Boko": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Blitzball Shot": {
     "shorthand": "ai",
@@ -717,7 +717,7 @@
   },
   "Chocobo Kick": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Chocobo Racetrack": {
     "shorthand": "ai",
@@ -725,7 +725,7 @@
   },
   "Clash of the Eikons": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Coliseum Behemoth": {
     "shorthand": "ai",
@@ -741,7 +741,7 @@
   },
   "The Earth Crystal": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Esper Origins // Summon: Esper Maduin": {
     "shorthand": "ai",
@@ -753,7 +753,7 @@
   },
   "Gigantoad": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Goobbue Gardener": {
     "shorthand": "ai",
@@ -773,7 +773,7 @@
   },
   "Loporrit Scout": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Prishe's Wanderings": {
     "shorthand": "ai",
@@ -809,7 +809,7 @@
   },
   "Sidequest: Raise a Chocobo // Black Chocobo": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Summon: Fat Chocobo": {
     "shorthand": "ai",
@@ -821,11 +821,11 @@
   },
   "Summon: Titan": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Summoner's Grimoire": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Tifa Lockhart": {
     "shorthand": "ai",
@@ -845,7 +845,7 @@
   },
   "Traveling Chocobo": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Vanille, Cheerful l'Cie": {
     "shorthand": "ai",
@@ -861,7 +861,7 @@
   },
   "Black Waltz No. 3": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Choco, Seeker of Paradise": {
     "shorthand": "ai",
@@ -881,7 +881,7 @@
   },
   "The Emperor of Palamecia // The Lord Master of Hell": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Exdeath, Void Warlock // Neo Exdeath, Dimension's End": {
     "shorthand": "ai",
@@ -913,11 +913,11 @@
   },
   "Jenova, Ancient Calamity": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Joshua, Phoenix's Dominant // Phoenix, Warden of Fire": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Judge Magister Gabranth": {
     "shorthand": "ai",
@@ -929,7 +929,7 @@
   },
   "Kuja, Genome Sorcerer // Trance Kuja, Fate Defied": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Lightning, Army of One": {
     "shorthand": "ai",
@@ -945,7 +945,7 @@
   },
   "Omega, Heartless Evolution": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Rinoa Heartilly": {
     "shorthand": "ai",
@@ -977,11 +977,11 @@
   },
   "Tellah, Great Sage": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Terra, Magical Adept // Esper Terra": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Tidus, Blitzball Star": {
     "shorthand": "ai",
@@ -993,7 +993,7 @@
   },
   "Vivi Ornitier": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Wandering Minstrel": {
     "shorthand": "ai",
@@ -1001,7 +1001,7 @@
   },
   "Yuna, Hope of Spira": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Zidane, Tantalus Thief": {
     "shorthand": "ai",
@@ -1045,7 +1045,7 @@
   },
   "Lion Heart": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Lunatic Pandora": {
     "shorthand": "ai",
@@ -1061,11 +1061,11 @@
   },
   "Monk's Fist": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "PuPu UFO": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Regalia": {
     "shorthand": "ai",
@@ -1141,7 +1141,7 @@
   },
   "Lindblum, Industrial Regency // Mage Siege": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Midgar, City of Mako // Reactor Raid": {
     "shorthand": "ai",
@@ -1213,7 +1213,7 @@
   },
   "Xande, Dark Mage": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Magitek Scythe": {
     "shorthand": "ai",
