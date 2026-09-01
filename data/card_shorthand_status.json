@@ -209,55 +209,55 @@
   },
   "Eject": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Ether": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Gogo, Master of Mimicry": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Ice Flan": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Ice Magic": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Il Mheg Pixie": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Jill, Shiva's Dominant // Shiva, Warden of Ice": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Louisoix's Sacrifice": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Lunar Whale": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Magic Damper": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Matoya, Archon Elder": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Memories Returning": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Prima Vista": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Qiqirn Merchant": {
     "shorthand": "ai",
@@ -265,11 +265,11 @@
   },
   "Quistis Trepe": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Relm's Sketching": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Retrieve the Esper": {
     "shorthand": "ai",
@@ -277,7 +277,7 @@
   },
   "Rook Turret": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Sage's Nouliths": {
     "shorthand": "ai",
@@ -285,7 +285,7 @@
   },
   "Sahagin": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Scorpion Sentinel": {
     "shorthand": "ai",
@@ -293,11 +293,11 @@
   },
   "Sidequest: Card Collection // Magicked Card": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Sleep Magic": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Stolen Uniform": {
     "shorthand": "ai",
@@ -305,7 +305,7 @@
   },
   "Stuck in Summoner's Sanctum": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Summon: Leviathan": {
     "shorthand": "ai",
@@ -313,15 +313,15 @@
   },
   "Summon: Shiva": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Swallowed by Leviathan": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Syncopate": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Thief's Knife": {
     "shorthand": "ai",
@@ -329,27 +329,27 @@
   },
   "Travel the Overworld": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Ultros, Obnoxious Octopus": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Valkyrie Aerial Unit": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Water Crystal": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Y'shtola Rhul": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Ahriman": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Al Bhed Salvagers": {
     "shorthand": "ai",
@@ -357,7 +357,7 @@
   },
   "Ardyn, the Usurper": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Black Mage's Rod": {
     "shorthand": "ai",
@@ -377,7 +377,7 @@
   },
   "Dark Confidant": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Dark Knight's Greatsword": {
     "shorthand": "ai",
@@ -385,19 +385,19 @@
   },
   "The Darkness Crystal": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Demon Wall": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Evil Reawakened": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Fang, Fearless l'Cie": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "Ragnarok, Divine Deliverance": {
     "shorthand": "ai",
@@ -405,7 +405,7 @@
   },
   "Fight On!": {
     "shorthand": "ai",
-    "review": "ai"
+    "review": "human"
   },
   "The Final Days": {
     "shorthand": "ai",

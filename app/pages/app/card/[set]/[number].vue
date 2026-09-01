@@ -89,6 +89,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             &larr; Previous
           </NuxtLink>
           <span v-else class="text-muted/40">&larr; Previous</span>
+          <span class="text-muted">#{{ currentNumber }}</span>
           <NuxtLink v-if="nextNumber != null" :to="`/app/card/${route.params.set}/${nextNumber}`" class="text-muted hover:text-text">
             Next &rarr;
           </NuxtLink>

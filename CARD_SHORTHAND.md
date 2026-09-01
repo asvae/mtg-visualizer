@@ -42,6 +42,12 @@ English; don't force a new abbreviation onto it.
   +4/+4 instead.").
 - No `N+` notation ("power 4+") — spell out "N or greater" ("power 4 or
   greater") in the text itself.
+- No `[optional]`/`[you may]` token — write plain, unbracketed "you may" (or
+  "You may" at a clause start), same retirement reasoning as `Your <noun>`
+  above: it's already exactly the real MTG wording, not a compression, so it
+  was never a candidate for a bracket in the first place.
+- `Enchant <type>` gets no trailing period — it's a type-line-style ability
+  word in real templating, not a full sentence.
 - A conditional stat pump leads with the `+N/+M`, condition trails: "+2/+0
   while you control two or more artifacts," not "While you control two or
   more artifacts, gets +2/+0." — same "no verb before +N/+M" rule as above,
@@ -130,18 +136,18 @@ the ability text exactly as printed and it just works, no curation needed.
 | `[Landfall] —` | "Landfall — Whenever a land you control enters," |
 | `ramp` | "search your library for a land card, put it onto the battlefield, then shuffle" — tapped/untapped is *not* implied, state it separately |
 | `[tutor] <type>` | "search your library for a \<type\> card, reveal it, put it into your hand, then shuffle" — hand, not battlefield; see `ramp` for the land-to-battlefield case |
-| `[optional]` (or `[you may]`) | "you may" |
 | `[bounce] <target>` | "return <target> to its owner's hand" |
 | `[Reanimate] <target> tapped` | "return target creature card from your graveyard to the battlefield tapped" — a specific, already-targeted graveyard card, not a search (distinct from `[tutor]`/`[dig]`); real MTG community term for this exact effect |
 | `+N/+M` | a stat pump — carries no implied duration (see Duration below) |
 | `for this turn` | equivalent to official "until end of turn" wording — marks a temporary effect |
 | `burns <target> for <amount>` | "deals <amount> damage to <target>" — noncombat damage only, not a combat-damage description |
-| `stuns <target>` | "puts a stun counter on <target>" — a stun counter's only rules effect is the untap-prevention static ability, so this is unambiguous |
+| `[Stun] <target>` / `stuns <target>` | "tap target, then put a stun counter on it" when the oracle text taps as part of the same effect (the overwhelmingly common case), otherwise "puts a stun counter on <target>" alone — a stun counter's only rules effect is the untap-prevention static ability, so either reading is unambiguous once you check whether the oracle text also taps |
+| `[Blink] <target>` | "exile target permanent, then return it to the battlefield under its owner's control" — real MTG community term for this exact effect |
 | `another <noun>` | excludes the source permanent itself |
-| `Your <noun(s)> <verb>...` | kept, unabbreviated — this is real MTG anthem-effect idiom ("Your Wizards get +1/+0," "Your creatures gain \[flying\]"), used whenever `<noun>` is the **grammatical subject** of a static/continuous effect or a triggered ability's *result* clause. Never a compression, so it was never a candidate for retirement. |
-| `<noun> you control` | used instead of `Your <noun>` everywhere `<noun>` is *not* the clause's subject — a trigger's condition ("Whenever another creature you control dies," "Whenever a Human you control attacks"), a count ("for each artifact you control," "damage equal to the number of creatures you control"), or a target restriction ("target creature you control," "attach target Equipment you control to..."). Real MTG templating overwhelmingly uses "you control" in exactly these three spots and "Your \<noun\>" in exactly none of them — that's the dividing line, not a stylistic preference. An earlier attempt at a single universal `your <noun>` token (and later `each your <noun>`) covering *all* of the above was tried and reverted for reading badly in the non-subject spots ("each your Cleric," "on your another target creature," "for each your artifact") — the fix wasn't a better token, it was recognizing these were never the same construction. |
+| `<noun> you control` | used everywhere a card refers to permanents/spells you control — a static/anthem effect's subject ("Creatures you control get +1/+1," "Wizards you control gain \[flying\]"), a trigger's condition ("Whenever another creature you control dies," "Whenever a Human you control attacks"), a count ("for each artifact you control," "damage equal to the number of creatures you control"), a target restriction ("target creature you control"), or a cost-reduction subject ("Blue spells you cast cost {1} less"). Never `Your <noun>` — matches real WotC templating, which uses "you control"/"you cast" universally in all these spots, including the anthem-subject case. (An earlier version of this rule kept `Your <noun>` for the anthem-subject case specifically, reasoning it was real MTG idiom there; that was a misread of actual templating and was reverted — WotC's own card text is "Creatures you control get +1/+1," not "Your creatures get +1/+1." Before that, an even earlier single universal `your <noun>` token — and later `each your <noun>` — covering everything was tried and reverted for reading badly in non-subject spots ("each your Cleric," "on your another target creature") before the subject/non-subject split was tried and also abandoned.) |
 | `[Donate] <target> to <target>` | "target opponent gains control of <target>" — the real MTG community term (whole deck archetype named after it), avoids reusing the official "Gift" keyword (a different, real mechanic) |
 | `[tutor] and/or [dig] <type>` | "search your library and/or graveyard for a \<type\> card, reveal it, put it into your hand" — `[dig]` alone means graveyard only, never needs a shuffle; combine with `[tutor]` for "library and/or graveyard" and add "shuffle if you [tutored]" since only the library side needs one |
+| `[Dig] N <type(s)>` | also covers "return up to N target \<type\> cards from your graveyard to your hand" — a targeted return, not a search, but plays out the same at the table, so it isn't worth a separate token from the search sense above |
 | `X = <thing>` | "where X is the number of <thing>" |
 | `Copy <thing> to <target>` | "put the same number of <thing> onto <target> as are on this permanent" |
 | `Sacrifice:` (a cost) | "Sacrifice this creature:" — the sacrificed permanent is this card itself by default in a cost; state a different object explicitly when it isn't ("Sacrifice a creature:") |
@@ -149,6 +155,7 @@ the ability text exactly as printed and it just works, no curation needed.
 | `Put <this card's counters> and attach <Equipment> to <target>` | combines a counter-copy and an Equipment-reattach into one sentence when a card does both at once, sharing one trailing "to it" — "Put this creature's counters and attach Equipment to it." instead of two separate "Copy...counters...then attach...Equipment" sentences. Keeps "attach" (not "put") for the Equipment half — Equipment is attached, not put onto a creature. |
 | `[Draw]` (optionally followed by a number) | "draw a card" — the count is omitted when it's exactly one; state it only for two or more, e.g. `[Draw] 2` |
 | `[Sorcery speed only]` | "Activate only as a sorcery" — a real reworded compression (not just the bare keyword), so it stays bracketed even with no icon |
+| `doesn't untap normally (during its controller's untap step)` | "doesn't untap during its controller's untap step" — the parenthetical stays since a permanent can also fail to untap for other reasons (e.g. a stun counter), so "normally" alone would be ambiguous |
 | `enemy <noun>` | "\<noun\> an opponent controls" |
 | `Job select` | the set's own named mechanic — kept verbatim, not bracketed (same reasoning as `Flashback`/`Tiered`: zero compression, it's already the exact real templating), its reminder text dropped like any other |
 | `Wielder` | "Equipped creature" |
