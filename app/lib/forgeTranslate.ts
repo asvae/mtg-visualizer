@@ -171,6 +171,20 @@ function coarseType(v: string | undefined): string {
 // the PromisedGift shape (handled separately by the narrower, already-
 // dedicated cond:gift_promised flag) to avoid double-encoding the same fact
 // two different ways.
+// A granted keyword's real mechanical fact, shared by the static AddKeyword$
+// handler AND Pump/PumpAll's own KW$ field (Finch Formation's own "target
+// creature you control gains flying" is exactly the same real-world fact as
+// a static's AddKeyword$ Flying grant — before this helper existed, Pump/
+// PumpAll's own inline `grant=flying` diverged from the static handler's
+// richer blocked_by=flying_or_reach encoding for the IDENTICAL keyword,
+// purely because they were two separately-written branches).
+function keywordGrantFact(kw: string): string {
+  if (kw === 'Flying') return 'blocked_by=flying_or_reach';
+  const ward = /^Ward:(.+)$/.exec(kw);
+  const wardCost = ward?.[1];
+  if (wardCost) return `ward=${/^\d+$/.test(wardCost) ? `{${wardCost}}` : wardCost}`;
+  return `grant=${kw.toLowerCase().replace(/\s+/g, '_')}`;
+}
 function ifPresentFlag(v: string | undefined): string | undefined {
   if (!v || /PromisedGift/.test(v)) return undefined;
   const type = coarseType(v);
@@ -355,7 +369,31 @@ function translateEffectRow(
     // Forge mode name), rather than falling through to the unreadable literal
     // string "changeszone".
     const isDies = (mode === 'ChangesZone' || mode === 'ChangesZoneAll') && fields.Origin === 'Battlefield' && fields.Destination === 'Graveyard';
-    const triggerType = isEnter ? 'enter' : isDies ? 'dies' : mode === 'Attacks' ? 'attack' : mode === 'DamageDone' ? 'deals-damage' : mode.toLowerCase();
+    // "Leaves the battlefield WITHOUT dying" (Dour Port-Mage's own trigger)
+    // — Forge spells this as Destination$ being a comma list of every zone
+    // EXCEPT Graveyard (Ante,Command,Exile,Hand,Library here) rather than a
+    // single named zone. A real, distinct rules concept from plain "dies,"
+    // not just a wider version of it — same coarse Origin/Destination-shape
+    // convention as isEnter/isDies above, rather than the unreadable literal
+    // "changeszoneall".
+    const isLeavesWithoutDying =
+      (mode === 'ChangesZone' || mode === 'ChangesZoneAll') &&
+      fields.Origin === 'Battlefield' &&
+      !!fields.Destination &&
+      fields.Destination !== 'Graveyard' &&
+      fields.Destination !== 'Battlefield' &&
+      !fields.Destination.split(',').includes('Graveyard');
+    const triggerType = isEnter
+      ? 'enter'
+      : isDies
+        ? 'dies'
+        : isLeavesWithoutDying
+          ? 'leaves-without-dying'
+          : mode === 'Attacks'
+            ? 'attack'
+            : mode === 'DamageDone'
+              ? 'deals-damage'
+              : mode.toLowerCase();
     // ValidCard$ (comma-separated = OR of alternatives, Forge's own dialect)
     // says WHOSE occurrence this trigger watches — "Card.Self" alone means
     // self-only (the common case, and the default below). A lord-style
@@ -488,13 +526,7 @@ function translateEffectRow(
       const parts = fields.AddKeyword.split('&')
         .map((k) => k.trim())
         .filter(Boolean)
-        .map((kw) => {
-          if (kw === 'Flying') return fields.Condition === 'PlayerTurn' ? 'your_turn;blocked_by=flying_or_reach' : 'blocked_by=flying_or_reach';
-          const ward = /^Ward:(.+)$/.exec(kw);
-          const wardCost = ward?.[1];
-          if (wardCost) return `ward=${/^\d+$/.test(wardCost) ? `{${wardCost}}` : wardCost}`;
-          return `grant=${kw.toLowerCase().replace(/\s+/g, '_')}`;
-        });
+        .map((kw) => (kw === 'Flying' && fields.Condition === 'PlayerTurn' ? 'your_turn;blocked_by=flying_or_reach' : keywordGrantFact(kw)));
       attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cond:${parts.join(';')}` }));
       handled = true;
     }
@@ -882,7 +914,7 @@ function translateOwnEffect(
     // change whatsoever.
     const hasDelta = fields.NumAtt !== undefined || fields.NumDef !== undefined;
     const delta = hasDelta ? `pt_delta=${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}` : undefined;
-    const grant = fields.KW ? `grant=${fields.KW.toLowerCase()}` : undefined;
+    const grant = fields.KW ? keywordGrantFact(fields.KW) : undefined;
     const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'gift_promised' : undefined;
     const cond = ['cond:', [giftGate, delta, grant].filter(Boolean).join(';')].join('');
     const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [lifetime, cond, ...qualifierFlags(fields.ValidCards)].filter(Boolean).join(' ') });
@@ -905,6 +937,26 @@ function translateOwnEffect(
     const owner = ownerFromTargetPredicate(fields.ChangeType);
     const thing = coarseType(fields.ChangeType);
     const id = addNode(ctx, { role: 'move', owner, from, to, thing, flags: qualifierFlags(fields.ChangeType).join(' ') || undefined });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'Counter') {
+    // "Counter target spell" (Dazzling Denial's own, with an "unless its
+    // controller pays {N}" clause) — a real, common effect with zero
+    // handling. Modeled as a move stack->gy of the targeted spell, same
+    // "forced move IS the effect" idiom Destroy already uses for
+    // battlefield->graveyard. UnlessCost$'s own dollar amount is often a
+    // dynamically-computed SVar (Dazzling Denial's own Y = Count$Compare...,
+    // "{2}, or {4} if you control a Bird" — the same unresolved-dynamic-
+    // value class as the still-unimplemented Condition group) — captured
+    // only as a boolean cond:unless_pay marker, not the concrete amount,
+    // rather than guessing at a number that isn't statically knowable here.
+    const owner = ownerFromTargetPredicate(fields.ValidTgts);
+    const thing = coarseType(fields.ValidTgts);
+    const unlessPay = fields.UnlessCost ? 'cond:unless_pay' : undefined;
+    const id = addNode(ctx, { role: 'move', owner, from: 'stack', to: 'gy', thing, flags: ['target', unlessPay].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -955,7 +1007,7 @@ function translateOwnEffect(
     // equipped;delta.
     const hasDelta = fields.NumAtt !== undefined || fields.NumDef !== undefined;
     const delta = hasDelta ? `pt_delta=${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}` : undefined;
-    const grant = fields.KW ? `grant=${fields.KW.toLowerCase()}` : undefined;
+    const grant = fields.KW ? keywordGrantFact(fields.KW) : undefined;
     // ConditionPresent$ Card.Self+PromisedGift | ConditionCompare$ EQ1 — "if
     // the gift was promised" — a narrow, well-understood boolean condition
     // tied to K:Gift specifically (not the general cross-player dynamic-

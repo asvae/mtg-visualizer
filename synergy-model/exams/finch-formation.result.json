@@ -1,0 +1,11 @@
+{
+  "name": "Finch Formation",
+  "manaCost": "{2}{U}",
+  "typeLine": "Creature — Bird Scout",
+  "description": "Offspring {3}. Flying. When this creature enters, target creature you control gains flying until end of turn.",
+  "assumptions": [],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "Found and fixed a consistency bug: Pump's own KW$ field (a temporary keyword grant, distinct from a static AddKeyword$) used a plain grant=<name> fact for EVERY keyword including Flying, while the static handler already had a richer blocked_by=flying_or_reach encoding for the identical real-world fact -- two different encodings of the same thing purely because they were separately-written branches. Extracted a shared keywordGrantFact() helper used by both Pump, PumpAll, and the static AddKeyword$ handler. Verified node F now shows cond:blocked_by=flying_or_reach, consistent with how Flying is encoded everywhere else. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

@@ -1,9 +1,9 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T22:54:16.132Z",
-  "clean": 190,
-  "gaps": 84,
-  "totalUnmapped": 116,
+  "generatedAt": "2026-09-03T23:06:07.192Z",
+  "clean": 193,
+  "gaps": 81,
+  "totalUnmapped": 112,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
@@ -21,9 +21,6 @@
     ],
     "Daring Waverider": [
       "?:Play"
-    ],
-    "Dazzling Denial": [
-      "A:Counter"
     ],
     "Dire Downdraft": [
       "S:ReduceCost"
@@ -50,10 +47,6 @@
     "Long River Lurker": [
       "?:Effect"
     ],
-    "Long River's Pull": [
-      "A:Counter",
-      "?:Counter"
-    ],
     "Mockingbird": [
       "K:ETBReplacement"
     ],
@@ -77,9 +70,6 @@
     ],
     "Skyskipper Duo": [
       "?:DelayedTrigger"
-    ],
-    "Spellgyre": [
-      "?:Counter"
     ],
     "Valley Floodcaller": [
       "S:CastWithFlash",

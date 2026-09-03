@@ -1,0 +1,11 @@
+{
+  "name": "Dazzling Denial",
+  "manaCost": "{1}{U}",
+  "typeLine": "Instant",
+  "description": "Counter target spell unless its controller pays {2}. If you control a Bird, counter that spell unless its controller pays {4} instead.",
+  "assumptions": [],
+  "couldNotDerive": ["The concrete unless-pay amount ({2}, or {4} if you control a Bird) -- a dynamic SVar (Count$Compare), same unresolved-dynamic-value class as the still-unimplemented Condition group."],
+  "verdict": "issues-fixed",
+  "notes": "Implemented A:Counter (had zero handling at all, a genuinely common effect type) as a move stack->gy of the targeted spell, with a boolean cond:unless_pay marker. The concrete dollar amount is a dynamically-computed SVar (bigger if you control a Bird) -- captured only as the boolean fact, not the specific number, rather than guessing. Not a full match given the missing amount, but a real improvement from total silence to the correct effect shape.",
+  "comparedAt": "2026-09-04"
+}

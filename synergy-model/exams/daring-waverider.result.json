@@ -1,0 +1,11 @@
+{
+  "name": "Daring Waverider",
+  "manaCost": "{4}{U}{U}",
+  "typeLine": "Creature — Otter Wizard",
+  "description": "When this creature enters, you may cast target instant or sorcery card with mana value 4 or less from your graveyard without paying its mana cost. If that spell would be put into your graveyard this turn, exile it instead.",
+  "assumptions": [],
+  "couldNotDerive": ["The entire play-from-graveyard-without-cost effect -- correctly absent rather than shown wrong."],
+  "verdict": "issues-open",
+  "notes": "DB$ Play (\"cast target card from an alternate zone, optionally without paying its cost\") has zero handling -- a genuinely new, moderately complex effect type (a whole alternate-casting mechanic, plus a replacement effect for where the spell goes after resolving). The ETB trigger condition itself reconstructs correctly. Not attempted this round -- real feature work, not a quick fix.",
+  "comparedAt": "2026-09-04"
+}
