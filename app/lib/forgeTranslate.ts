@@ -395,20 +395,34 @@ function translateEffectRow(
       attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing, flags: [...condFlags, `cond:${equipped ? 'equipped;' : ''}delta=${delta}`].join(' ') }));
       handled = true;
     }
-    if (fields.AddKeyword === 'Flying') {
-      // Real mechanical encoding per SCHEMA.md's own "menace/flying" note —
-      // not just restating the keyword name.
-      const cond = fields.Condition === 'PlayerTurn' ? 'cond:your_turn;blocked_by=flying_or_reach' : 'cond:blocked_by=flying_or_reach';
-      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: cond }));
+    if (fields.AddKeyword) {
+      // Forge joins multiple granted keywords with " & " (Essence Channeler's
+      // own "Flying & Vigilance", Feather of Flight's own compound grants) —
+      // one node per static line still, with one cond: payload per keyword,
+      // semicolon-joined same as every other multi-payload node. Flying gets
+      // SCHEMA.md's own real mechanical encoding (the menace/flying note);
+      // Ward:<cost> reuses K:Ward's own cond:ward= naming (this is the same
+      // mechanical fact whether printed on the card's own body or granted by
+      // a static); everything else (Vigilance, Trample, Menace, Lifelink,
+      // Haste, Reach, Prowess, Storm, Double/First Strike, ...) has no
+      // further mechanical decomposition yet, so it's a plain named grant=
+      // fact — SCHEMA's stated preference (state the mechanic, not the
+      // keyword) applies where a mechanic is actually known; where it isn't,
+      // an honest grant= fact beats silently dropping the keyword entirely
+      // (the previous behavior for anything other than a bare "Flying").
+      const parts = fields.AddKeyword.split('&')
+        .map((k) => k.trim())
+        .filter(Boolean)
+        .map((kw) => {
+          if (kw === 'Flying') return fields.Condition === 'PlayerTurn' ? 'your_turn;blocked_by=flying_or_reach' : 'blocked_by=flying_or_reach';
+          const ward = /^Ward:(.+)$/.exec(kw);
+          const wardCost = ward?.[1];
+          if (wardCost) return `ward=${/^\d+$/.test(wardCost) ? `{${wardCost}}` : wardCost}`;
+          return `grant=${kw.toLowerCase().replace(/\s+/g, '_')}`;
+        });
+      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cond:${parts.join(';')}` }));
       handled = true;
     }
-    // Any OTHER granted keyword (Innkeeper's Talent's own AddKeyword$ Ward:1
-    // — "permanents you control with counters have ward {1}") has no
-    // mechanical encoding yet, same as Flying did before SCHEMA's own
-    // convention was applied here — falls through to the unmapped fallback
-    // below (fields.AddKeyword is truthy but `handled` stays false) rather
-    // than being silently swallowed by a naive truthy-AddKeyword check that
-    // wrongly treated ANY keyword value as "already handled."
     if (fields.AddType) {
       attach(addNode(ctx, { role: 'tagger', owner: 'me', from: '--', to: 'bf', thing, flags: [...condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
       handled = true;

@@ -1,15 +1,12 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T21:36:05.017Z",
-  "clean": 175,
-  "gaps": 99,
-  "totalUnmapped": 144,
+  "generatedAt": "2026-09-03T21:43:54.024Z",
+  "clean": 176,
+  "gaps": 98,
+  "totalUnmapped": 138,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
-    ],
-    "Essence Channeler": [
-      "S:AddKeyword:Flying & Vigilance"
     ],
     "Mouse Trapper": [
       "?:Tap"
@@ -65,7 +62,6 @@
       "A:CopySpellAbility"
     ],
     "Long River Lurker": [
-      "S:AddKeyword:Ward:1",
       "?:Effect"
     ],
     "Long River's Pull": [
@@ -168,8 +164,7 @@
     ],
     "Blacksmith's Talent": [
       "TokenScript$sword",
-      "?:Attach",
-      "S:AddKeyword:Double Strike & Haste"
+      "?:Attach"
     ],
     "Conduct Electricity": [
       "?:DamageResolve"
@@ -229,7 +224,6 @@
       "?:Fight"
     ],
     "Innkeeper's Talent": [
-      "S:AddKeyword:Ward:1",
       "S:Event:AddCounter"
     ],
     "Longstalk Brawl": [
@@ -258,7 +252,6 @@
       "S:Continuous"
     ],
     "Camellia, the Seedmiser": [
-      "S:AddKeyword:Menace",
       "A:PutCounterAll"
     ],
     "Cindering Cutthroat": [
@@ -335,7 +328,6 @@
       "K:ETBReplacement"
     ],
     "Bria, Riptide Rogue": [
-      "S:AddKeyword:Prowess",
       "?:Effect"
     ],
     "Byrke, Long Ear of the Law": [

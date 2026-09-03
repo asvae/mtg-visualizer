@@ -79,6 +79,71 @@
       "attempts": 1,
       "note": "Spot-check batch 2. Found and fixed a systemic gap, not card-specific: ChangesZone/ChangesZoneAll with Origin$Battlefield->Destination$Graveyard (rule 700.4 'dies') fell through to the unreadable literal string 'changeszone' -- added an isDies check mirroring the existing isEnter one. Confirmed this also fixed Scavenger's Talent's base trigger in the same batch, so likely benefits several more untested BLB cards using 'whenever ~ dies'. Two narrower, card-specific qualifier gaps left open (multi-clause .YouCtrl/.withFlying, and a Beza-adjacent-but-narrower dynamic mana-value comparison on the return target)."
     },
+    "Harvestrite Host": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty (the ConditionCheckSVar$/ConditionSVarCompare$ gate is a FIELD silently dropped from an otherwise-recognized effect, not a distinct effect key, so it never shows as unmapped at all). See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Portent of Calamity": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has 3 unrelated unmapped entries (A:PeekAndReveal, ?:RepeatEach, ?:Play) not investigated further since the Condition gap already rules out a full match."
+    },
+    "Shoreline Looter": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated S:CantBlockBy unmapped entry, not investigated further."
+    },
+    "Coiling Rebirth": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also hits known_gap_classes.CopyPermanent (?:CopyPermanent unmapped)."
+    },
+    "Thought-Stalker Warlock": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated ?:Branch unmapped entry (a Forge modal-choice effect with no handler), not investigated further."
+    },
+    "Wick, the Whorled Mind": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated ?:Branch unmapped entry, not investigated further."
+    },
+    "Reptilian Recruiter": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty (same silent-field-drop shape as Harvestrite Host). See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Cache Grab": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty. See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Mistbreath Elder": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty. See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Finneas, Ace Archer": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated ?:PutCounterAll unmapped entry (PutCounter's ValidCards$-plural, non-targeted sibling -- not yet implemented, same shape gap as Pump/PumpAll), not investigated further."
+    },
+    "Season of Weaving": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is known_gap_classes.CopyPermanent -- a real backlog item, not a design-decision blocker, so not skipped-rework tier."
+    },
+    "Stormsplitter": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is known_gap_classes.CopyPermanent."
+    },
+    "For the Common Good": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is known_gap_classes.CopyPermanent."
+    },
     "Scavenger's Talent": {
       "status": "issues-fixed",
       "attempts": 1,
