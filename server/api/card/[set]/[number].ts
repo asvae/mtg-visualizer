@@ -13,6 +13,10 @@ import { join } from 'node:path';
 import { cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
 import type { CardData, EdgeData, Role, SynergyFlow, SynergyNode, SynergyExamResult, ThemeData } from '../../../../app/types';
+import { parseForgeScript } from '../../../../app/lib/forgeScript';
+import { translateForgeCard } from '../../../../app/lib/forgeTranslate';
+import { groupInteractionsForCard } from '../../../../app/lib/synergyInteractions';
+import type { InteractionGroup, ThingResolver } from '../../../../app/lib/synergyInteractions';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
@@ -68,6 +72,136 @@ function loadSynergyExamResult(name: string): SynergyExamResult | null {
   } catch {
     return null;
   }
+}
+
+// forge-model/data/<slug>.txt — a real Card-Forge cardsfolder script, copied
+// verbatim (see forge-model/README.md) for whichever cards synergy-model
+// also covers. Read raw, unparsed (app/lib/forgeScript.ts parses it
+// client-side, same split as synergyNodes/synergyFlow vs the page's own
+// walkFlowStep). No bundled fallback — like the exam results above, this is
+// a dev-time comparison artifact, not shipped to a production build.
+function loadForgeScript(name: string): string | null {
+  try {
+    return readFileSync(join(process.cwd(), `forge-model/data/${slugify(name)}.txt`), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+// No hand-authored edges.json entry -> translate the Forge script on the fly
+// (app/lib/forgeTranslate.ts) instead of showing nothing. Same "not yet
+// human-reviewed" treatment the card page already gives an AI decomposition
+// — see forge-model/README.md's "Cards outside FIN" note.
+function resolveSynergy(name: string): { nodes: Record<string, SynergyNode>; flow: SynergyFlow; review: 'ai' | 'human' | null } | null {
+  const hand = loadSynergyEntries()[name];
+  if (hand) return { nodes: hand.nodes, flow: hand.flow, review: loadSynergyStatus()[name]?.review ?? null };
+  const forge = loadForgeScript(name);
+  if (!forge) return null;
+  const translated = translateForgeCard(parseForgeScript(forge));
+  return { nodes: translated.nodes, flow: translated.flow, review: 'ai' };
+}
+
+// Small, explicit worked-example pool for app/lib/synergyInteractions.ts —
+// a real cross-card join needs every OTHER card's synergy data available at
+// once, which nothing in this app assembles yet (buildGraph.ts builds a
+// whole set's worth of theme edges, not synergy-model nodes). Rather than
+// fake a corpus-wide join, this lists the Cat cards from FDN (plus the
+// original Slashing Tiger worked example, a different set) this session
+// specifically prepared Forge scripts for. See forge-model/README.md.
+const CAT_POOL: { name: string; typeLine: string; set: string; collectorNumber: string }[] = [
+  { name: 'Arahbo, the First Fang', typeLine: 'Legendary Creature — Cat Avatar', set: 'fdn', collectorNumber: '2' },
+  { name: 'Slashing Tiger', typeLine: 'Creature — Cat', set: 'me3', collectorNumber: '133' },
+  { name: "Ajani's Pridemate", typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '135' },
+  { name: 'Dawnwing Marshal', typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '570' },
+  { name: 'Felidar Cub', typeLine: 'Creature — Cat Beast', set: 'fdn', collectorNumber: '573' },
+  { name: 'Felidar Savior', typeLine: 'Creature — Cat Beast', set: 'fdn', collectorNumber: '12' },
+  { name: 'Helpful Hunter', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '16' },
+  { name: 'Ingenious Leonin', typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '495' },
+  { name: 'Jazal Goldmane', typeLine: 'Legendary Creature — Cat Warrior', set: 'fdn', collectorNumber: '497' },
+  { name: 'Leonin Skyhunter', typeLine: 'Creature — Cat Knight', set: 'fdn', collectorNumber: '498' },
+  { name: 'Leonin Vanguard', typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '499' },
+  { name: 'Nine-Lives Familiar', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '66' },
+  { name: 'Prideful Parent', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '21' },
+  { name: 'Regal Caracal', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '579' },
+  { name: 'Savannah Lions', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '146' },
+  { name: 'Skyknight Squire', typeLine: 'Creature — Cat Scout', set: 'fdn', collectorNumber: '23' },
+  { name: 'Wary Thespian', typeLine: 'Creature — Cat Druid', set: 'fdn', collectorNumber: '235' },
+];
+const CAT_POOL_BY_NAME = new Map(CAT_POOL.map((c) => [c.name, c]));
+
+// TokenScript$ ids the CAT_POOL's own Forge scripts create, resolved for
+// app/lib/synergyInteractions.ts's self-interaction pass (SCHEMA §7
+// "self-sufficiency") — e.g. Arahbo's own trigger makes a Cat token that its
+// own anthem then buffs. This is a small demo-scoped registry, same
+// reasoning as CAT_POOL itself (see forge-model/README.md's "Cards outside
+// FIN" note) — NOT synergy-model/data/registries.json, which is FIN-scoped
+// reviewed data; these token scripts belong to a different corpus entirely.
+// set/collectorNumber here are the ACTUAL Foundations token sheet prints
+// (Scryfall `tfdn` — the dedicated token set for `fdn`) matching what these
+// scripts create: `t:cat set:tfdn` turns up exactly a plain 1/1 (tfdn/1) and
+// a lifelink 1/1 (tfdn/27). Real card refs, not synthesized — a token match
+// gets the same clickable real art every other match gets.
+const POOL_TOKEN_REGISTRY: Record<string, { labels: string[]; token: boolean; name: string; set: string; collectorNumber: string }> = {
+  w_1_1_cat: { labels: ['creature', 'cat', 'white', 'token'], token: true, name: '1/1 white Cat token', set: 'tfdn', collectorNumber: '1' },
+  w_1_1_cat_lifelink: {
+    labels: ['creature', 'cat', 'white', 'token'],
+    token: true,
+    name: '1/1 white Cat token (lifelink)',
+    set: 'tfdn',
+    collectorNumber: '27',
+  },
+};
+const resolvePoolThing: ThingResolver = (thing) => POOL_TOKEN_REGISTRY[thing] ?? null;
+
+// Every match name InteractionGroup can produce resolves to a real
+// set/collectorNumber this way — CAT_POOL for a printed card, or
+// POOL_TOKEN_REGISTRY (keyed by its own display `name`) for a self-produced
+// token. Shared by the "link to this card" and "fetch its art" needs below.
+const POOL_TOKEN_REGISTRY_BY_NAME = new Map(Object.values(POOL_TOKEN_REGISTRY).map((t) => [t.name, t]));
+function poolRef(name: string): { set: string; collectorNumber: string } | null {
+  return CAT_POOL_BY_NAME.get(name) ?? POOL_TOKEN_REGISTRY_BY_NAME.get(name) ?? null;
+}
+
+// Match thumbnails need real Scryfall art — cached per server process (these
+// are real, static printings, never change) instead of re-fetching Scryfall
+// on every single card-page view that happens to show a match from this
+// pool. Keyed by name since that's all InteractionGroup's matches carry.
+const poolImageCache = new Map<string, Promise<string | null>>();
+function poolCardImage(name: string): Promise<string | null> {
+  const cached = poolImageCache.get(name);
+  if (cached) return cached;
+  const ref = poolRef(name);
+  const promise = ref
+    ? fetchBySetNumber(ref.set, ref.collectorNumber)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((c) => c?.image_uris?.normal ?? c?.card_faces?.[0]?.image_uris?.normal ?? null)
+        .catch(() => null)
+    : Promise.resolve(null);
+  poolImageCache.set(name, promise);
+  return promise;
+}
+
+async function loadInteractionGroups(cardName: string, cardTypeLine: string): Promise<InteractionGroup[]> {
+  if (!CAT_POOL_BY_NAME.has(cardName)) return [];
+  const self = resolveSynergy(cardName);
+  if (!self) return [];
+  const pool = CAT_POOL.map((c) => {
+    const s = resolveSynergy(c.name);
+    return s ? { name: c.name, typeLine: c.typeLine, nodes: s.nodes } : null;
+  }).filter((c): c is { name: string; typeLine: string; nodes: Record<string, SynergyNode> } => c !== null);
+  const groups = groupInteractionsForCard({ name: cardName, typeLine: cardTypeLine, nodes: self.nodes }, pool, resolvePoolThing);
+
+  const names = new Set(groups.flatMap((g) => g.matches.map((m) => m.name)));
+  const images = new Map(await Promise.all([...names].map(async (n): Promise<[string, string | null]> => [n, await poolCardImage(n)])));
+  for (const group of groups) {
+    for (const m of group.matches) {
+      const ref = poolRef(m.name);
+      m.set = ref?.set;
+      m.collectorNumber = ref?.collectorNumber;
+      m.image = images.get(m.name) ?? null;
+    }
+  }
+  return groups;
 }
 
 const curatedThemes = themesData as ThemeData[];
@@ -166,14 +300,16 @@ export default defineEventHandler(async (event) => {
     ...(usedThemeIds.has('not-processed') ? [{ id: 'not-processed', label: 'Not Processed' }] : []),
   ];
 
-  const synergyEntry = loadSynergyEntries()[card.name] ?? null;
+  const synergyEntry = resolveSynergy(card.name);
   return {
     card: cardData,
     edges,
     themes,
     synergyNodes: synergyEntry?.nodes ?? null,
     synergyFlow: synergyEntry?.flow ?? null,
-    synergyReview: loadSynergyStatus()[card.name]?.review ?? null,
+    synergyReview: synergyEntry?.review ?? null,
     synergyExam: loadSynergyExamResult(card.name),
+    forgeScript: loadForgeScript(card.name),
+    interactions: await loadInteractionGroups(card.name, cardData.typeLine),
   };
 });

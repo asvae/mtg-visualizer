@@ -147,3 +147,52 @@ export interface SynergyExamResult {
   notes: string;
   comparedAt: string;
 }
+
+// forge-model/ — real Card-Forge (github.com/Card-Forge/forge) card scripts
+// for the same cards, parsed by app/lib/forgeScript.ts into an outline the
+// card page can render next to the synergy one. Forge's own shape is a flat
+// list of top-level ability lines (A$/T$/S$/K$), each optionally chaining
+// into further SVar-defined sub-effects — a per-ability linked list, not a
+// single graph the way `flow` above is, so this stays its own type rather
+// than being forced into SynergyFlow's shape.
+export type ForgeLineType = 'A' | 'T' | 'S' | 'R' | 'K';
+
+export interface ForgeRow {
+  kind: 'line' | 'group';
+  key: string;
+  depth: number;
+  isRoot: boolean;
+  // 'line' only:
+  lineType?: ForgeLineType;
+  // The effect/keyword name — Mode$ value for T:/S:, the AB$/SP$/DB$ value
+  // for an activated ability or a chained sub-effect, or the bare keyword
+  // name for K: lines.
+  role?: string;
+  // Remaining pipe-separated fields not already consumed by chain-following
+  // (SubAbility$/Choices$/AddTrigger$/Execute$) or shown as `description`,
+  // rendered `Key=Value`-joined the same way a synergy node's `flags` are.
+  fields?: string;
+  // SpellDescription$/TriggerDescription$/Description$ — Forge's own
+  // human-readable reminder text for this specific line, shown as a caption
+  // (synergy nodes carry no per-node prose; Forge's real scripts do).
+  description?: string;
+  // 'group' only — a Choices$ (Charm, real "choose one") or K:Chapter
+  // branch set.
+  groupLabel?: string;
+}
+
+export interface ForgeFace {
+  name: string;
+  manaCost: string | null;
+  typeLine: string | null;
+  pt: string | null;
+  oracle: string | null;
+  rows: ForgeRow[];
+  // DeckHas$/AlternateMode$/etc — Forge engine/AI bookkeeping lines with no
+  // synergy-model analogue, kept visible rather than silently dropped.
+  meta: string[];
+}
+
+export interface ForgeCard {
+  faces: ForgeFace[];
+}
