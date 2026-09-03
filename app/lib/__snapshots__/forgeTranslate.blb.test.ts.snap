@@ -1362,6 +1362,67 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Ligh
 }
 `;
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Nightwhorl Hermit 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+    },
+  },
+  "name": "Nightwhorl Hermit",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "vigilance",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "cond:delta=+1/+0 cond:threshold",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "E": {
+      "flags": "cond:unblockable cond:threshold",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Pileated Provisioner 1`] = `
 {
   "flow": {
@@ -1415,6 +1476,79 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Pile
     },
     "E": {
       "flags": "target cond:withoutflying cond:delta=+1/+1counter",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Plumecreed Escort 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "E": [
+        "F",
+      ],
+    },
+  },
+  "name": "Plumecreed Escort",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flash",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "flying",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "F": {
+      "flags": "target lifetime:turn cond:grant=hexproof",
       "from": "--",
       "owner": "me",
       "role": "modifier",
@@ -1527,6 +1661,59 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Seas
       "owner": "me",
       "role": "modifier",
       "thing": "self",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Shore Up 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+    },
+  },
+  "name": "Shore Up",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "target lifetime:turn cond:pt_delta=+1/+1;grant=hexproof",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "cond:state=untapped",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "targeted",
       "to": "bf",
     },
   },

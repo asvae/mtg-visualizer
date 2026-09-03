@@ -36,7 +36,23 @@
     },
     "Defined$<sibling-effect-target> self-references (ParentTarget, TriggeredSourceLKICopy, etc.)": {
       "description": "Forge has a whole family of Defined$ values naming 'the object some OTHER effect in this same chain already resolved to' (Targeted, ParentTarget, TriggeredSourceLKICopy, Remembered, DelayTriggerRememberedLKI, ...) -- deriveOwner/coarseType have no general case for any of them, so they fall to defaults (owner:'me', thing:selfThing) that are only coincidentally correct when the referenced object happens to be self-controlled. Mind Spiral's own Defined$ParentTarget (referring to a SIBLING effect's own opponent-controlled target) is a concrete case that resolves wrong. Same broader gap as the already-documented Defined$Targeted entry -- would need threading the parent effect's own resolved owner/thing down into children, a broader signature change.",
-      "cards": ["Crumb and Get It", "Azure Beastbinder", "Mind Spiral"]
+      "cards": ["Crumb and Get It", "Azure Beastbinder", "Mind Spiral", "Otterball Antics", "Shore Up"]
+    },
+    "K:ETBReplacement (enters-as-a-copy / conditional-arrival replacement)": {
+      "description": "Forge's ETB replacement-effect keyword family (enters tapped conditionally, enters as a copy of another permanent, etc.) has no handler. Genuinely varied shapes, real feature work.",
+      "cards": ["Eddymurk Crab", "Mockingbird"]
+    },
+    "S:ReduceCost (cost reduction)": {
+      "description": "No schema representation for cost reduction at all -- SCHEMA's `cost:` convention is for stating what something costs, not for a rule that lowers a printed cost under a condition. Recurring across several cards; now honestly surfaces as an unmapped S:ReduceCost entry (fixed earlier this session) rather than silently vanishing, but still unimplemented.",
+      "cards": ["Eddymurk Crab", "Eluge, the Shoreless Sea", "Dire Downdraft", "Pearl of Wisdom"]
+    },
+    "TargetsWithDifferentControllers$ (a multi-target restriction)": {
+      "description": "Run Away Together's own \"choose two target creatures controlled by DIFFERENT players\" -- a real, narrow targeting-restriction concept (relating two targets to each other) with no representation. Distinct from a single target's own qualifiers.",
+      "cards": ["Run Away Together"]
+    },
+    "ConditionPresent$ Card.wasCast+!wasCastFromYourHand (cast-origin condition)": {
+      "description": "Otterball Antics's own \"if this spell was cast from anywhere other than your hand\" -- a real, narrow dynamic condition (checking THIS spell's own casting zone), distinct from the gift-promised/Threshold conditions already handled.",
+      "cards": ["Otterball Antics"]
     },
     "A:CopySpellAbility (copy target spell)": {
       "description": "Zero handling -- a genuinely new, moderately complex effect type (Kitsa, Otterball Elite's own \"copy target instant or sorcery spell you control, may choose new targets\"), plus its own self-referential IsPresent$ Card.powerGE3+Self activation-gate on the activated ability's cost (a third IsPresent$/ConditionPresent$ context beyond trigger-level and effect-level).",
@@ -159,6 +175,14 @@
       "attempts": 1,
       "note": "Fixed Valiant$True (\"for the first time each turn\") by reusing cond:once_per_turn. One narrower gap remains open: ValidSource$SpellAbility.YouCtrl (who controls the triggering spell/ability) has no home in the trigger vocabulary's current owner slot."
     },
+    "Mindwhisker": { "status": "issues-fixed", "attempts": 1, "note": "Found and fixed a real, serious bug: S: static handler hardcoded owner:'me' regardless of Affected$'s own qualifiers -- 'creatures your opponents control get -1/-0' wrongly rendered as affecting the caster's own creatures. Fixed by computing owner per Affected$ clause. Also fixed Condition$Threshold. Phase$Upkeep specificity (generic 'phase' trigger-type) remains open." },
+    "Mockingbird": { "status": "issues-open", "attempts": 1, "note": "K:ETBReplacement (enters-as-a-copy mechanic), same known gap class as Eddymurk Crab." },
+    "Nightwhorl Hermit": { "status": "match", "attempts": 1, "note": "Fixed CantBlockBy-with-no-ValidBlocker$ (blanket unblockable) and Condition$Threshold. In blb-success.json." },
+    "Otterball Antics": { "status": "issues-open", "attempts": 1, "note": "Defined$Remembered (new instance of the Defined$<sibling-reference> family) resolves wrong; ConditionPresent$ Card.wasCast+!wasCastFromYourHand (a new, narrow dynamic condition) not represented." },
+    "Pearl of Wisdom": { "status": "issues-open", "attempts": 1, "note": "S:ReduceCost, known gap." },
+    "Plumecreed Escort": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
+    "Run Away Together": { "status": "issues-open", "attempts": 1, "note": "TargetsWithDifferentControllers$True (a real, new targeting-restriction concept) not represented." },
+    "Shore Up": { "status": "match", "attempts": 1, "note": "All facts correct; Untap's Defined$Targeted resolves to an imprecise but not misleading thing value (same family as other Defined$<sibling> gaps), didn't block the correct reconstruction. In blb-success.json." },
     "Into the Flood Maw": { "status": "issues-open", "attempts": 1, "note": "Count$PromisedGift.N.M dynamic exclusive-or shape, same class as Dewdrop Cure." },
     "Kitnap": { "status": "match", "attempts": 1, "note": "4 real bugs found and fixed on this card alone: Mode$Continuous+GainControl$ (zero handling), Defined$Enchanted resolving to a meaningless literal instead of 'creature', PutCounter missing gift-condition handling entirely, and a latent polarity bug in the gift-condition helper (every site hardcoded gift_promised regardless of ConditionCompare$). In blb-success.json." },
     "Kitsa, Otterball Elite": { "status": "issues-open", "attempts": 1, "note": "A:CopySpellAbility has zero handling -- new complex effect type, plus its own self-referential power>=3 activation gate." },

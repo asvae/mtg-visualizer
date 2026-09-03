@@ -498,6 +498,14 @@ function translateEffectRow(
     // one existing `equipped` flag rather than inventing a parallel
     // `enchanted` one for the same concept.
     const equipped = /\.(?:EquippedBy|EnchantedBy)\b/.test(affected ?? '');
+    // Condition$Threshold (Nightwhorl Hermit's own "Threshold — as long as
+    // there are seven or more cards in your graveyard...") is a NAMED,
+    // FIXED ability word — always means exactly "7+ cards in your own
+    // graveyard," never a per-card dynamic value — unlike the genuinely
+    // unimplemented ConditionCheckSVar$/ConditionSVarCompare$/CheckSVar$
+    // class (cross-player or computed comparisons). Cheap and unambiguous
+    // enough to encode directly as a fixed fact.
+    const thresholdFlag = fields.Condition === 'Threshold' ? 'cond:threshold' : undefined;
     // Card.Self (Essence Channeler's own conditional-flying static) means
     // "this permanent itself" — the same self-reference CARDNAME already
     // gets in coarseType, just spelled differently in an Affected$ context.
@@ -510,12 +518,22 @@ function translateEffectRow(
     // predicate — but an attachment's own K:Enchant:Creature/Equipment
     // target is, in real practice, essentially always a creature, so 'any'
     // is a real precision loss here even though it isn't technically wrong.
-    const resolveAffectedClause = (c: string | undefined): { thing: string; condFlags: string[] } => {
-      if (c && /^Card\.Self\b/.test(c)) return { thing: selfThing, condFlags: [] };
-      if (c && /^Card[.+](?:EquippedBy|EnchantedBy)\b/.test(c)) return { thing: 'creature', condFlags: qualifierFlags(c) };
-      return { thing: coarseType(c), condFlags: qualifierFlags(c) };
+    // owner was hardcoded to 'me' at every call site below regardless of
+    // Affected$'s own qualifiers — silently wrong for a real, if uncommon,
+    // shape: Mindwhisker's own "creatures YOUR OPPONENTS control get -1/-0"
+    // rendered as if it affected the caster's own creatures. Only flips to
+    // 'opp' on an EXPLICIT .OppCtrl/.OppOwn/.Opponent qualifier — an
+    // Affected$ with no owner qualifier at all overwhelmingly means "you
+    // control" in practice (the common lord-effect shape), so that default
+    // is preserved rather than switched to ownerFromTargetPredicate's own
+    // (different) 'any' default.
+    const resolveAffectedClause = (c: string | undefined): { thing: string; condFlags: string[]; owner: SynergyOwner } => {
+      const owner: SynergyOwner = c && /[.+](?:OppCtrl|OppOwn|Opponent)\b/.test(c) ? 'opp' : 'me';
+      if (c && /^Card\.Self\b/.test(c)) return { thing: selfThing, condFlags: [], owner };
+      if (c && /^Card[.+](?:EquippedBy|EnchantedBy)\b/.test(c)) return { thing: 'creature', condFlags: qualifierFlags(c), owner };
+      return { thing: coarseType(c), condFlags: qualifierFlags(c), owner };
     };
-    const { thing, condFlags } = resolveAffectedClause(affected);
+    const { thing, condFlags, owner: affectedOwner } = resolveAffectedClause(affected);
     // Affected$ can be a comma-joined list of SEVERAL different subtypes
     // (Valley Questcaller's own "Other Rabbits, Bats, Birds, and Mice you
     // control get +1/+1" -- Affected$ Rabbit.Other+YouCtrl,Bat.Other+YouCtrl,
@@ -525,12 +543,12 @@ function translateEffectRow(
     // other subtype from a multi-type tribal anthem. One modifier node per
     // clause, same delta payload, mirrors the trigger multi-clause pattern.
     const affectedClauses = (affected ?? '').split(',').map((c) => c.trim()).filter(Boolean);
-    const affectedSpecs = affectedClauses.length > 1 ? affectedClauses.map(resolveAffectedClause) : [{ thing, condFlags }];
+    const affectedSpecs = affectedClauses.length > 1 ? affectedClauses.map(resolveAffectedClause) : [{ thing, condFlags, owner: affectedOwner }];
     let handled = false;
     if (fields.AddPower || fields.AddToughness) {
       const delta = `${fields.AddPower ? '+' + fields.AddPower : '+0'}/${fields.AddToughness ? '+' + fields.AddToughness : '+0'}`;
       for (const spec of affectedSpecs) {
-        attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}delta=${delta}`].join(' ') }));
+        attach(addNode(ctx, { role: 'modifier', owner: spec.owner, from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}delta=${delta}`, thresholdFlag].filter(Boolean).join(' ') }));
       }
       handled = true;
     }
@@ -560,13 +578,13 @@ function translateEffectRow(
         .filter(Boolean)
         .map((kw) => (kw === 'Flying' && fields.Condition === 'PlayerTurn' ? 'your_turn;blocked_by=flying_or_reach' : keywordGrantFact(kw)));
       for (const spec of affectedSpecs) {
-        attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${parts.join(';')}`].join(' ') }));
+        attach(addNode(ctx, { role: 'modifier', owner: spec.owner, from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${parts.join(';')}`].join(' ') }));
       }
       handled = true;
     }
     if (fields.AddType) {
       for (const spec of affectedSpecs) {
-        attach(addNode(ctx, { role: 'tagger', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
+        attach(addNode(ctx, { role: 'tagger', owner: spec.owner, from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
       }
       handled = true;
     }
@@ -578,7 +596,7 @@ function translateEffectRow(
     // point-in-time event.
     if (fields.GainControl) {
       for (const spec of affectedSpecs) {
-        attach(addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, equipped ? 'cond:equipped' : undefined].filter(Boolean).join(' ') || undefined }));
+        attach(addNode(ctx, { role: 'becomes', owner: spec.owner, from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, equipped ? 'cond:equipped' : undefined].filter(Boolean).join(' ') || undefined }));
       }
       handled = true;
     }
@@ -590,10 +608,17 @@ function translateEffectRow(
     // own Affected$ field is absent for this Mode (the restriction is on
     // THIS permanent, not a chosen "affected" subject), so it always reads
     // off selfThing rather than the shared `thing`/`affected` above.
-    if (fields.ValidBlocker) {
-      const blockerType = coarseType(fields.ValidBlocker);
-      const blockerQualifiers = qualifierFlags(fields.ValidBlocker);
-      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cond:not_blocked_by=${[blockerType, ...blockerQualifiers.map((f) => f.replace('cond:', ''))].join(';')}` }));
+    // Detected by Mode$ itself (via eventMode), not merely by ValidBlocker$'s
+    // presence — Nightwhorl Hermit's own second CantBlockBy static has NO
+    // ValidBlocker$ at all (ValidAttacker$ Card.Self | Condition$ Threshold),
+    // meaning blanket "can't be blocked" rather than "can't be blocked BY
+    // <type>" — the earlier ValidBlocker$-presence-only check never even
+    // recognized this shape as CantBlockBy in the first place.
+    if (eventMode(row) === 'CantBlockBy') {
+      const fact = fields.ValidBlocker
+        ? `not_blocked_by=${[coarseType(fields.ValidBlocker), ...qualifierFlags(fields.ValidBlocker).map((f) => f.replace('cond:', ''))].join(';')}`
+        : 'unblockable';
+      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: [`cond:${fact}`, thresholdFlag].filter(Boolean).join(' ') }));
       handled = true;
     }
     // Anything else this Mode$ can carry (ReduceCost, a non-Flying
