@@ -918,3 +918,172 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Pile
   "unmapped": [],
 }
 `;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Rabbit Response 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+    },
+  },
+  "name": "Rabbit Response",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "lifetime:turn cond:pt_delta=+2/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "qty:2 cond:if_present=rabbit",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "library-look",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Seasoned Warrenguard 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+    },
+  },
+  "name": "Seasoned Warrenguard",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "cond:if_present=token",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "attack",
+    },
+    "D": {
+      "flags": "lifetime:turn cond:pt_delta=+2/+0",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Shrike Force 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+    },
+  },
+  "name": "Shrike Force",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flying",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "double strike",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "E": {
+      "flags": "vigilance",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;

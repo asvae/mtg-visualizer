@@ -1,0 +1,11 @@
+{
+  "name": "Repel Calamity",
+  "manaCost": "{1}{W}",
+  "typeLine": "Instant",
+  "description": "Destroy target creature with power or toughness 4 or greater.",
+  "assumptions": [],
+  "couldNotDerive": ["The power/toughness >=4 restriction (ValidTgts$ is a comma-OR of two stat-threshold qualifiers, not represented)."],
+  "verdict": "issues-open",
+  "notes": "ValidTgts$ Creature.powerGE4,Creature.toughnessGE4 (\"power OR toughness 4 or greater\") is a real, unrepresented restriction -- qualifierFlags has no support for stat-threshold qualifiers at all (distinct from the narrower ConditionDefined$Targeted+ConditionPresent$ shape already handled for Driftgloom Coyote, which is a condition on an EARLIER target, not the primary ValidTgts$ predicate itself). Not fixed this round -- would need a general power/toughness-threshold qualifier convention, plus OR support (this card ORs two different stats), which qualifierFlags' current design (an array of independent AND'd facts) doesn't cleanly support.",
+  "comparedAt": "2026-09-04"
+}

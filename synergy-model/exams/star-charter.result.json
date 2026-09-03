@@ -1,0 +1,15 @@
+{
+  "name": "Star Charter",
+  "manaCost": "{3}{W}",
+  "typeLine": "Creature — Bat Cleric",
+  "description": "Flying. At the beginning of your end step, if you gained or lost life this turn, look at the top four cards of your library. You may reveal a creature card with power 3 or less from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+  "assumptions": [],
+  "couldNotDerive": [
+    "The specific phase (Phase$ End of Turn -> generic 'phase' trigger-type, same open gap as Innkeeper's Talent).",
+    "The CheckSVar$X dynamic condition ('if you gained or lost life this turn') -- same unimplemented class as Essence Channeler's CheckSVar$ gate.",
+    "The Dig effect's real shape: it's a look-then-selectively-reveal-to-hand-with-the-rest-bottomed mechanic (Optional$True, ChangeValid$Creature.powerLE3, RestRandomOrder$True), which the current Dig handler doesn't model -- it produced a plain 'exile 4 cards' move instead (DestinationZone$ is absent on this card, defaulting to exile, which is wrong for this shape)."
+  ],
+  "verdict": "issues-open",
+  "notes": "Three distinct real gaps on one card: (1) Phase$ specificity on the generic 'phase' trigger-type (already-known gap). (2) CheckSVar$X dynamic condition (already-known gap, added to that class earlier this batch via Essence Channeler). (3) Dig's real capability gap: it only supports a simple 'look at N, then move remainder to a stated DestinationZone$' shape, not Forge's more common 'look at N, optionally reveal ONE matching card to hand, put the rest on the bottom in random order' idiom (Optional$/ChangeValid$/RestRandomOrder$ all unread) -- worth a real look at Dig's handler in a future pass, since this specific pattern (scry/dig-and-selectively-grab) is common across many card types. Not fixed this round given the accumulated scope of fixes already made this batch.",
+  "comparedAt": "2026-09-04"
+}

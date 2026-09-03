@@ -159,6 +159,27 @@ function coarseType(v: string | undefined): string {
   if (base === 'CARDNAME') return 'self';
   return base.toLowerCase();
 }
+// ConditionPresent$ <Type>.YouCtrl ("if you control a Bat/Rabbit/...") is a
+// simple board-state existence check — a real, recurring payoff shape across
+// many BLB cards (Sonar Strike's own life gain, Rabbit Response's own scry,
+// Seasoned Warrenguard's attack trigger via the sibling IsPresent$ field) —
+// distinct from the still-unimplemented ConditionCheckSVar$/
+// ConditionSVarCompare$/CheckSVar$ dynamic-VALUE class (see
+// blb-progress.json's known_gap_classes): this is a plain "does at least one
+// X exist" boolean, not a computed number or cross-player comparison, so
+// it's cheap and unambiguous enough to encode directly. Deliberately skips
+// the PromisedGift shape (handled separately by the narrower, already-
+// dedicated cond:gift_promised flag) to avoid double-encoding the same fact
+// two different ways.
+function ifPresentFlag(v: string | undefined): string | undefined {
+  if (!v || /PromisedGift/.test(v)) return undefined;
+  const type = coarseType(v);
+  // A generic base (Permanent/Card) isn't the real distinguishing fact when
+  // a qualifier narrows it further — Seasoned Warrenguard's own IsPresent$
+  // Permanent.token+YouCtrl means "a TOKEN," not merely "a permanent."
+  if ((type === 'permanent' || type === 'card' || type === 'any') && /[.+]token\b/i.test(v)) return 'if_present=token';
+  return type && type !== 'any' ? `if_present=${type}` : undefined;
+}
 function qualifierFlags(v: string | undefined): string[] {
   if (!v) return [];
   const flags: string[] = [];
@@ -367,8 +388,15 @@ function translateEffectRow(
     // restriction ActivationLimit$1 already covers — reusing the same flag
     // rather than inventing a second name for one mechanical fact.
     const onceFlag = fields.ActivationLimit === '1' || fields.Valiant === 'True' ? 'cond:once_per_turn' : undefined;
+    // IsPresent$ (Seasoned Warrenguard's own "attacks WHILE YOU CONTROL A
+    // TOKEN") is the trigger-level sibling of ConditionPresent$ — same
+    // board-state existence check, different Forge field name depending on
+    // whether it gates a trigger firing at all vs. one of its downstream
+    // effects. ifPresentFlag's own reasoning applies identically here.
+    const presentTriggerFact = ifPresentFlag(fields.IsPresent);
+    const presentFlag = presentTriggerFact ? `cond:${presentTriggerFact}` : undefined;
     const ids = specs.map((spec) =>
-      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
+      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, presentFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
     );
     ids.forEach((id) => attach(id));
     // Build the downstream chain once, under the first clause-node, then
@@ -732,7 +760,8 @@ function translateOwnEffect(
   if (ek === 'Scry') {
     // SCHEMA.md §3's own worked example: scry-N -> emit me -- -- library-look.
     const qty = fields.ScryNum ?? '1';
-    const id = addNode(ctx, { role: 'emit', owner: 'me', from: '--', to: '--', thing: 'library-look', flags: qty !== '1' ? `qty:${qty}` : undefined });
+    const presentFlag = ifPresentFlag(fields.ConditionPresent);
+    const id = addNode(ctx, { role: 'emit', owner: 'me', from: '--', to: '--', thing: 'library-look', flags: [qty !== '1' ? `qty:${qty}` : undefined, presentFlag ? `cond:${presentFlag}` : undefined].filter(Boolean).join(' ') || undefined });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -986,7 +1015,11 @@ function translateOwnEffect(
   const owner = deriveOwner(fields.Defined);
   const qty = fields.LifeAmount ?? fields.NumCards;
   const emitThing = ek === 'LoseLife' ? 'life-loss' : ek === 'GainLife' ? 'life-gain' : ek === 'Draw' ? 'draw' : 'unknown';
-  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' ? emitThing : 'unknown', flags: qty && qty !== '1' ? `qty:${qty}` : undefined });
+  // ConditionPresent$ (Sonar Strike's own "You gain 3 life IF YOU CONTROL A
+  // BAT") — see ifPresentFlag's own comment for why this is cheap/safe to
+  // encode directly, unlike the general dynamic-comparison class.
+  const presentFlag = ifPresentFlag(fields.ConditionPresent);
+  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' ? emitThing : 'unknown', flags: [qty && qty !== '1' ? `qty:${qty}` : undefined, presentFlag ? `cond:${presentFlag}` : undefined].filter(Boolean).join(' ') || undefined });
   attach(id);
   for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
 }

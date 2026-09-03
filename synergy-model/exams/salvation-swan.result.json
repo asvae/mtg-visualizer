@@ -1,0 +1,11 @@
+{
+  "name": "Salvation Swan",
+  "manaCost": "{3}{W}",
+  "typeLine": "Creature — Bird Cleric",
+  "description": "Flash. Flying. Whenever this creature or another Bird you control enters, exile up to one target creature you control without flying. Return it to the battlefield under its owner's control with a flying counter on it at the beginning of the next end step.",
+  "assumptions": [],
+  "couldNotDerive": ["The entire delayed/conditional return clause -- correctly absent rather than shown wrong, per the DelayedTrigger fix from Parting Gust."],
+  "verdict": "issues-open",
+  "notes": "Confirms two of this batch's fixes working correctly: node F now shows cond:withoutflying (qualifierFlags fix), and the DelayedTrigger return is honestly absent (?:DelayedTrigger unmapped) rather than wrongly rendered as unconditional/immediate, per the fix made for Parting Gust in the same session. The real gap is the delayed+conditional-free return with a flying counter itself -- same known_gap_classes entry as Parting Gust's own unimplemented return mechanic (both grouped under a shared gap class).",
+  "comparedAt": "2026-09-04"
+}

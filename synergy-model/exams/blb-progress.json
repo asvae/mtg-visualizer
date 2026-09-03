@@ -4,7 +4,23 @@
   "known_gap_classes": {
     "ConditionCheckSVar/ConditionSVarCompare/CheckSVar (dynamic conditional effect)": {
       "description": "Forge's system for conditional effects gated on a dynamically-computed value -- cross-player count comparisons (ConditionCheckSVar$/ConditionSVarCompare$, e.g. 'if an opponent controls more lands than you') AND single-player dynamic checks on a STATIC ability (CheckSVar$, e.g. Essence Channeler's 'as long as you've lost life this turn'). Zero translator support for either -- conditions are silently dropped, producing an unconditional effect/ability. A whole unsupported class, not a quick fix -- needs a design decision (a sensor-role extension, or a new cond: convention) before implementing. Flagged for the user. (A narrower, single-object property check on an earlier target -- ConditionDefined$Targeted + ConditionPresent$ Type.powerLEN, or a boolean ConditionPresent$...PromisedGift check -- is NOT in this class; both were cheap enough to implement directly, see Driftgloom Coyote's if_targeted_* flag and Crumb and Get It's/Dawn's Truce's cond:gift_promised.)",
-      "cards": ["Beza, the Bounding Spring", "Harvestrite Host", "Portent of Calamity", "Shoreline Looter", "Coiling Rebirth", "Thought-Stalker Warlock", "Wick, the Whorled Mind", "Reptilian Recruiter", "Cache Grab", "Mistbreath Elder", "Finneas, Ace Archer", "Essence Channeler"]
+      "cards": ["Beza, the Bounding Spring", "Harvestrite Host", "Portent of Calamity", "Shoreline Looter", "Coiling Rebirth", "Thought-Stalker Warlock", "Wick, the Whorled Mind", "Reptilian Recruiter", "Cache Grab", "Mistbreath Elder", "Finneas, Ace Archer", "Essence Channeler", "Star Charter"]
+    },
+    "Delayed conditional return (DelayedTrigger + WithCountersType)": {
+      "description": "The real mechanic behind Parting Gust/Salvation Swan's own exile-then-conditionally-return effects: a DelayedTrigger (fires at a future phase) gated by its own ConditionPresent$/ConditionCompare$, returning the object under its OWNER's control (not the caster's) with a counter added. DelayedTrigger's Execute$ child is correctly suppressed now (no longer produces WRONG data), but the mechanic itself has no positive representation -- real, non-trivial modeling work (a delayed-timing dimension on top of the existing gift-condition machinery).",
+      "cards": ["Parting Gust", "Salvation Swan"]
+    },
+    "Stat-threshold ValidTgts$ qualifiers (powerGE/toughnessGE/powerLE/etc, incl. OR)": {
+      "description": "A target's own printed power/toughness compared to a threshold, written directly into ValidTgts$ (Repel Calamity's own Creature.powerGE4,Creature.toughnessGE4 -- an OR of two stat checks; Sonar Strike's Creature.attacking,Creature.blocking,Creature.tapped is the same OR-of-qualifiers shape but for combat states). qualifierFlags' current design (an array of independently AND'd facts) doesn't cleanly support OR of qualifiers. Distinct from the already-implemented ConditionDefined$Targeted+ConditionPresent$ shape (a condition on an EARLIER target elsewhere in the chain, not the primary ValidTgts$ predicate).",
+      "cards": ["Repel Calamity", "Sonar Strike"]
+    },
+    "Pawprint$ weighted/repeatable modal choice": {
+      "description": "Forge's Bloomburrow-specific 'choose up to N {P} worth of modes, may repeat' point-buy modal system (Season of the Burrow). SCHEMA's `combine` convention only supports a fixed choose-N-of-the-following shape, not a weighted/repeatable point-buy one. Individual mode effects still translate correctly; only the modal-choice wrapper itself is misrepresented (reads as a plain 'choose one').",
+      "cards": ["Season of the Burrow"]
+    },
+    "Dig's look-then-selectively-reveal-to-hand shape": {
+      "description": "The current Dig handler only supports 'look at N, move the remainder to a stated DestinationZone$' -- it doesn't read Optional$/ChangeValid$/RestRandomOrder$/DestinationZone$-absent, all needed for Forge's very common 'look at the top N, you may reveal ONE matching card and put it into your hand, put the rest on the bottom in random order' idiom (Star Charter). Worth a real look since this shape recurs across many card types (not BLB-specific).",
+      "cards": ["Star Charter"]
     },
     "Count$PromisedGift.N.M (dynamic gift-conditional QUANTITY)": {
       "description": "A narrower cousin of the Condition class above: Dewdrop Cure's own SVar:X:Count$PromisedGift.3.2 means \"3 if the gift was promised, else 2\" -- swaps a NUMBER rather than gating an effect on/off (which the existing cond:gift_promised boolean flag already handles). Needs recognizing this specific Count$ shape and binding qty to a declared value via SCHEMA's :=/= label convention. Real modeling work, not a quick fix.",
@@ -123,6 +139,14 @@
       "attempts": 1,
       "note": "Fixed Valiant$True (\"for the first time each turn\") by reusing cond:once_per_turn. One narrower gap remains open: ValidSource$SpellAbility.YouCtrl (who controls the triggering spell/ability) has no home in the trigger vocabulary's current owner slot."
     },
+    "Shrike Force": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
+    "Seasoned Warrenguard": { "status": "match", "attempts": 1, "note": "Fixed IsPresent$ (trigger-level board-state check) via new ifPresentFlag helper. In blb-success.json." },
+    "Rabbit Response": { "status": "match", "attempts": 1, "note": "Fixed ConditionPresent$ on chained Scry via ifPresentFlag. In blb-success.json." },
+    "Sonar Strike": { "status": "issues-fixed", "attempts": 1, "note": "Fixed ConditionPresent$ Bat.YouCtrl via ifPresentFlag. One gap remains: ValidTgts$ comma-OR of 3 combat-state qualifiers (attacking/blocking/tapped) has no representation." },
+    "Repel Calamity": { "status": "issues-open", "attempts": 1, "note": "ValidTgts$ Creature.powerGE4,Creature.toughnessGE4 (power OR toughness threshold) not represented -- qualifierFlags has no stat-threshold or OR support." },
+    "Salvation Swan": { "status": "issues-open", "attempts": 1, "note": "Confirms 2 of this batch's fixes (withoutFlying, DelayedTrigger honest-absence). Real gap: the delayed conditional return with a flying counter itself -- see known_gap_classes['Delayed conditional return (DelayedTrigger + WithCountersType)']." },
+    "Season of the Burrow": { "status": "issues-open", "attempts": 1, "note": "Pawprint$ weighted/repeatable modal choice (choose up to 5 pips worth of modes) has no schema representation -- read as a plain 'choose one'. Individual mode effects reconstructed correctly." },
+    "Star Charter": { "status": "issues-open", "attempts": 1, "note": "3 gaps on one card: Phase$ specificity (known gap), CheckSVar$ dynamic condition (known gap, card added to that class), and Dig's real capability gap (look-then-selectively-reveal-to-hand-with-rest-bottomed shape not supported, only a simple look-then-move-remainder shape is)." },
     "Intrepid Rabbit": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
     "Jolly Gerbils": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
     "Lifecreed Duo": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
