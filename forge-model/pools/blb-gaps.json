@@ -1,0 +1,525 @@
+{
+  "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
+  "generatedAt": "2026-09-03T15:13:53.196Z",
+  "clean": 130,
+  "gaps": 144,
+  "totalUnmapped": 228,
+  "cards": {
+    "Beza, the Bounding Spring": [
+      "TokenScript$u_1_1_fish"
+    ],
+    "Builder's Talent": [
+      "TokenScript$w_0_4_wall_defender",
+      "K:Class",
+      "K:Class"
+    ],
+    "Caretaker's Talent": [
+      "K:Class",
+      "K:Class"
+    ],
+    "Carrot Cake": [
+      "TokenScript$w_1_1_rabbit",
+      "?:Scry",
+      "TokenScript$w_1_1_rabbit",
+      "?:Scry"
+    ],
+    "Feather of Flight": [
+      "K:Enchant"
+    ],
+    "Flowerfoot Swordmaster": [
+      "K:Offspring",
+      "?:PumpAll"
+    ],
+    "Hop to It": [
+      "TokenScript$w_1_1_rabbit"
+    ],
+    "Intrepid Rabbit": [
+      "K:Offspring"
+    ],
+    "Mouse Trapper": [
+      "?:Tap"
+    ],
+    "Parting Gust": [
+      "?:DelayedTrigger"
+    ],
+    "Rabbit Response": [
+      "A:PumpAll",
+      "?:Scry"
+    ],
+    "Salvation Swan": [
+      "?:DelayedTrigger"
+    ],
+    "Season of the Burrow": [
+      "TokenScript$w_1_1_rabbit"
+    ],
+    "Starfall Invocation": [
+      "A:DestroyAll"
+    ],
+    "Thistledown Players": [
+      "?:Untap"
+    ],
+    "Valley Questcaller": [
+      "?:Scry"
+    ],
+    "Warren Elder": [
+      "A:PumpAll"
+    ],
+    "Warren Warleader": [
+      "K:Offspring",
+      "TokenScript$w_1_1_rabbit",
+      "?:PumpAll"
+    ],
+    "Whiskervale Forerunner": [
+      "?:PeekAndReveal",
+      "?:ChooseCard",
+      "?:undefined",
+      "?:ChangeZoneAll"
+    ],
+    "Daring Waverider": [
+      "?:Play"
+    ],
+    "Dazzling Denial": [
+      "A:Counter"
+    ],
+    "Eddymurk Crab": [
+      "K:ETBReplacement",
+      "?:Tap"
+    ],
+    "Eluge, the Shoreless Sea": [
+      "?:Effect",
+      "?:Effect"
+    ],
+    "Finch Formation": [
+      "K:Offspring"
+    ],
+    "Gossip's Talent": [
+      "K:Class",
+      "K:Class"
+    ],
+    "Kitnap": [
+      "K:Enchant",
+      "?:Tap"
+    ],
+    "Kitsa, Otterball Elite": [
+      "A:CopySpellAbility"
+    ],
+    "Knightfisher": [
+      "TokenScript$u_1_1_fish"
+    ],
+    "Long River Lurker": [
+      "K:Ward",
+      "?:Effect"
+    ],
+    "Long River's Pull": [
+      "A:Counter",
+      "?:Counter"
+    ],
+    "Mind Spiral": [
+      "?:Tap"
+    ],
+    "Mockingbird": [
+      "K:ETBReplacement"
+    ],
+    "Otterball Antics": [
+      "TokenScript$ur_1_1_otter_prowess"
+    ],
+    "Portent of Calamity": [
+      "A:PeekAndReveal",
+      "?:RepeatEach",
+      "?:ChangeZoneAll",
+      "?:Play"
+    ],
+    "Season of Weaving": [
+      "?:CopyPermanent",
+      "?:undefined",
+      "?:ChangeZoneAll"
+    ],
+    "Skyskipper Duo": [
+      "?:DelayedTrigger"
+    ],
+    "Spellgyre": [
+      "?:Counter"
+    ],
+    "Splash Lasher": [
+      "K:Offspring",
+      "?:Tap"
+    ],
+    "Stormchaser's Talent": [
+      "TokenScript$ur_1_1_otter_prowess",
+      "K:Class",
+      "K:Class"
+    ],
+    "Sugar Coat": [
+      "K:Enchant"
+    ],
+    "Thundertrap Trainer": [
+      "K:Offspring"
+    ],
+    "Valley Floodcaller": [
+      "?:PumpAll",
+      "?:UntapAll"
+    ],
+    "Wishing Well": [
+      "?:ImmediateTrigger",
+      "?:Play"
+    ],
+    "Bandit's Talent": [
+      "K:Class",
+      "K:Class"
+    ],
+    "Coiling Rebirth": [
+      "?:CopyPermanent"
+    ],
+    "Cruelclaw's Heist": [
+      "?:Effect"
+    ],
+    "Daggerfang Duo": [
+      "?:Mill"
+    ],
+    "Darkstar Augur": [
+      "K:Offspring"
+    ],
+    "Feed the Cycle": [
+      "K:AlternateAdditionalCost"
+    ],
+    "Iridescent Vinelasher": [
+      "K:Offspring"
+    ],
+    "Maha, Its Feathers Night": [
+      "K:Ward"
+    ],
+    "Moonstone Harbinger": [
+      "?:PumpAll",
+      "?:PumpAll"
+    ],
+    "Osteomancer Adept": [
+      "A:Effect"
+    ],
+    "Rottenmouth Viper": [
+      "A:PermanentCreature",
+      "?:Repeat",
+      "?:Repeat"
+    ],
+    "Scales of Shale": [
+      "K:Affinity"
+    ],
+    "Scavenger's Talent": [
+      "TokenScript$c_a_food_sac",
+      "K:Class",
+      "K:Class"
+    ],
+    "Starscape Cleric": [
+      "K:Offspring"
+    ],
+    "Thornplate Intimidator": [
+      "K:Offspring",
+      "?:GenericChoice",
+      "?:undefined"
+    ],
+    "Thought-Stalker Warlock": [
+      "?:Branch"
+    ],
+    "Wick, the Whorled Mind": [
+      "?:Branch"
+    ],
+    "Wick's Patrol": [
+      "?:Mill",
+      "?:ImmediateTrigger"
+    ],
+    "Alania's Pathmaker": [
+      "?:Effect"
+    ],
+    "Artist's Talent": [
+      "K:Class",
+      "K:Class"
+    ],
+    "Blacksmith's Talent": [
+      "TokenScript$sword",
+      "K:Class",
+      "K:Class"
+    ],
+    "Brazen Collector": [
+      "?:Mana"
+    ],
+    "Conduct Electricity": [
+      "?:DamageResolve"
+    ],
+    "Coruscation Mage": [
+      "K:Offspring"
+    ],
+    "Dragonhawk, Fate's Tempest": [
+      "?:Effect",
+      "?:DelayedTrigger",
+      "?:DamageAll",
+      "?:Effect",
+      "?:DelayedTrigger",
+      "?:DamageAll"
+    ],
+    "Emberheart Challenger": [
+      "?:Effect"
+    ],
+    "Flamecache Gecko": [
+      "?:Mana"
+    ],
+    "Frilled Sparkshooter": [
+      "K:etbCounter"
+    ],
+    "Harnesser of Storms": [
+      "?:Effect"
+    ],
+    "Kindlespark Duo": [
+      "?:Untap"
+    ],
+    "Manifold Mouse": [
+      "K:Offspring"
+    ],
+    "Season of the Bold": [
+      "?:Effect",
+      "?:Effect"
+    ],
+    "Steampath Charger": [
+      "K:Offspring"
+    ],
+    "Stormsplitter": [
+      "?:CopyPermanent"
+    ],
+    "Sunspine Lynx": [
+      "?:RepeatEach"
+    ],
+    "Valley Rally": [
+      "A:PumpAll"
+    ],
+    "War Squeak": [
+      "K:Enchant"
+    ],
+    "Wildfire Howl": [
+      "?:DamageAll",
+      "?:DamageResolve"
+    ],
+    "Bakersbane Duo": [
+      "TokenScript$c_a_food_sac"
+    ],
+    "Brambleguard Veteran": [
+      "?:PumpAll"
+    ],
+    "Bushy Bodyguard": [
+      "K:Offspring"
+    ],
+    "Cache Grab": [
+      "A:Mill",
+      "TokenScript$c_a_food_sac"
+    ],
+    "Clifftop Lookout": [
+      "?:DigUntil"
+    ],
+    "Curious Forager": [
+      "?:ImmediateTrigger"
+    ],
+    "For the Common Good": [
+      "A:CopyPermanent",
+      "?:PumpAll"
+    ],
+    "Hivespine Wolverine": [
+      "?:Fight"
+    ],
+    "Hunter's Talent": [
+      "K:Class",
+      "K:Class"
+    ],
+    "Innkeeper's Talent": [
+      "K:Class",
+      "K:Class"
+    ],
+    "Longstalk Brawl": [
+      "?:Fight"
+    ],
+    "Lumra, Bellow of the Woods": [
+      "?:Mill",
+      "?:ChangeZoneAll"
+    ],
+    "Pawpatch Formation": [
+      "TokenScript$c_a_food_sac"
+    ],
+    "Pawpatch Recruit": [
+      "K:Offspring"
+    ],
+    "Polliwallop": [
+      "K:Affinity"
+    ],
+    "Rust-Shield Rampager": [
+      "K:Offspring"
+    ],
+    "Season of Gathering": [
+      "?:undefined",
+      "?:GenericChoice",
+      "?:undefined",
+      "?:DestroyAll",
+      "?:DestroyAll"
+    ],
+    "Tender Wildguide": [
+      "K:Offspring",
+      "A:Mana"
+    ],
+    "Thornvault Forager": [
+      "A:Mana",
+      "A:Mana"
+    ],
+    "Three Tree Rootweaver": [
+      "A:Mana"
+    ],
+    "Alania, Divergent Storm": [
+      "?:CopySpellAbility"
+    ],
+    "Baylen, the Haymaker": [
+      "A:Mana"
+    ],
+    "Camellia, the Seedmiser": [
+      "TokenScript$g_1_1_squirrel",
+      "A:PutCounterAll"
+    ],
+    "Cindering Cutthroat": [
+      "K:etbCounter"
+    ],
+    "Dreamdew Entrancer": [
+      "?:Tap"
+    ],
+    "Finneas, Ace Archer": [
+      "?:PutCounterAll"
+    ],
+    "Fireglass Mentor": [
+      "?:ChooseCard",
+      "?:undefined",
+      "?:Effect"
+    ],
+    "Gev, Scaled Scorch": [
+      "K:Ward",
+      "K:ETBReplacement"
+    ],
+    "Head of the Homestead": [
+      "TokenScript$w_1_1_rabbit"
+    ],
+    "Helga, Skittish Seer": [
+      "A:Mana"
+    ],
+    "Hugs, Grisly Guardian": [
+      "?:Effect"
+    ],
+    "The Infamous Cruelclaw": [
+      "?:DigUntil",
+      "?:Play"
+    ],
+    "Kastral, the Windcrested": [
+      "?:PutCounterAll"
+    ],
+    "Lunar Convocation": [
+      "TokenScript$b_1_1_bat_flying"
+    ],
+    "Mabel, Heir to Cragflame": [
+      "TokenScript$cragflame"
+    ],
+    "Muerra, Trash Tactician": [
+      "?:Mana",
+      "?:Effect"
+    ],
+    "Ral, Crackling Wit": [
+      "TokenScript$ur_1_1_otter_prowess",
+      "?:Effect"
+    ],
+    "Starseer Mentor": [
+      "?:GenericChoice",
+      "?:undefined"
+    ],
+    "Vinereap Mentor": [
+      "TokenScript$c_a_food_sac",
+      "TokenScript$c_a_food_sac"
+    ],
+    "Vren, the Relentless": [
+      "K:Ward",
+      "TokenScript$b_1_1_rat_relentless"
+    ],
+    "Wandertale Mentor": [
+      "A:Mana"
+    ],
+    "Ygra, Eater of All": [
+      "K:Ward"
+    ],
+    "Zoraline, Cosmos Caller": [
+      "?:ImmediateTrigger",
+      "?:ImmediateTrigger"
+    ],
+    "Bumbleflower's Sharepot": [
+      "TokenScript$c_a_food_sac"
+    ],
+    "Patchwork Banner": [
+      "K:ETBReplacement",
+      "A:Mana"
+    ],
+    "Starforged Sword": [
+      "?:Attach"
+    ],
+    "Three Tree Mascot": [
+      "A:Mana"
+    ],
+    "Fabled Passage": [
+      "?:Untap"
+    ],
+    "Fountainport": [
+      "A:Mana",
+      "TokenScript$u_1_1_fish"
+    ],
+    "Hidden Grotto": [
+      "A:Mana",
+      "A:Mana"
+    ],
+    "Lilypad Village": [
+      "A:Mana",
+      "A:Mana"
+    ],
+    "Lupinflower Village": [
+      "A:Mana",
+      "A:Mana"
+    ],
+    "Mudflat Village": [
+      "A:Mana",
+      "A:Mana"
+    ],
+    "Oakhollow Village": [
+      "A:Mana",
+      "A:Mana",
+      "A:PutCounterAll"
+    ],
+    "Rockface Village": [
+      "A:Mana",
+      "A:Mana"
+    ],
+    "Three Tree City": [
+      "K:ETBReplacement",
+      "A:Mana",
+      "A:Mana"
+    ],
+    "Uncharted Haven": [
+      "K:ETBReplacement",
+      "A:Mana"
+    ],
+    "Bria, Riptide Rogue": [
+      "?:Effect"
+    ],
+    "Byrke, Long Ear of the Law": [
+      "?:MultiplyCounter"
+    ],
+    "Charmed Sleep": [
+      "K:Enchant",
+      "?:Tap"
+    ],
+    "Colossification": [
+      "K:Enchant",
+      "?:Tap"
+    ],
+    "Blossoming Sands": [
+      "A:Mana"
+    ],
+    "Swiftwater Cliffs": [
+      "A:Mana"
+    ]
+  }
+}

@@ -88,6 +88,22 @@ function loadForgeScript(name: string): string | null {
   }
 }
 
+// Parsing + translating a Forge script is pure (same input text -> same
+// output) but not free — an interactions pool this size (274 cards for BLB)
+// re-running it for every pool member on every single request would add up
+// fast, so cache by name for the life of the server process. Same tradeoff
+// as poolImageCache below: a dev-server restart is what picks up an edited
+// forge-model/data/*.txt file, same as it already does for the pool JSON.
+const translateCache = new Map<string, { nodes: Record<string, SynergyNode>; flow: SynergyFlow }>();
+function translateForgeScriptCached(name: string, raw: string) {
+  const cached = translateCache.get(name);
+  if (cached !== undefined) return cached;
+  const translated = translateForgeCard(parseForgeScript(raw));
+  const result = { nodes: translated.nodes, flow: translated.flow };
+  translateCache.set(name, result);
+  return result;
+}
+
 // No hand-authored edges.json entry -> translate the Forge script on the fly
 // (app/lib/forgeTranslate.ts) instead of showing nothing. Same "not yet
 // human-reviewed" treatment the card page already gives an AI decomposition
@@ -97,108 +113,123 @@ function resolveSynergy(name: string): { nodes: Record<string, SynergyNode>; flo
   if (hand) return { nodes: hand.nodes, flow: hand.flow, review: loadSynergyStatus()[name]?.review ?? null };
   const forge = loadForgeScript(name);
   if (!forge) return null;
-  const translated = translateForgeCard(parseForgeScript(forge));
+  const translated = translateForgeScriptCached(name, forge);
   return { nodes: translated.nodes, flow: translated.flow, review: 'ai' };
 }
 
-// Small, explicit worked-example pool for app/lib/synergyInteractions.ts —
-// a real cross-card join needs every OTHER card's synergy data available at
-// once, which nothing in this app assembles yet (buildGraph.ts builds a
-// whole set's worth of theme edges, not synergy-model nodes). Rather than
-// fake a corpus-wide join, this lists the Cat cards from FDN (plus the
-// original Slashing Tiger worked example, a different set) this session
-// specifically prepared Forge scripts for. See forge-model/README.md.
-const CAT_POOL: { name: string; typeLine: string; set: string; collectorNumber: string }[] = [
-  { name: 'Arahbo, the First Fang', typeLine: 'Legendary Creature — Cat Avatar', set: 'fdn', collectorNumber: '2' },
-  { name: 'Slashing Tiger', typeLine: 'Creature — Cat', set: 'me3', collectorNumber: '133' },
-  { name: "Ajani's Pridemate", typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '135' },
-  { name: 'Dawnwing Marshal', typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '570' },
-  { name: 'Felidar Cub', typeLine: 'Creature — Cat Beast', set: 'fdn', collectorNumber: '573' },
-  { name: 'Felidar Savior', typeLine: 'Creature — Cat Beast', set: 'fdn', collectorNumber: '12' },
-  { name: 'Helpful Hunter', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '16' },
-  { name: 'Ingenious Leonin', typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '495' },
-  { name: 'Jazal Goldmane', typeLine: 'Legendary Creature — Cat Warrior', set: 'fdn', collectorNumber: '497' },
-  { name: 'Leonin Skyhunter', typeLine: 'Creature — Cat Knight', set: 'fdn', collectorNumber: '498' },
-  { name: 'Leonin Vanguard', typeLine: 'Creature — Cat Soldier', set: 'fdn', collectorNumber: '499' },
-  { name: 'Nine-Lives Familiar', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '66' },
-  { name: 'Prideful Parent', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '21' },
-  { name: 'Regal Caracal', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '579' },
-  { name: 'Savannah Lions', typeLine: 'Creature — Cat', set: 'fdn', collectorNumber: '146' },
-  { name: 'Skyknight Squire', typeLine: 'Creature — Cat Scout', set: 'fdn', collectorNumber: '23' },
-  { name: 'Wary Thespian', typeLine: 'Creature — Cat Druid', set: 'fdn', collectorNumber: '235' },
-];
-const CAT_POOL_BY_NAME = new Map(CAT_POOL.map((c) => [c.name, c]));
+// Worked-example pools for app/lib/synergyInteractions.ts — a real
+// cross-card join needs every OTHER card's synergy data available at once,
+// which nothing in this app assembles yet (buildGraph.ts builds a whole
+// set's worth of theme edges, not synergy-model nodes). Rather than fake a
+// corpus-wide join, each file under forge-model/pools/ lists one curated (or,
+// for blb.json, the entire real) set of cards this session prepared Forge
+// scripts for. A card belongs to at most one pool file; querying by name
+// finds which file (if any) and runs the join against that file's members.
+// See forge-model/README.md.
+interface PoolEntry {
+  name: string;
+  typeLine: string;
+  set: string;
+  collectorNumber: string;
+  // Precomputed (see forge-model/README.md's "Cards outside FIN" note) —
+  // never fetched live at request time, see poolCardImage below for why.
+  image?: string | null;
+}
+const POOL_FILES = ['fdn-cats.json', 'blb.json'];
+function loadPool(file: string): PoolEntry[] {
+  return loadJsonFresh(`forge-model/pools/${file}`, [] as PoolEntry[]);
+}
+function findPoolFor(name: string): PoolEntry[] | null {
+  for (const file of POOL_FILES) {
+    const entries = loadPool(file);
+    if (entries.some((e) => e.name === name)) return entries;
+  }
+  return null;
+}
+// Every pool's entries, name -> ref, for the match-thumbnail lookups below —
+// a match can be from a different pool than the one being viewed only in
+// the sense that its own set/collectorNumber still needs resolving the same
+// way regardless of which pool it came from, so this merges all of them.
+function allPoolEntriesByName(): Map<string, PoolEntry> {
+  const map = new Map<string, PoolEntry>();
+  for (const file of POOL_FILES) for (const e of loadPool(file)) map.set(e.name, e);
+  return map;
+}
 
-// TokenScript$ ids the CAT_POOL's own Forge scripts create, resolved for
+// TokenScript$ ids any pool's Forge scripts create, resolved for
 // app/lib/synergyInteractions.ts's self-interaction pass (SCHEMA §7
 // "self-sufficiency") — e.g. Arahbo's own trigger makes a Cat token that its
-// own anthem then buffs. This is a small demo-scoped registry, same
-// reasoning as CAT_POOL itself (see forge-model/README.md's "Cards outside
-// FIN" note) — NOT synergy-model/data/registries.json, which is FIN-scoped
-// reviewed data; these token scripts belong to a different corpus entirely.
-// set/collectorNumber here are the ACTUAL Foundations token sheet prints
-// (Scryfall `tfdn` — the dedicated token set for `fdn`) matching what these
-// scripts create: `t:cat set:tfdn` turns up exactly a plain 1/1 (tfdn/1) and
-// a lifelink 1/1 (tfdn/27). Real card refs, not synthesized — a token match
-// gets the same clickable real art every other match gets.
-const POOL_TOKEN_REGISTRY: Record<string, { labels: string[]; token: boolean; name: string; set: string; collectorNumber: string }> = {
-  w_1_1_cat: { labels: ['creature', 'cat', 'white', 'token'], token: true, name: '1/1 white Cat token', set: 'tfdn', collectorNumber: '1' },
+// own anthem then buffs. Shared across all pools (Forge's TokenScript ids
+// are its own global namespace, not scoped to one set) — a demo-scoped
+// registry, same reasoning as the pool files themselves (see
+// forge-model/README.md's "Cards outside FIN" note) — NOT
+// synergy-model/data/registries.json, which is FIN-scoped reviewed data.
+// set/collectorNumber are real token-sheet prints (Scryfall's dedicated
+// token sets, e.g. `tfdn` for `fdn`) matching what each script actually
+// creates — a token match gets the same clickable real art every other
+// match gets, not a synthesized placeholder.
+// `image` is precomputed (forge-model/pools/*.json get theirs the same way,
+// see forge-model/README.md) — a live per-request Scryfall lookup here was
+// the actual cause of the rate-limit block below: a densely-matching card's
+// interaction groups can reference a hundred-plus distinct pool cards, and
+// even paced under Scryfall's 10/s limit that's tens of seconds of latency
+// on a cold cache, every time, for data that's static. Precomputing once
+// removes both the latency and the rate-limit exposure entirely.
+const POOL_TOKEN_REGISTRY: Record<string, { labels: string[]; token: boolean; name: string; set: string; collectorNumber: string; image: string | null }> = {
+  w_1_1_cat: { labels: ['creature', 'cat', 'white', 'token'], token: true, name: '1/1 white Cat token', set: 'tfdn', collectorNumber: '1', image: 'https://cards.scryfall.io/normal/front/2/8/2885d54c-9fb2-4f01-8937-54f8ac1ce5bc.jpg?1783908593' },
   w_1_1_cat_lifelink: {
     labels: ['creature', 'cat', 'white', 'token'],
     token: true,
     name: '1/1 white Cat token (lifelink)',
     set: 'tfdn',
     collectorNumber: '27',
+    image: 'https://cards.scryfall.io/normal/front/8/6/86701490-17ac-4253-810d-6cfd7a46594c.jpg?1783908586',
   },
+  // BLB's own token sheet (Scryfall `tblb`) — every TokenScript$ id BLB's
+  // 274 real cards actually create (found via a translator run over the
+  // whole set's unmapped output, then matched against `set:tblb`).
+  w_1_1_rabbit: { labels: ['creature', 'rabbit', 'white', 'token'], token: true, name: 'Rabbit token', set: 'tblb', collectorNumber: '3', image: 'https://cards.scryfall.io/normal/front/8/1/81de52ef-7515-4958-abea-fb8ebdcef93c.jpg?1783909772' },
+  c_a_food_sac: { labels: ['artifact', 'food', 'token'], token: true, name: 'Food token', set: 'tblb', collectorNumber: '27', image: 'https://cards.scryfall.io/normal/front/0/d/0dce2241-e58b-41d4-b57c-9794fc8ee004.jpg?1783909763' },
+  u_1_1_fish: { labels: ['creature', 'fish', 'blue', 'token'], token: true, name: 'Fish token', set: 'tblb', collectorNumber: '7', image: 'https://cards.scryfall.io/normal/front/d/e/de0d6700-49f0-4233-97ba-cef7821c30ed.jpg?1783909771' },
+  ur_1_1_otter_prowess: { labels: ['creature', 'otter', 'blue', 'red', 'token'], token: true, name: 'Otter token', set: 'tblb', collectorNumber: '25', image: 'https://cards.scryfall.io/normal/front/e/6/e6b2c465-c446-4dee-9101-763105dcf813.jpg?1783909764' },
+  w_0_4_wall_defender: { labels: ['creature', 'wall', 'white', 'token'], token: true, name: 'Wall token', set: 'tblb', collectorNumber: '4', image: 'https://cards.scryfall.io/normal/front/2/2/229a41de-91dd-4696-bfc1-10d702787c3e.jpg?1783909772' },
+  sword: { labels: ['artifact', 'equipment', 'token'], token: true, name: 'Sword token', set: 'tblb', collectorNumber: '28', image: 'https://cards.scryfall.io/normal/front/b/b/bb1e78e6-a9e7-48a4-9231-61fb331c5837.jpg?1783909763' },
+  g_1_1_squirrel: { labels: ['creature', 'squirrel', 'green', 'token'], token: true, name: 'Squirrel token', set: 'tblb', collectorNumber: '23', image: 'https://cards.scryfall.io/normal/front/5/a/5a6ec62e-0e9b-4312-bfe8-cc85d76fd9e0.jpg?1783909765' },
+  b_1_1_bat_flying: { labels: ['creature', 'bat', 'black', 'token'], token: true, name: 'Bat token', set: 'tblb', collectorNumber: '10', image: 'https://cards.scryfall.io/normal/front/1/0/100c0127-49dd-4a78-9c88-1881e7923674.jpg?1783909768' },
+  cragflame: { labels: ['artifact', 'equipment', 'legendary', 'token'], token: true, name: 'Cragflame token', set: 'tblb', collectorNumber: '26', image: 'https://cards.scryfall.io/normal/front/c/7/c76fa1c6-6000-47b2-9188-9c15b2c73f8f.jpg?1783909763' },
+  b_1_1_rat_relentless: { labels: ['creature', 'rat', 'black', 'token'], token: true, name: 'Rat token', set: 'tblb', collectorNumber: '13', image: 'https://cards.scryfall.io/normal/front/1/c/1c0977b2-3342-4b7e-b1c7-f06bd8ab7fbf.jpg?1783909768' },
 };
 const resolvePoolThing: ThingResolver = (thing) => POOL_TOKEN_REGISTRY[thing] ?? null;
 
 // Every match name InteractionGroup can produce resolves to a real
-// set/collectorNumber this way — CAT_POOL for a printed card, or
+// set/collectorNumber/image this way — any pool file for a printed card, or
 // POOL_TOKEN_REGISTRY (keyed by its own display `name`) for a self-produced
 // token. Shared by the "link to this card" and "fetch its art" needs below.
 const POOL_TOKEN_REGISTRY_BY_NAME = new Map(Object.values(POOL_TOKEN_REGISTRY).map((t) => [t.name, t]));
-function poolRef(name: string): { set: string; collectorNumber: string } | null {
-  return CAT_POOL_BY_NAME.get(name) ?? POOL_TOKEN_REGISTRY_BY_NAME.get(name) ?? null;
+function poolRef(name: string): { set: string; collectorNumber: string; image?: string | null } | null {
+  return allPoolEntriesByName().get(name) ?? POOL_TOKEN_REGISTRY_BY_NAME.get(name) ?? null;
 }
 
-// Match thumbnails need real Scryfall art — cached per server process (these
-// are real, static printings, never change) instead of re-fetching Scryfall
-// on every single card-page view that happens to show a match from this
-// pool. Keyed by name since that's all InteractionGroup's matches carry.
-const poolImageCache = new Map<string, Promise<string | null>>();
-function poolCardImage(name: string): Promise<string | null> {
-  const cached = poolImageCache.get(name);
-  if (cached) return cached;
-  const ref = poolRef(name);
-  const promise = ref
-    ? fetchBySetNumber(ref.set, ref.collectorNumber)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((c) => c?.image_uris?.normal ?? c?.card_faces?.[0]?.image_uris?.normal ?? null)
-        .catch(() => null)
-    : Promise.resolve(null);
-  poolImageCache.set(name, promise);
-  return promise;
-}
-
-async function loadInteractionGroups(cardName: string, cardTypeLine: string): Promise<InteractionGroup[]> {
-  if (!CAT_POOL_BY_NAME.has(cardName)) return [];
+function loadInteractionGroups(cardName: string, cardTypeLine: string): InteractionGroup[] {
+  const poolEntries = findPoolFor(cardName);
+  if (!poolEntries) return [];
   const self = resolveSynergy(cardName);
   if (!self) return [];
-  const pool = CAT_POOL.map((c) => {
+  const pool = poolEntries.map((c) => {
     const s = resolveSynergy(c.name);
     return s ? { name: c.name, typeLine: c.typeLine, nodes: s.nodes } : null;
   }).filter((c): c is { name: string; typeLine: string; nodes: Record<string, SynergyNode> } => c !== null);
   const groups = groupInteractionsForCard({ name: cardName, typeLine: cardTypeLine, nodes: self.nodes }, pool, resolvePoolThing);
 
-  const names = new Set(groups.flatMap((g) => g.matches.map((m) => m.name)));
-  const images = new Map(await Promise.all([...names].map(async (n): Promise<[string, string | null]> => [n, await poolCardImage(n)])));
+  // No live Scryfall call here on purpose — see PoolEntry's `image` comment
+  // above. Every match name resolves to a real ref (its own pool entry, or
+  // POOL_TOKEN_REGISTRY for a self-produced token) with art already on it.
   for (const group of groups) {
     for (const m of group.matches) {
       const ref = poolRef(m.name);
       m.set = ref?.set;
       m.collectorNumber = ref?.collectorNumber;
-      m.image = images.get(m.name) ?? null;
+      m.image = ref?.image ?? null;
     }
   }
   return groups;
@@ -207,11 +238,29 @@ async function loadInteractionGroups(cardName: string, cardTypeLine: string): Pr
 const curatedThemes = themesData as ThemeData[];
 const curatedThemeIds = new Set(curatedThemes.map((t) => t.id));
 
+// Scryfall's own guideline: stay under 10 requests/second or risk a network
+// block (confirmed the hard way mid-session — a burst of interaction-match
+// image lookups across a 274-card pool, on top of this session's own
+// verification traffic, tripped a real 429 with a 60s lockout). A
+// concurrency cap alone doesn't bound rate if each request is fast; this
+// paces request STARTS at least 110ms apart (~9/s) regardless of how many
+// are queued, so a single card page with dozens of uncached matches degrades
+// to a few extra seconds instead of a block. Every Scryfall call in this
+// route goes through it — the main card, its tokens, and pool match art
+// alike, not just the pool-image loop specifically.
+let lastScryfallStart = 0;
+const SCRYFALL_MIN_INTERVAL_MS = 110;
+async function scryfallFetch(url: string): Promise<Response> {
+  const now = Date.now();
+  const scheduled = Math.max(now, lastScryfallStart + SCRYFALL_MIN_INTERVAL_MS);
+  lastScryfallStart = scheduled;
+  const wait = scheduled - now;
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  return fetch(url, { headers: { 'User-Agent': 'mtg-visualizer/0.1', Accept: 'application/json' } });
+}
+
 async function fetchBySetNumber(set: string, number: string) {
-  const r = await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(set)}/${encodeURIComponent(number)}`, {
-    headers: { 'User-Agent': 'mtg-visualizer/0.1', Accept: 'application/json' },
-  });
-  return r;
+  return scryfallFetch(`https://api.scryfall.com/cards/${encodeURIComponent(set)}/${encodeURIComponent(number)}`);
 }
 
 export default defineEventHandler(async (event) => {
@@ -245,9 +294,7 @@ export default defineEventHandler(async (event) => {
   const tokensById: TokensById = {};
   await Promise.all(
     tokenIds.map(async (tid) => {
-      const tRes = await fetch(`https://api.scryfall.com/cards/${tid}`, {
-        headers: { 'User-Agent': 'mtg-visualizer/0.1', Accept: 'application/json' },
-      });
+      const tRes = await scryfallFetch(`https://api.scryfall.com/cards/${tid}`);
       if (!tRes.ok) return;
       const t = await tRes.json();
       tokensById[tid] = { name: t.name, image: t.image_uris?.normal ?? null };
@@ -310,6 +357,6 @@ export default defineEventHandler(async (event) => {
     synergyReview: synergyEntry?.review ?? null,
     synergyExam: loadSynergyExamResult(card.name),
     forgeScript: loadForgeScript(card.name),
-    interactions: await loadInteractionGroups(card.name, cardData.typeLine),
+    interactions: loadInteractionGroups(card.name, cardData.typeLine),
   };
 });

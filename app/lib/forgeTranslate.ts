@@ -152,6 +152,7 @@ const TOKEN_SCRIPT_MAP: Record<string, string> = {
 // need more than a role swap (owner/thing/split-into-two-nodes).
 const EFFECT_ROLE: Record<string, SynergyRole> = {
   LoseLife: 'emit',
+  GainLife: 'emit',
   Draw: 'emit',
   Discard: 'move',
   Token: 'enters',
@@ -260,34 +261,51 @@ function translateEffectRow(
     const triggerType = mode === 'ChangesZone' && fields.Destination === 'Battlefield' ? 'enter' : mode === 'Attacks' ? 'attack' : mode === 'DamageDone' ? 'deals-damage' : mode.toLowerCase();
     // ValidCard$ (comma-separated = OR of alternatives, Forge's own dialect)
     // says WHOSE occurrence this trigger watches — "Card.Self" alone means
-    // self-only (the common case, and the default below), but a lord-style
-    // "Card.Self,Cat.!token+Other+YouCtrl" (Arahbo) is self-OR-another-Cat:
-    // effectively "any nontoken Cat you control," self included. Only the
-    // non-self clause carries new type info (self is already `selfThing`),
-    // and `not:self` only belongs on the node if EVERY clause excludes self.
-    let thing = granted ? granted.thing : selfThing;
-    let crossCardFlags: string[] = [];
+    // self-only (the common case, and the default below). A lord-style
+    // "Card.Self,Cat.!token+Other+YouCtrl" (Arahbo) is self-OR-another-Cat;
+    // "Squirrel.Other+YouCtrl,Food.Other+YouCtrl" (Honored Dreyleader) is
+    // two DIFFERENT non-self subtypes, no self clause at all. Either way,
+    // synergy's `thing` column is one string, so N non-self clauses become N
+    // separate trigger nodes rather than one node hedging across predicates
+    // — same precedent SCHEMA already uses for "one occurrence, several
+    // valid producers" (Namazu Trader's `surveil` reached from two branches):
+    // every clause-node shares the exact same downstream chain (built once,
+    // then referenced from each), not a duplicated copy of it. Only the
+    // non-self clauses carry new type info (self is already `selfThing`),
+    // and `not:self` only belongs on a node if EVERY clause excludes self.
+    const specs: { thing: string; extraFlags: string[] }[] = [];
     if (!granted && fields.ValidCard) {
       const clauses = fields.ValidCard.split(',').map((c) => c.trim());
       const includesSelf = clauses.some((c) => c === 'Card.Self');
-      const otherClause = clauses.find((c) => c !== 'Card.Self');
-      if (otherClause) {
-        thing = coarseType(otherClause);
-        crossCardFlags = qualifierFlags(otherClause).filter((f) => !(includesSelf && f === 'not:self'));
+      const otherClauses = clauses.filter((c) => c !== 'Card.Self');
+      for (const clause of otherClauses) {
+        specs.push({ thing: coarseType(clause), extraFlags: qualifierFlags(clause).filter((f) => !(includesSelf && f === 'not:self')) });
       }
     }
-    const flags = [combat ? 'combat' : undefined, ...crossCardFlags].filter(Boolean).join(' ') || undefined;
-    const id = addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing, flags });
-    attach(id);
-    // OptionalDecider$You ("you MAY exile it, then return it...") gates the
-    // whole contingent chain, but only the first node in that chain carries
-    // the `may` flag (matches Kain/Jecht's own hand-authored convention —
-    // optionality is a property of the decision point, not repeated down
-    // every downstream step).
-    let first = true;
-    for (const child of tree.children) {
-      translateEffectRow(ctx, child, id, selfThing, true, granted, fields.OptionalDecider === 'You' && first);
-      first = false;
+    if (specs.length === 0) specs.push({ thing: granted ? granted.thing : selfThing, extraFlags: [] });
+
+    const combatFlag = combat ? 'combat' : undefined;
+    const ids = specs.map((spec) =>
+      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
+    );
+    ids.forEach((id) => attach(id));
+    // Build the downstream chain once, under the first clause-node, then
+    // reuse the exact same step ids under every other clause-node — not a
+    // second walk (which would double-count every effect the trigger leads
+    // to). OptionalDecider$You ("you MAY exile it, then return it...") gates
+    // the whole contingent chain, but only the first node in that chain
+    // carries the `may` flag (matches Kain/Jecht's own hand-authored
+    // convention — optionality is a property of the decision point, not
+    // repeated down every downstream step).
+    const [firstId, ...restIds] = ids;
+    if (firstId) {
+      let first = true;
+      for (const child of tree.children) {
+        translateEffectRow(ctx, child, firstId, selfThing, true, granted, fields.OptionalDecider === 'You' && first);
+        first = false;
+      }
+      const sharedSteps = ctx.steps[firstId];
+      if (sharedSteps) for (const restId of restIds) ctx.steps[restId] = sharedSteps;
     }
     return;
   }
@@ -496,14 +514,54 @@ function translateOwnEffect(
     return;
   }
 
+  if (ek === 'DealDamage') {
+    // Same targeted-vs-Defined duality Pump has (a targeted burn spell vs.
+    // "this creature deals 1 damage to each opponent") — an event, not a
+    // stock, same class as LoseLife (SCHEMA §2: "loses life" is the listed
+    // `emit` example; dealing damage is the same shape).
+    const targeted = !!fields.ValidTgts;
+    const owner = targeted
+      ? /\.YouCtrl\b/.test(fields.ValidTgts ?? '') ? 'me' : /\.Opponent\b/.test(fields.ValidTgts ?? '') ? 'opp' : 'any'
+      : deriveOwner(fields.Defined);
+    const qty = fields.NumDmg ?? '1';
+    const id = addNode(ctx, { role: 'emit', owner, from: '--', to: '--', thing: 'damage', flags: [targeted ? 'target' : undefined, qty !== '1' ? `qty:${qty}` : undefined].filter(Boolean).join(' ') || undefined });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'Destroy') {
+    // Always targeted in practice (Forge has no "destroy each"/Defined$ form
+    // in this corpus) — same predicate shape as Sacrifice, but a `move` the
+    // controller chooses is being forced onto someone else's permanent
+    // rather than their own, so owner comes from the target predicate.
+    const thing = coarseType(fields.ValidTgts);
+    const owner = /\.YouCtrl\b/.test(fields.ValidTgts ?? '') ? 'me' : /\.Opponent\b/.test(fields.ValidTgts ?? '') ? 'opp' : 'any';
+    const id = addNode(ctx, { role: 'move', owner, from: 'bf', to: 'gy', thing, flags: ['target', ...qualifierFlags(fields.ValidTgts)].join(' ') });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
   const role = ek ? EFFECT_ROLE[ek] : undefined;
   if (!role) {
     ctx.unmapped.push(`${row.lineType ?? '?'}:${ek}`);
+    // Still walk the chain past this unrecognized effect (attached at the
+    // same point THIS node would have been, since it was never created) —
+    // an earlier version returned here unconditionally, which silently lost
+    // every downstream SubAbility$ step too, not just this one line, with
+    // only a single unmapped entry to show for however much chain was cut
+    // (real gap found auditing Dragonhawk, Fate's Tempest: 13 forge lines,
+    // only 7 synergy nodes + 2 unmapped). Best-effort: a child that reads a
+    // value THIS step would have declared (`:=`) won't resolve correctly,
+    // but that's strictly better than the child not existing at all.
+    for (const child of tree.children) translateEffectRow(ctx, child, parent, selfThing, inTrigger, granted);
     return;
   }
   const owner = deriveOwner(fields.Defined);
   const qty = fields.LifeAmount ?? fields.NumCards;
-  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' && ek === 'LoseLife' ? 'life-loss' : role === 'emit' && ek === 'Draw' ? 'draw' : 'unknown', flags: qty && qty !== '1' ? `qty:${qty}` : undefined });
+  const emitThing = ek === 'LoseLife' ? 'life-loss' : ek === 'GainLife' ? 'life-gain' : ek === 'Draw' ? 'draw' : 'unknown';
+  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' ? emitThing : 'unknown', flags: qty && qty !== '1' ? `qty:${qty}` : undefined });
   attach(id);
   for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
 }
@@ -573,7 +631,15 @@ function translateKeyword(ctx: Ctx, row: ForgeRow, selfThing: string) {
   // ground-truth 5-tuple needs to match against).
   if (!params.length) {
     ctx.roots.push(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: row.role?.toLowerCase() }));
+    return;
   }
+  // A parametrized keyword this function has no real handling for (Class,
+  // Gift, Offspring, ETBReplacement, ...) used to just fall through here and
+  // vanish — no node, and (unlike every other unhandled effect) no
+  // `unmapped` entry either, so it never showed up in coverage stats. That's
+  // worse than an honest gap: it made a card with real un-modeled content
+  // (a Class enchantment's whole level-up structure, say) count as "clean."
+  ctx.unmapped.push(`K:${row.role}`);
 }
 
 // ---------------------------------------------------------------------------
