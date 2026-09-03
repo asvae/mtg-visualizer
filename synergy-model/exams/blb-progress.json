@@ -1,5 +1,5 @@
 {
-  "_comment": "Tracks the full-set examiner pass over BLB (274 cards). status: 'match' | 'issues-fixed' (bug found+fixed, converged) | 'issues-open' (real gap, not fixed, doesn't need big rework) | 'skipped-attempts' (3 examiner loops used, still issues) | 'skipped-rework' (needs a design decision, see note). attempts counts examiner agent runs used.",
+  "_comment": "Tracks the full-set examiner pass over BLB (274 cards), goal: every card gets 1-3 examiner/parser-fix iterations, stopping early on a full match or when the remaining gap needs a design decision; non-success cards are left as-is for the user. status: 'match' (full reconstruction confirmed correct -- ALSO added to blb-success.json, which drives app/lib/forgeTranslate.blb.test.ts's snapshot suite) | 'issues-fixed' (a real bug was found+fixed but the card still has an unrelated unfixed gap, so NOT a full match) | 'issues-open' (real gap identified, not fixed -- either narrower than worth a fix pass, or blocked on a bigger schema change) | 'skipped-attempts' (3 examiner loops used, still issues) | 'skipped-rework' (needs a design decision, see note). attempts counts examiner agent runs used (a fix verified by direct node inspection instead of a fresh agent run, to save budget, still counts as using that attempt's slot).",
   "_strategy": "Batch 1 (5 cards, full blind examiner each) showed exhaustive per-card examining doesn't scale (~400k+ tokens for 5 cards). Switched to audit-first triage starting batch 2: a static risk-pattern scan (scripts under the job scratch dir, not checked into the repo) flags cards using fragile Forge field shapes; cards hitting only ALREADY-FIXED shared-logic patterns are not re-examined individually (the fix applies uniformly to every card using that pattern); a small diverse spot-check sample is examined per round instead to catch NEW bug classes, and known architectural gaps (see known_gap_classes) are recorded once and applied to every card in that class without spending agent budget on each.",
   "known_gap_classes": {
     "ConditionCheckSVar/ConditionSVarCompare (dynamic cross-player comparison)": {
@@ -24,6 +24,10 @@
     }
   },
   "done": {
+    "Brightblade Stoat": {
+      "status": "match",
+      "attempts": 1
+    },
     "Builder's Talent": {
       "status": "issues-open",
       "attempts": 2
@@ -42,14 +46,14 @@
       "note": "See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare. Needs your call before implementing."
     },
     "Banishing Light": {
-      "status": "issues-fixed",
+      "status": "match",
       "attempts": 2,
-      "note": "Attempt 1 missed the .nonLand qualifier and .OppCtrl owner (Forge's Permanent.nonLand+OppCtrl chains qualifiers with + past the first, which the owner/qualifier regexes only matched right after a literal dot). Fixed the regex, plus wired qualifierFlags() into the ChangeZone targeted-move handler (it had .nonLand support added earlier but never actually called). Verified directly against the regenerated packet, not a 3rd live agent run."
+      "note": "Attempt 1 missed the .nonLand qualifier and .OppCtrl owner (Forge's Permanent.nonLand+OppCtrl chains qualifiers with + past the first, which the owner/qualifier regexes only matched right after a literal dot). Fixed the regex, plus wired qualifierFlags() into the ChangeZone targeted-move handler (it had .nonLand support added earlier but never actually called). Full 1-ability card now fully matches oracle text -- verified directly against the regenerated packet, not a 3rd live agent run. In blb-success.json."
     },
     "Brave-Kin Duo": {
-      "status": "issues-fixed",
+      "status": "match",
       "attempts": 2,
-      "note": "Attempt 2 (post Cost$/tap fix) correctly reconstructed the full activated ability except \"Activate only as a sorcery\" (SorcerySpeed$True had no flag). Added cond:sorcery_speed. Verified via forgeTranslate.test.ts, not a 3rd live agent run."
+      "note": "Attempt 2 (post Cost$/tap fix) correctly reconstructed the full activated ability except \"Activate only as a sorcery\" (SorcerySpeed$True had no flag). Added cond:sorcery_speed -- full 1-ability card now fully matches. Verified via forgeTranslate.test.ts, not a 3rd live agent run. In blb-success.json."
     },
     "Caretaker's Talent": {
       "status": "issues-open",

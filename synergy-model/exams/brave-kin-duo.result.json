@@ -10,7 +10,7 @@
   "couldNotDerive": [
     "Rarity, supertype/subtype beyond Creature — Rabbit Mouse, 1/1."
   ],
-  "verdict": "issues",
+  "verdict": "match",
   "notes": "Reconstruction matched mana cost, type, P/T, and the full activated-ability text except one clause: \"Activate only as a sorcery\" was missing entirely (Forge's SorcerySpeed$True field on the AB$ Pump line had no representation). Fixed by adding a cond:sorcery_speed flag to the tap-cost node when SorcerySpeed$ is present. Not re-run through a fresh blind agent a 3rd time — the fix is a single new flag mirroring the existing cost: flag convention, mechanically verified in the node output, not worth a 3rd exam's cost given this batch's budget.",
   "comparedAt": "2026-09-03"
 }

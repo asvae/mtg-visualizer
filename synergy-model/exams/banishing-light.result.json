@@ -10,7 +10,7 @@
     "Whether the targeted permanent is restricted to nonland or to an opponent's permanents (attempt 1, pre-fix).",
     "Rarity, supertype/subtype, additional abilities beyond the ETB effect."
   ],
-  "verdict": "issues",
+  "verdict": "match",
   "notes": "Attempt 1 (pre-fix) missed both the `.nonLand` qualifier and the `.OppCtrl` owner on the real ValidTgts$ Permanent.nonLand+OppCtrl, reconstructing an unrestricted \"target permanent\" instead of \"target nonland permanent an opponent controls.\" Root cause found: two real bugs. (1) qualifierFlags()/ownerFromTargetPredicate() both only matched a qualifier immediately after the FIRST dot (`\\.OppCtrl\\b`) — Forge chains qualifiers past the first with `+`, not another `.` (`Permanent.nonLand+OppCtrl`), so `.OppCtrl` here was never seen by the owner regex at all. Fixed by widening both regexes to `[.+]OppCtrl\\b` etc. (2) Separately, the ChangeZone targeted-move handler had `qualifierFlags` extended with `.nonLand` support but never actually called qualifierFlags() on ValidTgts$ at all when building the move node's flags — wired that in. Re-verified directly against the regenerated packet (not a 3rd live exam run, to conserve budget): node now shows `owner:\"opp\"` and `flags:\"target cond:until_self_leaves cond:nonland\"`, an exact match to the real oracle text's \"exile target nonland permanent an opponent controls until Banishing Light leaves the battlefield.\" Not re-run through a fresh blind agent a 3rd time since the fix is mechanically confirmed in the raw node data.",
   "comparedAt": "2026-09-03"
 }

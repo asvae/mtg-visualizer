@@ -174,6 +174,17 @@ function qualifierFlags(v: string | undefined): string[] {
 const TOKEN_SCRIPT_MAP: Record<string, string> = {
   c_a_treasure_sac: 'treasure',
   b_2_2_horror: 'horror-1',
+  c_a_food_sac: 'food',
+  b_1_1_bat_flying: 'bat-1',
+  b_1_1_rat_relentless: 'rat-1',
+  b_1_1_snail: 'snail-1',
+  g_1_1_squirrel: 'squirrel-1',
+  u_1_1_fish: 'fish-1',
+  ur_1_1_otter_prowess: 'otter-1',
+  w_0_4_wall_defender: 'wall-1',
+  w_1_1_cat: 'cat-1',
+  w_1_1_cat_lifelink: 'cat-1',
+  w_1_1_rabbit: 'rabbit-1',
 };
 
 // DB$/AB$/SP$ effect name -> synergy role. Data, not branching logic — see
@@ -637,6 +648,82 @@ function translateOwnEffect(
     return;
   }
 
+  if (ek === 'Mill') {
+    // SCHEMA.md §3's own worked example: mill-N -> source me -- gy any
+    // qty:N. Targeted mill of another player (ValidTgts$ Player, Scavenger's
+    // Talent's Level 2) reads owner off the target the same way every other
+    // targeted effect does; the common untargeted "mill N" (Defined$ You)
+    // falls back to deriveOwner like Dig/DealDamage's Defined$-only cases.
+    const targeted = !!fields.ValidTgts;
+    const owner = targeted ? ownerFromTargetPredicate(fields.ValidTgts) : deriveOwner(fields.Defined);
+    const qty = fields.NumCards ?? '1';
+    const id = addNode(ctx, { role: 'source', owner, from: '--', to: 'gy', thing: 'any', flags: [fields.Optional === 'True' ? 'may' : undefined, targeted ? 'target' : undefined, qty !== '1' ? `qty:${qty}` : undefined].filter(Boolean).join(' ') || undefined });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'Scry') {
+    // SCHEMA.md §3's own worked example: scry-N -> emit me -- -- library-look.
+    const qty = fields.ScryNum ?? '1';
+    const id = addNode(ctx, { role: 'emit', owner: 'me', from: '--', to: '--', thing: 'library-look', flags: qty !== '1' ? `qty:${qty}` : undefined });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'Mana') {
+    // SCHEMA has no dedicated worked example for mana production, but it's
+    // the same "event, not stock" shape §2 lists draws/life-loss/lore
+    // counters under (`emit`) — adding mana is a one-shot fact becoming
+    // available, not an object taking up space in a zone. Produced$ names
+    // the color(s) (a literal color list, "Combo G W" for a choice of two,
+    // or "Any"/"C") — carried as a free-text cond: payload same as PutCounter/
+    // Pump's delta, since `thing` itself is already "mana".
+    const produced = (fields.Produced ?? '').replace(/^Combo /, '').trim();
+    const id = addNode(ctx, { role: 'emit', owner: 'me', from: '--', to: '--', thing: 'mana', flags: produced ? `cond:color=${produced}` : undefined });
+    attach(id);
+    return;
+  }
+
+  if (ek === 'PumpAll') {
+    // Same delta-payload shape as Pump, but ValidCards$ (plural, matches
+    // every qualifying permanent, non-targeted) instead of ValidTgts$ (one
+    // chosen target) -- an anthem-style resolved effect (Carrot Cake's
+    // "Creatures you control get +2/+1"), not a static/continuous one (that
+    // shape is the S: handler's AddPower$/AddToughness$ case above). Unlike
+    // Pump, DOES walk children -- Carrot Cake's own SubAbility$ DBScry
+    // ("...if you control a Rabbit, scry 2") chains off this exact effect,
+    // which a returnless Pump-style handler would have silently dropped.
+    const thing = coarseType(fields.ValidCards);
+    const owner = ownerFromTargetPredicate(fields.ValidCards);
+    const delta = `${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}`;
+    const lifetime = fields.Permanent === 'True' ? undefined : 'lifetime:turn';
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [lifetime, `cond:pt_delta=${delta}`, ...qualifierFlags(fields.ValidCards)].filter(Boolean).join(' ') });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'ChangeZoneAll') {
+    // The DB$/AB$ action-level ChangeZoneAll ("return EACH nonland,
+    // nontoken permanent to hand," "each land you control returns from
+    // graveyard tapped") -- distinct from the T: Mode$ChangesZoneAll trigger
+    // shape (which watches for one-or-more-at-once ENTERING, handled at the
+    // top of translateEffectRow). This one always reads its subject from
+    // ChangeType$ (never ValidTgts$ in this corpus -- moving "each" matching
+    // object isn't a choice, so there's nothing to target), same non-targeted
+    // idiom as the ChangeType$ fix added to plain ChangeZone this batch.
+    const from = zone(fields.Origin);
+    const to = zone(fields.Destination);
+    const owner = ownerFromTargetPredicate(fields.ChangeType);
+    const thing = coarseType(fields.ChangeType);
+    const id = addNode(ctx, { role: 'move', owner, from, to, thing, flags: qualifierFlags(fields.ChangeType).join(' ') || undefined });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
   if (ek === 'Pump') {
     const targeted = !!fields.ValidTgts;
     // A targeted pump (ValidTgts$) resolves owner/thing off the target
@@ -781,6 +868,32 @@ function translateKeyword(ctx: Ctx, row: ForgeRow, selfThing: string) {
   if (row.role === 'Equip') {
     const cost = params[0];
     ctx.roots.push(addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: '--', thing: selfThing, flags: `cost:{${cost}} target cond:attach` }));
+    return;
+  }
+  if (row.role === 'Enchant') {
+    // K:Enchant:<TypeList>[:<description>] — an Aura's own attach
+    // declaration ("Enchant creature", "Enchant creature or Food"). Same
+    // becomes/self/cond:attach idiom SCHEMA.md already prescribes for
+    // Equipment's Equip keyword (target flag carries the actual chosen
+    // object, `thing` stays `self` per that convention) — the valid-type
+    // restriction has nowhere else to live, so it's a cond: payload same as
+    // PutCounter/Pump's delta.
+    const types = (params[0] ?? '').split(',').map((t) => t.trim().toLowerCase()).join(',');
+    ctx.roots.push(addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: '--', thing: selfThing, flags: `target cond:attach;type=${types}` }));
+    return;
+  }
+  if (row.role === 'Ward') {
+    // K:Ward:<cost> — "If this becomes the target of a spell or ability an
+    // opponent controls, counter it unless they pay <cost>." A real,
+    // mechanical self-fact about this permanent, same shape as SCHEMA.md's
+    // own flying/menace cond: convention (state the mechanic, not the
+    // keyword's name). Cost can be plain mana (a bare number) or an
+    // alternate cost descriptor (Discard<1/Card>, PayLife<2>, Sac<1/Food>) —
+    // only the numeric case gets braced as mana notation, the rest is kept
+    // as Forge's own descriptor rather than guessed at.
+    const raw = params[0] ?? '1';
+    const cost = /^\d+$/.test(raw) ? `{${raw}}` : raw;
+    ctx.roots.push(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cond:ward=${cost}` }));
     return;
   }
   if (row.role === 'TypeCycling' || row.role === 'Cycling' || row.role === 'Landcycling') {

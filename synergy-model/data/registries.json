@@ -23,6 +23,95 @@
         "token"
       ]
     },
+    "food": {
+      "labels": [
+        "artifact",
+        "token"
+      ],
+      "subtype": "Food"
+    },
+    "bat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Bat"
+    },
+    "rat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Rat"
+    },
+    "snail-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Snail"
+    },
+    "squirrel-1": {
+      "labels": [
+        "creature",
+        "token",
+        "green"
+      ],
+      "stats": "1/1",
+      "subtype": "Squirrel"
+    },
+    "fish-1": {
+      "labels": [
+        "creature",
+        "token",
+        "blue"
+      ],
+      "stats": "1/1",
+      "subtype": "Fish"
+    },
+    "otter-1": {
+      "labels": [
+        "creature",
+        "token",
+        "blue",
+        "red"
+      ],
+      "stats": "1/1",
+      "subtype": "Otter"
+    },
+    "wall-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "0/4",
+      "subtype": "Wall"
+    },
+    "cat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "1/1",
+      "subtype": "Cat"
+    },
+    "rabbit-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "1/1",
+      "subtype": "Rabbit"
+    },
     "horror-1": {
       "labels": [
         "creature",
