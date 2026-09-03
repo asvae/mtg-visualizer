@@ -1,0 +1,16 @@
+{
+  "name": "Essence Channeler",
+  "manaCost": "{1}{W}",
+  "typeLine": "Creature — Bat Cleric",
+  "description": "As long as you've lost life this turn, this creature has flying and vigilance. Whenever you gain life, put a +1/+1 counter on this creature. When this creature dies, put its counters on target creature you control.",
+  "assumptions": [
+    "Read node C's static flying+vigilance grant as unconditional (no cond: payload signals a gate)."
+  ],
+  "couldNotDerive": [
+    "The condition gating node C (\"as long as you've lost life this turn\") -- not represented in the data at all, so the examiner correctly, but wrongly, read it as an always-on static.",
+    "The exact meaning of node G's delta=EachFromSource (correctly inferred as \"for each +1/+1 counter on this creature\" from context, but the raw value itself doesn't say so)."
+  ],
+  "verdict": "issues-open",
+  "notes": "Two real, unfixed gaps: (1) Mode$Continuous | CheckSVar$X | SVar:X:PlayerCountPropertyYou$LifeLostThisTurn is a conditional static (\"as long as you've lost life this turn, has flying and vigilance\") -- the translator has zero support for CheckSVar$ gates on statics at all, so it unconditionally grants the keywords, same underlying unsupported-dynamic-condition class as ConditionCheckSVar$/ConditionSVarCompare$ (see known_gap_classes) just on a different field name (CheckSVar$ rather than ConditionCheckSVar$/ConditionSVarCompare$) -- added to that gap class's description as a related field to watch for. (2) CounterType$EachFromSource (a dynamic \"however many counters were on the dying source\" amount) passes through PutCounter's type-naming logic as the raw literal string \"EachFromSource\" instead of a readable value -- the examiner still inferred the correct meaning from context, but the encoding itself is opaque. Neither fixed this round -- (1) needs the same design decision as the broader Condition class, (2) is a narrower cosmetic improvement.",
+  "comparedAt": "2026-09-04"
+}

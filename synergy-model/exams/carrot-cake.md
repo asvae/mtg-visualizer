@@ -369,7 +369,7 @@ simulated here since you have no Scryfall access).
 {
   "self": {
     "manaCost": "{1}{W}",
-    "typeLine": "Enchantment — Aura"
+    "typeLine": "Artifact — Food"
   }
 }
 ```
@@ -398,22 +398,6 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "C": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "self",
-      "flags": "flash"
-    },
-    "D": {
-      "role": "becomes",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "target cond:attach;type=creature"
-    },
-    "E": {
       "role": "trigger",
       "trigger-type": "enter",
       "owner": "me",
@@ -421,28 +405,57 @@ Rarity is deliberately withheld.
       "to": "stack",
       "thing": "self"
     },
-    "F": {
+    "D": {
+      "role": "enters",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "rabbit-1"
+    },
+    "E": {
       "role": "emit",
       "owner": "me",
       "from": "--",
       "to": "--",
-      "thing": "draw"
+      "thing": "library-look"
+    },
+    "F": {
+      "role": "trigger",
+      "trigger-type": "sacrificed",
+      "owner": "me",
+      "from": "--",
+      "to": "stack",
+      "thing": "self"
     },
     "G": {
-      "role": "modifier",
+      "role": "enters",
       "owner": "me",
       "from": "--",
       "to": "bf",
-      "thing": "creature",
-      "flags": "cond:equipped;delta=+1/+0"
+      "thing": "rabbit-1"
     },
     "H": {
-      "role": "modifier",
+      "role": "emit",
       "owner": "me",
       "from": "--",
+      "to": "--",
+      "thing": "library-look"
+    },
+    "I": {
+      "role": "tap",
+      "owner": "me",
+      "from": "bf",
       "to": "bf",
       "thing": "self",
-      "flags": "cond:blocked_by=flying_or_reach"
+      "flags": "cost:{2}{Sac<1/CARDNAME>}"
+    },
+    "J": {
+      "role": "emit",
+      "owner": "me",
+      "from": "--",
+      "to": "--",
+      "thing": "life-gain",
+      "flags": "qty:3"
     }
   },
   "flow": {
@@ -450,17 +463,27 @@ Rarity is deliberately withheld.
       "A",
       "B",
       "C",
-      "D",
-      "E",
-      "G",
-      "H"
+      "F",
+      "I"
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "E": [
-        "F"
+      "C": [
+        "D"
+      ],
+      "D": [
+        "E"
+      ],
+      "F": [
+        "G"
+      ],
+      "G": [
+        "H"
+      ],
+      "I": [
+        "J"
       ]
     }
   }

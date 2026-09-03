@@ -2,9 +2,13 @@
   "_comment": "Tracks the full-set examiner pass over BLB (274 cards), goal: every card gets 1-3 examiner/parser-fix iterations, stopping early on a full match or when the remaining gap needs a design decision; non-success cards are left as-is for the user. status: 'match' (full reconstruction confirmed correct -- ALSO added to blb-success.json, which drives app/lib/forgeTranslate.blb.test.ts's snapshot suite) | 'issues-fixed' (a real bug was found+fixed but the card still has an unrelated unfixed gap, so NOT a full match) | 'issues-open' (real gap identified, not fixed -- either narrower than worth a fix pass, or blocked on a bigger schema change) | 'skipped-attempts' (3 examiner loops used, still issues) | 'skipped-rework' (needs a design decision, see note). attempts counts examiner agent runs used (a fix verified by direct node inspection instead of a fresh agent run, to save budget, still counts as using that attempt's slot).",
   "_strategy": "Batch 1 (5 cards, full blind examiner each) showed exhaustive per-card examining doesn't scale (~400k+ tokens for 5 cards). Switched to audit-first triage starting batch 2: a static risk-pattern scan (scripts under the job scratch dir, not checked into the repo) flags cards using fragile Forge field shapes; cards hitting only ALREADY-FIXED shared-logic patterns are not re-examined individually (the fix applies uniformly to every card using that pattern); a small diverse spot-check sample is examined per round instead to catch NEW bug classes, and known architectural gaps (see known_gap_classes) are recorded once and applied to every card in that class without spending agent budget on each.",
   "known_gap_classes": {
-    "ConditionCheckSVar/ConditionSVarCompare (dynamic cross-player comparison)": {
-      "description": "Forge's system for conditional effects compared against another player's count (e.g. 'if an opponent controls more lands than you'). Zero translator support -- conditions are silently dropped, producing an unconditional effect chain. A whole unsupported class, not a quick fix -- needs a design decision (a sensor-role extension, or a new cond: convention) before implementing. Flagged for the user.",
-      "cards": ["Beza, the Bounding Spring", "Harvestrite Host", "Portent of Calamity", "Shoreline Looter", "Coiling Rebirth", "Thought-Stalker Warlock", "Wick, the Whorled Mind", "Reptilian Recruiter", "Cache Grab", "Mistbreath Elder", "Finneas, Ace Archer"]
+    "ConditionCheckSVar/ConditionSVarCompare/CheckSVar (dynamic conditional effect)": {
+      "description": "Forge's system for conditional effects gated on a dynamically-computed value -- cross-player count comparisons (ConditionCheckSVar$/ConditionSVarCompare$, e.g. 'if an opponent controls more lands than you') AND single-player dynamic checks on a STATIC ability (CheckSVar$, e.g. Essence Channeler's 'as long as you've lost life this turn'). Zero translator support for either -- conditions are silently dropped, producing an unconditional effect/ability. A whole unsupported class, not a quick fix -- needs a design decision (a sensor-role extension, or a new cond: convention) before implementing. Flagged for the user. (A narrower, single-object property check on an earlier target -- ConditionDefined$Targeted + ConditionPresent$ Type.powerLEN, or a boolean ConditionPresent$...PromisedGift check -- is NOT in this class; both were cheap enough to implement directly, see Driftgloom Coyote's if_targeted_* flag and Crumb and Get It's/Dawn's Truce's cond:gift_promised.)",
+      "cards": ["Beza, the Bounding Spring", "Harvestrite Host", "Portent of Calamity", "Shoreline Looter", "Coiling Rebirth", "Thought-Stalker Warlock", "Wick, the Whorled Mind", "Reptilian Recruiter", "Cache Grab", "Mistbreath Elder", "Finneas, Ace Archer", "Essence Channeler"]
+    },
+    "Count$PromisedGift.N.M (dynamic gift-conditional QUANTITY)": {
+      "description": "A narrower cousin of the Condition class above: Dewdrop Cure's own SVar:X:Count$PromisedGift.3.2 means \"3 if the gift was promised, else 2\" -- swaps a NUMBER rather than gating an effect on/off (which the existing cond:gift_promised boolean flag already handles). Needs recognizing this specific Count$ shape and binding qty to a declared value via SCHEMA's :=/= label convention. Real modeling work, not a quick fix.",
+      "cards": ["Dewdrop Cure"]
     },
     "CopyPermanent (create a token copy of target permanent)": {
       "description": "DB$ CopyPermanent has no handler at all -- a genuinely new effect type (not a quick field/regex fix), but not big-rework/design-decision-needed either. Real backlog item, not blocking.",
@@ -78,6 +82,46 @@
       "status": "issues-fixed",
       "attempts": 1,
       "note": "Spot-check batch 2. Found and fixed a systemic gap, not card-specific: ChangesZone/ChangesZoneAll with Origin$Battlefield->Destination$Graveyard (rule 700.4 'dies') fell through to the unreadable literal string 'changeszone' -- added an isDies check mirroring the existing isEnter one. Confirmed this also fixed Scavenger's Talent's base trigger in the same batch, so likely benefits several more untested BLB cards using 'whenever ~ dies'. Two narrower, card-specific qualifier gaps left open (multi-clause .YouCtrl/.withFlying, and a Beza-adjacent-but-narrower dynamic mana-value comparison on the return target)."
+    },
+    "Hop to It": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match on first attempt. In blb-success.json."
+    },
+    "Carrot Cake": {
+      "status": "match",
+      "attempts": 1,
+      "note": "All facts correct on first attempt; only a structural/presentational difference (2 paragraphs vs. the real card's 1 combined sentence for 2 trigger conditions) -- not a wrong fact, counted as match. In blb-success.json."
+    },
+    "Driftgloom Coyote": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed a real gap: ConditionDefined$Targeted+ConditionPresent$ Type.powerLEN (\"if that creature had power 2 or less\") had no handling. Added a narrow if_targeted_<stat>_<le|ge>=<N> flag to PutCounter. Full match after fix, verified via regenerated packet. In blb-success.json."
+    },
+    "Feather of Flight": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed a real gap: .EnchantedBy (Aura) wasn't recognized alongside .EquippedBy (Equipment) for the same \"attached creature gets X\" mechanical fact. Extended the equipped-flag check. Full match after fix. In blb-success.json."
+    },
+    "Dawn's Truce": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Found and fixed a broadly-applicable bug: PumpAll fabricated a fake cond:pt_delta=+0/+0 on every KW$-only grant (no NumAtt$/NumDef$ at all) and had none of Pump's KW$/gift_promised handling -- mirrored Pump's logic exactly. Affects every KW$-only PumpAll card, not just this one. One narrower gap remains open: compound Defined$ \"You & Valid Permanent.YouCtrl\" (a player AND their permanents in one effect) isn't parsed."
+    },
+    "Dewdrop Cure": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "See known_gap_classes['Count$PromisedGift.N.M (dynamic gift-conditional QUANTITY)']. The qty:0..X rendering is working as designed (honest unresolved variable), not a bug -- X's binding just isn't implemented yet."
+    },
+    "Essence Channeler": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Two real gaps: CheckSVar$ conditional static (added to the Condition known_gap_class) and PutCounter's CounterType$EachFromSource passing through as a raw literal instead of a readable value. Neither fixed this round."
+    },
+    "Flowerfoot Swordmaster": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed Valiant$True (\"for the first time each turn\") by reusing cond:once_per_turn. One narrower gap remains open: ValidSource$SpellAbility.YouCtrl (who controls the triggering spell/ability) has no home in the trigger vocabulary's current owner slot."
     },
     "Harvestrite Host": {
       "status": "skipped-rework",

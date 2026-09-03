@@ -369,7 +369,7 @@ simulated here since you have no Scryfall access).
 {
   "self": {
     "manaCost": "{1}{W}",
-    "typeLine": "Enchantment — Aura"
+    "typeLine": "Instant"
   }
 }
 ```
@@ -391,76 +391,48 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "B": {
-      "role": "enters",
+      "role": "move",
       "owner": "me",
-      "from": "--",
-      "to": "bf",
+      "from": "stack",
+      "to": "gy",
       "thing": "self"
     },
     "C": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "self",
-      "flags": "flash"
-    },
-    "D": {
-      "role": "becomes",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "target cond:attach;type=creature"
-    },
-    "E": {
-      "role": "trigger",
-      "trigger-type": "enter",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
-    },
-    "F": {
       "role": "emit",
-      "owner": "me",
+      "owner": "opp",
       "from": "--",
       "to": "--",
       "thing": "draw"
     },
-    "G": {
+    "D": {
       "role": "modifier",
       "owner": "me",
       "from": "--",
       "to": "bf",
-      "thing": "creature",
-      "flags": "cond:equipped;delta=+1/+0"
+      "thing": "any",
+      "flags": "lifetime:turn cond:grant=hexproof"
     },
-    "H": {
+    "E": {
       "role": "modifier",
       "owner": "me",
       "from": "--",
       "to": "bf",
-      "thing": "self",
-      "flags": "cond:blocked_by=flying_or_reach"
+      "thing": "permanent",
+      "flags": "lifetime:turn cond:gift_promised;grant=indestructible"
     }
   },
   "flow": {
     "roots": [
       "A",
-      "B",
       "C",
-      "D",
-      "E",
-      "G",
-      "H"
+      "D"
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "E": [
-        "F"
+      "D": [
+        "E"
       ]
     }
   }

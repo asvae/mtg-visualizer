@@ -368,8 +368,10 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{1}{W}",
-    "typeLine": "Enchantment — Aura"
+    "manaCost": "{W}",
+    "typeLine": "Creature — Mouse Soldier",
+    "power": "1",
+    "toughness": "2"
   }
 }
 ```
@@ -398,51 +400,29 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "C": {
-      "role": "modifier",
+      "role": "enters",
       "owner": "me",
       "from": "--",
       "to": "bf",
       "thing": "self",
-      "flags": "flash"
+      "flags": "cost:{2} cond:token;paid_at_cast"
     },
     "D": {
-      "role": "becomes",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "target cond:attach;type=creature"
-    },
-    "E": {
       "role": "trigger",
-      "trigger-type": "enter",
+      "trigger-type": "becomestarget",
       "owner": "me",
       "from": "--",
       "to": "stack",
-      "thing": "self"
-    },
-    "F": {
-      "role": "emit",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "draw"
-    },
-    "G": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "creature",
-      "flags": "cond:equipped;delta=+1/+0"
-    },
-    "H": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
       "thing": "self",
-      "flags": "cond:blocked_by=flying_or_reach"
+      "flags": "cond:once_per_turn"
+    },
+    "E": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "mouse",
+      "flags": "lifetime:turn cond:pt_delta=+1/+0"
     }
   },
   "flow": {
@@ -450,17 +430,14 @@ Rarity is deliberately withheld.
       "A",
       "B",
       "C",
-      "D",
-      "E",
-      "G",
-      "H"
+      "D"
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "E": [
-        "F"
+      "D": [
+        "E"
       ]
     }
   }

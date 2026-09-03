@@ -1,0 +1,13 @@
+{
+  "name": "Carrot Cake",
+  "manaCost": "{1}{W}",
+  "typeLine": "Artifact — Food",
+  "description": "When this artifact enters and when you sacrifice it, create a 1/1 white Rabbit creature token and scry 1. {2}, {T}, Sacrifice this artifact: You gain 3 life.",
+  "assumptions": [
+    "Rendered the enter-trigger and sacrifice-trigger as two separate paragraphs, since the real card shares one printed sentence across two distinct trigger nodes (Forge's own ChangesZone + Sacrificed/Secondary$True pair) and the schema has no representation for a description shared verbatim by two independent trigger roots."
+  ],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "All facts correct on first attempt: both triggers produce the rabbit-1 token + scry 1, the tap/sac/mana activated ability correctly reads as {2},{T},Sacrifice this artifact: gain 3 life. Only difference from the real printed card is structural/presentational (2 paragraphs describing the same effect vs. the real card's 1 combined sentence for both trigger conditions) -- a known, narrow schema-completeness gap (no way to mark two trigger nodes as sharing identical printed text), not a wrong or missing fact. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

@@ -368,8 +368,8 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{1}{W}",
-    "typeLine": "Enchantment — Aura"
+    "manaCost": "{2}{W}",
+    "typeLine": "Sorcery"
   }
 }
 ```
@@ -391,76 +391,29 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "B": {
+      "role": "move",
+      "owner": "me",
+      "from": "stack",
+      "to": "gy",
+      "thing": "self"
+    },
+    "C": {
       "role": "enters",
       "owner": "me",
       "from": "--",
       "to": "bf",
-      "thing": "self"
-    },
-    "C": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "self",
-      "flags": "flash"
-    },
-    "D": {
-      "role": "becomes",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "target cond:attach;type=creature"
-    },
-    "E": {
-      "role": "trigger",
-      "trigger-type": "enter",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
-    },
-    "F": {
-      "role": "emit",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "draw"
-    },
-    "G": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "creature",
-      "flags": "cond:equipped;delta=+1/+0"
-    },
-    "H": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "self",
-      "flags": "cond:blocked_by=flying_or_reach"
+      "thing": "rabbit-1",
+      "flags": "qty:3"
     }
   },
   "flow": {
     "roots": [
       "A",
-      "B",
-      "C",
-      "D",
-      "E",
-      "G",
-      "H"
+      "C"
     ],
     "steps": {
       "A": [
         "B"
-      ],
-      "E": [
-        "F"
       ]
     }
   }

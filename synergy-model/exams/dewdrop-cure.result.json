@@ -1,0 +1,15 @@
+{
+  "name": "Dewdrop Cure",
+  "manaCost": "{2}{W}",
+  "typeLine": "Sorcery",
+  "description": "Gift a card. Return up to two target creature cards each with mana value 2 or less from your graveyard to the battlefield. If the gift was promised, instead return up to three target creature cards each with mana value 2 or less.",
+  "assumptions": [
+    "Read owner:opp + emit:draw as the Gift's own \"they draw a card.\""
+  ],
+  "couldNotDerive": [
+    "The concrete value of X in qty:0..X (correctly recognized as an unresolved variable rather than guessed at)."
+  ],
+  "verdict": "issues-open",
+  "notes": "The qty:0..X rendering is working exactly as designed (an honestly unresolved bound variable, per SCHEMA's own binding convention), not a silent-drop bug -- X is set via SVar:X:Count$PromisedGift.3.2 (\"3 if the gift was promised, else 2\"), a real, narrower cousin of the general ConditionCheckSVar$/ConditionSVarCompare$ dynamic-value class (see known_gap_classes): here the dynamic value swaps a QUANTITY rather than gating an effect on/off like the boolean cond:gift_promised flag added this session handles. Implementing it properly would mean recognizing Count$PromisedGift.N.M specifically and binding qty to a value declared on the Gift/condition node via SCHEMA's `:=`/`=` label convention -- real, non-trivial modeling work, not a quick fix. Left open rather than guessed at.",
+  "comparedAt": "2026-09-04"
+}

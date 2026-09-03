@@ -354,7 +354,11 @@ function translateEffectRow(
     // rules restriction (Caretaker's Talent's own base ability has it)
     // distinct from the trigger firing itself; had no flag at all before,
     // silently reading as unlimited.
-    const onceFlag = fields.ActivationLimit === '1' ? 'cond:once_per_turn' : undefined;
+    // Valiant$True (Flowerfoot Swordmaster's own "...for the first time each
+    // turn...") is a different Forge field for the exact same real-world
+    // restriction ActivationLimit$1 already covers — reusing the same flag
+    // rather than inventing a second name for one mechanical fact.
+    const onceFlag = fields.ActivationLimit === '1' || fields.Valiant === 'True' ? 'cond:once_per_turn' : undefined;
     const ids = specs.map((spec) =>
       addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
     );
@@ -386,7 +390,13 @@ function translateEffectRow(
     // node (modifier/tagger/trigger), all siblings, all sharing the static's
     // own Affected$ subject.
     const affected = fields.Affected;
-    const equipped = /\.EquippedBy\b/.test(affected ?? '');
+    // .EquippedBy (Equipment) and .EnchantedBy (Aura, Feather of Flight's own
+    // "Enchanted creature gets +1/+0") are the identical real mechanical
+    // fact — "attached to the permanent granting this static" — under two
+    // different Forge names depending on which attachment type; reusing the
+    // one existing `equipped` flag rather than inventing a parallel
+    // `enchanted` one for the same concept.
+    const equipped = /\.(?:EquippedBy|EnchantedBy)\b/.test(affected ?? '');
     const thing = coarseType(affected);
     const condFlags = qualifierFlags(affected);
     let handled = false;
@@ -712,9 +722,19 @@ function translateOwnEffect(
     // which a returnless Pump-style handler would have silently dropped.
     const thing = coarseType(fields.ValidCards);
     const owner = ownerFromTargetPredicate(fields.ValidCards);
-    const delta = `${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}`;
     const lifetime = fields.Permanent === 'True' ? undefined : 'lifetime:turn';
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [lifetime, `cond:pt_delta=${delta}`, ...qualifierFlags(fields.ValidCards)].filter(Boolean).join(' ') });
+    // Same KW$/gift_promised handling as Pump above (Dawn's Truce's own
+    // DBPumpAll SubAbility$ is KW$Indestructible-only, no NumAtt$/NumDef$ at
+    // all) -- an unconditional `${fields.NumAtt ?? '+0'}/${fields.NumDef ??
+    // '+0'}` here fabricated a fake "+0/+0" delta payload on every
+    // KW$-only PumpAll, when the real effect was a keyword grant with NO P/T
+    // change whatsoever.
+    const hasDelta = fields.NumAtt !== undefined || fields.NumDef !== undefined;
+    const delta = hasDelta ? `pt_delta=${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}` : undefined;
+    const grant = fields.KW ? `grant=${fields.KW.toLowerCase()}` : undefined;
+    const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'gift_promised' : undefined;
+    const cond = ['cond:', [giftGate, delta, grant].filter(Boolean).join(';')].join('');
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [lifetime, cond, ...qualifierFlags(fields.ValidCards)].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -791,7 +811,19 @@ function translateOwnEffect(
     const owner = targeted
       ? ownerFromTargetPredicate(fields.ValidTgts)
       : 'me';
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, `cond:delta=${type}`].filter(Boolean).join(' ') });
+    // ConditionDefined$ Targeted | ConditionPresent$ <Type>.powerLE2 —
+    // Driftgloom Coyote's own "If THAT CREATURE [the one exiled earlier in
+    // this same chain] had power 2 or less, put a +1/+1 counter on this
+    // creature." A narrow, single-object property check (the earlier
+    // target's own printed power/toughness), NOT the general cross-player
+    // dynamic-count comparison ConditionCheckSVar$/ConditionSVarCompare$
+    // represents (see blb-progress.json's known_gap_classes) — cheap and
+    // unambiguous enough to encode directly, same reasoning as Crumb and Get
+    // It's narrower cond:gift_promised.
+    const statCond = /^([A-Za-z]+)\.(power|toughness)(LE|GE)(\d+)$/.exec(fields.ConditionPresent ?? '');
+    const conditionalOnTarget =
+      fields.ConditionDefined === 'Targeted' && statCond ? `if_targeted_${statCond[2]}_${statCond[3] === 'LE' ? 'le' : 'ge'}=${statCond[4]}` : undefined;
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, `cond:delta=${type}${conditionalOnTarget ? `;${conditionalOnTarget}` : ''}`].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;

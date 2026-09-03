@@ -368,8 +368,10 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{1}{W}",
-    "typeLine": "Enchantment — Aura"
+    "manaCost": "{3}{W}{W}",
+    "typeLine": "Creature — Elemental Coyote",
+    "power": "3",
+    "toughness": "4"
   }
 }
 ```
@@ -398,22 +400,6 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "C": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "self",
-      "flags": "flash"
-    },
-    "D": {
-      "role": "becomes",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "target cond:attach;type=creature"
-    },
-    "E": {
       "role": "trigger",
       "trigger-type": "enter",
       "owner": "me",
@@ -421,46 +407,38 @@ Rarity is deliberately withheld.
       "to": "stack",
       "thing": "self"
     },
-    "F": {
-      "role": "emit",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "draw"
-    },
-    "G": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
+    "D": {
+      "role": "move",
+      "owner": "opp",
+      "from": "bf",
+      "to": "exile",
       "thing": "creature",
-      "flags": "cond:equipped;delta=+1/+0"
+      "flags": "target cond:until_self_leaves"
     },
-    "H": {
+    "E": {
       "role": "modifier",
       "owner": "me",
       "from": "--",
       "to": "bf",
       "thing": "self",
-      "flags": "cond:blocked_by=flying_or_reach"
+      "flags": "cond:delta=+1/+1counter;if_targeted_power_le=2"
     }
   },
   "flow": {
     "roots": [
       "A",
       "B",
-      "C",
-      "D",
-      "E",
-      "G",
-      "H"
+      "C"
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "E": [
-        "F"
+      "C": [
+        "D"
+      ],
+      "D": [
+        "E"
       ]
     }
   }

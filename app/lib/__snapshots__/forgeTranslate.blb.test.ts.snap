@@ -280,6 +280,124 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Buil
 }
 `;
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Carrot Cake 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "F",
+      "I",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+      "D": [
+        "E",
+      ],
+      "F": [
+        "G",
+      ],
+      "G": [
+        "H",
+      ],
+      "I": [
+        "J",
+      ],
+    },
+  },
+  "name": "Carrot Cake",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "rabbit-1",
+      "to": "bf",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "library-look",
+      "to": "--",
+    },
+    "F": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "sacrificed",
+    },
+    "G": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "rabbit-1",
+      "to": "bf",
+    },
+    "H": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "library-look",
+      "to": "--",
+    },
+    "I": {
+      "flags": "cost:{2}{Sac<1/CARDNAME>}",
+      "from": "bf",
+      "owner": "me",
+      "role": "tap",
+      "thing": "self",
+      "to": "bf",
+    },
+    "J": {
+      "flags": "qty:3",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-gain",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Coruscation Mage 1`] = `
 {
   "flow": {
@@ -338,6 +456,205 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Coru
       "role": "emit",
       "thing": "damage",
       "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Driftgloom Coyote 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Driftgloom Coyote",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "D": {
+      "flags": "target cond:until_self_leaves",
+      "from": "bf",
+      "owner": "opp",
+      "role": "move",
+      "thing": "creature",
+      "to": "exile",
+    },
+    "E": {
+      "flags": "cond:delta=+1/+1counter;if_targeted_power_le=2",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Feather of Flight 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "G",
+      "H",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "E": [
+        "F",
+      ],
+    },
+  },
+  "name": "Feather of Flight",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flash",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "target cond:attach;type=creature",
+      "from": "--",
+      "owner": "me",
+      "role": "becomes",
+      "thing": "self",
+      "to": "--",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "F": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
+    },
+    "G": {
+      "flags": "cond:equipped;delta=+1/+0",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "H": {
+      "flags": "cond:blocked_by=flying_or_reach",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Hop to It 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+    },
+  },
+  "name": "Hop to It",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "qty:3",
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "rabbit-1",
+      "to": "bf",
     },
   },
   "unmapped": [],
