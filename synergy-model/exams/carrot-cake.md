@@ -447,9 +447,16 @@ Rarity is deliberately withheld.
       "from": "bf",
       "to": "bf",
       "thing": "self",
-      "flags": "cost:{2}{Sac<1/CARDNAME>}"
+      "flags": "cost:{2}"
     },
     "J": {
+      "role": "move",
+      "owner": "me",
+      "from": "bf",
+      "to": "gy",
+      "thing": "self"
+    },
+    "K": {
       "role": "emit",
       "owner": "me",
       "from": "--",
@@ -484,6 +491,9 @@ Rarity is deliberately withheld.
       ],
       "I": [
         "J"
+      ],
+      "J": [
+        "K"
       ]
     }
   }

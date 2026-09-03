@@ -309,6 +309,9 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Carr
       "I": [
         "J",
       ],
+      "J": [
+        "K",
+      ],
     },
   },
   "name": "Carrot Cake",
@@ -378,7 +381,7 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Carr
       "to": "--",
     },
     "I": {
-      "flags": "cost:{2}{Sac<1/CARDNAME>}",
+      "flags": "cost:{2}",
       "from": "bf",
       "owner": "me",
       "role": "tap",
@@ -386,6 +389,14 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Carr
       "to": "bf",
     },
     "J": {
+      "flags": undefined,
+      "from": "bf",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "K": {
       "flags": "qty:3",
       "from": "--",
       "owner": "me",
@@ -654,6 +665,253 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Hop 
       "owner": "me",
       "role": "enters",
       "thing": "rabbit-1",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Intrepid Rabbit 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Intrepid Rabbit",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "cost:{1} cond:token;paid_at_cast",
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "target lifetime:turn cond:pt_delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Jolly Gerbils 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+    },
+  },
+  "name": "Jolly Gerbils",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "givegift",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Lifecreed Duo 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Lifecreed Duo",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flying",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "not:self",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "creature",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-gain",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Pileated Provisioner 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Pileated Provisioner",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flying",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "target cond:withoutflying cond:delta=+1/+1counter",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
       "to": "bf",
     },
   },

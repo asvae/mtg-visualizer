@@ -368,10 +368,10 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{5}{U}{U}",
-    "typeLine": "Creature — Elemental Crab",
-    "power": "5",
-    "toughness": "5"
+    "manaCost": "{1}{W}",
+    "typeLine": "Creature — Mouse Soldier",
+    "power": "3",
+    "toughness": "1"
   }
 }
 ```
@@ -400,28 +400,37 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "C": {
+      "role": "trigger",
+      "trigger-type": "becomestarget",
+      "owner": "me",
+      "from": "--",
+      "to": "stack",
+      "thing": "self",
+      "flags": "cond:once_per_turn"
+    },
+    "D": {
       "role": "modifier",
       "owner": "me",
       "from": "--",
       "to": "bf",
       "thing": "self",
-      "flags": "flash"
-    },
-    "D": {
-      "role": "trigger",
-      "trigger-type": "enter",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
+      "flags": "lifetime:turn cond:pt_delta=+0/+2"
     },
     "E": {
-      "role": "modifier",
+      "role": "move",
+      "owner": "me",
+      "from": "bf",
+      "to": "gy",
+      "thing": "self",
+      "flags": "cost:{1}"
+    },
+    "F": {
+      "role": "move",
       "owner": "any",
-      "from": "--",
-      "to": "bf",
-      "thing": "creature",
-      "flags": "target cond:state=tapped"
+      "from": "bf",
+      "to": "gy",
+      "thing": "artifact,enchantment",
+      "flags": "target"
     }
   },
   "flow": {
@@ -429,14 +438,17 @@ Rarity is deliberately withheld.
       "A",
       "B",
       "C",
-      "D"
+      "E"
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "D": [
-        "E"
+      "C": [
+        "D"
+      ],
+      "E": [
+        "F"
       ]
     }
   }

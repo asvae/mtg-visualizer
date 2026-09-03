@@ -368,10 +368,8 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{5}{U}{U}",
-    "typeLine": "Creature — Elemental Crab",
-    "power": "5",
-    "toughness": "5"
+    "manaCost": "{W}{W}",
+    "typeLine": "Instant"
   }
 }
 ```
@@ -393,50 +391,38 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "B": {
-      "role": "enters",
+      "role": "move",
       "owner": "me",
-      "from": "--",
-      "to": "bf",
+      "from": "stack",
+      "to": "gy",
       "thing": "self"
     },
     "C": {
-      "role": "modifier",
-      "owner": "me",
+      "role": "enters",
+      "owner": "opp",
       "from": "--",
       "to": "bf",
-      "thing": "self",
-      "flags": "flash"
+      "thing": "fish-1",
+      "flags": "tapped"
     },
     "D": {
-      "role": "trigger",
-      "trigger-type": "enter",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
-    },
-    "E": {
-      "role": "modifier",
+      "role": "move",
       "owner": "any",
-      "from": "--",
-      "to": "bf",
+      "from": "bf",
+      "to": "exile",
       "thing": "creature",
-      "flags": "target cond:state=tapped"
+      "flags": "target cond:nontoken"
     }
   },
   "flow": {
     "roots": [
       "A",
-      "B",
       "C",
       "D"
     ],
     "steps": {
       "A": [
         "B"
-      ],
-      "D": [
-        "E"
       ]
     }
   }

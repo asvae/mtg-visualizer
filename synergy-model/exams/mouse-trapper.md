@@ -368,10 +368,10 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{5}{U}{U}",
-    "typeLine": "Creature — Elemental Crab",
-    "power": "5",
-    "toughness": "5"
+    "manaCost": "{2}{W}",
+    "typeLine": "Creature — Mouse Soldier",
+    "power": "3",
+    "toughness": "2"
   }
 }
 ```
@@ -409,15 +409,16 @@ Rarity is deliberately withheld.
     },
     "D": {
       "role": "trigger",
-      "trigger-type": "enter",
+      "trigger-type": "becomestarget",
       "owner": "me",
       "from": "--",
       "to": "stack",
-      "thing": "self"
+      "thing": "self",
+      "flags": "cond:once_per_turn"
     },
     "E": {
       "role": "modifier",
-      "owner": "any",
+      "owner": "opp",
       "from": "--",
       "to": "bf",
       "thing": "creature",

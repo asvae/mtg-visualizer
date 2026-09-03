@@ -368,10 +368,8 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{5}{U}{U}",
-    "typeLine": "Creature — Elemental Crab",
-    "power": "5",
-    "toughness": "5"
+    "manaCost": "{1}{W}",
+    "typeLine": "Instant"
   }
 }
 ```
@@ -393,50 +391,40 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "B": {
-      "role": "enters",
+      "role": "move",
       "owner": "me",
-      "from": "--",
-      "to": "bf",
+      "from": "stack",
+      "to": "gy",
       "thing": "self"
     },
     "C": {
-      "role": "modifier",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "self",
-      "flags": "flash"
-    },
-    "D": {
-      "role": "trigger",
-      "trigger-type": "enter",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
-    },
-    "E": {
       "role": "modifier",
       "owner": "any",
       "from": "--",
       "to": "bf",
       "thing": "creature",
-      "flags": "target cond:state=tapped"
+      "flags": "target lifetime:turn cond:pt_delta=+2/+2"
+    },
+    "D": {
+      "role": "modifier",
+      "owner": "any",
+      "from": "--",
+      "to": "bf",
+      "thing": "creature",
+      "flags": "target qty:0..1 lifetime:turn cond:pt_delta=+1/+1"
     }
   },
   "flow": {
     "roots": [
       "A",
-      "B",
-      "C",
-      "D"
+      "C"
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "D": [
-        "E"
+      "C": [
+        "D"
       ]
     }
   }

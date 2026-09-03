@@ -1,0 +1,11 @@
+{
+  "name": "Mabel's Mettle",
+  "manaCost": "{1}{W}",
+  "typeLine": "Instant",
+  "description": "Target creature gets +2/+2 until end of turn. Up to one other target creature gets +1/+1 until end of turn.",
+  "assumptions": [],
+  "couldNotDerive": ["That the second target must be different from the first (TargetUnique$True)."],
+  "verdict": "issues-fixed",
+  "notes": "Found and fixed a real gap: Pump had no TargetMax$/TargetMin$ qty handling at all (unlike ChangeZone/PutCounter's identical convention), so \"up to one other target creature\" read as a single mandatory target. Added qty:0..N support. Verified: node D now shows qty:0..1. TargetUnique$True (\"OTHER target\" -- must differ from the first Pump's target) remains unencoded -- deliberately not approximated with not:self, which means something different (excluded from being this card itself, not excluded from being a sibling target) and would have been a wrong fact, not just an imprecise one. Left open rather than guessed at.",
+  "comparedAt": "2026-09-04"
+}

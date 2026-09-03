@@ -151,6 +151,12 @@ function coarseType(v: string | undefined): string {
   if (!v) return 'any';
   const base = v.split('.')[0] ?? v;
   if (base === 'Card') return 'any';
+  // CARDNAME — Forge's own literal self-reference (Sac<1/CARDNAME>: "sacrifice
+  // this permanent," Carrot Cake's own tap-cost). Without this, it fell
+  // through to the generic lowercase-the-type-word path, producing the
+  // literal (and meaningless to any consumer) thing:"cardname" instead of
+  // the real self-reference every other self-targeting effect uses.
+  if (base === 'CARDNAME') return 'self';
   return base.toLowerCase();
 }
 function qualifierFlags(v: string | undefined): string[] {
@@ -164,6 +170,8 @@ function qualifierFlags(v: string | undefined): string[] {
   if (/[.+]EquippedBy\b/.test(v)) flags.push('cond:equipped');
   if (/[.+]nonLand\b/.test(v)) flags.push('cond:nonland');
   if (/[.+]nonCreature\b/.test(v)) flags.push('cond:noncreature');
+  if (/[.+]withoutFlying\b/.test(v)) flags.push('cond:withoutflying');
+  if (/[.+]withFlying\b/.test(v)) flags.push('cond:withflying');
   return flags;
 }
 
@@ -258,14 +266,14 @@ function link(ctx: Ctx, parent: string, child: SynergyFlowStep) {
 // id(s) that the ability's own effect should be chained from (every branch,
 // same convention as Namazu Trader's `surveil` node being reached from both
 // `sacCreature` and `sacArtifact`).
-function wireSacCost(ctx: Ctx, cost: string, inTrigger: boolean, attach: (step: SynergyFlowStep) => void): string[] {
+function wireSacCost(ctx: Ctx, cost: string, inTrigger: boolean, attach: (step: SynergyFlowStep) => void, manaCost?: string): string[] {
   const m = /^Sac<(\d+)\/([^/]+)(?:\/.*)?>$/.exec(cost);
   if (!m || !m[1] || !m[2]) return [];
   const qty = m[1];
   const types = m[2].split(';');
   const ids = types.map((t) => {
     const qf = qualifierFlags(t);
-    const parts = [...(inTrigger ? ['may'] : []), ...qf, ...(qty !== '1' ? [`qty:${qty}`] : [])];
+    const parts = [manaCost ? `cost:${manaCost}` : undefined, ...(inTrigger ? ['may'] : []), ...qf, ...(qty !== '1' ? [`qty:${qty}`] : [])].filter(Boolean);
     return addNode(ctx, { role: 'move', owner: 'me', from: 'bf', to: 'gy', thing: coarseType(t), flags: parts.join(' ') || undefined });
   });
   const first = ids[0];
@@ -470,9 +478,42 @@ function translateEffectRow(
   // the sacrifice(s) first; the line's own remaining effect becomes a step
   // from every cost branch, same convention as Namazu's `surveil` node being
   // reached from both `sacCreature` and `sacArtifact` (SCHEMA.md's own
-  // worked example).
-  if (fields.Cost && /^Sac</.test(fields.Cost)) {
-    const leafIds = wireSacCost(ctx, fields.Cost, inTrigger, attach);
+  // worked example). The Sac<> token doesn't have to be the WHOLE cost —
+  // Nettle Guard's own `Cost$ 1 Sac<1/CARDNAME>` combines mana AND a
+  // sacrifice — the old `/^Sac</`-anchored check required Sac<> to be the
+  // entire string, so a mixed cost like this matched nothing at all and its
+  // whole activated ability (including the mana-only part) silently had no
+  // cost node, no effect chain, nothing (confirmed by a round-trip exam that
+  // found no cost node feeding the Destroy effect whatsoever).
+  // Extracted as a bracket-matched substring, NOT a space-split token —
+  // Sac<>'s own description clause can contain spaces (Namazu Trader's own
+  // "Sac<1/Creature.Other;Artifact.Other/another creature or artifact>"), so
+  // naively splitting the whole Cost$ string on spaces first (an earlier
+  // version of this fix did exactly that) mangles the bracket contents into
+  // several broken fragments, matching wireSacCost's regex against none of
+  // them and silently losing the entire sacrifice cost.
+  const sacMatch = /Sac<[^>]*>/.exec(fields.Cost ?? '');
+  if (sacMatch) {
+    const sacToken = sacMatch[0];
+    const remainder = (fields.Cost ?? '').replace(sacToken, '').split(' ').filter(Boolean);
+    const hasTap = remainder.includes('T');
+    const manaCost = remainder
+      .filter((t) => t !== 'T')
+      .map((s) => `{${s}}`)
+      .join('');
+    // A three-part cost (mana + tap + sacrifice, Carrot Cake's own "{2},
+    // {T}, Sacrifice this artifact") needs its own tap node chained ahead of
+    // the sac-move — folding the tap into the sac-move's own cost: flag
+    // would silently drop the fact that this ALSO requires tapping (a real
+    // state change, not just a mana payment).
+    if (hasTap) {
+      const tapId = addNode(ctx, { role: 'tap', owner: 'me', from: 'bf', to: 'bf', thing: selfThing, flags: manaCost ? `cost:${manaCost}` : undefined });
+      attach(tapId);
+      const leafIds = wireSacCost(ctx, sacToken, inTrigger, (step) => link(ctx, tapId, step));
+      for (const leafId of leafIds) translateOwnEffect(ctx, tree, leafId, selfThing, inTrigger, granted, false);
+      return;
+    }
+    const leafIds = wireSacCost(ctx, sacToken, inTrigger, attach, manaCost || undefined);
     for (const leafId of leafIds) translateOwnEffect(ctx, tree, leafId, selfThing, inTrigger, granted, false);
     return;
   }
@@ -790,7 +831,18 @@ function translateOwnEffect(
     // known_gap_classes). Cheap and unambiguous enough to encode directly.
     const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'gift_promised' : undefined;
     const cond = ['cond:', [giftGate, delta, grant].filter(Boolean).join(';')].join('');
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, lifetime, cond].filter(Boolean).join(' ') });
+    // TargetMax$/TargetMin$ (Mabel's Mettle's own second Pump: "up to ONE
+    // other target creature gets +1/+1") had no qty handling at all, unlike
+    // ChangeZone/PutCounter's identical TargetMax$ convention — silently
+    // read as a single mandatory target instead of an optional 0..N choice.
+    // TargetUnique$True ("...OTHER target...", distinct from an earlier
+    // target chosen elsewhere in this same chain) is NOT the same fact as
+    // not:self (excluded from being THIS card) — reusing not:self here
+    // would actively misstate the restriction, so it's left unencoded
+    // rather than approximated with something factually wrong; a real
+    // "distinct from a sibling target" flag doesn't exist yet.
+    const qty = fields.TargetMax ? `qty:${fields.TargetMin ?? 0}..${fields.TargetMax}` : undefined;
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, qty, lifetime, cond].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -823,7 +875,12 @@ function translateOwnEffect(
     const statCond = /^([A-Za-z]+)\.(power|toughness)(LE|GE)(\d+)$/.exec(fields.ConditionPresent ?? '');
     const conditionalOnTarget =
       fields.ConditionDefined === 'Targeted' && statCond ? `if_targeted_${statCond[2]}_${statCond[3] === 'LE' ? 'le' : 'ge'}=${statCond[4]}` : undefined;
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, `cond:delta=${type}${conditionalOnTarget ? `;${conditionalOnTarget}` : ''}`].filter(Boolean).join(' ') });
+    // qualifierFlags(ValidTgts$) was never called here at all (unlike
+    // ChangeZone/Destroy/Pump) — Pileated Provisioner's own "target creature
+    // you control WITHOUT FLYING" silently lost the .withoutFlying
+    // restriction with no trace, since owner/thing alone don't carry it.
+    const qualifiers = targeted ? qualifierFlags(fields.ValidTgts) : [];
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, ...qualifiers, `cond:delta=${type}${conditionalOnTarget ? `;${conditionalOnTarget}` : ''}`].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -840,6 +897,27 @@ function translateOwnEffect(
     // paying `cost`, every time, independent of any other level.
     const cost = (fields.Cost ?? '').split(' ').filter(Boolean).map((s) => `{${s}}`).join('');
     const id = addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: '--', thing: selfThing, flags: `cost:${cost} cond:class_level=${fields.ClassLevel ?? '?'}` });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'Tap' || ek === 'Untap') {
+    // DB$/AB$ Tap or Untap as a standalone EFFECT ("tap target creature an
+    // opponent controls," Mouse Trapper's own trigger payoff) — distinct
+    // from the `tap` ROLE, which SCHEMA reserves for a cost/drain shape
+    // (convoke/crew-style, tapping THIS card to pay for something). Tapping
+    // something else as an effect is a real state change to that object,
+    // same "state the actual mechanical fact" idiom as flying/menace/ward's
+    // cond: conventions — modeled as a `modifier` (its state, not its P/T,
+    // changes) with cond:state=tapped/untapped, mirroring the shape of
+    // every other keyword-fact `modifier` node rather than inventing a new
+    // role.
+    const targeted = !!fields.ValidTgts;
+    const owner = targeted ? ownerFromTargetPredicate(fields.ValidTgts) : deriveOwner(fields.Defined);
+    const thing = targeted ? coarseType(fields.ValidTgts) : coarseType(fields.ValidCards ?? fields.Defined);
+    const state = ek === 'Tap' ? 'tapped' : 'untapped';
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, `cond:state=${state}`, ...(targeted ? qualifierFlags(fields.ValidTgts) : [])].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -877,6 +955,22 @@ function translateOwnEffect(
   const role = ek ? EFFECT_ROLE[ek] : undefined;
   if (!role) {
     ctx.unmapped.push(`${row.lineType ?? '?'}:${ek}`);
+    // DelayedTrigger is the ONE exception to "walk children anyway" below —
+    // its Execute$ child (forgeScript.ts's generic Execute$ auto-walk
+    // resolves it into a tree child same as any other) is NOT a guaranteed,
+    // unconditional continuation the way a SubAbility$ chain is: a delayed
+    // trigger's effect only happens later (a future turn phase) AND is
+    // typically gated by its own ConditionZone$/ConditionPresent$/
+    // ConditionCompare$ fields (Parting Gust's own "if the gift wasn't
+    // promised... at the beginning of the next end step"). Walking it here
+    // produced real WRONG data — an unconditional, immediate "return to
+    // YOUR control" — worse than the honest gap of showing nothing, since a
+    // consumer has no way to tell a guaranteed step from a conditional/
+    // delayed one once it's attached the same way. Confirmed by a round-trip
+    // exam completely misreading Parting Gust's actual (conditional,
+    // owner's-control, delayed, +1/+1-countered) return as an unconditional,
+    // immediate, caster-control one.
+    if (ek === 'DelayedTrigger') return;
     // Still walk the chain past this unrecognized effect (attached at the
     // same point THIS node would have been, since it was never created) —
     // an earlier version returned here unconditionally, which silently lost

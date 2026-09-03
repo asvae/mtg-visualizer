@@ -14,9 +14,9 @@
       "description": "DB$ CopyPermanent has no handler at all -- a genuinely new effect type (not a quick field/regex fix), but not big-rework/design-decision-needed either. Real backlog item, not blocking.",
       "cards": ["Caretaker's Talent", "Season of Weaving", "Coiling Rebirth", "Stormsplitter", "For the Common Good"]
     },
-    "Tap as an EFFECT (not a cost)": {
-      "description": "SCHEMA's own `tap` role is explicitly defined as a cost/drain shape (convoke/crew-style) -- 'tap target creature(s)' as a standalone effect (DB$/AB$ Tap) has no representation. Needs a design decision: a new role, or a modifier-with-state-payload convention (parallel to the menace/flying cond: pattern). Smaller in scope than the dynamic-comparison gap but still a real open question.",
-      "cards": ["Eddymurk Crab"]
+    "ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger": {
+      "description": "\"Whenever this becomes the target of a spell or ability YOU CONTROL\" -- the trigger node's owner field already means \"whose occurrence\" (self, correctly 'me'), but WHO CONTROLS THE TRIGGERING SOURCE is a different dimension with no home in the current trigger vocabulary. Narrower than the big Condition class -- a real, recurring gap (Flowerfoot Swordmaster, Mouse Trapper, Nettle Guard all hit it) worth a follow-up flag/field addition, not a full redesign.",
+      "cards": ["Flowerfoot Swordmaster", "Mouse Trapper", "Nettle Guard"]
     },
     "AddReplacementEffect$ / non-Flying AddKeyword$ on a static": {
       "description": "Fixed this batch -- both now surface honestly as unmapped entries instead of vanishing silently. No node built yet (no schema role for either mechanic), but no longer a silent-drop bug.",
@@ -76,7 +76,7 @@
     "Eddymurk Crab": {
       "status": "issues-fixed",
       "attempts": 1,
-      "note": "Spot-check batch 2. Found and fixed a real silent-drop bug: Mode$ ReduceCost (this card's own cost-reduction clause) matched none of the static handler's branches and vanished with no node AND no unmapped entry -- same fix as Innkeeper's Talent's AddKeyword bug (a `handled` flag + honest fallback), now surfaces as S:ReduceCost. See known_gap_classes for the two remaining open gaps (K:ETBReplacement, Tap-as-effect)."
+      "note": "Spot-check batch 2. Found and fixed a real silent-drop bug: Mode$ ReduceCost (this card's own cost-reduction clause) matched none of the static handler's branches and vanished with no node AND no unmapped entry -- same fix as Innkeeper's Talent's AddKeyword bug (a `handled` flag + honest fallback), now surfaces as S:ReduceCost. Tap-as-effect (this card's own ETB tap-two-creatures) is now implemented (2026-09-04, Mouse Trapper's batch) -- confirmed via regenerated packet, this card's own Tap unmapped entry is gone. Two open gaps remain: S:ReduceCost (cost reduction has no schema representation) and K:ETBReplacement (enters-tapped-conditionally)."
     },
     "Jackdaw Savior": {
       "status": "issues-fixed",
@@ -122,6 +122,34 @@
       "status": "issues-fixed",
       "attempts": 1,
       "note": "Fixed Valiant$True (\"for the first time each turn\") by reusing cond:once_per_turn. One narrower gap remains open: ValidSource$SpellAbility.YouCtrl (who controls the triggering spell/ability) has no home in the trigger vocabulary's current owner slot."
+    },
+    "Intrepid Rabbit": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
+    "Jolly Gerbils": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
+    "Lifecreed Duo": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
+    "Mabel's Mettle": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed a real gap: Pump had no TargetMax$/TargetMin$ qty handling (unlike ChangeZone/PutCounter's identical convention) -- \"up to one other target\" read as mandatory. Added qty:0..N support, a systemic fix for every Pump with TargetMax$. TargetUnique$True (\"OTHER target\") remains open -- deliberately not approximated with not:self, a different and wrong fact."
+    },
+    "Mouse Trapper": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Made the schema call to implement Tap as a standalone effect (DB$/AB$ Tap, distinct from SCHEMA's cost/drain-only `tap` role) -- modeled as modifier+cond:state=tapped/untapped. A systemic fix, not card-specific -- also fixed Eddymurk Crab's own ETB tap effect for free. See known_gap_classes['ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger'] for the one remaining open gap."
+    },
+    "Nettle Guard": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed a real, systemic bug: Cost$ combining mana+Sac<> (not Sac<> alone) matched no existing detection at all, dropping the entire activated ability. Fixed with a bracket-aware Sac<...> extraction (caught and fixed a regression from the first fix attempt -- Sac<>'s own description clause can contain spaces, breaking a naive space-split) plus coarseType('CARDNAME')->'self'. See known_gap_classes['ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger'] for the one remaining open gap (on the Valiant trigger, not the fixed sac-cost ability)."
+    },
+    "Parting Gust": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Found and fixed a real WRONG-DATA bug (not just a gap): DelayedTrigger's Execute$ child was auto-walked as an unconditional immediate continuation, producing a factually wrong reconstruction (unconditional 'return under your control' instead of the real conditional/delayed/owner's-control/+1-counter return). Fixed by suppressing DelayedTrigger's child-walk specifically. The real delayed+conditional return mechanic itself remains unmodeled (real, non-trivial work) but now correctly absent rather than wrong."
+    },
+    "Pileated Provisioner": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Found and fixed a real gap: PutCounter never called qualifierFlags(ValidTgts$) at all (unlike its siblings) -- .withoutFlying was silently lost. Fixed, plus added .withFlying/.withoutFlying to qualifierFlags' vocabulary. In blb-success.json."
     },
     "Harvestrite Host": {
       "status": "skipped-rework",

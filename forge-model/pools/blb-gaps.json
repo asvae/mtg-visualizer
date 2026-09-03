@@ -1,15 +1,12 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T21:55:34.557Z",
-  "clean": 176,
-  "gaps": 98,
-  "totalUnmapped": 138,
+  "generatedAt": "2026-09-03T22:18:59.453Z",
+  "clean": 187,
+  "gaps": 87,
+  "totalUnmapped": 122,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
-    ],
-    "Mouse Trapper": [
-      "?:Tap"
     ],
     "Parting Gust": [
       "?:DelayedTrigger"
@@ -19,9 +16,6 @@
     ],
     "Starfall Invocation": [
       "A:DestroyAll"
-    ],
-    "Thistledown Players": [
-      "?:Untap"
     ],
     "Whiskervale Forerunner": [
       "?:PeekAndReveal",
@@ -42,8 +36,7 @@
     ],
     "Eddymurk Crab": [
       "S:ReduceCost",
-      "K:ETBReplacement",
-      "?:Tap"
+      "K:ETBReplacement"
     ],
     "Eluge, the Shoreless Sea": [
       "S:Continuous",
@@ -55,8 +48,7 @@
       "?:Effect"
     ],
     "Kitnap": [
-      "S:Continuous",
-      "?:Tap"
+      "S:Continuous"
     ],
     "Kitsa, Otterball Elite": [
       "A:CopySpellAbility"
@@ -67,9 +59,6 @@
     "Long River's Pull": [
       "A:Counter",
       "?:Counter"
-    ],
-    "Mind Spiral": [
-      "?:Tap"
     ],
     "Mockingbird": [
       "K:ETBReplacement"
@@ -89,9 +78,6 @@
       "?:CopyPermanent",
       "?:undefined"
     ],
-    "Shore Up": [
-      "?:Untap"
-    ],
     "Shoreline Looter": [
       "S:CantBlockBy"
     ],
@@ -100,9 +86,6 @@
     ],
     "Spellgyre": [
       "?:Counter"
-    ],
-    "Splash Lasher": [
-      "?:Tap"
     ],
     "Valley Floodcaller": [
       "S:CastWithFlash",
@@ -131,7 +114,6 @@
       "A:Effect"
     ],
     "Rottenmouth Viper": [
-      "A:PermanentCreature",
       "S:ReduceCost",
       "?:Repeat",
       "?:Repeat"
@@ -172,10 +154,8 @@
     "Dragonhawk, Fate's Tempest": [
       "?:Effect",
       "?:DelayedTrigger",
-      "?:DamageAll",
       "?:Effect",
-      "?:DelayedTrigger",
-      "?:DamageAll"
+      "?:DelayedTrigger"
     ],
     "Emberheart Challenger": [
       "?:Effect"
@@ -188,9 +168,6 @@
     ],
     "Harnesser of Storms": [
       "?:Effect"
-    ],
-    "Kindlespark Duo": [
-      "?:Untap"
     ],
     "Season of the Bold": [
       "?:Effect",
@@ -216,9 +193,6 @@
     ],
     "For the Common Good": [
       "A:CopyPermanent"
-    ],
-    "High Stride": [
-      "?:Untap"
     ],
     "Hivespine Wolverine": [
       "?:Fight"
@@ -259,9 +233,6 @@
     ],
     "Clement, the Worrywort": [
       "S:Continuous"
-    ],
-    "Dreamdew Entrancer": [
-      "?:Tap"
     ],
     "Finneas, Ace Archer": [
       "?:PutCounterAll"
@@ -315,9 +286,6 @@
     "Starforged Sword": [
       "?:Attach"
     ],
-    "Fabled Passage": [
-      "?:Untap"
-    ],
     "Oakhollow Village": [
       "A:PutCounterAll"
     ],
@@ -332,12 +300,6 @@
     ],
     "Byrke, Long Ear of the Law": [
       "?:MultiplyCounter"
-    ],
-    "Charmed Sleep": [
-      "?:Tap"
-    ],
-    "Colossification": [
-      "?:Tap"
     ]
   }
 }

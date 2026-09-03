@@ -368,10 +368,10 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{5}{U}{U}",
-    "typeLine": "Creature — Elemental Crab",
-    "power": "5",
-    "toughness": "5"
+    "manaCost": "{1}{W}",
+    "typeLine": "Creature — Bat Bird",
+    "power": "1",
+    "toughness": "2"
   }
 }
 ```
@@ -405,7 +405,7 @@ Rarity is deliberately withheld.
       "from": "--",
       "to": "bf",
       "thing": "self",
-      "flags": "flash"
+      "flags": "flying"
     },
     "D": {
       "role": "trigger",
@@ -413,15 +413,15 @@ Rarity is deliberately withheld.
       "owner": "me",
       "from": "--",
       "to": "stack",
-      "thing": "self"
+      "thing": "creature",
+      "flags": "not:self"
     },
     "E": {
-      "role": "modifier",
-      "owner": "any",
+      "role": "emit",
+      "owner": "me",
       "from": "--",
-      "to": "bf",
-      "thing": "creature",
-      "flags": "target cond:state=tapped"
+      "to": "--",
+      "thing": "life-gain"
     }
   },
   "flow": {
