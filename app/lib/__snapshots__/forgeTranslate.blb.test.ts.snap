@@ -827,7 +827,7 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Feat
       "from": "--",
       "owner": "me",
       "role": "modifier",
-      "thing": "self",
+      "thing": "creature",
       "to": "bf",
     },
   },
@@ -1069,6 +1069,163 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Joll
 }
 `;
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Kitnap 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "F": [
+        "G",
+      ],
+      "G": [
+        "H",
+      ],
+    },
+  },
+  "name": "Kitnap",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "opp",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
+    },
+    "D": {
+      "flags": "target cond:attach;type=creature",
+      "from": "--",
+      "owner": "me",
+      "role": "becomes",
+      "thing": "self",
+      "to": "--",
+    },
+    "E": {
+      "flags": "cond:equipped",
+      "from": "--",
+      "owner": "me",
+      "role": "becomes",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "F": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "G": {
+      "flags": "cond:state=tapped",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "H": {
+      "flags": "cond:delta=Stun;gift_not_promised",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Knightfisher 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Knightfisher",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flying",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "not:self cond:nontoken",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "bird",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "fish-1",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Lifecreed Duo 1`] = `
 {
   "flow": {
@@ -1126,6 +1283,78 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Life
       "owner": "me",
       "role": "emit",
       "thing": "life-gain",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Lightshell Duo 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+        "F",
+      ],
+    },
+  },
+  "name": "Lightshell Duo",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "prowess",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "qty:0..2",
+      "from": "--",
+      "owner": "me",
+      "role": "source",
+      "thing": "any",
+      "to": "gy",
+    },
+    "F": {
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "library-look",
       "to": "--",
     },
   },

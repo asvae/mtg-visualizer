@@ -1,0 +1,11 @@
+{
+  "name": "Kitsa, Otterball Elite",
+  "manaCost": "{1}{U}",
+  "typeLine": "Legendary Creature — Otter Wizard",
+  "description": "Vigilance. Prowess. {T}: Draw a card, then discard a card. {2}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy. Activate only if Kitsa's power is 3 or greater.",
+  "assumptions": [],
+  "couldNotDerive": ["The entire copy-spell ability and its own power>=3 activation restriction -- correctly absent rather than shown wrong."],
+  "verdict": "issues-open",
+  "notes": "A:CopySpellAbility has zero handling -- a genuinely new, moderately complex effect type (spell-copying), plus its own IsPresent$ Card.powerGE3+Self activation-gate (a self-referential stat check on an activated ability's own cost, distinct from the trigger/effect-level IsPresent$/ConditionPresent$ shapes already handled). The {T}: draw-then-discard ability reconstructs correctly. Not attempted this round -- real feature work.",
+  "comparedAt": "2026-09-04"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Long River's Pull",
+  "manaCost": "{U}{U}",
+  "typeLine": "Instant",
+  "description": "Gift a card. Counter target creature spell. If the gift was promised, instead counter target spell.",
+  "assumptions": [],
+  "couldNotDerive": ["That the two counter effects are mutually exclusive (gift-gated) rather than both happening -- TargetMin$/TargetMax$ referencing dynamic PromisedGift.N.M SVars aren't resolved, so both nodes render as if unconditional."],
+  "verdict": "issues-fixed",
+  "notes": "Benefited from this batch's A:Counter implementation -- both counter effects now show up as real move(stack->gy) nodes with correct target-type restrictions (creature vs. any). The real card is actually an exclusive 'or' (\"counter target creature spell -- INSTEAD counter target spell if gift promised\", via TargetMin$X/TargetMax$X = Count$PromisedGift.0.1 zeroing out the first counter when the second fires) -- same unresolved dynamic-quantity class as Dewdrop Cure/Into the Flood Maw, not fixed this round. A real improvement from complete silence to two structurally-correct-but-unconditionally-rendered counters.",
+  "comparedAt": "2026-09-04"
+}

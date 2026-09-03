@@ -185,6 +185,16 @@ function keywordGrantFact(kw: string): string {
   if (wardCost) return `ward=${/^\d+$/.test(wardCost) ? `{${wardCost}}` : wardCost}`;
   return `grant=${kw.toLowerCase().replace(/\s+/g, '_')}`;
 }
+// ConditionPresent$...PromisedGift + ConditionCompare$ — "if the gift was
+// promised" (Crumb and Get It's own EQ1) vs "if the gift WASN'T promised"
+// (Parting Gust's and Kitnap's own EQ0, the opposite fact). Every call site
+// before this helper existed hardcoded "gift_promised" regardless of
+// ConditionCompare$'s actual polarity, silently mislabeling every EQ0 card's
+// condition as its own opposite.
+function giftGateFact(conditionPresent: string | undefined, conditionCompare: string | undefined): string | undefined {
+  if (!conditionPresent || !/PromisedGift/.test(conditionPresent)) return undefined;
+  return conditionCompare === 'EQ0' ? 'gift_not_promised' : 'gift_promised';
+}
 function ifPresentFlag(v: string | undefined): string | undefined {
   if (!v || /PromisedGift/.test(v)) return undefined;
   const type = coarseType(v);
@@ -488,8 +498,24 @@ function translateEffectRow(
     // one existing `equipped` flag rather than inventing a parallel
     // `enchanted` one for the same concept.
     const equipped = /\.(?:EquippedBy|EnchantedBy)\b/.test(affected ?? '');
-    const thing = coarseType(affected);
-    const condFlags = qualifierFlags(affected);
+    // Card.Self (Essence Channeler's own conditional-flying static) means
+    // "this permanent itself" — the same self-reference CARDNAME already
+    // gets in coarseType, just spelled differently in an Affected$ context.
+    // Left unhandled, it fell into coarseType's own "Card" -> 'any' rule
+    // (meant for an unspecified TARGET predicate like ValidTgts$ Card, not
+    // a self-reference), silently turning "this creature" into "anything."
+    // Card.EquippedBy/Card.EnchantedBy (Kitnap's own "You control enchanted
+    // creature," Affected$ Card.EnchantedBy with no Creature. prefix) hits
+    // coarseType's own "Card" -> 'any' rule meant for a genuinely unspecified
+    // predicate — but an attachment's own K:Enchant:Creature/Equipment
+    // target is, in real practice, essentially always a creature, so 'any'
+    // is a real precision loss here even though it isn't technically wrong.
+    const resolveAffectedClause = (c: string | undefined): { thing: string; condFlags: string[] } => {
+      if (c && /^Card\.Self\b/.test(c)) return { thing: selfThing, condFlags: [] };
+      if (c && /^Card[.+](?:EquippedBy|EnchantedBy)\b/.test(c)) return { thing: 'creature', condFlags: qualifierFlags(c) };
+      return { thing: coarseType(c), condFlags: qualifierFlags(c) };
+    };
+    const { thing, condFlags } = resolveAffectedClause(affected);
     // Affected$ can be a comma-joined list of SEVERAL different subtypes
     // (Valley Questcaller's own "Other Rabbits, Bats, Birds, and Mice you
     // control get +1/+1" -- Affected$ Rabbit.Other+YouCtrl,Bat.Other+YouCtrl,
@@ -499,7 +525,7 @@ function translateEffectRow(
     // other subtype from a multi-type tribal anthem. One modifier node per
     // clause, same delta payload, mirrors the trigger multi-clause pattern.
     const affectedClauses = (affected ?? '').split(',').map((c) => c.trim()).filter(Boolean);
-    const affectedSpecs = affectedClauses.length > 1 ? affectedClauses.map((c) => ({ thing: coarseType(c), condFlags: qualifierFlags(c) })) : [{ thing, condFlags }];
+    const affectedSpecs = affectedClauses.length > 1 ? affectedClauses.map(resolveAffectedClause) : [{ thing, condFlags }];
     let handled = false;
     if (fields.AddPower || fields.AddToughness) {
       const delta = `${fields.AddPower ? '+' + fields.AddPower : '+0'}/${fields.AddToughness ? '+' + fields.AddToughness : '+0'}`;
@@ -523,16 +549,36 @@ function translateEffectRow(
       // keyword) applies where a mechanic is actually known; where it isn't,
       // an honest grant= fact beats silently dropping the keyword entirely
       // (the previous behavior for anything other than a bare "Flying").
+      // Previously always hardcoded thing:selfThing regardless of Affected$
+      // — silently wrong for a static granting a keyword to something OTHER
+      // than itself (Long River Lurker's own "Other Frogs you control have
+      // ward {1}" rendered identically to its own K:Ward:1, indistinguishable
+      // from each other and both wrongly attributed to self). Now uses the
+      // same affectedSpecs every other branch here already does.
       const parts = fields.AddKeyword.split('&')
         .map((k) => k.trim())
         .filter(Boolean)
         .map((kw) => (kw === 'Flying' && fields.Condition === 'PlayerTurn' ? 'your_turn;blocked_by=flying_or_reach' : keywordGrantFact(kw)));
-      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cond:${parts.join(';')}` }));
+      for (const spec of affectedSpecs) {
+        attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${parts.join(';')}`].join(' ') }));
+      }
       handled = true;
     }
     if (fields.AddType) {
       for (const spec of affectedSpecs) {
         attach(addNode(ctx, { role: 'tagger', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
+      }
+      handled = true;
+    }
+    // Mode$Continuous | GainControl$You (Kitnap's own defining effect —
+    // "You control enchanted creature," a Control-Magic-style Aura) — a
+    // static, ongoing control change, distinct from the one-shot AB$/DB$
+    // GainControl effect (already mapped to `becomes` elsewhere). Same role,
+    // same real fact (control changes hands), just continuous rather than a
+    // point-in-time event.
+    if (fields.GainControl) {
+      for (const spec of affectedSpecs) {
+        attach(addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, equipped ? 'cond:equipped' : undefined].filter(Boolean).join(' ') || undefined }));
       }
       handled = true;
     }
@@ -675,8 +721,19 @@ function translateOwnEffect(
   if (ek === 'Cleanup') return; // Forge-only bookkeeping, no synergy analogue
 
   if (ek === 'Surveil') {
-    const id = addNode(ctx, { role: 'source', owner: 'me', from: 'gy', to: '--', thing: `surveil-${fields.Amount ?? '1'}` });
-    attach(id);
+    // Was backwards (from:'gy', to:'--' — the literal opposite of SCHEMA's
+    // own worked action registry entry) AND collapsed into a single node
+    // with an invented thing key ("surveil-N") instead of the TWO real
+    // sibling nodes the actions.surveil-N registry entry actually
+    // prescribes: a `source` (cards you choose becoming graveyard stock,
+    // library->gy) plus an `emit` (the library-look event itself) — the
+    // exact shape scry-N and mill-N already get right elsewhere in this
+    // file. Both attached to the same parent as siblings, not chained.
+    const qty = fields.Amount ?? '1';
+    const sourceId = addNode(ctx, { role: 'source', owner: 'me', from: '--', to: 'gy', thing: 'any', flags: `qty:0..${qty}` });
+    const emitId = addNode(ctx, { role: 'emit', owner: 'me', from: '--', to: '--', thing: 'library-look' });
+    attach(sourceId);
+    attach(emitId);
     return;
   }
 
@@ -836,9 +893,10 @@ function translateOwnEffect(
     // ConditionPresent$...PromisedGift (Starfall Invocation's own "if the
     // gift was promised, return a creature card...") — same narrow boolean
     // gate already handled for Pump/PumpAll, missing here entirely.
-    const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'cond:gift_promised' : undefined;
+    const giftFact = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
+    const giftGateFlag = giftFact ? `cond:${giftFact}` : undefined;
     const qualifiers = targeted ? qualifierFlags(fields.ValidTgts) : changeTypePredicate ? qualifierFlags(changeTypePredicate) : [];
-    const flags = withMay([qty, targeted ? 'target' : undefined, untilSelfLeaves, giftGate, ...qualifiers].filter(Boolean).join(' ') || undefined);
+    const flags = withMay([qty, targeted ? 'target' : undefined, untilSelfLeaves, giftGateFlag, ...qualifiers].filter(Boolean).join(' ') || undefined);
     const thing = selfMove ? selfThing : coarseType(fields.ValidTgts ?? fields.SacValid ?? changeTypePredicate);
     const id = addNode(ctx, { role: 'move', owner, from, to, thing, flags });
     attach(id);
@@ -915,7 +973,7 @@ function translateOwnEffect(
     const hasDelta = fields.NumAtt !== undefined || fields.NumDef !== undefined;
     const delta = hasDelta ? `pt_delta=${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}` : undefined;
     const grant = fields.KW ? keywordGrantFact(fields.KW) : undefined;
-    const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'gift_promised' : undefined;
+    const giftGate = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
     const cond = ['cond:', [giftGate, delta, grant].filter(Boolean).join(';')].join('');
     const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [lifetime, cond, ...qualifierFlags(fields.ValidCards)].filter(Boolean).join(' ') });
     attach(id);
@@ -1014,7 +1072,7 @@ function translateOwnEffect(
     // count comparison ConditionCheckSVar$/ConditionSVarCompare$ represent,
     // which stays an open, unimplemented class — see blb-progress.json's
     // known_gap_classes). Cheap and unambiguous enough to encode directly.
-    const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'gift_promised' : undefined;
+    const giftGate = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
     const cond = ['cond:', [giftGate, delta, grant].filter(Boolean).join(';')].join('');
     // TargetMax$/TargetMin$ (Mabel's Mettle's own second Pump: "up to ONE
     // other target creature gets +1/+1") had no qty handling at all, unlike
@@ -1044,7 +1102,16 @@ function translateOwnEffect(
     // non-creature enchantment supposedly receiving its own +1/+1 counter.
     const type = fields.CounterType === 'P1P1' ? '+1/+1counter' : (fields.CounterType ?? 'counter');
     const targeted = !!fields.ValidTgts;
-    const thing = targeted ? coarseType(fields.ValidTgts) : selfThing;
+    // Defined$Enchanted (Kitnap's own "tap enchanted creature... put three
+    // stun counters on it") is Forge's self-reference for "whatever this
+    // permanent is attached to" — same family as CARDNAME/Remembered/
+    // Targeted, just for Auras specifically. coarseType has no case for the
+    // bare literal word "Enchanted" (not a dotted qualifier), so it fell
+    // through to the meaningless literal thing:"enchanted" — the coarse
+    // type-word "creature" is the correct, always-true fact (only creatures
+    // can be Enchanted by a Creature-only Aura), same idiom Equipment's
+    // "the equipped creature" already relies on via `granted.thing`.
+    const thing = targeted ? coarseType(fields.ValidTgts) : fields.Defined === 'Enchanted' ? 'creature' : selfThing;
     const owner = targeted
       ? ownerFromTargetPredicate(fields.ValidTgts)
       : 'me';
@@ -1065,7 +1132,12 @@ function translateOwnEffect(
     // you control WITHOUT FLYING" silently lost the .withoutFlying
     // restriction with no trace, since owner/thing alone don't carry it.
     const qualifiers = targeted ? qualifierFlags(fields.ValidTgts) : [];
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, ...qualifiers, `cond:delta=${type}${conditionalOnTarget ? `;${conditionalOnTarget}` : ''}`].filter(Boolean).join(' ') });
+    // ConditionPresent$...PromisedGift (Kitnap's own "If the gift wasn't
+    // promised, put three stun counters on it") had NO gift-condition
+    // handling at all here (only Pump/PumpAll/ChangeZone did) — silently
+    // dropped the entire condition with no trace.
+    const giftFact = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, ...qualifiers, `cond:delta=${type}${conditionalOnTarget ? `;${conditionalOnTarget}` : ''}${giftFact ? `;${giftFact}` : ''}`].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -1100,7 +1172,9 @@ function translateOwnEffect(
     // role.
     const targeted = !!fields.ValidTgts;
     const owner = targeted ? ownerFromTargetPredicate(fields.ValidTgts) : deriveOwner(fields.Defined);
-    const thing = targeted ? coarseType(fields.ValidTgts) : coarseType(fields.ValidCards ?? fields.Defined);
+    // Defined$Enchanted (Kitnap's own "tap enchanted creature") — see
+    // PutCounter's identical fix for the full explanation.
+    const thing = targeted ? coarseType(fields.ValidTgts) : fields.Defined === 'Enchanted' ? 'creature' : coarseType(fields.ValidCards ?? fields.Defined);
     const state = ek === 'Tap' ? 'tapped' : 'untapped';
     const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, `cond:state=${state}`, ...(targeted ? qualifierFlags(fields.ValidTgts) : [])].filter(Boolean).join(' ') });
     attach(id);

@@ -1,0 +1,11 @@
+{
+  "name": "Long River Lurker",
+  "manaCost": "{2}{U}",
+  "typeLine": "Creature — Frog Scout",
+  "description": "Ward {1}. Other Frogs you control have ward {1}. When this creature enters, target creature you control can't be blocked this turn. Whenever that creature deals combat damage this turn, you may exile it. If you do, return it to the battlefield under its owner's control.",
+  "assumptions": [],
+  "couldNotDerive": ["The whole unblockable/blink chain -- correctly absent rather than shown wrong."],
+  "verdict": "issues-fixed",
+  "notes": "Found and fixed a real bug that was silently corrupting data: the static AddKeyword$ branch ALWAYS hardcoded thing:selfThing regardless of Affected$, so this card's own K:Ward:1 (self) and its static's Affected$ Frog.Other+YouCtrl grant ('other Frogs you control have ward {1}') rendered as two IDENTICAL, indistinguishable nodes -- both wrongly attributed to self. Fixed by wiring the AddKeyword branch into the same affectedSpecs mechanism the other static branches already had. Verified: node D now correctly shows thing:frog, not:self. The ETB unblockable+blink ability hits the already-documented ?:Effect gap class (a variable-shape 'remembered object gets a granted ability' idiom), correctly absent rather than wrong.",
+  "comparedAt": "2026-09-04"
+}

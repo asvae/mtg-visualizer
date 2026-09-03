@@ -1,9 +1,9 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T23:06:07.192Z",
-  "clean": 193,
-  "gaps": 81,
-  "totalUnmapped": 112,
+  "generatedAt": "2026-09-03T23:25:39.580Z",
+  "clean": 194,
+  "gaps": 80,
+  "totalUnmapped": 111,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
@@ -37,9 +37,6 @@
     ],
     "Gossip's Talent": [
       "?:Effect"
-    ],
-    "Kitnap": [
-      "S:Continuous"
     ],
     "Kitsa, Otterball Elite": [
       "A:CopySpellAbility"

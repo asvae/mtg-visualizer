@@ -31,8 +31,16 @@
       "cards": ["Dire Downdraft"]
     },
     "Count$PromisedGift.N.M (dynamic gift-conditional QUANTITY)": {
-      "description": "A narrower cousin of the Condition class above: Dewdrop Cure's own SVar:X:Count$PromisedGift.3.2 means \"3 if the gift was promised, else 2\" -- swaps a NUMBER rather than gating an effect on/off (which the existing cond:gift_promised boolean flag already handles). Needs recognizing this specific Count$ shape and binding qty to a declared value via SCHEMA's :=/= label convention. Real modeling work, not a quick fix.",
-      "cards": ["Dewdrop Cure"]
+      "description": "A narrower cousin of the Condition class above: Dewdrop Cure's own SVar:X:Count$PromisedGift.3.2 means \"3 if the gift was promised, else 2\" -- swaps a NUMBER rather than gating an effect on/off (which the existing cond:gift_promised/gift_not_promised boolean flags already handle). Also covers the exclusive-or shape (Long River's Pull/Into the Flood Maw/Mind Spiral's own TargetMin$X/TargetMax$X where X = Count$PromisedGift.0.1 or .1.0 -- zeroing out one of two sibling effects depending on gift status, rendered as both happening unconditionally instead). Needs recognizing this specific Count$ shape and binding qty to a declared value via SCHEMA's :=/= label convention. Real modeling work, not a quick fix.",
+      "cards": ["Dewdrop Cure", "Into the Flood Maw", "Long River's Pull", "Mind Spiral"]
+    },
+    "Defined$<sibling-effect-target> self-references (ParentTarget, TriggeredSourceLKICopy, etc.)": {
+      "description": "Forge has a whole family of Defined$ values naming 'the object some OTHER effect in this same chain already resolved to' (Targeted, ParentTarget, TriggeredSourceLKICopy, Remembered, DelayTriggerRememberedLKI, ...) -- deriveOwner/coarseType have no general case for any of them, so they fall to defaults (owner:'me', thing:selfThing) that are only coincidentally correct when the referenced object happens to be self-controlled. Mind Spiral's own Defined$ParentTarget (referring to a SIBLING effect's own opponent-controlled target) is a concrete case that resolves wrong. Same broader gap as the already-documented Defined$Targeted entry -- would need threading the parent effect's own resolved owner/thing down into children, a broader signature change.",
+      "cards": ["Crumb and Get It", "Azure Beastbinder", "Mind Spiral"]
+    },
+    "A:CopySpellAbility (copy target spell)": {
+      "description": "Zero handling -- a genuinely new, moderately complex effect type (Kitsa, Otterball Elite's own \"copy target instant or sorcery spell you control, may choose new targets\"), plus its own self-referential IsPresent$ Card.powerGE3+Self activation-gate on the activated ability's cost (a third IsPresent$/ConditionPresent$ context beyond trigger-level and effect-level).",
+      "cards": ["Kitsa, Otterball Elite"]
     },
     "CopyPermanent (create a token copy of target permanent)": {
       "description": "DB$ CopyPermanent has no handler at all -- a genuinely new effect type (not a quick field/regex fix), but not big-rework/design-decision-needed either. Real backlog item, not blocking.",
@@ -41,10 +49,6 @@
     "ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger": {
       "description": "\"Whenever this becomes the target of a spell or ability YOU CONTROL\" -- the trigger node's owner field already means \"whose occurrence\" (self, correctly 'me'), but WHO CONTROLS THE TRIGGERING SOURCE is a different dimension with no home in the current trigger vocabulary. Narrower than the big Condition class -- a real, recurring gap (Flowerfoot Swordmaster, Mouse Trapper, Nettle Guard all hit it) worth a follow-up flag/field addition, not a full redesign.",
       "cards": ["Flowerfoot Swordmaster", "Mouse Trapper", "Nettle Guard", "Whiskervale Forerunner"]
-    },
-    "Defined$Targeted / Defined$Targeted.<Type> owner resolution": {
-      "description": "A chained sub-effect referencing \"the same object targeted earlier in this chain\" (Crumb and Get It's KW$ grant, Azure Beastbinder's own Animate P/T-set) -- deriveOwner has no case for 'Targeted'/'Targeted.Creature', so it falls to the 'me' default, which is wrong whenever the earlier target wasn't necessarily controlled by the caster. Would need threading the parent effect's own resolved owner/thing down into children reached via SubAbility$, a broader signature change across many handlers, not attempted yet.",
-      "cards": ["Crumb and Get It", "Azure Beastbinder"]
     },
     "Pure mana-only activated-ability cost (no T, no Sac<>)": {
       "description": "The generic activation-cost handler only recognizes a Cost$ containing T (tap) or Sac<> (sacrifice) -- a plain \"{3}{W}: effect\" cost with neither falls through completely uncosted (Warren Elder's own PumpAll). Would need a parallel cost-node path for the mana-only case.",
@@ -155,6 +159,14 @@
       "attempts": 1,
       "note": "Fixed Valiant$True (\"for the first time each turn\") by reusing cond:once_per_turn. One narrower gap remains open: ValidSource$SpellAbility.YouCtrl (who controls the triggering spell/ability) has no home in the trigger vocabulary's current owner slot."
     },
+    "Into the Flood Maw": { "status": "issues-open", "attempts": 1, "note": "Count$PromisedGift.N.M dynamic exclusive-or shape, same class as Dewdrop Cure." },
+    "Kitnap": { "status": "match", "attempts": 1, "note": "4 real bugs found and fixed on this card alone: Mode$Continuous+GainControl$ (zero handling), Defined$Enchanted resolving to a meaningless literal instead of 'creature', PutCounter missing gift-condition handling entirely, and a latent polarity bug in the gift-condition helper (every site hardcoded gift_promised regardless of ConditionCompare$). In blb-success.json." },
+    "Kitsa, Otterball Elite": { "status": "issues-open", "attempts": 1, "note": "A:CopySpellAbility has zero handling -- new complex effect type, plus its own self-referential power>=3 activation gate." },
+    "Knightfisher": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
+    "Lightshell Duo": { "status": "match", "attempts": 1, "note": "Found and fixed a real modeling bug in Surveil: zones were literally backwards, and it collapsed the real 2-node source+emit shape into one invented node. Also fixed the FIN hand-authored ground truth (Namazu Trader), which encoded the same bug. In blb-success.json." },
+    "Long River Lurker": { "status": "issues-fixed", "attempts": 1, "note": "Found and fixed a real bug: static AddKeyword$ always hardcoded thing:selfThing regardless of Affected$, making a self-Ward and an other-Frogs-Ward grant render identically. Wired into the existing affectedSpecs mechanism. ETB unblockable/blink hits the known ?:Effect gap." },
+    "Long River's Pull": { "status": "issues-fixed", "attempts": 1, "note": "Benefited from A:Counter. Real card is an exclusive gift-gated either/or, rendered as unconditional both -- same PromisedGift.N.M dynamic-quantity class as Dewdrop Cure." },
+    "Mind Spiral": { "status": "issues-fixed", "attempts": 1, "note": "Benefited from the gift-condition polarity fix (this card uses EQ1). Defined$ParentTarget owner/thing resolution still wrong (Defined$Targeted-family gap); tap/counter effect's own gift-gating not resolved (PromisedGift.N.M class)." },
     "Bellowing Crier": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
     "Calamitous Tide": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
     "Daring Waverider": { "status": "issues-open", "attempts": 1, "note": "DB$ Play (cast from an alternate zone without paying cost) has zero handling -- a genuinely new, moderately complex effect type. Not attempted." },

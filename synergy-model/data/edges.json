@@ -63,12 +63,20 @@
         "thing": "artifact",
         "flags": "may not:self"
       },
-      "node:surveil": {
+      "node:surveilSource": {
         "role": "source",
         "owner": "me",
-        "from": "gy",
+        "from": "--",
+        "to": "gy",
+        "thing": "any",
+        "flags": "qty:0..2"
+      },
+      "node:surveilLook": {
+        "role": "emit",
+        "owner": "me",
+        "from": "--",
         "to": "--",
-        "thing": "surveil-2"
+        "thing": "library-look"
       }
     },
     "flow": {
@@ -95,10 +103,12 @@
           }
         ],
         "node:sacCreature": [
-          "node:surveil"
+          "node:surveilSource",
+          "node:surveilLook"
         ],
         "node:sacArtifact": [
-          "node:surveil"
+          "node:surveilSource",
+          "node:surveilLook"
         ],
         "node:cast": [
           "node:enters"

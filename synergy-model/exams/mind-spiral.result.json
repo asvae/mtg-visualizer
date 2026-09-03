@@ -1,0 +1,14 @@
+{
+  "name": "Mind Spiral",
+  "manaCost": "{4}{U}",
+  "typeLine": "Sorcery",
+  "description": "Gift a tapped Fish. Target player draws three cards. If the gift was promised, tap target creature an opponent controls and put a stun counter on it.",
+  "assumptions": [],
+  "couldNotDerive": [
+    "That the tap+stun effect is gift-gated rather than unconditional -- TargetMin$/TargetMax$X (dynamic PromisedGift SVar) not resolved, same class as Dewdrop Cure.",
+    "That PutCounter's Defined$ParentTarget refers back to DBTap's own target (an opponent's creature) -- resolves to self/me instead, same Defined$Targeted-family owner-resolution gap."
+  ],
+  "verdict": "issues-fixed",
+  "notes": "Benefited from this batch's gift-condition fixes: node H now correctly shows cond:gift_promised (this card uses the EQ1/'was promised' polarity, unlike Kitnap/Parting Gust's EQ0). Two narrower gaps remain, both pre-existing and now more visible: the tap/counter effect isn't actually gated on the gift (same PromisedGift.N.M dynamic-quantity class as Dewdrop Cure), and Defined$ParentTarget (a sibling-effect's-own-target self-reference) resolves to self/me instead of the opponent's tapped creature (same family as Defined$Targeted).",
+  "comparedAt": "2026-09-04"
+}
