@@ -160,3 +160,186 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Brig
   "unmapped": [],
 }
 `;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Builder's Talent 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "E",
+      "H",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+      "E": [
+        "F",
+      ],
+      "F": [
+        "G",
+      ],
+      "H": [
+        "I",
+      ],
+      "I": [
+        "J",
+      ],
+    },
+  },
+  "name": "Builder's Talent",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "wall-1",
+      "to": "bf",
+    },
+    "E": {
+      "flags": "cost:{W} cond:class_level=2",
+      "from": "--",
+      "owner": "me",
+      "role": "becomes",
+      "thing": "self",
+      "to": "--",
+    },
+    "F": {
+      "flags": "cond:nonland cond:noncreature",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "permanent",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "G": {
+      "flags": "target cond:delta=+1/+1counter",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "H": {
+      "flags": "cost:{4}{W} cond:class_level=3",
+      "from": "--",
+      "owner": "me",
+      "role": "becomes",
+      "thing": "self",
+      "to": "--",
+    },
+    "I": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "classlevelgained",
+    },
+    "J": {
+      "flags": "target cond:nonland cond:noncreature",
+      "from": "gy",
+      "owner": "me",
+      "role": "move",
+      "thing": "permanent",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Coruscation Mage 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Coruscation Mage",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "cost:{2} cond:token;paid_at_cast",
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "cond:noncreature",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "any",
+      "to": "stack",
+      "trigger-type": "spellcast",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "opp",
+      "role": "emit",
+      "thing": "damage",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;

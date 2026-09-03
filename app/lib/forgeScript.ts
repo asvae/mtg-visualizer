@@ -208,7 +208,14 @@ function parseFace(block: string): ForgeFace {
           // for a non-root chained row (a child reached via SubAbility$
           // etc), invisible to that walk, which is exactly the class of bug
           // this whole Gift/Class effort exists to close (see report).
-          walkEffect(parsePipeFields(giftRaw), 0, true, 'A', svars, rows);
+          // A synthetic GiftOptional$True field (not a real Forge field) —
+          // Gift (702.199) is ALWAYS "you MAY promise a gift," but that
+          // optionality is baked into the K:Gift keyword mechanic itself,
+          // never appearing as an Optional$/OptionalDecider$ field on
+          // GiftAbility's own SVar the way other optional effects mark it —
+          // so forgeTranslate.ts's Token handler has no field to read it
+          // from without this being injected here.
+          walkEffect([...parsePipeFields(giftRaw), ['GiftOptional', 'True']], 0, true, 'A', svars, rows);
           continue;
         }
       }

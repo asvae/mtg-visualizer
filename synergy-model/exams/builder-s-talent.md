@@ -96,7 +96,9 @@ separate `flow` graph describing how they depend on each other:
   (chosen via targeting, not "each"/automatic), `combat` (on a
   deals-damage trigger: combat damage specifically), `cost:{...}` (mana
   cost for anything other than a plain hand-cast — an activated ability, an
-  alternate-cost cast), `qty:N` / `qty:0..N` (a fixed or ranged count),
+  alternate-cost cast), `qty:N` / `qty:0..N` (a fixed or ranged count —
+  when this flag is ABSENT entirely, the count is exactly 1, not unlimited
+  or unspecified),
   `lifetime:turn` (temporary), `tapped` (arrives tapped), `cond:...`
   (free-text game-state precondition, or a payload for `modifier`/`tagger`/
   `becomes` stating what actually changes — e.g. `cond:equipped;delta=+1/+1`).
@@ -168,6 +170,95 @@ always `thing: self` instead. `actions` expands a named keyword action (e.g.
         "creature",
         "token"
       ]
+    },
+    "food": {
+      "labels": [
+        "artifact",
+        "token"
+      ],
+      "subtype": "Food"
+    },
+    "bat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Bat"
+    },
+    "rat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Rat"
+    },
+    "snail-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Snail"
+    },
+    "squirrel-1": {
+      "labels": [
+        "creature",
+        "token",
+        "green"
+      ],
+      "stats": "1/1",
+      "subtype": "Squirrel"
+    },
+    "fish-1": {
+      "labels": [
+        "creature",
+        "token",
+        "blue"
+      ],
+      "stats": "1/1",
+      "subtype": "Fish"
+    },
+    "otter-1": {
+      "labels": [
+        "creature",
+        "token",
+        "blue",
+        "red"
+      ],
+      "stats": "1/1",
+      "subtype": "Otter"
+    },
+    "wall-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "0/4",
+      "subtype": "Wall"
+    },
+    "cat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "1/1",
+      "subtype": "Cat"
+    },
+    "rabbit-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "1/1",
+      "subtype": "Rabbit"
     },
     "horror-1": {
       "labels": [
@@ -319,7 +410,7 @@ Rarity is deliberately withheld.
       "owner": "me",
       "from": "--",
       "to": "bf",
-      "thing": "w_0_4_wall_defender"
+      "thing": "wall-1"
     },
     "E": {
       "role": "becomes",
@@ -335,7 +426,8 @@ Rarity is deliberately withheld.
       "owner": "me",
       "from": "--",
       "to": "stack",
-      "thing": "permanent"
+      "thing": "permanent",
+      "flags": "cond:nonland cond:noncreature"
     },
     "G": {
       "role": "modifier",
@@ -367,7 +459,7 @@ Rarity is deliberately withheld.
       "from": "gy",
       "to": "bf",
       "thing": "permanent",
-      "flags": "target"
+      "flags": "target cond:nonland cond:noncreature"
     }
   },
   "flow": {

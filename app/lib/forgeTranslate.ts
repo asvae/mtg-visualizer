@@ -163,6 +163,7 @@ function qualifierFlags(v: string | undefined): string[] {
   if (/[.+]!token\b/.test(v)) flags.push('cond:nontoken');
   if (/[.+]EquippedBy\b/.test(v)) flags.push('cond:equipped');
   if (/[.+]nonLand\b/.test(v)) flags.push('cond:nonland');
+  if (/[.+]nonCreature\b/.test(v)) flags.push('cond:noncreature');
   return flags;
 }
 
@@ -736,10 +737,28 @@ function translateOwnEffect(
     const owner = targeted
       ? ownerFromTargetPredicate(fields.ValidTgts)
       : deriveOwner(fields.Defined);
-    const delta = `${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}`;
     const lifetime = fields.Permanent === 'True' ? undefined : 'lifetime:turn';
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, lifetime, `cond:pt_delta=${delta}`].filter(Boolean).join(' ') });
+    // KW$ (Crumb and Get It's own "also gains indestructible") is a SECOND,
+    // independent thing Pump can grant besides a P/T delta — a keyword, not
+    // a stat change — which had no handling at all: NumAtt$/NumDef$ default
+    // to +0/+0 when absent, so a KW$-only Pump silently rendered as a no-op
+    // +0/+0 modifier with the real keyword grant nowhere in the node. Same
+    // semicolon-joined multi-payload convention SCHEMA.md already uses for
+    // equipped;delta.
+    const hasDelta = fields.NumAtt !== undefined || fields.NumDef !== undefined;
+    const delta = hasDelta ? `pt_delta=${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}` : undefined;
+    const grant = fields.KW ? `grant=${fields.KW.toLowerCase()}` : undefined;
+    // ConditionPresent$ Card.Self+PromisedGift | ConditionCompare$ EQ1 — "if
+    // the gift was promised" — a narrow, well-understood boolean condition
+    // tied to K:Gift specifically (not the general cross-player dynamic-
+    // count comparison ConditionCheckSVar$/ConditionSVarCompare$ represent,
+    // which stays an open, unimplemented class — see blb-progress.json's
+    // known_gap_classes). Cheap and unambiguous enough to encode directly.
+    const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'gift_promised' : undefined;
+    const cond = ['cond:', [giftGate, delta, grant].filter(Boolean).join(';')].join('');
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, lifetime, cond].filter(Boolean).join(' ') });
     attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
   }
 
@@ -861,8 +880,15 @@ function translateKeyword(ctx: Ctx, row: ForgeRow, selfThing: string) {
     // stays `self` (the token shares the original's own type line) but
     // `cond:token` marks it as token-status for `cond:token`/`cond:nontoken`
     // predicate matching (SCHEMA §2), same as any other token producer.
+    // A bare `cost:{N}` here reads exactly like an activated ability's cost
+    // (Coruscation Mage's own examiner exam misread it as a repeatable
+    // "{2}: create a token copy" ability) — Offspring's cost is paid exactly
+    // ONCE, as an additional cost while casting the spell, not a cost this
+    // node's own `enters` role can be activated for later. `paid_at_cast`
+    // distinguishes the two, semicolon-joined onto the existing cond:token
+    // payload per SCHEMA.md's multi-payload convention.
     const cost = params[0] ?? '';
-    ctx.roots.push(addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cost:{${cost}} cond:token` }));
+    ctx.roots.push(addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cost:{${cost}} cond:token;paid_at_cast` }));
     return;
   }
   if (row.role === 'Equip') {

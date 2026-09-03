@@ -169,6 +169,95 @@ always `thing: self` instead. `actions` expands a named keyword action (e.g.
         "token"
       ]
     },
+    "food": {
+      "labels": [
+        "artifact",
+        "token"
+      ],
+      "subtype": "Food"
+    },
+    "bat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Bat"
+    },
+    "rat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Rat"
+    },
+    "snail-1": {
+      "labels": [
+        "creature",
+        "token",
+        "black"
+      ],
+      "stats": "1/1",
+      "subtype": "Snail"
+    },
+    "squirrel-1": {
+      "labels": [
+        "creature",
+        "token",
+        "green"
+      ],
+      "stats": "1/1",
+      "subtype": "Squirrel"
+    },
+    "fish-1": {
+      "labels": [
+        "creature",
+        "token",
+        "blue"
+      ],
+      "stats": "1/1",
+      "subtype": "Fish"
+    },
+    "otter-1": {
+      "labels": [
+        "creature",
+        "token",
+        "blue",
+        "red"
+      ],
+      "stats": "1/1",
+      "subtype": "Otter"
+    },
+    "wall-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "0/4",
+      "subtype": "Wall"
+    },
+    "cat-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "1/1",
+      "subtype": "Cat"
+    },
+    "rabbit-1": {
+      "labels": [
+        "creature",
+        "token",
+        "white"
+      ],
+      "stats": "1/1",
+      "subtype": "Rabbit"
+    },
     "horror-1": {
       "labels": [
         "creature",
@@ -311,7 +400,7 @@ Rarity is deliberately withheld.
       "owner": "opp",
       "from": "--",
       "to": "bf",
-      "thing": "c_a_food_sac"
+      "thing": "food"
     },
     "D": {
       "role": "modifier",
@@ -320,6 +409,14 @@ Rarity is deliberately withheld.
       "to": "bf",
       "thing": "creature",
       "flags": "target lifetime:turn cond:pt_delta=+2/+2"
+    },
+    "E": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "any",
+      "flags": "lifetime:turn cond:gift_promised;grant=indestructible"
     }
   },
   "flow": {
@@ -331,6 +428,9 @@ Rarity is deliberately withheld.
     "steps": {
       "A": [
         "B"
+      ],
+      "D": [
+        "E"
       ]
     }
   }

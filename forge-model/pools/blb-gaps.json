@@ -1,9 +1,9 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T21:22:27.471Z",
-  "clean": 177,
-  "gaps": 97,
-  "totalUnmapped": 141,
+  "generatedAt": "2026-09-03T21:36:05.017Z",
+  "clean": 175,
+  "gaps": 99,
+  "totalUnmapped": 144,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
@@ -93,6 +93,9 @@
       "?:CopyPermanent",
       "?:undefined"
     ],
+    "Shore Up": [
+      "?:Untap"
+    ],
     "Shoreline Looter": [
       "S:CantBlockBy"
     ],
@@ -165,6 +168,7 @@
     ],
     "Blacksmith's Talent": [
       "TokenScript$sword",
+      "?:Attach",
       "S:AddKeyword:Double Strike & Haste"
     ],
     "Conduct Electricity": [
@@ -217,6 +221,9 @@
     ],
     "For the Common Good": [
       "A:CopyPermanent"
+    ],
+    "High Stride": [
+      "?:Untap"
     ],
     "Hivespine Wolverine": [
       "?:Fight"

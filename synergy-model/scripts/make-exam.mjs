@@ -154,7 +154,9 @@ separate \`flow\` graph describing how they depend on each other:
   (chosen via targeting, not "each"/automatic), \`combat\` (on a
   deals-damage trigger: combat damage specifically), \`cost:{...}\` (mana
   cost for anything other than a plain hand-cast — an activated ability, an
-  alternate-cost cast), \`qty:N\` / \`qty:0..N\` (a fixed or ranged count),
+  alternate-cost cast), \`qty:N\` / \`qty:0..N\` (a fixed or ranged count —
+  when this flag is ABSENT entirely, the count is exactly 1, not unlimited
+  or unspecified),
   \`lifetime:turn\` (temporary), \`tapped\` (arrives tapped), \`cond:...\`
   (free-text game-state precondition, or a payload for \`modifier\`/\`tagger\`/
   \`becomes\` stating what actually changes — e.g. \`cond:equipped;delta=+1/+1\`).

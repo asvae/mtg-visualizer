@@ -14,10 +14,6 @@
       "description": "SCHEMA's own `tap` role is explicitly defined as a cost/drain shape (convoke/crew-style) -- 'tap target creature(s)' as a standalone effect (DB$/AB$ Tap) has no representation. Needs a design decision: a new role, or a modifier-with-state-payload convention (parallel to the menace/flying cond: pattern). Smaller in scope than the dynamic-comparison gap but still a real open question.",
       "cards": ["Eddymurk Crab"]
     },
-    "Mill as an effect": {
-      "description": "DB$ Mill has no handler -- genuinely unimplemented effect type, narrow backlog item.",
-      "cards": ["Scavenger's Talent"]
-    },
     "AddReplacementEffect$ / non-Flying AddKeyword$ on a static": {
       "description": "Fixed this batch -- both now surface honestly as unmapped entries instead of vanishing silently. No node built yet (no schema role for either mechanic), but no longer a silent-drop bug.",
       "cards": ["Innkeeper's Talent"]
@@ -29,16 +25,19 @@
       "attempts": 1
     },
     "Builder's Talent": {
-      "status": "issues-open",
-      "attempts": 2
+      "status": "match",
+      "attempts": 2,
+      "note": "See result.json -- ValidCard/ValidCards field-name split and missing .nonCreature qualifier both fixed 2026-09-04, all 3 Class levels now fully match. In blb-success.json."
     },
     "Crumb and Get It": {
-      "status": "issues-open",
-      "attempts": 1
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed 2 real gaps 2026-09-04: Pump's KW$ field (a granted keyword, e.g. Indestructible, distinct from a P/T delta) was completely unhandled; ConditionPresent$...PromisedGift is now read as a narrow cond:gift_promised flag (distinct from the general unimplemented ConditionCheckSVar$ class). One precision gap remains open: the indestructible-grant node's `thing` is 'any' instead of 'creature' because Defined$Targeted (\"the same creature the earlier Pump targeted\") isn't resolved back to the sibling's target type -- would need threading target-type context between chained effects, a broader signature change not done here. Also confirmed the c_a_food_sac registries.json gap (flagged by the exam) is now fixed via this session's token-registry fill-out."
     },
     "Coruscation Mage": {
-      "status": "issues-open",
-      "attempts": 1
+      "status": "match",
+      "attempts": 1,
+      "note": "See result.json -- .nonCreature qualifier fix (shared with Builder's Talent) plus a new Offspring cond:paid_at_cast marker both fixed 2026-09-04, full match. In blb-success.json."
     },
     "Beza, the Bounding Spring": {
       "status": "skipped-rework",
@@ -83,7 +82,7 @@
     "Scavenger's Talent": {
       "status": "issues-fixed",
       "attempts": 1,
-      "note": "Spot-check batch 2. Benefited from two shared-logic fixes made earlier in this same batch: the dies-trigger fix (base ability) and a new ChangeType$ fix (Level 3's non-targeted 'return a creature card' idiom via ChangeType$ Creature.YouOwn was wrongly read as 'this enchantment returns' -- selfMove's heuristic didn't know about ChangeType$ as a third way Forge names an external subject, alongside ValidTgts$/SacValid$). Fixed by adding ChangeType$ handling to the ChangeZone handler (owner/thing/qualifiers all now derived from it same as ValidTgts$). See known_gap_classes.Mill for the one remaining gap (Level 2's effect)."
+      "note": "Spot-check batch 2. Benefited from two shared-logic fixes made earlier in this same batch: the dies-trigger fix (base ability) and a new ChangeType$ fix (Level 3's non-targeted 'return a creature card' idiom via ChangeType$ Creature.YouOwn was wrongly read as 'this enchantment returns' -- selfMove's heuristic didn't know about ChangeType$ as a third way Forge names an external subject, alongside ValidTgts$/SacValid$). Fixed by adding ChangeType$ handling to the ChangeZone handler (owner/thing/qualifiers all now derived from it same as ValidTgts$). DB$ Mill (Level 2's effect) is now implemented (2026-09-04, mirrors SCHEMA's own mill-N worked example) -- card now shows zero unmapped entries. One precision gap remains open: WithCountersType$FINALITY on the Level 3 return (a counter placed on the returned object as part of the same effect) has no representation -- narrow, not fixed."
     }
   }
 }
