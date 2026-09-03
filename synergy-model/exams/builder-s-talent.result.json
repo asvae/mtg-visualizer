@@ -1,0 +1,19 @@
+{
+  "name": "Builder's Talent",
+  "manaCost": "{1}{W}",
+  "typeLine": "Enchantment — Class",
+  "description": "When this Class enters, create a 0/4 white Wall creature token with defender.\n\n{W}: Level 2.\n\nWhen this Class becomes level 2, put a +1/+1 counter on target creature.\n\n{4}{W}: Level 3.\n\nWhen this Class becomes level 3, return target permanent card from your graveyard to the battlefield.",
+  "assumptions": [
+    "Decoded the non-registry thing key w_0_4_wall_defender (node D) as a 0/4 white Wall creature token with defender by reading its own segments the same way registry entries like hero-token/horror-1 encode color/stats/subtype/keyword.",
+    "Treated node F (trigger-type \"enter\") as parallel to node I (trigger-type \"classlevelgained\") — both a \"this Class reaches a new level\" trigger — since both sit downstream of a becomes node with cond:class_level=N in the same shape.",
+    "Rendered the two becomes nodes carrying cost:{...} and cond:class_level=N (E, H) as the standard Class activated-ability line \"{cost}: Level N.\""
+  ],
+  "couldNotDerive": [
+    "Whether the level-2 and level-3 triggered abilities are worded differently in print, given the data distinguishes their trigger-type values without explaining what textual difference that signals.",
+    "Any restriction narrower than bare type on G's target creature or J's target permanent card.",
+    "Rarity and any supertype."
+  ],
+  "verdict": "issues",
+  "notes": "Second attempt, after two live fixes (PutCounter no longer hardcoding thing:self regardless of a real ValidTgts$ target; ChangesZoneAll mapped to the same trigger-type as ChangesZone instead of an unreadable literal string) — both confirmed working: the reconstruction now correctly says \"put a +1/+1 counter on target creature\" (was \"[recipient undetermined]\" on the first attempt) and no longer stumbles on an undecodable trigger-type. One real misread remained even after those fixes: the examiner described node F as \"when this Class becomes level 2\" (a one-time, level-reached framing, matching node I's genuinely different Mode$ClassLevelGained shape) when the real card text is \"whenever one or more noncreature, nonland permanents you control enter\" — an ongoing, unlocked-but-repeating trigger, not a level-reached one-time trigger. Tracing this after the exam found the actual root cause: Forge spells the field two ways for the same concept (ValidCard$ singular on ChangesZone, ValidCards$ plural on ChangesZoneAll) and app/lib/forgeTranslate.ts's multi-clause trigger parser only read the singular form, so node F's thing silently fell back to 'self' instead of the real 'Permanent.nonCreature+nonLand+YouCtrl' predicate — invisible to the examiner as anything but an odd trigger-type reuse. Fixed (now reads either field name); confirmed via direct node inspection that node F's thing is now 'permanent' instead of 'self', which resolves the confusion at the data level. Not re-verified with a third live exam run (two already used for this card per this round's 2-attempt cap) — leaving final confirmation to review, per instruction. A smaller residual gap remains even after this fix: the 'nonCreature+nonLand' qualifiers on that predicate aren't captured by qualifierFlags' vocabulary (only handles .Other/.token/.!token/.EquippedBy), so 'permanent' is coarser than the real 'noncreature, nonland permanent' — a known, documented remaining gap, not silently lost (the coarse type is still correct, just not maximally precise).",
+  "comparedAt": "2026-09-03"
+}

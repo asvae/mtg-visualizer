@@ -67,11 +67,24 @@ function selfLabels(typeLine: string): Set<string> {
   );
 }
 
+// This whole join assumes a one-sided pool (every CardFacts is "your board")
+// — there's no opposing pool to match an `owner: "opp"`/`"all"` fact
+// against. Without this filter, an opponent-targeting removal/debuff (e.g.
+// Downwind Ambusher's "target creature an opponent controls gets -1/-1",
+// owner: "opp") would get treated as a friendly `provides` rule reaching
+// every pool creature, same badge and framing as a real anthem — actively
+// misleading, not just out of scope. `owner: "me"`/`"any"` are the only
+// values that mean "something happening on your own side."
+function inScope(owner: SynergyOwner): boolean {
+  return owner === 'me' || owner === 'any';
+}
+
 function deriveDemands(nodes: Record<string, SynergyNode>): Demand[] {
   const demands: Demand[] = [];
   for (const [nodeId, n] of Object.entries(nodes)) {
     if (n.role !== 'move' && n.role !== 'tap' && n.role !== 'trigger') continue;
     if (n.thing === 'self' || n.thing.startsWith('self:')) continue; // wants its own arrival, not a cross-card fact
+    if (!inScope(n.owner)) continue;
     const { notSelf, token } = parseFlags(n.flags);
     demands.push({ nodeId, thing: n.thing, owner: n.owner, notSelf, token, role: n.role as Demand['role'] });
   }
@@ -83,6 +96,7 @@ function deriveRules(nodes: Record<string, SynergyNode>): Rule[] {
   for (const [nodeId, n] of Object.entries(nodes)) {
     if (n.role !== 'modifier' && n.role !== 'tagger') continue;
     if (n.thing === 'self' || n.thing.startsWith('self:')) continue; // a self-only buff isn't a broadcast rule
+    if (!inScope(n.owner)) continue;
     const { notSelf, token, condPayload } = parseFlags(n.flags);
     rules.push({ nodeId, thing: n.thing, owner: n.owner, notSelf, token, role: n.role as Rule['role'], payload: condPayload ?? '' });
   }

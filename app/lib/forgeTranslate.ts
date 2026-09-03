@@ -112,7 +112,35 @@ function deriveOwner(defined: string | undefined): SynergyOwner {
   // divergence rather than special-casing one card (see this session's
   // report).
   if (defined === 'TriggeredTarget' || defined === 'Remembered') return 'any';
+  // `TokenOwner$ Promised` — Gift's own vocabulary: the token goes to
+  // whichever opponent was promised the gift (Gift, 702.199), never you.
+  if (defined === 'Promised') return 'opp';
   return 'me';
+}
+
+// Owner from a ValidTgts$/SacValid$-style TARGET predicate (as opposed to
+// deriveOwner's Defined$/TokenOwner$ vocabulary above) — `.YouCtrl` (yours),
+// `.OppCtrl`/`.Opponent` (an opponent's — Forge uses both spellings; a
+// missing `.OppCtrl` check here silently defaulted an explicit "target
+// creature an OPPONENT controls" to `any`, confirmed on Downwind Ambusher's
+// real ValidTgts$ Creature.OppCtrl), else `any` (unrestricted — could be
+// anyone's, genuinely not determined by the predicate alone). Shared by
+// every targeted-effect handler (Pump, PutCounter, Destroy, DealDamage) —
+// duplicated inline before, which is exactly how `.OppCtrl` went unnoticed
+// in three of the four copies once it was missed in the first.
+function ownerFromTargetPredicate(validTgts: string | undefined): SynergyOwner {
+  const v = validTgts ?? '';
+  // `.YouCtrl` (control — battlefield/stack) and `.YouOwn` (ownership — a
+  // real, separate Forge qualifier for graveyard/hand/library cards, where
+  // "control" doesn't apply the same way; Fight On!'s own real ValidTgts$
+  // Creature.YouOwn targets creature cards in YOUR graveyard) both mean "me"
+  // for this join's purposes. Qualifiers past the first are joined with `+`
+  // rather than another `.` (Banishing Light's real ValidTgts$
+  // Permanent.nonLand+OppCtrl) — `[.+]` matches either separator, not just
+  // the literal dot a lone `\.` only catches before the FIRST qualifier.
+  if (/[.+]YouCtrl\b/.test(v) || /[.+]YouOwn\b/.test(v)) return 'me';
+  if (/[.+]OppCtrl\b/.test(v) || /[.+]OppOwn\b/.test(v) || /[.+]Opponent\b/.test(v)) return 'opp';
+  return 'any';
 }
 
 // A Forge type predicate (`Creature.Other`, `Creature.token`, `Enchantment`,
@@ -128,10 +156,13 @@ function coarseType(v: string | undefined): string {
 function qualifierFlags(v: string | undefined): string[] {
   if (!v) return [];
   const flags: string[] = [];
-  if (/\.Other\b/.test(v)) flags.push('not:self');
-  if (/\.token\b/.test(v)) flags.push('cond:token');
-  if (/\.!token\b/.test(v)) flags.push('cond:nontoken');
-  if (/\.EquippedBy\b/.test(v)) flags.push('cond:equipped');
+  // Same `[.+]`-separator fix as ownerFromTargetPredicate above — a
+  // qualifier chain past the first is `+`-joined, not `.`-joined.
+  if (/[.+]Other\b/.test(v)) flags.push('not:self');
+  if (/[.+]token\b/.test(v)) flags.push('cond:token');
+  if (/[.+]!token\b/.test(v)) flags.push('cond:nontoken');
+  if (/[.+]EquippedBy\b/.test(v)) flags.push('cond:equipped');
+  if (/[.+]nonLand\b/.test(v)) flags.push('cond:nonland');
   return flags;
 }
 
@@ -258,7 +289,21 @@ function translateEffectRow(
   if (row.lineType === 'T' || row.role?.startsWith('trigger(')) {
     const mode = eventMode(row) ?? '';
     const combat = fields.CombatDamage === 'True';
-    const triggerType = mode === 'ChangesZone' && fields.Destination === 'Battlefield' ? 'enter' : mode === 'Attacks' ? 'attack' : mode === 'DamageDone' ? 'deals-damage' : mode.toLowerCase();
+    // ChangesZoneAll is Forge's own "one-or-more-at-once" variant of
+    // ChangesZone (Class level 2's "whenever one or more ... permanents ...
+    // enter" — a real rules distinction for how the engine batches
+    // simultaneous events, not a different real-world event) — same
+    // trigger-type as the singular case rather than a bare lowercased
+    // 'changeszoneall' with no derivable meaning (round-trip exam couldn't
+    // make sense of it as printed either).
+    const isEnter = (mode === 'ChangesZone' || mode === 'ChangesZoneAll') && fields.Destination === 'Battlefield';
+    // battlefield->graveyard is rule 700.4's "dies" event (Jackdaw Savior's
+    // own "whenever ... dies" trigger) — same convention as the isEnter
+    // mapping just above (a coarse Origin/Destination shape, not the literal
+    // Forge mode name), rather than falling through to the unreadable literal
+    // string "changeszone".
+    const isDies = (mode === 'ChangesZone' || mode === 'ChangesZoneAll') && fields.Origin === 'Battlefield' && fields.Destination === 'Graveyard';
+    const triggerType = isEnter ? 'enter' : isDies ? 'dies' : mode === 'Attacks' ? 'attack' : mode === 'DamageDone' ? 'deals-damage' : mode.toLowerCase();
     // ValidCard$ (comma-separated = OR of alternatives, Forge's own dialect)
     // says WHOSE occurrence this trigger watches — "Card.Self" alone means
     // self-only (the common case, and the default below). A lord-style
@@ -274,8 +319,16 @@ function translateEffectRow(
     // non-self clauses carry new type info (self is already `selfThing`),
     // and `not:self` only belongs on a node if EVERY clause excludes self.
     const specs: { thing: string; extraFlags: string[] }[] = [];
-    if (!granted && fields.ValidCard) {
-      const clauses = fields.ValidCard.split(',').map((c) => c.trim());
+    // Forge spells this field two ways for the same concept — `ValidCard$`
+    // on a singular-event trigger (ChangesZone), `ValidCards$` (plural) on
+    // the "one or more at once" variant (ChangesZoneAll, Class level 2's
+    // own "whenever one or more noncreature, nonland permanents enter") —
+    // reading only the singular form silently fell back to `self` for every
+    // ChangesZoneAll trigger, confirmed by a round-trip exam mistaking
+    // Builder's Talent's level-2 ability for the wrong kind of trigger.
+    const validCardField = fields.ValidCard ?? fields.ValidCards;
+    if (!granted && validCardField) {
+      const clauses = validCardField.split(',').map((c) => c.trim());
       const includesSelf = clauses.some((c) => c === 'Card.Self');
       const otherClauses = clauses.filter((c) => c !== 'Card.Self');
       for (const clause of otherClauses) {
@@ -285,8 +338,13 @@ function translateEffectRow(
     if (specs.length === 0) specs.push({ thing: granted ? granted.thing : selfThing, extraFlags: [] });
 
     const combatFlag = combat ? 'combat' : undefined;
+    // ActivationLimit$1 — "This ability triggers only once each turn," a real
+    // rules restriction (Caretaker's Talent's own base ability has it)
+    // distinct from the trigger firing itself; had no flag at all before,
+    // silently reading as unlimited.
+    const onceFlag = fields.ActivationLimit === '1' ? 'cond:once_per_turn' : undefined;
     const ids = specs.map((spec) =>
-      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
+      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
     );
     ids.forEach((id) => attach(id));
     // Build the downstream chain once, under the first clause-node, then
@@ -319,18 +377,48 @@ function translateEffectRow(
     const equipped = /\.EquippedBy\b/.test(affected ?? '');
     const thing = coarseType(affected);
     const condFlags = qualifierFlags(affected);
+    let handled = false;
     if (fields.AddPower || fields.AddToughness) {
       const delta = `${fields.AddPower ? '+' + fields.AddPower : '+0'}/${fields.AddToughness ? '+' + fields.AddToughness : '+0'}`;
       attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing, flags: [...condFlags, `cond:${equipped ? 'equipped;' : ''}delta=${delta}`].join(' ') }));
+      handled = true;
     }
     if (fields.AddKeyword === 'Flying') {
       // Real mechanical encoding per SCHEMA.md's own "menace/flying" note —
       // not just restating the keyword name.
       const cond = fields.Condition === 'PlayerTurn' ? 'cond:your_turn;blocked_by=flying_or_reach' : 'cond:blocked_by=flying_or_reach';
       attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: cond }));
+      handled = true;
     }
+    // Any OTHER granted keyword (Innkeeper's Talent's own AddKeyword$ Ward:1
+    // — "permanents you control with counters have ward {1}") has no
+    // mechanical encoding yet, same as Flying did before SCHEMA's own
+    // convention was applied here — falls through to the unmapped fallback
+    // below (fields.AddKeyword is truthy but `handled` stays false) rather
+    // than being silently swallowed by a naive truthy-AddKeyword check that
+    // wrongly treated ANY keyword value as "already handled."
     if (fields.AddType) {
       attach(addNode(ctx, { role: 'tagger', owner: 'me', from: '--', to: 'bf', thing, flags: [...condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
+      handled = true;
+    }
+    // Anything else this Mode$ can carry (ReduceCost, CantBlock, a non-Flying
+    // AddKeyword$, ...) had no node AND no unmapped entry — a static line
+    // whose sole content was e.g. Mode$ ReduceCost (Eddymurk Crab's "costs
+    // {1} less for each ... in your graveyard") or AddKeyword$ Ward:1
+    // (Innkeeper's Talent) silently vanished with zero trace, the same
+    // silent-drop shape as the K:-keyword-fallback bug fixed earlier this
+    // session.
+    if (!handled) {
+      // fields.Mode is unavailable here — forgeScript.ts's renderFields()
+      // strips Mode$ out of row.fields upstream (it's already folded into
+      // row.role as `static(<mode>)`); eventMode() is the same extraction
+      // translateEffectRow's own T: handling already relies on above.
+      // A replacement effect (AddReplacementEffect$) uses Event$/ValidSource$/
+      // ReplaceWith$, not Mode$ — eventMode(row) then extracts the literal
+      // string "undefined" from a role like "static(undefined)" rather than
+      // a real JS undefined, so fields.Event is checked explicitly first.
+      const label = fields.AddKeyword ? `AddKeyword:${fields.AddKeyword}` : fields.Event ? `Event:${fields.Event}` : (eventMode(row) ?? 'static');
+      ctx.unmapped.push(`S:${label}`);
     }
     for (const child of tree.children) translateEffectRow(ctx, child, null, selfThing, false, granted || { thing });
     return;
@@ -351,6 +439,32 @@ function translateEffectRow(
     const leafIds = wireSacCost(ctx, fields.Cost, inTrigger, attach);
     for (const leafId of leafIds) translateOwnEffect(ctx, tree, leafId, selfThing, inTrigger, granted, false);
     return;
+  }
+
+  // A plain `Cost$` (space-separated mana symbols, optionally including `T`
+  // for "tap this") on a top-level activated ability — previously read
+  // nowhere at all, so a card like "{1}, {T}: target creature gets +1/+1"
+  // (Brave-Kin Duo) silently lost its entire activation cost, leaving the
+  // effect looking like an ungated, always-on capability (confirmed by a
+  // round-trip exam that correctly couldn't tell how the ability was meant
+  // to be used). Only the tap-cost shape is modeled here — SCHEMA's `tap`
+  // role ("a cost — convoke/crew-style") is the natural fit, and tapping is
+  // a real state change worth its own node. A pure mana-only cost (no `T`)
+  // has no such node to attach `cost:` to without deeper changes to every
+  // individual effect handler below; left as a smaller, separate open gap.
+  if (row.lineType === 'A' && fields.Cost && !/^Sac</.test(fields.Cost)) {
+    const parts = fields.Cost.split(' ').filter(Boolean);
+    if (parts.includes('T')) {
+      const manaCost = parts.filter((p) => p !== 'T').map((s) => `{${s}}`).join('');
+      // SorcerySpeed$True ("Activate only as a sorcery") — a real timing
+      // restriction (Brave-Kin Duo's own activated ability has it) that had
+      // no flag at all, silently reading as an instant-speed ability.
+      const sorceryOnly = fields.SorcerySpeed === 'True' ? 'cond:sorcery_speed' : undefined;
+      const tapId = addNode(ctx, { role: 'tap', owner: 'me', from: 'bf', to: 'bf', thing: selfThing, flags: [manaCost ? `cost:${manaCost}` : undefined, sorceryOnly].filter(Boolean).join(' ') || undefined });
+      attach(tapId);
+      translateOwnEffect(ctx, tree, tapId, selfThing, inTrigger, granted, applyMay);
+      return;
+    }
   }
 
   translateOwnEffect(ctx, tree, parent, selfThing, inTrigger, granted, applyMay);
@@ -456,22 +570,58 @@ function translateOwnEffect(
     const from = zone(fields.Origin);
     const to = zone(fields.Destination);
     const transformed = fields.Transformed === 'True';
-    if (to === 'bf') {
+    // No ValidTgts/SacValid at all, and no Defined$ other than `Remembered`
+    // (a same-chain self-reference, not a different subject — Jecht's own
+    // exile-then-return sets `RememberChanged$True` on the exile step, then
+    // reads it back here), means the effect's own implicit subject is
+    // whatever triggered/cast it — the card moving itself, not an anonymous
+    // or targeted external thing. This is the ONLY case `to:"bf"` means
+    // "this card returns" — a real target predicate (ValidTgts$, e.g. Class
+    // level 3's "return target ... permanent card from your graveyard")
+    // moves some OTHER, arbitrary object, same as any other `move` node; an
+    // earlier version treated every to:"bf" as this card returning
+    // regardless, which was flatly wrong for the targeted case (found
+    // auditing Builder's Talent's own Class levels).
+    // ChangeType$ (Scavenger's Talent's Level 3: "return A creature card from
+    // your graveyard," via ChangeType$ Creature.YouOwn, no ValidTgts$ at all
+    // since nothing is targeted — you just choose one matching the type) is a
+    // third way Forge names an external, non-self subject, same as ValidTgts$/
+    // SacValid$ above — missing it here meant this whole shape fell through
+    // to "this card returns," which produces a `becomes self` return using
+    // the WRONG identity for a targeted-adjacent choice of some OTHER card.
+    const selfMove = !fields.ValidTgts && !fields.SacValid && !fields.ChangeType && (!fields.Defined || fields.Defined === 'Remembered');
+    if (to === 'bf' && selfMove) {
       const id = addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: transformed ? 'self:back' : selfThing });
       attach(id);
       for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
       return;
     }
-    // No ValidTgts/Defined/SacValid at all means the effect's own implicit
-    // subject is whatever triggered/cast it (an English "exile IT, then
-    // return it" — Jecht's own transform step) — the card moving itself,
-    // not an anonymous or targeted external thing.
-    const selfMove = !fields.ValidTgts && !fields.Defined && !fields.SacValid;
-    const owner = selfMove ? 'me' : deriveOwner(fields.Defined);
+    // Owner from the TARGET's own controller (ownerFromTargetPredicate,
+    // reading ValidTgts$'s .YouCtrl/.OppCtrl/.Opponent qualifiers) when
+    // targeted — this branch previously used deriveOwner(fields.Defined)
+    // unconditionally, which is the wrong field for a targeted move (Defined$
+    // is empty here; the qualifier lives on ValidTgts$) and silently
+    // defaulted every targeted ChangeZone to owner:"me" regardless of whose
+    // permanent it actually targets (found on Banishing Light's real
+    // ValidTgts$ Permanent.nonLand+OppCtrl — an opponent's permanent).
     const targeted = !!fields.ValidTgts;
+    const changeTypePredicate = !targeted && !selfMove ? fields.ChangeType : undefined;
+    const owner = selfMove
+      ? 'me'
+      : targeted
+        ? ownerFromTargetPredicate(fields.ValidTgts)
+        : changeTypePredicate
+          ? ownerFromTargetPredicate(changeTypePredicate)
+          : deriveOwner(fields.Defined);
     const qty = fields.TargetMax ? `qty:${fields.TargetMin ?? 0}..${fields.TargetMax}` : undefined;
-    const flags = withMay([qty, targeted ? 'target' : undefined].filter(Boolean).join(' ') || undefined);
-    const thing = selfMove ? selfThing : coarseType(fields.ValidTgts ?? fields.SacValid);
+    // Duration$UntilHostLeavesPlay — the "exile ... until CARDNAME leaves the
+    // battlefield" O-Ring pattern (Banishing Light and its many relatives):
+    // a real, common linked-return mechanic that had no representation at
+    // all, silently rendering as a permanent, unconditional exile.
+    const untilSelfLeaves = fields.Duration === 'UntilHostLeavesPlay' ? 'cond:until_self_leaves' : undefined;
+    const qualifiers = targeted ? qualifierFlags(fields.ValidTgts) : changeTypePredicate ? qualifierFlags(changeTypePredicate) : [];
+    const flags = withMay([qty, targeted ? 'target' : undefined, untilSelfLeaves, ...qualifiers].filter(Boolean).join(' ') || undefined);
+    const thing = selfMove ? selfThing : coarseType(fields.ValidTgts ?? fields.SacValid ?? changeTypePredicate);
     const id = addNode(ctx, { role: 'move', owner, from, to, thing, flags });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
@@ -497,7 +647,7 @@ function translateOwnEffect(
     const definedSelf = !targeted && fields.Defined === 'Self';
     const thing = targeted ? coarseType(fields.ValidTgts) : definedSelf ? selfThing : coarseType(fields.ValidTgts);
     const owner = targeted
-      ? /\.YouCtrl\b/.test(fields.ValidTgts ?? '') ? 'me' : /\.Opponent\b/.test(fields.ValidTgts ?? '') ? 'opp' : 'any'
+      ? ownerFromTargetPredicate(fields.ValidTgts)
       : deriveOwner(fields.Defined);
     const delta = `${fields.NumAtt ?? '+0'}/${fields.NumDef ?? '+0'}`;
     const lifetime = fields.Permanent === 'True' ? undefined : 'lifetime:turn';
@@ -507,8 +657,37 @@ function translateOwnEffect(
   }
 
   if (ek === 'PutCounter') {
+    // Same targeted-vs-self duality Pump/DealDamage/Destroy already handle —
+    // `Defined$ Self` (Ajani's Pridemate, Skyknight Squire: "put a counter
+    // on THIS creature") vs a real `ValidTgts$` (Builder's Talent's Class
+    // level 2: "put a +1/+1 counter on TARGET creature you control", a
+    // completely different permanent). An earlier version hardcoded
+    // `thing: selfThing` unconditionally — silently wrong for the targeted
+    // case, confirmed by a round-trip exam that couldn't make sense of a
+    // non-creature enchantment supposedly receiving its own +1/+1 counter.
     const type = fields.CounterType === 'P1P1' ? '+1/+1counter' : (fields.CounterType ?? 'counter');
-    const id = addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cond:delta=${type}` });
+    const targeted = !!fields.ValidTgts;
+    const thing = targeted ? coarseType(fields.ValidTgts) : selfThing;
+    const owner = targeted
+      ? ownerFromTargetPredicate(fields.ValidTgts)
+      : 'me';
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, `cond:delta=${type}`].filter(Boolean).join(' ') });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'ClassLevel') {
+    // Class (702.140b): leveling up is itself an activated ability (a paid,
+    // player-timed choice — Class rules explicitly call it a special action
+    // done at sorcery speed, not automatic) that permanently grants
+    // whatever ability the level names. Modeled as a `becomes` node (a
+    // persistent state change unlocked by a cost, same shape Equip already
+    // uses) rather than folding the granted trigger straight into the
+    // card's own always-on abilities — the level really is gated behind
+    // paying `cost`, every time, independent of any other level.
+    const cost = (fields.Cost ?? '').split(' ').filter(Boolean).map((s) => `{${s}}`).join('');
+    const id = addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: '--', thing: selfThing, flags: `cost:${cost} cond:class_level=${fields.ClassLevel ?? '?'}` });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -521,7 +700,7 @@ function translateOwnEffect(
     // `emit` example; dealing damage is the same shape).
     const targeted = !!fields.ValidTgts;
     const owner = targeted
-      ? /\.YouCtrl\b/.test(fields.ValidTgts ?? '') ? 'me' : /\.Opponent\b/.test(fields.ValidTgts ?? '') ? 'opp' : 'any'
+      ? ownerFromTargetPredicate(fields.ValidTgts)
       : deriveOwner(fields.Defined);
     const qty = fields.NumDmg ?? '1';
     const id = addNode(ctx, { role: 'emit', owner, from: '--', to: '--', thing: 'damage', flags: [targeted ? 'target' : undefined, qty !== '1' ? `qty:${qty}` : undefined].filter(Boolean).join(' ') || undefined });
@@ -536,7 +715,7 @@ function translateOwnEffect(
     // controller chooses is being forced onto someone else's permanent
     // rather than their own, so owner comes from the target predicate.
     const thing = coarseType(fields.ValidTgts);
-    const owner = /\.YouCtrl\b/.test(fields.ValidTgts ?? '') ? 'me' : /\.Opponent\b/.test(fields.ValidTgts ?? '') ? 'opp' : 'any';
+    const owner = ownerFromTargetPredicate(fields.ValidTgts);
     const id = addNode(ctx, { role: 'move', owner, from: 'bf', to: 'gy', thing, flags: ['target', ...qualifierFlags(fields.ValidTgts)].join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
@@ -584,6 +763,21 @@ function translateEffectAsLeaf(ctx: Ctx, tree: RowTree, selfThing: string, inTri
 // shape (Equip, the *Cycling family, Job select).
 function translateKeyword(ctx: Ctx, row: ForgeRow, selfThing: string) {
   const params = (row.fields ?? '').split(':').filter((x) => x !== '');
+  if (row.role === 'Offspring') {
+    // "Pay an additional {cost} as you cast this spell. If you do, when
+    // this creature enters, create a 1/1 token copy of it." Forge hardcodes
+    // the whole effect into the keyword itself — no SVar reference at all,
+    // unlike every other mechanic here — so params[0] (the only param) is
+    // the entire content: the extra cost. A second, independent `enters`
+    // root (not chained off the normal cast->enters skeleton, since paying
+    // extra is optional and this is a distinct conditional event) — `thing`
+    // stays `self` (the token shares the original's own type line) but
+    // `cond:token` marks it as token-status for `cond:token`/`cond:nontoken`
+    // predicate matching (SCHEMA §2), same as any other token producer.
+    const cost = params[0] ?? '';
+    ctx.roots.push(addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cost:{${cost}} cond:token` }));
+    return;
+  }
   if (row.role === 'Equip') {
     const cost = params[0];
     ctx.roots.push(addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: '--', thing: selfThing, flags: `cost:{${cost}} target cond:attach` }));

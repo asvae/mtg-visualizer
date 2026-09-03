@@ -91,6 +91,31 @@ function walkEffect(
     const raw = svars.get(addTrigger);
     if (raw) walkEffect(parsePipeFields(raw), depth + 1, false, 'T', svars, rows);
   }
+  // AddStaticAbility$ — the same "grant an ability via a referenced SVar"
+  // idea AddTrigger$ already handles, just granting a STATIC (a continuous
+  // rule, e.g. Class level 3's "creature tokens you control get +2/+2")
+  // instead of a triggered ability. A real, separate Forge field (Caretaker's
+  // Talent's level 3 uses it, not AddTrigger$) that had no handling at all —
+  // the whole anthem silently had nothing pointing at it.
+  const addStatic = fieldValue(fields, 'AddStaticAbility');
+  if (addStatic) {
+    const raw = svars.get(addStatic);
+    if (raw) walkEffect(parsePipeFields(raw), depth + 1, false, 'S', svars, rows);
+  }
+  // AddReplacementEffect$ — a THIRD "grant an ability via a referenced SVar"
+  // field (Innkeeper's Talent's level 3: "if you would put counters on a
+  // permanent, put twice that many instead"), same silent-nothing-points-
+  // at-it gap AddStaticAbility$ had before it got this same treatment.
+  // Routed as an 'S' row same as AddStaticAbility$ — forgeTranslate.ts's
+  // static handler has no real replacement-effect role to build a node for
+  // (SCHEMA has no representation for "modifies a future event" yet), so
+  // this deliberately surfaces as an honest `unmapped` entry there rather
+  // than vanishing with zero trace the way it did with no handling at all.
+  const addReplacement = fieldValue(fields, 'AddReplacementEffect');
+  if (addReplacement) {
+    const raw = svars.get(addReplacement);
+    if (raw) walkEffect(parsePipeFields(raw), depth + 1, false, 'S', svars, rows);
+  }
 
   const execute = fieldValue(fields, 'Execute');
   if (execute) {
@@ -166,6 +191,50 @@ function parseFace(block: string): ForgeFace {
       const name = params[0];
       if (name === 'Chapter') {
         walkChapter(params.slice(1), 0, svars, rows);
+        continue;
+      }
+      // Gift (702.199) always references a SVar literally named
+      // `GiftAbility` — a hardcoded engine convention, not a `Choices$`/
+      // `Execute$`/`AddTrigger$` field pointer this parser would otherwise
+      // follow — so it never becomes a row on its own. Walking it explicitly
+      // here surfaces the real gift (a token to whichever opponent is
+      // promised it) as a normal effect row instead of `K:Gift` staying an
+      // opaque bare keyword with no content behind it.
+      if (name === 'Gift') {
+        const giftRaw = svars.get('GiftAbility');
+        if (giftRaw) {
+          // lineType 'A' (not undefined) — app/lib/forgeTranslate.ts's own
+          // top-level walk only picks up rows typed A/T/S/K; `undefined` is
+          // for a non-root chained row (a child reached via SubAbility$
+          // etc), invisible to that walk, which is exactly the class of bug
+          // this whole Gift/Class effort exists to close (see report).
+          walkEffect(parsePipeFields(giftRaw), 0, true, 'A', svars, rows);
+          continue;
+        }
+      }
+      // Class (702.140): `K:Class:<level>:<cost>:AddTrigger$ <SVar>` — one
+      // line per level, each paying its own cost to permanently grant a
+      // trigger. Synthesized as `AB$ ClassLevel` (a made-up effect name
+      // app/lib/forgeTranslate.ts special-cases, same idea as SP$/AB$/DB$)
+      // carrying the real Cost$/ClassLevel$ fields plus the level's own
+      // AddTrigger$ — walkEffect's existing generic AddTrigger$ handling
+      // (see above) then resolves and nests the granted trigger as this
+      // row's child automatically, no separate lookup needed.
+      if (name === 'Class' && params.length >= 4) {
+        const [, level, cost, addTriggerField] = params;
+        walkEffect(
+          [
+            ['AB', 'ClassLevel'],
+            ['ClassLevel', level ?? ''],
+            ['Cost', cost ?? ''],
+            [addTriggerField?.split('$')[0]?.trim() ?? 'AddTrigger', addTriggerField?.split('$')[1]?.trim() ?? ''],
+          ],
+          0,
+          true,
+          'A', // see the Gift branch's comment above — must be a root-visible type
+          svars,
+          rows
+        );
         continue;
       }
       rows.push({

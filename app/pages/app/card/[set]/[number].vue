@@ -197,6 +197,20 @@ const outlineRows = computed<OutlineRow[]>(() => {
   return rows;
 });
 
+// Node ids that show up in the Interactions panel below — i.e. this card's
+// own row actually participates in a cross-card (or self) match, not just
+// sitting in the outline unused. Only `nodeOwner === card.name` counts:
+// the "affected by another card's rule" groups carry no id of THIS card's
+// own (see synergyInteractions.ts's own header — bearing a rule isn't a
+// node), so those never light anything up here, correctly.
+const interactingNodeIds = computed<Set<string>>(() => {
+  const ids = new Set<string>();
+  for (const group of data.value?.interactions ?? []) {
+    if (group.nodeOwner === card.value?.name) ids.add(group.nodeId);
+  }
+  return ids;
+});
+
 // Indentation guide for the role/label cell: roots get a plain marker, a
 // child gets a └─ prefix repeated at its own depth so nesting reads at a
 // glance without a second indentation mechanism (padding alone loses the
@@ -279,7 +293,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     </td>
                   </template>
                   <template v-else>
-                    <td class="pr-2 text-muted/60">{{ row.id }}</td>
+                    <td
+                      class="pr-2"
+                      :class="interactingNodeIds.has(row.id) ? 'font-bold text-text' : 'text-muted/60'"
+                      :title="interactingNodeIds.has(row.id) ? 'Appears in the Interactions panel below' : undefined"
+                      >{{ row.id }}</td
+                    >
                     <td class="pr-3">
                       <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span
                       ><span :style="{ color: synergyRoleColor(row.node.role) }">{{ synergyRoleLabel(row.node) }}</span

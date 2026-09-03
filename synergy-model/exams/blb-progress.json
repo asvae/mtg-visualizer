@@ -1,0 +1,85 @@
+{
+  "_comment": "Tracks the full-set examiner pass over BLB (274 cards). status: 'match' | 'issues-fixed' (bug found+fixed, converged) | 'issues-open' (real gap, not fixed, doesn't need big rework) | 'skipped-attempts' (3 examiner loops used, still issues) | 'skipped-rework' (needs a design decision, see note). attempts counts examiner agent runs used.",
+  "_strategy": "Batch 1 (5 cards, full blind examiner each) showed exhaustive per-card examining doesn't scale (~400k+ tokens for 5 cards). Switched to audit-first triage starting batch 2: a static risk-pattern scan (scripts under the job scratch dir, not checked into the repo) flags cards using fragile Forge field shapes; cards hitting only ALREADY-FIXED shared-logic patterns are not re-examined individually (the fix applies uniformly to every card using that pattern); a small diverse spot-check sample is examined per round instead to catch NEW bug classes, and known architectural gaps (see known_gap_classes) are recorded once and applied to every card in that class without spending agent budget on each.",
+  "known_gap_classes": {
+    "ConditionCheckSVar/ConditionSVarCompare (dynamic cross-player comparison)": {
+      "description": "Forge's system for conditional effects compared against another player's count (e.g. 'if an opponent controls more lands than you'). Zero translator support -- conditions are silently dropped, producing an unconditional effect chain. A whole unsupported class, not a quick fix -- needs a design decision (a sensor-role extension, or a new cond: convention) before implementing. Flagged for the user.",
+      "cards": ["Beza, the Bounding Spring", "Harvestrite Host", "Portent of Calamity", "Shoreline Looter", "Coiling Rebirth", "Thought-Stalker Warlock", "Wick, the Whorled Mind", "Reptilian Recruiter", "Cache Grab", "Mistbreath Elder", "Finneas, Ace Archer"]
+    },
+    "CopyPermanent (create a token copy of target permanent)": {
+      "description": "DB$ CopyPermanent has no handler at all -- a genuinely new effect type (not a quick field/regex fix), but not big-rework/design-decision-needed either. Real backlog item, not blocking.",
+      "cards": ["Caretaker's Talent", "Season of Weaving", "Coiling Rebirth", "Stormsplitter", "For the Common Good"]
+    },
+    "Tap as an EFFECT (not a cost)": {
+      "description": "SCHEMA's own `tap` role is explicitly defined as a cost/drain shape (convoke/crew-style) -- 'tap target creature(s)' as a standalone effect (DB$/AB$ Tap) has no representation. Needs a design decision: a new role, or a modifier-with-state-payload convention (parallel to the menace/flying cond: pattern). Smaller in scope than the dynamic-comparison gap but still a real open question.",
+      "cards": ["Eddymurk Crab"]
+    },
+    "Mill as an effect": {
+      "description": "DB$ Mill has no handler -- genuinely unimplemented effect type, narrow backlog item.",
+      "cards": ["Scavenger's Talent"]
+    },
+    "AddReplacementEffect$ / non-Flying AddKeyword$ on a static": {
+      "description": "Fixed this batch -- both now surface honestly as unmapped entries instead of vanishing silently. No node built yet (no schema role for either mechanic), but no longer a silent-drop bug.",
+      "cards": ["Innkeeper's Talent"]
+    }
+  },
+  "done": {
+    "Builder's Talent": {
+      "status": "issues-open",
+      "attempts": 2
+    },
+    "Crumb and Get It": {
+      "status": "issues-open",
+      "attempts": 1
+    },
+    "Coruscation Mage": {
+      "status": "issues-open",
+      "attempts": 1
+    },
+    "Beza, the Bounding Spring": {
+      "status": "skipped-rework",
+      "attempts": 1,
+      "note": "See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare. Needs your call before implementing."
+    },
+    "Banishing Light": {
+      "status": "issues-fixed",
+      "attempts": 2,
+      "note": "Attempt 1 missed the .nonLand qualifier and .OppCtrl owner (Forge's Permanent.nonLand+OppCtrl chains qualifiers with + past the first, which the owner/qualifier regexes only matched right after a literal dot). Fixed the regex, plus wired qualifierFlags() into the ChangeZone targeted-move handler (it had .nonLand support added earlier but never actually called). Verified directly against the regenerated packet, not a 3rd live agent run."
+    },
+    "Brave-Kin Duo": {
+      "status": "issues-fixed",
+      "attempts": 2,
+      "note": "Attempt 2 (post Cost$/tap fix) correctly reconstructed the full activated ability except \"Activate only as a sorcery\" (SorcerySpeed$True had no flag). Added cond:sorcery_speed. Verified via forgeTranslate.test.ts, not a 3rd live agent run."
+    },
+    "Caretaker's Talent": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Level 3 anthem confirmed correct (AddStaticAbility$ fix from attempt 1 working). Fixed ActivationLimit$1 (\"triggers only once each turn\") -> cond:once_per_turn. See known_gap_classes.CopyPermanent for the remaining Level 2 gap."
+    },
+    "Innkeeper's Talent": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Confirmed PutCounter's owner (Creature.YouCtrl) already correct -- examining agent misread it, not a translator bug. Found and fixed a real silent-drop bug: the static handler's unmapped-fallback treated ANY AddKeyword$ value as \"handled\" (only Flying actually built a node), so AddKeyword$ Ward:1 vanished with zero trace. Fixed via a `handled` tracking flag. Also found AddReplacementEffect$ (a third grant-via-SVar field, distinct from AddTrigger$/AddStaticAbility$) was completely unwired -- fixed in forgeScript.ts, plus fixed a label bug where a missing Mode$ stringified to the literal text 'undefined'. Remaining open: Mode$ Phase's Phase$ field is unread (generic 'phase' trigger-type instead of 'beginning of combat'); Ward/replacement-effect mechanics themselves have no schema role yet (see known_gap_classes)."
+    },
+    "Eluge, the Shoreless Sea": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Spot-check batch 2. No new bug class found -- confirms two already-known gaps: CharacteristicDefining$ (dynamic */* P/T, likely a smaller sibling of the sensor-role gap, not full Beza-tier) and a second Mode$ ReduceCost (same shape as Eddymurk Crab's, now at least surfaces honestly post this batch's static-handler fix). The nested SubAbility$->StaticAbilities$ 'remembered object gets a static ability' shape (granting the flooded land its Island type) also isn't followed -- not chased down further."
+    },
+    "Eddymurk Crab": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Found and fixed a real silent-drop bug: Mode$ ReduceCost (this card's own cost-reduction clause) matched none of the static handler's branches and vanished with no node AND no unmapped entry -- same fix as Innkeeper's Talent's AddKeyword bug (a `handled` flag + honest fallback), now surfaces as S:ReduceCost. See known_gap_classes for the two remaining open gaps (K:ETBReplacement, Tap-as-effect)."
+    },
+    "Jackdaw Savior": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Found and fixed a systemic gap, not card-specific: ChangesZone/ChangesZoneAll with Origin$Battlefield->Destination$Graveyard (rule 700.4 'dies') fell through to the unreadable literal string 'changeszone' -- added an isDies check mirroring the existing isEnter one. Confirmed this also fixed Scavenger's Talent's base trigger in the same batch, so likely benefits several more untested BLB cards using 'whenever ~ dies'. Two narrower, card-specific qualifier gaps left open (multi-clause .YouCtrl/.withFlying, and a Beza-adjacent-but-narrower dynamic mana-value comparison on the return target)."
+    },
+    "Scavenger's Talent": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Benefited from two shared-logic fixes made earlier in this same batch: the dies-trigger fix (base ability) and a new ChangeType$ fix (Level 3's non-targeted 'return a creature card' idiom via ChangeType$ Creature.YouOwn was wrongly read as 'this enchantment returns' -- selfMove's heuristic didn't know about ChangeType$ as a third way Forge names an external subject, alongside ValidTgts$/SacValid$). Fixed by adding ChangeType$ handling to the ChangeZone handler (owner/thing/qualifiers all now derived from it same as ValidTgts$). See known_gap_classes.Mill for the one remaining gap (Level 2's effect)."
+    }
+  }
+}

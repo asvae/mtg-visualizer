@@ -1,21 +1,18 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T15:13:53.196Z",
-  "clean": 130,
-  "gaps": 144,
-  "totalUnmapped": 228,
+  "generatedAt": "2026-09-03T20:35:58.030Z",
+  "clean": 126,
+  "gaps": 148,
+  "totalUnmapped": 238,
   "cards": {
     "Beza, the Bounding Spring": [
       "TokenScript$u_1_1_fish"
     ],
     "Builder's Talent": [
-      "TokenScript$w_0_4_wall_defender",
-      "K:Class",
-      "K:Class"
+      "TokenScript$w_0_4_wall_defender"
     ],
     "Caretaker's Talent": [
-      "K:Class",
-      "K:Class"
+      "?:CopyPermanent"
     ],
     "Carrot Cake": [
       "TokenScript$w_1_1_rabbit",
@@ -23,23 +20,26 @@
       "TokenScript$w_1_1_rabbit",
       "?:Scry"
     ],
+    "Crumb and Get It": [
+      "TokenScript$c_a_food_sac"
+    ],
+    "Essence Channeler": [
+      "S:AddKeyword:Flying & Vigilance"
+    ],
     "Feather of Flight": [
       "K:Enchant"
     ],
     "Flowerfoot Swordmaster": [
-      "K:Offspring",
       "?:PumpAll"
     ],
     "Hop to It": [
       "TokenScript$w_1_1_rabbit"
     ],
-    "Intrepid Rabbit": [
-      "K:Offspring"
-    ],
     "Mouse Trapper": [
       "?:Tap"
     ],
     "Parting Gust": [
+      "TokenScript$u_1_1_fish",
       "?:DelayedTrigger"
     ],
     "Rabbit Response": [
@@ -65,7 +65,6 @@
       "A:PumpAll"
     ],
     "Warren Warleader": [
-      "K:Offspring",
       "TokenScript$w_1_1_rabbit",
       "?:PumpAll"
     ],
@@ -75,29 +74,38 @@
       "?:undefined",
       "?:ChangeZoneAll"
     ],
+    "Azure Beastbinder": [
+      "S:CantBlockBy"
+    ],
     "Daring Waverider": [
       "?:Play"
     ],
     "Dazzling Denial": [
       "A:Counter"
     ],
+    "Dire Downdraft": [
+      "S:ReduceCost"
+    ],
     "Eddymurk Crab": [
+      "S:ReduceCost",
       "K:ETBReplacement",
       "?:Tap"
     ],
     "Eluge, the Shoreless Sea": [
+      "S:Continuous",
       "?:Effect",
-      "?:Effect"
-    ],
-    "Finch Formation": [
-      "K:Offspring"
+      "?:Effect",
+      "S:ReduceCost"
     ],
     "Gossip's Talent": [
-      "K:Class",
-      "K:Class"
+      "?:Effect"
+    ],
+    "Into the Flood Maw": [
+      "TokenScript$u_1_1_fish"
     ],
     "Kitnap": [
       "K:Enchant",
+      "S:Continuous",
       "?:Tap"
     ],
     "Kitsa, Otterball Elite": [
@@ -108,6 +116,7 @@
     ],
     "Long River Lurker": [
       "K:Ward",
+      "S:AddKeyword:Ward:1",
       "?:Effect"
     ],
     "Long River's Pull": [
@@ -115,13 +124,20 @@
       "?:Counter"
     ],
     "Mind Spiral": [
+      "TokenScript$u_1_1_fish",
       "?:Tap"
     ],
     "Mockingbird": [
       "K:ETBReplacement"
     ],
+    "Nightwhorl Hermit": [
+      "S:CantBlockBy"
+    ],
     "Otterball Antics": [
       "TokenScript$ur_1_1_otter_prowess"
+    ],
+    "Pearl of Wisdom": [
+      "S:ReduceCost"
     ],
     "Portent of Calamity": [
       "A:PeekAndReveal",
@@ -134,6 +150,9 @@
       "?:undefined",
       "?:ChangeZoneAll"
     ],
+    "Shoreline Looter": [
+      "S:CantBlockBy"
+    ],
     "Skyskipper Duo": [
       "?:DelayedTrigger"
     ],
@@ -141,31 +160,23 @@
       "?:Counter"
     ],
     "Splash Lasher": [
-      "K:Offspring",
       "?:Tap"
     ],
     "Stormchaser's Talent": [
       "TokenScript$ur_1_1_otter_prowess",
-      "K:Class",
-      "K:Class"
+      "TokenScript$ur_1_1_otter_prowess"
     ],
     "Sugar Coat": [
       "K:Enchant"
     ],
-    "Thundertrap Trainer": [
-      "K:Offspring"
-    ],
     "Valley Floodcaller": [
+      "S:CastWithFlash",
       "?:PumpAll",
       "?:UntapAll"
     ],
     "Wishing Well": [
       "?:ImmediateTrigger",
       "?:Play"
-    ],
-    "Bandit's Talent": [
-      "K:Class",
-      "K:Class"
     ],
     "Coiling Rebirth": [
       "?:CopyPermanent"
@@ -176,27 +187,29 @@
     "Daggerfang Duo": [
       "?:Mill"
     ],
-    "Darkstar Augur": [
-      "K:Offspring"
-    ],
     "Feed the Cycle": [
       "K:AlternateAdditionalCost"
     ],
-    "Iridescent Vinelasher": [
-      "K:Offspring"
+    "Huskburster Swarm": [
+      "S:ReduceCost"
     ],
     "Maha, Its Feathers Night": [
-      "K:Ward"
+      "K:Ward",
+      "S:Continuous"
     ],
     "Moonstone Harbinger": [
       "?:PumpAll",
       "?:PumpAll"
+    ],
+    "Nocturnal Hunger": [
+      "TokenScript$c_a_food_sac"
     ],
     "Osteomancer Adept": [
       "A:Effect"
     ],
     "Rottenmouth Viper": [
       "A:PermanentCreature",
+      "S:ReduceCost",
       "?:Repeat",
       "?:Repeat"
     ],
@@ -205,14 +218,12 @@
     ],
     "Scavenger's Talent": [
       "TokenScript$c_a_food_sac",
-      "K:Class",
-      "K:Class"
+      "?:Mill"
     ],
     "Starscape Cleric": [
-      "K:Offspring"
+      "S:CantBlock"
     ],
     "Thornplate Intimidator": [
-      "K:Offspring",
       "?:GenericChoice",
       "?:undefined"
     ],
@@ -230,22 +241,18 @@
       "?:Effect"
     ],
     "Artist's Talent": [
-      "K:Class",
-      "K:Class"
+      "S:ReduceCost",
+      "S:Event:DamageDone"
     ],
     "Blacksmith's Talent": [
       "TokenScript$sword",
-      "K:Class",
-      "K:Class"
+      "S:AddKeyword:Double Strike & Haste"
     ],
     "Brazen Collector": [
       "?:Mana"
     ],
     "Conduct Electricity": [
       "?:DamageResolve"
-    ],
-    "Coruscation Mage": [
-      "K:Offspring"
     ],
     "Dragonhawk, Fate's Tempest": [
       "?:Effect",
@@ -257,6 +264,9 @@
     ],
     "Emberheart Challenger": [
       "?:Effect"
+    ],
+    "Festival of Embers": [
+      "S:Continuous"
     ],
     "Flamecache Gecko": [
       "?:Mana"
@@ -270,23 +280,23 @@
     "Kindlespark Duo": [
       "?:Untap"
     ],
-    "Manifold Mouse": [
-      "K:Offspring"
+    "Sazacap's Brew": [
+      "TokenScript$u_1_1_fish"
     ],
     "Season of the Bold": [
       "?:Effect",
       "?:Effect"
     ],
-    "Steampath Charger": [
-      "K:Offspring"
-    ],
     "Stormsplitter": [
       "?:CopyPermanent"
     ],
     "Sunspine Lynx": [
+      "S:CantGainLife",
+      "S:CantPreventDamage",
       "?:RepeatEach"
     ],
     "Valley Rally": [
+      "TokenScript$c_a_food_sac",
       "A:PumpAll"
     ],
     "War Squeak": [
@@ -301,9 +311,6 @@
     ],
     "Brambleguard Veteran": [
       "?:PumpAll"
-    ],
-    "Bushy Bodyguard": [
-      "K:Offspring"
     ],
     "Cache Grab": [
       "A:Mill",
@@ -322,32 +329,27 @@
     "Hivespine Wolverine": [
       "?:Fight"
     ],
-    "Hunter's Talent": [
-      "K:Class",
-      "K:Class"
-    ],
     "Innkeeper's Talent": [
-      "K:Class",
-      "K:Class"
+      "S:AddKeyword:Ward:1",
+      "S:Event:AddCounter"
     ],
     "Longstalk Brawl": [
+      "TokenScript$u_1_1_fish",
       "?:Fight"
     ],
     "Lumra, Bellow of the Woods": [
+      "S:Continuous",
       "?:Mill",
       "?:ChangeZoneAll"
     ],
     "Pawpatch Formation": [
       "TokenScript$c_a_food_sac"
     ],
-    "Pawpatch Recruit": [
-      "K:Offspring"
-    ],
     "Polliwallop": [
       "K:Affinity"
     ],
     "Rust-Shield Rampager": [
-      "K:Offspring"
+      "S:CantBlockBy"
     ],
     "Season of Gathering": [
       "?:undefined",
@@ -357,7 +359,6 @@
       "?:DestroyAll"
     ],
     "Tender Wildguide": [
-      "K:Offspring",
       "A:Mana"
     ],
     "Thornvault Forager": [
@@ -373,12 +374,19 @@
     "Baylen, the Haymaker": [
       "A:Mana"
     ],
+    "Burrowguard Mentor": [
+      "S:Continuous"
+    ],
     "Camellia, the Seedmiser": [
+      "S:AddKeyword:Menace",
       "TokenScript$g_1_1_squirrel",
       "A:PutCounterAll"
     ],
     "Cindering Cutthroat": [
       "K:etbCounter"
+    ],
+    "Clement, the Worrywort": [
+      "S:Continuous"
     ],
     "Dreamdew Entrancer": [
       "?:Tap"
@@ -395,6 +403,10 @@
       "K:Ward",
       "K:ETBReplacement"
     ],
+    "Glarb, Calamity's Augur": [
+      "S:Continuous",
+      "S:Continuous"
+    ],
     "Head of the Homestead": [
       "TokenScript$w_1_1_rabbit"
     ],
@@ -402,7 +414,8 @@
       "A:Mana"
     ],
     "Hugs, Grisly Guardian": [
-      "?:Effect"
+      "?:Effect",
+      "S:Continuous"
     ],
     "The Infamous Cruelclaw": [
       "?:DigUntil",
@@ -428,6 +441,9 @@
     "Starseer Mentor": [
       "?:GenericChoice",
       "?:undefined"
+    ],
+    "Stormcatch Mentor": [
+      "S:ReduceCost"
     ],
     "Vinereap Mentor": [
       "TokenScript$c_a_food_sac",
@@ -455,6 +471,7 @@
       "A:Mana"
     ],
     "Starforged Sword": [
+      "TokenScript$u_1_1_fish",
       "?:Attach"
     ],
     "Three Tree Mascot": [
@@ -502,6 +519,7 @@
       "A:Mana"
     ],
     "Bria, Riptide Rogue": [
+      "S:AddKeyword:Prowess",
       "?:Effect"
     ],
     "Byrke, Long Ear of the Law": [

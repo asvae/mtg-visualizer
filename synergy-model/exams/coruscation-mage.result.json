@@ -1,0 +1,20 @@
+{
+  "name": "Coruscation Mage",
+  "manaCost": "{1}{R}",
+  "typeLine": "Creature — Otter Wizard",
+  "description": "{2}: Create a token that's a copy of this creature.\n\nWhenever you cast a spell, this creature deals damage to each opponent.",
+  "assumptions": [
+    "Rendered node C's cond:token + thing:self as \"Create a token that's a copy of this creature\" — the node establishes that a token copy of the card's own identity enters the battlefield for {2}, but the exact verb/phrasing isn't itself fixed by the schema.",
+    "Assumed the damage in D→E is dealt by this creature (the ability's own source), since no other source is named on node E.",
+    "Rendered trigger-type \"spellcast\" with thing: any as unrestricted \"Whenever you cast a spell\" (not limited to instant/sorcery), since any denotes an unspecified card rather than a restricted type.",
+    "Assumed node E's owner: opp phrasing is \"each opponent\" rather than \"target opponent,\" since node E carries no target flag."
+  ],
+  "couldNotDerive": [
+    "The amount of damage dealt to each opponent — node E has no qty flag, so no number is given.",
+    "Any restriction on the {2} activated ability (once-per-turn limiter, sorcery-speed clause, tap cost) — none present on node C beyond the {2} mana cost.",
+    "Rarity and any supertype."
+  ],
+  "verdict": "issues",
+  "notes": "Two real translator/decomposition gaps, both confirmed against forge-model/data/coruscation-mage.txt's real oracle text (\"Offspring {2}... Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent.\"): (1) Offspring's own `cost:{2}` flag on an `enters` node is genuinely ambiguous with an activated ability's cost — nothing in the node distinguishes \"pay this once, at cast time, for a conditional ETB\" from \"pay this any time, repeatedly, for an immediate effect\"; the examiner reasonably read it as the latter. Offspring needs a flag distinguishing an alternate/additional cast-time cost from a true activated-ability cost. (2) The SpellCast trigger's `ValidCard$ Card.nonCreature` qualifier was lost entirely — the translator's ValidCard-clause parser (built for ChangesZone-style \"self or another Cat entering\" predicates, per this session's Arahbo work) doesn't understand a coarse-type-with-negation filter on a *different* trigger type (which spell you cast, not which permanent enters), so it fell back to `thing: any`, and \"noncreature\" never made it into the data at all. Root cause is a genuine gap in app/lib/forgeTranslate.ts's trigger predicate handling, not examiner error — a second blind attempt against the same node data would reproduce the identical gaps, so not retried. Separately, node E's real NumDmg$1 was correctly omitted from qty per SCHEMA's own \"default 1\" convention, but the exam packet's own schema summary (shared with make-exam.mjs) doesn't restate that default explicitly, so the examiner reasonably flagged it as undeterminable — a packet-completeness issue worth fixing in both scripts, not a data gap.",
+  "comparedAt": "2026-09-03"
+}

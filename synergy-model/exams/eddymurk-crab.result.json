@@ -1,0 +1,15 @@
+{
+  "name": "Eddymurk Crab",
+  "manaCost": "{5}{U}{U}",
+  "typeLine": "Creature — Elemental Crab",
+  "description": "Flash. This spell costs {1} less to cast for each instant and sorcery card in your graveyard. Eddymurk Crab enters tapped if it's not your turn. When Eddymurk Crab enters, tap up to two target creatures.",
+  "assumptions": [
+    "Read flags:\"flash\" on a modifier node as the literal keyword Flash."
+  ],
+  "couldNotDerive": [
+    "The cost-reduction ability, the enters-tapped-conditionally replacement, and the ETB tap effect -- all three untranslated at the time of the exam."
+  ],
+  "verdict": "issues",
+  "notes": "Found and fixed one real silent-drop bug this round: the S: (static) handler only recognized AddPower/AddToughness/AddKeyword=Flying/AddType -- Mode$ ReduceCost (this card's own cost-reduction clause) matched none of those and vanished with NO node and NO unmapped entry, same silent-drop shape as the K:-keyword bug fixed earlier this session. Added a `handled` tracking flag and an honest S:${mode} unmapped fallback -- now correctly surfaces as S:ReduceCost. Two gaps remain, documented but not fixed (out of this batch's scope): (1) K:ETBReplacement (the 'enters tapped if not your turn' conditional replacement) has no handler at all. (2) DB$ Tap as a standalone EFFECT (tap target creature(s), as opposed to the tap-as-COST handling added earlier this session for Brave-Kin Duo) has no representation -- SCHEMA's own `tap` role is explicitly defined as a cost/drain shape (convoke/crew-style), not a generic 'target becomes tapped' effect, so this isn't a quick reuse of that role; it would need either a new role or a `modifier`-with-state-payload convention (parallel to the menace/flying `cond:` pattern) -- a real design question worth flagging, similar in kind (though smaller) to Beza's gap.",
+  "comparedAt": "2026-09-04"
+}
