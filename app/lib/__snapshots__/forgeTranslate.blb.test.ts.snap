@@ -1087,3 +1087,344 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Shri
   "unmapped": [],
 }
 `;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Starfall Invocation 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Starfall Invocation",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "opp",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "bf",
+      "owner": "any",
+      "role": "move",
+      "thing": "creature",
+      "to": "gy",
+    },
+    "E": {
+      "flags": "cond:gift_promised cond:nontoken",
+      "from": "gy",
+      "owner": "me",
+      "role": "move",
+      "thing": "creature",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Thistledown Players 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+    },
+  },
+  "name": "Thistledown Players",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "attack",
+    },
+    "D": {
+      "flags": "target cond:state=untapped cond:nonland",
+      "from": "--",
+      "owner": "any",
+      "role": "modifier",
+      "thing": "permanent",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Valley Questcaller 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "H",
+      "I",
+      "J",
+      "K",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "G",
+      ],
+      "D": [
+        "G",
+      ],
+      "E": [
+        "G",
+      ],
+      "F": [
+        "G",
+      ],
+    },
+  },
+  "name": "Valley Questcaller",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "not:self",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "rabbit",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "D": {
+      "flags": "not:self",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "bat",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "not:self",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "bird",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "F": {
+      "flags": "not:self",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "mouse",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "G": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "library-look",
+      "to": "--",
+    },
+    "H": {
+      "flags": "not:self cond:delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "rabbit",
+      "to": "bf",
+    },
+    "I": {
+      "flags": "not:self cond:delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "bat",
+      "to": "bf",
+    },
+    "J": {
+      "flags": "not:self cond:delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "bird",
+      "to": "bf",
+    },
+    "K": {
+      "flags": "not:self cond:delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "mouse",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Wax-Wane Witness 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "G",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "E": [
+        "F",
+      ],
+      "G": [
+        "H",
+      ],
+    },
+  },
+  "name": "Wax-Wane Witness",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flying",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "vigilance",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "E": {
+      "flags": "cond:your_turn",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "lifegained",
+    },
+    "F": {
+      "flags": "lifetime:turn cond:pt_delta=+1/+0",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "G": {
+      "flags": "cond:your_turn",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "lifelost",
+    },
+    "H": {
+      "flags": "lifetime:turn cond:pt_delta=+1/+0",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;

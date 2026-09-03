@@ -1,0 +1,13 @@
+{
+  "name": "Wax-Wane Witness",
+  "manaCost": "{3}{W}",
+  "typeLine": "Creature — Bat Cleric",
+  "description": "Flying, vigilance. Whenever you gain or lose life during your turn, this creature gets +1/+0 until end of turn.",
+  "assumptions": [
+    "Presented the life-gain and life-loss triggers as two separate sentences, since they're modeled as two distinct root trigger nodes with identical downstream effects -- same structural duplication as Carrot Cake's shared-text pair."
+  ],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "Fixed a real gap: PlayerTurn$True (\"during YOUR turn\") had no handling on triggers at all -- reused the existing cond:your_turn naming already established for Flying's own Condition$PlayerTurn encoding. Verified both trigger nodes now carry cond:your_turn. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

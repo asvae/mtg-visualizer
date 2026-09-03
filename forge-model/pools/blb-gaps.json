@@ -1,9 +1,9 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T22:33:25.628Z",
-  "clean": 187,
-  "gaps": 87,
-  "totalUnmapped": 122,
+  "generatedAt": "2026-09-03T22:54:16.132Z",
+  "clean": 190,
+  "gaps": 84,
+  "totalUnmapped": 116,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
@@ -14,16 +14,10 @@
     "Salvation Swan": [
       "?:DelayedTrigger"
     ],
-    "Starfall Invocation": [
-      "A:DestroyAll"
-    ],
     "Whiskervale Forerunner": [
       "?:PeekAndReveal",
       "?:ChooseCard",
       "?:undefined"
-    ],
-    "Azure Beastbinder": [
-      "S:CantBlockBy"
     ],
     "Daring Waverider": [
       "?:Play"
@@ -182,7 +176,6 @@
       "?:RepeatEach"
     ],
     "Wildfire Howl": [
-      "?:DamageAll",
       "?:DamageResolve"
     ],
     "Clifftop Lookout": [
@@ -209,15 +202,10 @@
     "Polliwallop": [
       "K:Affinity"
     ],
-    "Rust-Shield Rampager": [
-      "S:CantBlockBy"
-    ],
     "Season of Gathering": [
       "?:undefined",
       "?:GenericChoice",
-      "?:undefined",
-      "?:DestroyAll",
-      "?:DestroyAll"
+      "?:undefined"
     ],
     "Alania, Divergent Storm": [
       "?:CopySpellAbility"

@@ -1,0 +1,11 @@
+{
+  "name": "Warren Elder",
+  "manaCost": "{1}{W}",
+  "typeLine": "Creature — Rabbit Cleric",
+  "description": "{3}{W}: Creatures you control get +1/+1 until end of turn.",
+  "assumptions": [],
+  "couldNotDerive": ["The activation cost {3}{W} -- node C has no cost node/flag feeding it at all, so the examiner correctly flagged the ability as ungated with an unknown trigger/cost mechanism."],
+  "verdict": "issues-open",
+  "notes": "Real gap: AB$ PumpAll with a plain mana-only Cost$ (\"{3}{W}: Creatures you control get +1/+1\") has no cost handling at all -- the generic tap-cost handler only recognizes Cost$ strings containing T (a tap component); a pure-mana activated-ability cost with no tap and no Sac<> falls through completely uncosted, same class of gap noted much earlier this session for Pump (\"a smaller, separate open gap\" -- still open, now confirmed hit by a real card). Not fixed this round -- would need extending the tap-cost handler (or adding a parallel mana-only-cost handler) to build a cost-bearing node even without a tap component.",
+  "comparedAt": "2026-09-04"
+}

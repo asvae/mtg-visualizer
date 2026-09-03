@@ -133,7 +133,10 @@ separate \`flow\` graph describing how they depend on each other:
   or unspecified),
   \`lifetime:turn\` (temporary), \`tapped\` (arrives tapped), \`cond:...\`
   (free-text game-state precondition, or a payload for \`modifier\`/\`tagger\`/
-  \`becomes\` stating what actually changes — e.g. \`cond:equipped;delta=+1/+1\`).
+  \`becomes\` stating what actually changes — e.g. \`cond:equipped;delta=+1/+1\`,
+  or \`cond:state=tapped\`/\`cond:state=untapped\` on a \`modifier\` node — this is
+  the EFFECT itself ("this becomes tapped/untapped"), not a precondition the
+  target must already satisfy before being eligible).
   Two binding forms: \`<name>:=<label>\` on the node where a value is first
   fixed (a scaler's own measured count, or a trigger's own variable info —
   "that player," "that many," locked in at the moment it triggers, not

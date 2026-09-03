@@ -32,7 +32,15 @@
     },
     "ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger": {
       "description": "\"Whenever this becomes the target of a spell or ability YOU CONTROL\" -- the trigger node's owner field already means \"whose occurrence\" (self, correctly 'me'), but WHO CONTROLS THE TRIGGERING SOURCE is a different dimension with no home in the current trigger vocabulary. Narrower than the big Condition class -- a real, recurring gap (Flowerfoot Swordmaster, Mouse Trapper, Nettle Guard all hit it) worth a follow-up flag/field addition, not a full redesign.",
-      "cards": ["Flowerfoot Swordmaster", "Mouse Trapper", "Nettle Guard"]
+      "cards": ["Flowerfoot Swordmaster", "Mouse Trapper", "Nettle Guard", "Whiskervale Forerunner"]
+    },
+    "Defined$Targeted / Defined$Targeted.<Type> owner resolution": {
+      "description": "A chained sub-effect referencing \"the same object targeted earlier in this chain\" (Crumb and Get It's KW$ grant, Azure Beastbinder's own Animate P/T-set) -- deriveOwner has no case for 'Targeted'/'Targeted.Creature', so it falls to the 'me' default, which is wrong whenever the earlier target wasn't necessarily controlled by the caster. Would need threading the parent effect's own resolved owner/thing down into children reached via SubAbility$, a broader signature change across many handlers, not attempted yet.",
+      "cards": ["Crumb and Get It", "Azure Beastbinder"]
+    },
+    "Pure mana-only activated-ability cost (no T, no Sac<>)": {
+      "description": "The generic activation-cost handler only recognizes a Cost$ containing T (tap) or Sac<> (sacrifice) -- a plain \"{3}{W}: effect\" cost with neither falls through completely uncosted (Warren Elder's own PumpAll). Would need a parallel cost-node path for the mana-only case.",
+      "cards": ["Warren Elder"]
     },
     "AddReplacementEffect$ / non-Flying AddKeyword$ on a static": {
       "description": "Fixed this batch -- both now surface honestly as unmapped entries instead of vanishing silently. No node built yet (no schema role for either mechanic), but no longer a silent-drop bug.",
@@ -139,6 +147,14 @@
       "attempts": 1,
       "note": "Fixed Valiant$True (\"for the first time each turn\") by reusing cond:once_per_turn. One narrower gap remains open: ValidSource$SpellAbility.YouCtrl (who controls the triggering spell/ability) has no home in the trigger vocabulary's current owner slot."
     },
+    "Starfall Invocation": { "status": "match", "attempts": 1, "note": "Implemented DestroyAll/DamageAll (had zero handling) and gift_promised on ChangeZone. In blb-success.json." },
+    "Thistledown Players": { "status": "match", "attempts": 1, "note": "Node data was already correct; fixed the packet's own documentation ambiguity around cond:state=tapped/untapped (was readable as a precondition, not the effect). In blb-success.json." },
+    "Valley Questcaller": { "status": "match", "attempts": 1, "note": "Fixed multi-clause Affected$ on static AddPower/AddToughness/AddType (only read the first of 4 comma-joined subtypes before) -- a systemic fix for tribal anthems. In blb-success.json." },
+    "Warren Elder": { "status": "issues-open", "attempts": 1, "note": "A pure mana-cost activated ability (no T, no Sac<>) has no cost handling at all -- same narrower gap noted early this session for Pump, now confirmed hit by a real card. Not fixed." },
+    "Warren Warleader": { "status": "issues-fixed", "attempts": 1, "note": "Fixed TokenAttacking$True (no handling existed, only TokenTapped$ did). One narrower gap remains: Mode$AttackersDeclared's generic trigger-type." },
+    "Wax-Wane Witness": { "status": "match", "attempts": 1, "note": "Fixed PlayerTurn$True on triggers (reused existing cond:your_turn naming). In blb-success.json." },
+    "Whiskervale Forerunner": { "status": "issues-open", "attempts": 1, "note": "Genuinely complex multi-step effect chain (PeekAndReveal/ChooseCard/conditionally-gated ChangeZone branches) with no handler support at any step -- correctly absent rather than wrong. Left for a dedicated pass. Also hits the ValidSource$YouCtrl gap." },
+    "Azure Beastbinder": { "status": "issues-fixed", "attempts": 1, "note": "Fixed CantBlockBy (zero handling) and Animate's RemoveAllAbilities$/Power$+Toughness$-only shape (silent-drop, plus Animate always wrongly assumed self-targeting). Primary fact (opponent's permanent loses abilities) now correct. Two narrower gaps remain: 3-way target-type OR not split, and the second Animate node's Defined$Targeted owner/thing still wrong." },
     "Shrike Force": { "status": "match", "attempts": 1, "note": "Exact match. In blb-success.json." },
     "Seasoned Warrenguard": { "status": "match", "attempts": 1, "note": "Fixed IsPresent$ (trigger-level board-state check) via new ifPresentFlag helper. In blb-success.json." },
     "Rabbit Response": { "status": "match", "attempts": 1, "note": "Fixed ConditionPresent$ on chained Scry via ifPresentFlag. In blb-success.json." },

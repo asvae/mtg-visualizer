@@ -1,0 +1,14 @@
+{
+  "name": "Azure Beastbinder",
+  "manaCost": "{1}{U}",
+  "typeLine": "Creature — Rat Rogue",
+  "description": "Vigilance. Azure Beastbinder can't be blocked by creatures with power 2 or greater. Whenever Azure Beastbinder attacks, up to one target artifact, creature, or planeswalker an opponent controls loses all abilities until your next turn. If it's a creature, it also has base power and toughness 2/2 until your next turn.",
+  "assumptions": [],
+  "couldNotDerive": [
+    "The comma-OR of 3 target types (Artifact/Creature/Planeswalker) on the attack trigger's target -- only 'artifact' (the first clause) is captured.",
+    "That the P/T-set effect (base 2/2) applies to the SAME object the first effect targeted -- Defined$Targeted isn't resolved back to the earlier target's real owner (falls to a default 'me'/'self' instead of 'opp'/the actual targeted object), same class of gap as Crumb and Get It's Defined$Targeted imprecision."
+  ],
+  "verdict": "issues-fixed",
+  "notes": "Found and fixed 2 real gaps this round: (1) Mode$CantBlockBy had zero handling at all -- implemented as cond:not_blocked_by=<type>;<qualifiers>, reusing the power/toughness threshold qualifier also added this batch. Verified node D shows cond:not_blocked_by=creature;powerge=2, exact match. (2) Animate's RemoveAllAbilities$/Power$+Toughness$-only shape (no Types$) had NO handling at all -- silently vanished with zero trace. Fixed with a new branch (cond:loses_abilities, cond:set=P/T) plus targeted-owner/thing support (Animate previously always assumed self, wrong for a targeted use). Verified node F now shows owner:opp, target, cond:loses_abilities -- the primary fact (an opponent's permanent loses its abilities) is now correct. Two narrower gaps remain: the 3-way target-type OR isn't split (same accepted limitation as multi-clause ValidTgts$ elsewhere), and the second Animate node (Defined$Targeted.Creature, the P/T-set half) still resolves owner/thing to self/me instead of referring back to the actual targeted object.",
+  "comparedAt": "2026-09-04"
+}

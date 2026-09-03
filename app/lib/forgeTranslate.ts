@@ -193,6 +193,17 @@ function qualifierFlags(v: string | undefined): string[] {
   if (/[.+]nonCreature\b/.test(v)) flags.push('cond:noncreature');
   if (/[.+]withoutFlying\b/.test(v)) flags.push('cond:withoutflying');
   if (/[.+]withFlying\b/.test(v)) flags.push('cond:withflying');
+  // A single power/toughness threshold directly on a predicate (Azure
+  // Beastbinder's own ValidBlocker$ Creature.powerGE2 — "can't be blocked by
+  // creatures with power 2 or greater"). Does NOT cover an OR of two
+  // different stat thresholds on the SAME predicate (Repel Calamity's own
+  // Creature.powerGE4,Creature.toughnessGE4 — a comma-separated top-level OR
+  // this function was never designed to split, since it operates on one
+  // dot/plus-joined predicate string at a time) — see blb-progress.json's
+  // known_gap_classes for that narrower, still-open case.
+  const statMatch = /[.+](power|toughness)(GE|LE|EQ)(\d+)\b/i.exec(v);
+  const [, statName, statOp, statNum] = statMatch ?? [];
+  if (statName && statOp && statNum) flags.push(`cond:${statName.toLowerCase()}${statOp.toLowerCase()}=${statNum}`);
   return flags;
 }
 
@@ -395,8 +406,14 @@ function translateEffectRow(
     // effects. ifPresentFlag's own reasoning applies identically here.
     const presentTriggerFact = ifPresentFlag(fields.IsPresent);
     const presentFlag = presentTriggerFact ? `cond:${presentTriggerFact}` : undefined;
+    // PlayerTurn$True ("...during YOUR turn," Wax-Wane Witness's own life-
+    // gain/loss trigger) had no handling on triggers at all — reuses the
+    // same your_turn naming already established for Flying's own
+    // Condition$PlayerTurn encoding (a real mechanical fact, not a new name
+    // for the same restriction).
+    const yourTurnFlag = fields.PlayerTurn === 'True' ? 'cond:your_turn' : undefined;
     const ids = specs.map((spec) =>
-      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, presentFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
+      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, presentFlag, yourTurnFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
     );
     ids.forEach((id) => attach(id));
     // Build the downstream chain once, under the first clause-node, then
@@ -435,10 +452,22 @@ function translateEffectRow(
     const equipped = /\.(?:EquippedBy|EnchantedBy)\b/.test(affected ?? '');
     const thing = coarseType(affected);
     const condFlags = qualifierFlags(affected);
+    // Affected$ can be a comma-joined list of SEVERAL different subtypes
+    // (Valley Questcaller's own "Other Rabbits, Bats, Birds, and Mice you
+    // control get +1/+1" -- Affected$ Rabbit.Other+YouCtrl,Bat.Other+YouCtrl,
+    // Bird.Other+YouCtrl,Mouse.Other+YouCtrl), same multi-clause shape
+    // ValidCard$ already gets on triggers -- coarseType/qualifierFlags only
+    // read the FIRST clause (up to the first comma), silently dropping every
+    // other subtype from a multi-type tribal anthem. One modifier node per
+    // clause, same delta payload, mirrors the trigger multi-clause pattern.
+    const affectedClauses = (affected ?? '').split(',').map((c) => c.trim()).filter(Boolean);
+    const affectedSpecs = affectedClauses.length > 1 ? affectedClauses.map((c) => ({ thing: coarseType(c), condFlags: qualifierFlags(c) })) : [{ thing, condFlags }];
     let handled = false;
     if (fields.AddPower || fields.AddToughness) {
       const delta = `${fields.AddPower ? '+' + fields.AddPower : '+0'}/${fields.AddToughness ? '+' + fields.AddToughness : '+0'}`;
-      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing, flags: [...condFlags, `cond:${equipped ? 'equipped;' : ''}delta=${delta}`].join(' ') }));
+      for (const spec of affectedSpecs) {
+        attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}delta=${delta}`].join(' ') }));
+      }
       handled = true;
     }
     if (fields.AddKeyword) {
@@ -470,10 +499,26 @@ function translateEffectRow(
       handled = true;
     }
     if (fields.AddType) {
-      attach(addNode(ctx, { role: 'tagger', owner: 'me', from: '--', to: 'bf', thing, flags: [...condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
+      for (const spec of affectedSpecs) {
+        attach(addNode(ctx, { role: 'tagger', owner: 'me', from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
+      }
       handled = true;
     }
-    // Anything else this Mode$ can carry (ReduceCost, CantBlock, a non-Flying
+    // Mode$ CantBlockBy (Azure Beastbinder's own "can't be blocked by
+    // creatures with power 2 or greater") — a real, well-understood
+    // mechanical fact, same idiom as the flying/menace blocked_by=
+    // convention just inverted (restricting who CAN'T block, not who CAN).
+    // ValidBlocker$ names the excluded blocker type/qualifier; the static's
+    // own Affected$ field is absent for this Mode (the restriction is on
+    // THIS permanent, not a chosen "affected" subject), so it always reads
+    // off selfThing rather than the shared `thing`/`affected` above.
+    if (fields.ValidBlocker) {
+      const blockerType = coarseType(fields.ValidBlocker);
+      const blockerQualifiers = qualifierFlags(fields.ValidBlocker);
+      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cond:not_blocked_by=${[blockerType, ...blockerQualifiers.map((f) => f.replace('cond:', ''))].join(';')}` }));
+      handled = true;
+    }
+    // Anything else this Mode$ can carry (ReduceCost, a non-Flying
     // AddKeyword$, ...) had no node AND no unmapped entry — a static line
     // whose sole content was e.g. Mode$ ReduceCost (Eddymurk Crab's "costs
     // {1} less for each ... in your graveyard") or AddKeyword$ Ward:1
@@ -639,7 +684,11 @@ function translateOwnEffect(
     if (!TOKEN_SCRIPT_MAP[fields.TokenScript ?? '']) ctx.unmapped.push(`TokenScript$${fields.TokenScript}`);
     const qty = fields.TokenAmount && fields.TokenAmount !== '1' ? `qty${/^[A-Z]/.test(fields.TokenAmount) ? '=' : ':'}${fields.TokenAmount}` : undefined;
     const tapped = fields.TokenTapped === 'True' ? 'tapped' : undefined;
-    const id = addNode(ctx, { role: 'enters', owner, from: '--', to: 'bf', thing, flags: [qty, tapped].filter(Boolean).join(' ') || undefined });
+    // TokenAttacking$True (Warren Warleader's own "create a token that's
+    // tapped and attacking") — same missing-flag shape as tapped, just a
+    // second, independent arrival-state fact.
+    const attacking = fields.TokenAttacking === 'True' ? 'cond:attacking' : undefined;
+    const id = addNode(ctx, { role: 'enters', owner, from: '--', to: 'bf', thing, flags: [qty, tapped, attacking].filter(Boolean).join(' ') || undefined });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -654,20 +703,48 @@ function translateOwnEffect(
   }
 
   if (ek === 'Animate') {
+    // Always assumed self (Defined$Self, own-body type changes like Phantom
+    // Train/Tangle Tumbler) regardless of a real ValidTgts$ — silently wrong
+    // for a targeted Animate (Azure Beastbinder's own "up to one target
+    // artifact, creature, or planeswalker AN OPPONENT CONTROLS"). Comma-
+    // joined multi-type ValidTgts$ (Artifact.OppCtrl,Creature.OppCtrl,
+    // Planeswalker.OppCtrl) isn't split into multiple nodes here the way
+    // trigger ValidCard$ is — coarseType only reads the first clause,
+    // landing on just "artifact" — a known, accepted imprecision for this
+    // one rare shape rather than a full multi-clause rewrite.
+    const targeted = !!fields.ValidTgts;
+    const owner = targeted ? ownerFromTargetPredicate(fields.ValidTgts) : 'me';
+    const thing = targeted ? coarseType(fields.ValidTgts) : selfThing;
     // Splits a coarse-type addition (becomes) from a creature-subtype/flavor
     // tag (tagger) — SCHEMA.md's `becomes`/`tagger` are different columns
     // (identity change vs. an added tag), and Forge's single Types$ list
     // conflates both.
-    const types = (fields.Types ?? '').split(',');
+    const types = (fields.Types ?? '').split(',').filter(Boolean);
     const coarse = types.filter((t) => ['Artifact', 'Creature', 'Enchantment', 'Land', 'Planeswalker'].includes(t));
     const subtype = types.find((t) => !coarse.includes(t));
     const lifetime = fields.Permanent === 'True' ? undefined : 'lifetime:turn';
+    let handled = false;
     if (coarse.length) {
-      attach(addNode(ctx, { role: 'becomes', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: [lifetime, `cond:type=${coarse.join('-').toLowerCase()}`].filter(Boolean).join(' ') }));
+      attach(addNode(ctx, { role: 'becomes', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, lifetime, `cond:type=${coarse.join('-').toLowerCase()}`].filter(Boolean).join(' ') }));
+      handled = true;
     }
     if (subtype) {
-      attach(addNode(ctx, { role: 'tagger', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: [lifetime, `cond:tag=${subtype}`].filter(Boolean).join(' ') }));
+      attach(addNode(ctx, { role: 'tagger', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, lifetime, `cond:tag=${subtype}`].filter(Boolean).join(' ') }));
+      handled = true;
     }
+    // RemoveAllAbilities$/Power$+Toughness$ with no Types$ at all (Azure
+    // Beastbinder's own "loses all abilities... has base power and
+    // toughness 2/2") had NO handling whatsoever — the whole effect
+    // silently vanished with no node and no unmapped entry, same silent-
+    // drop shape fixed for K:/S: earlier this session.
+    if (fields.RemoveAllAbilities === 'True' || (fields.Power !== undefined && fields.Toughness !== undefined)) {
+      const setStats = fields.Power !== undefined && fields.Toughness !== undefined ? `set=${fields.Power}/${fields.Toughness}` : undefined;
+      const removeAbilities = fields.RemoveAllAbilities === 'True' ? 'loses_abilities' : undefined;
+      attach(addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, lifetime, `cond:${[setStats, removeAbilities].filter(Boolean).join(';')}`].filter(Boolean).join(' ') }));
+      handled = true;
+    }
+    if (!handled) ctx.unmapped.push(`?:Animate`);
+    for (const child of tree.children) translateEffectRow(ctx, child, parent, selfThing, inTrigger, granted);
     return;
   }
 
@@ -724,8 +801,12 @@ function translateOwnEffect(
     // a real, common linked-return mechanic that had no representation at
     // all, silently rendering as a permanent, unconditional exile.
     const untilSelfLeaves = fields.Duration === 'UntilHostLeavesPlay' ? 'cond:until_self_leaves' : undefined;
+    // ConditionPresent$...PromisedGift (Starfall Invocation's own "if the
+    // gift was promised, return a creature card...") — same narrow boolean
+    // gate already handled for Pump/PumpAll, missing here entirely.
+    const giftGate = /PromisedGift/.test(fields.ConditionPresent ?? '') ? 'cond:gift_promised' : undefined;
     const qualifiers = targeted ? qualifierFlags(fields.ValidTgts) : changeTypePredicate ? qualifierFlags(changeTypePredicate) : [];
-    const flags = withMay([qty, targeted ? 'target' : undefined, untilSelfLeaves, ...qualifiers].filter(Boolean).join(' ') || undefined);
+    const flags = withMay([qty, targeted ? 'target' : undefined, untilSelfLeaves, giftGate, ...qualifiers].filter(Boolean).join(' ') || undefined);
     const thing = selfMove ? selfThing : coarseType(fields.ValidTgts ?? fields.SacValid ?? changeTypePredicate);
     const id = addNode(ctx, { role: 'move', owner, from, to, thing, flags });
     attach(id);
@@ -824,6 +905,29 @@ function translateOwnEffect(
     const owner = ownerFromTargetPredicate(fields.ChangeType);
     const thing = coarseType(fields.ChangeType);
     const id = addNode(ctx, { role: 'move', owner, from, to, thing, flags: qualifierFlags(fields.ChangeType).join(' ') || undefined });
+    attach(id);
+    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'DestroyAll' || ek === 'DamageAll') {
+    // A board wipe ("destroy all creatures," Starfall Invocation's own) or
+    // a symmetric damage sweep — always non-targeted (ValidCards$, matching
+    // every qualifying permanent at once), always bf-based. DestroyAll's
+    // destination is fixed (destroy always lands in gy); DamageAll has no
+    // destination at all (it's an emit, not a move) — same emit/damage
+    // shape DealDamage already uses, just untargeted and plural.
+    const owner = ownerFromTargetPredicate(fields.ValidCards);
+    const thing = coarseType(fields.ValidCards);
+    const qualifiers = qualifierFlags(fields.ValidCards);
+    if (ek === 'DamageAll') {
+      const qty = fields.NumDmg ?? '1';
+      const id = addNode(ctx, { role: 'emit', owner, from: '--', to: '--', thing: 'damage', flags: [...qualifiers, qty !== '1' ? `qty:${qty}` : undefined].filter(Boolean).join(' ') || undefined });
+      attach(id);
+      for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+      return;
+    }
+    const id = addNode(ctx, { role: 'move', owner, from: 'bf', to: 'gy', thing, flags: qualifiers.join(' ') || undefined });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;

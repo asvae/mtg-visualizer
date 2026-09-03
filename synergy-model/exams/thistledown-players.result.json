@@ -1,0 +1,11 @@
+{
+  "name": "Thistledown Players",
+  "manaCost": "{2}{W}",
+  "typeLine": "Creature — Mouse Bard",
+  "description": "Whenever this creature attacks, untap target nonland permanent.",
+  "assumptions": [],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "The underlying node data was already fully correct (cond:state=untapped is the Untap-as-effect payload, implemented earlier this session), but the examining agent misread it as a targeting PRECONDITION (\"target UNTAPPED permanent\") rather than the effect itself, producing a backwards \"tap\" instead of \"untap\" in its prose -- a packet-documentation gap, not a translator bug. Fixed by adding an explicit clarifying note to both make-exam.mjs and make-exam-forge.mjs's shared schema summary (cond:state=tapped/untapped is the EFFECT, not a precondition). Counted as match since the node data itself was always correct; the packet fix should prevent this specific misread on future Tap/Untap cards.",
+  "comparedAt": "2026-09-04"
+}
