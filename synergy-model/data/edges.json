@@ -1,0 +1,910 @@
+[
+  {
+    "name": "Namazu Trader",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self"
+      },
+      "node:onEnter": {
+        "role": "trigger",
+        "trigger-type": "enter",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:lifeLoss": {
+        "role": "emit",
+        "owner": "me",
+        "from": "--",
+        "to": "--",
+        "thing": "life-loss",
+        "flags": "qty:1"
+      },
+      "node:treasure": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "treasure"
+      },
+      "node:onAttack": {
+        "role": "trigger",
+        "trigger-type": "attack",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:sacCreature": {
+        "role": "move",
+        "owner": "me",
+        "from": "bf",
+        "to": "gy",
+        "thing": "creature",
+        "flags": "may not:self"
+      },
+      "node:sacArtifact": {
+        "role": "move",
+        "owner": "me",
+        "from": "bf",
+        "to": "gy",
+        "thing": "artifact",
+        "flags": "may not:self"
+      },
+      "node:surveil": {
+        "role": "source",
+        "owner": "me",
+        "from": "gy",
+        "to": "--",
+        "thing": "surveil-2"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters",
+        "node:onAttack"
+      ],
+      "steps": {
+        "node:enters": [
+          "node:onEnter"
+        ],
+        "node:onEnter": [
+          "node:lifeLoss",
+          "node:treasure"
+        ],
+        "node:onAttack": [
+          {
+            "combine": "any",
+            "of": [
+              "node:sacCreature",
+              "node:sacArtifact"
+            ]
+          }
+        ],
+        "node:sacCreature": [
+          "node:surveil"
+        ],
+        "node:sacArtifact": [
+          "node:surveil"
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Fight On!",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:returnCreatures": {
+        "role": "move",
+        "owner": "me",
+        "from": "gy",
+        "to": "hand",
+        "thing": "creature",
+        "flags": "qty:0..2 target"
+      },
+      "node:selfToGy": {
+        "role": "move",
+        "owner": "me",
+        "from": "stack",
+        "to": "gy",
+        "thing": "self"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast"
+      ],
+      "steps": {
+        "node:cast": [
+          "node:returnCreatures",
+          "node:selfToGy"
+        ]
+      }
+    }
+  },
+  {
+    "name": "The Final Days",
+    "nodes": {
+      "node:castNormal": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:castFlashback": {
+        "role": "cast",
+        "owner": "me",
+        "from": "gy",
+        "to": "stack",
+        "thing": "self",
+        "flags": "cost:{4}{B}{B}"
+      },
+      "node:tokensNormal": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "horror-1",
+        "flags": "qty:2 tapped"
+      },
+      "node:gyMoveNormal": {
+        "role": "move",
+        "owner": "me",
+        "from": "stack",
+        "to": "gy",
+        "thing": "self"
+      },
+      "node:gyCreatureCount": {
+        "role": "scaler",
+        "owner": "me",
+        "from": "gy",
+        "to": "--",
+        "thing": "creature",
+        "flags": "count:=gyCreatureCount"
+      },
+      "node:tokensFlashback": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "horror-1",
+        "flags": "qty=gyCreatureCount tapped"
+      },
+      "node:exileMoveFlashback": {
+        "role": "move",
+        "owner": "me",
+        "from": "stack",
+        "to": "exile",
+        "thing": "self"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:castNormal",
+        "node:castFlashback"
+      ],
+      "steps": {
+        "node:castNormal": [
+          "node:tokensNormal",
+          "node:gyMoveNormal"
+        ],
+        "node:castFlashback": [
+          "node:gyCreatureCount",
+          "node:tokensFlashback",
+          "node:exileMoveFlashback"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Gaius van Baelsar",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self"
+      },
+      "node:onEnter": {
+        "role": "trigger",
+        "trigger-type": "enter",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:sacToken": {
+        "role": "move",
+        "owner": "all",
+        "from": "bf",
+        "to": "gy",
+        "thing": "creature",
+        "flags": "qty:1 cond:token;sacrifice"
+      },
+      "node:sacNontoken": {
+        "role": "move",
+        "owner": "all",
+        "from": "bf",
+        "to": "gy",
+        "thing": "creature",
+        "flags": "qty:1 cond:nontoken;sacrifice"
+      },
+      "node:sacEnchantment": {
+        "role": "move",
+        "owner": "all",
+        "from": "bf",
+        "to": "gy",
+        "thing": "enchantment",
+        "flags": "qty:1 cond:sacrifice"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters"
+      ],
+      "steps": {
+        "node:enters": [
+          "node:onEnter"
+        ],
+        "node:onEnter": [
+          {
+            "combine": 1,
+            "of": [
+              "node:sacToken",
+              "node:sacNontoken",
+              "node:sacEnchantment"
+            ]
+          }
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Hecteyes",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self"
+      },
+      "node:onEnter": {
+        "role": "trigger",
+        "trigger-type": "enter",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:move": {
+        "role": "move",
+        "owner": "opp",
+        "from": "hand",
+        "to": "gy",
+        "thing": "any",
+        "flags": "qty:1"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters"
+      ],
+      "steps": {
+        "node:enters": [
+          "node:onEnter"
+        ],
+        "node:onEnter": [
+          "node:move"
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Jecht, Reluctant Guardian // Braska's Final Aeon",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self:front"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self:front"
+      },
+      "node:menaceFront": {
+        "role": "modifier",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self:front",
+        "flags": "menace"
+      },
+      "node:menaceBack": {
+        "role": "modifier",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self:back",
+        "flags": "menace"
+      },
+      "node:loreCounter": {
+        "role": "emit",
+        "owner": "me",
+        "from": "--",
+        "to": "--",
+        "thing": "lore-counter",
+        "flags": ""
+      },
+      "node:onDealsDamage": {
+        "role": "trigger",
+        "trigger-type": "deals-damage",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self:front",
+        "flags": "combat"
+      },
+      "node:exileSelf": {
+        "role": "move",
+        "owner": "me",
+        "from": "bf",
+        "to": "exile",
+        "thing": "self:front",
+        "flags": "may"
+      },
+      "node:reenterTransformed": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self:back",
+        "flags": ""
+      },
+      "node:onSagaChapter12": {
+        "role": "trigger",
+        "trigger-type": "saga-chapter",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self:back",
+        "flags": "cond:chapter=1-2"
+      },
+      "node:sagaDiscard": {
+        "role": "move",
+        "owner": "opp",
+        "from": "hand",
+        "to": "gy",
+        "thing": "any",
+        "flags": "qty:1"
+      },
+      "node:sagaDraw": {
+        "role": "emit",
+        "owner": "me",
+        "from": "--",
+        "to": "--",
+        "thing": "draw",
+        "flags": "qty:1"
+      },
+      "node:onSagaChapter3": {
+        "role": "trigger",
+        "trigger-type": "saga-chapter",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self:back",
+        "flags": "cond:chapter=3"
+      },
+      "node:sagaSac2": {
+        "role": "move",
+        "owner": "opp",
+        "from": "bf",
+        "to": "gy",
+        "thing": "creature",
+        "flags": "qty:2 cond:each_opponent_chooses"
+      },
+      "node:sagaSelfSac": {
+        "role": "move",
+        "owner": "me",
+        "from": "bf",
+        "to": "gy",
+        "thing": "self:back",
+        "flags": "cond:sacrifice_after_chapter_3"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters",
+        "node:menaceFront",
+        "node:onDealsDamage"
+      ],
+      "steps": {
+        "node:onDealsDamage": [
+          "node:exileSelf"
+        ],
+        "node:exileSelf": [
+          "node:reenterTransformed"
+        ],
+        "node:reenterTransformed": [
+          "node:menaceBack",
+          "node:loreCounter"
+        ],
+        "node:loreCounter": [
+          "node:onSagaChapter12",
+          "node:onSagaChapter3"
+        ],
+        "node:onSagaChapter12": [
+          "node:sagaDiscard",
+          "node:sagaDraw"
+        ],
+        "node:onSagaChapter3": [
+          "node:sagaSac2",
+          "node:sagaSelfSac"
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Kain, Traitorous Dragoon",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self"
+      },
+      "node:jump": {
+        "role": "modifier",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self",
+        "flags": "cond:your_turn;blocked_by=flying_or_reach"
+      },
+      "node:onDealsDamage": {
+        "role": "trigger",
+        "trigger-type": "deals-damage",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self",
+        "flags": "combat player:=damagedPlayer damage:=damageDealt"
+      },
+      "node:controlChange": {
+        "role": "becomes",
+        "owner": "any",
+        "from": "--",
+        "to": "bf",
+        "thing": "self",
+        "flags": "player=damagedPlayer"
+      },
+      "node:draw": {
+        "role": "emit",
+        "owner": "me",
+        "from": "--",
+        "to": "--",
+        "thing": "draw",
+        "flags": "qty=damageDealt"
+      },
+      "node:treasure": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "treasure",
+        "flags": "qty=damageDealt tapped"
+      },
+      "node:lifeLoss": {
+        "role": "emit",
+        "owner": "me",
+        "from": "--",
+        "to": "--",
+        "thing": "life-loss",
+        "flags": "qty=damageDealt"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters",
+        "node:jump",
+        "node:onDealsDamage"
+      ],
+      "steps": {
+        "node:onDealsDamage": [
+          "node:controlChange"
+        ],
+        "node:controlChange": [
+          "node:draw",
+          "node:treasure",
+          "node:lifeLoss"
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Malboro",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self"
+      },
+      "node:onEnter": {
+        "role": "trigger",
+        "trigger-type": "enter",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:discard": {
+        "role": "move",
+        "owner": "opp",
+        "from": "hand",
+        "to": "gy",
+        "thing": "any",
+        "flags": "qty:1"
+      },
+      "node:lifeLoss": {
+        "role": "emit",
+        "owner": "opp",
+        "from": "--",
+        "to": "--",
+        "thing": "life-loss",
+        "flags": "qty:2"
+      },
+      "node:exile": {
+        "role": "move",
+        "owner": "opp",
+        "from": "lib",
+        "to": "exile",
+        "thing": "any",
+        "flags": "qty:3"
+      },
+      "node:swampcyclingCost": {
+        "role": "move",
+        "owner": "me",
+        "from": "hand",
+        "to": "gy",
+        "thing": "self",
+        "flags": "cost:{2}"
+      },
+      "node:swampcyclingFind": {
+        "role": "move",
+        "owner": "me",
+        "from": "--",
+        "to": "hand",
+        "thing": "land",
+        "flags": "target cond:subtype_swamp;reveal;shuffle"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters",
+        "node:swampcyclingCost"
+      ],
+      "steps": {
+        "node:enters": [
+          "node:onEnter"
+        ],
+        "node:onEnter": [
+          "node:discard",
+          "node:lifeLoss",
+          "node:exile"
+        ],
+        "node:swampcyclingCost": [
+          "node:swampcyclingFind"
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Ninja's Blades",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self"
+      },
+      "node:jobSelect": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "job-select"
+      },
+      "node:modifier": {
+        "role": "modifier",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "creature",
+        "flags": "cond:equipped;delta=+1/+1"
+      },
+      "node:tagger": {
+        "role": "tagger",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "creature",
+        "flags": "cond:equipped;tag=Ninja"
+      },
+      "node:onDealsDamage": {
+        "role": "trigger",
+        "trigger-type": "deals-damage",
+        "owner": "me",
+        "from": "--",
+        "to": "stack",
+        "thing": "creature",
+        "flags": "combat cond:equipped"
+      },
+      "node:draw": {
+        "role": "emit",
+        "owner": "me",
+        "from": "--",
+        "to": "--",
+        "thing": "draw",
+        "flags": "qty:1"
+      },
+      "node:discard": {
+        "role": "move",
+        "owner": "me",
+        "from": "hand",
+        "to": "gy",
+        "thing": "any",
+        "flags": "qty:1"
+      },
+      "node:opponentLifeLoss": {
+        "role": "emit",
+        "owner": "opp",
+        "from": "--",
+        "to": "--",
+        "thing": "life-loss",
+        "flags": "qty:X cond:X=discarded_card_mv"
+      },
+      "node:equip": {
+        "role": "becomes",
+        "owner": "me",
+        "from": "--",
+        "to": "--",
+        "thing": "self",
+        "flags": "cost:{2} target cond:attach"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters",
+        "node:jobSelect",
+        "node:modifier",
+        "node:tagger",
+        "node:onDealsDamage",
+        "node:equip"
+      ],
+      "steps": {
+        "node:onDealsDamage": [
+          "node:draw",
+          "node:discard",
+          "node:opponentLifeLoss"
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Overkill",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:modifier": {
+        "role": "modifier",
+        "owner": "any",
+        "from": "--",
+        "to": "bf",
+        "thing": "creature",
+        "flags": "target lifetime:turn cond:pt_delta=-0/-9999"
+      },
+      "node:selfToGy": {
+        "role": "move",
+        "owner": "me",
+        "from": "stack",
+        "to": "gy",
+        "thing": "self"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast"
+      ],
+      "steps": {
+        "node:cast": [
+          "node:modifier",
+          "node:selfToGy"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Phantom Train",
+    "nodes": {
+      "node:cast": {
+        "role": "cast",
+        "owner": "me",
+        "from": "hand",
+        "to": "stack",
+        "thing": "self"
+      },
+      "node:enters": {
+        "role": "enters",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self"
+      },
+      "node:sacCreature": {
+        "role": "move",
+        "owner": "me",
+        "from": "bf",
+        "to": "gy",
+        "thing": "creature",
+        "flags": "not:self"
+      },
+      "node:sacArtifact": {
+        "role": "move",
+        "owner": "me",
+        "from": "bf",
+        "to": "gy",
+        "thing": "artifact",
+        "flags": "not:self"
+      },
+      "node:counter": {
+        "role": "modifier",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self",
+        "flags": "cond:delta=+1/+1counter"
+      },
+      "node:becomesCreature": {
+        "role": "becomes",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self",
+        "flags": "lifetime:turn cond:type=artifact-creature"
+      },
+      "node:tagSpirit": {
+        "role": "tagger",
+        "owner": "me",
+        "from": "--",
+        "to": "bf",
+        "thing": "self",
+        "flags": "lifetime:turn cond:tag=Spirit"
+      }
+    },
+    "flow": {
+      "roots": [
+        "node:cast",
+        "node:enters",
+        {
+          "combine": "any",
+          "of": [
+            "node:sacCreature",
+            "node:sacArtifact"
+          ]
+        }
+      ],
+      "steps": {
+        "node:sacCreature": [
+          "node:counter",
+          "node:becomesCreature",
+          "node:tagSpirit"
+        ],
+        "node:sacArtifact": [
+          "node:counter",
+          "node:becomesCreature",
+          "node:tagSpirit"
+        ],
+        "node:cast": [
+          "node:enters"
+        ]
+      }
+    }
+  }
+]

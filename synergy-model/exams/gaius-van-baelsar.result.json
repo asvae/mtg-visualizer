@@ -1,0 +1,19 @@
+{
+  "name": "Gaius van Baelsar",
+  "manaCost": "{2}{B}{B}",
+  "typeLine": "Legendary Creature — Human Soldier",
+  "description": "When this creature enters, choose one — • Each player sacrifices a creature token. • Each player sacrifices a nontoken creature. • Each player sacrifices an enchantment.",
+  "assumptions": [
+    "Rendered the enter-trigger without \"the battlefield\" — the node only carries trigger-type, not exact phrasing.",
+    "Rendered the combine:1 group as \"choose one—\" with three bulleted modes in the order given in `of`.",
+    "Read owner:\"all\" as \"Each player sacrifices...\""
+  ],
+  "couldNotDerive": [
+    "Exact trigger phrasing (\"enters\" vs \"enters the battlefield\").",
+    "Rarity.",
+    "Card name."
+  ],
+  "verdict": "match",
+  "notes": "Correctly reconstructed mana cost, type line, P/T, modal structure, and all three sacrifice modes against real oracle text. Only difference is real oracle text appends \"of their choice\" to each mode — but that's standard sacrifice-rules boilerplate (701.16d: the sacrificing player always chooses which qualifying permanent, absent other instruction), not a separate mechanical fact our nodes need to encode. Same meaning either way; not counted against the verdict.",
+  "comparedAt": "2026-09-03"
+}

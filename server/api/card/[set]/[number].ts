@@ -1,10 +1,9 @@
 // Single-card detail endpoint — everything the card detail page needs
-// (Scryfall data, tagging relations, and our homebrew shorthand notes) in one
-// request, independent of the big client-side graph store (app/composables/
-// useGraphStore.ts). That store assembles a whole set/query's worth of cards
-// at once via buildGraph.ts; this route reuses buildGraph.ts's per-card
-// mapping helpers so a single card renders identically without needing the
-// rest of the corpus loaded.
+// (Scryfall data and tagging relations) in one request, independent of the
+// big client-side graph store (app/composables/useGraphStore.ts). That store
+// assembles a whole set/query's worth of cards at once via buildGraph.ts;
+// this route reuses buildGraph.ts's per-card mapping helpers so a single
+// card renders identically without needing the rest of the corpus loaded.
 //
 // GET /api/card/:set/:number  — same identity Scryfall's own card URLs use
 // (scryfall.com/card/<set>/<number>), so prev/next is a plain ±1 on :number.
@@ -13,22 +12,27 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
-import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
+import type { CardData, EdgeData, Role, SynergyFlow, SynergyNode, SynergyExamResult, ThemeData } from '../../../../app/types';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
-import bundledShorthands from '../../../../data/card_shorthands.json';
-import bundledShorthandStatus from '../../../../data/card_shorthand_status.json';
+import bundledSynergyEdges from '../../../../synergy-model/data/edges.json';
+import bundledSynergyStatus from '../../../../synergy-model/data/edges_status.json';
 
-// Read fresh off disk on every request in dev, instead of the statically
-// bundled imports — these files are being hand-edited card by card right
-// now, and a static import only reflects a full dev-server restart (Nitro
-// doesn't hot-reload data imported into server routes the way Vite
-// hot-reloads the client). `import.meta.url` isn't reliable here — Nitro's
-// dev bundle rewrites it to point at a rolled-up chunk, not this source
-// file — so resolve from `process.cwd()` (the repo root the dev server runs
-// from) instead. Falls back to the bundled copy so a production build
-// (different cwd, raw `data/` source tree not shipped) still works.
+// fin_relations.json wins over global_relations.json by name — see
+// server/api/cards.ts for why (FIN not yet chronologically merged).
+const relationsByName = new Map<string, RelationsEntry>([
+  ...(relationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
+  ...(finRelationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
+]);
+
+// Read fresh off disk on every request in dev (not the statically bundled
+// import) — synergy-model/data/edges.json is being hand-edited card by card
+// right now, and a static import only reflects a full dev-server restart.
+// Same trick as the old shorthand endpoint used. Falls back to the bundled
+// copy for a production build (different cwd, raw source tree not shipped) —
+// synergy-model isn't wired into any prod path yet, this is just so the
+// import doesn't break one if it ever is.
 function loadJsonFresh<T>(relativePath: string, bundled: T): T {
   if (process.env.NODE_ENV === 'production') return bundled;
   try {
@@ -37,23 +41,34 @@ function loadJsonFresh<T>(relativePath: string, bundled: T): T {
     return bundled;
   }
 }
-interface ShorthandStatus {
-  shorthand: 'ai' | 'human';
+interface SynergyEntry {
+  name: string;
+  nodes: Record<string, SynergyNode>;
+  flow: SynergyFlow;
+}
+interface SynergyStatus {
+  decomposition: 'ai' | 'human';
   review: 'ai' | 'human';
 }
-function loadShorthands(): Record<string, string> {
-  return loadJsonFresh('data/card_shorthands.json', bundledShorthands as Record<string, string>);
+function loadSynergyEntries(): Record<string, { nodes: Record<string, SynergyNode>; flow: SynergyFlow }> {
+  const entries = loadJsonFresh('synergy-model/data/edges.json', bundledSynergyEdges as unknown as SynergyEntry[]);
+  return Object.fromEntries(entries.map((e) => [e.name, { nodes: e.nodes, flow: e.flow }]));
 }
-function loadShorthandStatus(): Record<string, ShorthandStatus> {
-  return loadJsonFresh('data/card_shorthand_status.json', bundledShorthandStatus as Record<string, ShorthandStatus>);
+function loadSynergyStatus(): Record<string, SynergyStatus> {
+  return loadJsonFresh('synergy-model/data/edges_status.json', bundledSynergyStatus as Record<string, SynergyStatus>);
 }
 
-// fin_relations.json wins over global_relations.json by name — see
-// server/api/cards.ts for why (FIN not yet chronologically merged).
-const relationsByName = new Map<string, RelationsEntry>([
-  ...(relationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
-  ...(finRelationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
-]);
+// synergy-model/EXAM_PROCESS.md's round-trip results: one sparse JSON file
+// per decomposed-and-tested card, filename = slugify(name), no bundled
+// fallback (exam results are a dev-time artifact of synergy-model, never
+// shipped to a production build).
+function loadSynergyExamResult(name: string): SynergyExamResult | null {
+  try {
+    return JSON.parse(readFileSync(join(process.cwd(), `synergy-model/exams/${slugify(name)}.result.json`), 'utf8'));
+  } catch {
+    return null;
+  }
+}
 
 const curatedThemes = themesData as ThemeData[];
 const curatedThemeIds = new Set(curatedThemes.map((t) => t.id));
@@ -151,11 +166,14 @@ export default defineEventHandler(async (event) => {
     ...(usedThemeIds.has('not-processed') ? [{ id: 'not-processed', label: 'Not Processed' }] : []),
   ];
 
+  const synergyEntry = loadSynergyEntries()[card.name] ?? null;
   return {
     card: cardData,
     edges,
     themes,
-    shorthand: loadShorthands()[card.name] ?? null,
-    shorthandReview: loadShorthandStatus()[card.name]?.review ?? null,
+    synergyNodes: synergyEntry?.nodes ?? null,
+    synergyFlow: synergyEntry?.flow ?? null,
+    synergyReview: loadSynergyStatus()[card.name]?.review ?? null,
+    synergyExam: loadSynergyExamResult(card.name),
   };
 });

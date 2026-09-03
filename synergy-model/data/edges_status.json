@@ -1,0 +1,46 @@
+{
+  "Namazu Trader": {
+    "decomposition": "ai",
+    "review": "human"
+  },
+  "Fight On!": {
+    "decomposition": "ai",
+    "review": "human"
+  },
+  "The Final Days": {
+    "decomposition": "ai",
+    "review": "human"
+  },
+  "Gaius van Baelsar": {
+    "decomposition": "ai",
+    "review": "human"
+  },
+  "Hecteyes": {
+    "decomposition": "ai",
+    "review": "human"
+  },
+  "Jecht, Reluctant Guardian // Braska's Final Aeon": {
+    "decomposition": "ai",
+    "review": "human"
+  },
+  "Kain, Traitorous Dragoon": {
+    "decomposition": "ai",
+    "review": "ai"
+  },
+  "Malboro": {
+    "decomposition": "ai",
+    "review": "ai"
+  },
+  "Ninja's Blades": {
+    "decomposition": "ai",
+    "review": "ai"
+  },
+  "Overkill": {
+    "decomposition": "ai",
+    "review": "ai"
+  },
+  "Phantom Train": {
+    "decomposition": "ai",
+    "review": "ai"
+  }
+}
