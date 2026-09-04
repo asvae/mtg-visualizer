@@ -1,0 +1,17 @@
+{
+  "name": "Ravine Raider",
+  "manaCost": "{B}",
+  "typeLine": "Creature — Lizard Rogue",
+  "description": "Menace\n\nThis creature gets +1/+1 until end of turn.",
+  "assumptions": [
+    "Treated node C's `menace` flag as a static keyword ability printed on its own line, granted unconditionally, since it's a root with no gating node or trigger attached to it.",
+    "Rendered node D's `cond:pt_delta=+1/+1` + `lifetime:turn` payload as literal printed text ('gets +1/+1 until end of turn'), taking the node at face value even though nothing in the flow explains what causes or permits it."
+  ],
+  "couldNotDerive": [
+    "What causes or gates node D's +1/+1-until-end-of-turn effect. It's listed as a root (ungated by anything else on the card) yet flagged `lifetime:turn`, which normally implies a repeatable/situational effect rather than an always-on static bonus. No `cost:` flag, no `tap`/cost node, and no `trigger` node are attached to it, so I could not tell whether this is meant to be an activated ability (with an unstated activation cost), a triggered ability (with an unstated trigger event), or something else.",
+    "Rarity (withheld by design)."
+  ],
+  "verdict": "issues-open",
+  "notes": "Real card (forge-model/data/ravine-raider.txt): Ravine Raider, {B} Creature — Lizard Rogue, 1/1. `K:Menace` matches node C exactly (static keyword, correctly reconstructed). The problem is node D, which corresponds to the Forge line `A:AB$ Pump | Cost$ 1 B | Defined$ Self | NumAtt$ +1 | NumDef$ +1 | SpellDescription$ CARDNAME gets +1/+1 until end of turn.` -- an ACTIVATED ability costing {1}{B} (oracle: '{1}{B}: Ravine Raider gets +1/+1 until end of turn.'), not a free/passive effect. Node D's `flags` only carry `lifetime:turn cond:pt_delta=+1/+1` -- the `Cost$ 1 B` field from the AB$ line was never translated into a `cost:{1}{B}` flag on that node, even though SCHEMA.md explicitly reserves `cost:{...}` on a modifier node for exactly this case ('mana cost for anything other than a plain hand-cast -- an activated ability, an alternate-cost cast'; cf. Bonecache Overseer's tap node correctly carrying `cost:{PayLife<1>}`). Because the cost flag is missing, node D is indistinguishable in the packet from an unconditional static/root modifier, which is why the reconstruction could only flag (correctly, as could-not-derive) that something ungates this bonus rather than identify it as a paid activated ability -- the packet gave no way to know. This is a decomposition/translation gap in forgeTranslate.ts's `AB$ Pump` handling: it emits the NumAtt$/NumDef$ pump payload as a bare modifier node but drops the ability's own `Cost$` field entirely instead of attaching it as a `cost:` flag on the same node. Fix belongs in forgeTranslate.ts's AB$-ability cost extraction, mirrored into edges.json via REVIEW_PROCESS.md once fixed. Mana cost, type line, P/T, and Menace all matched cleanly; only the activated-ability cost is missing.",
+  "comparedAt": "2026-09-04"
+}

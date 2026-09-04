@@ -158,6 +158,25 @@ export function deriveOwner(defined: string | undefined): SynergyOwner {
 // in three of the four copies once it was missed in the first.
 export function ownerFromTargetPredicate(validTgts: string | undefined): SynergyOwner {
   const v = validTgts ?? '';
+  // A bare whole-string player predicate (Iridescent Vinelasher's own
+  // ValidTgts$ Opponent, "deals 1 damage to TARGET OPPONENT" -- no object-
+  // type prefix at all, unlike every other qualifier below which needs a
+  // preceding ./+ separator) was silently falling through to the 'any'
+  // default at every one of this function's ~9 call sites (DealDamage,
+  // Destroy, Pump, PutCounter, Sacrifice, Discard, ...) -- previously
+  // special-cased just for ChangeZone (validTgtsIsPlayer) instead of fixed
+  // here, so the same bug kept resurfacing per-handler. You/Opponent map
+  // the same way deriveOwner's own Defined$ vocabulary does, but a bare
+  // "Player" here is NOT deriveOwner's symmetric/every-player meaning
+  // (Defined$ Player, an automatic no-choice effect) -- as a TARGET
+  // predicate it means one chosen, unspecified player, this function's
+  // own 'any' default (confirmed by a round-trip exam: delegating this
+  // case to deriveOwner('Player') produced 'all', rendering Psychic
+  // Whorl's real "TARGET player discards" as a symmetric "EACH player
+  // discards" -- the opposite mechanic).
+  if (v === 'You') return 'me';
+  if (v === 'Opponent') return 'opp';
+  if (v === 'Player') return 'any';
   // `.YouCtrl` (control — battlefield/stack) and `.YouOwn` (ownership — a
   // real, separate Forge qualifier for graveyard/hand/library cards, where
   // "control" doesn't apply the same way; Fight On!'s own real ValidTgts$
@@ -290,8 +309,17 @@ export function ifPresentFlag(v: string | undefined): string | undefined {
   // A generic base (Permanent/Card) isn't the real distinguishing fact when
   // a qualifier narrows it further — Seasoned Warrenguard's own IsPresent$
   // Permanent.token+YouCtrl means "a TOKEN," not merely "a permanent."
-  if ((type === 'permanent' || type === 'card' || type === 'any') && /[.+]token\b/i.test(v)) return 'if_present=token';
-  return type && type !== 'any' ? `if_present=${type}` : undefined;
+  // Named `you_control=` (not the earlier `if_present=`) -- this function
+  // ONLY ever reads ConditionPresent$/IsPresent$'s own `.YouCtrl` board-
+  // state shape (see its own comment above), never a chain-local "was just
+  // discarded/revealed" fact, but the earlier generic name left that
+  // genuinely ambiguous immediately downstream of another effect (Psychic
+  // Whorl's own surveil gate, "if you control a Rat," got misread by a
+  // fresh reconstruction as "if a Rat was among the cards just discarded"
+  // by the preceding Discard step) -- the value was always right, only the
+  // label invited the wrong reading.
+  if ((type === 'permanent' || type === 'card' || type === 'any') && /[.+]token\b/i.test(v)) return 'you_control=token';
+  return type && type !== 'any' ? `you_control=${type}` : undefined;
 }
 export function qualifierFlags(v: string | undefined): string[] {
   if (!v) return [];
@@ -564,7 +592,12 @@ function translateEffectRow(
     // reading only the singular form silently fell back to `self` for every
     // ChangesZoneAll trigger, confirmed by a round-trip exam mistaking
     // Builder's Talent's level-2 ability for the wrong kind of trigger.
-    const validCardField = fields.ValidCard ?? fields.ValidCards;
+    // ValidAttackers$ (Persistent Marshstalker's own "whenever you attack
+    // WITH ONE OR MORE RATS") is Mode$Attacks's own name for this same
+    // predicate — a third spelling alongside ValidCard$/ValidCards$, missed
+    // entirely, so an attack-trigger's real subject fell back to selfThing
+    // ("this creature attacks") instead of the broader "a Rat attacks."
+    const validCardField = fields.ValidCard ?? fields.ValidCards ?? fields.ValidAttackers;
     if (!granted && validCardField) {
       const clauses = validCardField.split(',').map((c) => c.trim());
       // `Creature.Self` (Waterspout Warden's own ValidCard$) is the SAME
@@ -605,6 +638,12 @@ function translateEffectRow(
     // Condition$PlayerTurn encoding (a real mechanical fact, not a new name
     // for the same restriction).
     const yourTurnFlag = fields.PlayerTurn === 'True' ? 'cond:your_turn' : undefined;
+    // Threshold$True (Persistent Marshstalker's own attack trigger, "IF 7+
+    // CARDS ARE IN YOUR GRAVEYARD") -- the static-row branch already reads
+    // this fact off Condition$Threshold, but a trigger row names the same
+    // named ability word via a differently-spelled field (Threshold$ vs
+    // Condition$) and had no check at all.
+    const triggerThresholdFlag = fields.Threshold === 'True' ? 'cond:threshold' : undefined;
     // Mode$Phase (Bandit's Talent's own "at the beginning of each opponent's
     // upkeep"/"...your draw step") already derives triggerType:"phase" from
     // the mode name, but WHICH phase (Phase$Upkeep vs Phase$Draw vs ...) had
@@ -620,7 +659,7 @@ function translateEffectRow(
     // this exactly; absent (the common case) still defaults to 'me'.
     const triggerOwner = fields.ValidPlayer ? deriveOwner(fields.ValidPlayer) : 'me';
     const ids = specs.map((spec) =>
-      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: triggerOwner, from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, presentFlag, yourTurnFlag, phaseFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
+      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: triggerOwner, from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, presentFlag, yourTurnFlag, phaseFlag, triggerThresholdFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
     );
     ids.forEach((id) => attach(id));
     // Build the downstream chain once, under the first clause-node, then
@@ -944,7 +983,13 @@ function translateOwnEffect(
     // exact shape scry-N and mill-N already get right elsewhere in this
     // file. Both attached to the same parent as siblings, not chained.
     const qty = fields.Amount ?? '1';
-    const sourceId = addNode(ctx, { role: 'source', owner: 'me', from: '--', to: 'gy', thing: 'any', flags: `qty:0..${qty}` });
+    // ConditionPresent$/ConditionCompare$ (Psychic Whorl's own "if you
+    // control a Rat, surveil 2") had no handling at all here, unlike every
+    // other effect that already wires ifPresentFlag -- the whole gate
+    // silently vanished, reading as an always-on surveil.
+    const presentFact = ifPresentFlag(fields.ConditionPresent);
+    const presentFlag = presentFact ? ` cond:${presentFact}` : '';
+    const sourceId = addNode(ctx, { role: 'source', owner: 'me', from: '--', to: 'gy', thing: 'any', flags: `qty:0..${qty}${presentFlag}` });
     const emitId = addNode(ctx, { role: 'emit', owner: 'me', from: '--', to: '--', thing: 'library-look' });
     attach(sourceId);
     attach(emitId);
@@ -985,7 +1030,12 @@ function translateOwnEffect(
   }
 
   if (ek === 'Discard') {
-    const owner = deriveOwner(fields.Defined);
+    // ValidTgts$ (Psychic Whorl's own "TARGET PLAYER discards two cards")
+    // was never read (only Defined$), same missing-target-predicate class
+    // already fixed for Sacrifice -- defaulted every targeted discard to
+    // owner:"me" (a self-discard) regardless of who's actually targeted.
+    const targeted = !!fields.ValidTgts;
+    const owner = targeted ? ownerFromTargetPredicate(fields.ValidTgts) : deriveOwner(fields.Defined);
     const qty = fields.NumCards ?? '1';
     // UnlessType$ (Bandit's Talent's own "discards two cards UNLESS THEY
     // DISCARD A NONLAND CARD") had no handling at all — a real out the
@@ -997,7 +1047,7 @@ function translateOwnEffect(
     // unqualified "any card" after the first version of this fix.
     const unlessNonLand = /[.+]nonLand\b/.test(fields.UnlessType ?? '');
     const unless = fields.UnlessType ? `cond:unless_discard=${unlessNonLand ? 'nonland' : coarseType(fields.UnlessType)}` : undefined;
-    const id = addNode(ctx, { role: 'move', owner, from: 'hand', to: 'gy', thing: 'any', flags: [`qty:${qty}`, unless].filter(Boolean).join(' ') });
+    const id = addNode(ctx, { role: 'move', owner, from: 'hand', to: 'gy', thing: 'any', flags: [`qty:${qty}`, targeted ? 'target' : undefined, unless].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -1127,13 +1177,11 @@ function translateOwnEffect(
     const changeTypePredicate = (validTgtsIsPlayer || !targeted) && !selfMove ? fields.ChangeType : undefined;
     const owner = selfMove
       ? 'me'
-      : validTgtsIsPlayer
-        ? deriveOwner(fields.ValidTgts)
-        : targeted
-          ? ownerFromTargetPredicate(fields.ValidTgts)
-          : changeTypePredicate
-            ? ownerFromTargetPredicate(changeTypePredicate)
-            : deriveOwner(fields.Defined);
+      : targeted
+        ? ownerFromTargetPredicate(fields.ValidTgts)
+        : changeTypePredicate
+          ? ownerFromTargetPredicate(changeTypePredicate)
+          : deriveOwner(fields.Defined);
     const qty = fields.TargetMax ? `qty:${fields.TargetMin ?? 0}..${fields.TargetMax}` : undefined;
     // Duration$UntilHostLeavesPlay — the "exile ... until CARDNAME leaves the
     // battlefield" O-Ring pattern (Banishing Light and its many relatives):
@@ -1568,7 +1616,15 @@ function translateOwnEffect(
   // encode directly, unlike the general dynamic-comparison class.
   const presentFlag = ifPresentFlag(fields.ConditionPresent);
   const compareFact = svarComparisonFact(ctx, fields, attach);
-  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' ? emitThing : 'unknown', flags: [qty && qty !== '1' ? `qty:${qty}` : undefined, presentFlag ? `cond:${presentFlag}` : undefined, compareFact].filter(Boolean).join(' ') || undefined });
+  // ConditionPresent$...PromisedGift + ConditionCompare$ (Nocturnal
+  // Hunger's own "If the gift wasn't promised, you lose 2 life") was never
+  // wired here — only Pump/PumpAll/ChangeZone/PutCounter called
+  // giftGateFact. ifPresentFlag explicitly bails on a PromisedGift match
+  // (it's not a board-state existence check), so this whole condition fell
+  // through both helpers silently, reading as an unconditional life-loss.
+  const giftFact = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
+  const giftGateFlag = giftFact ? `cond:${giftFact}` : undefined;
+  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' ? emitThing : 'unknown', flags: [qty && qty !== '1' ? `qty:${qty}` : undefined, presentFlag ? `cond:${presentFlag}` : undefined, giftGateFlag, compareFact].filter(Boolean).join(' ') || undefined });
   attach(id);
   for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
 }
@@ -1726,6 +1782,7 @@ function translateFace(ctx: Ctx, face: ForgeFace, selfThing: string, isBack: boo
   const isSaga = /\bSaga\b/.test(face.typeLine ?? '');
 
   let entersId: string | undefined;
+  let castId: string | undefined;
 
   // Cast/enters (or cast/resolve) skeleton — never written explicitly in a
   // Forge script (the engine derives it from the header alone), but
@@ -1734,7 +1791,7 @@ function translateFace(ctx: Ctx, face: ForgeFace, selfThing: string, isBack: boo
   // face of a transforming DFC (Braska's Final Aeon) isn't independently
   // castable; it only ever arrives via the front face's transform.
   if (face.manaCost && !isBack) {
-    const castId = addNode(ctx, { role: 'cast', owner: 'me', from: 'hand', to: 'stack', thing: selfThing });
+    castId = addNode(ctx, { role: 'cast', owner: 'me', from: 'hand', to: 'stack', thing: selfThing });
     ctx.roots.push(castId);
     if (isInstantOrSorcery) {
       const resolveId = addNode(ctx, { role: 'move', owner: 'me', from: 'stack', to: 'gy', thing: selfThing });
@@ -1842,9 +1899,29 @@ function translateFace(ctx: Ctx, face: ForgeFace, selfThing: string, isBack: boo
     if (tree.row.lineType === 'A' || tree.row.lineType === 'T' || tree.row.lineType === 'S') {
       // A root activated/spell ability line IS itself the first effect node
       // (its own AB$/SP$ value) — same translateEffectRow path as a chained
-      // SVar, just parented at the face level (attach -> ctx.roots). Its own
-      // Cost$ Sac<...>, if any, is handled uniformly inside translateEffectRow.
-      translateEffectRow(ctx, tree, null, selfThing, false, false);
+      // SVar, just parented at the face level. Its own Cost$ Sac<...>, if
+      // any, is handled uniformly inside translateEffectRow.
+      //
+      // An Instant/Sorcery's own `SP$` line is its ENTIRE printed effect,
+      // gated on the spell resolving — it was parented at `null` unconditionally
+      // (attach -> ctx.roots), producing an independent root sibling to
+      // `castId` with no edge between them. Harmless when nothing else
+      // competes for root status (Fell's own "Destroy target creature" has
+      // no other root, so the ambiguity never surfaced), but a real,
+      // demonstrated bug once a second root exists: Hazel's Nocturne's own
+      // "return two creatures, then drain 2" effect landed as a second,
+      // ungated root next to its own cast node, meaning (per SCHEMA's own
+      // "roots fire on their own, ungated by anything else" definition) the
+      // printed effect would happen for free without ever casting the
+      // spell — nonsensical for an Instant, and only produced a correct
+      // reconstruction because the examining agent charitably overrode the
+      // graph rather than reading it literally. `castId` only exists for a
+      // castable face (guarded above), and this is the spell's OWN ability
+      // line, not a granted/inherited one, so linking it under `castId` is
+      // safe and matches the resolve-to-graveyard node's own precedent
+      // just above (also linked under `castId`, never a root itself).
+      const spellParent = tree.row.lineType === 'A' && isInstantOrSorcery && castId ? castId : null;
+      translateEffectRow(ctx, tree, spellParent, selfThing, false, false);
     }
   }
 

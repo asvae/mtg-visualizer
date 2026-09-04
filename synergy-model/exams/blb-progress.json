@@ -149,7 +149,8 @@
     "Pure mana-only activated-ability cost (no T, no Sac<>)": {
       "description": "The generic activation-cost handler only recognizes a Cost$ containing T (tap) or Sac<> (sacrifice) -- a plain \"{3}{W}: effect\" cost with neither falls through completely uncosted (Warren Elder's own PumpAll). Would need a parallel cost-node path for the mana-only case.",
       "cards": [
-        "Warren Elder"
+        "Warren Elder",
+        "Ravine Raider"
       ]
     },
     "AddReplacementEffect$ / non-Flying AddKeyword$ on a static": {
@@ -234,6 +235,24 @@
       "description": "Darkstar Augur's own upkeep trigger (\"lose life equal to its mana value\") ties a LoseLife$ amount to SVar:X:Remembered$CardManaCost -- the mana value of whatever card was dug/revealed earlier in the SAME chain (RememberChanged$True on the Dig step). No := / = binding connects the Dig node to the LoseLife node's qty; the generic emit builder stamps the literal SVar name \"X\" onto qty instead of resolving or at least naming the binding. Needs a real scaler-node mechanism analogous to Beza's sensor pair, not attempted.",
       "cards": [
         "Darkstar Augur"
+      ]
+    },
+    "AB$Effect with nested StaticAbilities$/Triggers$ sub-ability chain": {
+      "description": "Osteomancer Adept's own \"{T}: until end of turn, you may cast creature spells from your graveyard by foraging... that creature enters with a finality counter\" -- Forge wraps a whole nested ability (a graveyard-cast permission SVar plus a static \"if you cast this way\" trigger plus a replacement-effect chain granting a counter) inside a single AB$Effect via StaticAbilities$/Triggers$ sub-fields. forgeTranslate.ts emits the tap-cost node but never walks into the nested sub-abilities at all. Also touches the same Forage mechanic as Feed the Cycle's K:AlternateAdditionalCost gap (registries.json has no forage action entry either way) and needs a new flag idiom for granting a named counter type on ETB.",
+      "cards": [
+        "Osteomancer Adept"
+      ]
+    },
+    "Secondary$True (a same-named ability split across two paired trigger lines)": {
+      "description": "Forge sometimes writes ONE named ability as two T: lines watching different events (LifeGained + LifeLost) with the second marked Secondary$True, meaning they SHARE one activation-limit counter, not two independent ones. Harmless when neither carries an ActivationLimit (Carrot Cake, Wax-Wane Witness -- already matched) but produces a real over-count bug when both carry ActivationLimit$1 (Moonstone Harbinger, allows 2 fires/turn instead of 1). No handling for Secondary$ anywhere in forgeTranslate.ts, and SCHEMA.md has no flag vocabulary for \"once per turn, shared across two root trigger nodes\" either.",
+      "cards": [
+        "Moonstone Harbinger"
+      ]
+    },
+    "Subtype qualifiers on multi-part predicates (e.g. +Rat) not carried into cond:": {
+      "description": "A predicate like ValidAttackers$ Creature.YouCtrl+Rat correctly derives thing:creature and owner, but the +Rat subtype restriction itself has no fixed vocabulary the way YouCtrl/token/nonLand/etc. do (Forge names hundreds of possible subtypes here) and is silently dropped. A generic \"any leftover capitalized qualifier is a subtype\" fallback was attempted and reverted after immediately producing a false positive (IsRemembered, a Forge boolean predicate, got mistagged as cond:subtype_isremembered on Starfall Invocation) -- too broad a heuristic for Forge's open-ended qualifier vocabulary. Needs a real allowlist or a different detection strategy, not attempted further.",
+      "cards": [
+        "Persistent Marshstalker"
       ]
     }
   },
@@ -906,6 +925,46 @@
       "status": "match",
       "attempts": 1,
       "note": "Clean match, no bugs found (Flying + ETB symmetric drain)."
+    },
+    "Ravine Raider": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Menace correct. AB$ Pump Cost$ 1 B (pure mana-only activated ability) never wired to a cost: flag -- matches known Pure mana-only activated-ability cost gap class."
+    },
+    "Osteomancer Adept": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Deathtouch + tap cost correct. AB$Effect | StaticAbilities$/Triggers$ nested sub-ability chain (graveyard-cast permission + finality-counter ETB replacement) entirely unhandled -- new gap class, genuinely complex."
+    },
+    "Moonstone Harbinger": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Surface facts correct. Secondary$True (a LifeGained/LifeLost trigger pair sharing ONE activation-limit counter) never read -- produces 2 independent cond:once_per_turn nodes instead of one shared cap. New gap class."
+    },
+    "Hazel's Nocturne": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real, corpus-wide bug: an Instant/Sorcery own printed effect was pushed as an independent, ungated flow root instead of a step under its cast node. Full match on attempt 2."
+    },
+    "Iridescent Vinelasher": {
+      "status": "match",
+      "attempts": 3,
+      "note": "Fixed real bug: ownerFromTargetPredicate generalized to handle bare whole-string player predicates (You/Opponent/Player), fixing DealDamage/Destroy/Pump/etc all at once (previously only special-cased for ChangeZone). Also fixed a recurring examiner-side misread (Offspring dual-root additive-not-exclusive) by clarifying the exam packet schema summary -- 3rd occurrence of this exact misread, now resolved at the documentation level for all future Offspring cards."
+    },
+    "Psychic Whorl": {
+      "status": "issues-open",
+      "attempts": 4,
+      "note": "Fixed 2 real bugs: Discard never read ValidTgts$ (self-discard default), then a second bug in that same fix (owner \"all\" instead of \"any\" for a targeted single-player discard); Surveil never wired ifPresentFlag for its ConditionPresent$/ConditionCompare$ gate. Also renamed the ambiguous if_present= flag to you_control= (confirmed fixing a real misread). Final attempt is pure examiner variance -- misread an already-elsewhere-validated surveil-N node shape as mill+scry -- data confirmed correct, not a real gap."
+    },
+    "Nocturnal Hunger": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: giftGateFact was never wired into the generic Draw/GainLife/LoseLife emit fallback (only Pump/ChangeZone/PutCounter had it) -- \"if the gift wasn't promised, you lose 2 life\" was silently dropped. Remaining, deliberately deferred: Gift's own may/single-target-opponent semantics on the Food-token creation."
+    },
+    "Persistent Marshstalker": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed 2 real bugs: ValidAttackers$ never read by trigger predicate detection (fell back to self), Threshold$True never read on trigger rows (only static rows' Condition$Threshold). Remaining, deliberately deferred: static +X/+0 SVar scaler unresolved, graveyard-reanimation return shape (Tapped$/Cost$/Attacking$/TriggerZones$Graveyard) unmodeled, and a newly-found narrower gap -- ValidAttackers$'s own +Rat subtype qualifier isn't carried into a cond: flag (a generic subtype-qualifier fallback was attempted and reverted after producing a false positive on IsRemembered elsewhere -- too risky to generalize)."
     }
   }
 }

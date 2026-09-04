@@ -149,7 +149,12 @@ at a coordinate:
 - \`roots\`: ids (or combine-groups) with nothing pointing at them — they fire
   on their own, ungated by anything else on the card. A permanent's bare
   \`enters\` is always a root even when the card also has a \`cast\` node — a
-  permanent can enter without being cast (reanimation, etc.).
+  permanent can enter without being cast (reanimation, etc.). Multiple
+  independent roots are ADDITIVE by default (all of them happen), never
+  mutually exclusive alternatives, unless a \`combine\` group says otherwise —
+  Offspring's own second \`enters\` root (\`cost:{N} cond:token;paid_at_cast\`)
+  means an EXTRA 1/1 token copy ALSO enters if that extra cost was paid, on
+  top of (not instead of) the card's own normal arrival.
 - \`steps[id]\`: what follows \`id\`. Whether that's a *guaranteed* continuation
   or a *contingent* one is derived from \`id\`'s own \`to\` field: if
   \`to: "stack"\`, whatever follows only happens if \`id\` actually resolves

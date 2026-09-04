@@ -631,11 +631,11 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Cala
   "flow": {
     "roots": [
       "A",
-      "C",
     ],
     "steps": {
       "A": [
         "B",
+        "C",
       ],
       "C": [
         "D",
@@ -952,12 +952,12 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Dire
   "flow": {
     "roots": [
       "A",
-      "C",
-      "D",
     ],
     "steps": {
       "A": [
         "B",
+        "C",
+        "D",
       ],
       "D": [
         "E",
@@ -1334,11 +1334,11 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Fell
   "flow": {
     "roots": [
       "A",
-      "C",
     ],
     "steps": {
       "A": [
         "B",
+        "C",
       ],
     },
   },
@@ -1519,16 +1519,80 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Glid
 }
 `;
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Hazel's Nocturne 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+    ],
+    "steps": {
+      "A": [
+        "B",
+        "C",
+      ],
+      "C": [
+        "D",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Hazel's Nocturne",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "qty:0..2 target",
+      "from": "gy",
+      "owner": "me",
+      "role": "move",
+      "thing": "creature",
+      "to": "hand",
+    },
+    "D": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "opp",
+      "role": "emit",
+      "thing": "life-loss",
+      "to": "--",
+    },
+    "E": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-gain",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Hop to It 1`] = `
 {
   "flow": {
     "roots": [
       "A",
-      "C",
     ],
     "steps": {
       "A": [
         "B",
+        "C",
       ],
     },
   },
@@ -1619,6 +1683,70 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Intr
       "role": "modifier",
       "thing": "creature",
       "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Iridescent Vinelasher 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Iridescent Vinelasher",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "cost:{2} cond:token;paid_at_cast;set=1/1",
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "land",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "target",
+      "from": "--",
+      "owner": "opp",
+      "role": "emit",
+      "thing": "damage",
+      "to": "--",
     },
   },
   "unmapped": [],
@@ -2176,11 +2304,11 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Rabb
   "flow": {
     "roots": [
       "A",
-      "C",
     ],
     "steps": {
       "A": [
         "B",
+        "C",
       ],
       "C": [
         "D",
@@ -2212,7 +2340,7 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Rabb
       "to": "bf",
     },
     "D": {
-      "flags": "qty:2 cond:if_present=rabbit",
+      "flags": "qty:2 cond:you_control=rabbit",
       "from": "--",
       "owner": "me",
       "role": "emit",
@@ -2258,7 +2386,7 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Seas
       "to": "bf",
     },
     "C": {
-      "flags": "cond:if_present=token",
+      "flags": "cond:you_control=token",
       "from": "--",
       "owner": "me",
       "role": "trigger",
@@ -2284,11 +2412,11 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Shor
   "flow": {
     "roots": [
       "A",
-      "C",
     ],
     "steps": {
       "A": [
         "B",
+        "C",
       ],
       "C": [
         "D",
@@ -2398,17 +2526,17 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Spel
   "flow": {
     "roots": [
       "A",
-      {
-        "combine": 1,
-        "of": [
-          "C",
-          "D",
-        ],
-      },
     ],
     "steps": {
       "A": [
         "B",
+        {
+          "combine": 1,
+          "of": [
+            "C",
+            "D",
+          ],
+        },
       ],
       "D": [
         "E",
@@ -2475,12 +2603,12 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Star
   "flow": {
     "roots": [
       "A",
-      "C",
-      "D",
     ],
     "steps": {
       "A": [
         "B",
+        "C",
+        "D",
       ],
       "D": [
         "E",
