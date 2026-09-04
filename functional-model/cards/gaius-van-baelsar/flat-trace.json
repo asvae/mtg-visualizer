@@ -1,0 +1,55 @@
+[
+  {
+    "fn": "trigger",
+    "card": "Gaius van Baelsar",
+    "name": "onEnter"
+  },
+  {
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "token"
+  },
+  {
+    "fn": "sacrifice",
+    "player": "opp0",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "token"
+  },
+  {
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "nontoken"
+  },
+  {
+    "fn": "sacrifice",
+    "player": "opp0",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "nontoken"
+  },
+  {
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "enchantment",
+    "notSelf": false,
+    "tokenFilter": null
+  },
+  {
+    "fn": "sacrifice",
+    "player": "opp0",
+    "qty": 1,
+    "validType": "enchantment",
+    "notSelf": false,
+    "tokenFilter": null
+  }
+]

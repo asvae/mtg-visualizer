@@ -1,0 +1,83 @@
+[
+  {
+    "scenario": "ETB, mode 0 (sac creature token)",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Gaius van Baelsar",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": "token"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": "token"
+      }
+    ]
+  },
+  {
+    "scenario": "ETB, mode 1 (sac nontoken creature)",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Gaius van Baelsar",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": "nontoken"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": "nontoken"
+      }
+    ]
+  },
+  {
+    "scenario": "ETB, mode 2 (sac enchantment)",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Gaius van Baelsar",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "enchantment",
+        "notSelf": false,
+        "tokenFilter": null
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 1,
+        "validType": "enchantment",
+        "notSelf": false,
+        "tokenFilter": null
+      }
+    ]
+  }
+]

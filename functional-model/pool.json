@@ -1,0 +1,511 @@
+[
+  {
+    "card": "Fight On!",
+    "fn": "cast",
+    "from": "hand",
+    "cost": "{2}{B}"
+  },
+  {
+    "card": "Fight On!",
+    "fn": "read:getCardsIn",
+    "player": "you",
+    "zone": "Graveyard",
+    "count": 2,
+    "creatureCount": 2
+  },
+  {
+    "card": "Fight On!",
+    "fn": "moveTo",
+    "target": "you-gy-creature-0",
+    "zone": "Hand"
+  },
+  {
+    "card": "Fight On!",
+    "fn": "moveTo",
+    "target": "you-gy-creature-1",
+    "zone": "Hand"
+  },
+  {
+    "card": "Fight On!",
+    "fn": "move",
+    "from": "stack",
+    "to": "graveyard"
+  },
+  {
+    "card": "Fight On!",
+    "fn": "read:getCardsIn",
+    "player": "you",
+    "zone": "Graveyard",
+    "count": 1,
+    "creatureCount": 1
+  },
+  {
+    "card": "Fight On!",
+    "fn": "read:getCardsIn",
+    "player": "you",
+    "zone": "Graveyard",
+    "count": 0,
+    "creatureCount": 0
+  },
+  {
+    "card": "Gaius van Baelsar",
+    "fn": "trigger",
+    "name": "onEnter"
+  },
+  {
+    "card": "Gaius van Baelsar",
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "token"
+  },
+  {
+    "card": "Gaius van Baelsar",
+    "fn": "sacrifice",
+    "player": "opp0",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "token"
+  },
+  {
+    "card": "Gaius van Baelsar",
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "nontoken"
+  },
+  {
+    "card": "Gaius van Baelsar",
+    "fn": "sacrifice",
+    "player": "opp0",
+    "qty": 1,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": "nontoken"
+  },
+  {
+    "card": "Gaius van Baelsar",
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "enchantment",
+    "notSelf": false,
+    "tokenFilter": null
+  },
+  {
+    "card": "Gaius van Baelsar",
+    "fn": "sacrifice",
+    "player": "opp0",
+    "qty": 1,
+    "validType": "enchantment",
+    "notSelf": false,
+    "tokenFilter": null
+  },
+  {
+    "card": "Hecteyes",
+    "fn": "trigger",
+    "name": "onEnter"
+  },
+  {
+    "card": "Hecteyes",
+    "fn": "discard",
+    "player": "opp0",
+    "qty": 1
+  },
+  {
+    "card": "Hecteyes",
+    "fn": "discard",
+    "player": "opp1",
+    "qty": 1
+  },
+  {
+    "card": "Jecht, Reluctant Guardian",
+    "fn": "trigger",
+    "name": "onDealsDamage"
+  },
+  {
+    "card": "Jecht, Reluctant Guardian",
+    "fn": "moveTo",
+    "target": "Jecht, Reluctant Guardian",
+    "zone": "Exile"
+  },
+  {
+    "card": "Jecht, Reluctant Guardian",
+    "fn": "moveTo",
+    "target": "Jecht, Reluctant Guardian",
+    "zone": "Battlefield"
+  },
+  {
+    "card": "Braska's Final Aeon",
+    "fn": "trigger",
+    "name": "chapterI"
+  },
+  {
+    "card": "Jecht, Reluctant Guardian",
+    "fn": "discard",
+    "player": "opp0",
+    "qty": 1
+  },
+  {
+    "card": "Jecht, Reluctant Guardian",
+    "fn": "drawCard",
+    "player": "you"
+  },
+  {
+    "card": "Braska's Final Aeon",
+    "fn": "trigger",
+    "name": "chapterIII"
+  },
+  {
+    "card": "Jecht, Reluctant Guardian",
+    "fn": "sacrifice",
+    "player": "opp0",
+    "qty": 2,
+    "validType": "creature",
+    "notSelf": false,
+    "tokenFilter": null
+  },
+  {
+    "card": "Kain, Traitorous Dragoon",
+    "fn": "trigger",
+    "name": "onDealsDamage"
+  },
+  {
+    "card": "Kain, Traitorous Dragoon",
+    "fn": "gainControl",
+    "controller": "opp0",
+    "target": "Kain, Traitorous Dragoon"
+  },
+  {
+    "card": "Kain, Traitorous Dragoon",
+    "fn": "drawCard",
+    "player": "you"
+  },
+  {
+    "card": "Kain, Traitorous Dragoon",
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Treasure",
+    "qty": 2,
+    "tapped": true
+  },
+  {
+    "card": "Kain, Traitorous Dragoon",
+    "fn": "loseLife",
+    "player": "you",
+    "amount": 2
+  },
+  {
+    "card": "Kain, Traitorous Dragoon",
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Treasure",
+    "qty": 5,
+    "tapped": true
+  },
+  {
+    "card": "Kain, Traitorous Dragoon",
+    "fn": "loseLife",
+    "player": "you",
+    "amount": 5
+  },
+  {
+    "card": "Malboro",
+    "fn": "trigger",
+    "name": "onEnter"
+  },
+  {
+    "card": "Malboro",
+    "fn": "discard",
+    "player": "opp0",
+    "qty": 1
+  },
+  {
+    "card": "Malboro",
+    "fn": "loseLife",
+    "player": "opp0",
+    "amount": 2
+  },
+  {
+    "card": "Malboro",
+    "fn": "move",
+    "player": "opp0",
+    "from": "Library",
+    "to": "Exile",
+    "qty": 3
+  },
+  {
+    "card": "Malboro",
+    "fn": "discard",
+    "player": "opp1",
+    "qty": 1
+  },
+  {
+    "card": "Malboro",
+    "fn": "loseLife",
+    "player": "opp1",
+    "amount": 2
+  },
+  {
+    "card": "Malboro",
+    "fn": "move",
+    "player": "opp1",
+    "from": "Library",
+    "to": "Exile",
+    "qty": 3
+  },
+  {
+    "card": "Namazu Trader",
+    "fn": "trigger",
+    "name": "onEnter"
+  },
+  {
+    "card": "Namazu Trader",
+    "fn": "loseLife",
+    "player": "you",
+    "amount": 1
+  },
+  {
+    "card": "Namazu Trader",
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Treasure",
+    "qty": 1,
+    "tapped": false
+  },
+  {
+    "card": "Namazu Trader",
+    "fn": "trigger",
+    "name": "onAttack"
+  },
+  {
+    "card": "Namazu Trader",
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature-or-artifact",
+    "notSelf": true,
+    "tokenFilter": null
+  },
+  {
+    "card": "Namazu Trader",
+    "fn": "surveil",
+    "player": "you",
+    "qty": 2
+  },
+  {
+    "card": "Ninja's Blades",
+    "fn": "activate",
+    "cost": "{2}"
+  },
+  {
+    "card": "Ninja's Blades",
+    "fn": "read:getCreaturesInPlay",
+    "player": "you",
+    "count": 2
+  },
+  {
+    "card": "Ninja's Blades",
+    "fn": "equip",
+    "equipment": "Ninja's Blades",
+    "target": "you-creature-token-0"
+  },
+  {
+    "card": "Ninja's Blades",
+    "fn": "trigger",
+    "name": "onEquippedDealsDamage"
+  },
+  {
+    "card": "Ninja's Blades",
+    "fn": "drawCard",
+    "player": "you"
+  },
+  {
+    "card": "Ninja's Blades",
+    "fn": "discard",
+    "player": "you",
+    "qty": 1
+  },
+  {
+    "card": "Ninja's Blades",
+    "fn": "loseLife",
+    "player": "opp0",
+    "amount": 3
+  },
+  {
+    "card": "Overkill",
+    "fn": "cast",
+    "from": "hand",
+    "cost": "{2}{B}"
+  },
+  {
+    "card": "Overkill",
+    "fn": "read:getCreaturesInPlay",
+    "player": "you",
+    "count": 0
+  },
+  {
+    "card": "Overkill",
+    "fn": "read:getCreaturesInPlay",
+    "player": "opp0",
+    "count": 1
+  },
+  {
+    "card": "Overkill",
+    "fn": "pump",
+    "target": "opp0-creature-token-0",
+    "power": 0,
+    "toughness": -9999
+  },
+  {
+    "card": "Overkill",
+    "fn": "move",
+    "from": "stack",
+    "to": "graveyard"
+  },
+  {
+    "card": "Phantom Train",
+    "fn": "activate",
+    "cost": "Sacrifice another artifact or creature"
+  },
+  {
+    "card": "Phantom Train",
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature-or-artifact",
+    "notSelf": true,
+    "tokenFilter": null
+  },
+  {
+    "card": "Phantom Train",
+    "fn": "putCounter",
+    "target": "Phantom Train",
+    "counterType": "+1/+1",
+    "amount": 1
+  },
+  {
+    "card": "Phantom Train",
+    "fn": "animate",
+    "target": "Phantom Train",
+    "types": [
+      "Artifact",
+      "Creature",
+      "Spirit"
+    ]
+  },
+  {
+    "card": "The Final Days",
+    "fn": "cast",
+    "from": "hand",
+    "cost": "{2}{B}{B}"
+  },
+  {
+    "card": "The Final Days",
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Horror",
+    "qty": 2,
+    "tapped": true
+  },
+  {
+    "card": "The Final Days",
+    "fn": "move",
+    "from": "stack",
+    "to": "graveyard"
+  },
+  {
+    "card": "The Final Days",
+    "fn": "cast",
+    "from": "graveyard",
+    "cost": "{4}{B}{B}"
+  },
+  {
+    "card": "The Final Days",
+    "fn": "read:getCardsIn",
+    "player": "you",
+    "zone": "Graveyard",
+    "count": 3,
+    "creatureCount": 3
+  },
+  {
+    "card": "The Final Days",
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Horror",
+    "qty": 3,
+    "tapped": true
+  },
+  {
+    "card": "The Final Days",
+    "fn": "move",
+    "from": "stack",
+    "to": "exile"
+  },
+  {
+    "card": "The Final Days",
+    "fn": "read:getCardsIn",
+    "player": "you",
+    "zone": "Graveyard",
+    "count": 0,
+    "creatureCount": 0
+  },
+  {
+    "card": "The Final Days",
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Horror",
+    "qty": 0,
+    "tapped": true
+  },
+  {
+    "card": "Warren Elder",
+    "fn": "activate",
+    "cost": "{3}{W}"
+  },
+  {
+    "card": "Warren Elder",
+    "fn": "read:getCreaturesInPlay",
+    "player": "you",
+    "count": 1
+  },
+  {
+    "card": "Warren Elder",
+    "fn": "pump",
+    "target": "Warren Elder",
+    "power": 1,
+    "toughness": 1
+  },
+  {
+    "card": "Warren Elder",
+    "fn": "read:getCreaturesInPlay",
+    "player": "you",
+    "count": 4
+  },
+  {
+    "card": "Warren Elder",
+    "fn": "pump",
+    "target": "you-creature-token-0",
+    "power": 1,
+    "toughness": 1
+  },
+  {
+    "card": "Warren Elder",
+    "fn": "pump",
+    "target": "you-creature-token-1",
+    "power": 1,
+    "toughness": 1
+  },
+  {
+    "card": "Warren Elder",
+    "fn": "pump",
+    "target": "you-creature-token-2",
+    "power": 1,
+    "toughness": 1
+  }
+]

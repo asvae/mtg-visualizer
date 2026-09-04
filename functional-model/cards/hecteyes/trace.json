@@ -1,0 +1,39 @@
+[
+  {
+    "scenario": "ETB, 1 opponent",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Hecteyes",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "discard",
+        "player": "opp0",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": "ETB, 2 opponents",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Hecteyes",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "discard",
+        "player": "opp0",
+        "qty": 1
+      },
+      {
+        "fn": "discard",
+        "player": "opp1",
+        "qty": 1
+      }
+    ]
+  }
+]

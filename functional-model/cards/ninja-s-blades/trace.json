@@ -1,0 +1,48 @@
+[
+  {
+    "scenario": "equip to a creature",
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ninja's Blades",
+        "instanceId": 1,
+        "cost": "{2}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Ninja's Blades",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": "equipped creature deals damage, discarded card MV 3",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ninja's Blades",
+        "instanceId": 1,
+        "name": "onEquippedDealsDamage"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 3
+      }
+    ]
+  }
+]

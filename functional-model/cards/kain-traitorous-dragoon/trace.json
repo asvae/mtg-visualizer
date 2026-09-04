@@ -1,0 +1,86 @@
+[
+  {
+    "scenario": "deals 2 combat damage to opponent 0",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Kain, Traitorous Dragoon",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "gainControl",
+        "controller": "opp0",
+        "target": "Kain, Traitorous Dragoon"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 2,
+        "tapped": true
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": "deals 5 combat damage to opponent 0",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Kain, Traitorous Dragoon",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "gainControl",
+        "controller": "opp0",
+        "target": "Kain, Traitorous Dragoon"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 5,
+        "tapped": true
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 5
+      }
+    ]
+  }
+]

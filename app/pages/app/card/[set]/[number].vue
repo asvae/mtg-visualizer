@@ -2,8 +2,8 @@
 import { computed, onMounted, onUnmounted } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
 import { parseManaSegments } from '../../../../lib/manaSegments';
-import type { InteractionGroup } from '../../../../lib/synergyInteractions';
-import type { CardData, EdgeData, SynergyFlow, SynergyFlowStep, SynergyNode, SynergyExamResult, ThemeData } from '../../../../types';
+import type { InteractionGroup } from '../../../../../functional-model/synergy';
+import type { CardData, EdgeData, SynergyFlow, SynergyFlowStep, SynergyNode, ThemeData } from '../../../../types';
 
 definePageMeta({ layout: 'graph' });
 
@@ -16,8 +16,11 @@ interface CardResponse {
   synergyNodes: Record<string, SynergyNode> | null;
   synergyFlow: SynergyFlow | null;
   synergyReview: 'ai' | 'human' | null;
-  synergyExam: SynergyExamResult | null;
-  forgeScript: string | null;
+  functionalModel: {
+    source: string;
+    facts: Record<string, unknown>[];
+    traces: { scenario: string; log: Record<string, unknown>[] }[];
+  } | null;
   interactions: InteractionGroup[];
 }
 
@@ -53,6 +56,20 @@ const synergyJson = computed(() => {
   if (!data.value?.synergyNodes || !data.value?.synergyFlow) return null;
   return JSON.stringify({ nodes: data.value.synergyNodes, flow: data.value.synergyFlow }, null, 2);
 });
+
+// functional-model's own outline data — the DISTINCT facts
+// functional-model/scripts/flatten-traces.mjs derived by actually running
+// this card's declarative CardDefinition through real game state (see
+// functional-model/harness.ts/state.ts), not hand-authored nodes the way
+// synergyNodes above are. Same "Raw JSON" spoiler pattern as the Synergy
+// model column, just fed by execution instead of annotation.
+const functionalModelJson = computed(() => (data.value?.functionalModel ? JSON.stringify(data.value.functionalModel.facts, null, 2) : null));
+function factFields(fact: Record<string, unknown>): string {
+  return Object.entries(fact)
+    .filter(([k]) => k !== 'fn')
+    .map(([k, v]) => `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`)
+    .join('  ');
+}
 
 const themeLabelById = computed(() => {
   const map = new Map<string, string>();
@@ -260,142 +277,132 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
       </div>
       <h1 class="mb-3 text-lg font-semibold">{{ card.name }}</h1>
       <CardMedia :images="card.images" :tokens="card.tokens" />
-      <!-- Two comparison columns, wrapping to stacked below ~640px each so
-           the page never scrolls horizontally on a narrow viewport (the
-           outline tables inside still scroll their own overflow). Only
-           rendered once there's at least one model's data for this card —
-           most FIN cards have neither yet. -->
-      <div v-if="outlineRows.length || data?.forgeScript" class="mt-3 flex flex-wrap items-start gap-6">
-        <div v-if="outlineRows.length" class="min-w-[320px] flex-1 basis-[420px]">
-          <div class="mb-1 text-[10px] font-semibold tracking-wide text-muted uppercase">Synergy model</div>
-          <div
-            class="overflow-x-auto border-l-2 pl-2.5"
-            :class="data?.synergyReview === 'human' ? 'border-transparent' : 'border-orange-500'"
-            :title="data?.synergyReview === 'human' ? undefined : 'Synergy nodes not yet human-reviewed'"
-          >
-            <table class="border-collapse font-mono text-xs whitespace-nowrap">
-              <thead>
-                <tr class="text-[10px] tracking-wide text-muted/70 uppercase">
-                  <th class="pr-2 pb-1 text-left font-normal">id</th>
-                  <th class="pr-3 pb-1 text-left font-normal">role</th>
-                  <th class="pr-3 pb-1 text-left font-normal">owner</th>
-                  <th class="pr-3 pb-1 text-left font-normal">from</th>
-                  <th class="pr-3 pb-1 text-left font-normal">to</th>
-                  <th class="pr-3 pb-1 text-left font-normal">thing</th>
-                  <th class="pb-1 text-left font-normal">flags</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in outlineRows" :key="row.key" class="align-top">
-                  <template v-if="row.kind === 'group'">
-                    <td colspan="7" class="pt-1 pb-0.5 text-muted italic">
-                      <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span>{{ groupLabel(row) }}
-                    </td>
-                  </template>
-                  <template v-else>
-                    <td
-                      class="pr-2"
-                      :class="interactingNodeIds.has(row.id) ? 'font-bold text-text' : 'text-muted/60'"
-                      :title="interactingNodeIds.has(row.id) ? 'Appears in the Interactions panel below' : undefined"
-                      >{{ row.id }}</td
-                    >
-                    <td class="pr-3">
-                      <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span
-                      ><span :style="{ color: synergyRoleColor(row.node.role) }">{{ synergyRoleLabel(row.node) }}</span
-                      ><span
-                        v-if="row.node.to === 'stack'"
-                        class="ml-1 cursor-help"
-                        title="Put on the stack — can be responded to before it resolves (e.g. countered/Stifled)."
-                        >⚡</span
-                      ><template v-for="link in row.links" :key="link.id"
-                        ><span
-                          class="ml-1 cursor-help text-muted/60"
-                          :title="`Resolves into its own root entry (${link.node.role}) below, rather than a nested copy.`"
-                          >↓</span
-                        ></template
-                      >
-                    </td>
-                    <td class="pr-3 text-muted">{{ row.node.owner }}</td>
-                    <td class="pr-3 text-muted">{{ row.node.from }}</td>
-                    <td class="pr-3 text-muted">{{ row.node.to }}</td>
-                    <td class="pr-3">{{ row.node.thing }}</td>
-                    <td class="text-muted"
-                      ><template v-for="(seg, si) in parseManaSegments(row.node.flags ?? '')" :key="si"
-                        ><ManaSymbol v-if="'mana' in seg" :code="seg.mana" /><template v-else>{{ seg.text }}</template></template
-                      ></td
-                    >
-                  </template>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <details class="mt-2 text-[11px]">
-            <summary class="cursor-pointer text-muted hover:text-text">Raw JSON</summary>
-            <pre class="mt-1 max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
-              synergyJson
-            }}</pre>
-          </details>
-          <div v-if="data?.synergyExam" class="mt-4 max-w-prose rounded-md border border-border bg-panel p-3 text-xs">
-            <div class="mb-2 flex items-center gap-2 text-[11px] tracking-wide text-muted uppercase">
-              Round-trip reconstruction
-              <span
-                class="rounded px-1.5 py-px text-[10px] font-bold normal-case"
-                :class="data.synergyExam.verdict === 'match' ? 'bg-produce/20 text-produce' : 'bg-[#c0392b]/20 text-[#e07a6e]'"
-              >
-                {{ data.synergyExam.verdict === 'match' ? 'Match' : 'Issues found' }}
-              </span>
-            </div>
 
-            <!-- Everything the isolated examiner agent itself produced — kept
-                 visually separate from this session's judgement below it, so
-                 it's never unclear which is the raw answer and which is the
-                 assessment of it. -->
-            <div class="mb-2 rounded border border-border/60 bg-bg p-2">
-              <div class="mb-1 text-[10px] tracking-wide text-muted/60 uppercase">Examiner's proposal</div>
-              <p v-if="data.synergyExam.manaCost || data.synergyExam.typeLine" class="mb-1.5 leading-relaxed text-text"
-                ><template v-if="data.synergyExam.manaCost"
-                  ><template v-for="(seg, si) in parseManaSegments(data.synergyExam.manaCost)" :key="si"
-                    ><ManaSymbol v-if="'mana' in seg" :code="seg.mana" /><template v-else>{{ seg.text }}</template></template
-                  ></template
-                ><span v-if="data.synergyExam.manaCost && data.synergyExam.typeLine"> &middot; </span
-                ><span v-if="data.synergyExam.typeLine">{{ data.synergyExam.typeLine }}</span></p
-              >
-              <p class="mb-1.5 leading-relaxed whitespace-pre-line text-text"
-                ><template v-for="(seg, si) in parseManaSegments(data.synergyExam.description)" :key="si"
-                  ><ManaSymbol v-if="'mana' in seg" :code="seg.mana" /><template v-else>{{ seg.text }}</template></template
-                ></p
-              >
-              <div v-if="data.synergyExam.assumptions.length" class="mb-1.5">
-                <div class="text-[10px] tracking-wide text-muted/60 uppercase">Assumptions</div>
-                <ul class="list-disc pl-4 text-text/80">
-                  <li v-for="(a, ai) in data.synergyExam.assumptions" :key="ai">{{ a }}</li>
-                </ul>
-              </div>
-              <div v-if="data.synergyExam.couldNotDerive.length">
-                <div class="text-[10px] tracking-wide text-muted/60 uppercase">Could not derive</div>
-                <ul class="list-disc pl-4 text-text/80">
-                  <li v-for="(c, ci) in data.synergyExam.couldNotDerive" :key="ci">{{ c }}</li>
-                </ul>
-              </div>
-            </div>
-
-            <!-- This session's own assessment — never the examiner's words. -->
-            <div class="text-[10px] tracking-wide text-muted/60 uppercase">Judgement</div>
-            <p class="leading-relaxed whitespace-pre-line text-text/80 italic">{{ data.synergyExam.notes }}</p>
-          </div>
+      <!-- functional-model/ — a declarative CardDefinition
+           (functional-model/card.ts) run through real, mutable game state
+           (functional-model/state.ts) across its own scenarios.ts. Primary
+           position right under the card now (not a comparison column
+           anymore) — synergy-model/forge-model are deprecated (see their
+           own README/SCHEMA.md banners), this is the current direction. -->
+      <div v-if="data?.functionalModel" class="mt-3">
+        <div class="mb-1 text-[10px] font-semibold tracking-wide text-muted uppercase">Functional model</div>
+        <div class="overflow-x-auto border-l-2 border-orange-500 pl-2.5" title="Functional model facts not yet human-reviewed">
+          <table class="border-collapse font-mono text-xs whitespace-nowrap">
+            <thead>
+              <tr class="text-[10px] tracking-wide text-muted/70 uppercase">
+                <th class="pr-3 pb-1 text-left font-normal">fn</th>
+                <th class="pb-1 text-left font-normal">fields</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(fact, fi) in data.functionalModel.facts" :key="fi" class="align-top">
+                <td class="pr-3 text-text">{{ fact.fn }}</td>
+                <td class="whitespace-pre-wrap text-muted">{{ factFields(fact) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <div v-if="data?.forgeScript" class="min-w-[320px] flex-1 basis-[420px]">
-          <div class="mb-1 text-[10px] font-semibold tracking-wide text-muted uppercase">Forge model</div>
-          <ForgeCardScript :raw="data.forgeScript" />
-          <details class="mt-2 text-[11px]">
-            <summary class="cursor-pointer text-muted hover:text-text">Raw Forge script</summary>
-            <pre class="mt-1 max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
-              data.forgeScript
-            }}</pre>
-          </details>
-        </div>
+        <!-- trace.json's own raw per-scenario log — richer than the facts
+             table above (which is flat-trace.json: deduplicated,
+             scenario-agnostic). Its own nested <details> per scenario, so
+             it stays collapsed-by-default like every other spoiler on this
+             page rather than dumping every scenario's full log at once. -->
+        <details v-if="data.functionalModel.traces?.length" class="mt-2 text-[11px]">
+          <summary class="cursor-pointer text-muted hover:text-text">Scenarios ({{ data.functionalModel.traces.length }})</summary>
+          <div class="mt-1">
+            <TraceViewer :traces="data.functionalModel.traces" />
+          </div>
+        </details>
+        <details class="mt-2 text-[11px]">
+          <summary class="cursor-pointer text-muted hover:text-text">Raw JSON</summary>
+          <pre class="mt-1 max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
+            functionalModelJson
+          }}</pre>
+        </details>
+        <details class="mt-2 text-[11px]">
+          <summary class="cursor-pointer text-muted hover:text-text">Raw source</summary>
+          <div class="mt-1">
+            <FunctionalModelScript :code="data.functionalModel.source" />
+          </div>
+        </details>
       </div>
+
+      <!-- synergy-model/ — deprecated (see synergy-model/SCHEMA.md's own
+           banner), kept around and still readable but folded under a
+           collapse by default rather than shown expanded, since it's no
+           longer the primary representation this page leads with. -->
+      <details v-if="outlineRows.length" class="mt-3 text-xs">
+        <summary class="mb-1 cursor-pointer text-[10px] font-semibold tracking-wide text-muted uppercase hover:text-text"
+          >Synergy model (deprecated)</summary
+        >
+        <div
+          class="mt-2 overflow-x-auto border-l-2 pl-2.5"
+          :class="data?.synergyReview === 'human' ? 'border-transparent' : 'border-orange-500'"
+          :title="data?.synergyReview === 'human' ? undefined : 'Synergy nodes not yet human-reviewed'"
+        >
+          <table class="border-collapse font-mono text-xs whitespace-nowrap">
+            <thead>
+              <tr class="text-[10px] tracking-wide text-muted/70 uppercase">
+                <th class="pr-2 pb-1 text-left font-normal">id</th>
+                <th class="pr-3 pb-1 text-left font-normal">role</th>
+                <th class="pr-3 pb-1 text-left font-normal">owner</th>
+                <th class="pr-3 pb-1 text-left font-normal">from</th>
+                <th class="pr-3 pb-1 text-left font-normal">to</th>
+                <th class="pr-3 pb-1 text-left font-normal">thing</th>
+                <th class="pb-1 text-left font-normal">flags</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in outlineRows" :key="row.key" class="align-top">
+                <template v-if="row.kind === 'group'">
+                  <td colspan="7" class="pt-1 pb-0.5 text-muted italic">
+                    <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span>{{ groupLabel(row) }}
+                  </td>
+                </template>
+                <template v-else>
+                  <td
+                    class="pr-2"
+                    :class="interactingNodeIds.has(row.id) ? 'font-bold text-text' : 'text-muted/60'"
+                    :title="interactingNodeIds.has(row.id) ? 'Appears in the Interactions panel below' : undefined"
+                    >{{ row.id }}</td
+                  >
+                  <td class="pr-3">
+                    <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span
+                    ><span :style="{ color: synergyRoleColor(row.node.role) }">{{ synergyRoleLabel(row.node) }}</span
+                    ><span
+                      v-if="row.node.to === 'stack'"
+                      class="ml-1 cursor-help"
+                      title="Put on the stack — can be responded to before it resolves (e.g. countered/Stifled)."
+                      >⚡</span
+                    ><template v-for="link in row.links" :key="link.id"
+                      ><span
+                        class="ml-1 cursor-help text-muted/60"
+                        :title="`Resolves into its own root entry (${link.node.role}) below, rather than a nested copy.`"
+                        >↓</span
+                      ></template
+                    >
+                  </td>
+                  <td class="pr-3 text-muted">{{ row.node.owner }}</td>
+                  <td class="pr-3 text-muted">{{ row.node.from }}</td>
+                  <td class="pr-3 text-muted">{{ row.node.to }}</td>
+                  <td class="pr-3">{{ row.node.thing }}</td>
+                  <td class="text-muted"
+                    ><template v-for="(seg, si) in parseManaSegments(row.node.flags ?? '')" :key="si"
+                      ><ManaSymbol v-if="'mana' in seg" :code="seg.mana" /><template v-else>{{ seg.text }}</template></template
+                    ></td
+                  >
+                </template>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <details class="mt-2 text-[11px]">
+          <summary class="cursor-pointer text-muted hover:text-text">Raw JSON</summary>
+          <pre class="mt-1 max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
+            synergyJson
+          }}</pre>
+        </details>
+      </details>
       <!-- app/lib/synergyInteractions.ts's cross-card join, grouped by this
            card's own node (or, for a rule this card only bears, the rule
            owner's node — see groupInteractionsForCard) — one row per

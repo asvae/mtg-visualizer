@@ -1,3 +1,14 @@
+> **Deprecated (2026-09-04).** Same status as `synergy-model/` (see that
+> folder's own SCHEMA.md banner) — superseded as a design direction by
+> `functional-model/`, whose `interfaces.ts` reads real Forge source directly
+> from a local checkout (`../mtg-forge`, sibling directory) with per-member
+> citations, rather than copying `.txt` scripts into this repo. This copied
+> data is NOT scheduled for removal yet though: `server/api/card/[set]/[number].ts`
+> still reads it live, both for the Synergy model column's translate-on-the-fly
+> fallback and for the whole Interactions panel (`forge-model/pools/`) — check
+> those call sites before deleting anything here. `../mtg-forge` is the
+> reference to use for any NEW work, not this folder.
+
 # Forge model
 
 Real card scripts from [Card-Forge/forge](https://github.com/Card-Forge/forge)

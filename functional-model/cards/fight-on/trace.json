@@ -1,0 +1,95 @@
+[
+  {
+    "scenario": "cast from hand, 2 creature cards in graveyard",
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fight On!",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-1",
+        "zone": "Hand"
+      },
+      {
+        "fn": "move",
+        "card": "Fight On!",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "graveyard"
+      }
+    ]
+  },
+  {
+    "scenario": "cast from hand, 1 creature card in graveyard",
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fight On!",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "move",
+        "card": "Fight On!",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "graveyard"
+      }
+    ]
+  },
+  {
+    "scenario": "cast from hand, empty graveyard",
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fight On!",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Fight On!",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "graveyard"
+      }
+    ]
+  }
+]

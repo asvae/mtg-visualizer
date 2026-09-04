@@ -1,0 +1,41 @@
+[
+  {
+    "fn": "activate",
+    "card": "Warren Elder",
+    "cost": "{3}{W}"
+  },
+  {
+    "fn": "read:getCreaturesInPlay",
+    "player": "you",
+    "count": 1
+  },
+  {
+    "fn": "pump",
+    "target": "Warren Elder",
+    "power": 1,
+    "toughness": 1
+  },
+  {
+    "fn": "read:getCreaturesInPlay",
+    "player": "you",
+    "count": 4
+  },
+  {
+    "fn": "pump",
+    "target": "you-creature-token-0",
+    "power": 1,
+    "toughness": 1
+  },
+  {
+    "fn": "pump",
+    "target": "you-creature-token-1",
+    "power": 1,
+    "toughness": 1
+  },
+  {
+    "fn": "pump",
+    "target": "you-creature-token-2",
+    "power": 1,
+    "toughness": 1
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "fn": "cast",
+    "card": "Overkill",
+    "from": "hand",
+    "cost": "{2}{B}"
+  },
+  {
+    "fn": "read:getCreaturesInPlay",
+    "player": "you",
+    "count": 0
+  },
+  {
+    "fn": "read:getCreaturesInPlay",
+    "player": "opp0",
+    "count": 1
+  },
+  {
+    "fn": "pump",
+    "target": "opp0-creature-token-0",
+    "power": 0,
+    "toughness": -9999
+  },
+  {
+    "fn": "move",
+    "card": "Overkill",
+    "from": "stack",
+    "to": "graveyard"
+  }
+]

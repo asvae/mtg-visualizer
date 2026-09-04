@@ -1,0 +1,61 @@
+[
+  {
+    "fn": "cast",
+    "card": "The Final Days",
+    "from": "hand",
+    "cost": "{2}{B}{B}"
+  },
+  {
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Horror",
+    "qty": 2,
+    "tapped": true
+  },
+  {
+    "fn": "move",
+    "card": "The Final Days",
+    "from": "stack",
+    "to": "graveyard"
+  },
+  {
+    "fn": "cast",
+    "card": "The Final Days",
+    "from": "graveyard",
+    "cost": "{4}{B}{B}"
+  },
+  {
+    "fn": "read:getCardsIn",
+    "player": "you",
+    "zone": "Graveyard",
+    "count": 3,
+    "creatureCount": 3
+  },
+  {
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Horror",
+    "qty": 3,
+    "tapped": true
+  },
+  {
+    "fn": "move",
+    "card": "The Final Days",
+    "from": "stack",
+    "to": "exile"
+  },
+  {
+    "fn": "read:getCardsIn",
+    "player": "you",
+    "zone": "Graveyard",
+    "count": 0,
+    "creatureCount": 0
+  },
+  {
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Horror",
+    "qty": 0,
+    "tapped": true
+  }
+]

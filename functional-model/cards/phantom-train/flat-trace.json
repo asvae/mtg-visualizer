@@ -1,0 +1,30 @@
+[
+  {
+    "fn": "activate",
+    "card": "Phantom Train",
+    "cost": "Sacrifice another artifact or creature"
+  },
+  {
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature-or-artifact",
+    "notSelf": true,
+    "tokenFilter": null
+  },
+  {
+    "fn": "putCounter",
+    "target": "Phantom Train",
+    "counterType": "+1/+1",
+    "amount": 1
+  },
+  {
+    "fn": "animate",
+    "target": "Phantom Train",
+    "types": [
+      "Artifact",
+      "Creature",
+      "Spirit"
+    ]
+  }
+]

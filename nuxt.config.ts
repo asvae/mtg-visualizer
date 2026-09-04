@@ -50,12 +50,36 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'netlify',
+    // Nitro runs its OWN separate chokidar instance for server/** (API
+    // routes, middleware), independent of the Vite polling config below —
+    // confirmed the hard way: server/api/card/[set]/[number].ts's return
+    // shape changed, but the running dev server kept serving the OLD
+    // handler until manually restarted, even with the Vite watcher already
+    // polling. Tried `watchOptions: { usePolling: true }` here first — it's
+    // a real, typed Nitro config key (nitropack's own ChokidarOptions), but
+    // it did NOT fix this in practice (verified: edited a file, waited well
+    // past the poll interval, the server bundle never rebuilt) — Nuxt's
+    // nitro-server package routes some of its own dev-storage watching
+    // through a different path than the server-bundle rebuild watcher this
+    // problem is actually about. The fix that DOES work: chokidar itself
+    // (every watcher in this whole toolchain is built on it) honors a
+    // global `CHOKIDAR_USEPOLLING`/`CHOKIDAR_INTERVAL` env var override
+    // that supersedes whatever options object any individual caller passes
+    // — see .env.example. Set those two vars in your own (gitignored) .env
+    // rather than here, since this is a WSL/DrvFs-specific workaround, not
+    // something every contributor's machine needs paying the polling-CPU
+    // cost for.
   },
   // Repo lives on /mnt/c (WSL's DrvFs mount of the Windows filesystem) —
   // inotify doesn't reliably fire for changes there, so Vite's default
   // watcher silently misses saves until something else forces a rebuild
   // (e.g. a full dev-server restart). Polling instead of relying on inotify
-  // fixes that at the cost of a bit of CPU.
+  // fixes that at the cost of a bit of CPU. Kept alongside the env-var fix
+  // above (redundant once CHOKIDAR_USEPOLLING is set, since that overrides
+  // every chokidar instance including this one) rather than removed, since
+  // it predates this investigation and there's no evidence it's actually
+  // broken — only that it alone wasn't sufficient for Nitro's separate
+  // server-bundle watcher.
   vite: {
     server: {
       watch: {

@@ -1,0 +1,37 @@
+[
+  {
+    "fn": "trigger",
+    "card": "Namazu Trader",
+    "name": "onEnter"
+  },
+  {
+    "fn": "loseLife",
+    "player": "you",
+    "amount": 1
+  },
+  {
+    "fn": "createToken",
+    "controller": "you",
+    "token": "Treasure",
+    "qty": 1,
+    "tapped": false
+  },
+  {
+    "fn": "trigger",
+    "card": "Namazu Trader",
+    "name": "onAttack"
+  },
+  {
+    "fn": "sacrifice",
+    "player": "you",
+    "qty": 1,
+    "validType": "creature-or-artifact",
+    "notSelf": true,
+    "tokenFilter": null
+  },
+  {
+    "fn": "surveil",
+    "player": "you",
+    "qty": 2
+  }
+]

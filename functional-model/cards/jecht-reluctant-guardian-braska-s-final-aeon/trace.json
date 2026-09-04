@@ -1,0 +1,62 @@
+[
+  {
+    "scenario": "Jecht deals combat damage to a player",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Jecht, Reluctant Guardian",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Jecht, Reluctant Guardian",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Jecht, Reluctant Guardian",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": "Braska chapter I",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Braska's Final Aeon",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "discard",
+        "player": "opp0",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": "Braska chapter III",
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Braska's Final Aeon",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 2,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": null
+      }
+    ]
+  }
+]
