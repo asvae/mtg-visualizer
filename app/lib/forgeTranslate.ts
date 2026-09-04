@@ -130,6 +130,16 @@ export function deriveOwner(defined: string | undefined): SynergyOwner {
   // divergence rather than special-casing one card (see this session's
   // report).
   if (defined === 'TriggeredTarget' || defined === 'Remembered') return 'any';
+  // TriggeredDefendingPlayer = whoever's being attacked (a combat-attack
+  // trigger's own event-determined player) — same "not necessarily an
+  // opponent in multiplayer" reasoning as TriggeredTarget above.
+  // TriggeredPlayer = whichever player the triggering EVENT itself concerns
+  // (Bandit's Talent's own "at the beginning of EACH OPPONENT'S upkeep...
+  // THEY lose life" — Phase$Upkeep|ValidPlayer$Opponent picks the player,
+  // Defined$TriggeredPlayer just refers back to that same pick). No case
+  // here fell through to the default `me`, flipping "each opponent loses
+  // life" into "you lose life."
+  if (defined === 'TriggeredDefendingPlayer' || defined === 'TriggeredPlayer') return 'any';
   // `TokenOwner$ Promised` — Gift's own vocabulary: the token goes to
   // whichever opponent was promised the gift (Gift, 702.199), never you.
   if (defined === 'Promised') return 'opp';
@@ -307,7 +317,29 @@ export function qualifierFlags(v: string | undefined): string[] {
   const statMatch = /[.+](power|toughness)(GE|LE|EQ)(\d+)\b/i.exec(v);
   const [, statName, statOp, statNum] = statMatch ?? [];
   if (statName && statOp && statNum) flags.push(`cond:${statName.toLowerCase()}${statOp.toLowerCase()}=${statNum}`);
+  // greatestPowerControlledByTargeted (Consumed by Greed's own SacValid$ —
+  // "sacrifices A CREATURE WITH THE GREATEST POWER among creatures they
+  // control") isn't a free choice, it's a forced pick constrained to
+  // whichever creature(s) tie for highest power.
+  if (/greatestPowerControlledByTargeted\b/.test(v)) flags.push('cond:greatest_power');
   return flags;
+}
+
+// A comma-separated ValidTgts$/ValidCards$ predicate (Valley Floodcaller's
+// own `Bird.YouCtrl,Frog.YouCtrl,Otter.YouCtrl,Rat.YouCtrl`, Stormchaser's
+// Talent's own `Instant.YouCtrl,Sorcery.YouCtrl`) is Forge's own OR-of-
+// several-types idiom — the SAME shape trigger's ValidCard$ and static's
+// Affected$ already split into one clause-node per alternative (see
+// includesSelf/otherClauses above and resolveAffectedClause below); reading
+// coarseType/qualifierFlags on the FULL string only ever sees the first
+// comma clause, silently dropping every other type. Shared here so any
+// other targeted/plural-target effect hitting this same idiom can reuse it
+// rather than re-deriving its own copy (three near-identical versions of
+// this exact split already existed before this one).
+function splitTypeClauses(v: string | undefined): { thing: string; owner: SynergyOwner; qualifiers: string[] }[] {
+  const clauses = (v ?? '').split(',').map((c) => c.trim()).filter(Boolean);
+  const resolveOne = (c: string) => ({ thing: coarseType(c), owner: ownerFromTargetPredicate(c), qualifiers: qualifierFlags(c) });
+  return clauses.length > 1 ? clauses.map(resolveOne) : [resolveOne(v ?? '')];
 }
 
 // TokenScript$ id -> synergy-model/data/registries.json label key. Only the
@@ -417,6 +449,29 @@ function wireSacCost(ctx: Ctx, cost: string, inTrigger: boolean, attach: (step: 
   return ids;
 }
 
+// A `Cost$ ExileFromGrave<N/Type/description>` cost — Bonebind Orator's own
+// "{3}{B}, Exile Bonebind Orator from your graveyard: Return another target
+// creature card..." (an activation usable while the card sits in its
+// graveyard, ActivationZone$Graveyard). Same bracket syntax and multi-type-
+// alternative shape as Sac<> above, just moving gy->exile instead of
+// bf->gy — mirrors wireSacCost rather than being folded into it, since the
+// two costs sacrifice/exile from genuinely different zones.
+function wireExileGraveCost(ctx: Ctx, cost: string, attach: (step: SynergyFlowStep) => void, manaCost?: string): string[] {
+  const m = /^ExileFromGrave<(\d+)\/([^/]+)(?:\/.*)?>$/.exec(cost);
+  if (!m || !m[1] || !m[2]) return [];
+  const qty = m[1];
+  const types = m[2].split(';');
+  const ids = types.map((t) => {
+    const qf = qualifierFlags(t);
+    const parts = [manaCost ? `cost:${manaCost}` : undefined, ...qf, ...(qty !== '1' ? [`qty:${qty}`] : [])].filter(Boolean);
+    return addNode(ctx, { role: 'move', owner: 'me', from: 'gy', to: 'exile', thing: coarseType(t), flags: parts.join(' ') || undefined });
+  });
+  const first = ids[0];
+  if (ids.length > 1) attach({ combine: 'any', of: ids });
+  else if (first) attach(first);
+  return ids;
+}
+
 // Translates one effect row (a top-level A:/K: line's own fields, or a
 // chained SVar effect) into 0+ synergy nodes, wiring them under `parent` (or
 // into `roots` when `parent` is null), and recurses into its Forge children.
@@ -508,8 +563,15 @@ function translateEffectRow(
     const validCardField = fields.ValidCard ?? fields.ValidCards;
     if (!granted && validCardField) {
       const clauses = validCardField.split(',').map((c) => c.trim());
-      const includesSelf = clauses.some((c) => c === 'Card.Self');
-      const otherClauses = clauses.filter((c) => c !== 'Card.Self');
+      // `Creature.Self` (Waterspout Warden's own ValidCard$) is the SAME
+      // self-only fact as bare `Card.Self` — just with the redundant own
+      // type prefixed on — but the exact-string check below only matched
+      // the bare form, so `Creature.Self` fell into `otherClauses` and got
+      // coarseType'd down to the literal (and wrong) "creature", widening
+      // "whenever THIS creature attacks" into "whenever a creature attacks."
+      const isSelfClause = (c: string) => c === 'Card.Self' || /\.Self\b/.test(c);
+      const includesSelf = clauses.some(isSelfClause);
+      const otherClauses = clauses.filter((c) => !isSelfClause(c));
       for (const clause of otherClauses) {
         specs.push({ thing: coarseType(clause), extraFlags: qualifierFlags(clause).filter((f) => !(includesSelf && f === 'not:self')) });
       }
@@ -539,8 +601,22 @@ function translateEffectRow(
     // Condition$PlayerTurn encoding (a real mechanical fact, not a new name
     // for the same restriction).
     const yourTurnFlag = fields.PlayerTurn === 'True' ? 'cond:your_turn' : undefined;
+    // Mode$Phase (Bandit's Talent's own "at the beginning of each opponent's
+    // upkeep"/"...your draw step") already derives triggerType:"phase" from
+    // the mode name, but WHICH phase (Phase$Upkeep vs Phase$Draw vs ...) had
+    // no flag at all — every phase trigger looked identical.
+    const phaseFlag = mode === 'Phase' && fields.Phase ? `cond:phase=${fields.Phase.toLowerCase()}` : undefined;
+    // ValidPlayer$ (Bandit's Talent's own level-2 "at the beginning of EACH
+    // OPPONENT'S upkeep" -- Mode$Phase|ValidPlayer$Opponent) says whose
+    // phase this trigger watches -- the trigger node's own `owner` was
+    // hardcoded 'me' regardless, silently flipping "each opponent's upkeep"
+    // into "your upkeep" even though the downstream LoseLife effect's own
+    // Defined$TriggeredPlayer correctly resolved to 'any' once deriveOwner
+    // gained that case. deriveOwner's existing You/Opponent handling covers
+    // this exactly; absent (the common case) still defaults to 'me'.
+    const triggerOwner = fields.ValidPlayer ? deriveOwner(fields.ValidPlayer) : 'me';
     const ids = specs.map((spec) =>
-      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: 'me', from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, presentFlag, yourTurnFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
+      addNode(ctx, { role: 'trigger', 'trigger-type': triggerType, owner: triggerOwner, from: '--', to: 'stack', thing: spec.thing, flags: [combatFlag, onceFlag, presentFlag, yourTurnFlag, phaseFlag, ...spec.extraFlags].filter(Boolean).join(' ') || undefined })
     );
     ids.forEach((id) => attach(id));
     // Build the downstream chain once, under the first clause-node, then
@@ -703,6 +779,16 @@ function translateEffectRow(
     // meaning blanket "can't be blocked" rather than "can't be blocked BY
     // <type>" — the earlier ValidBlocker$-presence-only check never even
     // recognized this shape as CantBlockBy in the first place.
+    // Mode$ CastWithFlash (Valley Floodcaller's own second static, distinct
+    // from its K:Flash self-keyword — "you may cast NONCREATURE SPELLS as
+    // though they had flash") grants a casting PERMISSION on some other
+    // type of card, not a state change on an affected permanent — had zero
+    // handling, silently dropping this whole static with no trace.
+    if (eventMode(row) === 'CastWithFlash') {
+      const thing = coarseType(fields.ValidCard);
+      attach(addNode(ctx, { role: 'modifier', owner: 'me', from: '--', to: '--', thing, flags: ['cond:grant=flash_cast', ...qualifierFlags(fields.ValidCard)].filter(Boolean).join(' ') }));
+      handled = true;
+    }
     if (eventMode(row) === 'CantBlockBy') {
       const fact = fields.ValidBlocker
         ? `not_blocked_by=${[coarseType(fields.ValidBlocker), ...qualifierFlags(fields.ValidBlocker).map((f) => f.replace('cond:', ''))].join(';')}`
@@ -779,6 +865,16 @@ function translateEffectRow(
       return;
     }
     const leafIds = wireSacCost(ctx, sacToken, inTrigger, attach, manaCost || undefined);
+    for (const leafId of leafIds) translateOwnEffect(ctx, tree, leafId, selfThing, inTrigger, granted, false);
+    return;
+  }
+
+  const exileGraveMatch = /ExileFromGrave<[^>]*>/.exec(fields.Cost ?? '');
+  if (exileGraveMatch) {
+    const exileToken = exileGraveMatch[0];
+    const remainder = (fields.Cost ?? '').replace(exileToken, '').split(' ').filter(Boolean);
+    const manaCost = remainder.map((s) => `{${s}}`).join('');
+    const leafIds = wireExileGraveCost(ctx, exileToken, attach, manaCost || undefined);
     for (const leafId of leafIds) translateOwnEffect(ctx, tree, leafId, selfThing, inTrigger, granted, false);
     return;
   }
@@ -868,11 +964,17 @@ function translateOwnEffect(
   }
 
   if (ek === 'Sacrifice') {
-    const owner = deriveOwner(fields.Defined);
+    // ValidTgts$ (Consumed by Greed's own "TARGET OPPONENT sacrifices...")
+    // means a chosen PLAYER does the sacrificing — a real target, whose
+    // owner comes from the target predicate, not Defined$ (which was the
+    // only thing read before, silently defaulting every targeted-sacrifice
+    // effect to `me`).
+    const targeted = !!fields.ValidTgts;
+    const owner = targeted ? ownerFromTargetPredicate(fields.ValidTgts) : deriveOwner(fields.Defined);
     const thing = coarseType(fields.SacValid);
     const qty = fields.Amount ?? '1';
-    const flagParts = [...(qty !== '1' ? [`qty:${qty}`] : []), ...qualifierFlags(fields.SacValid), 'cond:sacrifice'];
-    const id = addNode(ctx, { role: 'move', owner, from: 'bf', to: 'gy', thing, flags: flagParts.join(' ') });
+    const flagParts = [targeted ? 'target' : undefined, ...(qty !== '1' ? [`qty:${qty}`] : []), ...qualifierFlags(fields.SacValid), 'cond:sacrifice'];
+    const id = addNode(ctx, { role: 'move', owner, from: 'bf', to: 'gy', thing, flags: flagParts.filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -881,7 +983,17 @@ function translateOwnEffect(
   if (ek === 'Discard') {
     const owner = deriveOwner(fields.Defined);
     const qty = fields.NumCards ?? '1';
-    const id = addNode(ctx, { role: 'move', owner, from: 'hand', to: 'gy', thing: 'any', flags: `qty:${qty}` });
+    // UnlessType$ (Bandit's Talent's own "discards two cards UNLESS THEY
+    // DISCARD A NONLAND CARD") had no handling at all — a real out the
+    // affected player has, silently dropped, misreading an escapable
+    // discard as an unconditional one. coarseType('Card.nonLand') alone
+    // collapses to its own generic "Card" -> 'any' rule (meant for a bare
+    // unqualified predicate), silently losing the nonLand qualifier itself
+    // — confirmed by a round-trip exam still reading this as an
+    // unqualified "any card" after the first version of this fix.
+    const unlessNonLand = /[.+]nonLand\b/.test(fields.UnlessType ?? '');
+    const unless = fields.UnlessType ? `cond:unless_discard=${unlessNonLand ? 'nonland' : coarseType(fields.UnlessType)}` : undefined;
+    const id = addNode(ctx, { role: 'move', owner, from: 'hand', to: 'gy', thing: 'any', flags: [`qty:${qty}`, unless].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -1019,6 +1131,33 @@ function translateOwnEffect(
     const qualifiers = targeted ? qualifierFlags(fields.ValidTgts) : changeTypePredicate ? qualifierFlags(changeTypePredicate) : [];
     const flags = withMay([qty, targeted ? 'target' : undefined, untilSelfLeaves, giftGateFlag, ...qualifiers].filter(Boolean).join(' ') || undefined);
     const thing = selfMove ? selfThing : coarseType(fields.ValidTgts ?? fields.SacValid ?? changeTypePredicate);
+    // ValidTgts$ multi-type OR (Stormchaser's Talent's own "return target
+    // INSTANT OR SORCERY card" -- Instant.YouCtrl,Sorcery.YouCtrl) previously
+    // only read the first clause, silently dropping "or sorcery" entirely.
+    // Only worth splitting for the plain targeted case (selfMove/ChangeType
+    // predicates are single-subject shapes in this corpus). Unlike trigger's
+    // own multi-clause ValidCard$ (independent alternate trigger occurrences)
+    // or PumpAll's own multi-clause ValidCards$ (a real conjunction -- every
+    // matching permanent, of any of these types, actually gets pumped at
+    // once), THIS is a single target chosen among several possible types --
+    // a disjunctive CHOICE, same shape wireSacCost's own multi-type Sac<>
+    // already wraps in `combine:"any"`. Attaching each clause-node
+    // independently (this fix's own first version) reads as "return BOTH,"
+    // not "return either" -- caught by a round-trip exam misreading the
+    // fix's own output as doubling the effect.
+    const targetClauses = targeted && (fields.ValidTgts ?? '').includes(',') ? splitTypeClauses(fields.ValidTgts) : undefined;
+    if (targetClauses) {
+      const ids = targetClauses.map((spec) => addNode(ctx, { role: 'move', owner: spec.owner, from, to, thing: spec.thing, flags: withMay([qty, 'target', untilSelfLeaves, giftGateFlag, ...spec.qualifiers].filter(Boolean).join(' ') || undefined) }));
+      const [firstId, ...restIds] = ids;
+      if (firstId) {
+        for (const child of tree.children) translateEffectRow(ctx, child, firstId, selfThing, inTrigger, granted);
+        const sharedSteps = ctx.steps[firstId];
+        if (sharedSteps) for (const restId of restIds) ctx.steps[restId] = sharedSteps;
+      }
+      if (ids.length > 1) attach({ combine: 'any', of: ids });
+      else if (firstId) attach(firstId);
+      return;
+    }
     const id = addNode(ctx, { role: 'move', owner, from, to, thing, flags });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
@@ -1082,8 +1221,6 @@ function translateOwnEffect(
     // Pump, DOES walk children -- Carrot Cake's own SubAbility$ DBScry
     // ("...if you control a Rabbit, scry 2") chains off this exact effect,
     // which a returnless Pump-style handler would have silently dropped.
-    const thing = coarseType(fields.ValidCards);
-    const owner = ownerFromTargetPredicate(fields.ValidCards);
     const lifetime = fields.Permanent === 'True' ? undefined : 'lifetime:turn';
     // Same KW$/gift_promised handling as Pump above (Dawn's Truce's own
     // DBPumpAll SubAbility$ is KW$Indestructible-only, no NumAtt$/NumDef$ at
@@ -1096,9 +1233,22 @@ function translateOwnEffect(
     const grant = fields.KW ? keywordGrantFact(fields.KW) : undefined;
     const giftGate = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
     const cond = ['cond:', [giftGate, delta, grant].filter(Boolean).join(';')].join('');
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [lifetime, cond, ...qualifierFlags(fields.ValidCards)].filter(Boolean).join(' ') });
-    attach(id);
-    for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    // ValidCards$ multi-type OR (Valley Floodcaller's own "each Bird, Frog,
+    // Otter, or Rat you control" -- Bird.YouCtrl,Frog.YouCtrl,Otter.YouCtrl,
+    // Rat.YouCtrl) previously only read the first clause, silently buffing
+    // Birds alone. One modifier node per type, sharing the same downstream
+    // chain -- same precedent as static Affected$'s multi-clause anthem.
+    const cardsSpecs = splitTypeClauses(fields.ValidCards);
+    const ids = cardsSpecs.map((spec) =>
+      addNode(ctx, { role: 'modifier', owner: spec.owner, from: '--', to: 'bf', thing: spec.thing, flags: [lifetime, cond, ...spec.qualifiers].filter(Boolean).join(' ') })
+    );
+    ids.forEach((id) => attach(id));
+    const [firstId, ...restIds] = ids;
+    if (firstId) {
+      for (const child of tree.children) translateEffectRow(ctx, child, firstId, selfThing, inTrigger, granted);
+      const sharedSteps = ctx.steps[firstId];
+      if (sharedSteps) for (const restId of restIds) ctx.steps[restId] = sharedSteps;
+    }
     return;
   }
 
@@ -1301,6 +1451,30 @@ function translateOwnEffect(
     const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, `cond:state=${state}`, ...(targeted ? qualifierFlags(fields.ValidTgts) : [])].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
+    return;
+  }
+
+  if (ek === 'TapAll' || ek === 'UntapAll') {
+    // Plural sibling of Tap/Untap above (ValidCards$, matches every
+    // qualifying permanent at once, non-targeted) -- same DestroyAll/
+    // DamageAll idiom applied to tap state instead of destruction/damage.
+    // Valley Floodcaller's own chained "...then untap them" (SubAbility$
+    // TrigUntapAll) had no handler at all, silently vanishing. Same
+    // multi-type OR as PumpAll's own ValidCards$ (a real conjunction, every
+    // matching creature actually gets untapped) -- one modifier node per
+    // type, sibling attach (not combine:"any"), sharing the same downstream
+    // chain, matching PumpAll's own sibling shape exactly (this card
+    // chains PumpAll -> UntapAll off the identical 4-type list).
+    const state = ek === 'TapAll' ? 'tapped' : 'untapped';
+    const specs = splitTypeClauses(fields.ValidCards);
+    const ids = specs.map((spec) => addNode(ctx, { role: 'modifier', owner: spec.owner, from: '--', to: 'bf', thing: spec.thing, flags: [`cond:state=${state}`, ...spec.qualifiers].filter(Boolean).join(' ') }));
+    ids.forEach((id) => attach(id));
+    const [firstId, ...restIds] = ids;
+    if (firstId) {
+      for (const child of tree.children) translateEffectRow(ctx, child, firstId, selfThing, inTrigger, granted);
+      const sharedSteps = ctx.steps[firstId];
+      if (sharedSteps) for (const restId of restIds) ctx.steps[restId] = sharedSteps;
+    }
     return;
   }
 

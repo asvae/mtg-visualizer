@@ -371,8 +371,10 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{U}",
-    "typeLine": "Enchantment — Class"
+    "manaCost": "{B}",
+    "typeLine": "Creature — Squirrel Warlock",
+    "power": "1",
+    "toughness": "1"
   }
 }
 ```
@@ -401,91 +403,26 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "C": {
-      "role": "trigger",
-      "trigger-type": "enter",
+      "role": "tap",
       "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
+      "from": "bf",
+      "to": "bf",
+      "thing": "self",
+      "flags": "cost:{PayLife<1>}"
     },
     "D": {
-      "role": "enters",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "otter-1"
-    },
-    "E": {
-      "role": "becomes",
+      "role": "emit",
       "owner": "me",
       "from": "--",
       "to": "--",
-      "thing": "self",
-      "flags": "cost:{3}{U} cond:class_level=2"
-    },
-    "F": {
-      "role": "trigger",
-      "trigger-type": "classlevelgained",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
-    },
-    "G": {
-      "role": "move",
-      "owner": "me",
-      "from": "gy",
-      "to": "hand",
-      "thing": "instant",
-      "flags": "target"
-    },
-    "H": {
-      "role": "move",
-      "owner": "me",
-      "from": "gy",
-      "to": "hand",
-      "thing": "sorcery",
-      "flags": "target"
-    },
-    "I": {
-      "role": "becomes",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "cost:{5}{U} cond:class_level=3"
-    },
-    "J": {
-      "role": "trigger",
-      "trigger-type": "spellcast",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "instant"
-    },
-    "K": {
-      "role": "trigger",
-      "trigger-type": "spellcast",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "sorcery"
-    },
-    "L": {
-      "role": "enters",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "otter-1"
+      "thing": "draw"
     }
   },
   "flow": {
     "roots": [
       "A",
       "B",
-      "C",
-      "E",
-      "I"
+      "C"
     ],
     "steps": {
       "A": [
@@ -493,28 +430,6 @@ Rarity is deliberately withheld.
       ],
       "C": [
         "D"
-      ],
-      "E": [
-        "F"
-      ],
-      "F": [
-        {
-          "combine": "any",
-          "of": [
-            "G",
-            "H"
-          ]
-        }
-      ],
-      "I": [
-        "J",
-        "K"
-      ],
-      "J": [
-        "L"
-      ],
-      "K": [
-        "L"
       ]
     }
   }

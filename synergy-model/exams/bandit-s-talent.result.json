@@ -1,0 +1,22 @@
+{
+  "name": "Bandit's Talent",
+  "manaCost": "{1}{B}",
+  "typeLine": "Enchantment — Class",
+  "description": "When this enters the battlefield, each opponent discards two cards unless that player discards a card.\n\nLevel 2: {B}\nAt the beginning of each opponent's upkeep, that player loses 2 life.\n\nLevel 3: {3}{B}\nAt the beginning of your draw step, a player draws cards.",
+  "assumptions": [
+    "Treated E and H (\"becomes\" nodes carrying cost:{B}/cost:{3}{B} and cond:class_level=2/3) as this Class enchantment's own level-up activated abilities, each unlocking the trigger chain (F->G, I->J) that follows it in flow.",
+    "Read node D's owner (\"opp\", no target flag) per the schema's definition of opp as symmetric/every-opponent, producing an automatic \"each opponent discards\" rather than a targeted single opponent.",
+    "Read node F's owner (\"opp\", same convention as D) as \"each opponent's upkeep\" rather than a targeted or controller-owned upkeep.",
+    "Assumed the discard in D's unless-clause could be any card, since thing:any carries no narrower type restriction."
+  ],
+  "couldNotDerive": [
+    "Which player loses life in the level-2 ability — node G's owner is \"any\", not explicitly bound to the specific opponent whose upkeep triggered F.",
+    "Which player draws in the level-3 ability — node J's owner is \"any\", not clearly \"you\" despite its trigger I carrying owner \"me\".",
+    "The exact number of cards drawn at level 3 — flag is qty:Y, an unbound variable, not a fixed number or a value bound via := / = to another node.",
+    "Whether the level-2 or level-3 abilities have any additional qualifying condition beyond level and phase — no cond expressing one appears on F, G, I, or J.",
+    "Whether the card discarded in D's unless-clause must be a specific type (e.g. a land) — thing:any gives no such restriction."
+  ],
+  "verdict": "issues-open",
+  "notes": "Real card confirmed via forge-model/data/bandit-s-talent.txt: Bandit's Talent, {1}{B} Enchantment — Class — \"When Bandit's Talent enters, each opponent discards two cards unless they discard a nonland card. {B}: Level 2 -- At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 2 life. {3}{B}: Level 3 -- At the beginning of your draw step, draw an additional card for each opponent who has one or fewer cards in hand.\" This is the 3rd attempt, after a translator fix to node F's owner (previously hardcoded \"me\", now correctly \"opp\"). The fix verified correct: F now reads as \"each opponent's upkeep\" in the blind reconstruction, matching the real `Mode$ Phase | Phase$ Upkeep | ValidPlayer$ Opponent` — the level-2 chapter's biggest prior defect (turn ownership flipped to the controller's own upkeep) is resolved. Mana cost, type line, and the overall 3-chapter shape (ETB discard / upkeep life-loss / draw-step extra draw) are all correct, nothing invented. Two remaining gaps are the ones explicitly flagged as deliberately deferred and are not held against this verdict: (1) F and I carry no representation of the real card's `CheckSVar$ X | SVarCompare$ LE1` hand-size gate (\"if that player has one or fewer cards in hand\") — both level-2 and level-3 abilities are unconditionally worded in the reconstruction, correctly omitted rather than guessed since nothing in the nodes hints at the gate's existence; (2) J's qty:Y (the level-3 draw count) has no resolution to the real `SVar:Y:PlayerCountOpponents$HasPropertyHasCardsInHand_Card_LE1` formula — correctly flagged as could-not-derive rather than guessed as \"one card\" or \"one per opponent\". Two smaller, non-deferred gaps persist unchanged from the prior attempt and are worth carrying into REVIEW_PROCESS.md if this card's edges get revisited: (a) node D's cond:unless_discard=any drops the real `UnlessType$ Card.nonLand` restriction entirely — the reconstruction correctly left the discarded card's type unspecified rather than inventing \"nonland\", but the edge itself under-specifies it; (b) nodes G and J both use owner:\"any\" where the real script resolves each to a specific player via `Defined$ TriggeredPlayer` (the opponent whose upkeep it is, for G; \"you\", matching I's owner \"me\", for J) — correctly flagged as could-not-derive rather than guessed, but both could be tightened with an explicit binding (e.g. `player=<label>` back to F/I's trigger) the way other cards in this dataset do.",
+  "comparedAt": "2026-09-04"
+}

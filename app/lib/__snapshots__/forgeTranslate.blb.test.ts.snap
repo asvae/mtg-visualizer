@@ -1,5 +1,71 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Agate-Blade Assassin 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Agate-Blade Assassin",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "attack",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "any",
+      "role": "emit",
+      "thing": "life-loss",
+      "to": "--",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-gain",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Banishing Light 1`] = `
 {
   "flow": {
@@ -275,6 +341,60 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Beza
       "role": "emit",
       "thing": "draw",
       "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Bonebind Orator 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+    },
+  },
+  "name": "Bonebind Orator",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "cost:{3}{B}",
+      "from": "gy",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "exile",
+    },
+    "D": {
+      "flags": "target not:self",
+      "from": "gy",
+      "owner": "me",
+      "role": "move",
+      "thing": "creature",
+      "to": "hand",
     },
   },
   "unmapped": [],
@@ -2129,6 +2249,162 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > This
       "owner": "any",
       "role": "modifier",
       "thing": "permanent",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Valley Floodcaller 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "E": [
+        "F",
+        "G",
+        "H",
+        "I",
+      ],
+      "F": [
+        "J",
+        "K",
+        "L",
+        "M",
+      ],
+      "G": [
+        "J",
+        "K",
+        "L",
+        "M",
+      ],
+      "H": [
+        "J",
+        "K",
+        "L",
+        "M",
+      ],
+      "I": [
+        "J",
+        "K",
+        "L",
+        "M",
+      ],
+    },
+  },
+  "name": "Valley Floodcaller",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flash",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": "cond:grant=flash_cast cond:noncreature",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "any",
+      "to": "--",
+    },
+    "E": {
+      "flags": "cond:noncreature",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "any",
+      "to": "stack",
+      "trigger-type": "spellcast",
+    },
+    "F": {
+      "flags": "lifetime:turn cond:pt_delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "bird",
+      "to": "bf",
+    },
+    "G": {
+      "flags": "lifetime:turn cond:pt_delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "frog",
+      "to": "bf",
+    },
+    "H": {
+      "flags": "lifetime:turn cond:pt_delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "otter",
+      "to": "bf",
+    },
+    "I": {
+      "flags": "lifetime:turn cond:pt_delta=+1/+1",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "rat",
+      "to": "bf",
+    },
+    "J": {
+      "flags": "cond:state=untapped",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "bird",
+      "to": "bf",
+    },
+    "K": {
+      "flags": "cond:state=untapped",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "frog",
+      "to": "bf",
+    },
+    "L": {
+      "flags": "cond:state=untapped",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "otter",
+      "to": "bf",
+    },
+    "M": {
+      "flags": "cond:state=untapped",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "rat",
       "to": "bf",
     },
   },

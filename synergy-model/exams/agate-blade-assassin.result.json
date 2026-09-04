@@ -1,0 +1,18 @@
+{
+  "name": "Agate-Blade Assassin",
+  "manaCost": "{1}{B}",
+  "typeLine": "Creature — Lizard Assassin",
+  "description": "Whenever this creature attacks, defending player loses 1 life and you gain 1 life.",
+  "assumptions": [
+    "Read D's owner: \"any\" as \"defending player\" — the natural non-targeted party in an attack-trigger context (no target flag present, and any is defined as \"one side, not necessarily chosen by targeting\"); an attack trigger's untargeted, non-\"me\" party is the player/planeswalker being attacked.",
+    "D and E carry no flags field at all (not even an empty one), so per the schema's stated default (\"when this flag is ABSENT entirely, the count is exactly 1\") read each as exactly 1 life.",
+    "Treated root A→B (cast→enters) as ordinary cast-then-battlefield sequencing, producing no printed ability text, and treated B as independently listed among roots per the schema's note that a bare enters is always a root even alongside a cast node."
+  ],
+  "couldNotDerive": [
+    "Rarity (explicitly withheld in the source material).",
+    "Any supertype (e.g., Legendary) — neither the self registry nor the nodes indicate one, so none is printed rather than assumed absent for flavor reasons."
+  ],
+  "verdict": "match",
+  "notes": "Second attempt, after the translator fix from attempt 1 (deriveOwner() adding a TriggeredDefendingPlayer -> 'any' branch). Confirmed the fix landed: node D in this regenerated packet now carries owner: \"any\" (previously \"me\"). The examiner correctly read owner: \"any\" on an untargeted attack-trigger emit as \"defending player\" and reconstructed \"Whenever this creature attacks, defending player loses 1 life and you gain 1 life.\" — an exact semantic match to the real oracle text \"Whenever Agate-Blade Assassin attacks, defending player loses 1 life and you gain 1 life.\" Mana cost ({1}{B}), type line (Creature — Lizard Assassin), and P/T (1/3, taken from the self registry) all matched as well. The attempt-1 agent-misinterpretation finding (misreading absent qty: flags as \"could not derive\" instead of the schema's stated exactly-1 default) also did not recur: this agent correctly applied the absent-flag-means-1 rule and listed no life-total amounts under Could not derive. No remaining decomposition gap, schema gap, or misinterpretation — both prior issues are resolved.",
+  "comparedAt": "2026-09-04"
+}

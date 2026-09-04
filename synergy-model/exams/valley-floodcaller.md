@@ -371,8 +371,10 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{U}",
-    "typeLine": "Enchantment — Class"
+    "manaCost": "{2}{U}",
+    "typeLine": "Creature — Otter Wizard",
+    "power": "2",
+    "toughness": "2"
   }
 }
 ```
@@ -401,82 +403,93 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "C": {
-      "role": "trigger",
-      "trigger-type": "enter",
+      "role": "modifier",
       "owner": "me",
       "from": "--",
-      "to": "stack",
-      "thing": "self"
+      "to": "bf",
+      "thing": "self",
+      "flags": "flash"
     },
     "D": {
-      "role": "enters",
+      "role": "modifier",
       "owner": "me",
       "from": "--",
-      "to": "bf",
-      "thing": "otter-1"
+      "to": "--",
+      "thing": "any",
+      "flags": "cond:grant=flash_cast cond:noncreature"
     },
     "E": {
-      "role": "becomes",
+      "role": "trigger",
+      "trigger-type": "spellcast",
       "owner": "me",
       "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "cost:{3}{U} cond:class_level=2"
+      "to": "stack",
+      "thing": "any",
+      "flags": "cond:noncreature"
     },
     "F": {
-      "role": "trigger",
-      "trigger-type": "classlevelgained",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
-    },
-    "G": {
-      "role": "move",
-      "owner": "me",
-      "from": "gy",
-      "to": "hand",
-      "thing": "instant",
-      "flags": "target"
-    },
-    "H": {
-      "role": "move",
-      "owner": "me",
-      "from": "gy",
-      "to": "hand",
-      "thing": "sorcery",
-      "flags": "target"
-    },
-    "I": {
-      "role": "becomes",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "self",
-      "flags": "cost:{5}{U} cond:class_level=3"
-    },
-    "J": {
-      "role": "trigger",
-      "trigger-type": "spellcast",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "instant"
-    },
-    "K": {
-      "role": "trigger",
-      "trigger-type": "spellcast",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "sorcery"
-    },
-    "L": {
-      "role": "enters",
+      "role": "modifier",
       "owner": "me",
       "from": "--",
       "to": "bf",
-      "thing": "otter-1"
+      "thing": "bird",
+      "flags": "lifetime:turn cond:pt_delta=+1/+1"
+    },
+    "G": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "frog",
+      "flags": "lifetime:turn cond:pt_delta=+1/+1"
+    },
+    "H": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "otter",
+      "flags": "lifetime:turn cond:pt_delta=+1/+1"
+    },
+    "I": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "rat",
+      "flags": "lifetime:turn cond:pt_delta=+1/+1"
+    },
+    "J": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "bird",
+      "flags": "cond:state=untapped"
+    },
+    "K": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "frog",
+      "flags": "cond:state=untapped"
+    },
+    "L": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "otter",
+      "flags": "cond:state=untapped"
+    },
+    "M": {
+      "role": "modifier",
+      "owner": "me",
+      "from": "--",
+      "to": "bf",
+      "thing": "rat",
+      "flags": "cond:state=untapped"
     }
   },
   "flow": {
@@ -484,37 +497,42 @@ Rarity is deliberately withheld.
       "A",
       "B",
       "C",
-      "E",
-      "I"
+      "D",
+      "E"
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "C": [
-        "D"
-      ],
       "E": [
-        "F"
+        "F",
+        "G",
+        "H",
+        "I"
       ],
       "F": [
-        {
-          "combine": "any",
-          "of": [
-            "G",
-            "H"
-          ]
-        }
+        "J",
+        "K",
+        "L",
+        "M"
+      ],
+      "G": [
+        "J",
+        "K",
+        "L",
+        "M"
+      ],
+      "H": [
+        "J",
+        "K",
+        "L",
+        "M"
       ],
       "I": [
         "J",
-        "K"
-      ],
-      "J": [
-        "L"
-      ],
-      "K": [
-        "L"
+        "K",
+        "L",
+        "M"
       ]
     }
   }

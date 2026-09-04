@@ -1,9 +1,9 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-04T00:26:17.472Z",
-  "clean": 194,
-  "gaps": 80,
-  "totalUnmapped": 111,
+  "generatedAt": "2026-09-04T01:05:54.255Z",
+  "clean": 195,
+  "gaps": 79,
+  "totalUnmapped": 109,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
@@ -64,10 +64,6 @@
     ],
     "Sugar Coat": [
       "S:TypeReplacement"
-    ],
-    "Valley Floodcaller": [
-      "S:CastWithFlash",
-      "?:UntapAll"
     ],
     "Wishing Well": [
       "?:ImmediateTrigger",

@@ -371,7 +371,7 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{U}",
+    "manaCost": "{1}{B}",
     "typeLine": "Enchantment — Class"
   }
 }
@@ -409,11 +409,12 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "D": {
-      "role": "enters",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "otter-1"
+      "role": "move",
+      "owner": "opp",
+      "from": "hand",
+      "to": "gy",
+      "thing": "any",
+      "flags": "qty:2 cond:unless_discard=any"
     },
     "E": {
       "role": "becomes",
@@ -421,62 +422,49 @@ Rarity is deliberately withheld.
       "from": "--",
       "to": "--",
       "thing": "self",
-      "flags": "cost:{3}{U} cond:class_level=2"
+      "flags": "cost:{B} cond:class_level=2"
     },
     "F": {
       "role": "trigger",
-      "trigger-type": "classlevelgained",
-      "owner": "me",
+      "trigger-type": "phase",
+      "owner": "opp",
       "from": "--",
       "to": "stack",
-      "thing": "self"
+      "thing": "self",
+      "flags": "cond:phase=upkeep"
     },
     "G": {
-      "role": "move",
-      "owner": "me",
-      "from": "gy",
-      "to": "hand",
-      "thing": "instant",
-      "flags": "target"
+      "role": "emit",
+      "owner": "any",
+      "from": "--",
+      "to": "--",
+      "thing": "life-loss",
+      "flags": "qty:2"
     },
     "H": {
-      "role": "move",
-      "owner": "me",
-      "from": "gy",
-      "to": "hand",
-      "thing": "sorcery",
-      "flags": "target"
-    },
-    "I": {
       "role": "becomes",
       "owner": "me",
       "from": "--",
       "to": "--",
       "thing": "self",
-      "flags": "cost:{5}{U} cond:class_level=3"
+      "flags": "cost:{3}{B} cond:class_level=3"
+    },
+    "I": {
+      "role": "trigger",
+      "trigger-type": "phase",
+      "owner": "me",
+      "from": "--",
+      "to": "stack",
+      "thing": "self",
+      "flags": "cond:phase=draw"
     },
     "J": {
-      "role": "trigger",
-      "trigger-type": "spellcast",
-      "owner": "me",
+      "role": "emit",
+      "owner": "any",
       "from": "--",
-      "to": "stack",
-      "thing": "instant"
-    },
-    "K": {
-      "role": "trigger",
-      "trigger-type": "spellcast",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "sorcery"
-    },
-    "L": {
-      "role": "enters",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "otter-1"
+      "to": "--",
+      "thing": "draw",
+      "flags": "qty:Y"
     }
   },
   "flow": {
@@ -485,7 +473,7 @@ Rarity is deliberately withheld.
       "B",
       "C",
       "E",
-      "I"
+      "H"
     ],
     "steps": {
       "A": [
@@ -498,23 +486,13 @@ Rarity is deliberately withheld.
         "F"
       ],
       "F": [
-        {
-          "combine": "any",
-          "of": [
-            "G",
-            "H"
-          ]
-        }
+        "G"
+      ],
+      "H": [
+        "I"
       ],
       "I": [
-        "J",
-        "K"
-      ],
-      "J": [
-        "L"
-      ],
-      "K": [
-        "L"
+        "J"
       ]
     }
   }

@@ -3,7 +3,7 @@
   "_strategy": "Batch 1 (5 cards, full blind examiner each) showed exhaustive per-card examining doesn't scale (~400k+ tokens for 5 cards). Switched to audit-first triage starting batch 2: a static risk-pattern scan (scripts under the job scratch dir, not checked into the repo) flags cards using fragile Forge field shapes; cards hitting only ALREADY-FIXED shared-logic patterns are not re-examined individually (the fix applies uniformly to every card using that pattern); a small diverse spot-check sample is examined per round instead to catch NEW bug classes, and known architectural gaps (see known_gap_classes) are recorded once and applied to every card in that class without spending agent budget on each.",
   "known_gap_classes": {
     "ConditionCheckSVar/ConditionSVarCompare/CheckSVar (dynamic conditional effect)": {
-      "description": "RESOLVED for Beza's own exact shape (2026-09-04, user design call): ConditionCheckSVar$ X<Metric> compared against ConditionSVarCompare$ <op>Y<Metric> (a real two-player comparison) now produces two `sensor` nodes (your count, opp count, named via SCHEMA's := binding) plus a loose cond:compare= fact on the gated effect -- see svarComparisonFact(). NOT resolved: CheckSVar$ on a static (Essence Channeler's 'as long as you've lost life this turn' -- single-player, not a two-player comparison), and a ConditionCheckSVar$/ConditionSVarCompare$ pair compared against a plain NUMBER instead of a Y-prefixed variable (Harvestrite Host's own EQ2, Cache Grab's own GT0, Mistbreath Elder's own LE0 -- confirmed by spot-checking 4 of the remaining 10 cards, none use Beza's clean X/Y convention) -- svarComparisonFact() deliberately bails out on these rather than fabricating a wrong opponent-side fact. The remaining 10 cards need individual re-checking, not assumed fixed by Beza's resolution. (A narrower, single-object property check on an earlier target -- ConditionDefined$Targeted + ConditionPresent$ Type.powerLEN, or a boolean ConditionPresent$...PromisedGift check -- was already a separate, already-implemented case.)",
+      "description": "RESOLVED for Beza's own exact shape (2026-09-04, user design call): ConditionCheckSVar$ X<Metric> compared against ConditionSVarCompare$ <op>Y<Metric> (a real two-player comparison) now produces two `sensor` nodes (your count, opp count, named via SCHEMA's := binding) plus a loose cond:compare= fact on the gated effect -- see svarComparisonFact(). NOT resolved: CheckSVar$ on a static (Essence Channeler's 'as long as you've lost life this turn' -- single-player, not a two-player comparison), and a ConditionCheckSVar$/ConditionSVarCompare$ pair compared against a plain NUMBER instead of a Y-prefixed variable (Harvestrite Host's own EQ2, Cache Grab's own GT0, Mistbreath Elder's own LE0 -- confirmed by spot-checking 4 of the remaining 10 cards, none use Beza's clean X/Y convention) -- svarComparisonFact() deliberately bails out on these rather than fabricating a wrong opponent-side fact. The remaining 10 cards need individual re-checking, not assumed fixed by Beza's resolution. (A narrower, single-object property check on an earlier target -- ConditionDefined$Targeted + ConditionPresent$ Type.powerLEN, or a boolean ConditionPresent$...PromisedGift check -- was already a separate, already-implemented case.) Also confirmed on Bonecache Overseer (AB$ activated-ability variant: CheckSVar$X|SVarCompare$GE3, X folded from two ORed conditions via a Count$.../Plus.Y-with-Times.N-multiplier idiom -- a third attachment point beyond ConditionCheckSVar$ on a downstream effect and CheckSVar$ on a trigger) and Waterspout Warden (CheckSVar$ gating a TRIGGER itself, a plain single-value existence count rather than a comparison -- \"if another creature entered this turn\") and Bandit's Talent Level 2 (CheckSVar$X|SVarCompare$LE1 gating an activated static trigger). None of these three attachment-point variants are implemented -- only Beza's own downstream two-player X/Y comparison shape is.",
       "cards": [
         "Harvestrite Host",
         "Portent of Calamity",
@@ -16,14 +16,18 @@
         "Mistbreath Elder",
         "Finneas, Ace Archer",
         "Essence Channeler",
-        "Star Charter"
+        "Star Charter",
+        "Bonecache Overseer",
+        "Waterspout Warden (trigger-gate variant)",
+        "Bandit's Talent"
       ]
     },
     "Delayed conditional return (DelayedTrigger + WithCountersType)": {
       "description": "The real mechanic behind Parting Gust/Salvation Swan's own exile-then-conditionally-return effects: a DelayedTrigger (fires at a future phase) gated by its own ConditionPresent$/ConditionCompare$, returning the object under its OWNER's control (not the caster's) with a counter added. DelayedTrigger's Execute$ child is correctly suppressed now (no longer produces WRONG data), but the mechanic itself has no positive representation -- real, non-trivial modeling work (a delayed-timing dimension on top of the existing gift-condition machinery).",
       "cards": [
         "Parting Gust",
-        "Salvation Swan"
+        "Salvation Swan",
+        "Dragonhawk, Fate's Tempest"
       ]
     },
     "Stat-threshold ValidTgts$ qualifiers (powerGE/toughnessGE/powerLE/etc, incl. OR)": {
@@ -47,9 +51,13 @@
       ]
     },
     "DB$ Play (cast from an alternate zone, optionally without cost)": {
-      "description": "A whole alternate-casting mechanic (\"cast target instant/sorcery from your graveyard without paying its mana cost,\" Daring Waverider's own) plus its own replacement effect for where the spell goes afterward (ReplaceGraveyard$Exile). Zero handling -- genuinely new, moderately complex effect type, not a quick fix.",
+      "description": "A whole alternate-casting mechanic (\"cast target instant/sorcery from your graveyard without paying its mana cost,\" Daring Waverider's own) plus its own replacement effect for where the spell goes afterward (ReplaceGraveyard$Exile). Zero handling -- genuinely new, moderately complex effect type, not a quick fix. Wishing Well needs this PLUS two co-requirements to reach full match: DB$ ImmediateTrigger (an SVar-chained \"when you do\" sub-trigger, falls through to the generic unmapped path with no role:trigger node) and a Count$CardCounters.<Type> scaler (no code path turns it into a role:scaler node) and ReplaceGraveyard$ (an \"exile instead of graveyard\" replacement effect, never read anywhere in the file).",
       "cards": [
-        "Daring Waverider"
+        "Daring Waverider",
+        "Wishing Well",
+        "Wick's Patrol",
+        "Curious Forager",
+        "Zoraline, Cosmos Caller"
       ]
     },
     "AlternativeDecider$ (a non-caster player choosing between two outcomes)": {
@@ -64,7 +72,8 @@
         "Dewdrop Cure",
         "Into the Flood Maw",
         "Long River's Pull",
-        "Mind Spiral"
+        "Mind Spiral",
+        "Consumed by Greed"
       ]
     },
     "Defined$<sibling-effect-target> self-references (ParentTarget, TriggeredSourceLKICopy, etc.)": {
@@ -82,7 +91,11 @@
       "description": "Forge's ETB replacement-effect keyword family (enters tapped conditionally, enters as a copy of another permanent, etc.) has no handler. Genuinely varied shapes, real feature work.",
       "cards": [
         "Eddymurk Crab",
-        "Mockingbird"
+        "Mockingbird",
+        "Gev, Scaled Scorch",
+        "Patchwork Banner",
+        "Three Tree City",
+        "Uncharted Haven"
       ]
     },
     "S:ReduceCost (cost reduction)": {
@@ -91,7 +104,9 @@
         "Eddymurk Crab",
         "Eluge, the Shoreless Sea",
         "Dire Downdraft",
-        "Pearl of Wisdom"
+        "Pearl of Wisdom",
+        "Huskburster Swarm",
+        "Stormcatch Mentor"
       ]
     },
     "TargetsWithDifferentControllers$ (a multi-target restriction)": {
@@ -146,11 +161,59 @@
     "S: Full type/ability replacement (SetColor$/RemoveCardTypes$/RemoveAllAbilities$/AddAbility$)": {
       "description": "A static that turns a permanent into ONLY a new type (e.g. Sugar Coat's \"becomes a colorless Food artifact, loses all other types/abilities, gains a new granted ability\") -- a full identity replacement, not a simple AddType/AddKeyword tag. Currently only AddType is read; the rest (SetColor$, RemoveCardTypes$, RemoveAllAbilities$, and the granted AddAbility$ referencing a separate SVar) are silently dropped. A minimal S:TypeReplacement unmapped marker was added for honesty, not a real implementation -- genuinely complex, needs its own node shape.",
       "cards": [
-        "Sugar Coat"
+        "Sugar Coat",
+        "Ygra, Eater of All"
       ]
     },
     "Multi-clause ValidTgts$/ValidCards$ on a single-target effect (ChangeZone/Pump/PutCounter/DealDamage/Destroy)": {
       "description": "A comma-separated multi-type predicate (e.g. Instant.YouCtrl,Sorcery.YouCtrl) on a targeted non-trigger/non-static effect only reads the first clause, dropping the rest. Triggers and statics already got multi-clause support (specs/affectedSpecs) earlier this session; this is a third, still-unhandled context.",
+      "cards": [
+        "Stormchaser's Talent"
+      ]
+    },
+    "AB$Effect/DB$Effect (Forge's raw generic scripted ability, Execute$-driven)": {
+      "description": "A whole separate Forge ability API: instead of a typed effect (Pump/Draw/Token/etc), the card uses a generic Effect$ SVar chain driven by raw Execute$/Static-ability scripting bolted onto a placeholder permanent. Zero translator support -- needs its own investigation, likely several distinct sub-shapes rather than one fix.",
+      "cards": [
+        "Cruelclaw's Heist",
+        "Alania's Pathmaker",
+        "Dragonhawk, Fate's Tempest",
+        "Emberheart Challenger",
+        "Harnesser of Storms",
+        "Season of the Bold",
+        "Fireglass Mentor",
+        "Hugs, Grisly Guardian",
+        "Muerra, Trash Tactician",
+        "Ral, Crackling Wit",
+        "Bria, Riptide Rogue"
+      ]
+    },
+    "S:Mode$Continuous (a distinct static shape from the handled Static/Trigger/etc modes)": {
+      "description": "A static ability line whose Mode$ is Continuous -- a different shape from the already-handled AddPower/AddKeyword/etc static modes, not yet read at all.",
+      "cards": [
+        "Maha, Its Feathers Night",
+        "Festival of Embers",
+        "Lumra, Bellow of the Woods",
+        "Burrowguard Mentor",
+        "Clement, the Worrywort",
+        "Glarb, Calamity's Augur",
+        "Hugs, Grisly Guardian"
+      ]
+    },
+    "PutCounterAll (put counters on all matching permanents, plural form of PutCounter)": {
+      "description": "The plural sibling of PutCounter -- analogous to DestroyAll/DamageAll already implemented for Destroy/DealDamage, but PutCounter's own all-targets variant isn't handled yet. Likely a cheap, well-scoped fix (mirror the DestroyAll/DamageAll pattern).",
+      "cards": [
+        "Kastral, the Windcrested"
+      ]
+    },
+    "PeekAndReveal/ChooseCard (multi-step peek-then-choose effect chain)": {
+      "description": "A multi-step chain: peek at a zone, then choose a card from among the peeked cards to move/reveal, using PeekAndReveal$/ChooseCard$ SVars with no handler support at any step -- distinct from the simpler Dig look-then-move shape. Whiskervale Forerunner also separately hits the already-documented ValidSource$YouCtrl gap.",
+      "cards": [
+        "Whiskervale Forerunner",
+        "Fireglass Mentor"
+      ]
+    },
+    "Token registry entries carry no keyword-ability field": {
+      "description": "A created token can itself have a printed keyword (Stormchaser's Talent's own Otter token \"with prowess\", matching TOKEN_SCRIPT_MAP's own ur_1_1_otter_prowess key) but synergy-model/data/registries.json's label entries (labels/stats/subtype only) have no field to carry it, so any granted keyword on a created token is silently lost even though the underlying Forge token-script id literally names it. A real, cheap-looking fix (extend the registry schema with an abilities/keywords field) deferred as a data-schema decision, not attempted.",
       "cards": [
         "Stormchaser's Talent"
       ]
@@ -588,8 +651,8 @@
     },
     "Stormchaser's Talent": {
       "status": "issues-open",
-      "attempts": 1,
-      "note": "Level 1/3 and costs all correct. New gap: multi-clause ValidTgts$ on a targeted ChangeZone only reads the first clause (third context beyond triggers/statics)."
+      "attempts": 3,
+      "note": "Fixed real bug (batch 11 carryover from batch 10): ChangeZone's new multi-clause ValidTgts$ support initially attached each type-clause as an independent sibling (read as \"return BOTH\"), instead of wrapping in combine:\"any\" (a single disjunctive choice) -- caught by attempt 3's own exam misreading the fix's first version. Remaining gap: token registry entries (otter-1) carry no field for a token's own printed keywords (prowess), a data-schema limitation, not a translator bug."
     },
     "Sugar Coat": {
       "status": "issues-open",
@@ -605,6 +668,186 @@
       "status": "issues-open",
       "attempts": 1,
       "note": "Offspring correct. Same Dig look-then-selectively-reveal-to-hand gap as Star Charter."
+    },
+    "Cruelclaw's Heist": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Huskburster Swarm": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:ReduceCost\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Maha, Its Feathers Night": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Alania's Pathmaker": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Dragonhawk, Fate's Tempest": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\",\"?:DelayedTrigger\",\"?:Effect\",\"?:DelayedTrigger\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Emberheart Challenger": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Festival of Embers": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Harnesser of Storms": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Season of the Bold": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\",\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Lumra, Bellow of the Woods": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Burrowguard Mentor": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Clement, the Worrywort": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Fireglass Mentor": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:ChooseCard\",\"?:undefined\",\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Gev, Scaled Scorch": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Glarb, Calamity's Augur": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\",\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Hugs, Grisly Guardian": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\",\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Kastral, the Windcrested": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:PutCounterAll\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Muerra, Trash Tactician": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Ral, Crackling Wit": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Stormcatch Mentor": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:ReduceCost\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Ygra, Eater of All": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:TypeReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Patchwork Banner": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Three Tree City": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Uncharted Haven": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Bria, Riptide Rogue": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Bonecache Overseer": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Tap+pay-1-life-draw ability correct. Activation gate (CheckSVar$X|SVarCompare$GE3, an OR of two conditions folded via Times.N) matches known ConditionCheckSVar/CheckSVar dynamic-condition class, AB$ variant -- not implemented, per Beza-only design scope."
+    },
+    "Wishing Well": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Coin-counter half correct. The defining mechanic (DB$Play cast-from-graveyard + DB$ImmediateTrigger + Count$CardCounters scaler + ReplaceGraveyard$ exile-instead) entirely unrepresented -- matches known DB$ Play gap class, a real architectural gap needing design input, not attempted."
+    },
+    "Valley Floodcaller": {
+      "status": "match",
+      "attempts": 3,
+      "note": "Found and fixed 3 real bugs across 3 attempts: missing S:Mode$CastWithFlash static, ValidCards$ multi-type truncation on PumpAll (bird-only), and the same truncation on the chained UntapAll SubAbility (fixed separately since it wasn't propagated from the PumpAll fix). Full match on attempt 3."
+    },
+    "Waterspout Warden": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: trigger ValidCard$Creature.Self wasn't recognized as self-only (only bare Card.Self matched), widening \"this creature attacks\" into \"a creature attacks\". Remaining gap: CheckSVar$X gating the trigger itself (\"if another creature entered this turn\") -- matches known ConditionCheckSVar/CheckSVar class, trigger-gate variant, not implemented."
+    },
+    "Agate-Blade Assassin": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: deriveOwner had no case for Defined$TriggeredDefendingPlayer, defaulting to 'me' and collapsing \"defending player loses life\" into \"you lose life\". Full match on attempt 2."
+    },
+    "Bandit's Talent": {
+      "status": "issues-open",
+      "attempts": 3,
+      "note": "Fixed 2 real bugs: trigger owner hardcoded 'me' regardless of ValidPlayer$Opponent (flipped \"each opponent's upkeep\" into \"your upkeep\"), and UnlessType$'s nonLand qualifier collapsing to coarseType's generic Card->any rule. Remaining, deliberately deferred: CheckSVar$/SVarCompare$ hand-size gate on both level-2/3 abilities, and the PlayerCountOpponents$ dynamic draw-count scaler -- both match the known dynamic-condition/scaler classes."
+    },
+    "Bonebind Orator": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: Cost$ ExileFromGrave<N/CARDNAME> (a graveyard-activated ability's compound cost) had zero handling, silently dropping both the mana AND the self-exile. New wireExileGraveCost() mirrors wireSacCost's Sac<> pattern. Full match on attempt 2."
+    },
+    "Consumed by Greed": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: Sacrifice never read ValidTgts$ (only Defined$), defaulting every targeted-sacrifice effect to owner:me; also added a greatestPowerControlledByTargeted qualifier. Remaining, deliberately deferred: Gift's own may/single-target-opponent semantics on the generic Draw fallback, and the Count$PromisedGift.1.0 dynamic return-count binding -- both known, documented classes."
+    },
+    "Wick's Patrol": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is the ImmediateTrigger/DB$Play co-requirement class."
+    },
+    "Curious Forager": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is the ImmediateTrigger/DB$Play co-requirement class."
+    },
+    "Zoraline, Cosmos Caller": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is the ImmediateTrigger/DB$Play co-requirement class."
     }
   }
 }
