@@ -1017,6 +1017,11 @@
       "status": "match",
       "attempts": 2,
       "note": "Fixed real bug: SorcerySpeed$True missing from the Sac<>-cost branch (already read on the plain mana+tap branch). Full match on attempt 2."
+    },
+    "Savor": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (-2/-2 pump + Food token)."
     }
   }
 }
