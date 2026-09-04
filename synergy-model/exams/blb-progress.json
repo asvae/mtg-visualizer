@@ -881,6 +881,31 @@
       "status": "issues-open",
       "attempts": 2,
       "note": "Fixed 2 real bugs: Offspring token now correctly noted as 1/1 (was inheriting full stats), Dig now carries a reveal fact when Reveal$True. Remaining, deliberately deferred: SVar:X:Remembered$CardManaCost dynamic life-loss amount has no scaler/binding mechanism -- matches new Remembered-value-scaler gap class. (A round-2 examiner also misread the dual-root enters structure as one event rather than two separate arrivals -- confirmed by the agent itself as its own misinterpretation, not a decomposition bug -- no fix needed.)"
+    },
+    "Daggerfang Duo": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (Deathtouch + optional ETB mill 2)."
+    },
+    "Diresight": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (Surveil 2, draw 2, lose 2 life chain)."
+    },
+    "Downwind Ambusher": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: wasDealtDamageThisTurn qualifier on Destroy ValidTgts$ was dropped entirely. Full match on attempt 2."
+    },
+    "Fell": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (plain Destroy target creature). A duplicate/misfired re-run dissented on roots-vs-steps shape -- confirmed against corpus-wide precedent and reverted, not a real bug."
+    },
+    "Glidedive Duo": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (Flying + ETB symmetric drain)."
     }
   }
 }
