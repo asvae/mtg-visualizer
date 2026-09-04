@@ -371,10 +371,8 @@ simulated here since you have no Scryfall access).
 ```json
 {
   "self": {
-    "manaCost": "{2}{W}{W}",
-    "typeLine": "Legendary Creature — Elemental Elk",
-    "power": "4",
-    "toughness": "5"
+    "manaCost": "{2}{U}{U}",
+    "typeLine": "Instant"
   }
 }
 ```
@@ -396,146 +394,64 @@ Rarity is deliberately withheld.
       "thing": "self"
     },
     "B": {
-      "role": "enters",
+      "role": "move",
       "owner": "me",
-      "from": "--",
-      "to": "bf",
+      "from": "stack",
+      "to": "gy",
       "thing": "self"
     },
     "C": {
-      "role": "trigger",
-      "trigger-type": "enter",
-      "owner": "me",
-      "from": "--",
-      "to": "stack",
-      "thing": "self"
+      "role": "move",
+      "owner": "any",
+      "from": "stack",
+      "to": "gy",
+      "thing": "any",
+      "flags": "target"
     },
     "D": {
-      "role": "sensor",
+      "role": "source",
       "owner": "me",
       "from": "--",
-      "to": "--",
-      "thing": "lands",
-      "flags": "qty:=your_lands"
+      "to": "gy",
+      "thing": "any",
+      "flags": "qty:0..2"
     },
     "E": {
-      "role": "sensor",
-      "owner": "opp",
-      "from": "--",
-      "to": "--",
-      "thing": "lands",
-      "flags": "qty:=opp_lands"
-    },
-    "F": {
-      "role": "enters",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "treasure",
-      "flags": "cond:compare=opp_lands>your_lands"
-    },
-    "G": {
-      "role": "sensor",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "life",
-      "flags": "qty:=your_life"
-    },
-    "H": {
-      "role": "sensor",
-      "owner": "opp",
-      "from": "--",
-      "to": "--",
-      "thing": "life",
-      "flags": "qty:=opp_life"
-    },
-    "I": {
       "role": "emit",
       "owner": "me",
       "from": "--",
       "to": "--",
-      "thing": "life-gain",
-      "flags": "qty:4 cond:compare=opp_life>your_life"
+      "thing": "library-look"
     },
-    "J": {
-      "role": "sensor",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "creatures",
-      "flags": "qty:=your_creatures"
-    },
-    "K": {
-      "role": "sensor",
-      "owner": "opp",
-      "from": "--",
-      "to": "--",
-      "thing": "creatures",
-      "flags": "qty:=opp_creatures"
-    },
-    "L": {
-      "role": "enters",
-      "owner": "me",
-      "from": "--",
-      "to": "bf",
-      "thing": "fish-1",
-      "flags": "qty:2 cond:compare=opp_creatures>your_creatures"
-    },
-    "M": {
-      "role": "sensor",
-      "owner": "me",
-      "from": "--",
-      "to": "--",
-      "thing": "cards",
-      "flags": "qty:=your_cards"
-    },
-    "N": {
-      "role": "sensor",
-      "owner": "opp",
-      "from": "--",
-      "to": "--",
-      "thing": "cards",
-      "flags": "qty:=opp_cards"
-    },
-    "O": {
+    "F": {
       "role": "emit",
       "owner": "me",
       "from": "--",
       "to": "--",
       "thing": "draw",
-      "flags": "cond:compare=opp_cards>your_cards"
+      "flags": "qty:2"
     }
   },
   "flow": {
     "roots": [
       "A",
-      "B",
-      "C"
+      {
+        "combine": 1,
+        "of": [
+          "C",
+          "D"
+        ]
+      }
     ],
     "steps": {
       "A": [
         "B"
       ],
-      "C": [
-        "D",
-        "E",
+      "E": [
         "F"
       ],
-      "F": [
-        "G",
-        "H",
-        "I"
-      ],
-      "I": [
-        "J",
-        "K",
-        "L"
-      ],
-      "L": [
-        "M",
-        "N",
-        "O"
+      "D": [
+        "E"
       ]
     }
   }

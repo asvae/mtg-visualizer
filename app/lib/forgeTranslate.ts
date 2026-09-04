@@ -1,5 +1,18 @@
 import type { ForgeCard, ForgeFace, ForgeRow, SynergyFlow, SynergyFlowStep, SynergyNode, SynergyOwner, SynergyRole, SynergyZone } from '../types';
 
+// Mirrors forgeScript.ts's own forgeManaCostToBraced — inlined rather than
+// imported (a real, extension-less relative import here fails under the
+// exam scripts' native-TS Node execution, which needs an explicit .ts
+// suffix Vitest/Nuxt's own bundler doesn't require; duplicating this tiny,
+// stable helper avoids a cross-environment resolution mismatch entirely).
+function manaCostToBraced(cost: string): string {
+  return cost
+    .split(' ')
+    .filter(Boolean)
+    .map((sym) => `{${sym}}`)
+    .join('');
+}
+
 // Translates a parsed Forge script (app/lib/forgeScript.ts) into
 // synergy-model's own node/flow shape (synergy-model/SCHEMA.md), so a
 // first-pass decomposition can be generated for any card Forge has already
@@ -30,7 +43,7 @@ export interface TranslatedCard {
 // ---------------------------------------------------------------------------
 // Step 1 — recover structure from ForgeRow's rendered strings.
 
-function reparseFields(fields: string | undefined): Record<string, string> {
+export function reparseFields(fields: string | undefined): Record<string, string> {
   if (!fields) return {};
   const out: Record<string, string> = {};
   for (const chunk of fields.split('  ')) {
@@ -44,7 +57,7 @@ function reparseFields(fields: string | undefined): Record<string, string> {
 
 // `role` is `trigger(Mode)` / `static(Mode)` for T:/S: rows (see
 // forgeScript.ts's walkEffect) — recovers the bare Mode$ value.
-function eventMode(row: ForgeRow): string | undefined {
+export function eventMode(row: ForgeRow): string | undefined {
   const m = /^(?:trigger|static)\((.*)\)$/.exec(row.role ?? '');
   return m?.[1];
 }
@@ -55,12 +68,17 @@ function eventMode(row: ForgeRow): string | undefined {
 // rows are a pre-order DFS walk, same structure the outline table's own
 // indentation already relies on).
 
-interface RowTree {
+// Exported for app/lib/functionalTranslate.ts (the pseudocode-style
+// "functional model" comparison view) — it walks the exact same
+// parent→children tree this synergy translator does, rather than
+// re-deriving Forge's SubAbility/Choices/AddTrigger chain-following a
+// second time. Shape only, no synergy-specific meaning attached to it.
+export interface RowTree {
   row: ForgeRow;
   children: RowTree[];
 }
 
-function buildForest(rows: ForgeRow[]): RowTree[] {
+export function buildForest(rows: ForgeRow[]): RowTree[] {
   const roots: RowTree[] = [];
   const stack: RowTree[] = [];
   for (const row of rows) {
@@ -90,7 +108,7 @@ const ZONE_MAP: Record<string, SynergyZone> = {
   Stack: 'stack',
   Any: '--',
 };
-function zone(v: string | undefined): SynergyZone {
+export function zone(v: string | undefined): SynergyZone {
   return (v && ZONE_MAP[v]) || '--';
 }
 
@@ -98,7 +116,7 @@ function zone(v: string | undefined): SynergyZone {
 // resolves against. Not a general parser — the handful of shapes these 11
 // cards use (`You`, `Opponent`, `Player.Opponent`, bare `Player`,
 // `TriggeredTarget`, absent).
-function deriveOwner(defined: string | undefined): SynergyOwner {
+export function deriveOwner(defined: string | undefined): SynergyOwner {
   if (!defined || defined === 'You') return 'me';
   if (defined === 'Opponent' || defined === 'Player.Opponent') return 'opp';
   if (defined === 'Player') return 'all'; // bare "Player" = every player, symmetric
@@ -128,7 +146,7 @@ function deriveOwner(defined: string | undefined): SynergyOwner {
 // every targeted-effect handler (Pump, PutCounter, Destroy, DealDamage) —
 // duplicated inline before, which is exactly how `.OppCtrl` went unnoticed
 // in three of the four copies once it was missed in the first.
-function ownerFromTargetPredicate(validTgts: string | undefined): SynergyOwner {
+export function ownerFromTargetPredicate(validTgts: string | undefined): SynergyOwner {
   const v = validTgts ?? '';
   // `.YouCtrl` (control — battlefield/stack) and `.YouOwn` (ownership — a
   // real, separate Forge qualifier for graveyard/hand/library cards, where
@@ -147,7 +165,7 @@ function ownerFromTargetPredicate(validTgts: string | undefined): SynergyOwner {
 // `Player.Opponent` used as a SacValid/ValidTgts type rather than an owner)
 // down to synergy's coarse `thing` word plus whatever flags its qualifiers
 // imply.
-function coarseType(v: string | undefined): string {
+export function coarseType(v: string | undefined): string {
   if (!v) return 'any';
   const base = v.split('.')[0] ?? v;
   if (base === 'Card') return 'any';
@@ -178,7 +196,7 @@ function coarseType(v: string | undefined): string {
 // PumpAll's own inline `grant=flying` diverged from the static handler's
 // richer blocked_by=flying_or_reach encoding for the IDENTICAL keyword,
 // purely because they were two separately-written branches).
-function keywordGrantFact(kw: string): string {
+export function keywordGrantFact(kw: string): string {
   if (kw === 'Flying') return 'blocked_by=flying_or_reach';
   const ward = /^Ward:(.+)$/.exec(kw);
   const wardCost = ward?.[1];
@@ -191,11 +209,72 @@ function keywordGrantFact(kw: string): string {
 // before this helper existed hardcoded "gift_promised" regardless of
 // ConditionCompare$'s actual polarity, silently mislabeling every EQ0 card's
 // condition as its own opposite.
-function giftGateFact(conditionPresent: string | undefined, conditionCompare: string | undefined): string | undefined {
+export function giftGateFact(conditionPresent: string | undefined, conditionCompare: string | undefined): string | undefined {
   if (!conditionPresent || !/PromisedGift/.test(conditionPresent)) return undefined;
   return conditionCompare === 'EQ0' ? 'gift_not_promised' : 'gift_promised';
 }
-function ifPresentFlag(v: string | undefined): string | undefined {
+// ConditionCheckSVar$/ConditionSVarCompare$ — Forge's own dynamic
+// cross-player comparison (Beza, the Bounding Spring's own "create a
+// Treasure token IF AN OPPONENT CONTROLS MORE LANDS THAN YOU"). Full
+// resolution would mean parsing the referenced SVars' own Count$/
+// PlayerCountOpponents$ sub-expressions (a whole unsupported class this
+// session left undocumented as a design question) — the user's own
+// explicit call: don't parametrize precisely, just surface WHAT this card
+// measures (your count vs. an opponent's, of some named metric) and mark
+// the gated effect as conditional on them. Forge's own naming convention
+// for this shape is highly consistent — the opponent-side SVar is named
+// X<Metric>, the your-side one Y<Metric> (confirmed across all 4 of
+// Beza's own clauses: XLands/YLands, XLife/YLife, XCreatures/YCreatures,
+// XCards/YCards) — so the metric word is read straight off the SVar name
+// rather than resolving what it actually counts. Two `sensor` nodes (your
+// count, the opponent's count) via SCHEMA's own `:=` binding convention,
+// plus a loose `cond:compare=` fact on the gated effect — not a precise
+// operator/threshold, just "this depends on comparing these two."
+// Pure parse of Beza's own X<Metric>/Y<Metric> comparison shape, split out
+// of svarComparisonFact below so app/lib/functionalTranslate.ts (the
+// pseudocode "functional model" comparison view) can reuse the identical
+// regex/bail-out logic without either duplicating it or dragging in
+// svarComparisonFact's synergy-node-graph coupling (it needs a `Ctx` +
+// `attach` callback purely to emit two `sensor` nodes, which the pseudocode
+// translator has no use for — it just wants the parsed comparison as data).
+// Behavior-preserving extraction: svarComparisonFact's own regex/bail-outs
+// are unchanged, just moved here and called from both places.
+export interface SvarCompare {
+  metric: string;
+  op: 'GT' | 'GE' | 'LT' | 'LE' | 'EQ';
+  yourLabel: string;
+  oppLabel: string;
+  symbol: '>' | '>=' | '<' | '<=' | '=';
+}
+export function parseSvarCompare(checkVar: string | undefined, compareVar: string | undefined): SvarCompare | undefined {
+  if (!checkVar || !compareVar) return undefined;
+  const match = /^(GT|GE|LT|LE|EQ)(.+)$/.exec(compareVar);
+  if (!match) return undefined;
+  const [, op, compareTarget] = match;
+  // Only Beza's own exact shape: an X<Metric> checked variable compared
+  // against a Y<Metric> variable (both real, named SVars — the two-player
+  // comparison this whole fix is for). Other real cards use this same
+  // ConditionCheckSVar$/ConditionSVarCompare$ pair to compare a variable
+  // against a plain NUMBER instead (Harvestrite Host's own EQ2, Cache
+  // Grab's own GT0 — checking "resolved == 2" / "X > 0", nothing to do
+  // with an opponent's count at all) — fabricating an opp_<metric> sensor
+  // for those would be a wrong fact, not just an approximation, so this
+  // bails out rather than guessing whenever the compared-against side
+  // isn't itself a Y-prefixed variable name.
+  if (!/^X/.test(checkVar) || !compareTarget || !/^Y/.test(compareTarget)) return undefined;
+  const metric = checkVar.replace(/^X/, '').toLowerCase() || 'count';
+  const symbol = op === 'GT' ? '>' : op === 'GE' ? '>=' : op === 'LT' ? '<' : op === 'LE' ? '<=' : '=';
+  return { metric, op: op as SvarCompare['op'], yourLabel: `your_${metric}`, oppLabel: `opp_${metric}`, symbol };
+}
+function svarComparisonFact(ctx: Ctx, fields: Record<string, string | undefined>, attach: (step: SynergyFlowStep) => void): string | undefined {
+  const parsed = parseSvarCompare(fields.ConditionCheckSVar, fields.ConditionSVarCompare);
+  if (!parsed) return undefined;
+  const { metric, yourLabel, oppLabel, symbol } = parsed;
+  attach(addNode(ctx, { role: 'sensor', owner: 'me', from: '--', to: '--', thing: metric, flags: `qty:=${yourLabel}` }));
+  attach(addNode(ctx, { role: 'sensor', owner: 'opp', from: '--', to: '--', thing: metric, flags: `qty:=${oppLabel}` }));
+  return `cond:compare=${oppLabel}${symbol}${yourLabel}`;
+}
+export function ifPresentFlag(v: string | undefined): string | undefined {
   if (!v || /PromisedGift/.test(v)) return undefined;
   const type = coarseType(v);
   // A generic base (Permanent/Card) isn't the real distinguishing fact when
@@ -204,7 +283,7 @@ function ifPresentFlag(v: string | undefined): string | undefined {
   if ((type === 'permanent' || type === 'card' || type === 'any') && /[.+]token\b/i.test(v)) return 'if_present=token';
   return type && type !== 'any' ? `if_present=${type}` : undefined;
 }
-function qualifierFlags(v: string | undefined): string[] {
+export function qualifierFlags(v: string | undefined): string[] {
   if (!v) return [];
   const flags: string[] = [];
   // Same `[.+]`-separator fix as ownerFromTargetPredicate above — a
@@ -236,7 +315,7 @@ function qualifierFlags(v: string | undefined): string[] {
 // generate this from Forge's own res/tokenscripts the same way registries.json
 // itself says labels "can be auto-generated from Scryfall type lines"
 // (SCHEMA.md §8).
-const TOKEN_SCRIPT_MAP: Record<string, string> = {
+export const TOKEN_SCRIPT_MAP: Record<string, string> = {
   c_a_treasure_sac: 'treasure',
   b_2_2_horror: 'horror-1',
   c_a_food_sac: 'food',
@@ -257,7 +336,7 @@ const TOKEN_SCRIPT_MAP: Record<string, string> = {
 // aren't a plain 1:1 (GainControl, Animate, Sacrifice, Token, Discard,
 // ChangeZone) get extra handling in translateEffectRow below because they
 // need more than a role swap (owner/thing/split-into-two-nodes).
-const EFFECT_ROLE: Record<string, SynergyRole> = {
+export const EFFECT_ROLE: Record<string, SynergyRole> = {
   LoseLife: 'emit',
   GainLife: 'emit',
   Draw: 'emit',
@@ -587,6 +666,16 @@ function translateEffectRow(
         attach(addNode(ctx, { role: 'tagger', owner: spec.owner, from: '--', to: 'bf', thing: spec.thing, flags: [...spec.condFlags, `cond:${equipped ? 'equipped;' : ''}tag=${fields.AddType}`].join(' ') }));
       }
       handled = true;
+      // SetColor$/RemoveCardTypes$/RemoveAllAbilities$/AddAbility$ (Sugar
+      // Coat's own "...loses all other card types and abilities" +
+      // AddAbility$ granting a brand-new activated ability referencing a
+      // separate SVar) is a real, genuinely complex "total identity
+      // replacement" shape with no representation — previously silently
+      // ignored alongside the AddType tag with zero trace. Honestly
+      // surfaced now rather than fixed (real feature work).
+      if (fields.RemoveCardTypes || fields.RemoveAllAbilities || fields.AddAbility) {
+        ctx.unmapped.push('S:TypeReplacement');
+      }
     }
     // Mode$Continuous | GainControl$You (Kitnap's own defining effect —
     // "You control enchanted creature," a Control-Magic-style Aura) — a
@@ -759,6 +848,12 @@ function translateOwnEffect(
     const emitId = addNode(ctx, { role: 'emit', owner: 'me', from: '--', to: '--', thing: 'library-look' });
     attach(sourceId);
     attach(emitId);
+    // Was missing entirely — any SubAbility$ chained off a Surveil effect
+    // (Spellgyre's own "Surveil 2, then draw two cards") was silently
+    // dropped with no trace. Chained under emitId (the "and now you know
+    // more" half), same convention Scry's own follow-up chaining already
+    // uses implicitly.
+    for (const child of tree.children) translateEffectRow(ctx, child, emitId, selfThing, inTrigger, granted);
     return;
   }
 
@@ -802,7 +897,8 @@ function translateOwnEffect(
     // tapped and attacking") — same missing-flag shape as tapped, just a
     // second, independent arrival-state fact.
     const attacking = fields.TokenAttacking === 'True' ? 'cond:attacking' : undefined;
-    const id = addNode(ctx, { role: 'enters', owner, from: '--', to: 'bf', thing, flags: [qty, tapped, attacking].filter(Boolean).join(' ') || undefined });
+    const compareFact = svarComparisonFact(ctx, fields, attach);
+    const id = addNode(ctx, { role: 'enters', owner, from: '--', to: 'bf', thing, flags: [qty, tapped, attacking, compareFact].filter(Boolean).join(' ') || undefined });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -1162,7 +1258,8 @@ function translateOwnEffect(
     // handling at all here (only Pump/PumpAll/ChangeZone did) — silently
     // dropped the entire condition with no trace.
     const giftFact = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
-    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, ...qualifiers, `cond:delta=${type}${conditionalOnTarget ? `;${conditionalOnTarget}` : ''}${giftFact ? `;${giftFact}` : ''}`].filter(Boolean).join(' ') });
+    const compareFact = svarComparisonFact(ctx, fields, attach);
+    const id = addNode(ctx, { role: 'modifier', owner, from: '--', to: 'bf', thing, flags: [targeted ? 'target' : undefined, ...qualifiers, `cond:delta=${type}${conditionalOnTarget ? `;${conditionalOnTarget}` : ''}${giftFact ? `;${giftFact}` : ''}`, compareFact].filter(Boolean).join(' ') });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -1274,7 +1371,8 @@ function translateOwnEffect(
   // BAT") — see ifPresentFlag's own comment for why this is cheap/safe to
   // encode directly, unlike the general dynamic-comparison class.
   const presentFlag = ifPresentFlag(fields.ConditionPresent);
-  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' ? emitThing : 'unknown', flags: [qty && qty !== '1' ? `qty:${qty}` : undefined, presentFlag ? `cond:${presentFlag}` : undefined].filter(Boolean).join(' ') || undefined });
+  const compareFact = svarComparisonFact(ctx, fields, attach);
+  const id = addNode(ctx, { role, owner, from: '--', to: '--', thing: role === 'emit' ? emitThing : 'unknown', flags: [qty && qty !== '1' ? `qty:${qty}` : undefined, presentFlag ? `cond:${presentFlag}` : undefined, compareFact].filter(Boolean).join(' ') || undefined });
   attach(id);
   for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
 }
@@ -1283,13 +1381,24 @@ function translateOwnEffect(
 // a wrapping node — the group's `of` list IS their id, so this returns the id
 // the branch's own root effect got instead of attaching it anywhere itself.
 function translateEffectAsLeaf(ctx: Ctx, tree: RowTree, selfThing: string, inTrigger: boolean, granted: false | { thing: string }): string | undefined {
-  let capturedId: string | undefined;
   const fakeParent = '__charm_capture__';
   translateEffectRow(ctx, tree, fakeParent, selfThing, inTrigger, granted);
   const captured = ctx.steps[fakeParent];
   delete ctx.steps[fakeParent];
-  if (captured && captured.length === 1 && typeof captured[0] === 'string') capturedId = captured[0];
-  return capturedId;
+  if (!captured || captured.length === 0) return undefined;
+  const [first, ...rest] = captured;
+  if (typeof first !== 'string') return undefined;
+  // A branch producing SEVERAL sibling roots (Surveil's own source+emit
+  // pair, both happening together as one action) previously failed this
+  // function's single-id assumption entirely, silently dropping the WHOLE
+  // choice branch — confirmed by Spellgyre's own "Surveil 2, then draw two
+  // cards" mode vanishing completely from a real Charm. A combine-group
+  // can't nest inside another combine-group's own `of` (SynergyFlowStep's
+  // own type only allows plain ids there), so the extra sibling(s) are
+  // chained under the first instead — same "both happen" fact, restructured
+  // to fit a single representative id for this choice branch.
+  for (const step of rest) link(ctx, first, step);
+  return first;
 }
 
 // K: lines — bare keywords (Menace/Trample: no synergy node, matching this
@@ -1315,8 +1424,13 @@ function translateKeyword(ctx: Ctx, row: ForgeRow, selfThing: string) {
     // node's own `enters` role can be activated for later. `paid_at_cast`
     // distinguishes the two, semicolon-joined onto the existing cond:token
     // payload per SCHEMA.md's multi-payload convention.
-    const cost = params[0] ?? '';
-    ctx.roots.push(addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cost:{${cost}} cond:token;paid_at_cast` }));
+    // Forge writes a multi-symbol cost space-separated ("1 U", Splash
+    // Lasher's own Offspring {1}{U}) — wrapping the WHOLE string in one
+    // brace pair produced the invalid mana notation "{1 U}" instead of
+    // "{1}{U}" (only ever noticed on single-symbol Offspring costs before,
+    // where "{N}" happens to look identical either way).
+    const cost = manaCostToBraced(params[0] ?? '');
+    ctx.roots.push(addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cost:${cost} cond:token;paid_at_cast` }));
     return;
   }
   if (row.role === 'Equip') {

@@ -1,0 +1,11 @@
+{
+  "name": "Stormchaser's Talent",
+  "manaCost": "{U}",
+  "typeLine": "Enchantment — Class",
+  "description": "When this enchantment enters, create a 1/1 blue and red Otter creature token with prowess. {3}{U}: Level 2 -- When this Class becomes level 2, return target instant or sorcery card from your graveyard to your hand. {5}{U}: Level 3 -- Whenever you cast an instant or sorcery spell, create a 1/1 blue and red Otter creature token with prowess.",
+  "assumptions": [],
+  "couldNotDerive": ["That Level 2's return target can be EITHER an instant or a sorcery card -- ValidTgts$ Instant.YouCtrl,Sorcery.YouCtrl on ChangeZone only reads the first clause (instant), dropping sorcery entirely."],
+  "verdict": "issues-open",
+  "notes": "Level 1, Level 3 (including its own multi-clause SpellCast trigger, which DOES correctly split into 2 nodes sharing one downstream chain), and both Class costs all reconstruct correctly. One real gap: a comma-separated multi-type ValidTgts$ on a targeted ChangeZone (not a trigger or a static, a THIRD context) only reads the first clause -- same underlying multi-clause limitation already documented for triggers/statics, now confirmed on a third node type. Not fixed this round.",
+  "comparedAt": "2026-09-04"
+}

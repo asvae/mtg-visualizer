@@ -1,9 +1,9 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-03T23:40:11.845Z",
-  "clean": 196,
-  "gaps": 78,
-  "totalUnmapped": 109,
+  "generatedAt": "2026-09-04T00:26:17.472Z",
+  "clean": 194,
+  "gaps": 80,
+  "totalUnmapped": 111,
   "cards": {
     "Caretaker's Talent": [
       "?:CopyPermanent"
@@ -61,6 +61,9 @@
     ],
     "Skyskipper Duo": [
       "?:DelayedTrigger"
+    ],
+    "Sugar Coat": [
+      "S:TypeReplacement"
     ],
     "Valley Floodcaller": [
       "S:CastWithFlash",
@@ -244,6 +247,9 @@
     ],
     "Stormcatch Mentor": [
       "S:ReduceCost"
+    ],
+    "Ygra, Eater of All": [
+      "S:TypeReplacement"
     ],
     "Zoraline, Cosmos Caller": [
       "?:ImmediateTrigger",

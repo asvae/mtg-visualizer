@@ -121,6 +121,166 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Bell
 }
 `;
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Beza, the Bounding Spring 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+        "E",
+        "F",
+      ],
+      "F": [
+        "G",
+        "H",
+        "I",
+      ],
+      "I": [
+        "J",
+        "K",
+        "L",
+      ],
+      "L": [
+        "M",
+        "N",
+        "O",
+      ],
+    },
+  },
+  "name": "Beza, the Bounding Spring",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "D": {
+      "flags": "qty:=your_lands",
+      "from": "--",
+      "owner": "me",
+      "role": "sensor",
+      "thing": "lands",
+      "to": "--",
+    },
+    "E": {
+      "flags": "qty:=opp_lands",
+      "from": "--",
+      "owner": "opp",
+      "role": "sensor",
+      "thing": "lands",
+      "to": "--",
+    },
+    "F": {
+      "flags": "cond:compare=opp_lands>your_lands",
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "treasure",
+      "to": "bf",
+    },
+    "G": {
+      "flags": "qty:=your_life",
+      "from": "--",
+      "owner": "me",
+      "role": "sensor",
+      "thing": "life",
+      "to": "--",
+    },
+    "H": {
+      "flags": "qty:=opp_life",
+      "from": "--",
+      "owner": "opp",
+      "role": "sensor",
+      "thing": "life",
+      "to": "--",
+    },
+    "I": {
+      "flags": "qty:4 cond:compare=opp_life>your_life",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-gain",
+      "to": "--",
+    },
+    "J": {
+      "flags": "qty:=your_creatures",
+      "from": "--",
+      "owner": "me",
+      "role": "sensor",
+      "thing": "creatures",
+      "to": "--",
+    },
+    "K": {
+      "flags": "qty:=opp_creatures",
+      "from": "--",
+      "owner": "opp",
+      "role": "sensor",
+      "thing": "creatures",
+      "to": "--",
+    },
+    "L": {
+      "flags": "qty:2 cond:compare=opp_creatures>your_creatures",
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "fish-1",
+      "to": "bf",
+    },
+    "M": {
+      "flags": "qty:=your_cards",
+      "from": "--",
+      "owner": "me",
+      "role": "sensor",
+      "thing": "cards",
+      "to": "--",
+    },
+    "N": {
+      "flags": "qty:=opp_cards",
+      "from": "--",
+      "owner": "opp",
+      "role": "sensor",
+      "thing": "cards",
+      "to": "--",
+    },
+    "O": {
+      "flags": "cond:compare=opp_cards>your_cards",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Brave-Kin Duo 1`] = `
 {
   "flow": {
@@ -1776,6 +1936,83 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Shri
       "role": "modifier",
       "thing": "self",
       "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Spellgyre 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      {
+        "combine": 1,
+        "of": [
+          "C",
+          "D",
+        ],
+      },
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+      "E": [
+        "F",
+      ],
+    },
+  },
+  "name": "Spellgyre",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "target",
+      "from": "stack",
+      "owner": "any",
+      "role": "move",
+      "thing": "any",
+      "to": "gy",
+    },
+    "D": {
+      "flags": "qty:0..2",
+      "from": "--",
+      "owner": "me",
+      "role": "source",
+      "thing": "any",
+      "to": "gy",
+    },
+    "E": {
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "library-look",
+      "to": "--",
+    },
+    "F": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
     },
   },
   "unmapped": [],
