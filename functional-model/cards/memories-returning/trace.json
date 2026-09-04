@@ -1,0 +1,64 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 5 card(s) in library",
+      "action": "cast from hand",
+      "result": "3 of the top 5 cards go to your hand, the other 2 to the bottom of your library"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Memories Returning",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}{U}"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 5,
+        "take": 3,
+        "found": 3
+      },
+      {
+        "fn": "move",
+        "card": "Memories Returning",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 5 card(s) in library",
+      "action": "cast from graveyard",
+      "result": "cast via Flashback for {7}{U}{U}; same dig, then exiled instead of going to the graveyard"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Memories Returning",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{7}{U}{U}"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 5,
+        "take": 3,
+        "found": 3
+      },
+      {
+        "fn": "move",
+        "card": "Memories Returning",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

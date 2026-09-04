@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCast\" trigger fires",
+      "result": "puts a +1/+1 counter on itself (and can't be blocked this turn, not tracked in this model)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sahagin",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Sahagin",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  }
+]

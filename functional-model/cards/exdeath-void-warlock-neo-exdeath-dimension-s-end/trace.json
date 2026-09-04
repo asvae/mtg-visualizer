@@ -1,0 +1,143 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "you gain 3 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Exdeath, Void Warlock",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 6 creature card(s) in graveyard",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "transforms into Neo Exdeath, Dimension's End (6+ permanent cards in the graveyard)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Exdeath, Void Warlock",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 6,
+        "creatureCount": 6
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-2",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-3",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-4",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-5",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Exdeath, Void Warlock",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Exdeath, Void Warlock",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "stays Exdeath, Void Warlock (fewer than 6 permanent cards in the graveyard)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Exdeath, Void Warlock",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Exdeath, Void Warlock",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Exdeath, Void Warlock",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Exdeath, Void Warlock",
+        "player": "you"
+      }
+    ]
+  }
+]

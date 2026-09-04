@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Balamb Garden, SeeD Academy\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "transform exile-then-return has no produce fact"
+  ]
+}

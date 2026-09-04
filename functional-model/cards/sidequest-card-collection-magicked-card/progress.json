@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has enters ({\"fn\":\"enters\",\"card\":\"Magicked Card\",\"instanceId\":1,\"zone\":\"Battlefield\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "back face's battlefield entry (transform) has no produce fact (informational note)"
+  ]
+}

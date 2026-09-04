@@ -1,0 +1,130 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 8 card(s) in library",
+      "action": "\"chapterI\" trigger fires",
+      "result": "mills 5 cards from your library to your graveyard"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Titan",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 5
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 creature card(s) in graveyard",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no land cards in graveyard (this harness has no way to seed a land-typed graveyard card — see definition.ts), nothing returned"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Titan",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-2",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-2",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Graveyard",
+        "to": "Battlefield",
+        "qty": 0,
+        "validType": "land"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 land(s); you: 1 creature(s)",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "another target creature you control gets +2/+2 and gains trample until end of turn (X = 2 lands you control)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Titan",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getLandsInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getLandsInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Trample"
+      }
+    ]
+  }
+]

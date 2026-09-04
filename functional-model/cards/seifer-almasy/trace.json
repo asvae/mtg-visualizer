@@ -1,0 +1,69 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onAttacksAlone\" trigger fires",
+      "result": "the attacking creature gains double strike until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Seifer Almasy",
+        "instanceId": 1,
+        "name": "onAttacksAlone"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "DoubleStrike"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
+      "result": "(not mechanically enforced — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Seifer Almasy",
+        "instanceId": 1,
+        "name": "onDealsCombatDamageToPlayer"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Seifer Almasy",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Seifer Almasy",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Seifer Almasy",
+        "player": "you"
+      }
+    ]
+  }
+]

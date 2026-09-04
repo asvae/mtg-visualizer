@@ -1,0 +1,15 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "event": "entersBattlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

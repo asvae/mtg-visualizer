@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Crystal Fragments\",\"zone\":\"Exile\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Crystal Fragments\",\"zone\":\"Battlefield\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "front-face self-transform (exile-then-return) has no produce fact, left as accepted informational note"
+  ]
+}

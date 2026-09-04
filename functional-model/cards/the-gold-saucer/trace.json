@@ -1,0 +1,21 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "activated ({3}, {T}, Sacrifice two artifacts)",
+      "result": "draws a card (the two sacrificed artifacts are paid as part of the activation cost)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Gold Saucer",
+        "instanceId": 1,
+        "cost": "{3}, {T}, Sacrifice two artifacts"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

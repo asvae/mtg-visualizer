@@ -1,0 +1,37 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "target creature gets +1/+0 until end of turn (the granted death-trigger text is not modeled — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Galuf's Final Act",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "move",
+        "card": "Galuf's Final Act",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

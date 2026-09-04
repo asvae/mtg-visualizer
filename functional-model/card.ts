@@ -71,6 +71,11 @@ import {
   surveil as realSurveil,
   destroy as realDestroy,
   dealDamage as realDealDamage,
+  tap as realTap,
+  untap as realUntap,
+  dig as realDig,
+  grantKeyword as realGrantKeyword,
+  copyPermanent as realCopyPermanent,
 } from './interfaces';
 
 /**
@@ -98,6 +103,11 @@ export interface Actions {
   surveil: typeof realSurveil;
   destroy: typeof realDestroy;
   dealDamage: typeof realDealDamage;
+  tap: typeof realTap;
+  untap: typeof realUntap;
+  dig: typeof realDig;
+  grantKeyword: typeof realGrantKeyword;
+  copyPermanent: typeof realCopyPermanent;
 }
 const defaultActions: Actions = {
   createToken: realCreateToken,
@@ -114,6 +124,11 @@ const defaultActions: Actions = {
   surveil: realSurveil,
   destroy: realDestroy,
   dealDamage: realDealDamage,
+  tap: realTap,
+  untap: realUntap,
+  dig: realDig,
+  grantKeyword: realGrantKeyword,
+  copyPermanent: realCopyPermanent,
 };
 
 /** Everything an effect needs to read at resolution time — the one argument every effect/Computed function receives. */
@@ -141,13 +156,15 @@ export interface EffectContext {
    * (603.3b/603.4) — Kain, Traitorous Dragoon's own "that player"/"that
    * much damage," read back by three separate downstream effects, is the
    * reference case (see synergy-model/SCHEMA.md's `:=`/`=` binding
-   * convention, and cards/kain-traitorous-dragoon/index.ts's own `custom`
+   * convention, and cards/kain-traitorous-dragoon/definition.ts's own `custom`
    * effect for how this plays out as a plain local variable instead of new
    * schema machinery). A scenario sets this the same way it sets
    * `castFrom`/`mode` — a real player-visible fact fixed by the game event,
    * not something an effect computes on its own.
    */
   triggerInput?: Record<string, unknown>;
+  /** Real Forge `Count$xPaid` (Choco-Comet's own "deals X damage," e.g.) — the value chosen for a card's own printed `X` in its mana cost, fixed once at cast time (601.2b/601.2f) the same way `mode`/`castFrom` are, not something an effect computes. A scenario sets this the same way it sets those — a real player-visible fact fixed by the cast, not authored per-effect. */
+  xPaid?: number;
 }
 
 /**
@@ -183,6 +200,10 @@ export type Effect =
       predicate: 'creatures-you-control';
       power: Computed<number>;
       toughness: Computed<number>;
+      /** Forge's own real `Creature.YouCtrl+Other` shape ("OTHER creatures you control get...") — excludes `ctx.self` from the affected set, same reasoning as `sacrifice`/`move`'s own `notSelf`. */
+      notSelf?: boolean;
+      /** A creature subtype filter (Circle of Power's own "Wizards you control get...") — same field `putCounterAll` already carries, omit to match every creature `predicate` selects. */
+      subtype?: string;
     }
   | { kind: 'loseLife'; owner: EffectOwner; amount: Computed<number> }
   | { kind: 'discard'; owner: EffectOwner; qty: Computed<number> }
@@ -199,7 +220,7 @@ export type Effect =
       /** `'creature-or-artifact'` is Forge's own `Sac<1/Creature.Other;Artifact.Other/...>` shape (Namazu Trader's own attack trigger) — a disjunctive predicate on ONE sacrifice ("flexible about what qualifies"), not a choice between two different effects; SCHEMA.md's own `combine:"any"`. */
       validType: 'creature' | 'artifact' | 'enchantment' | 'any' | 'creature-or-artifact';
       notSelf?: boolean;
-      /** "you MAY sacrifice..." (Namazu Trader's own attack trigger) vs. "each player sacrifices..." (Gaius van Baelsar's own ETB, not optional). */
+      /** "you MAY sacrifice..." (Namazu Trader's own attack trigger) vs. "each player sacrifices..." (Gaius van Baelsar's own ETB, not optional). Documentary only, like `move`'s own `optional` field above — no player-decision engine exists here, so this doesn't change resolution behavior (a legal target always gets taken). */
       optional?: boolean;
       /** Forge's own `Creature.token`/`Creature.!token` distinction (Gaius van Baelsar's own first two modes) — omit when the card doesn't care either way. */
       tokenFilter?: 'token' | 'nontoken';
@@ -223,25 +244,47 @@ export type Effect =
       from: ZoneType;
       to: ZoneType;
       qty: Computed<number>;
-      validType?: 'creature' | 'any';
+      validType?: 'creature' | 'artifact' | 'land' | 'any';
       target?: boolean;
+      /** "return ANOTHER permanent you control" (Ambrosia Whiteheart) — excludes `ctx.self` from the candidate pool, same reasoning as `sacrifice`'s own `notSelf`. */
+      notSelf?: boolean;
+      /** Forge's own `OptionalDecider$ You` (Ambrosia Whiteheart's own ETB) — a real binary "you MAY," distinct from qty/pool-exhaustion's own "up to N" (which already yields zero for free when nothing qualifies). Documentary only, same as `sacrifice`/`dig`'s own `optional` field: this model has no player-decision engine anywhere (`chooseTarget` always takes the first pool candidate), so a legal-but-declined target isn't actually modeled yet — set this to record the real card text's intent, not to change resolution behavior. */
+      optional?: boolean;
     }
   | { kind: 'putCounter'; target: 'self'; counterType: string; amount: Computed<number> }
   | {
       /** A counter on a CHOSEN target (Cloudbound Moogle's "put a +1/+1 counter on target creature," Ultima's "put a blight counter on target land") — as opposed to `putCounter`'s always-self target. `qty` targets chosen the same up-to-N pattern as `move`'s targeted branch. */
       kind: 'putCounterTarget';
-      validType: 'creature' | 'land' | 'any';
+      validType: 'creature' | 'land' | 'artifact' | 'creature-or-artifact' | 'any';
       counterType: string;
       amount: Computed<number>;
       qty?: Computed<number>;
+      /** See `dealDamageTarget`'s own doc comment above — same owner-restriction fix, same bug. */
+      owner?: EffectOwner;
+    }
+  | {
+      /** Forge's own `CountersPut ... | Defined$ ...+ValidType` UNCHOSEN batch shape (Minwu, White Mage's own "put a +1/+1 counter on each Cleric you control") — every creature matching `predicate` gets it, as opposed to `putCounterTarget`'s player-chosen targets. Same `predicate`/`notSelf` shape `pumpAll` uses, not a new vocabulary. */
+      kind: 'putCounterAll';
+      predicate: 'creatures-you-control';
+      counterType: string;
+      amount: Computed<number>;
+      notSelf?: boolean;
+      /** A creature subtype filter (Minwu's own "each CLERIC you control") — omit to match every creature `predicate` selects. */
+      subtype?: string;
     }
   | { kind: 'surveil'; qty: Computed<number> }
   | {
-      /** Real rule 701.6/`DestroyEffect` — as opposed to `sacrifice` (701.16, a cost/effect a player CHOOSES to pay) or a generic `move`, destroy is its OWN action a spell/ability directly causes. `qty`/optional together cover "up to N" (Summon: Bahamut's own chapters I/II, TargetMin$0). */
+      /** Real rule 701.6/`DestroyEffect` — as opposed to `sacrifice` (701.16, a cost/effect a player CHOOSES to pay) or a generic `move`, destroy is its OWN action a spell/ability directly causes. `qty` alone covers "up to N" (Summon: Bahamut's own chapters I/II, TargetMin$0) via pool-exhaustion — no separate `optional` field here (nothing else on this effect distinguishes "must" from "may" when a legal target exists; see `move`/`sacrifice`'s own `optional` fields for that same documentary-only distinction). */
       kind: 'destroy';
-      validType: 'permanent' | 'creature';
+      validType: 'permanent' | 'creature' | 'land';
       nonLand?: boolean;
       qty: Computed<number>;
+      /** "destroy target creature with power N or greater" (Battle Menu's own Magic mode) — filters the candidate pool by `getNetPower()`, omit for no threshold. */
+      minPower?: Computed<number>;
+      /** Real `TargetMin$ 0` (Summon: Bahamut's own "destroy up to one target nonland permanent") — documentary only, same as `move`/`sacrifice`'s own `optional` field: no player-decision engine exists here, so a legal-but-declined target still gets destroyed. `qty` + pool-exhaustion already cover "0 when nothing qualifies" for free. */
+      optional?: boolean;
+      /** See `dealDamageTarget`'s own doc comment above — same owner-restriction fix, same bug. */
+      owner?: EffectOwner;
     }
   | {
       /** `DB$ DealDamage | Defined$ Player.Opponent` — real Forge shape for "deals damage to each opponent" (Summon: Bahamut's own Mega Flare). Reuses `EffectOwner` (`'opponents'` = every opponent) rather than inventing a second owner vocabulary. */
@@ -250,10 +293,82 @@ export type Effect =
       amount: Computed<number>;
     }
   | {
+      /** A SINGLE targeted creature (any player's, Slash of Light's own "target creature") takes damage — as opposed to `dealDamage`'s player-group target. Same `X`/`XTarget` naming split `pump`/`pumpTarget` and `putCounter`/`putCounterTarget` already use, not a new pattern. */
+      kind: 'dealDamageTarget';
+      amount: Computed<number>;
+      /** Restricts the candidate pool to one side (Ultros' own "target creature an opponent controls") — omit for the prior default, every creature on the battlefield regardless of controller. Same fix `pumpTarget`/`tapTarget`/`putCounterTarget`/`destroy` below all needed: without an owner restriction, `chooseTarget`'s always-take-the-first-candidate rule can land on the source's OWN controller's side (even itself) for a card whose REAL text actually is restricted — Ice Flan's own real "target artifact or creature an opponent controls" is the confirmed case. (Coeurl/Dion, Bahamut's Dominant's own chapter III were checked against this same failure mode and found to be real, printed UNRESTRICTED targeting — `ValidTgts$ Creature.nonEnchantment` / `ValidTgts$ Permanent`, no controller clause at all — so self-targeting there is a legal, if unlucky, `chooseTarget`-determinism outcome, not a bug; they don't set this field.) */
+      owner?: EffectOwner;
+    }
+  | {
+      /** `DB$ DealDamage | ValidTgts$ Any` — real Forge "any target" (a player OR a creature/planeswalker, Choco-Comet-style burn), as opposed to `dealDamage`'s player-group-only target and `dealDamageTarget`'s creature-only target. Pool is every player plus every creature on the battlefield. */
+      kind: 'dealDamageAnyTarget';
+      amount: Computed<number>;
+      owner?: EffectOwner;
+    }
+  | {
+      /** `FightEffect` (forge-game/.../ability/effects/FightEffect.java) — `self` fights a chosen target creature: each deals damage equal to its own power to the other, simultaneously. A real, distinct Forge action (not two separate `dealDamageTarget` calls a card would author itself). */
+      kind: 'fightTarget';
+      owner?: EffectOwner;
+    }
+  | {
       /** A SINGLE targeted creature (any player's — Overkill's own "target creature," not "creatures you control") gets a P/T delta, as opposed to `pumpAll`'s board-wide broadcast. */
       kind: 'pumpTarget';
       power: Computed<number>;
       toughness: Computed<number>;
+      /** See `dealDamageTarget`'s own doc comment above — same owner-restriction fix, same bug. */
+      owner?: EffectOwner;
+      /** "another target creature you control" (Gladiolus Amicitia/Rinoa Heartilly's own Landfall/attack pumps) — excludes `ctx.self` from the pool, same reasoning as `pumpAll`/`sacrifice`/`move`'s own `notSelf`. Without this the pool ordering (self is always added to the battlefield LAST in a scenario — see harness.ts) happens to put self last, so omitting it isn't unsafe today, but a real "another" card should still set this explicitly rather than rely on that ordering. */
+      notSelf?: boolean;
+    }
+  | {
+      /** `self` gets a P/T delta with no target/board-wide choice involved (Ambrosia Whiteheart's own Landfall — "CARDNAME gets +1/+0") — a third, narrower shape than `pumpTarget` (chosen) and `pumpAll` (broadcast). */
+      kind: 'pumpSelf';
+      power: Computed<number>;
+      toughness: Computed<number>;
+    }
+  | {
+      /** Grants a keyword to a SINGLE chosen target (Magic Damper-style "target creature gains X") — same target-picking shape as `pumpTarget`. Mechanically REAL, not just documentary (see state.ts's own `grantKeyword`: it mutates the real card's `keywords`, so a later Lifelink/Indestructible check genuinely reflects it) — but DURATION isn't tracked (the grant is permanent within a scenario), same caveat `state.grantKeyword`'s own doc comment explains in full. */
+      kind: 'grantKeywordTarget';
+      keyword: Keyword;
+      validType?: 'creature' | 'any';
+      owner?: EffectOwner;
+      /** See `pumpTarget`'s own `notSelf` doc comment above — same "another target creature" exclusion. */
+      notSelf?: boolean;
+    }
+  | {
+      /** Grants a keyword to every creature matching `predicate` (Ardyn's own "Demons you control have menace," a real static grant to a GROUP) — same `predicate`/`notSelf`/`subtype` shape `pumpAll`/`putCounterAll` already use. Same duration caveat as `grantKeywordTarget` above. */
+      kind: 'grantKeywordAll';
+      predicate: 'creatures-you-control';
+      keyword: Keyword;
+      notSelf?: boolean;
+      subtype?: string;
+    }
+  | {
+      /** `self` gains a keyword with no target/board-wide choice (Zack Fair's own "gains indestructible") — third shape mirroring `pumpSelf`. Same duration caveat as `grantKeywordTarget` above. */
+      kind: 'grantKeywordSelf';
+      keyword: Keyword;
+    }
+  | {
+      /** `TapEffect`/`TapAllEffect` (forge-game/.../ability/effects/) — a CHOSEN target tapped (Coeurl's own activated ability), as opposed to a board-wide tap-all this batch doesn't need yet. */
+      kind: 'tapTarget';
+      validType: 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any';
+      excludeEnchantment?: boolean;
+      /** See `dealDamageTarget`'s own doc comment above — same owner-restriction mechanism, for a card whose real text actually is restricted (Coeurl's own real text is NOT — see that doc comment). */
+      owner?: EffectOwner;
+    }
+  | {
+      /** `UntapEffect` (forge-game/.../ability/effects/) — Forge's own real counterpart to `tapTarget` above (Magic Damper's own "untap target creature"), same shape, `untap` instead of `tap`. */
+      kind: 'untapTarget';
+      validType: 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any';
+      owner?: EffectOwner;
+    }
+  | {
+      /** `DigEffect` — look at the top `qty` library cards, take up to `take` matching `validType` to hand, rest to bottom (Ashe's own attack trigger). */
+      kind: 'dig';
+      qty: Computed<number>;
+      take: Computed<number>;
+      validType?: 'artifact' | 'any';
+      optional?: boolean;
     }
   | {
       /** Phantom Train's own "becomes a Spirit artifact creature in addition to its other types until end of turn" — see interfaces.ts's own `animate` doc comment for how much real Forge machinery this is standing in for. */
@@ -310,10 +425,34 @@ export interface Trigger {
 }
 
 /**
+ * A controlled vocabulary of real Forge `K:` keyword names — see
+ * `CardDefinition.keywords`'s own doc comment for which of these actually
+ * change resolution behavior (today: only `Lifelink`/`Indestructible`) vs.
+ * are recognized-but-inert structured facts. Deliberately not exhaustive of
+ * every real MTG keyword — extend as a real card needs one not listed here.
+ */
+export type Keyword =
+  | 'Flying'
+  | 'Reach'
+  | 'Trample'
+  | 'Vigilance'
+  | 'Haste'
+  | 'Lifelink'
+  | 'Deathtouch'
+  | 'Menace'
+  | 'FirstStrike'
+  | 'DoubleStrike'
+  | 'Defender'
+  | 'Hexproof'
+  | 'Indestructible'
+  | 'Ward'
+  | 'Flash';
+
+/**
  * Every card definition is a plain object of this shape — a data RECORD,
  * not an instance of a per-card class (see this file's own header for why:
  * Forge itself has exactly one `Card` class for every printed card, never a
- * subclass per name). `functional-model/cards/the-final-days/index.ts`
+ * subclass per name). `functional-model/cards/the-final-days/definition.ts`
  * exports a `const theFinalDays: CardDefinition = { ... }` object literal,
  * the direct TS analogue of a `.txt` script `CardFactory` would parse into
  * one generic `Card` plus its `SpellAbility` list.
@@ -322,6 +461,21 @@ export interface CardDefinition {
   readonly name: string;
   readonly manaCost: string;
   readonly typeLine: string;
+  /**
+   * Real printed base power/toughness (a Creature/Vehicle's own `PT:` line)
+   * — omit for a non-creature, OR for a creature whose power/toughness is
+   * itself "*" and fully covered by `ptFormula` (Snow Villiers' own real
+   * printed "*&#47;3": power is "*"/omit-equivalent since `ptFormula` sets
+   * it, but toughness is a real fixed 3, so `pt: [0, 3]` still carries that
+   * half). Without this, `state.ts`'s own `addCard` silently defaults every
+   * creature to a fake 1/1 — a real, previously-unnoticed gap this field
+   * closes (found while building Snow Villiers' own CDA: its real "*&#47;3"
+   * print means only POWER is dynamic, toughness stays a real printed 3 —
+   * which exposed that no card anywhere was tracking real base P/T at all).
+   */
+  readonly pt?: [power: number, toughness: number];
+  /** Real mana value (`Card.getCMC()`, see interfaces.ts's own citation) — omit unless a real card's own effect reads its OWN cmc (nothing yet needs another card's, e.g. a revealed library card's — see state.ts's own `RealCard.cmc` doc comment). */
+  readonly cmc?: number;
   /** Omit for a card with only its normal hand-cast mode. */
   readonly alternateCosts?: AlternateCost[];
   /**
@@ -331,6 +485,15 @@ export interface CardDefinition {
    * cast."
    */
   readonly activationCost?: string;
+  /**
+   * TWO OR MORE independent activated abilities on the same permanent
+   * (Qiqirn Merchant's own pair of unrelated {T} abilities) — the common
+   * single-ability case still just uses `activationCost`+`effects` above
+   * unchanged; only reach for this when a card genuinely has more than one.
+   * Selected the same way `triggers` is (by name — see `Scenario.ability`,
+   * functional-model/harness.ts), not by array position.
+   */
+  readonly abilities?: { name: string; cost: string; effects: Effect[] }[];
   /** A Vehicle's own real "Crew N" cost (Phantom Train has none printed — its own ability is a sacrifice-cost activated ability instead — but the field exists for the general case). Distinct from `activationCost`: crewing doesn't pay mana, it taps creatures with total power >= N. */
   readonly crewCost?: number;
   /**
@@ -345,13 +508,49 @@ export interface CardDefinition {
   /** Zero or more independent named triggered abilities — see `Trigger` above. */
   readonly triggers?: Trigger[];
   /**
-   * Continuous/keyword rules text (Kain's own "Jump — during your turn,
-   * NICKNAME has flying," a granted static buff, a bare keyword like
-   * Menace/Trample) — plain description, NEVER executed by `resolveCard()`
-   * or read by it. A static rule is a continuous fact about the game state,
-   * not a resolvable step; putting it in `effects` would misrepresent it as
-   * something that "happens" once. Still surfaced in `synergyTags()` as a
-   * `static:...` tag so it isn't invisible to a synergy search.
+   * Real Forge `K:` lines — a CONTROLLED, executable vocabulary (as opposed
+   * to `staticAbilities`' freeform text below), Forge's own real K:/S: split
+   * (see e.g. `adelbert_steiner.txt`'s own `K:Lifelink` vs. its separate
+   * `S:Mode$ Continuous ...` line). Recognized here doesn't mean
+   * MECHANICALLY ENFORCED everywhere real MTG would enforce it — only
+   * `Lifelink` (`state.dealDamage`) and `Indestructible` (`state.destroy`)
+   * actually change resolution behavior today, since this model has no real
+   * combat/attack-block step for the rest (Flying/Trample/Deathtouch/
+   * Menace/First Strike/Double Strike are fundamentally about blocking
+   * legality and damage-assignment order, neither of which exist here) —
+   * still real, structured facts (not text) even when inert, which is
+   * strictly better for synergy detection than the old undifferentiated
+   * `staticAbilities: string[]` blob these used to live in.
+   */
+  readonly keywords?: Keyword[];
+  /**
+   * A real layer-7a characteristic-defining P/T ability (613.3a) —
+   * recalculated LIVE from current board state on every read (see
+   * `state.ts`'s own `effectivePT`), never a fixed/timestamped delta. Two
+   * concrete real Forge shapes built so far:
+   *  - `addPerEquipmentControlled` — Forge's own `AddPower$/AddToughness$`
+   *    (Adelbert Steiner's "gets +X/+X for each Equipment you control").
+   *  - `setToCreaturesControlled` — Forge's own `SetPower$ X` (POWER ONLY —
+   *    Snow Villiers' own real printed "*&#47;3": only power is dynamic,
+   *    toughness is a real fixed printed 3, carried via `pt` instead). A genuinely
+   *    different Forge mechanism than the ADD shape above (SET, not ADD),
+   *    still layer 7a as long as the ability is printed on the card itself
+   *    and doesn't reference other effects (613.4b). A card whose real
+   *    script also has `SetToughness$` would need its own, differently-
+   *    named variant — not assumed for free just because this one exists.
+   * Anything else (a conditional CDA, a formula over a different
+   * subtype/count) stays `staticAbilities` text until a real card needs it.
+   */
+  readonly ptFormula?: { kind: 'addPerEquipmentControlled'; power: number; toughness: number } | { kind: 'setToCreaturesControlled' };
+  /**
+   * Continuous rules text that ISN'T a recognized `keywords` entry or
+   * `ptFormula` (Kain's own "Jump — during your turn, NICKNAME has flying,"
+   * a granted static buff, a conditional CDA) — plain description, NEVER
+   * executed by `resolveCard()` or read by it. A static rule is a continuous
+   * fact about the game state, not a resolvable step; putting it in
+   * `effects` would misrepresent it as something that "happens" once. Still
+   * surfaced in `synergyTags()` as a `static:...` tag so it isn't invisible
+   * to a synergy search.
    */
   readonly staticAbilities?: string[];
   /**
@@ -360,7 +559,7 @@ export interface CardDefinition {
    * schema machinery. A Saga's own chapter abilities (714.3a/b — REAL
    * turn-based actions, not triggered abilities, though modeled here as
    * named `triggers` the same way for simplicity — see
-   * cards/jecht-reluctant-guardian-braska-s-final-aeon/index.ts's own
+   * cards/jecht-reluctant-guardian-braska-s-final-aeon/definition.ts's own
    * comment on that simplification) are just this face's own `triggers`
    * array, named `chapterI`/`chapterII`/`chapterIII`.
    */
@@ -377,8 +576,12 @@ export interface CardDefinition {
  * engine over many data records" instead of "one method implementation per
  * card."
  */
-export function resolveCard(card: CardDefinition, ctx: EffectContext, actions: Actions = defaultActions, triggerName?: string): void {
-  const effects = triggerName ? (card.triggers?.find((t) => t.name === triggerName)?.effects ?? []) : (card.effects ?? []);
+export function resolveCard(card: CardDefinition, ctx: EffectContext, actions: Actions = defaultActions, triggerName?: string, abilityName?: string): void {
+  const effects = triggerName
+    ? (card.triggers?.find((t) => t.name === triggerName)?.effects ?? [])
+    : abilityName
+      ? (card.abilities?.find((a) => a.name === abilityName)?.effects ?? [])
+      : (card.effects ?? []);
   for (const effect of effects) applyEffect(effect, ctx, actions);
 }
 
@@ -388,8 +591,20 @@ function playersFor(owner: EffectOwner, ctx: EffectContext): Player[] {
   return [ctx.you, ...ctx.opponents];
 }
 
-function matchesValidType(card: Card, validType: 'creature' | 'any' | undefined): boolean {
-  return !validType || validType === 'any' || (validType === 'creature' && card.isCreature());
+/** Shared vocabulary `move`'s targeted branch, `putCounterTarget`, `tapTarget`, and `untapTarget` all filter their candidate pool by — 'land' and 'creature-or-artifact' (Forge's own `Sac<1/Creature.Other;Artifact.Other/...>`-style disjunctive shape, already precedented on `sacrifice`) added alongside the original three. */
+type BattlefieldValidType = 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any';
+
+function matchesValidType(card: Card, validType: BattlefieldValidType | undefined): boolean {
+  if (!validType || validType === 'any') return true;
+  if (validType === 'creature') return card.isCreature();
+  if (validType === 'artifact') return card.isArtifact();
+  if (validType === 'land') return card.isLand();
+  return card.isCreature() || card.isArtifact();
+}
+
+/** `players`' combined Battlefield pool, filtered by `matchesValidType` — the shared candidate-pool builder `putCounterTarget`/`tapTarget`/`untapTarget` all use (see `matchesValidType`'s own doc comment). */
+function battlefieldPool(players: Player[], validType: BattlefieldValidType | undefined): Card[] {
+  return players.flatMap((p) => p.getCardsIn('Battlefield')).filter((c) => matchesValidType(c, validType));
 }
 
 function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void {
@@ -408,7 +623,11 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     case 'pumpAll': {
       const power = resolve(effect.power, ctx);
       const toughness = resolve(effect.toughness, ctx);
-      for (const creature of ctx.you.getCreaturesInPlay()) actions.pump(creature, power, toughness);
+      for (const creature of ctx.you.getCreaturesInPlay()) {
+        if (effect.notSelf && creature.getId() === ctx.self.getId()) continue;
+        if (effect.subtype && !creature.hasSubtype(effect.subtype)) continue;
+        actions.pump(creature, power, toughness);
+      }
       return;
     }
     case 'loseLife': {
@@ -441,7 +660,10 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
           // (nothing here can invalidate a target between casting and
           // resolving), but would diverge for a card where something else
           // could remove a target in between.
-          const pool = player.getCardsIn(effect.from).filter((c) => matchesValidType(c, effect.validType));
+          const pool = player
+            .getCardsIn(effect.from)
+            .filter((c) => matchesValidType(c, effect.validType))
+            .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
           const targets: Card[] = [];
           for (let i = 0; i < qty; i++) {
             const remaining = pool.filter((c) => !targets.includes(c));
@@ -459,9 +681,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       actions.putCounter(ctx.self, effect.counterType, resolve(effect.amount, ctx));
       return;
     case 'putCounterTarget': {
-      const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))].filter((c) =>
-        effect.validType === 'any' ? true : effect.validType === 'creature' ? c.isCreature() : c.isLand()
-      );
+      const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType);
       const qty = resolve(effect.qty ?? 1, ctx);
       const chosen: Card[] = [];
       for (let i = 0; i < qty; i++) {
@@ -472,10 +692,25 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       for (const target of chosen) actions.putCounter(target, effect.counterType, resolve(effect.amount, ctx));
       return;
     }
+    case 'putCounterAll': {
+      const amount = resolve(effect.amount, ctx);
+      for (const creature of ctx.you.getCreaturesInPlay()) {
+        if (effect.notSelf && creature.getId() === ctx.self.getId()) continue;
+        if (effect.subtype && !creature.hasSubtype(effect.subtype)) continue;
+        actions.putCounter(creature, effect.counterType, amount);
+      }
+      return;
+    }
     case 'destroy': {
-      const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))].filter(
-        (c) => (effect.validType === 'creature' ? c.isCreature() : true) && (!effect.nonLand || !c.isLand())
-      );
+      const minPower = effect.minPower === undefined ? undefined : resolve(effect.minPower, ctx);
+      const pool = playersFor(effect.owner ?? 'each', ctx)
+        .flatMap((p) => p.getCardsIn('Battlefield'))
+        .filter(
+          (c) =>
+            (effect.validType === 'creature' ? c.isCreature() : effect.validType === 'land' ? c.isLand() : true) &&
+            (!effect.nonLand || !c.isLand()) &&
+            (minPower === undefined || c.getNetPower() >= minPower)
+        );
       const qty = resolve(effect.qty, ctx);
       const targets: Card[] = [];
       for (let i = 0; i < qty; i++) {
@@ -491,6 +726,41 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       for (const player of playersFor(effect.target, ctx)) actions.dealDamage(ctx.self, player, amount);
       return;
     }
+    case 'dealDamageTarget': {
+      const pool = playersFor(effect.owner ?? 'each', ctx).flatMap((p) => p.getCreaturesInPlay());
+      const target = actions.chooseTarget(pool);
+      if (target) actions.dealDamage(ctx.self, target, resolve(effect.amount, ctx));
+      return;
+    }
+    case 'dealDamageAnyTarget': {
+      // `chooseTarget` only ever operates over `Card[]` (see interfaces.ts's
+      // own doc comment — no heterogeneous Card|Player choice mechanism
+      // exists), so a real "any target" pick is approximated as: prefer a
+      // creature (deterministic first-candidate, same convention every
+      // other targeted effect here already uses), fall back to the first
+      // eligible player only when no creature qualifies. Not a real player
+      // CHOICE between the two — same acknowledged limitation as every
+      // other targeted effect in this file.
+      const amount = resolve(effect.amount, ctx);
+      const players = playersFor(effect.owner ?? 'each', ctx);
+      const creaturePool = players.flatMap((p) => p.getCreaturesInPlay());
+      if (creaturePool.length > 0) {
+        const target = actions.chooseTarget(creaturePool);
+        if (target) actions.dealDamage(ctx.self, target, amount);
+      } else if (players[0]) {
+        actions.dealDamage(ctx.self, players[0], amount);
+      }
+      return;
+    }
+    case 'fightTarget': {
+      const pool = playersFor(effect.owner ?? 'each', ctx).flatMap((p) => p.getCreaturesInPlay());
+      const target = actions.chooseTarget(pool);
+      if (target) {
+        actions.dealDamage(ctx.self, target, ctx.self.getNetPower());
+        actions.dealDamage(target, ctx.self, target.getNetPower());
+      }
+      return;
+    }
     case 'animate':
       actions.animate(ctx.self, effect.types);
       return;
@@ -498,9 +768,49 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       actions.surveil(ctx.you, resolve(effect.qty, ctx));
       return;
     case 'pumpTarget': {
-      const pool = [...ctx.you.getCreaturesInPlay(), ...ctx.opponents.flatMap((p) => p.getCreaturesInPlay())];
+      const pool = playersFor(effect.owner ?? 'each', ctx)
+        .flatMap((p) => p.getCreaturesInPlay())
+        .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
       const target = actions.chooseTarget(pool);
       if (target) actions.pump(target, resolve(effect.power, ctx), resolve(effect.toughness, ctx));
+      return;
+    }
+    case 'pumpSelf':
+      actions.pump(ctx.self, resolve(effect.power, ctx), resolve(effect.toughness, ctx));
+      return;
+    case 'grantKeywordTarget': {
+      const pool = playersFor(effect.owner ?? 'each', ctx)
+        .flatMap((p) => p.getCreaturesInPlay())
+        .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
+      const target = actions.chooseTarget(pool);
+      if (target) actions.grantKeyword(target, effect.keyword);
+      return;
+    }
+    case 'grantKeywordAll': {
+      for (const creature of ctx.you.getCreaturesInPlay()) {
+        if (effect.notSelf && creature.getId() === ctx.self.getId()) continue;
+        if (effect.subtype && !creature.hasSubtype(effect.subtype)) continue;
+        actions.grantKeyword(creature, effect.keyword);
+      }
+      return;
+    }
+    case 'grantKeywordSelf':
+      actions.grantKeyword(ctx.self, effect.keyword);
+      return;
+    case 'tapTarget': {
+      const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType).filter((c) => !effect.excludeEnchantment || !c.isEnchantment());
+      const target = actions.chooseTarget(pool);
+      if (target) actions.tap(target);
+      return;
+    }
+    case 'untapTarget': {
+      const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType);
+      const target = actions.chooseTarget(pool);
+      if (target) actions.untap(target);
+      return;
+    }
+    case 'dig': {
+      actions.dig(ctx.you, resolve(effect.qty, ctx), resolve(effect.take, ctx), effect.validType);
       return;
     }
     case 'modal': {
@@ -541,7 +851,7 @@ export function synergyTags(card: CardDefinition): string[] {
         tags.push('draw');
         break;
       case 'pumpAll':
-        tags.push(`anthem:${effect.predicate}`);
+        tags.push(`anthem:${effect.predicate}${effect.subtype ? `:${effect.subtype}` : ''}`);
         break;
       case 'loseLife':
         tags.push('lifeloss');
@@ -561,11 +871,23 @@ export function synergyTags(card: CardDefinition): string[] {
       case 'putCounterTarget':
         tags.push(`counters-target:${effect.counterType}:${effect.validType}`);
         break;
+      case 'putCounterAll':
+        tags.push(`counters-all:${effect.counterType}${effect.subtype ? `:${effect.subtype}` : ''}`);
+        break;
       case 'destroy':
         tags.push(`removal:destroy:${effect.validType}`);
         break;
       case 'dealDamage':
         tags.push('damage');
+        break;
+      case 'dealDamageTarget':
+        tags.push('damage');
+        break;
+      case 'dealDamageAnyTarget':
+        tags.push('damage');
+        break;
+      case 'fightTarget':
+        tags.push('fight');
         break;
       case 'animate':
         tags.push('animate');
@@ -575,6 +897,27 @@ export function synergyTags(card: CardDefinition): string[] {
         break;
       case 'pumpTarget':
         tags.push('removal-or-pump:target-creature');
+        break;
+      case 'pumpSelf':
+        tags.push('pump:self');
+        break;
+      case 'grantKeywordTarget':
+        tags.push(`grant:keyword:${effect.keyword}`);
+        break;
+      case 'grantKeywordAll':
+        tags.push(`grant:keyword:${effect.keyword}${effect.subtype ? `:${effect.subtype}` : ''}`);
+        break;
+      case 'grantKeywordSelf':
+        tags.push(`grant:keyword:${effect.keyword}`);
+        break;
+      case 'tapTarget':
+        tags.push('tap:target-creature');
+        break;
+      case 'untapTarget':
+        tags.push('untap:target-creature');
+        break;
+      case 'dig':
+        tags.push(`dig:${effect.validType ?? 'any'}`);
         break;
       case 'modal':
         for (const mode of effect.modes) for (const inner of mode.effects) tagEffect(inner);
@@ -590,7 +933,11 @@ export function synergyTags(card: CardDefinition): string[] {
   }
   for (const effect of card.effects ?? []) tagEffect(effect);
   for (const trigger of card.triggers ?? []) for (const effect of trigger.effects) tagEffect(effect);
+  for (const ability of card.abilities ?? []) for (const effect of ability.effects) tagEffect(effect);
   for (const rule of card.staticAbilities ?? []) tags.push(`static:${rule}`);
+  for (const keyword of card.keywords ?? []) tags.push(`keyword:${keyword}`);
+  if (card.ptFormula?.kind === 'addPerEquipmentControlled') tags.push('static:Gets +X/+X for each Equipment you control.');
+  if (card.ptFormula?.kind === 'setToCreaturesControlled') tags.push('static:Power is equal to the number of creatures you control.');
   if (card.alternateCosts?.some((c) => c.from === 'graveyard')) tags.push('graveyard-recursion');
   if (card.backFace) tags.push(...synergyTags(card.backFace).map((t) => `backface:${t}`));
   return tags;

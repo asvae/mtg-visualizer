@@ -1,0 +1,102 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Elixir",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Elixir",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Elixir"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "activated ({5}, {T}, Exile this artifact)",
+      "result": "2 nonland cards shuffled from graveyard into library; gains 2 life"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elixir",
+        "instanceId": 1,
+        "cost": "{5}, {T}, Exile this artifact"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-1",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Library"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-1",
+        "zone": "Library"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}, {T}, Exile this artifact)",
+      "result": "no cards in graveyard, nothing shuffled, no life gained"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elixir",
+        "instanceId": 1,
+        "cost": "{5}, {T}, Exile this artifact"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  }
+]

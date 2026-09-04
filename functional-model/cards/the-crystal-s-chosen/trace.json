@@ -1,0 +1,74 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "cast from hand",
+      "result": "creates four 1/1 Hero tokens, then puts a +1/+1 counter on each creature you control (including the new tokens)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "The Crystal's Chosen",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{5}{W}{W}"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 4,
+        "tapped": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 6
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-1",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "Hero",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "Hero",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "Hero",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "Hero",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "move",
+        "card": "The Crystal's Chosen",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

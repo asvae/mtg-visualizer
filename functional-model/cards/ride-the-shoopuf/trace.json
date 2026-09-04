@@ -1,0 +1,106 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "puts a +1/+1 counter on the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ride the Shoopuf",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Ride the Shoopuf",
+        "result": false
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "no legal creature target you control, no counter placed"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ride the Shoopuf",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Ride the Shoopuf",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}{G}{G})",
+      "result": "becomes a 7/7 Beast creature in addition to its other types (types animated; power/toughness set from a default 1/1 base to 7/7 via a computed pump delta)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ride the Shoopuf",
+        "instanceId": 1,
+        "cost": "{5}{G}{G}"
+      },
+      {
+        "fn": "animate",
+        "target": "Ride the Shoopuf",
+        "types": [
+          "Creature",
+          "Beast"
+        ]
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Ride the Shoopuf",
+        "result": 1
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "Ride the Shoopuf",
+        "result": 1
+      },
+      {
+        "fn": "pump",
+        "target": "Ride the Shoopuf",
+        "power": 6,
+        "toughness": 6
+      }
+    ]
+  }
+]

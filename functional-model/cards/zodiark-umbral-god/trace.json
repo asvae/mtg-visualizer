@@ -1,0 +1,172 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 4 creature(s); opp0: 4 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "each player sacrifices 2 of their own creatures (half of 4 non-God creatures each, rounded down) — Zodiark itself excluded from both the count and the sacrifice pool"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zodiark, Umbral God",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 5
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-2",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-3",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 2,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-2",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-3",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 2,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "too few non-God creatures on either side to halve into a whole one, nobody sacrifices"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zodiark, Umbral God",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 0,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 0,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCreatureSacrificed\" trigger fires",
+      "result": "puts a +1/+1 counter on Zodiark"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zodiark, Umbral God",
+        "instanceId": 1,
+        "name": "onCreatureSacrificed"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Zodiark, Umbral God",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Zodiark, Umbral God",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{B}{B}{B}{B}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Zodiark, Umbral God",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Zodiark, Umbral God",
+        "player": "you"
+      }
+    ]
+  }
+]

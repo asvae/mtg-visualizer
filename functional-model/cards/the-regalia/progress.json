@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onAttacks (unbounded dig-until-land) is an honest no-op custom effect with zero logged actions — entirely unmodeled"
+  ]
+}

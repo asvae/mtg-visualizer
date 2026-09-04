@@ -1,0 +1,59 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({4}{R}{R}, {T})",
+      "result": "creates a token copy of the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Fire Crystal",
+        "instanceId": 1,
+        "cost": "{4}{R}{R}, {T}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 1
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-creature-token-0",
+        "result": 1
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "you-creature-token-0",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{R}{R}, {T})",
+      "result": "no creature to copy, no token created"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Fire Crystal",
+        "instanceId": 1,
+        "cost": "{4}{R}{R}, {T}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      }
+    ]
+  }
+]

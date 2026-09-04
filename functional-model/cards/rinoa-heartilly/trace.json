@@ -1,0 +1,87 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a legendary 1/1 green and white Dog creature token named Angelo"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rinoa Heartilly",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Angelo",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "the other creature you control gets +2/+2 until end of turn (2 creatures you control)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rinoa Heartilly",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Rinoa Heartilly",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Rinoa Heartilly",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Rinoa Heartilly",
+        "player": "you"
+      }
+    ]
+  }
+]

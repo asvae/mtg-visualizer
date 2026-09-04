@@ -1,0 +1,116 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 artifact(s)",
+      "action": "activated ({2}, {T})",
+      "result": "gives the opponent control of the artifact, draws a card"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Stiltzkin, Moogle Merchant",
+        "instanceId": 1,
+        "cost": "{2}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "gainControl",
+        "controller": "opp0",
+        "target": "you-artifact-0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({2}, {T})",
+      "result": "no other permanent to give away, no-op"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Stiltzkin, Moogle Merchant",
+        "instanceId": 1,
+        "cost": "{2}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({2}, {T}), deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Stiltzkin, Moogle Merchant",
+        "instanceId": 1,
+        "cost": "{2}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Stiltzkin, Moogle Merchant",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({2}, {T}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Stiltzkin, Moogle Merchant",
+        "instanceId": 1,
+        "cost": "{2}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "legendRule",
+        "card": "Stiltzkin, Moogle Merchant",
+        "player": "you"
+      }
+    ]
+  }
+]

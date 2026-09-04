@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "cast from hand",
+      "result": "no land cards available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap), so nothing enters the battlefield"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Reach the Horizon",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 2,
+        "validType": "land"
+      },
+      {
+        "fn": "move",
+        "card": "Reach the Horizon",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

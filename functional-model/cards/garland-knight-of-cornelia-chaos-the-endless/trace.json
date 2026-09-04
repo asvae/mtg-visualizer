@@ -1,0 +1,85 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCast\" trigger fires",
+      "result": "surveils 1"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Garland, Knight of Cornelia",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"returnTransformed\" activated",
+      "result": "no mechanically-executable effect (see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Garland, Knight of Cornelia",
+        "instanceId": 1,
+        "cost": "{3}{B}{B}{R}{R}, Activate only as a sorcery",
+        "ability": "returnTransformed"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDies\" trigger fires, back face",
+      "result": "put on the bottom of its owner's library"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Chaos, the Endless",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Chaos, the Endless",
+        "zone": "Library"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Garland, Knight of Cornelia",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{B}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Garland, Knight of Cornelia",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Garland, Knight of Cornelia",
+        "player": "you"
+      }
+    ]
+  }
+]

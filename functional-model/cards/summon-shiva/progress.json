@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "chapterIII ('Diamond Dust') is a documented genuine gap — Card.isTapped() isn't exposed through the Card interface at all, so the effect is a no-op"
+  ]
+}

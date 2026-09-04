@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "never logs a plain 'enters' line in ANY of its 4 scenarios — no Battlefield produce fact possible; also its Summon ability's actual success path (returning a Saga with FINALITY+haste) is never exercised, only the 'no legal target' branch — two major real branches entirely untested"
+  ]
+}

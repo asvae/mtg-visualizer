@@ -1,0 +1,20 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_treasure_sac"
+      },
+      "ease": 2,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "event": "dies",
+      "target": "self",
+      "ease": 3
+    }
+  ]
+}

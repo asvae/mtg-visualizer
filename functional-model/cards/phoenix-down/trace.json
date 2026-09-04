@@ -1,0 +1,156 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "activated ({1}{W}, {T}, Exile this artifact), mode 0 chosen",
+      "result": "returns a creature card from graveyard to the battlefield tapped"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Phoenix Down",
+        "instanceId": 1,
+        "cost": "{1}{W}, {T}, Exile this artifact"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "tap",
+        "target": "you-gy-creature-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({1}{W}, {T}, Exile this artifact), mode 0 chosen",
+      "result": "no creature card in graveyard, no-op"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Phoenix Down",
+        "instanceId": 1,
+        "cost": "{1}{W}, {T}, Exile this artifact"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 Zombie creature(s)",
+      "action": "activated ({1}{W}, {T}, Exile this artifact), mode 1 chosen",
+      "result": "exiles the Zombie"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Phoenix Down",
+        "instanceId": 1,
+        "cost": "{1}{W}, {T}, Exile this artifact"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Skeleton",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Spirit",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Zombie",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Exile"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "activated ({1}{W}, {T}, Exile this artifact), mode 1 chosen",
+      "result": "no legal Skeleton/Spirit/Zombie target, no-op"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Phoenix Down",
+        "instanceId": 1,
+        "cost": "{1}{W}, {T}, Exile this artifact"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Skeleton",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Spirit",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Zombie",
+        "result": false
+      }
+    ]
+  }
+]

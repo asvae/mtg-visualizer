@@ -1,0 +1,29 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 3,
+      "strength": 1
+    },
+    {
+      "event": "dies",
+      "target": "self",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Exile",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

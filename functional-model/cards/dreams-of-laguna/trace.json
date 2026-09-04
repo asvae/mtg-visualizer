@@ -1,0 +1,68 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "surveils 1, then draws a card"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Dreams of Laguna",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Dreams of Laguna",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from graveyard",
+      "result": "cast via Flashback from the graveyard; surveils 1, then draws a card; exiled afterward instead of going to the graveyard"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Dreams of Laguna",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{3}{U}"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Dreams of Laguna",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

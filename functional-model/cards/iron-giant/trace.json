@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creature enters, no other effect (Vigilance/Reach/Trample are recognized-but-inert structured facts — see card.ts's own Keyword doc comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Iron Giant",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{7}"
+      },
+      {
+        "fn": "enters",
+        "card": "Iron Giant",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

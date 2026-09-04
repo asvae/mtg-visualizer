@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onExpensiveNoncreatureSpellCast trigger's own condition has no want — no vocabulary exists for a generic 'expensive spell cast' event"
+  ]
+}

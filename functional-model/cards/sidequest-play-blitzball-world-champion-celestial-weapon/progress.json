@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "transform, self-transform note; pump/equip on both faces are parked, no facts"
+  ]
+}

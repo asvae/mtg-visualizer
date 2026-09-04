@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onCastNoncreatureSpell4Mana trigger explicitly undocumented/untracked per definition.ts's own comment; ALSO never logs a plain 'enters' line in any of its 3 scenarios — no Battlefield produce fact could be declared at all"
+  ]
+}

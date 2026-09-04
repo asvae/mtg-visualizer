@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "empty",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "only effect is surveil (zero fact vocabulary) and no scenario in trace.json ever demonstrates it entering the battlefield at all — genuinely nothing declarable currently"
+  ]
+}

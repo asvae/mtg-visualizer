@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "deals 1 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sabotender",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Sabotender",
+        "target": "opp0",
+        "amount": 1
+      }
+    ]
+  }
+]

@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "ETB, mode 0 (sac creature token)",
+    "scenario": {
+      "setup": "you: 2 creature(s), 1 nontoken; opp0: 2 creature(s), 1 nontoken",
+      "action": "\"onEnter\" trigger fires, mode 0 chosen",
+      "result": "each player sacrifices a creature token"
+    },
     "log": [
       {
         "fn": "trigger",
@@ -9,12 +13,22 @@
         "name": "onEnter"
       },
       {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
         "fn": "sacrifice",
         "player": "you",
         "qty": 1,
         "validType": "creature",
         "notSelf": false,
         "tokenFilter": "token"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
       },
       {
         "fn": "sacrifice",
@@ -27,7 +41,11 @@
     ]
   },
   {
-    "scenario": "ETB, mode 1 (sac nontoken creature)",
+    "scenario": {
+      "setup": "you: 2 creature(s), 1 nontoken; opp0: 2 creature(s), 1 nontoken",
+      "action": "\"onEnter\" trigger fires, mode 1 chosen",
+      "result": "each player sacrifices a nontoken creature"
+    },
     "log": [
       {
         "fn": "trigger",
@@ -36,12 +54,27 @@
         "name": "onEnter"
       },
       {
+        "fn": "read:isCreature",
+        "target": "you-creature-nontoken-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Gaius van Baelsar",
+        "result": true
+      },
+      {
         "fn": "sacrifice",
         "player": "you",
         "qty": 1,
         "validType": "creature",
         "notSelf": false,
         "tokenFilter": "nontoken"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-nontoken-0",
+        "result": true
       },
       {
         "fn": "sacrifice",
@@ -54,13 +87,27 @@
     ]
   },
   {
-    "scenario": "ETB, mode 2 (sac enchantment)",
+    "scenario": {
+      "setup": "you: 1 enchantment(s); opp0: 1 enchantment(s)",
+      "action": "\"onEnter\" trigger fires, mode 2 chosen",
+      "result": "each player sacrifices an enchantment"
+    },
     "log": [
       {
         "fn": "trigger",
         "card": "Gaius van Baelsar",
         "instanceId": 1,
         "name": "onEnter"
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-enchantment-0",
+        "result": true
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Gaius van Baelsar",
+        "result": false
       },
       {
         "fn": "sacrifice",
@@ -69,6 +116,11 @@
         "validType": "enchantment",
         "notSelf": false,
         "tokenFilter": null
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "opp0-enchantment-0",
+        "result": true
       },
       {
         "fn": "sacrifice",

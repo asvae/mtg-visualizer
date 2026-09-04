@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Sephiroth, Fabled SOLDIER\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "transform has no produce fact; also onCreatureDies/onAnyCreatureDies triggers not in TRIGGER_EVENT_MAP, want only verified via loose scenario-diff fallback, not real trigger evidence"
+  ]
+}

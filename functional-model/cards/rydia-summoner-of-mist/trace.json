@@ -1,0 +1,105 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "discards a card, then draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rydia, Summoner of Mist",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "no card in hand to discard; still draws a card (documentary-only \"if you do\" gate)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rydia, Summoner of Mist",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "activated ({X}, {T} (activate only as a sorcery)), X=2",
+      "result": "no legal target (no Saga card of mana value X in the graveyard — this model has no way to seed a subtype/cmc-matching graveyard card), nothing returned"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Rydia, Summoner of Mist",
+        "instanceId": 1,
+        "cost": "{X}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-gy-creature-0",
+        "subtype": "Saga",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({X}, {T} (activate only as a sorcery)), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Rydia, Summoner of Mist",
+        "instanceId": 1,
+        "cost": "{X}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "legendRule",
+        "card": "Rydia, Summoner of Mist",
+        "player": "you"
+      }
+    ]
+  }
+]

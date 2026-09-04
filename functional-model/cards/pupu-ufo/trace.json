@@ -1,0 +1,47 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand",
+      "action": "\"landDrop\" activated",
+      "result": "no land-typed hand filler exists in this model to actually match (see definition.ts), so nothing is put onto the battlefield"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "PuPu UFO",
+        "instanceId": 1,
+        "cost": "{T}",
+        "ability": "landDrop"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-hand-0",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Hand",
+        "to": "Battlefield",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"becomePowerOfTowns\" activated",
+      "result": "this creature's base power becomes equal to the number of Towns you control, until end of turn (not modeled — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "PuPu UFO",
+        "instanceId": 1,
+        "cost": "{3}",
+        "ability": "becomePowerOfTowns"
+      }
+    ]
+  }
+]

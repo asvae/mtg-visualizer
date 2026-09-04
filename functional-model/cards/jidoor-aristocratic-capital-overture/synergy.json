@@ -1,0 +1,27 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "ease": 5
+    },
+    {
+      "zone": "Library",
+      "controller": "opp",
+      "ease": 5
+    }
+  ]
+}

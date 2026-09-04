@@ -1,0 +1,76 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCastNoncreatureSpell4Mana\" trigger fires",
+      "result": "becomes an artifact creature (triggered by casting a 4+-mana noncreature spell)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "The Prima Vista",
+        "instanceId": 1,
+        "name": "onCastNoncreatureSpell4Mana"
+      },
+      {
+        "fn": "animate",
+        "target": "The Prima Vista",
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated (Crew 2 (tap creatures with total power 2 or more))",
+      "result": "becomes an artifact creature (crewed)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Prima Vista",
+        "instanceId": 1,
+        "cost": "Crew 2 (tap creatures with total power 2 or more)"
+      },
+      {
+        "fn": "animate",
+        "target": "The Prima Vista",
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated (Crew 2 (tap creatures with total power 2 or more)), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Prima Vista",
+        "instanceId": 1,
+        "cost": "Crew 2 (tap creatures with total power 2 or more)"
+      },
+      {
+        "fn": "animate",
+        "target": "The Prima Vista",
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Prima Vista",
+        "player": "you"
+      }
+    ]
+  }
+]

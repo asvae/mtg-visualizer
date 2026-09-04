@@ -1,0 +1,131 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "draws a card, then discards a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Emet-Selch, Unsundered",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "draws a card, then discards a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Emet-Selch, Unsundered",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 14 creature card(s) in graveyard",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "transforms into Hades, Sorcerer of Eld (14+ cards in the graveyard)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Emet-Selch, Unsundered",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 14,
+        "creatureCount": 14
+      },
+      {
+        "fn": "moveTo",
+        "target": "Emet-Selch, Unsundered",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Emet-Selch, Unsundered",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 5 creature card(s) in graveyard",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "stays Emet-Selch, Unsundered (fewer than 14 cards in the graveyard)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Emet-Selch, Unsundered",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 5,
+        "creatureCount": 5
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Emet-Selch, Unsundered",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Emet-Selch, Unsundered",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Emet-Selch, Unsundered",
+        "player": "you"
+      }
+    ]
+  }
+]

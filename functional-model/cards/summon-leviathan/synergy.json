@@ -1,0 +1,38 @@
+{
+  "produces": [
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "zone": "Hand",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

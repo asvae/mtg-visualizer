@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "no scenario shows it ever entering the battlefield — produces:[] despite being a real permanent, pure scenario-coverage gap"
+  ]
+}

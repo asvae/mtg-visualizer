@@ -1,0 +1,91 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "draws 2 cards; puts a +1/+1 counter on the one target creature you control"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Combat Tutorial",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "move",
+        "card": "Combat Tutorial",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "draws 2 cards; no legal creature to target, no counter placed"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Combat Tutorial",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Combat Tutorial",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

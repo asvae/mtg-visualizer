@@ -1,0 +1,118 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "puts 1 +1/+1 counter on the other creature (Jenova's power) and it becomes a Mutant"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Jenova, Ancient Calamity",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Jenova, Ancient Calamity",
+        "result": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "animate",
+        "target": "you-creature-token-0",
+        "types": [
+          "Mutant"
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "no other creature present, nothing happens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Jenova, Ancient Calamity",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 4 card(s) in library",
+      "action": "\"onMutantDies\" trigger fires",
+      "result": "draws 4 cards (the dying Mutant was power 4)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Jenova, Ancient Calamity",
+        "instanceId": 1,
+        "name": "onMutantDies"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Jenova, Ancient Calamity",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Jenova, Ancient Calamity",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Jenova, Ancient Calamity",
+        "player": "you"
+      }
+    ]
+  }
+]

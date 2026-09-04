@@ -1,0 +1,96 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 Hero token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Astrologian's Planisphere",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Astrologian's Planisphere",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEquippedCastsNoncreatureSpell\" trigger fires",
+      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Astrologian's Planisphere",
+        "instanceId": 1,
+        "name": "onEquippedCastsNoncreatureSpell"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Astrologian's Planisphere",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEquippedDrawsThirdCardThisTurn\" trigger fires",
+      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Astrologian's Planisphere",
+        "instanceId": 1,
+        "name": "onEquippedDrawsThirdCardThisTurn"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Astrologian's Planisphere",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({2})",
+      "result": "attaches to a creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Astrologian's Planisphere",
+        "instanceId": 1,
+        "cost": "{2}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Astrologian's Planisphere",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

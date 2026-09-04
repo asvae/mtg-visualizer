@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, no resolvable effect — the conditional ETB-tap and both mana abilities are all static text (see definition.ts for the turn-count gap)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Starting Town",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Starting Town",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

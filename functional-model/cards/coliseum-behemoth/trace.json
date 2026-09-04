@@ -1,0 +1,118 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 artifact(s)",
+      "action": "\"onEnter\" trigger fires, mode 0 chosen",
+      "result": "mode 0: destroys the target artifact"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Coliseum Behemoth",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Coliseum Behemoth",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Coliseum Behemoth",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-artifact-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires, mode 0 chosen",
+      "result": "mode 0: no artifact or enchantment to destroy, no effect"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Coliseum Behemoth",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Coliseum Behemoth",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Coliseum Behemoth",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "opp0-creature-token-0",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onEnter\" trigger fires, mode 1 chosen",
+      "result": "mode 1: draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Coliseum Behemoth",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

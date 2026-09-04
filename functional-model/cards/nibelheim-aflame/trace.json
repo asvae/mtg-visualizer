@@ -1,0 +1,141 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 3); opp0: 2 creature(s)",
+      "action": "cast from hand",
+      "result": "the chosen creature (power 3) deals 3 damage to each of the 2 other creatures; not cast from graveyard, no discard/draw"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Nibelheim Aflame",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-0",
+        "amount": 3
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-1",
+        "amount": 3
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 0
+      },
+      {
+        "fn": "move",
+        "card": "Nibelheim Aflame",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 2); you: 3 card(s) in hand; opp0: 1 creature(s)",
+      "action": "cast from graveyard",
+      "result": "cast from the graveyard via Flashback: the chosen creature still deals damage equal to its power, then discards the whole hand and draws four cards"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Nibelheim Aflame",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{5}{R}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-0",
+        "amount": 2
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Hand",
+        "count": 3,
+        "creatureCount": 0
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 3
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Nibelheim Aflame",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

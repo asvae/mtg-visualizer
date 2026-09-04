@@ -1,0 +1,34 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "looks at the top 3 library cards, puts 1 into hand (validType is over-broad \"any\" here — see definition.ts comment), rest to the bottom"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Commune with Beavers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 3,
+        "take": 1,
+        "validType": "any",
+        "found": 0
+      },
+      {
+        "fn": "move",
+        "card": "Commune with Beavers",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

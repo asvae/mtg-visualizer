@@ -1,0 +1,78 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
+      "result": "triggers Stagger (no replacement-effect machinery in this model — see definition.ts, flagged as a gap)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Lightning, Army of One",
+        "instanceId": 1,
+        "name": "onDealsCombatDamageToPlayer"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Lightning, Army of One",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Lightning, Army of One",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Lightning, Army of One",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Lightning, Army of One",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Lightning, Army of One",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Lightning, Army of One",
+        "player": "you"
+      }
+    ]
+  }
+]

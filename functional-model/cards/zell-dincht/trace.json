@@ -1,0 +1,68 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 land(s)",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "returns a land you control to your hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zell Dincht",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-1",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Zell Dincht",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Battlefield",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "no land to return, nothing happens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zell Dincht",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Zell Dincht",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Battlefield",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  }
+]

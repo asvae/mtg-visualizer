@@ -1,0 +1,35 @@
+{
+  "produces": [
+    {
+      "event": "damage",
+      "controller": "you",
+      "ease": 5,
+      "strength": 5,
+      "sourceText": "I — Aerial Blast — This creature deals 4 damage to target tapped creature an opponent controls."
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5,
+      "sourceText": "I — Aerial Blast — ...target tapped creature an opponent controls."
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "II, III — Slipstream — Another target creature you control gets +1/+0 and gains flying until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onScry/onSurveil are new want vocabulary with no producer anywhere in the pool yet (nothing currently satisfies these wants) — verified only via the loose scenario-diff fallback originally; confirm real evidence post any TRIGGER_EVENT_MAP update"
+  ]
+}

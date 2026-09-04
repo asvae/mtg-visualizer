@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield; Flying/Vigilance are real but not creature-relevant until crewed (crewing itself has no resolvable behavior in this model)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cargo Ship",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cargo Ship",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

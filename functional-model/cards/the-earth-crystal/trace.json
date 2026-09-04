@@ -1,0 +1,121 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({4}{G}{G}, {T})",
+      "result": "puts a +1/+1 counter on each of the 2 target creatures you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Earth Crystal",
+        "instanceId": 1,
+        "cost": "{4}{G}{G}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "The Earth Crystal",
+        "result": false
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-1",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({4}{G}{G}, {T})",
+      "result": "only one creature you control: puts a +1/+1 counter on it"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Earth Crystal",
+        "instanceId": 1,
+        "cost": "{4}{G}{G}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "The Earth Crystal",
+        "result": false
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{G}{G}, {T}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Earth Crystal",
+        "instanceId": 1,
+        "cost": "{4}{G}{G}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "The Earth Crystal",
+        "result": false
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Earth Crystal",
+        "player": "you"
+      }
+    ]
+  }
+]

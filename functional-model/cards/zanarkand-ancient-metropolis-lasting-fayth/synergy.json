@@ -1,0 +1,38 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_1_1_hero"
+      },
+      "ease": 1,
+      "strength": 1
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "ease": 5,
+      "strength": 5
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 3,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

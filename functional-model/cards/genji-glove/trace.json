@@ -1,0 +1,47 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({3})",
+      "result": "attaches to the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Genji Glove",
+        "instanceId": 1,
+        "cost": "{3}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Genji Glove",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEquippedAttacksFirstCombat\" trigger fires",
+      "result": "self has no equipped creature yet (this scenario's own setup doesn't attach it first, so nothing is untapped); the additional-combat-phase clause is not modeled"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Genji Glove",
+        "instanceId": 1,
+        "name": "onEquippedAttacksFirstCombat"
+      },
+      {
+        "fn": "read:getAttachedTo",
+        "target": "Genji Glove",
+        "result": null
+      }
+    ]
+  }
+]

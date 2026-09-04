@@ -1,0 +1,80 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "cast from hand",
+      "result": "returns a creature card from your graveyard to the battlefield with two +1/+1 counters on it"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Evil Reawakened",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-gy-creature-0",
+        "counterType": "+1/+1",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Evil Reawakened",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "no legal target — your graveyard has no creature card, nothing returned"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Evil Reawakened",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Evil Reawakened",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

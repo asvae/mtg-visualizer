@@ -1,0 +1,67 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 Equipment",
+      "action": "cast from hand",
+      "result": "gains control of the opponent's Equipment until end of turn and attaches it to your creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Stolen Uniform",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{U}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "gainControl",
+        "controller": "you",
+        "target": "opp0-equipment-0"
+      },
+      {
+        "fn": "equip",
+        "equipment": "opp0-equipment-0",
+        "target": "you-creature-token-0"
+      },
+      {
+        "fn": "move",
+        "card": "Stolen Uniform",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

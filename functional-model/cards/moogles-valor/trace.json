@@ -1,0 +1,67 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 creature(s)",
+      "action": "cast from hand",
+      "result": "creates 3 Moogle tokens (indestructible grant not mechanically enforced)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Moogles' Valor",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Moogle",
+        "qty": 3,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Moogles' Valor",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creates no tokens — no creatures to count"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Moogles' Valor",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "move",
+        "card": "Moogles' Valor",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

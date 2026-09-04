@@ -1,0 +1,55 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"cantrip\" activated",
+      "result": "draws a card, then discards a card (the front of hand — this model has no real player choice for which card)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Qiqirn Merchant",
+        "instanceId": 1,
+        "cost": "{1}, {T}",
+        "ability": "cantrip"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 card(s) in library",
+      "action": "\"bigDraw\" activated",
+      "result": "draws 3 cards"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Qiqirn Merchant",
+        "instanceId": 1,
+        "cost": "{7}, {T}, Sacrifice Qiqirn Merchant (costs {1} less for each Town you control)",
+        "ability": "bigDraw"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

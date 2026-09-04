@@ -1,0 +1,73 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Thief's Knife",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Thief's Knife",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({4})",
+      "result": "attaches itself to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Thief's Knife",
+        "instanceId": 1,
+        "cost": "{4}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Thief's Knife",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEquippedDealsDamage\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Thief's Knife",
+        "instanceId": 1,
+        "name": "onEquippedDealsDamage"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

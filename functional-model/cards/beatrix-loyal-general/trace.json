@@ -1,0 +1,162 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); you: 2 Equipment",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "attaches both Equipment to the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Beatrix, Loyal General",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 4,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-equipment-0",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-equipment-1",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-1",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Beatrix, Loyal General",
+        "result": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-equipment-0",
+        "target": "you-creature-token-0"
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-equipment-1",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Equipment",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "no creature to attach to, nothing happens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Beatrix, Loyal General",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-equipment-0",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-equipment-1",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-1",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Beatrix, Loyal General",
+        "result": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-equipment-0",
+        "target": "Beatrix, Loyal General"
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-equipment-1",
+        "target": "Beatrix, Loyal General"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Beatrix, Loyal General",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{W}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Beatrix, Loyal General",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Beatrix, Loyal General",
+        "player": "you"
+      }
+    ]
+  }
+]

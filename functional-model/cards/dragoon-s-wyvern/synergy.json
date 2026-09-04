@@ -1,0 +1,15 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_1_1_hero"
+      },
+      "ease": 1,
+      "strength": 1,
+      "sourceText": "When this creature enters, create a 1/1 colorless Hero creature token."
+    }
+  ],
+  "wants": []
+}

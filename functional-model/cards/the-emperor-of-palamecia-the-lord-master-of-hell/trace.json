@@ -1,0 +1,136 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCast\" trigger fires",
+      "result": "less than four mana spent: no effect"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "The Emperor of Palamecia",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "self already has 2 +1/+1 counter(s)",
+      "action": "\"onNoncreatureSpellCast\" trigger fires",
+      "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 3, so it transforms into The Lord Master of Hell)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "The Emperor of Palamecia",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast"
+      },
+      {
+        "fn": "putCounter",
+        "target": "The Emperor of Palamecia",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:getCounters",
+        "target": "The Emperor of Palamecia",
+        "counterType": "+1/+1",
+        "result": 3
+      },
+      {
+        "fn": "moveTo",
+        "target": "The Emperor of Palamecia",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "The Emperor of Palamecia",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCast\" trigger fires",
+      "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 1, not enough to transform)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "The Emperor of Palamecia",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast"
+      },
+      {
+        "fn": "putCounter",
+        "target": "The Emperor of Palamecia",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:getCounters",
+        "target": "The Emperor of Palamecia",
+        "counterType": "+1/+1",
+        "result": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttacks\" trigger fires, back face",
+      "result": "no noncreature, nonland cards in the graveyard: deals 0 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "The Lord Master of Hell",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "dealDamage",
+        "source": "The Lord Master of Hell",
+        "target": "opp0",
+        "amount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "The Emperor of Palamecia",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{U}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "The Emperor of Palamecia",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Emperor of Palamecia",
+        "player": "you"
+      }
+    ]
+  }
+]

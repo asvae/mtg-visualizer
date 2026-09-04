@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "cast from hand",
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creates two 2/2 Horror tokens, tapped"
+    },
     "log": [
       {
         "fn": "cast",
@@ -21,12 +25,17 @@
         "card": "The Final Days",
         "instanceId": 1,
         "from": "stack",
-        "to": "graveyard"
+        "to": "Graveyard",
+        "cardType": "Sorcery"
       }
     ]
   },
   {
-    "scenario": "flashback, 3 creature cards in graveyard",
+    "scenario": {
+      "setup": "you: 3 creature card(s) in graveyard",
+      "action": "cast from graveyard",
+      "result": "creates three 2/2 Horror tokens, tapped, then exiles itself"
+    },
     "log": [
       {
         "fn": "cast",
@@ -43,6 +52,21 @@
         "creatureCount": 3
       },
       {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-2",
+        "result": true
+      },
+      {
         "fn": "createToken",
         "controller": "you",
         "token": "Horror",
@@ -54,12 +78,17 @@
         "card": "The Final Days",
         "instanceId": 1,
         "from": "stack",
-        "to": "exile"
+        "to": "Exile",
+        "cardType": "Sorcery"
       }
     ]
   },
   {
-    "scenario": "flashback, empty graveyard",
+    "scenario": {
+      "setup": "",
+      "action": "cast from graveyard",
+      "result": "creates no Horror tokens (empty graveyard), then exiles itself"
+    },
     "log": [
       {
         "fn": "cast",
@@ -87,7 +116,8 @@
         "card": "The Final Days",
         "instanceId": 1,
         "from": "stack",
-        "to": "exile"
+        "to": "Exile",
+        "cardType": "Sorcery"
       }
     ]
   }

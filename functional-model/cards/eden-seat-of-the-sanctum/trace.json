@@ -1,0 +1,80 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard; you: 2 card(s) in library",
+      "action": "activated ({5}, {T})",
+      "result": "mills 2 cards, then sacrifices Eden itself, then returns another permanent card from the graveyard to hand"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Eden, Seat of the Sanctum",
+        "instanceId": 1,
+        "cost": "{5}, {T}"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "Eden, Seat of the Sanctum",
+        "zone": "Graveyard"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 5,
+        "creatureCount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Hand"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "activated ({5}, {T})",
+      "result": "mills 2 cards (library exhausted after), then sacrifices Eden itself; no OTHER permanent card in the graveyard to return"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Eden, Seat of the Sanctum",
+        "instanceId": 1,
+        "cost": "{5}, {T}"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "Eden, Seat of the Sanctum",
+        "zone": "Graveyard"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 3,
+        "creatureCount": 0
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-0",
+        "zone": "Hand"
+      }
+    ]
+  }
+]

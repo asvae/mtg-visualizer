@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}{B})",
+      "result": "puts two +1/+1 counters on itself"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Demon Wall",
+        "instanceId": 1,
+        "cost": "{5}{B}"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Demon Wall",
+        "counterType": "+1/+1",
+        "amount": 2
+      }
+    ]
+  }
+]

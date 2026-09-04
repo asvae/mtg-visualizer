@@ -1,0 +1,127 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 5 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "mills 5 cards; none of them are enchantments (this model has no way to seed a typed library card), nothing put into hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Terra, Magical Adept",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 5,
+        "validType": "any"
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-library-3",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-library-4",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{R}{G}, {T} (activate only as a sorcery))",
+      "result": "exiles Terra, then returns it to the battlefield transformed into Esper Terra"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Terra, Magical Adept",
+        "instanceId": 1,
+        "cost": "{4}{R}{G}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Terra, Magical Adept",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Terra, Magical Adept",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face",
+      "result": "back face: Flying only, no resolvable chapters (see definition.ts for the real gap — copyPermanent not wired, mana production out of scope)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Esper Terra",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Esper Terra",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{R}{G}, {T} (activate only as a sorcery)), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Terra, Magical Adept",
+        "instanceId": 1,
+        "cost": "{4}{R}{G}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Terra, Magical Adept",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Terra, Magical Adept",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Terra, Magical Adept",
+        "player": "you"
+      }
+    ]
+  }
+]

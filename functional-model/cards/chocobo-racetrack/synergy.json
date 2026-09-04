@@ -1,0 +1,20 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "g_2_2_bird_landfall"
+      },
+      "ease": 4,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "event": "landfall",
+      "controller": "you",
+      "ease": 5
+    }
+  ]
+}

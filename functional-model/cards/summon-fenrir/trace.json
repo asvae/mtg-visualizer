@@ -1,0 +1,167 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 card(s) in library",
+      "action": "\"chapterI\" trigger fires",
+      "result": "no basic land found in library (this harness has no way to seed a land-typed library card — see definition.ts), nothing put onto the battlefield"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Fenrir",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 3,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-2",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (real text: the next creature spell cast this turn would enter with an extra +1/+1 counter)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Fenrir",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s) (power 2)",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "your greatest power (self, 3) beats the greatest opposing power (2): draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Fenrir",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Summon: Fenrir",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "opp0-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s) (power 3)",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "tied for greatest power (self, 3, vs. 3): draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Fenrir",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Summon: Fenrir",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "opp0-creature-token-0",
+        "result": 3
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s) (power 5)",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "your greatest power (self, 3) is less than the opposing greatest power (5): no draw"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Fenrir",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Summon: Fenrir",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "opp0-creature-token-0",
+        "result": 5
+      }
+    ]
+  }
+]

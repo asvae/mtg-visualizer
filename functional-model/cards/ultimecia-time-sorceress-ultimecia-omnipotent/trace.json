@@ -1,0 +1,104 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnterOrAttacks\" trigger fires",
+      "result": "surveils 2"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultimecia, Time Sorceress",
+        "instanceId": 1,
+        "name": "onEnterOrAttacks"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 8 creature card(s) in graveyard",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "exiles 8 cards from the graveyard, then transforms into Ultimecia, Omnipotent (extra-turn text on the back face is a documented gap — no Effect kind exists for it)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultimecia, Time Sorceress",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Graveyard",
+        "to": "Exile",
+        "qty": 8,
+        "validType": "any"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Ultimecia, Time Sorceress",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Ultimecia, Time Sorceress",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face",
+      "result": "back face: Menace only; the Time Compression extra-turn trigger has no representable Effect kind, see definition.ts"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ultimecia, Omnipotent",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Ultimecia, Omnipotent",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ultimecia, Time Sorceress",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Ultimecia, Time Sorceress",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Ultimecia, Time Sorceress",
+        "player": "you"
+      }
+    ]
+  }
+]

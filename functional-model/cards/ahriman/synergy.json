@@ -1,0 +1,29 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "ease": 4,
+      "strength": 1
+    },
+    {
+      "event": "dies",
+      "controller": "you",
+      "ease": 4,
+      "strength": 4
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Creature",
+          "Artifact"
+        ]
+      },
+      "ease": 1
+    }
+  ]
+}

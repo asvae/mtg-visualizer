@@ -1,0 +1,40 @@
+{
+  "produces": [
+    {
+      "event": "grantKeyword",
+      "keyword": "Haste",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "zone": "Exile",
+      "controller": "you",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 4,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2
+    },
+    {
+      "zone": "Library",
+      "controller": "you",
+      "ease": 5
+    }
+  ]
+}

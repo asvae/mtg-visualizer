@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEquipmentEnters\" trigger fires",
+      "result": "creates a token copy of the entering Coral Sword"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Firion, Wild Rose Warrior",
+        "instanceId": 1,
+        "name": "onEquipmentEnters"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Coral Sword",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Firion, Wild Rose Warrior",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Firion, Wild Rose Warrior",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Firion, Wild Rose Warrior",
+        "player": "you"
+      }
+    ]
+  }
+]

@@ -1,0 +1,70 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 Frog creature(s)",
+      "action": "activated ({2}, Sacrifice a Frog)",
+      "result": "sacrifices the Frog and puts a +1/+1 counter on Quina"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Quina, Qu Gourmet",
+        "instanceId": 1,
+        "cost": "{2}, Sacrifice a Frog"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "putCounter",
+        "target": "Quina, Qu Gourmet",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({2}, Sacrifice a Frog), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Quina, Qu Gourmet",
+        "instanceId": 1,
+        "cost": "{2}, Sacrifice a Frog"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "putCounter",
+        "target": "Quina, Qu Gourmet",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "legendRule",
+        "card": "Quina, Qu Gourmet",
+        "player": "you"
+      }
+    ]
+  }
+]

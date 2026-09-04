@@ -1,0 +1,56 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 5 card(s) in library",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "reveals the top library card, puts it into hand, and loses 3 life (its mana value)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Dark Confidant",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 1,
+        "take": 1,
+        "found": 1
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 5 card(s) in library",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "reveals a 0-mana-value card, puts it into hand, loses no life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Dark Confidant",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 1,
+        "take": 1,
+        "found": 1
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 0
+      }
+    ]
+  }
+]

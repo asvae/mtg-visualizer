@@ -1,0 +1,117 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "returns the opponent's nonland permanent (a creature) to hand and draws a card"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Eject",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Eject",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 artifact(s)",
+      "action": "cast from hand",
+      "result": "returns the opponent's nonland permanent (an artifact) to hand and draws a card"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Eject",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-artifact-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Eject",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "no legal nonland permanent to target; nothing bounced, but still draws a card"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Eject",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Eject",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

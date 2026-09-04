@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "returns itself to its owner's hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cactuar",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Cactuar",
+        "zone": "Hand"
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "token subject uses an unregistered token slug (w_1_2_moogle_lifelink) — resolves to 'unknown' until token-cards/ gets a real definition for it"
+  ]
+}

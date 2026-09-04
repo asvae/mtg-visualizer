@@ -51,6 +51,19 @@ export interface RealCard {
   controllerId: number;
   zone: ZoneType;
   attachedToId?: number;
+  /** Real Forge `K:` lines this card carries — a controlled, executable vocabulary (see card.ts's own `Keyword` type), distinct from `staticAbilities`' freeform text. Copied from the resolving `CardDefinition` at scenario setup (harness.ts); only `self` ever has a non-empty value today (nothing seeds a keyword onto a generated filler card). */
+  keywords: string[];
+  /**
+   * A real layer-7a characteristic-defining P/T ability — see card.ts's own
+   * `CardDefinition.ptFormula` doc comment for the two real Forge shapes
+   * built so far (ADD-per-Equipment, SET-to-creature-count). Deliberately
+   * NOT a timestamped `layers.ts` delta: a CDA is recalculated live from
+   * CURRENT board state every time P/T is read (713.1), not fixed at the
+   * moment a continuous effect was created.
+   */
+  ptFormula?: { kind: 'addPerEquipmentControlled'; power: number; toughness: number } | { kind: 'setToCreaturesControlled' };
+  /** Real mana value (Card.java's own `getCMC()`, ~line 7227) — omit when nothing needs it (most cards, and every generated filler object). Dark Confidant's own upkeep life-loss is the reference case (needs a REAL number off the revealed card, not a `triggerInput`-supplied stand-in). */
+  cmc?: number;
 }
 
 /** Layer 4 (TYPE) applied — the card's CURRENT type list, not just its printed one. Use this instead of raw `card.types` anywhere "is this a creature/artifact/etc. right now" matters (an `animate`d permanent really does count). */
@@ -58,10 +71,35 @@ export function effectiveTypes(card: RealCard): string[] {
   return card.layers.computeTypes(card.types);
 }
 
-/** Layers 7's own P/T calculation (counters folded in as real Forge's own layer 7d does, simplified to +1/+1-style counters only) applied on top of base + timestamp-ordered continuous effects. */
-export function effectivePT(card: RealCard): [number, number] {
-  const base = card.basePower + (card.counters['+1/+1'] ?? 0);
-  const baseT = card.baseToughness + (card.counters['+1/+1'] ?? 0);
+/**
+ * Layer 7's own P/T calculation: layer 7a (a real, live-recalculated CDA —
+ * `ptFormula`, see `RealCard`'s own doc comment) applied FIRST, THEN counters
+ * (simplified to Forge's own layer 7d, +1/+1-style only) and timestamp-
+ * ordered continuous effects (`layers.ts`'s own 7b/7c) on top — real 613.3's
+ * own sublayer order, CDA before counters/other continuous effects.
+ * `state` is required (not optional) because a CDA needs to count OTHER
+ * cards on the controller's own battlefield — genuinely live, not a value
+ * this card object alone can answer.
+ */
+export function effectivePT(state: GameState, card: RealCard): [number, number] {
+  let base = card.basePower;
+  let baseT = card.baseToughness;
+  const controller = state.players.get(card.controllerId);
+  if (card.ptFormula?.kind === 'addPerEquipmentControlled') {
+    const equipmentCount = controller ? controller.battlefield.filter((c) => c.subtypes.includes('Equipment')).length : 0;
+    base += card.ptFormula.power * equipmentCount;
+    baseT += card.ptFormula.toughness * equipmentCount;
+  } else if (card.ptFormula?.kind === 'setToCreaturesControlled') {
+    // Real `SetPower$ X` ONLY (Snow Villiers' own `PT:*/3`) — toughness
+    // stays whatever the card's own real printed base is (`pt`/`baseToughness`),
+    // not also overridden. A card whose real script also carries a
+    // `SetToughness$` would need its own, differently-named variant here —
+    // not assumed for free just because this one exists.
+    const creatureCount = controller ? controller.battlefield.filter((c) => effectiveTypes(c).includes('Creature')).length : 0;
+    base = creatureCount;
+  }
+  base += card.counters['+1/+1'] ?? 0;
+  baseT += card.counters['+1/+1'] ?? 0;
   return card.layers.computePT(base, baseT);
 }
 
@@ -124,6 +162,9 @@ export class GameState {
       ownerId: owner.id,
       controllerId: owner.id,
       zone,
+      keywords: opts.keywords ?? [],
+      ptFormula: opts.ptFormula,
+      cmc: opts.cmc,
     };
     this.cards.set(card.id, card);
     const arr = zoneArray(owner, zone);
@@ -190,15 +231,26 @@ export class GameState {
    */
   createToken(controller: RealPlayer, token: TokenInfo, qty: number, opts?: { tapped?: boolean }): RealCard[] {
     const made: RealCard[] = [];
+    // `token.types` is the token's FULL real type-line word list (e.g.
+    // `['Creature', 'Wizard']` — see cards/circle-of-power/definition.ts's own
+    // Wizard token), the same convention `TokenInfo`'s own doc comment
+    // describes — not core-types-only. A prior bug hardcoded `subtypes: []`
+    // regardless, so a just-made token never matched `hasSubtype()` (Circle
+    // of Power's own "Wizards you control" pump missed its own token). Real
+    // subtypes are everything in `token.types` that isn't one of the four
+    // core types this model tracks (see harness.ts's own `typesFromTypeLine`
+    // for the same core-type list).
+    const subtypes = token.types.filter((t) => !['Creature', 'Artifact', 'Enchantment', 'Land'].includes(t));
     for (let i = 0; i < qty; i++) {
       made.push(
         this.addCard(controller, 'Battlefield', {
           name: token.name,
           isTokenCard: true,
           types: token.types,
-          subtypes: [],
+          subtypes,
           basePower: token.basePower,
           baseToughness: token.baseToughness,
+          keywords: token.keywords ?? [],
         })
       );
     }
@@ -260,6 +312,38 @@ export class GameState {
     card.layers.add({ layer: 4, timestamp: nextLayerTimestamp(), apply: (current) => [...new Set([...current, ...types])] });
   }
 
+  /**
+   * Real 704.5j (`handleLegendRule`, `GameAction.java` ~line 2006-2065): if a
+   * player controls 2+ Legendary permanents sharing a name, they keep one
+   * and the rest go to the graveyard — a real state-based action, NOT a
+   * `sacrifice` (701.16, a cost/effect a player CHOOSES to pay) even though
+   * the end zone change looks the same, so this gets its own return/log
+   * shape rather than reusing `sacrifice`. Real Forge lets the player CHOOSE
+   * which one to keep; this model has no real player-choice engine anywhere
+   * (`chooseTarget` always takes the first pool candidate), so it keeps
+   * whichever came first and returns the rest — same simplification, same
+   * place it's always made. "Legendary" is tracked as a subtype here (see
+   * `harness.ts`'s own note on this), a pragmatic approximation of Forge's
+   * real supertype, not a literal supertype lookup.
+   */
+  checkLegendRule(player: RealPlayer): RealCard[] {
+    const byName = new Map<string, RealCard[]>();
+    for (const card of player.battlefield) {
+      if (!card.subtypes.includes('Legendary')) continue;
+      if (!byName.has(card.name)) byName.set(card.name, []);
+      byName.get(card.name)!.push(card);
+    }
+    const removed: RealCard[] = [];
+    for (const group of byName.values()) {
+      if (group.length < 2) continue;
+      for (const card of group.slice(1)) {
+        this.move(card, 'Graveyard');
+        removed.push(card);
+      }
+    }
+    return removed;
+  }
+
   /** `Card.tap(...)` (forge-game/.../card/Card.java ~line 4662) — real, persistent tapped state. */
   tap(card: RealCard): void {
     card.tapped = true;
@@ -270,9 +354,88 @@ export class GameState {
     card.tapped = false;
   }
 
-  /** `DestroyEffect` (forge-game/.../ability/effects/DestroyEffect.java) — real zone change, battlefield->graveyard, via the SAME `move()` a sacrifice/dies uses (a token still ceases to exist rather than reaching the graveyard, per `move`'s own rule). Destroy is its own real action (distinct from sacrifice, rule 701.16) only in WHICH ability caused the move, not in the zone-change mechanics themselves — no separate state to track here beyond that. */
-  destroy(card: RealCard): void {
+  /**
+   * `CardFactory.copyCard(...)`-style copy (forge-game/.../card/CardFactory.java)
+   * — makes a NEW object with `source`'s own name/types/subtypes/base P&T/
+   * keywords, under `controller`'s control. Always a TOKEN here (Sin,
+   * Spira's Punishment's own "create a token copy," e.g.) — this model has
+   * no continuous "this permanent becomes a copy of that" layer-1 tracking
+   * (real Forge's `CopyEffect`/`CopyPermanentEffect` split), same lighter-
+   * continuous-effect simplification `animate`'s own doc comment already
+   * accepts. Real counters/attachments/damage on `source` are NOT copied
+   * (601.2h's own "copiable values" only — printed characteristics), same
+   * as a real copy effect.
+   */
+  copyPermanent(source: RealCard, controller: RealPlayer): RealCard {
+    return this.addCard(controller, 'Battlefield', {
+      name: source.name,
+      isTokenCard: true,
+      types: [...source.types],
+      subtypes: [...source.subtypes],
+      basePower: source.basePower,
+      baseToughness: source.baseToughness,
+      keywords: [...source.keywords],
+      ptFormula: source.ptFormula,
+    });
+  }
+
+  /**
+   * `Card.addChangedCardKeywords(...)` (forge-game/.../card/Card.java ~line
+   * 5017) — grants a keyword. Real Forge tracks this as a duration-scoped,
+   * timestamped layer-6 entry (reverted at the real effect's end — "until
+   * end of turn," e.g.); this model has no phase/turn-boundary reset step
+   * anywhere (see this file's own header), so the grant is a direct,
+   * PERMANENT push onto the card's own `keywords` array instead — same
+   * documentary-approximation category `move`/`destroy`'s own `optional`
+   * field already carries for a different nuance (player choice, there;
+   * duration, here). Still a REAL mutation, not just a logged intent: a
+   * later `state.destroy`/`state.dealDamage` call genuinely sees the
+   * granted Indestructible/Lifelink within the same scenario.
+   */
+  grantKeyword(card: RealCard, keyword: string): void {
+    if (!card.keywords.includes(keyword)) card.keywords.push(keyword);
+  }
+
+  /**
+   * `DestroyEffect` (forge-game/.../ability/effects/DestroyEffect.java) —
+   * real zone change, battlefield->graveyard, via the SAME `move()` a
+   * sacrifice/dies uses (a token still ceases to exist rather than reaching
+   * the graveyard, per `move`'s own rule). Destroy is its own real action
+   * (distinct from sacrifice, rule 701.16) only in WHICH ability caused the
+   * move, not in the zone-change mechanics themselves — no separate state to
+   * track here beyond that.
+   *
+   * Real rule 702.12b: an Indestructible permanent is never destroyed by a
+   * destroy effect — a REPLACEMENT, not a targeting restriction (the effect
+   * still resolves, the destruction itself just doesn't happen). Returns
+   * whether it actually was, so callers (harness.ts) can log the prevention
+   * as a real, visible fact rather than silently no-op-ing.
+   */
+  destroy(card: RealCard): boolean {
+    if (card.keywords.includes('Indestructible')) return false;
     this.move(card, 'Graveyard');
+    return true;
+  }
+
+  /**
+   * `DigEffect` (forge-game/.../ability/effects/DigEffect.java) — real
+   * library manipulation: splices the top `qty` cards off `player.library`,
+   * moves up to `take` of the ones matching `matches` to hand, pushes
+   * whatever's left back onto the BOTTOM of the library (real order
+   * fidelity for "in a random order" isn't tracked — generic library-filler
+   * objects are interchangeable here, see this file's own header).
+   */
+  dig(player: RealPlayer, qty: number, take: number, matches: (c: RealCard) => boolean): RealCard[] {
+    const looked = player.library.splice(0, qty);
+    const taken: RealCard[] = [];
+    const rest: RealCard[] = [];
+    for (const card of looked) {
+      if (taken.length < take && matches(card)) taken.push(card);
+      else rest.push(card);
+    }
+    for (const card of taken) this.move(card, 'Hand');
+    player.library.push(...rest);
+    return taken;
   }
 
   /**
@@ -283,9 +446,30 @@ export class GameState {
    * real and persistent (mirrors real Forge's own eventual life-total
    * consequence, minus the intermediate "damage marked, then SBA checks
    * life <= 0" step this model doesn't track separately).
+   *
+   * `source`, when given, carries out real rule 702.15e — confirmed against
+   * `GameAction.java` (~line 2732-2735): `if (sum > 0 &&
+   * sourceLKI.hasKeyword(Keyword.LIFELINK)) sourceLKI.getController()
+   * .gainLife(sum, sourceLKI, cause);` — whenever a source with Lifelink
+   * deals damage, its CONTROLLER gains that much life, for ANY damage
+   * (combat or a direct effect like Mega Flare), not something tied to the
+   * `dealDamage` Effect kind specifically. Real Forge sums every target a
+   * single damage EVENT hit before granting life once; this simplified
+   * version only ever deals damage to one target per call, so summing
+   * doesn't come up yet — same single-target scope every other action here
+   * has. Returns the life gained (0 when no Lifelink source), so callers
+   * (harness.ts) can log it as a real, visible fact.
    */
-  dealDamage(target: RealPlayer | RealCard, amount: number): void {
+  dealDamage(target: RealPlayer | RealCard, amount: number, source?: RealCard): number {
     if ('life' in target) target.life -= amount;
+    if (source?.keywords.includes('Lifelink')) {
+      const controller = this.players.get(source.controllerId);
+      if (controller) {
+        controller.life += amount;
+        return amount;
+      }
+    }
+    return 0;
   }
 }
 
@@ -303,11 +487,18 @@ export function wrapCard(state: GameState, real: RealCard): Card {
     isToken: () => real.isTokenCard,
     isCreature: () => effectiveTypes(real).includes('Creature'),
     isLand: () => effectiveTypes(real).includes('Land'),
+    isEnchantment: () => effectiveTypes(real).includes('Enchantment'),
+    isArtifact: () => effectiveTypes(real).includes('Artifact'),
+    isTapped: () => real.tapped,
+    getCMC: () => real.cmc ?? 0,
+    getAttachedTo: () => (real.attachedToId !== undefined ? wrapCard(state, state.cards.get(real.attachedToId)!) : undefined),
+    getEquippedBy: () => [...state.cards.values()].filter((c) => c.attachedToId === real.id).map((c) => wrapCard(state, c)),
     hasSubtype: (subtype: string) => real.subtypes.includes(subtype),
+    hasKeyword: (keyword: string) => real.keywords.includes(keyword),
     getOwner: () => wrapPlayer(state, state.players.get(real.ownerId)!),
     getController: () => wrapPlayer(state, state.players.get(real.controllerId)!),
-    getNetPower: () => effectivePT(real)[0],
-    getNetToughness: () => effectivePT(real)[1],
+    getNetPower: () => effectivePT(state, real)[0],
+    getNetToughness: () => effectivePT(state, real)[1],
     getCounters: (counterType: string) => real.counters[counterType] ?? 0,
   } as unknown as Card;
 }

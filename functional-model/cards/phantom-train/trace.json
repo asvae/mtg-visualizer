@@ -1,12 +1,31 @@
 [
   {
-    "scenario": "activate, has fodder",
+    "scenario": {
+      "setup": "you: 1 creature(s); you: 1 artifact(s)",
+      "action": "activated (Sacrifice another artifact or creature)",
+      "result": "sacrifices another artifact or creature, puts a +1/+1 counter on itself, and becomes an artifact creature"
+    },
     "log": [
       {
         "fn": "activate",
         "card": "Phantom Train",
         "instanceId": 1,
         "cost": "Sacrifice another artifact or creature"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-0",
+        "result": true
       },
       {
         "fn": "sacrifice",

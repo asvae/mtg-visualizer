@@ -1,0 +1,29 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDies\" trigger fires",
+      "result": "exiles itself and creates ten tapped Treasure tokens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ancient Adamantoise",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Ancient Adamantoise",
+        "zone": "Exile"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 10,
+        "tapped": true
+      }
+    ]
+  }
+]

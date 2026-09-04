@@ -1,0 +1,114 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "exiles itself (the first pool candidate) and returns it to the battlefield"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Y'shtola Rhul",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Y'shtola Rhul",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Y'shtola Rhul",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s), 1 nontoken",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "exiles the other (nontoken) creature it controls and returns it to the battlefield"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Y'shtola Rhul",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-nontoken-0",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-nontoken-0",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "exiles the other (token) creature it controls; it ceases to exist and does not return"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Y'shtola Rhul",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-token-0",
+        "zone": "Exile"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Y'shtola Rhul",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{U}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Y'shtola Rhul",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Y'shtola Rhul",
+        "player": "you"
+      }
+    ]
+  }
+]

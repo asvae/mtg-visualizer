@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has move ({\"fn\":\"move\",\"player\":\"you\",\"from\":\"Graveyard\",\"to\":\"Battlefield\",\"qty\":0,\"validType\":\"land\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "chapter II 'return all lands from graveyard' branch never exercised, same harness gap as summon-fenrir"
+  ]
+}

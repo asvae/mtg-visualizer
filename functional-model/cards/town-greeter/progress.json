@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "only its no-op branch (mill 4, no land found) has any scenario — the real land-to-hand AND conditional-lifegain branches are entirely untested, both real parts of the card's text unverified"
+  ]
+}

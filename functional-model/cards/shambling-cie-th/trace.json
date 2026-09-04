@@ -1,0 +1,53 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shambling Cie'th",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Shambling Cie'th",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Shambling Cie'th"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCast\" trigger fires",
+      "result": "returns from the graveyard to hand (the {B} payment is not a resolvable state here)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shambling Cie'th",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Shambling Cie'th",
+        "zone": "Hand"
+      }
+    ]
+  }
+]

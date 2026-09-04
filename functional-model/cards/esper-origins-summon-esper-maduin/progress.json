@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Esper Origins\",\"zone\":\"Battlefield\"}) with no matching declared produce | trace has putCounter ({\"fn\":\"putCounter\",\"target\":\"Esper Origins\",\"counterType\":\"finality\",\"amount\":1}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "front-face transform exile/putCounter mid-effect left undeclared (2 soft notes)"
+  ]
+}

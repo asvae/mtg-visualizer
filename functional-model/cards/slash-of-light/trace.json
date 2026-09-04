@@ -1,0 +1,124 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s); you: 1 Equipment; opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "deals 3 damage to target creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Slash of Light",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Slash of Light",
+        "target": "you-creature-token-0",
+        "amount": 3
+      },
+      {
+        "fn": "move",
+        "card": "Slash of Light",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "deals 0 damage to target creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Slash of Light",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Slash of Light",
+        "target": "opp0-creature-token-0",
+        "amount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Slash of Light",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

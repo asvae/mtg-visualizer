@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is real text, not mechanically enforced — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Gigantoad",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Gigantoad",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

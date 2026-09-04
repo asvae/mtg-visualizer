@@ -1,0 +1,33 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped (the color choice itself is static text — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Crossroads Village",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Crossroads Village",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Crossroads Village"
+      }
+    ]
+  }
+]

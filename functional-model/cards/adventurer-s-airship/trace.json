@@ -1,0 +1,26 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "draws a card, then discards a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Adventurer's Airship",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  }
+]

@@ -1,0 +1,68 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "w_2_2_knight"
+      },
+      "ease": 1,
+      "strength": 1,
+      "sourceText": "When Dion enters, create a 2/2 white Knight creature token."
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "Bahamut chapter I, II — Wings of Light: put a +1/+1 counter on each other creature you control."
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side; the destroyed permanent lands in its owner's graveyard)."
+    },
+    {
+      "event": "dies",
+      "controller": "you",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side, firing that permanent's own dies triggers)."
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "Wings of Light — put a +1/+1 counter on each OTHER creature you control; needs another creature you control to exist."
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "ease": 1,
+      "sourceText": "Gigaflare — Destroy target permanent, no controller restriction (real script: ValidTgts$ Permanent, no owner clause) — can target one of YOUR OWN permanents."
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "ease": 5,
+      "sourceText": "Gigaflare — Destroy target permanent, no controller restriction — can equally target an OPPONENT'S permanent."
+    }
+  ]
+}

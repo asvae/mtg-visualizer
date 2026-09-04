@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "Exile produce (Hero's Sundering) omits controller entirely as a workaround for producedZone's moveTo hardcoding controller:'you' — unconfirmed whether that harness issue was ever actually fixed"
+  ]
+}

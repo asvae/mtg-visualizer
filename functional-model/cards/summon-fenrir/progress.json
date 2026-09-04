@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "chapter I 'return lands from graveyard' branch never actually moves a card in any scenario — harness has no way to seed a land-typed graveyard card, real branch untested"
+  ]
+}

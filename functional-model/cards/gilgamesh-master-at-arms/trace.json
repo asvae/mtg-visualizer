@@ -1,0 +1,134 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 artifact(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "puts the 2 Equipment cards from the library onto the battlefield and attaches one to Gilgamesh (a Samurai)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Gilgamesh, Master-at-Arms",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-1",
+        "result": true
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 6,
+        "validType": "artifact"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Gilgamesh, Master-at-Arms",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-1",
+        "result": true
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Gilgamesh, Master-at-Arms",
+        "subtype": "Samurai",
+        "result": true
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-library-artifact-0",
+        "target": "Gilgamesh, Master-at-Arms"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 card(s) in library",
+      "action": "\"onAttack\" trigger fires",
+      "result": "no Equipment among the library cards, nothing put onto the battlefield"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Gilgamesh, Master-at-Arms",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 6,
+        "validType": "artifact"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Gilgamesh, Master-at-Arms",
+        "result": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Gilgamesh, Master-at-Arms",
+        "subtype": "Samurai",
+        "result": true
+      }
+    ]
+  }
+]

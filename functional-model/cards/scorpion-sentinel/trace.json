@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creature enters, no other effect (the land-count P/T bonus is continuous, not a resolvable effect)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Scorpion Sentinel",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Scorpion Sentinel",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

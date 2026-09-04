@@ -1,0 +1,111 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zanarkand, Ancient Metropolis",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Zanarkand, Ancient Metropolis",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Zanarkand, Ancient Metropolis"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 land(s)",
+      "action": "cast from hand, back face",
+      "result": "creates a 1/1 colorless Hero creature token with three +1/+1 counters on it (3 lands controlled)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Lasting Fayth",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{G}{G}"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "read:getLandsInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "putCounter",
+        "target": "Hero",
+        "counterType": "+1/+1",
+        "amount": 3
+      },
+      {
+        "fn": "move",
+        "card": "Lasting Fayth",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face",
+      "result": "creates a 1/1 colorless Hero creature token, no counters (no lands controlled)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Lasting Fayth",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{G}{G}"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "read:getLandsInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "move",
+        "card": "Lasting Fayth",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

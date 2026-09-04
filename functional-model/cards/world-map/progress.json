@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "both search abilities now have real read:isLand evidence (post harness fix) but wants:[] — addable Library/Land want not yet added"
+  ]
+}

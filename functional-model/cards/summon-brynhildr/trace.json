@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "\"chapterI\" trigger fires",
+      "result": "exiles the top card of your library (the \"you may play it\" permission is not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Brynhildr",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Brynhildr",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Brynhildr",
+        "instanceId": 1,
+        "name": "chapterIII"
+      }
+    ]
+  }
+]

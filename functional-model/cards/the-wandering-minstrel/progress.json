@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "no scenario ever logs an 'enters' line (only 'activate') — no Battlefield produce fact declared despite being a real permanent"
+  ]
+}

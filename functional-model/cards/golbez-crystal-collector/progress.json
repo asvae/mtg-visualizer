@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onArtifactEnters trigger unmapped (same class as rook-turret), currently passes only via loose scenario-diff fallback not real evidence"
+  ]
+}

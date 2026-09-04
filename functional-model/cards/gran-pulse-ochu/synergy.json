@@ -1,0 +1,18 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Creature",
+          "Artifact",
+          "Enchantment",
+          "Land"
+        ]
+      },
+      "ease": 2
+    }
+  ]
+}

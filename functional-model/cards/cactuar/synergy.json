@@ -1,0 +1,12 @@
+{
+  "produces": [
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "subject": "self",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": []
+}

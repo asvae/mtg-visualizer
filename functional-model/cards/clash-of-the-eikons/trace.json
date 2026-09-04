@@ -1,0 +1,132 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 3); opp0: 1 creature(s) (power 2)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "your creature (power 3) and the opponent creature (power 2) fight, each dealing damage equal to its power to the other"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Clash of the Eikons",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 3
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-0",
+        "amount": 3
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "opp0-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "opp0-creature-token-0",
+        "target": "you-creature-token-0",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Clash of the Eikons",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 enchantment(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "removes a lore counter from the target Saga you control (this model has no way to seed a pre-existing counter on a chosen, non-self permanent, so the count goes to -1)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Clash of the Eikons",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-enchantment-0",
+        "counterType": "LORE",
+        "amount": -1
+      },
+      {
+        "fn": "move",
+        "card": "Clash of the Eikons",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 enchantment(s)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "puts a lore counter on the target Saga you control"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Clash of the Eikons",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-enchantment-0",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
+        "fn": "move",
+        "card": "Clash of the Eikons",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

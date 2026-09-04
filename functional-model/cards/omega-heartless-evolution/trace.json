@@ -1,0 +1,93 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 land(s); opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "taps the opponent's nonland permanent, puts 2 stun counters on it, and you gain 2 life (2 lands controlled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Omega, Heartless Evolution",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:getLandsInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "putCounter",
+        "target": "opp0-creature-token-0",
+        "counterType": "Stun",
+        "amount": 2
+      },
+      {
+        "fn": "read:getLandsInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Omega, Heartless Evolution",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{5}{G}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Omega, Heartless Evolution",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Omega, Heartless Evolution",
+        "player": "you"
+      }
+    ]
+  }
+]

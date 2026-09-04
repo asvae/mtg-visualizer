@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield UNTAPPED, no resolvable effect — unlike most of this batch, Capital City has no real ETBTapped replacement; every real ability is static text (see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Capital City",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Capital City",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

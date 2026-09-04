@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield with no resolvable effect — every real ability is static text (see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cid, Timeless Artificer",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cid, Timeless Artificer",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cid, Timeless Artificer",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cid, Timeless Artificer",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Cid, Timeless Artificer",
+        "player": "you"
+      }
+    ]
+  }
+]

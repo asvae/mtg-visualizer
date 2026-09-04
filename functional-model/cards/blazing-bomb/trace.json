@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onExpensiveNoncreatureSpellCast\" trigger fires",
+      "result": "puts a +1/+1 counter on itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Blazing Bomb",
+        "instanceId": 1,
+        "name": "onExpensiveNoncreatureSpellCast"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Blazing Bomb",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({T}, Sacrifice Blazing Bomb (activate only as a sorcery))",
+      "result": "sacrifices itself, dealing 1 damage (its power) to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Blazing Bomb",
+        "instanceId": 1,
+        "cost": "{T}, Sacrifice Blazing Bomb (activate only as a sorcery)"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Blazing Bomb",
+        "result": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Blazing Bomb",
+        "target": "you-creature-token-0",
+        "amount": 1
+      }
+    ]
+  }
+]

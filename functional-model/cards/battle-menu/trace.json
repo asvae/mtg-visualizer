@@ -1,0 +1,197 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "creates a 2/2 white Knight creature token"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "target creature gets +0/+4 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 0,
+        "toughness": 4
+      },
+      {
+        "fn": "move",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s) (power 4)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "destroys the power-4-or-greater creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "opp0-creature-token-0",
+        "result": 4
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "move",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "no legal target (power below 4), nothing destroyed"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "opp0-creature-token-0",
+        "result": 1
+      },
+      {
+        "fn": "move",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 3 chosen",
+      "result": "you gain 4 life"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 4
+      },
+      {
+        "fn": "move",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

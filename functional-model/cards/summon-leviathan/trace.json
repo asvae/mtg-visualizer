@@ -1,0 +1,224 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterI\" trigger fires",
+      "result": "returns your 2 non-tribal creatures to hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Leviathan",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Leviathan",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Merfolk",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Octopus",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Serpent",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-token-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Leviathan",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Merfolk",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Octopus",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Serpent",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-token-1",
+        "zone": "Hand"
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Leviathan",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Leviathan",
+        "subtype": "Leviathan",
+        "result": true
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 Merfolk creature(s); opp0: 1 creature(s)",
+      "action": "\"chapterI\" trigger fires",
+      "result": "returns the opponent's non-tribal creature to hand; your own Merfolk stays (an exempt subtype)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Leviathan",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Leviathan",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Merfolk",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Leviathan",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Leviathan",
+        "subtype": "Leviathan",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Leviathan",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Merfolk",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Octopus",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "opp0-creature-token-0",
+        "subtype": "Serpent",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Hand"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Leviathan",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Leviathan",
+        "instanceId": 1,
+        "name": "chapterIII"
+      }
+    ]
+  }
+]

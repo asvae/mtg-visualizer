@@ -1,0 +1,35 @@
+{
+  "produces": [
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "event": "landfall",
+      "controller": "you",
+      "ease": 5
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2
+    }
+  ]
+}

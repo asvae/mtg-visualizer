@@ -1,0 +1,35 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "(implicit — not a printed clause: any instant goes to its owner's graveyard after it resolves, a generic MTG rule (608.2m), not specific to this card's own text.)"
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "If you control three or more creatures, it gets +4/+4 instead."
+    },
+    {
+      "zone": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "Target creature gets +2/+2 until end of turn — the target itself, no controller restriction printed (any creature is legal)."
+    }
+  ]
+}

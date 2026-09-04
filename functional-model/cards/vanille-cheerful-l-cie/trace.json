@@ -1,0 +1,36 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "mills 2 cards, then returns one permanent card from the graveyard to hand (the meld ability is out of scope — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Vanille, Cheerful l'Cie",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 2
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-0",
+        "zone": "Hand"
+      }
+    ]
+  }
+]

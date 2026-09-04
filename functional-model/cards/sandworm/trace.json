@@ -1,0 +1,88 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 land(s); opp0: 3 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "destroys the opponent's target land; its controller finds a basic land in their library, puts it onto the battlefield tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sandworm",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Sandworm",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-land-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-land-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 land(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no basic land in the library to find; the destroyed land is simply gone"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sandworm",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Sandworm",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-land-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-land-0"
+      }
+    ]
+  }
+]

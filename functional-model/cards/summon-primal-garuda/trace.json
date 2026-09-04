@@ -1,0 +1,120 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"chapterI\" trigger fires",
+      "result": "deals 4 damage to the tapped creature the opponent controls"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Garuda",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Summon: Primal Garuda",
+        "target": "opp0-creature-token-0",
+        "amount": 4
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterI\" trigger fires",
+      "result": "no creature for the opponent to lose, nothing damaged"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Garuda",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterII\" trigger fires",
+      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Garuda",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no other creature you control, no-op"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Garuda",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Garuda",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  }
+]

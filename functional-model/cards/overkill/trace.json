@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "cast at an opposing creature",
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "target creature's toughness is reduced to -9999 (no SBA-destruction check modeled here)"
+    },
     "log": [
       {
         "fn": "cast",
@@ -30,7 +34,8 @@
         "card": "Overkill",
         "instanceId": 1,
         "from": "stack",
-        "to": "graveyard"
+        "to": "Graveyard",
+        "cardType": "Instant"
       }
     ]
   }

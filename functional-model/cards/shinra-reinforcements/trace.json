@@ -1,0 +1,29 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 5 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "mills 3 cards from your library into your graveyard, you gain 3 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shinra Reinforcements",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3
+      }
+    ]
+  }
+]

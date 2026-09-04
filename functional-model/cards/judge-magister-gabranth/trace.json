@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCreatureOrArtifactDies\" trigger fires",
+      "result": "puts a +1/+1 counter on itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Judge Magister Gabranth",
+        "instanceId": 1,
+        "name": "onCreatureOrArtifactDies"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Judge Magister Gabranth",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Judge Magister Gabranth",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Judge Magister Gabranth",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Judge Magister Gabranth",
+        "player": "you"
+      }
+    ]
+  }
+]

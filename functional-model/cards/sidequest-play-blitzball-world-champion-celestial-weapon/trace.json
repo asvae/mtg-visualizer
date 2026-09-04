@@ -1,0 +1,78 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "target creature you control gets +2/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Play Blitzball",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEndCombat\" trigger fires",
+      "result": "attaches to a creature you control (transform + turn-damage condition not tracked by this engine)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Play Blitzball",
+        "instanceId": 1,
+        "name": "onEndCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Sidequest: Play Blitzball",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); World Champion, Celestial Weapon's own Equip {3} ability (card.activationCost)",
+      "action": "activated ({3}), back face",
+      "result": "equips to a creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "World Champion, Celestial Weapon",
+        "instanceId": 1,
+        "cost": "{3}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "World Champion, Celestial Weapon",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

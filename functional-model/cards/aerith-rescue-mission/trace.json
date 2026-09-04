@@ -1,0 +1,109 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "creates three 1/1 colorless Hero creature tokens"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Aerith Rescue Mission",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 3,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Aerith Rescue Mission",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "taps all three creatures and puts a stun counter on the first one tapped"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Aerith Rescue Mission",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "tap",
+        "target": "you-creature-token-0"
+      },
+      {
+        "fn": "tap",
+        "target": "you-creature-token-1"
+      },
+      {
+        "fn": "tap",
+        "target": "you-creature-token-2"
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "stun",
+        "amount": 1
+      },
+      {
+        "fn": "move",
+        "card": "Aerith Rescue Mission",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "no creatures to tap, no effect"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Aerith Rescue Mission",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "move",
+        "card": "Aerith Rescue Mission",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

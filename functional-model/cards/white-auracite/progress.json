@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "Exile produce (Oblivion Ring effect) omits controller for the same reason as venat — real controller semantics unresolved"
+  ]
+}

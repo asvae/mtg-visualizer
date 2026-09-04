@@ -1,0 +1,45 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "ease": 4,
+      "strength": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 3,
+      "strength": 1
+    },
+    {
+      "event": "dies",
+      "target": "self",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

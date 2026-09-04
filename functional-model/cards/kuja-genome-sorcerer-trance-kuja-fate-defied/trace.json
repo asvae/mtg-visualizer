@@ -1,0 +1,135 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "creates a tapped 0/1 black Wizard creature token (fewer than 4 Wizards controlled, no transform)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Kuja, Genome Sorcerer",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": true
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Kuja, Genome Sorcerer",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Wizard",
+        "subtype": "Wizard",
+        "result": true
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 Wizard creature(s)",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "creates the Wizard token, then (now controlling 4 Wizards) exiles Kuja and returns it transformed into Trance Kuja, Fate Defied"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Kuja, Genome Sorcerer",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": true
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 5
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-2",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Kuja, Genome Sorcerer",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Wizard",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Kuja, Genome Sorcerer",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Kuja, Genome Sorcerer",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Kuja, Genome Sorcerer",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Kuja, Genome Sorcerer",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Kuja, Genome Sorcerer",
+        "player": "you"
+      }
+    ]
+  }
+]

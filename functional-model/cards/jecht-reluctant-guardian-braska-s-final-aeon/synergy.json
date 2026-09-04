@@ -1,0 +1,17 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "event": "dies",
+      "controller": "opp",
+      "ease": 4,
+      "strength": 1
+    }
+  ],
+  "wants": []
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 Hero token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Magitek Armor",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated (Crew 1 (tap creatures with total power 1 or more))",
+      "result": "becomes an artifact creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Magitek Armor",
+        "instanceId": 1,
+        "cost": "Crew 1 (tap creatures with total power 1 or more)"
+      },
+      {
+        "fn": "animate",
+        "target": "Magitek Armor",
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
+      }
+    ]
+  }
+]

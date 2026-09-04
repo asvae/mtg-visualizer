@@ -1,0 +1,194 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 land(s)",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "fewer than five Towns controlled (this model has no way to seed a Town-subtype land) — no token created"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "The Wandering Minstrel",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 4,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-land-0",
+        "subtype": "Town",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-1",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-land-1",
+        "subtype": "Town",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-2",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-land-2",
+        "subtype": "Town",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "The Wandering Minstrel",
+        "result": false
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Elemental",
+        "qty": 0,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({3}{W}{U}{B}{R}{G})",
+      "result": "no Towns controlled — other creatures you control get +0/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Wandering Minstrel",
+        "instanceId": 1,
+        "cost": "{3}{W}{U}{B}{R}{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-token-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "The Wandering Minstrel",
+        "result": false
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-token-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "The Wandering Minstrel",
+        "result": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 0,
+        "toughness": 0
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 0,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({3}{W}{U}{B}{R}{G}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Wandering Minstrel",
+        "instanceId": 1,
+        "cost": "{3}{W}{U}{B}{R}{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "The Wandering Minstrel",
+        "result": false
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "The Wandering Minstrel",
+        "result": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Wandering Minstrel",
+        "player": "you"
+      }
+    ]
+  }
+]

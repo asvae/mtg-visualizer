@@ -1,0 +1,55 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "doubles Tifa Lockhart's power until end of turn (1 -> 2)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tifa Lockhart",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Tifa Lockhart",
+        "result": 1
+      },
+      {
+        "fn": "pump",
+        "target": "Tifa Lockhart",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tifa Lockhart",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Tifa Lockhart",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Tifa Lockhart",
+        "player": "you"
+      }
+    ]
+  }
+]

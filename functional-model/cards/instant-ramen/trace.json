@@ -1,0 +1,41 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Instant Ramen",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({2}, {T}, Sacrifice this artifact)",
+      "result": "you gain 3 life"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Instant Ramen",
+        "instanceId": 1,
+        "cost": "{2}, {T}, Sacrifice this artifact"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3
+      }
+    ]
+  }
+]

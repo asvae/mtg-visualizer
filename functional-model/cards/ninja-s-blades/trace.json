@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "equip to a creature",
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({2})",
+      "result": "attaches to a creature you control"
+    },
     "log": [
       {
         "fn": "activate",
@@ -21,7 +25,11 @@
     ]
   },
   {
-    "scenario": "equipped creature deals damage, discarded card MV 3",
+    "scenario": {
+      "setup": "",
+      "action": "\"onEquippedDealsDamage\" trigger fires",
+      "result": "draws a card, discards a card, target opponent loses 3 life"
+    },
     "log": [
       {
         "fn": "trigger",

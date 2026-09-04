@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"The Emperor of Palamecia\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "transform exile half unexplained; onNoncreatureSpellCast trigger unmapped, no want declared"
+  ]
+}

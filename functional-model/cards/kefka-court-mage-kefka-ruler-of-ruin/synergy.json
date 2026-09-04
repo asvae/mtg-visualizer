@@ -1,0 +1,49 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "ease": 1,
+      "strength": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "ease": 4,
+      "strength": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "event": "dies",
+      "controller": "opp",
+      "ease": 4,
+      "strength": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 3,
+      "strength": 1
+    },
+    {
+      "event": "dies",
+      "target": "self",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "event": "lifeloss",
+      "controller": "opp",
+      "ease": 4
+    }
+  ]
+}

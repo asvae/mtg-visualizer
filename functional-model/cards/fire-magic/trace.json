@@ -1,0 +1,140 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "Fire: deals 1 damage to each creature (2 total)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fire Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Fire Magic",
+        "target": "you-creature-token-0",
+        "amount": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Fire Magic",
+        "target": "opp0-creature-token-0",
+        "amount": 1
+      },
+      {
+        "fn": "move",
+        "card": "Fire Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "Fira: deals 2 damage to each creature (2 total)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fire Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Fire Magic",
+        "target": "you-creature-token-0",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Fire Magic",
+        "target": "opp0-creature-token-0",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Fire Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "Firaga: deals 3 damage to each creature (2 total)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fire Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Fire Magic",
+        "target": "you-creature-token-0",
+        "amount": 3
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Fire Magic",
+        "target": "opp0-creature-token-0",
+        "amount": 3
+      },
+      {
+        "fn": "move",
+        "card": "Fire Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

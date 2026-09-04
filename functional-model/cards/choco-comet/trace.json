@@ -1,0 +1,33 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creates a 2/2 green Bird token (the X-damage half of this card is not modeled — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Choco-Comet",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{X}{R}{R}"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Bird",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Choco-Comet",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

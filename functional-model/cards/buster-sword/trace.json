@@ -1,0 +1,46 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({2})",
+      "result": "attaches to the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Buster Sword",
+        "instanceId": 1,
+        "cost": "{2}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Buster Sword",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEquippedDealsDamage\" trigger fires",
+      "result": "draws a card (the free-cast clause is not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Buster Sword",
+        "instanceId": 1,
+        "name": "onEquippedDealsDamage"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

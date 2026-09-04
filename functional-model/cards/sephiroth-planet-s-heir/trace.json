@@ -1,0 +1,82 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 2 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "each opponent's creatures get -2/-2 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, Planet's Heir",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "opp0-creature-token-0",
+        "power": -2,
+        "toughness": -2
+      },
+      {
+        "fn": "pump",
+        "target": "opp0-creature-token-1",
+        "power": -2,
+        "toughness": -2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onOpponentCreatureDies\" trigger fires",
+      "result": "puts a +1/+1 counter on Sephiroth, Planet's Heir"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, Planet's Heir",
+        "instanceId": 1,
+        "name": "onOpponentCreatureDies"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Sephiroth, Planet's Heir",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Sephiroth, Planet's Heir",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Sephiroth, Planet's Heir",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Sephiroth, Planet's Heir",
+        "player": "you"
+      }
+    ]
+  }
+]

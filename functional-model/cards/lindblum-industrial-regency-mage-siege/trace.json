@@ -1,0 +1,64 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Lindblum, Industrial Regency",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Lindblum, Industrial Regency",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Lindblum, Industrial Regency"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face",
+      "result": "creates a 0/1 black Wizard creature token (its granted \"deals 1 damage on noncreature cast\" ability is not modeled — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Mage Siege",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Mage Siege",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

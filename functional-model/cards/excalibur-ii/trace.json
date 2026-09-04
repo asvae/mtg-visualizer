@@ -1,0 +1,73 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLifeGained\" trigger fires",
+      "result": "puts a charge counter on itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Excalibur II",
+        "instanceId": 1,
+        "name": "onLifeGained"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Excalibur II",
+        "counterType": "CHARGE",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({3})",
+      "result": "attaches to the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Excalibur II",
+        "instanceId": 1,
+        "cost": "{3}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Excalibur II",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({3}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Excalibur II",
+        "instanceId": 1,
+        "cost": "{3}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "legendRule",
+        "card": "Excalibur II",
+        "player": "you"
+      }
+    ]
+  }
+]

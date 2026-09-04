@@ -1,0 +1,218 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "destroys up to one target creature"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Hunt the Mark",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Sidequest: Hunt the Mark",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no legal target, nothing destroyed"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Hunt the Mark",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Sidequest: Hunt the Mark",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "creates a Treasure token; below three Treasures controlled (only the one just created), no transform"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Hunt the Mark",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Sidequest: Hunt the Mark",
+        "subtype": "Treasure",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Treasure",
+        "subtype": "Treasure",
+        "result": true
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({1}{B}, Sacrifice another creature or artifact), back face",
+      "result": "sacrifices another creature or artifact, Yiazmat gains indestructible until end of turn, then taps itself"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Yiazmat, Ultimate Mark",
+        "instanceId": 1,
+        "cost": "{1}{B}, Sacrifice another creature or artifact"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature-or-artifact",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Yiazmat, Ultimate Mark",
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Yiazmat, Ultimate Mark",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Yiazmat, Ultimate Mark"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({1}{B}, Sacrifice another creature or artifact), back face, a duplicate legendary copy enters",
+      "result": "a second Yiazmat entering triggers the legend rule; the newer copy is put into the graveyard"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Yiazmat, Ultimate Mark",
+        "instanceId": 1,
+        "cost": "{1}{B}, Sacrifice another creature or artifact"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature-or-artifact",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Yiazmat, Ultimate Mark",
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Yiazmat, Ultimate Mark",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Yiazmat, Ultimate Mark"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Yiazmat, Ultimate Mark",
+        "player": "you"
+      }
+    ]
+  }
+]

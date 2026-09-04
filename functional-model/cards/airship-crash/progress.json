@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "the third disjunct of its real destroy filter ('creature with flying') has no vocabulary slot — schema doesn't support keyword-based constraints yet, so this part of the filter is silently narrower than the real card"
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "puts a +1/+1 counter on itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sazh's Chocobo",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Sazh's Chocobo",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in hand",
+      "action": "\"onArtifactEnters\" trigger fires",
+      "result": "draws a card, then discards a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rook Turret",
+        "instanceId": 1,
+        "name": "onArtifactEnters"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  }
+]

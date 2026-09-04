@@ -1,0 +1,101 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 artifact(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "draws 2 cards, one for each of the 2 artifacts you control"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Edgar, King of Figaro",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-1",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Edgar, King of Figaro",
+        "result": false
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no artifacts you control, draws no cards"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Edgar, King of Figaro",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Edgar, King of Figaro",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Edgar, King of Figaro",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{U}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Edgar, King of Figaro",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Edgar, King of Figaro",
+        "player": "you"
+      }
+    ]
+  }
+]

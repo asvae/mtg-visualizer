@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "pays 1 life, draws a card, and puts a +1/+1 counter on Seymour Flux"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Seymour Flux",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Seymour Flux",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  }
+]

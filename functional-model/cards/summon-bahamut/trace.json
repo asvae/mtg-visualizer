@@ -1,0 +1,132 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 artifact(s)",
+      "action": "\"chapterI\" trigger fires",
+      "result": "destroys a nonland permanent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Bahamut",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Summon: Bahamut",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "destroy",
+        "target": "Summon: Bahamut"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 artifact(s)",
+      "action": "\"chapterII\" trigger fires",
+      "result": "destroys a nonland permanent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Bahamut",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Summon: Bahamut",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "destroy",
+        "target": "Summon: Bahamut"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "draws two cards"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Bahamut",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIV\" trigger fires",
+      "result": "deals 7 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Bahamut",
+        "instanceId": 1,
+        "name": "chapterIV"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Summon: Bahamut",
+        "target": "opp0",
+        "amount": 7
+      }
+    ]
+  }
+]

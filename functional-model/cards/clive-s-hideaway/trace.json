@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield UNTAPPED, no resolvable effect — Hideaway 4, the play-the-exiled-card ability, and the mana ability are all static text (see definition.ts for the real gaps)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Clive's Hideaway",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Clive's Hideaway",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

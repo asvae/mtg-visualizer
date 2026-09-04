@@ -1,0 +1,156 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 2)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "target creature gets +2/+2 until end of turn (2/2 -> 4/4)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "move",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 3)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "doubles target creature's power and toughness until end of turn (3/3 -> 6/6)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 3
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-creature-token-0",
+        "result": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "move",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 2)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "triples target creature's power and toughness until end of turn (2/2 -> 6/6)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 4,
+        "toughness": 4
+      },
+      {
+        "fn": "move",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "no legal target on the battlefield, nothing happens"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "move",
+        "card": "Tifa's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

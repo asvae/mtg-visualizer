@@ -1,0 +1,228 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 4)",
+      "action": "cast from hand",
+      "result": "creates a token copy of the target creature (same power/toughness/name)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Relm's Sketching",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 4
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-creature-token-0",
+        "result": 4
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "you-creature-token-0",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Relm's Sketching",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 artifact(s)",
+      "action": "cast from hand",
+      "result": "creates a token copy of the opponent's target artifact"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Relm's Sketching",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "opp0-artifact-0",
+        "result": 1
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "opp0-artifact-0",
+        "result": 1
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "opp0-artifact-0",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Relm's Sketching",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 land(s)",
+      "action": "cast from hand",
+      "result": "creates a token copy of the target land"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Relm's Sketching",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-land-0",
+        "result": 1
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-land-0",
+        "result": 1
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "you-land-0",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Relm's Sketching",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

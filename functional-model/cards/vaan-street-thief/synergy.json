@@ -1,0 +1,49 @@
+{
+  "produces": [
+    {
+      "zone": "Exile",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_treasure_sac"
+      },
+      "ease": 2,
+      "strength": 1
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Scout",
+            "Pirate",
+            "Rogue"
+          ]
+        }
+      },
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Scout",
+          "Pirate",
+          "Rogue"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

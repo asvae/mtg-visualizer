@@ -1,0 +1,166 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 2 card(s) in library; opp0: 1 card(s) in hand",
+      "action": "\"onEnter\" trigger fires",
+      "result": "each player discards a card, then you draw 2 cards"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Kefka, Court Mage",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "discard",
+        "player": "opp0",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 2 card(s) in library; opp0: 1 card(s) in hand",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "each player discards a card, then you draw 2 cards"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Kefka, Court Mage",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "discard",
+        "player": "opp0",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 artifact(s)",
+      "action": "activated ({8} (activate only as a sorcery))",
+      "result": "each opponent sacrifices a permanent, then exiles Kefka and returns it transformed into Kefka, Ruler of Ruin"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Kefka, Court Mage",
+        "instanceId": 1,
+        "cost": "{8} (activate only as a sorcery)"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 1,
+        "validType": "any",
+        "notSelf": false,
+        "tokenFilter": null
+      },
+      {
+        "fn": "moveTo",
+        "target": "Kefka, Court Mage",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Kefka, Court Mage",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 5 card(s) in library",
+      "action": "\"onOpponentLosesLife\" trigger fires, back face",
+      "result": "draws 5 cards (the opponent lost 5 life)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Kefka, Ruler of Ruin",
+        "instanceId": 1,
+        "name": "onOpponentLosesLife"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({8} (activate only as a sorcery)), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Kefka, Court Mage",
+        "instanceId": 1,
+        "cost": "{8} (activate only as a sorcery)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Kefka, Court Mage",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Kefka, Court Mage",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Kefka, Court Mage",
+        "player": "you"
+      }
+    ]
+  }
+]

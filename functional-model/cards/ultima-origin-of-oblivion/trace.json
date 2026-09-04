@@ -1,0 +1,86 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 2 land(s)",
+      "action": "\"onAttack\" trigger fires",
+      "result": "puts a blight counter on target land"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultima, Origin of Oblivion",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Ultima, Origin of Oblivion",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-land-1",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "opp0-land-0",
+        "counterType": "blight",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttack\" trigger fires",
+      "result": "no legal land target, no-op"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultima, Origin of Oblivion",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Ultima, Origin of Oblivion",
+        "result": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,128 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "destroys the opponent's creature, then draws 1 card (approximated as the graveyard's creature count at the moment of the read — see definition.ts comment on the untracked 'this turn' condition)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Deadly Embrace",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{B}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Deadly Embrace",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard; opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "destroys the creature, then draws 3 cards (the destroyed creature plus 2 already seeded in the graveyard)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Deadly Embrace",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{B}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Deadly Embrace",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

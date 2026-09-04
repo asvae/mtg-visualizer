@@ -1,0 +1,15 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

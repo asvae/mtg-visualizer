@@ -1,0 +1,104 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "pumps your target creature +1/+1, grants it hexproof, and untaps it"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Magic Damper",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{U}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Hexproof"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "untap",
+        "target": "you-creature-token-0"
+      },
+      {
+        "fn": "move",
+        "card": "Magic Damper",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "no legal target — you control no creatures, nothing happens"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Magic Damper",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{U}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Magic Damper",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

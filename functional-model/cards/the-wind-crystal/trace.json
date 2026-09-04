@@ -1,0 +1,37 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({4}{W}{W}, {T})",
+      "result": "activated (no resolvable effect in this model — keyword-only grants are not mechanically enforced)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Wind Crystal",
+        "instanceId": 1,
+        "cost": "{4}{W}{W}, {T}"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{W}{W}, {T}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Wind Crystal",
+        "instanceId": 1,
+        "cost": "{4}{W}{W}, {T}"
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Wind Crystal",
+        "player": "you"
+      }
+    ]
+  }
+]

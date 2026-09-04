@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Auron's Inspiration",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "move",
+        "card": "Auron's Inspiration",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from graveyard",
+      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Auron's Inspiration",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{2}{W}{W}"
+      },
+      {
+        "fn": "move",
+        "card": "Auron's Inspiration",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

@@ -1,0 +1,151 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "both creatures you control get +3/+3 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "move",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "2 permanent cards moved from graveyard to hand"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-1",
+        "zone": "Hand"
+      },
+      {
+        "fn": "move",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "1 permanent card moved from graveyard to hand"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "move",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "nothing to return, no legal targets"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Rydia's Return",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

@@ -1,0 +1,154 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Weapons Vendor",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); you: 1 Equipment",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "attaches your Equipment to a creature you control"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Weapons Vendor",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Weapons Vendor",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-equipment-0",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "no Equipment you control, nothing to attach"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Weapons Vendor",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Weapons Vendor",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 Equipment",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "no other creature you control; attaches the Equipment to Weapons Vendor itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Weapons Vendor",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Weapons Vendor",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-equipment-0",
+        "target": "Weapons Vendor"
+      }
+    ]
+  }
+]

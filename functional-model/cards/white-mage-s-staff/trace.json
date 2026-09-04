@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 Hero token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "White Mage's Staff",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "White Mage's Staff",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({3})",
+      "result": "attaches to a creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "White Mage's Staff",
+        "instanceId": 1,
+        "cost": "{3}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "White Mage's Staff",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

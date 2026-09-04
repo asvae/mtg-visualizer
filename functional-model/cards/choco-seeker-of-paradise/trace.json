@@ -1,0 +1,72 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "\"onBirdsAttack\" trigger fires",
+      "result": "looks at 2 cards, may put one into hand (the land-to-battlefield-tapped/rest-to-graveyard half is out of scope — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Choco, Seeker of Paradise",
+        "instanceId": 1,
+        "name": "onBirdsAttack"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 2,
+        "take": 1,
+        "found": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "gets +1/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Choco, Seeker of Paradise",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "pump",
+        "target": "Choco, Seeker of Paradise",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Choco, Seeker of Paradise",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Choco, Seeker of Paradise",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Choco, Seeker of Paradise",
+        "player": "you"
+      }
+    ]
+  }
+]

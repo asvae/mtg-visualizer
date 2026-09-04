@@ -1,0 +1,85 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}{W}{W})",
+      "result": "exiles itself and returns transformed into Summon: Alexander"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Crystal Fragments",
+        "instanceId": 1,
+        "cost": "{5}{W}{W}"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Crystal Fragments",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Crystal Fragments",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterI\" trigger fires, back face",
+      "result": "no resolvable effect in this model (damage prevention is not tracked here)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Alexander",
+        "instanceId": 1,
+        "name": "chapterI"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterII\" trigger fires, back face",
+      "result": "no resolvable effect in this model (damage prevention is not tracked here)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Alexander",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 2 creature(s)",
+      "action": "\"chapterIII\" trigger fires, back face",
+      "result": "taps both of the opponent's creatures"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Alexander",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 2
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-creature-token-1"
+      }
+    ]
+  }
+]

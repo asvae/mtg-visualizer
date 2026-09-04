@@ -1,0 +1,104 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library; you: 1 artifact(s) in library",
+      "action": "cast from hand",
+      "result": "finds the Vehicle (modeled as an artifact) and puts it into hand"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "From Father to Son",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 3,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-artifact-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "move",
+        "card": "From Father to Son",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library; you: 1 artifact(s) in library",
+      "action": "cast from graveyard",
+      "result": "finds the Vehicle (modeled as an artifact) and puts it directly onto the battlefield"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "From Father to Son",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{4}{W}{W}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 3,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-artifact-0",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "move",
+        "card": "From Father to Son",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

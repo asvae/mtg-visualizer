@@ -1,0 +1,249 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onArtifactEnters\" trigger fires",
+      "result": "surveils 1"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Golbez, Crystal Collector",
+        "instanceId": 1,
+        "name": "onArtifactEnters"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 artifact(s); you: 1 creature card(s) in graveyard",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "fewer than 4 artifacts: nothing happens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Golbez, Crystal Collector",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-1",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Golbez, Crystal Collector",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 4 artifact(s); you: 1 creature card(s) in graveyard",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "returns the creature card from graveyard to hand (4-7 artifacts, no life loss)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Golbez, Crystal Collector",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 5,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-1",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-2",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-3",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Golbez, Crystal Collector",
+        "result": false
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-gy-creature-0",
+        "result": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Hand"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 8 artifact(s); you: 1 creature card(s) in graveyard",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "returns the creature card to hand, then each opponent loses life equal to that card's power (1)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Golbez, Crystal Collector",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 9,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-1",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-2",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-3",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-4",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-5",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-6",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-7",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Golbez, Crystal Collector",
+        "result": false
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-gy-creature-0",
+        "result": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Golbez, Crystal Collector",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Golbez, Crystal Collector",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Golbez, Crystal Collector",
+        "player": "you"
+      }
+    ]
+  }
+]

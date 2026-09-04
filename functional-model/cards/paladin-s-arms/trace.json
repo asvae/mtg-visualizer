@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 Hero token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Paladin's Arms",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Paladin's Arms",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({4})",
+      "result": "attaches to a creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Paladin's Arms",
+        "instanceId": 1,
+        "cost": "{4}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Paladin's Arms",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

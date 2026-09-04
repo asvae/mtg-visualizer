@@ -1,0 +1,11 @@
+{
+  "produces": [
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "ease": 5,
+      "strength": 4
+    }
+  ],
+  "wants": []
+}

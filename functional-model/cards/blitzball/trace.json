@@ -1,0 +1,25 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "activated (GOOOOAAAALLL! — {T}, Sacrifice this artifact (activate only if an opponent was dealt combat damage by a legendary creature this turn))",
+      "result": "draws two cards"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Blitzball",
+        "instanceId": 1,
+        "cost": "GOOOOAAAALLL! — {T}, Sacrifice this artifact (activate only if an opponent was dealt combat damage by a legendary creature this turn)"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

@@ -12,8 +12,8 @@ const { GameState, wrapPlayer, wrapCard, effectivePT } = await import('../state.
 const { startGame, currentPhase, advancePhase, activePlayer } = await import('../turn.ts');
 const { Stack } = await import('../stack.ts');
 const { runPriorityRound } = await import('../priority.ts');
-const { theFinalDays } = await import('../cards/the-final-days/index.ts');
-const { warrenElder } = await import('../cards/warren-elder/index.ts');
+const { theFinalDays } = await import('../cards/the-final-days/definition.ts');
+const { warrenElder } = await import('../cards/warren-elder/definition.ts');
 
 const state = new GameState();
 const you = state.addPlayer('you');

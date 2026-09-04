@@ -1,0 +1,42 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "draws 4 cards"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Travel the Overworld",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{5}{U}{U}"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Travel the Overworld",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

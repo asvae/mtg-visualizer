@@ -1,0 +1,14 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "zone": "Library",
+      "controller": "you",
+      "name": {
+        "eq": "Magitek Infantry"
+      },
+      "ease": 5,
+      "sourceText": "{2}{W}: Search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle."
+    }
+  ]
+}

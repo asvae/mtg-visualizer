@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttack\" trigger fires",
+      "result": "creates a 0/1 black Wizard creature token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Queen Brahne",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Queen Brahne",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Queen Brahne",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Queen Brahne",
+        "player": "you"
+      }
+    ]
+  }
+]

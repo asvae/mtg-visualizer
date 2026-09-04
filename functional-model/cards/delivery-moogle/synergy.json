@@ -1,0 +1,40 @@
+{
+  "produces": [
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less... put it into your hand"
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "ease": 5,
+      "sourceText": "search your library ... for an artifact card with mana value 2 or less"
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "ease": 3,
+      "sourceText": "search ... your ... graveyard for an artifact card with mana value 2 or less"
+    }
+  ]
+}

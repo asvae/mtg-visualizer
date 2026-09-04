@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Terra, Magical Adept\",\"zone\":\"Exile\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Terra, Magical Adept\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "front-face transform exile half unexplained; Esper Terra's own Saga chapters and its extra-turn trigger remain entirely unrepresented in definition.ts itself"
+  ]
+}

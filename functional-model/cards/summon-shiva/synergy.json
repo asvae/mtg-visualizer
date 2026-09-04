@@ -1,0 +1,29 @@
+{
+  "produces": [
+    {
+      "event": "putCounter",
+      "counterType": "stun",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 2 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "chooses an opponent creature; every other creature (both players', except Zenos and the chosen one) gets -2/-2 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zenos yae Galvus",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": -2,
+        "toughness": -2
+      },
+      {
+        "fn": "pump",
+        "target": "opp0-creature-token-1",
+        "power": -2,
+        "toughness": -2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no opponent creature to choose, no resolvable effect"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zenos yae Galvus",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onChosenCreatureLeaves\" trigger fires",
+      "result": "the chosen creature left the battlefield: Zenos transforms into Shinryu (represented as exile-then-return)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zenos yae Galvus",
+        "instanceId": 1,
+        "name": "onChosenCreatureLeaves"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Zenos yae Galvus",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Zenos yae Galvus",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onChosenPlayerLosesGame\" trigger fires, back face",
+      "result": "Burning Chains — no resolvable effect in this model (loses-the-game and chosen-player tracking are both missing — see this batch's final report)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shinryu, Transcendent Rival",
+        "instanceId": 1,
+        "name": "onChosenPlayerLosesGame"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Zenos yae Galvus",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{B}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Zenos yae Galvus",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Zenos yae Galvus",
+        "player": "you"
+      }
+    ]
+  }
+]

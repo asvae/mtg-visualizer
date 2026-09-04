@@ -1,0 +1,26 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "Instant (goes to the graveyard after resolving, like any instant)."
+    },
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "ease": 5,
+      "strength": 5,
+      "sourceText": "Cura — {1} — ...You gain 3 life. / Curaga — {3}{W} — ...You gain 6 life."
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "ease": 1,
+      "sourceText": "Cure — {0} — Target permanent gains hexproof and indestructible until end of turn (any permanent, either side)."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "\"searchBasic\" activated",
+      "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "World Map",
+        "instanceId": 1,
+        "cost": "{1}, {T}, Sacrifice this artifact",
+        "ability": "searchBasic"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "\"searchAny\" activated",
+      "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "World Map",
+        "instanceId": 1,
+        "cost": "{3}, {T}, Sacrifice this artifact",
+        "ability": "searchAny"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  }
+]

@@ -1,0 +1,131 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 Legendary creature(s)",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "you control two other legendary creatures: Serah Farron transforms (exiled and returned, standing in for the in-place flip)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Serah Farron",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Legendary",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Legendary",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Serah Farron",
+        "subtype": "Legendary",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Serah Farron",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Serah Farron",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 Legendary creature(s)",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "only one other legendary creature — condition not met, no transform"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Serah Farron",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Legendary",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Serah Farron",
+        "subtype": "Legendary",
+        "result": true
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face",
+      "result": "back face: static-only permanent, no resolvable effects (cost reduction and the +2/+2 anthem are both continuous text)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Crystallized Serah",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Crystallized Serah",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Serah Farron",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Serah Farron",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Serah Farron",
+        "player": "you"
+      }
+    ]
+  }
+]

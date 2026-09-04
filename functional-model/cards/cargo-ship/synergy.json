@@ -1,0 +1,13 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "ease": 2,
+      "strength": 1,
+      "sourceText": "(implicit — not a specific printed clause: Cargo Ship itself, once cast, is a permanent sitting on your battlefield like any Vehicle/artifact, before Crew 1 makes it a creature.)"
+    }
+  ],
+  "wants": []
+}

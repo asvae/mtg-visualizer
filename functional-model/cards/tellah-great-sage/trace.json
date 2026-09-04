@@ -1,0 +1,122 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCastNoncreatureSpell\" trigger fires",
+      "result": "creates a 1/1 Hero token; below 4 mana spent, no draw, no sacrifice"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tellah, Great Sage",
+        "instanceId": 1,
+        "name": "onCastNoncreatureSpell"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "\"onCastNoncreatureSpell\" trigger fires",
+      "result": "creates a 1/1 Hero token and draws 2 cards; below 8 mana spent, no sacrifice"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tellah, Great Sage",
+        "instanceId": 1,
+        "name": "onCastNoncreatureSpell"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "\"onCastNoncreatureSpell\" trigger fires",
+      "result": "creates a 1/1 Hero token, draws 2 cards, then sacrifices Tellah and it deals 8 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tellah, Great Sage",
+        "instanceId": 1,
+        "name": "onCastNoncreatureSpell"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Tellah, Great Sage",
+        "zone": "Graveyard"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Tellah, Great Sage",
+        "target": "opp0",
+        "amount": 8
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tellah, Great Sage",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Tellah, Great Sage",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Tellah, Great Sage",
+        "player": "you"
+      }
+    ]
+  }
+]

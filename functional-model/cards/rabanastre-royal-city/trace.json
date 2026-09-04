@@ -1,0 +1,33 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rabanastre, Royal City",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Rabanastre, Royal City",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Rabanastre, Royal City"
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "trigger-only scenario never logs an 'enters' line — no Battlefield produce fact possible, despite being a real permanent (same class affects treno-dark-city, vector-imperial-capital, windurst-federation-center, and zanarkand's front face)"
+  ]
+}

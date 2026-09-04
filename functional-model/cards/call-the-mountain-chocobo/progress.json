@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "Library/Land want is declared but no scenario can actually seed a matching library card to demonstrate success — a real, already-flagged scenario-coverage gap"
+  ]
+}

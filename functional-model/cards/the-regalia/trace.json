@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "reveals cards until a land is found and puts it onto the battlefield tapped (not modeled — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "The Regalia",
+        "instanceId": 1,
+        "name": "onAttacks"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "The Regalia",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}"
+      },
+      {
+        "fn": "enters",
+        "card": "The Regalia",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Regalia",
+        "player": "you"
+      }
+    ]
+  }
+]

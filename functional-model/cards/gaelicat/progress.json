@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "'2+ artifacts -> +2/+0' static ability has zero trace reads anywhere — real ability, completely unenforced/unmodeled in this engine"
+  ]
+}

@@ -1,0 +1,151 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "searches the library and puts a card into hand (approximated — no Bird/basic-land subtype filter available, see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sazh Katzroy",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "any"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "empty library, nothing found"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sazh Katzroy",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "any"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onAttack\" trigger fires",
+      "result": "puts a +1/+1 counter on the target creature (0 -> 1), then doubles it to 2"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sazh Katzroy",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:getCounters",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "result": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttack\" trigger fires",
+      "result": "no other creature present — Sazh Katzroy itself is the only legal target, so it targets and doubles its own counters"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sazh Katzroy",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "Sazh Katzroy",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:getCounters",
+        "target": "Sazh Katzroy",
+        "counterType": "+1/+1",
+        "result": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "Sazh Katzroy",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Sazh Katzroy",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Sazh Katzroy",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Sazh Katzroy",
+        "player": "you"
+      }
+    ]
+  }
+]

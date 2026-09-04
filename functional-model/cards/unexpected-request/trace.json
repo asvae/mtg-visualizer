@@ -1,0 +1,123 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 Equipment; opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "gains control of the target creature, untaps it and grants it haste, and attaches your Equipment to it"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Unexpected Request",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "gainControl",
+        "controller": "you",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "untap",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "opp0-creature-token-0",
+        "keyword": "Haste"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "equip",
+        "equipment": "you-equipment-0",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "move",
+        "card": "Unexpected Request",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "gains control of the target creature and grants it haste (no Equipment you control to attach)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Unexpected Request",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "gainControl",
+        "controller": "you",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "untap",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "opp0-creature-token-0",
+        "keyword": "Haste"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Unexpected Request",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

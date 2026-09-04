@@ -1,0 +1,108 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDealsDamage\" trigger fires",
+      "result": "you lose 2 life (18 remaining); above half starting life, no transform"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cecil, Dark Knight",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "read:getLife",
+        "player": "you",
+        "result": 18
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: at 12 life",
+      "action": "\"onDealsDamage\" trigger fires",
+      "result": "you lose 5 life (7 remaining, at or below half of 20); untaps and transforms into Cecil, Redeemed Paladin"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cecil, Dark Knight",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 5
+      },
+      {
+        "fn": "read:getLife",
+        "player": "you",
+        "result": 7
+      },
+      {
+        "fn": "untap",
+        "target": "Cecil, Dark Knight"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Cecil, Dark Knight",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Cecil, Dark Knight",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onAttacks\" trigger fires, back face",
+      "result": "other attacking creatures gain indestructible until end of turn (not mechanically enforced)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cecil, Redeemed Paladin",
+        "instanceId": 1,
+        "name": "onAttacks"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cecil, Dark Knight",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cecil, Dark Knight",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Cecil, Dark Knight",
+        "player": "you"
+      }
+    ]
+  }
+]

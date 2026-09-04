@@ -1,22 +1,22 @@
 // A lightweight TypeScript mirror of the slice of Card-Forge's own real
 // engine API (github.com/Card-Forge/forge, GPL-3.0 — a checkout lives at
-// ../mtg-forge relative to this repo) that functional-model/data/*.ts's
-// generated pseudocode-turned-real-code calls against. The point is
+// ../mtg-forge relative to this repo) that functional-model/cards/*.ts's
+// hand-authored `CardDefinition`s call against. The point is
 // traceability: every interface member below cites the real Java file (and
 // roughly which line, at the time this was written) it mirrors, so a reader
 // can go check "is this really what Forge calls it" instead of trusting an
 // invented API. This is NOT a port of Forge's engine — no method here has a
 // body (`declare function`/interface members only, real ambient TS syntax,
-// no implementation to maintain) — it exists purely so
-// functional-model/data/*.ts reads as code written against Forge's real
-// shape rather than a shorthand DSL, per the user's own framing: "copy it
-// somehow from forge, to not reinvent the wheel."
+// no implementation to maintain) — it exists purely so card definitions read
+// as code written against Forge's real shape rather than a shorthand DSL,
+// per the user's own framing: "copy it somehow from forge, to not reinvent
+// the wheel."
 //
 // Deliberately partial. A handful of Java signatures are trimmed of
 // arguments that have no meaningful value outside a running Forge game (a
 // `SpellAbility`/`Card` "who/what caused this" argument, mostly) — noted
 // inline on each member. And a dozen-ish `declare function` helpers below
-// the interfaces cover actions the generated pseudocode needed that don't
+// the interfaces cover actions card definitions need that don't
 // correspond to one single Player/Card method call in the real engine (most
 // real Forge actions are dispatched through much heavier machinery —
 // `Game.getAction()`, replacement effects, static-ability layers, etc. —
@@ -69,6 +69,8 @@ export interface Card extends GameEntity {
    * reads as one predicate instead of a two-step lookup.
    */
   hasSubtype(subtype: string): boolean;
+  /** Real Forge `K:` keyword check (`Card.hasKeyword(String)`, Card.java ~line 4991) — same controlled vocabulary card.ts's own `Keyword` type uses; `state.ts`'s own `RealCard.keywords` already tracks this for Lifelink/Indestructible internally, this just exposes the read (Airship Crash's own "destroy target creature with flying," e.g.). */
+  hasKeyword(keyword: string): boolean;
   /**
    * Convenience collapsing `Card.getType()` then
    * `CardTypeView.isCreature()` (forge-core/.../card/CardTypeView.java
@@ -81,6 +83,26 @@ export interface Card extends GameEntity {
    * reasoning as `isCreature` above.
    */
   isLand(): boolean;
+  /**
+   * Convenience collapsing `Card.getType()` then `CardTypeView.isEnchantment()`
+   * (forge-core/.../card/CardTypeView.java ~line 48) into one call — same
+   * reasoning as `isCreature`/`isLand` above.
+   */
+  isEnchantment(): boolean;
+  /**
+   * Convenience collapsing `Card.getType()` then `CardTypeView.isArtifact()`
+   * (forge-core/.../card/CardTypeView.java ~line 42) into one call — same
+   * reasoning as `isCreature`/`isLand`/`isEnchantment` above.
+   */
+  isArtifact(): boolean;
+  /** Card.java ~line 4641 — `public final boolean isTapped()`. */
+  isTapped(): boolean;
+  /** Card.java ~line 7227 — `public int getCMC()`, real mana value. */
+  getCMC(): number;
+  /** Card.java ~line 3907 — `public final Card getAttachedTo()`: for an Equipment/Aura, what it's currently attached to (undefined when unattached). */
+  getAttachedTo(): Card | undefined;
+  /** Card.java ~line 3850 — `public final CardCollectionView getEquippedBy()`: for a creature, every Equipment currently attached to it (Barret Wallace's own "damage equal to equipped creatures you control," e.g.). */
+  getEquippedBy(): Card[];
 }
 
 /**
@@ -135,6 +157,8 @@ export interface TokenInfo {
   types: string[];
   basePower: number;
   baseToughness: number;
+  /** Real Forge `K:` lines a token itself carries (Prompto Argentum's own Bird token with a granted evasion keyword, e.g.) — same controlled vocabulary card.ts's own `Keyword` type uses, not reproduced here to avoid a circular import; typed as `string[]` and narrowed by the caller. Omit for a vanilla token (most of them). */
+  keywords?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +169,7 @@ export interface TokenInfo {
 // readable" purpose if mirrored in full. `declare function foo(...): T;` is
 // valid ambient TypeScript with no implementation required — there is
 // nothing here to keep in sync with a real function body, only a typed
-// surface for functional-model/data/*.ts to call against.
+// surface for functional-model/cards/*.ts to call against.
 
 /**
  * Convenience wrapper over the shape of
@@ -163,7 +187,7 @@ export declare function destroy(target: Card): void;
  * player chooses `qty` of their own permanents matching `SacValid$`" one
  * player at a time; this collapses that into one call for `controller`
  * alone (Gaius van Baelsar's "each player sacrifices..." calls this once per
- * player — see cards/gaius-van-baelsar/index.ts). No signature user yet at
+ * player — see cards/gaius-van-baelsar/definition.ts). No signature user yet at
  * the time this changed from a single-target form, so widened rather than
  * duplicated under a second name.
  */
@@ -181,6 +205,17 @@ export declare function tap(target: Card): void;
 /** Convenience wrapper over `Card.untap()`. */
 export declare function untap(target: Card): void;
 
+/**
+ * Convenience wrapper over `Card.addChangedCardKeywords(...)` (Card.java
+ * ~line 5017) — real Forge tracks a granted keyword as a duration-scoped,
+ * timestamped layer-6 entry, reverted at the real effect's end ("until end
+ * of turn," e.g.). This model has no phase/turn-boundary reset step
+ * anywhere (see state.ts's own header), so this applies the grant as a
+ * direct, PERMANENT mutation instead — see state.ts's own `grantKeyword`
+ * doc comment for the full reasoning.
+ */
+export declare function grantKeyword(target: Card, keyword: string): void;
+
 /** Convenience wrapper over `Player.mill(int)` — moves `qty` cards library-&gt;graveyard, returns them. */
 export declare function mill(player: Player, qty: number): Card[];
 
@@ -190,8 +225,7 @@ export declare function scry(player: Player, qty: number): void;
 /** Convenience wrapper over Forge's own Surveil effect (look at the top `qty`, put any number into the graveyard). */
 export declare function surveil(player: Player, qty: number): void;
 
-/** Convenience wrapper over Forge's own Dig effect (look at the top `qty`, choose some to hand). */
-export declare function dig(player: Player, qty: number): Card[];
+// dig's declaration lives further down (Forge's own DigEffect).
 
 /** Convenience wrapper over `Player.discard(...)`. */
 export declare function discard(player: Player, qty: number): void;
@@ -276,6 +310,16 @@ export declare function chooseTarget(pool: Card[], predicate?: (c: Card) => bool
  * "during your turn" restriction, e.g.).
  */
 export declare function isYourTurn(player: Player): boolean;
+
+/**
+ * Convenience wrapper over Forge's own `DigEffect`
+ * (forge-game/.../ability/effects/DigEffect.java) — looks at the top `qty`
+ * library cards, takes up to `take` matching `validType`, puts the rest on
+ * the bottom (real order fidelity for "rest in a random order" isn't
+ * tracked here — generic library-filler objects are interchangeable in this
+ * model, so the exact shuffled order has no observable consequence).
+ */
+export declare function dig(player: Player, qty: number, take: number, validType?: string): Card[];
 
 /**
  * Forge's own `PlayerCountOpponents$HighestValid`/`$HighestLifeTotal`/etc.

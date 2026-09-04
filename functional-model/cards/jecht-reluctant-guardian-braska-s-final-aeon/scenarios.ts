@@ -1,7 +1,7 @@
 import type { Scenario } from '../../harness';
 
 export const scenarios: Scenario[] = [
-  { label: 'Jecht deals combat damage to a player', trigger: 'onDealsDamage', opponents: [{}] },
-  { label: 'Braska chapter I', face: 'back', trigger: 'chapterI', opponents: [{ handCount: 3 }] },
-  { label: 'Braska chapter III', face: 'back', trigger: 'chapterIII', opponents: [{ creaturesCount: 3 }] },
+  { result: "exiles Jecht and returns it transformed into Braska's Final Aeon", trigger: 'onDealsDamage', opponents: [{}] },
+  { result: 'the opponent discards a card and you draw a card', face: 'back', trigger: 'chapterI', opponents: [{ handCount: 3 }] },
+  { result: 'the opponent sacrifices two creatures', face: 'back', trigger: 'chapterIII', opponents: [{ creaturesCount: 3 }] },
 ];

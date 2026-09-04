@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onDealsDamage\" trigger fires",
+      "result": "exiles the top card of your library (the MayPlay permission is not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Lightning, Security Sergeant",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Lightning, Security Sergeant",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Lightning, Security Sergeant",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Lightning, Security Sergeant",
+        "player": "you"
+      }
+    ]
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_1_1_hero"
+      },
+      "ease": 1,
+      "strength": 1,
+      "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token."
+    }
+  ],
+  "wants": [
+    {
+      "event": "dies",
+      "target": "self",
+      "ease": 3,
+      "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token. (needs itself to die)"
+    }
+  ]
+}

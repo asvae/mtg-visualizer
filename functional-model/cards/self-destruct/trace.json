@@ -1,0 +1,103 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 4); opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "the source creature (power 4) deals 4 damage to the other target creature and 4 damage to itself"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Self-Destruct",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 4
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-0",
+        "amount": 4
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "you-creature-token-0",
+        "amount": 4
+      },
+      {
+        "fn": "move",
+        "card": "Self-Destruct",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 3)",
+      "action": "cast from hand",
+      "result": "no other creature to hit; it only deals damage to itself equal to its own power"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Self-Destruct",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "you-creature-token-0",
+        "amount": 3
+      },
+      {
+        "fn": "move",
+        "card": "Self-Destruct",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creature enters, no resolvable effect (the P/T bonus is a real CDA with no matching ptFormula shape — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Xande, Dark Mage",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Xande, Dark Mage",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Xande, Dark Mage",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Xande, Dark Mage",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Xande, Dark Mage",
+        "player": "you"
+      }
+    ]
+  }
+]

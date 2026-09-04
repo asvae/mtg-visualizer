@@ -1,0 +1,156 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 card(s) in library",
+      "action": "\"onScoutsDealCombatDamage\" trigger fires",
+      "result": "exiles the top card of the opponent's library and creates a Treasure token (casting the discovered card is not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Vaan, Street Thief",
+        "instanceId": 1,
+        "name": "onScoutsDealCombatDamage"
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 1,
+        "validType": "any"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Scout creature(s)",
+      "action": "\"onCastSpellYouDontOwn\" trigger fires",
+      "result": "puts a +1/+1 counter on Vaan and both other Scouts you control"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Vaan, Street Thief",
+        "instanceId": 1,
+        "name": "onCastSpellYouDontOwn"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Scout",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Scout",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-1",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Vaan, Street Thief",
+        "subtype": "Scout",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Vaan, Street Thief",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"onCastSpellYouDontOwn\" trigger fires",
+      "result": "puts a +1/+1 counter on Vaan only — the other 2 creatures are not Scouts, Pirates, or Rogues"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Vaan, Street Thief",
+        "instanceId": 1,
+        "name": "onCastSpellYouDontOwn"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Scout",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Pirate",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Rogue",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Scout",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Pirate",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Rogue",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Vaan, Street Thief",
+        "subtype": "Scout",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Vaan, Street Thief",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  }
+]

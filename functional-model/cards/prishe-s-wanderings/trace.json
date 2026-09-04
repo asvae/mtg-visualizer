@@ -1,0 +1,101 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); you: 1 card(s) in library",
+      "action": "cast from hand",
+      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap); the +1/+1 counter is still placed on the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Prishe's Wanderings",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{G}"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 1,
+        "validType": "land"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "move",
+        "card": "Prishe's Wanderings",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "cast from hand",
+      "result": "no legal creature target you control, no counter placed"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Prishe's Wanderings",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{G}"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 1,
+        "validType": "land"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Prishe's Wanderings",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

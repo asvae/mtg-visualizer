@@ -1,0 +1,99 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "returns the other permanent to its owner's hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-token-0",
+        "zone": "Hand"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no other permanent to bounce, no effect"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "gets +1/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "pump",
+        "target": "Ambrosia Whiteheart",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Ambrosia Whiteheart",
+        "player": "you"
+      }
+    ]
+  }
+]

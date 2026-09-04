@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "double strike grant, self-untap, AND 'additional combat phase' are ALL entirely unmodeled (parked/no-vocabulary) — three real granted abilities with zero representation"
+  ]
+}

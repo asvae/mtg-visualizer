@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "you gain 2 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Adventurer's Inn",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2
+      }
+    ]
+  }
+]

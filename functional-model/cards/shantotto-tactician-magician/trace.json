@@ -1,0 +1,75 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCastNoncreatureSpell\" trigger fires",
+      "result": "Shantotto gets +4/+0 until end of turn and draws a card (4 mana spent)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shantotto, Tactician Magician",
+        "instanceId": 1,
+        "name": "onCastNoncreatureSpell"
+      },
+      {
+        "fn": "pump",
+        "target": "Shantotto, Tactician Magician",
+        "power": 4,
+        "toughness": 0
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCastNoncreatureSpell\" trigger fires",
+      "result": "Shantotto gets +2/+0 until end of turn, no draw (below 4 mana spent)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shantotto, Tactician Magician",
+        "instanceId": 1,
+        "name": "onCastNoncreatureSpell"
+      },
+      {
+        "fn": "pump",
+        "target": "Shantotto, Tactician Magician",
+        "power": 2,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Shantotto, Tactician Magician",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Shantotto, Tactician Magician",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Shantotto, Tactician Magician",
+        "player": "you"
+      }
+    ]
+  }
+]

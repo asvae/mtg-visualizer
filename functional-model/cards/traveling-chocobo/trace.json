@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield with no resolvable effect — all three abilities are continuous static permissions (see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Traveling Chocobo",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Traveling Chocobo",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has move ({\"fn\":\"move\",\"card\":\"Overture\",\"instanceId\":1,\"from\":\"stack\",\"to\":\"Graveyard\",\"cardType\":\"Sorcery\"}) with no matching declared produce | trace has move ({\"fn\":\"move\",\"card\":\"Overture\",\"instanceId\":1,\"from\":\"stack\",\"to\":\"Graveyard\",\"cardType\":\"Sorcery\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": []
+}

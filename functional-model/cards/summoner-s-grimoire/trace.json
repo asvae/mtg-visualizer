@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summoner's Grimoire",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Summoner's Grimoire",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({3})",
+      "result": "attaches itself to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Summoner's Grimoire",
+        "instanceId": 1,
+        "cost": "{3}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Summoner's Grimoire",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

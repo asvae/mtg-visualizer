@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "mode 1's discard effect never logs any read of the opponent's hand — 'wants opponent's hand' fact omitted since zero trace evidence exists for it, real gap in what's verifiable"
+  ]
+}

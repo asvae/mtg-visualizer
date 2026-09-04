@@ -1,0 +1,122 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "deals 2 damage to target creature (Thunder)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Thunder Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Thunder Magic",
+        "target": "opp0-creature-token-0",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Thunder Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "deals 4 damage to target creature (Thundara)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Thunder Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Thunder Magic",
+        "target": "opp0-creature-token-0",
+        "amount": 4
+      },
+      {
+        "fn": "move",
+        "card": "Thunder Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "deals 8 damage to target creature (Thundaga)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Thunder Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Thunder Magic",
+        "target": "opp0-creature-token-0",
+        "amount": 8
+      },
+      {
+        "fn": "move",
+        "card": "Thunder Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

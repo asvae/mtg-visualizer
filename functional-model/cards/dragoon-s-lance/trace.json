@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Dragoon's Lance",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Dragoon's Lance",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({4})",
+      "result": "attaches itself to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Dragoon's Lance",
+        "instanceId": 1,
+        "cost": "{4}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Dragoon's Lance",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

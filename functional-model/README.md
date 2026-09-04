@@ -1,5 +1,22 @@
 # Functional model
 
+> **Current state (2026-09):** the `data/*.ts` + `functionalTranslate.ts`
+> auto-generation pipeline this README describes below is defunct —
+> `app/lib/functionalTranslate.ts` no longer exists, and there is no
+> `functional-model/data/` directory. Card logic now lives hand-authored at
+> `cards/<slug>/definition.ts` (Forge script → TS, same spirit, no longer
+> auto-translated), alongside that card's `scenarios.ts` (test inputs),
+> `trace.json` (real engine output, via `scripts/run-scenarios.mjs`), and
+> `synergy.json` (AI-authored attribute-bag facts, checked against the trace
+> by `scripts/verify-synergy.mjs`). **See `SYNERGY_DESIGN.md` for the current
+> design** — the fact model, the verification pipeline, and what's
+> deliberately parked. Each card folder also carries a `progress.json`
+> (enrichment/review/verification status, same axis convention as
+> `tagging/card-enrichment-status.json`). The rest of this file (translator
+> internals, `interfaces.ts`/`tokens.ts` grounding, the Beza insight) is kept
+> as historical context for the ideas that carried over, not as a
+> description of what runs today.
+
 A real, compiling TypeScript reconstruction of card abilities — a comparison
 view on the card detail page, alongside `synergy-model/` (a node/flow
 relation graph, for computing synergy) and `forge-model/` (Card-Forge's own
@@ -149,7 +166,7 @@ The script also prints a coverage summary — how many of the 50 produced zero
 ## Real oracle text
 
 `generate.mjs` reads the real Scryfall bulk-data dump at
-`tagging/scryfall-bulk/oracle-cards-*.jsonl.gz` and writes each card's
+`tmp/scryfall-bulk/oracle-cards-*.jsonl.gz` and writes each card's
 printed oracle text as a caption in the generated file's header comment —
 purely for a human reading the code to have the real wording alongside it.
 This is **not** an input to the translator itself: `translateForgeToFunctional`

@@ -1,0 +1,10 @@
+{
+  "produces": [
+    {
+      "zone": "Exile",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": []
+}

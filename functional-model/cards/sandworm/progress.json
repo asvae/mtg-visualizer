@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "the 'search library, put onto battlefield tapped' half of its own text has ZERO trace evidence in either scenario — completely unrepresented, not just unfacted"
+  ]
+}

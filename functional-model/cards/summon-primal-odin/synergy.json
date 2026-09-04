@@ -1,0 +1,40 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "event": "dies",
+      "controller": "opp",
+      "ease": 4,
+      "strength": 1
+    },
+    {
+      "event": "lifeloss",
+      "controller": "you",
+      "ease": 5,
+      "strength": 4
+    },
+    {
+      "event": "lifeloss",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 4
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 Bird creature(s) (power 2); opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "each of the 2 other Birds you control (power 2 each) deals 2 damage to the target creature an opponent controls (4 total)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Bartz and Boko",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Bird",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Bird",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Bartz and Boko",
+        "subtype": "Bird",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-0",
+        "amount": 2
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-1",
+        "result": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-1",
+        "target": "opp0-creature-token-0",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no other Birds you control, no damage dealt"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Bartz and Boko",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Bartz and Boko",
+        "subtype": "Bird",
+        "result": true
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 Bird creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no legal target (opponent controls no creatures), no effect"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Bartz and Boko",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Bartz and Boko",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Bartz and Boko",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Bartz and Boko",
+        "player": "you"
+      }
+    ]
+  }
+]

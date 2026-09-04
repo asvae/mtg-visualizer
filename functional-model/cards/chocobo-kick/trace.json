@@ -1,0 +1,114 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 2); opp0: 1 creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "the creature you control (power 2) deals 2 damage to the target creature an opponent controls"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Chocobo Kick",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-0",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Chocobo Kick",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 land(s); you: 1 creature(s) (power 2); opp0: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "returns a land to hand; the creature you control (power 2) deals twice its power (4) damage to the target creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Chocobo Kick",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-land-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-land-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "you-creature-token-0",
+        "target": "opp0-creature-token-0",
+        "amount": 4
+      },
+      {
+        "fn": "move",
+        "card": "Chocobo Kick",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

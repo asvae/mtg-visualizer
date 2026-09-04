@@ -1,0 +1,84 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "deals 2 damage to a creature (preferred over a player, same deterministic any-target convention every dealDamageAnyTarget card uses)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Lion Heart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Lion Heart",
+        "target": "opp0-creature-token-0",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "deals 2 damage to a player (no creature on the battlefield to prefer)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Lion Heart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Lion Heart",
+        "target": "you",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({2})",
+      "result": "attaches to the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Lion Heart",
+        "instanceId": 1,
+        "cost": "{2}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Lion Heart",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

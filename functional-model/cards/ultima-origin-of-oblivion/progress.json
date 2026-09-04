@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "human",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "User spot-checked FIN #2: the mana-doubling static (\"whenever you tap a land for {C}, add an additional {C}\") has no fact because the engine has no trigger hook for \"land tapped for mana\" at all — real ability, left as descriptive text in definition.ts (pre-existing, documented gap, not a synergy.json miss). Needs a new harness trigger type to model, out of scope for fact-authoring.",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "'Whenever you tap a land for {C}, add an additional {C}' has no engine trigger hook for 'land tapped for mana' at all — left as descriptive text in definition.ts, real ability entirely unmodeled"
+  ]
+}

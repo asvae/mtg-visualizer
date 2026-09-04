@@ -1,0 +1,104 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires, mode 0 chosen",
+      "result": "destroys the target creature (damage-this-turn not tracked — approximated as any creature)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Qutrub Forayer",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Qutrub Forayer",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "Qutrub Forayer"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "\"onEnter\" trigger fires, mode 1 chosen",
+      "result": "exiles up to 2 cards from your graveyard"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Qutrub Forayer",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-1",
+        "zone": "Exile"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "\"onEnter\" trigger fires, mode 1 chosen",
+      "result": "only 1 card in your graveyard — exiles that one"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Qutrub Forayer",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Exile"
+      }
+    ]
+  }
+]

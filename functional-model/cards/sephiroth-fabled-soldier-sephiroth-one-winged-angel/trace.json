@@ -1,0 +1,247 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEnterOrAttacks\" trigger fires",
+      "result": "sacrifices another creature, draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, Fabled SOLDIER",
+        "instanceId": 1,
+        "name": "onEnterOrAttacks"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnterOrAttacks\" trigger fires",
+      "result": "no fodder to sacrifice; draws a card anyway (sacrifice-success gate not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, Fabled SOLDIER",
+        "instanceId": 1,
+        "name": "onEnterOrAttacks"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCreatureDies\" trigger fires",
+      "result": "target opponent loses 1 life, you gain 1 life; not the fourth resolution this turn, no transform"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, Fabled SOLDIER",
+        "instanceId": 1,
+        "name": "onCreatureDies"
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 1
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCreatureDies\" trigger fires",
+      "result": "target opponent loses 1 life, you gain 1 life, and this is the fourth resolution this turn: Sephiroth transforms"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, Fabled SOLDIER",
+        "instanceId": 1,
+        "name": "onCreatureDies"
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 1
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Sephiroth, Fabled SOLDIER",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Sephiroth, Fabled SOLDIER",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAnyCreatureDies\" trigger fires, back face",
+      "result": "target opponent loses 1 life, you gain 1 life (the emblem/granted ability, back face)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, One-Winged Angel",
+        "instanceId": 1,
+        "name": "onAnyCreatureDies"
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 1
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"onAttack\" trigger fires, back face",
+      "result": "sacrifices 2 other creatures, draws 2 cards"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, One-Winged Angel",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 2,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"onAttack\" trigger fires, back face",
+      "result": "sacrifices no creatures (chosen X = 0), draws no cards"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sephiroth, One-Winged Angel",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 0,
+        "validType": "creature",
+        "notSelf": true,
+        "tokenFilter": null
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Sephiroth, Fabled SOLDIER",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Sephiroth, Fabled SOLDIER",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Sephiroth, Fabled SOLDIER",
+        "player": "you"
+      }
+    ]
+  }
+]

@@ -1,0 +1,97 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "destroys target creature, you gain 2 life"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Sephiroth's Intervention",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Sephiroth's Intervention",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "no legal target, nothing destroyed; you still gain 2 life"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Sephiroth's Intervention",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{B}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Sephiroth's Intervention",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

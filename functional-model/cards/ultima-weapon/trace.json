@@ -1,0 +1,78 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated (Equip {7})",
+      "result": "enters the battlefield, unattached (no ETB effect)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "cost": "Equip {7}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated (Equip {7})",
+      "result": "Equip {7} activated: attaches to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "cost": "Equip {7}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Ultima Weapon",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEquippedAttacks\" trigger fires",
+      "result": "destroys the target creature an opponent controls"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "name": "onEquippedAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      }
+    ]
+  }
+]

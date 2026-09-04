@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "both static abilities AND its activated ability are genuine real-text no-ops in this engine — only the legend-rule death fact exists; the card's actual functionality is almost entirely unmodeled"
+  ]
+}

@@ -1,0 +1,77 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "puts a +1/+1 counter on the target creature you control and it gains lifelink until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rosa, Resolute White Mage",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Rosa, Resolute White Mage",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Rosa, Resolute White Mage",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Rosa, Resolute White Mage",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Rosa, Resolute White Mage",
+        "player": "you"
+      }
+    ]
+  }
+]

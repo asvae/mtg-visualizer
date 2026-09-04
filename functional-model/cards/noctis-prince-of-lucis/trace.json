@@ -1,0 +1,85 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creature enters, no other effect (Lifelink and the graveyard-casting permission are both continuous, not resolvable effects)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Noctis, Prince of Lucis",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Noctis, Prince of Lucis",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Noctis, Prince of Lucis",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Noctis, Prince of Lucis",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Noctis, Prince of Lucis",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Noctis, Prince of Lucis",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Noctis, Prince of Lucis",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Noctis, Prince of Lucis",
+        "player": "you"
+      }
+    ]
+  }
+]

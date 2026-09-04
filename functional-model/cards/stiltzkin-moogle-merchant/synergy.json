@@ -1,0 +1,27 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 3,
+      "strength": 1,
+      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)"
+    },
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "ease": 5,
+      "strength": 5,
+      "sourceText": "Lifelink (deals combat damage → you gain that much life)"
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "ease": 1,
+      "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card. (needs another permanent you control to give away)"
+    }
+  ]
+}

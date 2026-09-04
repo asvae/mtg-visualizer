@@ -1,0 +1,21 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "ease": 1,
+      "strength": 1,
+      "sourceText": "(baseline — Snow Villiers's own text is entirely static: \"Vigilance\" and \"Snow Villiers's power is equal to the number of creatures you control,\" both of which only matter while it's on the battlefield)"
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 3,
+      "strength": 1,
+      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)"
+    }
+  ],
+  "wants": []
+}

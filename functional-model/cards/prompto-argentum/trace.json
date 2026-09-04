@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCast4Mana\" trigger fires",
+      "result": "creates a Treasure token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Prompto Argentum",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast4Mana"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Prompto Argentum",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Prompto Argentum",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Prompto Argentum",
+        "player": "you"
+      }
+    ]
+  }
+]

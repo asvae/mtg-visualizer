@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{B}{B}, {T})",
+      "result": "no creature card in your exile zone, nothing returned"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Darkness Crystal",
+        "instanceId": 1,
+        "cost": "{4}{B}{B}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Exile",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{B}{B}, {T}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Darkness Crystal",
+        "instanceId": 1,
+        "cost": "{4}{B}{B}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Exile",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Darkness Crystal",
+        "player": "you"
+      }
+    ]
+  }
+]

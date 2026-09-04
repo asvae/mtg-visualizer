@@ -1,0 +1,179 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"chapterI\" trigger fires",
+      "result": "deals 0 damage to target creature an opponent controls (no noncreature, nonland cards in your graveyard — this harness has no field to seed one)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Esper Ramuh",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Summon: Esper Ramuh",
+        "target": "opp0-creature-token-0",
+        "amount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Wizard creature(s)",
+      "action": "\"chapterII\" trigger fires",
+      "result": "Wizards you control get +1/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Esper Ramuh",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Esper Ramuh",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Summon: Esper Ramuh",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no other Wizards present, no other creature is pumped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Esper Ramuh",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Wizard",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Wizard",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Esper Ramuh",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Summon: Esper Ramuh",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 Wizard creature(s)",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "Wizards you control get +1/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Esper Ramuh",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Esper Ramuh",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Summon: Esper Ramuh",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  }
+]

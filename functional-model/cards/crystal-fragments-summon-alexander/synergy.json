@@ -1,0 +1,16 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5,
+      "sourceText": "Summon: Alexander III — Tap all creatures your opponents control."
+    }
+  ]
+}

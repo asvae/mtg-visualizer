@@ -1,0 +1,119 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "cast from hand",
+      "result": "enters the battlefield; power CDA sets it to 3 (2 other creatures + self), toughness fixed at 3"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Snow Villiers",
+        "power": 3,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 creature(s)",
+      "action": "cast from hand",
+      "result": "CDA: 3 creatures on the battlefield (P/T should reflect it)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Snow Villiers",
+        "power": 4,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "CDA: no other creatures on the battlefield"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Snow Villiers",
+        "power": 1,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Snow Villiers",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Snow Villiers",
+        "player": "you"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Snow Villiers",
+        "power": 1,
+        "toughness": 3
+      }
+    ]
+  }
+]

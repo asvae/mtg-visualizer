@@ -1,0 +1,107 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 5 card(s) in library",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "each opponent mills 3 cards (you gained 3 life this turn)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Hope Estheim",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 5 card(s) in library",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "no life gained this turn, no cards milled"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Hope Estheim",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Hope Estheim",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Hope Estheim",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Hope Estheim",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Hope Estheim",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Hope Estheim",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Hope Estheim",
+        "player": "you"
+      }
+    ]
+  }
+]

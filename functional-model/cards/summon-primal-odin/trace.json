@@ -1,0 +1,81 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"chapterI\" trigger fires",
+      "result": "Gungnir — destroys target creature an opponent controls"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Odin",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "Zantetsuken — no resolvable effect in this model (grant-a-new-ability and loses-the-game are both missing Effect kinds — see this batch's final report)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Odin",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "Hall of Sorrow — draw two cards, each player loses 2 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Primal Odin",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 2
+      }
+    ]
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped with a stun counter on it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tonberry",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Tonberry",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Tonberry"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Tonberry",
+        "counterType": "stun",
+        "amount": 1
+      }
+    ]
+  }
+]

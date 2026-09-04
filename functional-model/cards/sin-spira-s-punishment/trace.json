@@ -1,0 +1,70 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "\"onEnterOrAttacks\" trigger fires",
+      "result": "exiles the creature card from the graveyard and creates a tapped token copy of it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sin, Spira's Punishment",
+        "instanceId": 1,
+        "name": "onEnterOrAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Exile"
+      },
+      {
+        "fn": "copyPermanent",
+        "source": "you-gy-creature-0",
+        "controller": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "you-gy-creature-0"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-gy-creature-0",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnterOrAttacks\" trigger fires",
+      "result": "empty graveyard, nothing to exile"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sin, Spira's Punishment",
+        "instanceId": 1,
+        "name": "onEnterOrAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s); opp0: 1 artifact(s)",
+      "action": "cast from hand",
+      "result": "destroys the opponent's creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fate of the Sun-Cryst",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "move",
+        "card": "Fate of the Sun-Cryst",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creature enters, no resolvable effect (both abilities are conditional continuous statics — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cloud, Planet's Champion",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cloud, Planet's Champion",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cloud, Planet's Champion",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cloud, Planet's Champion",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Cloud, Planet's Champion",
+        "player": "you"
+      }
+    ]
+  }
+]

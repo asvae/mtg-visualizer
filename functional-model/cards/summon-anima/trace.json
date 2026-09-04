@@ -1,0 +1,107 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterI\" trigger fires",
+      "result": "Pain — you draw a card and lose 1 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Anima",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "Pain — you draw a card and lose 1 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Anima",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "Pain — you draw a card and lose 1 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Anima",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"chapterIV\" trigger fires",
+      "result": "Oblivion — each opponent sacrifices a creature of their choice and loses 3 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Anima",
+        "instanceId": 1,
+        "name": "chapterIV"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": null
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 3
+      }
+    ]
+  }
+]

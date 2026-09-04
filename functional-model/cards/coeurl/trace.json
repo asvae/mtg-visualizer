@@ -1,0 +1,98 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "activated ({1}{W}, {T})",
+      "result": "taps itself — the real card text (\"target nonenchantment creature\") allows this legally (Coeurl is already tapped as an activation cost, but a legal retarget), and chooseTarget's own first-pool-candidate rule picks it over the opponent's creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Coeurl",
+        "instanceId": 1,
+        "cost": "{1}{W}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Coeurl",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "opp0-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "tap",
+        "target": "Coeurl"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({1}{W}, {T})",
+      "result": "taps itself, the only legal target"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Coeurl",
+        "instanceId": 1,
+        "cost": "{1}{W}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Coeurl",
+        "result": false
+      },
+      {
+        "fn": "tap",
+        "target": "Coeurl"
+      }
+    ]
+  }
+]

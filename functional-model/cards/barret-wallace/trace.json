@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, no other effect (attack trigger not modeled — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Barret Wallace",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Barret Wallace",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Barret Wallace",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Barret Wallace",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Barret Wallace",
+        "player": "you"
+      }
+    ]
+  }
+]

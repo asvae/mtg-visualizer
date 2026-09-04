@@ -1,0 +1,46 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 card(s) in library",
+      "action": "activated ({2}{W})",
+      "result": "no second copy found in library, no-op"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Magitek Infantry",
+        "instanceId": 1,
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 3,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({2}{W})",
+      "result": "empty library, no-op"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Magitek Infantry",
+        "instanceId": 1,
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  }
+]

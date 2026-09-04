@@ -1,0 +1,96 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 Human creature(s)",
+      "action": "\"onFirstHumanCreatureCast\" trigger fires",
+      "result": "puts 1 +1/+1 counter on the newly cast Human creature (Torgal itself is the only Dog/Wolf you control)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Torgal, A Fine Hound",
+        "instanceId": 1,
+        "name": "onFirstHumanCreatureCast"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Torgal, A Fine Hound",
+        "result": true
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Dog",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Wolf",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Torgal, A Fine Hound",
+        "subtype": "Dog",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Torgal, A Fine Hound",
+        "subtype": "Wolf",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Torgal, A Fine Hound",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Torgal, A Fine Hound",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Torgal, A Fine Hound",
+        "player": "you"
+      }
+    ]
+  }
+]

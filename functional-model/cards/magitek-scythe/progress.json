@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "its FirstStrike-grant effect omits owner:'you' (defaults to 'each') — a LATENT BEHAVIORAL BUG vs the real 'target creature you control' text, not just a missing fact; invisible in current scenarios since no opponent creature is present to expose it"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "library-artifact-search now has real read:isArtifact evidence (post harness fix) but no want fact was added to match — addable now, not yet added"
+  ]
+}

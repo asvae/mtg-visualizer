@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "scenarios.ts is missing the keywordScenarios spread every sibling Legendary card has — despite being Legendary, gets no legend-rule probe AND no plain enters scenario either; only the graveyard-exile ability is grounded in any evidence at all"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_1_1_hero"
+      },
+      "ease": 1,
+      "strength": 1,
+      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)"
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "target": "self",
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "\"...whenever you cast a noncreature spell and whenever you draw your third card each turn, put a +1/+1 counter on this creature.\" (granted ability, both triggers collapsed into this one fact — same declarative payoff either way)"
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "Diana — Equip {2} (standard Equip ability: attach to target creature you control)."
+    }
+  ]
+}

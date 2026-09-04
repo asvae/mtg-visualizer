@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "dig's card-to-hand half of its effect isn't declared (dig is parked); only the real lifeloss half is captured — the actual card-reveal mechanic is invisible to synergy"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "produces": [
+    {
+      "event": "putCounter",
+      "counterType": "finality",
+      "target": "self",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": []
+}

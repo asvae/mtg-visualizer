@@ -1,0 +1,23 @@
+{
+  "produces": [
+    {
+      "event": "grantKeyword",
+      "keyword": "FirstStrike",
+      "controller": "you",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2
+    }
+  ]
+}

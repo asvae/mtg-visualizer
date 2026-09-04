@@ -1,0 +1,27 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDies\" trigger fires",
+      "result": "target opponent loses 1 life, you gain 1 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Al Bhed Salvagers",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 1
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1
+      }
+    ]
+  }
+]

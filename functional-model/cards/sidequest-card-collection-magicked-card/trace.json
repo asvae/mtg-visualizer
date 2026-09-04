@@ -1,0 +1,71 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in hand",
+      "action": "\"onEnter\" trigger fires",
+      "result": "draws three cards, then discards two"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Card Collection",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "no resolvable effect in this model (transform is not tracked as state)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Card Collection",
+        "instanceId": 1,
+        "name": "onEndStep"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face",
+      "result": "back face: Magicked Card, a 4/4 flying Vehicle, enters as itself"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Magicked Card",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Magicked Card",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

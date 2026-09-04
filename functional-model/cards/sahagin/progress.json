@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onNoncreatureSpellCast trigger could not be declared as a verifiable want — TRIGGER_EVENT_MAP doesn't recognize it and only one scenario exists (no diff fallback)"
+  ]
+}

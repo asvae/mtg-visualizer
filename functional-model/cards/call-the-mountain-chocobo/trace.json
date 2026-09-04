@@ -1,0 +1,93 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 card(s) in library",
+      "action": "cast from hand",
+      "result": "creates a 2/2 green Bird token; the Mountain search finds no candidate (no scenario field can seed a land-typed library card — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Call the Mountain Chocobo",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 3,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Bird",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Call the Mountain Chocobo",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from graveyard",
+      "result": "cast via Flashback for {5}{R}; creates the Bird token, then Call the Mountain Chocobo is exiled instead of going to the graveyard"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Call the Mountain Chocobo",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{5}{R}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Bird",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Call the Mountain Chocobo",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

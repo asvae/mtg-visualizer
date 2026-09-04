@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has putCounter ({\"fn\":\"putCounter\",\"target\":\"Phantom Train\",\"counterType\":\"+1/+1\",\"amount\":1}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": []
+}

@@ -1,0 +1,66 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "(baseline — Ultima is a sorcery-shaped spell; it goes to its owner's graveyard after resolving)"
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "Destroy all artifacts and creatures. (your own permanents caught by the wipe)"
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "Destroy all artifacts and creatures. (an opponent's permanents caught by the wipe)"
+    },
+    {
+      "event": "dies",
+      "controller": "you",
+      "ease": 4,
+      "strength": 5,
+      "sourceText": "Destroy all artifacts and creatures. (your own permanents dying to the wipe, all at once)"
+    },
+    {
+      "event": "dies",
+      "controller": "opp",
+      "ease": 4,
+      "strength": 5,
+      "sourceText": "Destroy all artifacts and creatures. (an opponent's permanents dying to the wipe, all at once)"
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Artifact",
+          "Creature"
+        ]
+      },
+      "ease": 1,
+      "sourceText": "Destroy all artifacts and creatures. (needs your own artifacts/creatures present to actually destroy)"
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "hasAny": [
+          "Artifact",
+          "Creature"
+        ]
+      },
+      "ease": 5,
+      "sourceText": "Destroy all artifacts and creatures. (needs an opponent's artifacts/creatures present to actually destroy)"
+    }
+  ]
+}

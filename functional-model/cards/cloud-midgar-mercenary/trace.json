@@ -1,0 +1,148 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 9 card(s) in library; you: 1 artifact(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "finds the artifact and puts it into hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cloud, Midgar Mercenary",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-3",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-4",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-5",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-6",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-7",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-8",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "artifact"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 10 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no artifact in library, nothing found"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cloud, Midgar Mercenary",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-3",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-4",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-5",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-6",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-7",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-8",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-9",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "artifact"
+      }
+    ]
+  }
+]

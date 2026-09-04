@@ -1,0 +1,77 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "every creature on the battlefield, yours and the opponent's alike, gets -1/-1"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Poison the Waters",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": -1,
+        "toughness": -1
+      },
+      {
+        "fn": "pump",
+        "target": "opp0-creature-token-0",
+        "power": -1,
+        "toughness": -1
+      },
+      {
+        "fn": "move",
+        "card": "Poison the Waters",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 card(s) in hand",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "the opponent discards a card (front of hand — no real player choice of which)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Poison the Waters",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}"
+      },
+      {
+        "fn": "discard",
+        "player": "opp0",
+        "qty": 1
+      },
+      {
+        "fn": "move",
+        "card": "Poison the Waters",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

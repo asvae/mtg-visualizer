@@ -1,0 +1,104 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature card(s) in graveyard",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "exiles the opponent graveyard creature and creates a 5/5 black Demon token copy of it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ardyn, the Usurper",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-gy-creature-0",
+        "zone": "Exile"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "opp0-gy-creature-0",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onBeginCombat\" trigger fires",
+      "result": "no creature card in any graveyard, nothing exiled or created"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ardyn, the Usurper",
+        "instanceId": 1,
+        "name": "onBeginCombat"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ardyn, the Usurper",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{5}{B}{B}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Ardyn, the Usurper",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Ardyn, the Usurper",
+        "player": "you"
+      }
+    ]
+  }
+]

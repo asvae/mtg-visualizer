@@ -1,0 +1,225 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in hand; you: 2 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "discards 2 cards, then draws 2 cards"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Joshua, Phoenix's Dominant",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 2
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({3}{R}{W}, {T} (activate only as a sorcery))",
+      "result": "exiles Joshua and returns it transformed into Phoenix, Warden of Fire"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Joshua, Phoenix's Dominant",
+        "instanceId": 1,
+        "cost": "{3}{R}{W}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Joshua, Phoenix's Dominant",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Joshua, Phoenix's Dominant",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterI\" trigger fires, back face",
+      "result": "Rising Flames: deals 2 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Phoenix, Warden of Fire",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Phoenix, Warden of Fire",
+        "target": "opp0",
+        "amount": 2
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires, back face",
+      "result": "Rising Flames: deals 2 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Phoenix, Warden of Fire",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Phoenix, Warden of Fire",
+        "target": "opp0",
+        "amount": 2
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "\"chapterIII\" trigger fires, back face",
+      "result": "Flames of Rebirth: returns creature cards from your graveyard to the battlefield, then exiles Phoenix and returns it front face up (total mana value cap not tracked, see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Phoenix, Warden of Fire",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-1",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Phoenix, Warden of Fire",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Phoenix, Warden of Fire",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Phoenix, Warden of Fire",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Phoenix, Warden of Fire",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Phoenix, Warden of Fire",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({3}{R}{W}, {T} (activate only as a sorcery)), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Joshua, Phoenix's Dominant",
+        "instanceId": 1,
+        "cost": "{3}{R}{W}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Joshua, Phoenix's Dominant",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Joshua, Phoenix's Dominant",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Joshua, Phoenix's Dominant",
+        "player": "you"
+      }
+    ]
+  }
+]

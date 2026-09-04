@@ -1,0 +1,56 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "creates Darkstar, a legendary 2/2 white and black Dog token (you don't control one)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Rufus Shinra",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Darkstar",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Rufus Shinra",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Rufus Shinra",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Rufus Shinra",
+        "player": "you"
+      }
+    ]
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onGraveyardCardsLeave\" trigger fires",
+      "result": "draws a card and loses 1 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Fang, Fearless l'Cie",
+        "instanceId": 1,
+        "name": "onGraveyardCardsLeave"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fang, Fearless l'Cie",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Fang, Fearless l'Cie",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Fang, Fearless l'Cie",
+        "player": "you"
+      }
+    ]
+  }
+]

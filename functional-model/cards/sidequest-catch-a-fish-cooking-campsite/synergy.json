@@ -1,0 +1,61 @@
+{
+  "produces": [
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "If it's an artifact or creature card, you may reveal it and put it into your hand."
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_food_sac"
+      },
+      "ease": 2,
+      "strength": 1,
+      "sourceText": "If you put a card into your hand this way, create a Food token and transform this enchantment."
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "Cooking Campsite — {3}, {T}, Sacrifice an artifact: Put a +1/+1 counter on each creature you control."
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Library",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Creature",
+          "Artifact"
+        ]
+      },
+      "ease": 5,
+      "sourceText": "At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card..."
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "Cooking Campsite — Put a +1/+1 counter on each creature you control (needs creatures to benefit)."
+    }
+  ]
+}

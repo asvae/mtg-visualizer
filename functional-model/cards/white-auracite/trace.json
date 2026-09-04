@@ -1,0 +1,66 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "exiles a nonland permanent the opponent controls"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "White Auracite",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Exile"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 2 land(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no nonland permanent for the opponent to lose, nothing exiled"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "White Auracite",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-land-1",
+        "result": true
+      }
+    ]
+  }
+]

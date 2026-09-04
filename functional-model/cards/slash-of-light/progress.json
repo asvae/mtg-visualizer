@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has dealDamage ({\"fn\":\"dealDamage\",\"source\":\"Slash of Light\",\"target\":\"you-creature-token-0\",\"amount\":3}) with no matching declared produce | trace has dealDamage ({\"fn\":\"dealDamage\",\"source\":\"Slash of Light\",\"target\":\"opp0-creature-token-0\",\"amount\":0}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": []
+}

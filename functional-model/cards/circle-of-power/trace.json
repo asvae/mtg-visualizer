@@ -1,0 +1,179 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 Wizard creature(s)",
+      "action": "cast from hand",
+      "result": "draws 2 cards, loses 2 life, creates a 0/1 black Wizard token, then pumps BOTH the pre-existing nontoken Wizard and the freshly-created token +1/+0 and grants both Lifelink"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Circle of Power",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{B}"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Wizard",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Wizard",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Lifelink"
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Wizard",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Wizard",
+        "keyword": "Lifelink"
+      },
+      {
+        "fn": "move",
+        "card": "Circle of Power",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "draws 2 cards, loses 2 life, creates the token, then pumps that same freshly-created token +1/+0 and grants it Lifelink (the only Wizard on the battlefield)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Circle of Power",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{B}"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Wizard",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Wizard",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Wizard",
+        "subtype": "Wizard",
+        "result": true
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Wizard",
+        "keyword": "Lifelink"
+      },
+      {
+        "fn": "move",
+        "card": "Circle of Power",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

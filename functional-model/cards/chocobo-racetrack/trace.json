@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "creates a 2/2 green Bird creature token (its own landfall +1/+0 ability is not modeled — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Chocobo Racetrack",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Bird",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  }
+]

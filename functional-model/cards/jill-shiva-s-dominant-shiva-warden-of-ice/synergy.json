@@ -1,0 +1,17 @@
+{
+  "produces": [
+    {
+      "zone": "Hand",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "ease": 5
+    }
+  ]
+}

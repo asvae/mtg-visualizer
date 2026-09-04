@@ -1,0 +1,28 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "taps the enchanted permanent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Stuck in Summoner's Sanctum",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "tap",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

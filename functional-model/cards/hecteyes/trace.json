@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "ETB, 1 opponent",
+    "scenario": {
+      "setup": "opp0: 3 card(s) in hand",
+      "action": "\"onEnter\" trigger fires",
+      "result": "the opponent discards a card"
+    },
     "log": [
       {
         "fn": "trigger",
@@ -16,7 +20,11 @@
     ]
   },
   {
-    "scenario": "ETB, 2 opponents",
+    "scenario": {
+      "setup": "opp0: 3 card(s) in hand; opp1: 5 card(s) in hand",
+      "action": "\"onEnter\" trigger fires",
+      "result": "each opponent discards a card"
+    },
     "log": [
       {
         "fn": "trigger",

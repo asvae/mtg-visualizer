@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttack\" trigger fires",
+      "result": "gets +9999/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Jumbo Cactuar",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "pump",
+        "target": "Jumbo Cactuar",
+        "power": 9999,
+        "toughness": 0
+      }
+    ]
+  }
+]

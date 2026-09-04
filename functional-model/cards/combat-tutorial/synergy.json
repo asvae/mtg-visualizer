@@ -1,0 +1,38 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "(implicit — not a printed clause: any sorcery goes to its owner's graveyard after it resolves, a generic MTG rule (608.2m), not specific to this card's own text.)"
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "Put a +1/+1 counter on up to one target creature you control."
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "Put a +1/+1 counter on up to one target creature you control — needs a legal creature to target."
+    }
+  ]
+}

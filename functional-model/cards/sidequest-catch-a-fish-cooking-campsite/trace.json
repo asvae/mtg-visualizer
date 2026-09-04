@@ -1,0 +1,132 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 artifact(s) in library",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "reveals the artifact and puts it into hand, creates a Food token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Catch a Fish",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-artifact-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Food",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "top card is neither artifact nor creature, no-op"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Catch a Fish",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-library-0",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "empty library, no-op"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Catch a Fish",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s); you: 1 artifact(s)",
+      "action": "activated ({3}, {T}, Sacrifice an artifact (activate only as a sorcery)), back face",
+      "result": "sacrifices an artifact, puts a +1/+1 counter on each creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Cooking Campsite",
+        "instanceId": 1,
+        "cost": "{3}, {T}, Sacrifice an artifact (activate only as a sorcery)"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-1",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  }
+]

@@ -1,0 +1,31 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library; opp0: 2 card(s) in library",
+      "action": "\"onUpkeep\" trigger fires",
+      "result": "you and each opponent exile the top card of their library (the free-cast permission grant is not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Triple Triad",
+        "instanceId": 1,
+        "name": "onUpkeep"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 1
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 1
+      }
+    ]
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "you gain 3 life"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Balamb T-Rexaur",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3
+      }
+    ]
+  }
+]

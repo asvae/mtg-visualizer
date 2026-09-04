@@ -1,0 +1,84 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ishgard, the Holy See",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Ishgard, the Holy See",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Ishgard, the Holy See"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "cast from hand, back face",
+      "result": "no artifact/enchantment cards in the graveyard (only creature cards) — nothing returned to hand"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Faith & Grief",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-gy-creature-0",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-gy-creature-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-gy-creature-1",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-gy-creature-1",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "card": "Faith & Grief",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

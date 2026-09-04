@@ -1,0 +1,66 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "taps the enchanted creature"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sleep Magic",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Sleep Magic",
+        "result": false
+      },
+      {
+        "fn": "tap",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnchantedDealtDamage\" trigger fires",
+      "result": "sacrifices this Aura"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sleep Magic",
+        "instanceId": 1,
+        "name": "onEnchantedDealtDamage"
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Sleep Magic",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "enchantment",
+        "notSelf": false,
+        "tokenFilter": null
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "cost-reduction and 'mill +4' replacement static abilities are real text only, never exercised by any scenario, completely unmodeled"
+  ]
+}

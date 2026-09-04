@@ -1,0 +1,104 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Balamb Garden, SeeD Academy",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Balamb Garden, SeeD Academy",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Balamb Garden, SeeD Academy"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}{G}{U}, {T} (costs {1} less for each other Town you control))",
+      "result": "transforms into Balamb Garden, Airborne (approximated as exile then return to the battlefield — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Balamb Garden, SeeD Academy",
+        "instanceId": 1,
+        "cost": "{5}{G}{U}, {T} (costs {1} less for each other Town you control)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Balamb Garden, SeeD Academy",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Balamb Garden, SeeD Academy",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttacks\" trigger fires, back face",
+      "result": "attacks and draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Balamb Garden, Airborne",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face, a duplicate legendary copy enters",
+      "result": "legend rule: a second copy of Balamb Garden, Airborne enters and is put into the graveyard"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Balamb Garden, Airborne",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Balamb Garden, Airborne",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Balamb Garden, Airborne",
+        "player": "you"
+      }
+    ]
+  }
+]

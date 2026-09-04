@@ -1,0 +1,159 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "creature enters, no other effect (Lifelink and the Equipment-count P/T bonus are both continuous, not resolvable effects)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Adelbert Steiner",
+        "power": 2,
+        "toughness": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Adelbert Steiner",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Adelbert Steiner",
+        "power": 2,
+        "toughness": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Equipment",
+      "action": "cast from hand",
+      "result": "CDA: 2 Equipment on the battlefield (P/T should reflect it)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Adelbert Steiner",
+        "power": 4,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "CDA: no Equipment on the battlefield"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Adelbert Steiner",
+        "power": 2,
+        "toughness": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Adelbert Steiner",
+        "player": "you"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Adelbert Steiner",
+        "power": 2,
+        "toughness": 1
+      }
+    ]
+  }
+]

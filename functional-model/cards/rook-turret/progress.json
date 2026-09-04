@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onArtifactEnters want has zero read: evidence and only one scenario — left as wants:[], the real trigger condition is completely unverified/undeclared"
+  ]
+}

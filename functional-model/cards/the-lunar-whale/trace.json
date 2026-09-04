@@ -1,0 +1,53 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated (Crew 1 (tap creatures with total power 1 or more))",
+      "result": "becomes an artifact creature (crewed)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Lunar Whale",
+        "instanceId": 1,
+        "cost": "Crew 1 (tap creatures with total power 1 or more)"
+      },
+      {
+        "fn": "animate",
+        "target": "The Lunar Whale",
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated (Crew 1 (tap creatures with total power 1 or more)), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Lunar Whale",
+        "instanceId": 1,
+        "cost": "Crew 1 (tap creatures with total power 1 or more)"
+      },
+      {
+        "fn": "animate",
+        "target": "The Lunar Whale",
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Lunar Whale",
+        "player": "you"
+      }
+    ]
+  }
+]

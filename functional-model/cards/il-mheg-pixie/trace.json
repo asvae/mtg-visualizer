@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttack\" trigger fires",
+      "result": "surveils 1"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Il Mheg Pixie",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  }
+]

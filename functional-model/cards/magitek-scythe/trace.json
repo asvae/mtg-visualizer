@@ -1,0 +1,62 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "attaches to the target creature and grants it first strike until end of turn (the \"must be blocked\" restriction is not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Magitek Scythe",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Magitek Scythe",
+        "target": "you-creature-token-0"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "FirstStrike"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated (Equip {2})",
+      "result": "Equip {2} activated: attaches to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Magitek Scythe",
+        "instanceId": 1,
+        "cost": "Equip {2}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Magitek Scythe",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

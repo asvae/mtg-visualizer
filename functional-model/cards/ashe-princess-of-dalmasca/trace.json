@@ -1,0 +1,71 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 7 card(s) in library; you: 1 artifact(s) in library",
+      "action": "\"onAttack\" trigger fires",
+      "result": "finds the artifact among the top 5 cards and puts it into hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ashe, Princess of Dalmasca",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 5,
+        "take": 1,
+        "validType": "artifact",
+        "found": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 8 card(s) in library",
+      "action": "\"onAttack\" trigger fires",
+      "result": "no artifact among the top 5 cards, nothing taken"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ashe, Princess of Dalmasca",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 5,
+        "take": 1,
+        "validType": "artifact",
+        "found": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttack\" trigger fires",
+      "result": "library empty, nothing to look at"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ashe, Princess of Dalmasca",
+        "instanceId": 1,
+        "name": "onAttack"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 5,
+        "take": 1,
+        "validType": "artifact",
+        "found": 0
+      }
+    ]
+  }
+]

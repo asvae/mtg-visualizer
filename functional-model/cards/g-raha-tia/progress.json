@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "empty",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onOtherPermanentsDie trigger's real want (an opponent/other permanent dying) still not declared even though TRIGGER_EVENT_MAP now maps it — file is still {produces:[],wants:[]}, addable now, not yet added"
+  ]
+}

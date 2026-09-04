@@ -1,0 +1,32 @@
+{
+  "produces": [
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "ease": 5,
+      "strength": 4
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "ease": 3
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "types": {
+        "not": [
+          "Land"
+        ]
+      },
+      "ease": 1
+    }
+  ]
+}

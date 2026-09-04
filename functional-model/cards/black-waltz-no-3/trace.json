@@ -1,0 +1,56 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCast\" trigger fires",
+      "result": "deals 2 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Black Waltz No. 3",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCast"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Black Waltz No. 3",
+        "target": "opp0",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Black Waltz No. 3",
+        "target": "opp1",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Black Waltz No. 3",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Black Waltz No. 3",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Black Waltz No. 3",
+        "player": "you"
+      }
+    ]
+  }
+]

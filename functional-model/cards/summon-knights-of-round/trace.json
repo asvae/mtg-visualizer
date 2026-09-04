@@ -1,0 +1,176 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterI\" trigger fires",
+      "result": "creates three 2/2 Knight tokens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "creates three 2/2 Knight tokens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "creates three 2/2 Knight tokens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIV\" trigger fires",
+      "result": "creates three 2/2 Knight tokens"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterIV"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 creature(s)",
+      "action": "\"chapterV\" trigger fires",
+      "result": "other creatures you control get +2/+2 and an indestructible counter"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterV"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 4
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-2",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 4
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "Indestructible",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-1",
+        "counterType": "Indestructible",
+        "amount": 1
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-2",
+        "counterType": "Indestructible",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterV\" trigger fires",
+      "result": "no other creatures to affect, no-op"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterV"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      }
+    ]
+  }
+]

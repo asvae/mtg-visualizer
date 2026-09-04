@@ -1,0 +1,71 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({3}, Sacrifice another creature or artifact)",
+      "result": "sacrifices another creature and draws a card"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ahriman",
+        "instanceId": 1,
+        "cost": "{3}, Sacrifice another creature or artifact"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature-or-artifact",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 artifact(s)",
+      "action": "activated ({3}, Sacrifice another creature or artifact)",
+      "result": "sacrifices an artifact (no other creature present) and draws a card"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ahriman",
+        "instanceId": 1,
+        "cost": "{3}, Sacrifice another creature or artifact"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature-or-artifact",
+        "notSelf": true,
+        "tokenFilter": null
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

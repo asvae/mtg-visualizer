@@ -1,0 +1,91 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "no Sagas you control, so no +1/+1 counters are put on Garnet"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Garnet, Princess of Alexandria",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Garnet, Princess of Alexandria",
+        "subtype": "Saga",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Garnet, Princess of Alexandria",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Garnet, Princess of Alexandria",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Garnet, Princess of Alexandria",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Garnet, Princess of Alexandria",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Garnet, Princess of Alexandria",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Garnet, Princess of Alexandria",
+        "player": "you"
+      }
+    ]
+  }
+]

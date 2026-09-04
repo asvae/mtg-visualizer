@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Dion, Bahamut's Dominant\",\"zone\":\"Exile\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Bahamut, Warden of Light\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "front/back transform exile-then-return has no produce fact (informational note)"
+  ]
+}

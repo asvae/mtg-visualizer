@@ -1,0 +1,78 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters tapped"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Midgar, City of Mako",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Midgar, City of Mako",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Midgar, City of Mako"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); you: 2 card(s) in library",
+      "action": "cast from hand, back face",
+      "result": "sacrifices a creature, then draws 2 cards"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Reactor Raid",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature-or-artifact",
+        "notSelf": false,
+        "tokenFilter": null
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Reactor Raid",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

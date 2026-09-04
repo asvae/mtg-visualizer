@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "both granted triggers (onEquippedCastsNoncreatureSpell, onEquippedDrawsThirdCardThisTurn) have no event vocabulary at all — their real payoffs are unrepresented"
+  ]
+}

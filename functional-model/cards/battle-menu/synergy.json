@@ -1,0 +1,77 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "w_2_2_knight"
+      },
+      "ease": 1,
+      "strength": 1,
+      "sourceText": "Attack — Create a 2/2 white Knight creature token."
+    },
+    {
+      "event": "dies",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "power": {
+          "min": 4
+        }
+      },
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "Magic — Destroy target creature with power 4 or greater."
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "Magic — Destroy target creature with power 4 or greater. (NOTE: real text has no controller restriction on the target — this fact assumes it lands in an opponent's graveyard, but the printed mode can equally hit your own creature.)"
+    },
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "ease": 5,
+      "strength": 5,
+      "sourceText": "Item — You gain 4 life."
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 4,
+      "strength": 1,
+      "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)"
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "Ability — Target creature gets +0/+4 until end of turn."
+    },
+    {
+      "zone": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "power": {
+        "min": 4
+      },
+      "ease": 2,
+      "sourceText": "Magic — Destroy target creature with power 4 or greater."
+    }
+  ]
+}

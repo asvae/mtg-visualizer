@@ -1,0 +1,167 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 2/2 green Bird creature token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Raise a Chocobo",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Bird",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onMainPhase\" trigger fires",
+      "result": "the transform condition/consequence is text-only in this model — no board state is checked or mutated"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sidequest: Raise a Chocobo",
+        "instanceId": 1,
+        "name": "onMainPhase"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onTransform\" trigger fires, back face",
+      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Black Chocobo",
+        "instanceId": 1,
+        "name": "onTransform"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Bird creature(s)",
+      "action": "\"onLandfall\" trigger fires, back face",
+      "result": "itself plus the 2 other Birds you control (3 total) get +1/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Black Chocobo",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Bird",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Bird",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Black Chocobo",
+        "subtype": "Bird",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Black Chocobo",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"onLandfall\" trigger fires, back face",
+      "result": "the 2 other creatures are not Birds, so only itself (a Bird) gets +1/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Black Chocobo",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Bird",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Bird",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Black Chocobo",
+        "subtype": "Bird",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Black Chocobo",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  }
+]

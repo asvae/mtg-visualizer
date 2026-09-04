@@ -1,14 +1,13 @@
 <script setup lang="ts">
 // Renders functional-model/cards/<slug>/trace.json — the RAW per-scenario
 // log (unlike the card page's own "Functional model" facts table, which
-// reads flat-trace.json: deduplicated across scenarios, scenario label
-// dropped, since a synergy matcher only cares whether a fact is real, not
-// which scenario produced it). This component keeps each scenario's own
-// ordered log intact — for seeing exactly what ONE specific scenario
-// actually did, in the order it happened, not just the deduplicated set of
-// distinct facts across all of them.
+// reads cards/<slug>/synergy.json: AI-authored facts, verified against this
+// same trace.json but not derived from it — see SYNERGY_DESIGN.md). This
+// component keeps each scenario's own ordered log intact — for seeing
+// exactly what ONE specific scenario actually did, in the order it
+// happened, not just a deduplicated set of facts.
 interface TraceResult {
-  scenario: string;
+  scenario: { setup: string; action: string; result: string };
   log: Record<string, unknown>[];
 }
 defineProps<{ traces: TraceResult[] }>();
@@ -27,7 +26,13 @@ function fieldsOf(entry: Record<string, unknown>): string {
 <template>
   <div class="flex flex-col gap-2">
     <div v-for="(trace, ti) in traces" :key="ti" class="text-[11px]">
-      <div class="text-muted">{{ trace.scenario }} ({{ trace.log.length }})</div>
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-muted">
+        <span v-if="trace.scenario.setup"><span class="text-muted/60">setup:</span> {{ trace.scenario.setup }}</span>
+        <span v-else class="text-muted/60">setup: default board</span>
+        <span><span class="text-muted/60">action:</span> {{ trace.scenario.action }}</span>
+        <span class="text-text"><span class="text-muted/60">result:</span> {{ trace.scenario.result }}</span>
+        <span class="text-muted/50">({{ trace.log.length }})</span>
+      </div>
       <div class="mt-1 overflow-x-auto rounded border border-border bg-panel p-2">
         <table class="border-collapse font-mono text-xs whitespace-nowrap">
           <thead>

@@ -1,0 +1,87 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
+      "result": "draws a card, then discards a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Locke Cole",
+        "instanceId": 1,
+        "name": "onDealsCombatDamageToPlayer"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Locke Cole",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Locke Cole",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Locke Cole",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Locke Cole",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Locke Cole",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Locke Cole",
+        "player": "you"
+      }
+    ]
+  }
+]

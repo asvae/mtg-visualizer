@@ -1,0 +1,118 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterI\" trigger fires",
+      "result": "other creatures you control get +1/+0"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Choco/Mog",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no other creatures to pump, no-op"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Choco/Mog",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "other creatures you control get +1/+0"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Choco/Mog",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterIV\" trigger fires",
+      "result": "other creatures you control get +1/+0"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Choco/Mog",
+        "instanceId": 1,
+        "name": "chapterIV"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 1,
+        "toughness": 0
+      }
+    ]
+  }
+]

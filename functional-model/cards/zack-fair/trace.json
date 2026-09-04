@@ -1,0 +1,100 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "enters with a +1/+1 counter on itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zack Fair",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Zack Fair",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); self already has 2 +1/+1 counter(s)",
+      "action": "activated ({1}, Sacrifice Zack Fair)",
+      "result": "puts Zack Fair's 2 +1/+1 counters onto the target creature you control (indestructible grant and Equipment-transfer not mechanically enforced — see definition.ts's own comments)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Zack Fair",
+        "instanceId": 1,
+        "cost": "{1}, Sacrifice Zack Fair"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCounters",
+        "target": "Zack Fair",
+        "counterType": "+1/+1",
+        "result": 2
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "self already has 2 +1/+1 counter(s)",
+      "action": "activated ({1}, Sacrifice Zack Fair)",
+      "result": "no other creature you control to target, no counters moved"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Zack Fair",
+        "instanceId": 1,
+        "cost": "{1}, Sacrifice Zack Fair"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({1}, Sacrifice Zack Fair), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Zack Fair",
+        "instanceId": 1,
+        "cost": "{1}, Sacrifice Zack Fair"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "legendRule",
+        "card": "Zack Fair",
+        "player": "you"
+      }
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"you-gy-creature-0\",\"zone\":\"Library\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"you-gy-creature-1\",\"zone\":\"Library\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": []
+}

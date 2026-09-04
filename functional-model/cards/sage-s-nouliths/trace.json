@@ -1,0 +1,78 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sage's Nouliths",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Sage's Nouliths",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({3})",
+      "result": "attaches itself to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Sage's Nouliths",
+        "instanceId": 1,
+        "cost": "{3}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Sage's Nouliths",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"onEquippedAttacks\" trigger fires",
+      "result": "untaps a target attacking creature"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Sage's Nouliths",
+        "instanceId": 1,
+        "name": "onEquippedAttacks"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "untap",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

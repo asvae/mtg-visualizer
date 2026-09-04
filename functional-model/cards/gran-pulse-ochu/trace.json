@@ -1,0 +1,102 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 creature card(s) in graveyard",
+      "action": "activated ({8})",
+      "result": "gets +3/+3 until end of turn (3 permanent cards in your graveyard)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Gran Pulse Ochu",
+        "instanceId": 1,
+        "cost": "{8}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-2",
+        "result": true
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-2",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "Gran Pulse Ochu",
+        "power": 3,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({8})",
+      "result": "gets +0/+0 (no permanent cards in your graveyard)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Gran Pulse Ochu",
+        "instanceId": 1,
+        "cost": "{8}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "pump",
+        "target": "Gran Pulse Ochu",
+        "power": 0,
+        "toughness": 0
+      }
+    ]
+  }
+]

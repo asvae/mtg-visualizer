@@ -1,0 +1,139 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 creature card(s) in graveyard; opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "target creature an opponent controls gets -3/-3 until end of turn (3 permanent cards in this player's graveyard)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cloud of Darkness",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-2",
+        "result": true
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-2",
+        "result": true
+      },
+      {
+        "fn": "pump",
+        "target": "opp0-creature-token-0",
+        "power": -3,
+        "toughness": -3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no permanent cards in the graveyard: target creature an opponent controls gets -0/-0"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cloud of Darkness",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "pump",
+        "target": "opp0-creature-token-0",
+        "power": 0,
+        "toughness": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cloud of Darkness",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cloud of Darkness",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Cloud of Darkness",
+        "player": "you"
+      }
+    ]
+  }
+]

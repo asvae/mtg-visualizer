@@ -1,0 +1,15 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature."
+    }
+  ]
+}

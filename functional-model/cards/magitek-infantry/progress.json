@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "name-comparison half of its tutor filter (getName() ===) is NOT independently instrumented by harness.ts (deliberately, to avoid spamming every trace) — only the Library-zone half of the want is truly verified; also scenarios.ts has no scenario where the tutor actually succeeds — both documented in SYNERGY_DESIGN.md itself"
+  ]
+}

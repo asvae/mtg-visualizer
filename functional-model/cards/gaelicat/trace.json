@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 artifact(s)",
+      "action": "cast from hand",
+      "result": "creature enters, no other effect (the +2/+0 threshold bonus is continuous, not a resolvable effect)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Gaelicat",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Gaelicat",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

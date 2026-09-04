@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield; the mana ability is a continuous static effect, not a resolvable action in this model"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Goobbue Gardener",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Goobbue Gardener",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "produces": [
+    {
+      "event": "dies",
+      "target": {
+        "types": {
+          "not": [
+            "Land"
+          ]
+        }
+      },
+      "ease": 4,
+      "strength": 4,
+      "sourceText": "I, II — Destroy up to one target nonland permanent."
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "ease": 1,
+      "sourceText": "Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent."
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "ease": 5,
+      "sourceText": "Mega Flare — ...deals damage equal to the total mana value of other permanents you control to each opponent."
+    }
+  ]
+}

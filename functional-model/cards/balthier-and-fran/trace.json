@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCrewedVehicleAttacksFirstCombat\" trigger fires",
+      "result": "no mechanically-executable effect (no phase/turn-structure Effect shape exists here — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Balthier and Fran",
+        "instanceId": 1,
+        "name": "onCrewedVehicleAttacksFirstCombat"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Balthier and Fran",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Balthier and Fran",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Balthier and Fran",
+        "player": "you"
+      }
+    ]
+  }
+]

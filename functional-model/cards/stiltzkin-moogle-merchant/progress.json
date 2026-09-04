@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has dealDamage ({\"fn\":\"dealDamage\",\"source\":\"Stiltzkin, Moogle Merchant\",\"target\":\"opp0\",\"amount\":3}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": []
+}

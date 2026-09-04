@@ -1,0 +1,56 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCastNoncreatureSpell\" trigger fires",
+      "result": "puts a +1/+1 counter on Vivi and it deals 1 damage to each opponent"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Vivi Ornitier",
+        "instanceId": 1,
+        "name": "onCastNoncreatureSpell"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Vivi Ornitier",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Vivi Ornitier",
+        "target": "opp0",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Vivi Ornitier",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}{R}"
+      },
+      {
+        "fn": "enters",
+        "card": "Vivi Ornitier",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Vivi Ornitier",
+        "player": "you"
+      }
+    ]
+  }
+]

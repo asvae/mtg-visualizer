@@ -1,0 +1,92 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "target creature gets +2/+2 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "You're Not Alone",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "move",
+        "card": "You're Not Alone",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 creature(s)",
+      "action": "cast from hand",
+      "result": "you control 3+ creatures: target creature gets +4/+4 until end of turn instead"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "You're Not Alone",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 4,
+        "toughness": 4
+      },
+      {
+        "fn": "move",
+        "card": "You're Not Alone",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

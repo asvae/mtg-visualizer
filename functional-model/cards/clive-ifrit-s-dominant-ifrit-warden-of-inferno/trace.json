@@ -1,0 +1,27 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{R}{R}, {T} (activate only as a sorcery))",
+      "result": "exiles Clive and returns it transformed into Ifrit, Warden of Inferno"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Clive, Ifrit's Dominant",
+        "instanceId": 1,
+        "cost": "{4}{R}{R}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Clive, Ifrit's Dominant",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Clive, Ifrit's Dominant",
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

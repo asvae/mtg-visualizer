@@ -1,0 +1,62 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "attaches to the creature and grants it first strike until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Coral Sword",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Coral Sword",
+        "target": "you-creature-token-0"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "FirstStrike"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated (Equip {1})",
+      "result": "Equip {1} activated: attaches to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Coral Sword",
+        "instanceId": 1,
+        "cost": "Equip {1}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Coral Sword",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "both faces' real content (devotion ETB, fight ability, mana-adding Saga-like chapters) documented as entirely unmodeled in definition.ts's own comments — major unimplemented functionality, not just a missing fact"
+  ]
+}

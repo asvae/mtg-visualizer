@@ -1,0 +1,103 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onArtifactEnters\" trigger fires",
+      "result": "puts a +1/+1 counter on itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tidus, Blitzball Star",
+        "instanceId": 1,
+        "name": "onArtifactEnters"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Tidus, Blitzball Star",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "taps a target creature an opponent controls"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tidus, Blitzball Star",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "no opposing creature, no legal target"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Tidus, Blitzball Star",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tidus, Blitzball Star",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Tidus, Blitzball Star",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Tidus, Blitzball Star",
+        "player": "you"
+      }
+    ]
+  }
+]

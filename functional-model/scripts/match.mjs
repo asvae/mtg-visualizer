@@ -17,7 +17,7 @@ const cards = [];
 for (const slug of slugs) {
   const traceRaw = await readFile(new URL(`../cards/${slug}/trace.json`, import.meta.url), 'utf8').catch(() => null);
   if (!traceRaw) continue;
-  const cardModule = await import(`../cards/${slug}/index.ts`);
+  const cardModule = await import(`../cards/${slug}/definition.ts`);
   const card = Object.values(cardModule)[0];
   cards.push({ slug, name: card.name, traces: JSON.parse(traceRaw) });
 }

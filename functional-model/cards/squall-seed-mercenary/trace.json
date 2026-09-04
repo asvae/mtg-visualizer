@@ -1,0 +1,113 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onAttacksAlone\" trigger fires",
+      "result": "grants double strike until end of turn to a creature you control"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Squall, SeeD Mercenary",
+        "instanceId": 1,
+        "name": "onAttacksAlone"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "DoubleStrike"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature card(s) in graveyard",
+      "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
+      "result": "returns a mana-value-3-or-less permanent card from the graveyard to the battlefield"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Squall, SeeD Mercenary",
+        "instanceId": 1,
+        "name": "onDealsCombatDamageToPlayer"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "you-gy-creature-0",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "you-gy-creature-1",
+        "result": 0
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
+      "result": "empty graveyard, no legal target, nothing returned"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Squall, SeeD Mercenary",
+        "instanceId": 1,
+        "name": "onDealsCombatDamageToPlayer"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Squall, SeeD Mercenary",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Squall, SeeD Mercenary",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Squall, SeeD Mercenary",
+        "player": "you"
+      }
+    ]
+  }
+]

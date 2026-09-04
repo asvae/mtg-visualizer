@@ -1,0 +1,41 @@
+{
+  "produces": [
+    {
+      "event": "dies",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Artifact",
+            "Enchantment"
+          ]
+        }
+      },
+      "ease": 4,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Artifact",
+          "Enchantment"
+        ]
+      },
+      "ease": 3
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "hasAny": [
+          "Artifact",
+          "Enchantment"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

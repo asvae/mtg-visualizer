@@ -1,0 +1,93 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Gladiolus Amicitia",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "the other creature you control gets +2/+2 and gains trample until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Gladiolus Amicitia",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Trample"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Gladiolus Amicitia",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{R}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Gladiolus Amicitia",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Gladiolus Amicitia",
+        "player": "you"
+      }
+    ]
+  }
+]

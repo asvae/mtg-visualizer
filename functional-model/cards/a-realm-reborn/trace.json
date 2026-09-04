@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "the enchantment enters the battlefield; the granted mana ability is a continuous static effect, not a resolvable action in this model"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "A Realm Reborn",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "A Realm Reborn",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

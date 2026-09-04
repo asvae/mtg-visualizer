@@ -1,0 +1,67 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onScry\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Matoya, Archon Elder",
+        "instanceId": 1,
+        "name": "onScry"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onSurveil\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Matoya, Archon Elder",
+        "instanceId": 1,
+        "name": "onSurveil"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Matoya, Archon Elder",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Matoya, Archon Elder",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Matoya, Archon Elder",
+        "player": "you"
+      }
+    ]
+  }
+]

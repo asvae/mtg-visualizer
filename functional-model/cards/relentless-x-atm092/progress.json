@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "its graveyard-reanimation ability's 'started in graveyard' half is a structural gap — no activationZone field exists in this engine at all"
+  ]
+}

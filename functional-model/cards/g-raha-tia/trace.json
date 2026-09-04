@@ -1,0 +1,21 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onOtherPermanentsDie\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "G'raha Tia",
+        "instanceId": 1,
+        "name": "onOtherPermanentsDie"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

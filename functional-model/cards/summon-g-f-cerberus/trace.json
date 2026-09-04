@@ -1,0 +1,52 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterI\" trigger fires",
+      "result": "looks at the top card of your library, may put it into the graveyard"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: G.F. Cerberus",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires",
+      "result": "no observable effect — no spell-copy mechanism exists in this engine"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: G.F. Cerberus",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "no observable effect — no spell-copy mechanism exists in this engine"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: G.F. Cerberus",
+        "instanceId": 1,
+        "name": "chapterIII"
+      }
+    ]
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 4 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "mills 4 cards; no land among them, so nothing moves to hand and no life is gained"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Town Greeter",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 4
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-3",
+        "result": false
+      }
+    ]
+  }
+]

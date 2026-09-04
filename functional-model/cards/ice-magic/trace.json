@@ -1,0 +1,125 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "Blizzard: returns the opponent's creature to hand"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ice Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "move",
+        "card": "Ice Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "Blizzara: moves the opponent's creature to their library (top-or-bottom choice not tracked)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ice Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Library"
+      },
+      {
+        "fn": "move",
+        "card": "Ice Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "Blizzaga: moves the opponent's creature to their library (shuffle not tracked)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ice Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Library"
+      },
+      {
+        "fn": "move",
+        "card": "Ice Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

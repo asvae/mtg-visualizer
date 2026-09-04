@@ -1,0 +1,25 @@
+{
+  "produces": [
+    {
+      "zone": "Exile",
+      "controller": "you",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Creature",
+          "Artifact",
+          "Enchantment",
+          "Land"
+        ]
+      },
+      "ease": 2
+    }
+  ]
+}

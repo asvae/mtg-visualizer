@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Jill, Shiva's Dominant\",\"zone\":\"Exile\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Jill, Shiva's Dominant\",\"zone\":\"Battlefield\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Shiva, Warden of Ice\",\"zone\":\"Exile\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Shiva, Warden of Ice\",\"zone\":\"Battlefield\"}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": []
+}

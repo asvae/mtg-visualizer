@@ -1,0 +1,59 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Dark Knight's Greatsword",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Dark Knight's Greatsword",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated (Equip—Pay 3 life (activate only once each turn))",
+      "result": "pays 3 life and attaches itself to the target creature"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Dark Knight's Greatsword",
+        "instanceId": 1,
+        "cost": "Equip—Pay 3 life (activate only once each turn)"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Dark Knight's Greatsword",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

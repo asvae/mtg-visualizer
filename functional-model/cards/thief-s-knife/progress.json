@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "static +1/+1/Rogue-type grant AND its granted 'draw on combat damage' trigger are both unmodeled — no scenario exercises either, no vocabulary for drawCard trigger"
+  ]
+}

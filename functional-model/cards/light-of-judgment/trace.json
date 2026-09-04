@@ -1,0 +1,77 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "deals 6 damage to the target creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Light of Judgment",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Light of Judgment",
+        "target": "opp0-creature-token-0",
+        "amount": 6
+      },
+      {
+        "fn": "move",
+        "card": "Light of Judgment",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "deals 6 damage to your own target creature"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Light of Judgment",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Light of Judgment",
+        "target": "you-creature-token-0",
+        "amount": 6
+      },
+      {
+        "fn": "move",
+        "card": "Light of Judgment",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

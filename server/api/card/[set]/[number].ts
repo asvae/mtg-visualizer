@@ -8,15 +8,16 @@
 // GET /api/card/:set/:number  — same identity Scryfall's own card URLs use
 // (scryfall.com/card/<set>/<number>), so prev/next is a plain ±1 on :number.
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
+import { cardArtCrop, cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
 import type { CardData, EdgeData, Role, SynergyFlow, SynergyNode, SynergyExamResult, ThemeData } from '../../../../app/types';
 import { parseForgeScript } from '../../../../app/lib/forgeScript';
 import { translateForgeCard } from '../../../../app/lib/forgeTranslate';
 import { findInteractionsForCard } from '../../../../functional-model/synergy';
-import type { InteractionGroup, PoolCard } from '../../../../functional-model/synergy';
+import type { InteractionGroup, Fact } from '../../../../functional-model/synergy';
+import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
@@ -89,42 +90,40 @@ function loadForgeScript(name: string): string | null {
 }
 
 // functional-model/cards/<slug>/ — a hand-authored, declarative
-// CardDefinition (see functional-model/card.ts) plus the DISTINCT facts
-// (functional-model/scripts/flatten-traces.mjs's own output) that fall out
-// of actually running it through functional-model/harness.ts's real,
-// mutable game state (functional-model/state.ts) across its own
-// scenarios.ts. Same "no bundled fallback, dev-time comparison artifact"
-// treatment as loadForgeScript above — a miss here is the common case
-// (only a small hand-built set of cards exist in this design so far, see
-// functional-model/cards/), and regenerating trace/flat-trace.json after
-// editing a card needs `npx vite-node functional-model/scripts/run-scenarios.mjs`
-// then `.../flatten-traces.mjs`.
+// CardDefinition (see functional-model/card.ts) run through
+// functional-model/harness.ts's real, mutable game state
+// (functional-model/state.ts) across its own scenarios.ts. Same "no bundled
+// fallback, dev-time comparison artifact" treatment as loadForgeScript above
+// — a miss here is the common case (only a hand-built subset of cards exist
+// in this design so far, see functional-model/cards/), and regenerating
+// trace.json after editing a card needs
+// `npx vite-node functional-model/scripts/run-scenarios.mjs`.
 //
 // Supersedes the older functional-model/data/<slug>.ts generator (one
 // exported function per Forge ability line, produced by
 // app/lib/functionalTranslate.ts) — that design is retired; this route no
 // longer reads from it.
 interface FunctionalModelTraceResult {
-  scenario: string;
+  scenario: { setup: string; action: string; result: string };
   log: Record<string, unknown>[];
 }
+// loadCardSynergy (v2 SYNERGY_DESIGN.md attribute-bag facts) and
+// loadFunctionalModelPool are shared with server/api/graph-links.ts — see
+// server/utils/functionalModelPool.ts.
 interface FunctionalModelData {
   source: string;
-  facts: Record<string, unknown>[];
+  synergy: { produces: Fact[]; wants: Fact[] } | null;
   // Raw per-scenario output (functional-model/harness.ts's own
-  // TraceResult[]) — unlike `facts` (flat-trace.json, deduplicated across
-  // scenarios, scenario label dropped since a matcher only cares whether a
-  // fact is real), this keeps each scenario's own ordered log intact, for
-  // seeing exactly what one specific scenario actually did.
+  // TraceResult[]) — kept as each scenario's own ordered log, for seeing
+  // exactly what one specific scenario actually did.
   traces: FunctionalModelTraceResult[];
 }
 function loadFunctionalModel(name: string): FunctionalModelData | null {
   const slug = slugify(name);
   try {
-    const source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/index.ts`), 'utf8');
-    const facts = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/flat-trace.json`), 'utf8'));
+    const source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
     const traces = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/trace.json`), 'utf8'));
-    return { source, facts, traces };
+    return { source, synergy: loadCardSynergy(slug), traces };
   } catch {
     return null;
   }
@@ -217,48 +216,32 @@ function resolveFunctionalModelCardMeta(name: string): { set: string; collectorN
   return resolveFinCardMeta(name);
 }
 
-// functional-model/cards/<slug>/ — every card that has real trace data,
-// loaded as {name, facts}[] for functional-model/synergy.ts's own join.
-// `name` is read off flat-trace.json itself (any entry carrying a `card`
-// field — cast/move/trigger/activate/enters always do) rather than
-// importing/parsing index.ts, matching this whole file's existing "read
-// data files at runtime, don't import arbitrary TS modules" convention
-// (forge-model/synergy-model data is read the exact same way).
-function loadFunctionalModelPool(): PoolCard[] {
-  const cardsDir = join(process.cwd(), 'functional-model/cards');
-  let slugs: string[];
-  try {
-    slugs = readdirSync(cardsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
-  } catch {
-    return [];
-  }
-  const pool: PoolCard[] = [];
-  for (const slug of slugs) {
-    try {
-      const facts = JSON.parse(readFileSync(join(cardsDir, slug, 'flat-trace.json'), 'utf8')) as { fn: string; card?: string; [k: string]: unknown }[];
-      const name = facts.find((f) => f.card)?.card;
-      if (name) pool.push({ name, facts });
-    } catch {
-      // No flat-trace.json for this slug yet (run run-scenarios.mjs +
-      // flatten-traces.mjs) — skip it rather than error the whole route.
-    }
-  }
-  return pool;
+// InteractionGroup/InteractionMatch (functional-model/synergy.ts v2) carry
+// no thumbnail metadata — matches are identified by card name only (`card`,
+// renamed from the v1 shape's `name`). Enrich a copy here rather than
+// mutating the matcher's own output, since InteractionMatch has no
+// set/collectorNumber/image fields to mutate onto.
+export interface EnrichedInteractionMatch {
+  card: string;
+  selfInteraction?: InteractionGroup['matches'][number]['selfInteraction'];
+  set?: string;
+  collectorNumber?: string;
+  image: string | null;
 }
-
-function loadInteractionGroups(cardName: string): InteractionGroup[] {
-  const pool = loadFunctionalModelPool();
+export interface EnrichedInteractionGroup extends Omit<InteractionGroup, 'matches'> {
+  matches: EnrichedInteractionMatch[];
+}
+async function loadInteractionGroups(cardName: string): Promise<EnrichedInteractionGroup[]> {
+  const pool = await loadFunctionalModelPool();
   if (!pool.some((c) => c.name === cardName)) return [];
   const groups = findInteractionsForCard(cardName, pool);
-  for (const group of groups) {
-    for (const m of group.matches) {
-      const ref = resolveFunctionalModelCardMeta(m.name);
-      m.set = ref?.set;
-      m.collectorNumber = ref?.collectorNumber;
-      m.image = ref?.image ?? null;
-    }
-  }
-  return groups;
+  return groups.map((group) => ({
+    ...group,
+    matches: group.matches.map((m): EnrichedInteractionMatch => {
+      const ref = resolveFunctionalModelCardMeta(m.card);
+      return { card: m.card, selfInteraction: m.selfInteraction, set: ref?.set, collectorNumber: ref?.collectorNumber, image: ref?.image ?? null };
+    }),
+  }));
 }
 
 const curatedThemes = themesData as ThemeData[];
@@ -336,6 +319,7 @@ export default defineEventHandler(async (event) => {
     typeLine: card.type_line || '',
     rarity: card.rarity || 'common',
     images: cardImages(card),
+    artCrop: cardArtCrop(card),
     tokens: cardTokens(card, tokensById),
     scryfallUri: card.scryfall_uri,
     keywords: cardKeywords(card).filter((k) => BADGE_KEYWORDS.has(k)),
@@ -384,6 +368,6 @@ export default defineEventHandler(async (event) => {
     synergyExam: loadSynergyExamResult(card.name),
     forgeScript: loadForgeScript(card.name),
     functionalModel: loadFunctionalModel(card.name),
-    interactions: loadInteractionGroups(card.name),
+    interactions: await loadInteractionGroups(card.name),
   };
 });

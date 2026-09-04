@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onFirstHumanCreatureCast trigger has no TRIGGER_EVENT_MAP entry — no want declared for its real tribal-counter trigger condition"
+  ]
+}

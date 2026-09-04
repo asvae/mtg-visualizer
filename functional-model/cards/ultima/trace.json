@@ -1,0 +1,195 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 land(s); you: 1 creature(s); you: 1 artifact(s); opp0: 2 land(s); opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "destroys your artifact and creature, and the opponent's creature; spares lands (end-the-turn clause not mechanically enforced)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ultima",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 4,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-land-1",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-land-1",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-creature-token-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-land-1",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-land-1",
+        "result": false
+      },
+      {
+        "fn": "destroy",
+        "target": "you-creature-token-0"
+      },
+      {
+        "fn": "destroy",
+        "target": "you-artifact-0"
+      },
+      {
+        "fn": "destroy",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "move",
+        "card": "Ultima",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 land(s); opp0: 2 land(s)",
+      "action": "cast from hand",
+      "result": "no artifacts or creatures anywhere, nothing destroyed"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ultima",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-land-1",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-land-1",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-land-0",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "opp0-land-1",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-land-1",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "card": "Ultima",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

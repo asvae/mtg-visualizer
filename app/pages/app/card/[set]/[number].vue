@@ -2,7 +2,9 @@
 import { computed, onMounted, onUnmounted } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
 import { parseManaSegments } from '../../../../lib/manaSegments';
-import type { InteractionGroup } from '../../../../../functional-model/synergy';
+import { describeFact } from '../../../../../functional-model/synergy';
+import type { Fact } from '../../../../../functional-model/synergy';
+import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
 import type { CardData, EdgeData, SynergyFlow, SynergyFlowStep, SynergyNode, ThemeData } from '../../../../types';
 
 definePageMeta({ layout: 'graph' });
@@ -18,10 +20,10 @@ interface CardResponse {
   synergyReview: 'ai' | 'human' | null;
   functionalModel: {
     source: string;
-    facts: Record<string, unknown>[];
-    traces: { scenario: string; log: Record<string, unknown>[] }[];
+    synergy: { produces: Fact[]; wants: Fact[] } | null;
+    traces: { scenario: { setup: string; action: string; result: string }; log: Record<string, unknown>[] }[];
   } | null;
-  interactions: InteractionGroup[];
+  interactions: EnrichedInteractionGroup[];
 }
 
 // Prev/next is pure client-side ±1 on the URL's :number — no server
@@ -57,18 +59,23 @@ const synergyJson = computed(() => {
   return JSON.stringify({ nodes: data.value.synergyNodes, flow: data.value.synergyFlow }, null, 2);
 });
 
-// functional-model's own outline data — the DISTINCT facts
-// functional-model/scripts/flatten-traces.mjs derived by actually running
-// this card's declarative CardDefinition through real game state (see
-// functional-model/harness.ts/state.ts), not hand-authored nodes the way
-// synergyNodes above are. Same "Raw JSON" spoiler pattern as the Synergy
-// model column, just fed by execution instead of annotation.
-const functionalModelJson = computed(() => (data.value?.functionalModel ? JSON.stringify(data.value.functionalModel.facts, null, 2) : null));
-function factFields(fact: Record<string, unknown>): string {
-  return Object.entries(fact)
-    .filter(([k]) => k !== 'fn')
-    .map(([k, v]) => `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`)
-    .join('  ');
+// functional-model's own outline data — the card's v2 (SYNERGY_DESIGN.md)
+// AI-authored, execution-verified attribute-bag facts
+// (functional-model/cards/<slug>/synergy.json), not hand-authored nodes the
+// way synergyNodes above are. Same "Raw JSON" spoiler pattern as the
+// Synergy model column, just fed by execution-verified facts instead of
+// annotation. `null` for a card not yet migrated to v2 (see synergy.value).
+const synergy = computed(() => data.value?.functionalModel?.synergy ?? null);
+const functionalModelJson = computed(() => (synergy.value ? JSON.stringify(synergy.value, null, 2) : null));
+
+// ease × strength — a crude total connection strength (1-25). '—' if `ease`
+// itself is missing (a fact predating these fields). `strength` defaults to
+// neutral (1) when absent — real on a `wants` fact (a want has no magnitude
+// of its own, only rarity) and a genuine "no measurable magnitude" on a
+// `produces` fact (grantKeyword, e.g.), not a penalty either way.
+function factTotal(fact: Fact): number | null {
+  if (!fact.ease) return null;
+  return fact.ease * (fact.strength ?? 1);
 }
 
 const themeLabelById = computed(() => {
@@ -214,20 +221,6 @@ const outlineRows = computed<OutlineRow[]>(() => {
   return rows;
 });
 
-// Node ids that show up in the Interactions panel below — i.e. this card's
-// own row actually participates in a cross-card (or self) match, not just
-// sitting in the outline unused. Only `nodeOwner === card.name` counts:
-// the "affected by another card's rule" groups carry no id of THIS card's
-// own (see synergyInteractions.ts's own header — bearing a rule isn't a
-// node), so those never light anything up here, correctly.
-const interactingNodeIds = computed<Set<string>>(() => {
-  const ids = new Set<string>();
-  for (const group of data.value?.interactions ?? []) {
-    if (group.nodeOwner === card.value?.name) ids.add(group.nodeId);
-  }
-  return ids;
-});
-
 // Indentation guide for the role/label cell: roots get a plain marker, a
 // child gets a └─ prefix repeated at its own depth so nesting reads at a
 // glance without a second indentation mechanism (padding alone loses the
@@ -286,27 +279,35 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            own README/SCHEMA.md banners), this is the current direction. -->
       <div v-if="data?.functionalModel" class="mt-3">
         <div class="mb-1 text-[10px] font-semibold tracking-wide text-muted uppercase">Functional model</div>
-        <div class="overflow-x-auto border-l-2 border-orange-500 pl-2.5" title="Functional model facts not yet human-reviewed">
+        <div v-if="synergy" class="overflow-x-auto border-l-2 border-orange-500 pl-2.5" title="v2 synergy facts, AI-authored and verified against trace.json">
           <table class="border-collapse font-mono text-xs whitespace-nowrap">
             <thead>
               <tr class="text-[10px] tracking-wide text-muted/70 uppercase">
-                <th class="pr-3 pb-1 text-left font-normal">fn</th>
-                <th class="pb-1 text-left font-normal">fields</th>
+                <th class="pr-3 pb-1 text-left font-normal">role</th>
+                <th class="pr-3 pb-1 text-left font-normal" title="1-5 — how many real givers/wanters this fact has across the whole pool (real matcher, not a shape guess), INVERTED: 1 = nearly any card satisfies it ('permanents on your battlefield'), 5 = rare.">ease</th>
+                <th class="pr-3 pb-1 text-left font-normal" title="1-5 — real game-mechanical magnitude of a produce effect (tokens/counters/damage/life/cards), steeply scaled from trace.json: 1 card/counter/point stays 1, 2+ jumps to 4-5. Not meaningful on a want (shown '—').">strength</th>
+                <th class="pr-3 pb-1 text-left font-normal" title="ease × strength — a crude total connection strength, low when either dimension is weak">total</th>
+                <th class="pr-3 pb-1 text-left font-normal">fact</th>
+                <th class="pb-1 text-left font-normal" title="the card's own oracle text this fact was derived from — not authored for every card yet">card text</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(fact, fi) in data.functionalModel.facts" :key="fi" class="align-top">
-                <td class="pr-3 text-text">{{ fact.fn }}</td>
-                <td class="whitespace-pre-wrap text-muted">{{ factFields(fact) }}</td>
+              <tr v-for="(fact, fi) in [...synergy.produces, ...synergy.wants]" :key="fi" class="align-top">
+                <td class="pr-3 text-text">{{ fact.role }}</td>
+                <td class="pr-3 text-muted/60">{{ fact.ease ?? '—' }}</td>
+                <td class="pr-3 text-muted/60">{{ fact.strength ?? '—' }}</td>
+                <td class="pr-3 text-muted/60">{{ factTotal(fact) ?? '—' }}</td>
+                <td class="pr-3 whitespace-pre-wrap text-muted">{{ describeFact(fact) }}</td>
+                <td class="max-w-xs whitespace-pre-wrap text-muted/60 italic">{{ fact.sourceText ?? '—' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <!-- trace.json's own raw per-scenario log — richer than the facts
-             table above (which is flat-trace.json: deduplicated,
-             scenario-agnostic). Its own nested <details> per scenario, so
-             it stays collapsed-by-default like every other spoiler on this
-             page rather than dumping every scenario's full log at once. -->
+        <div v-else class="border-l-2 border-orange-500/50 pl-2.5 text-xs text-muted italic">Not yet migrated to v2 synergy.json.</div>
+        <!-- trace.json's own raw per-scenario log. Its own nested <details>
+             per scenario, so it stays collapsed-by-default like every other
+             spoiler on this page rather than dumping every scenario's full
+             log at once. -->
         <details v-if="data.functionalModel.traces?.length" class="mt-2 text-[11px]">
           <summary class="cursor-pointer text-muted hover:text-text">Scenarios ({{ data.functionalModel.traces.length }})</summary>
           <div class="mt-1">
@@ -360,12 +361,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                   </td>
                 </template>
                 <template v-else>
-                  <td
-                    class="pr-2"
-                    :class="interactingNodeIds.has(row.id) ? 'font-bold text-text' : 'text-muted/60'"
-                    :title="interactingNodeIds.has(row.id) ? 'Appears in the Interactions panel below' : undefined"
-                    >{{ row.id }}</td
-                  >
+                  <td class="pr-2 text-muted/60">{{ row.id }}</td>
                   <td class="pr-3">
                     <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span
                     ><span :style="{ color: synergyRoleColor(row.node.role) }">{{ synergyRoleLabel(row.node) }}</span
@@ -415,37 +411,34 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <div class="mb-1 text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</div>
         <ul class="flex flex-col gap-1.5">
           <li
-            v-for="group in data.interactions"
-            :key="`${group.kind}:${group.nodeOwner}:${group.nodeId}`"
+            v-for="(group, gi) in data.interactions"
+            :key="gi"
             class="rounded-md border border-border bg-panel px-2.5 py-1.5 text-xs text-text"
           >
             <details>
               <summary class="flex cursor-pointer items-center gap-1.5">
-                <span
-                  class="rounded px-1.5 py-px text-[10px] font-bold uppercase"
-                  :class="group.kind === 'resource' ? 'bg-produce/20 text-produce' : 'bg-[#9dcacf]/20 text-[#6fa8ae]'"
-                  >{{ group.kind }}</span
+                <span class="rounded px-1.5 py-px text-[10px] font-bold uppercase bg-[#9dcacf]/20 text-[#6fa8ae]">{{ group.theme.join(' ') }}</span
                 ><span
                   class="rounded px-1.5 py-px text-[10px] font-bold"
-                  :class="group.direction === 'provides' ? 'bg-produce/20 text-produce' : 'bg-consume/20 text-consume'"
-                  :title="group.direction === 'provides' ? 'This card is the source — other cards benefit from it' : 'This card is the beneficiary — other cards are the source'"
-                  >{{ group.direction === 'provides' ? '→ provides' : '← benefits' }}</span
-                >{{ group.description }}<span class="font-mono text-[10px] text-muted">({{ group.nodeId }})</span
-                ><span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted"
+                  :class="group.direction === 'produces' ? 'bg-produce/20 text-produce' : 'bg-consume/20 text-consume'"
+                  :title="group.direction === 'produces' ? 'This card is the source — other cards benefit from it' : 'This card is the beneficiary — other cards are the source'"
+                  >{{ group.direction === 'produces' ? '→ provides' : '← wants' }}</span
+                >{{ group.description }}<span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted"
                   >{{ group.matches.length }} card{{ group.matches.length === 1 ? '' : 's' }}</span
                 >
               </summary>
               <div class="mt-1.5 flex flex-wrap gap-1.5">
                 <NuxtLink
                   v-for="m in group.matches"
-                  :key="m.name"
+                  :key="m.card"
                   :to="m.set && m.collectorNumber ? `/app/card/${m.set}/${m.collectorNumber}` : undefined"
                   class="block shrink-0"
                   :class="{ 'pointer-events-none': !(m.set && m.collectorNumber) }"
+                  :title="m.selfInteraction ? `Self-interaction: ${m.selfInteraction}` : undefined"
                 >
-                  <img v-if="m.image" :src="m.image" :alt="m.name" class="block w-[220px] min-w-0 rounded-md" />
+                  <img v-if="m.image" :src="m.image" :alt="m.card" class="block w-[220px] min-w-0 rounded-md" />
                   <span v-else class="flex h-[307px] w-[220px] items-center justify-center rounded-md bg-bg text-center text-xs text-muted">{{
-                    m.name
+                    m.card
                   }}</span>
                 </NuxtLink>
               </div>

@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp0\",\"amount\":2}) with no matching declared produce | trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp0\",\"amount\":2}) with no matching declared produce | trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp1\",\"amount\":2}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": []
+}

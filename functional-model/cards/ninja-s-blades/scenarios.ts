@@ -1,9 +1,9 @@
 import type { Scenario } from '../../harness';
 
 export const scenarios: Scenario[] = [
-  { label: 'equip to a creature', you: { creaturesCount: 2 } },
+  { result: 'attaches to a creature you control', you: { creaturesCount: 2 } },
   {
-    label: 'equipped creature deals damage, discarded card MV 3',
+    result: 'draws a card, discards a card, target opponent loses 3 life',
     trigger: 'onEquippedDealsDamage',
     opponents: [{}],
     triggerInput: { damagedPlayerIndex: 0, discardedCardManaValue: 3 },

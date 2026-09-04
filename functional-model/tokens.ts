@@ -55,4 +55,10 @@ export const TOKENS: Record<string, TokenInfo> = {
   // own `horror-1` entry (2/2 black Horror) and forgeTranslate.ts's
   // TOKEN_SCRIPT_MAP (`b_2_2_horror: 'horror-1'`).
   b_2_2_horror: { name: 'Horror', manaCost: '0', types: ['Creature', 'Horror'], basePower: 2, baseToughness: 2 },
+  // FIN's own tokens, added ad hoc same as b_2_2_horror above — stats read
+  // straight off each TokenScript id's own naming convention (this file's
+  // own header rule), matching Aerith Rescue Mission's "Take the Elevator"
+  // (c_1_1_hero) and Battle Menu's "Attack" mode (w_2_2_knight).
+  c_1_1_hero: { name: 'Hero', manaCost: '0', types: ['Creature', 'Hero'], basePower: 1, baseToughness: 1 },
+  w_2_2_knight: { name: 'Knight', manaCost: '0', types: ['Creature', 'Knight'], basePower: 2, baseToughness: 2 },
 };

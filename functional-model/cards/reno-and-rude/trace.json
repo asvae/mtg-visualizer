@@ -1,0 +1,99 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s); opp0: 3 card(s) in library",
+      "action": "\"onDealsDamage\" trigger fires",
+      "result": "exiles the top card of the opponent's library, sacrifices another creature or artifact"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Reno and Rude",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature-or-artifact",
+        "notSelf": true,
+        "tokenFilter": null
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 3 card(s) in library",
+      "action": "\"onDealsDamage\" trigger fires",
+      "result": "exiles the top card of the opponent's library; nothing to sacrifice"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Reno and Rude",
+        "instanceId": 1,
+        "name": "onDealsDamage"
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 1
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature-or-artifact",
+        "notSelf": true,
+        "tokenFilter": null
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Reno and Rude",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Reno and Rude",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Reno and Rude",
+        "player": "you"
+      }
+    ]
+  }
+]

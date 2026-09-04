@@ -1,0 +1,110 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "gains control of an opposing creature, untaps it, grants it lifelink and haste"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zidane, Tantalus Thief",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "gainControl",
+        "controller": "you",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "untap",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "opp0-creature-token-0",
+        "keyword": "Lifelink"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "opp0-creature-token-0",
+        "keyword": "Haste"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no opposing creature, no legal target"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zidane, Tantalus Thief",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onOpponentGainsControlFromYou\" trigger fires",
+      "result": "creates a Treasure token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Zidane, Tantalus Thief",
+        "instanceId": 1,
+        "name": "onOpponentGainsControlFromYou"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Zidane, Tantalus Thief",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Zidane, Tantalus Thief",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Zidane, Tantalus Thief",
+        "player": "you"
+      }
+    ]
+  }
+]

@@ -41,14 +41,14 @@ describe('GameState.move', () => {
     state.pump(card, 3, 3);
     state.tap(card);
     state.gainControl(opp, card);
-    expect(effectivePT(card)).toEqual([1 + 2 + 3, 1 + 2 + 3]);
+    expect(effectivePT(state, card)).toEqual([1 + 2 + 3, 1 + 2 + 3]);
     expect(card.tapped).toBe(true);
     expect(card.controllerId).toBe(opp.id);
 
     state.move(card, 'Exile');
     state.move(card, 'Battlefield');
 
-    expect(effectivePT(card)).toEqual([1, 1]);
+    expect(effectivePT(state, card)).toEqual([1, 1]);
     expect(card.tapped).toBe(false);
     expect(card.controllerId).toBe(card.ownerId);
   });

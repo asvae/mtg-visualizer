@@ -1,0 +1,171 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "cast from hand",
+      "result": "surveils 2, you gain 2 life; not cast from graveyard, no transform"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Esper Origins",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 2
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Esper Origins",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "cast from graveyard",
+      "result": "cast from the graveyard via Flashback: surveils 2, gains 2 life, exiles itself and returns to the battlefield transformed with a finality counter (final tracked zone is Exile — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Esper Origins",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{3}{G}"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 2
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "Esper Origins",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Esper Origins",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Esper Origins",
+        "counterType": "finality",
+        "amount": 1
+      },
+      {
+        "fn": "move",
+        "card": "Esper Origins",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"chapterI\" trigger fires, back face",
+      "result": "chapter I: reveals the top library card and puts it into hand (validType is over-broad \"any\" here — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Esper Maduin",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "dig",
+        "player": "you",
+        "qty": 1,
+        "take": 1,
+        "validType": "any",
+        "found": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires, back face",
+      "result": "chapter II: adds {G}{G} (not modeled — no mana-production Effect kind exists)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Esper Maduin",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"chapterIII\" trigger fires, back face",
+      "result": "chapter III: other creatures you control get +2/+2 and gain trample until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: Esper Maduin",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Trample"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-1",
+        "keyword": "Trample"
+      }
+    ]
+  }
+]

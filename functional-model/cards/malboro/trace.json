@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "ETB, 1 opponent",
+    "scenario": {
+      "setup": "opp0: 4 card(s) in hand; opp0: 40 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled"
+    },
     "log": [
       {
         "fn": "trigger",
@@ -28,7 +32,11 @@
     ]
   },
   {
-    "scenario": "ETB, 2 opponents",
+    "scenario": {
+      "setup": "opp0: 4 card(s) in hand; opp0: 40 card(s) in library; opp1: at 12 life; opp1: 2 card(s) in hand; opp1: 30 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "each opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled"
+    },
     "log": [
       {
         "fn": "trigger",

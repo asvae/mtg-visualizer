@@ -1,0 +1,115 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 4 card(s) in library",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "exiles the top two cards of your library"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Opera Love Song",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Exile",
+        "qty": 2,
+        "validType": "any"
+      },
+      {
+        "fn": "move",
+        "card": "Opera Love Song",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "pumps two target creatures +2/+0 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Opera Love Song",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 0
+      },
+      {
+        "fn": "pump",
+        "target": "opp0-creature-token-0",
+        "power": 2,
+        "toughness": 0
+      },
+      {
+        "fn": "move",
+        "card": "Opera Love Song",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "only one legal creature on the battlefield: pumps just that one +2/+0"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Opera Love Song",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 2,
+        "toughness": 0
+      },
+      {
+        "fn": "move",
+        "card": "Opera Love Song",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

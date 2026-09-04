@@ -1,0 +1,76 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 2 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "taps both of the opponent's creatures"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultimecia, Temporal Threat",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 2
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-creature-token-1"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDealsCombatDamage\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultimecia, Temporal Threat",
+        "instanceId": 1,
+        "name": "onDealsCombatDamage"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ultimecia, Temporal Threat",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{U}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Ultimecia, Temporal Threat",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Ultimecia, Temporal Threat",
+        "player": "you"
+      }
+    ]
+  }
+]

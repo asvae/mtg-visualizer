@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "Jecht deals combat damage to a player",
+    "scenario": {
+      "setup": "",
+      "action": "\"onDealsDamage\" trigger fires",
+      "result": "exiles Jecht and returns it transformed into Braska's Final Aeon"
+    },
     "log": [
       {
         "fn": "trigger",
@@ -21,7 +25,11 @@
     ]
   },
   {
-    "scenario": "Braska chapter I",
+    "scenario": {
+      "setup": "opp0: 3 card(s) in hand",
+      "action": "\"chapterI\" trigger fires, back face",
+      "result": "the opponent discards a card and you draw a card"
+    },
     "log": [
       {
         "fn": "trigger",
@@ -41,13 +49,32 @@
     ]
   },
   {
-    "scenario": "Braska chapter III",
+    "scenario": {
+      "setup": "opp0: 3 creature(s)",
+      "action": "\"chapterIII\" trigger fires, back face",
+      "result": "the opponent sacrifices two creatures"
+    },
     "log": [
       {
         "fn": "trigger",
         "card": "Braska's Final Aeon",
         "instanceId": 1,
         "name": "chapterIII"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-2",
+        "result": true
       },
       {
         "fn": "sacrifice",

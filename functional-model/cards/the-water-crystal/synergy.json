@@ -1,0 +1,24 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "opp",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 3,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "ease": 3
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "produces": [
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "target": "self",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "event": "landfall",
+      "controller": "you",
+      "ease": 5
+    }
+  ]
+}

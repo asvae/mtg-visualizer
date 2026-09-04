@@ -1,0 +1,28 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"returnFromGraveyard\" activated",
+      "result": "returns to the battlefield tapped with a finality counter on it (this scenario's own setup already starts self on the battlefield — see definition.ts's own comment on the real \"activated from the graveyard\" gap — only the resulting tapped+countered state is modeled)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Relentless X-ATM092",
+        "instanceId": 1,
+        "cost": "{8} (activated only while this card is in your graveyard)",
+        "ability": "returnFromGraveyard"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Relentless X-ATM092",
+        "counterType": "finality",
+        "amount": 1
+      },
+      {
+        "fn": "tap",
+        "target": "Relentless X-ATM092"
+      }
+    ]
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "surveils 2"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Valkyrie Aerial Unit",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 2
+      }
+    ]
+  }
+]

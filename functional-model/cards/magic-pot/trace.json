@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDies\" trigger fires",
+      "result": "creates a Treasure token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Magic Pot",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "activated ({2}, {T})",
+      "result": "exiles a target card from your own graveyard (this model approximates \"any graveyard\" as your own — see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Magic Pot",
+        "instanceId": 1,
+        "cost": "{2}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Exile"
+      }
+    ]
+  }
+]

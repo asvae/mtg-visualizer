@@ -1,0 +1,66 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "draws two cards"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Laughing Mad",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{R}"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Laughing Mad",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from graveyard",
+      "result": "draws two cards (cast via Flashback, then exiled instead of returning to the graveyard)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Laughing Mad",
+        "instanceId": 1,
+        "from": "graveyard",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Laughing Mad",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Exile",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

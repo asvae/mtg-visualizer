@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onMutantDies want declared but currently zero producers in the entire pool satisfy it (animate has no fact vocabulary to make anything a Mutant) — new vocabulary with nothing to match yet"
+  ]
+}

@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, no resolvable effect (a vanilla body plus real static text — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Diamond Weapon",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{7}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Diamond Weapon",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Diamond Weapon",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{7}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Diamond Weapon",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Diamond Weapon",
+        "player": "you"
+      }
+    ]
+  }
+]

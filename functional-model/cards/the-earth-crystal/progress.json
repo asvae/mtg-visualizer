@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "no scenario in its trace logs a plain 'enters' — no Battlefield produce fact could be declared despite being a real permanent"
+  ]
+}

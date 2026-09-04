@@ -1,0 +1,96 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ignis Scientia",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 1,
+        "validType": "land"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "activated ({1}{G}{U}, {T})",
+      "result": "exiles the creature card from your graveyard and creates a Food token"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ignis Scientia",
+        "instanceId": 1,
+        "cost": "{1}{G}{U}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-gy-creature-0",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-creature-0",
+        "zone": "Exile"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Food",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({1}{G}{U}, {T}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ignis Scientia",
+        "instanceId": 1,
+        "cost": "{1}{G}{U}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "legendRule",
+        "card": "Ignis Scientia",
+        "player": "you"
+      }
+    ]
+  }
+]

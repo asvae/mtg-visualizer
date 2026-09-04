@@ -1,0 +1,133 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onOpponentCreatureDies\" trigger fires",
+      "result": "puts 3 +1/+1 counters on Vincent Valentine (the dying creature was power 3)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Vincent Valentine",
+        "instanceId": 1,
+        "name": "onOpponentCreatureDies"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Vincent Valentine",
+        "counterType": "+1/+1",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onAttacks\" trigger fires",
+      "result": "transforms into Galian Beast (represented as exile-then-return)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Vincent Valentine",
+        "instanceId": 1,
+        "name": "onAttacks"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Vincent Valentine",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Vincent Valentine",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDies\" trigger fires, back face",
+      "result": "returns to the battlefield tapped, front face up"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Galian Beast",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Galian Beast",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "tap",
+        "target": "Galian Beast"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Galian Beast",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Galian Beast",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Galian Beast",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Vincent Valentine",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}{B}"
+      },
+      {
+        "fn": "enters",
+        "card": "Vincent Valentine",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Vincent Valentine",
+        "player": "you"
+      }
+    ]
+  }
+]

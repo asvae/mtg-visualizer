@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "the untargeted library->exile move never logs a read of the opponent's library — 'wants opponent's library' fact omitted, same instrumentation gap as poison-the-waters"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "notes",
+  "lastVerified": "2026-09-04",
+  "notes": "trace has dealDamage ({\"fn\":\"dealDamage\",\"source\":\"Garnet, Princess of Alexandria\",\"target\":\"opp0\",\"amount\":3}) with no matching declared produce",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "onAttacks Saga-lore-counter payoff has ZERO scenario coverage where totalLore>0 — the actual counter-placement branch, a real part of the card, is entirely untested"
+  ]
+}

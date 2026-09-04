@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onDies\" trigger fires",
+      "result": "Rat Tail — creates a Treasure token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Undercity Dire Rat",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Treasure",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  }
+]

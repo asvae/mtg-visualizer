@@ -1,6 +1,10 @@
 [
   {
-    "scenario": "0 creatures in play",
+    "scenario": {
+      "setup": "",
+      "action": "activated ({3}{W})",
+      "result": "no creatures to pump, no-op"
+    },
     "log": [
       {
         "fn": "activate",
@@ -22,7 +26,11 @@
     ]
   },
   {
-    "scenario": "3 creatures in play",
+    "scenario": {
+      "setup": "you: 3 creature(s)",
+      "action": "activated ({3}{W})",
+      "result": "creatures you control get +1/+1"
+    },
     "log": [
       {
         "fn": "activate",

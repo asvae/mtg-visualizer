@@ -1,0 +1,80 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"chapterI\" trigger fires",
+      "result": "discards a card, then draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: G.F. Ifrit",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
+      "action": "\"chapterII\" trigger fires",
+      "result": "discards a card, then draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: G.F. Ifrit",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIII\" trigger fires",
+      "result": "no observable effect — no mana-production mechanism exists in this engine"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: G.F. Ifrit",
+        "instanceId": 1,
+        "name": "chapterIII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterIV\" trigger fires",
+      "result": "no observable effect — no mana-production mechanism exists in this engine"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Summon: G.F. Ifrit",
+        "instanceId": 1,
+        "name": "chapterIV"
+      }
+    ]
+  }
+]

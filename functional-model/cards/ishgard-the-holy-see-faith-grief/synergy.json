@@ -1,0 +1,26 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "ease": 5
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Artifact",
+          "Enchantment"
+        ]
+      },
+      "ease": 3
+    }
+  ]
+}

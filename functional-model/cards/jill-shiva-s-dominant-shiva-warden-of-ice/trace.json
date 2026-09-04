@@ -1,0 +1,131 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "returns the opponent's nonland permanent to hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Jill, Shiva's Dominant",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "opp0-creature-token-0",
+        "zone": "Hand"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no other nonland permanent to target; nothing returned (optional)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Jill, Shiva's Dominant",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({3}{U}{U}, {T} (activate only as a sorcery))",
+      "result": "exiles Jill and returns it transformed into Shiva, Warden of Ice"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Jill, Shiva's Dominant",
+        "instanceId": 1,
+        "cost": "{3}{U}{U}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Jill, Shiva's Dominant",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Jill, Shiva's Dominant",
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterI\" trigger fires, back face",
+      "result": "Mesmerize resolves — no trackable mutation in this model (evasion grant is untracked)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shiva, Warden of Ice",
+        "instanceId": 1,
+        "name": "chapterI"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"chapterII\" trigger fires, back face",
+      "result": "Mesmerize resolves — no trackable mutation in this model (evasion grant is untracked)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shiva, Warden of Ice",
+        "instanceId": 1,
+        "name": "chapterII"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 2 land(s)",
+      "action": "\"chapterIII\" trigger fires, back face",
+      "result": "exiles Shiva and returns it to the battlefield front-face-up (tapping opponents' lands is not modeled — no tapAll Effect kind exists yet)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Shiva, Warden of Ice",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Shiva, Warden of Ice",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Shiva, Warden of Ice",
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

@@ -1,0 +1,87 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 card(s) in hand; opp0: 5 card(s) in library",
+      "action": "activated ({4}{U}{U}, {T})",
+      "result": "each opponent mills 3 cards (equal to your hand size)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Water Crystal",
+        "instanceId": 1,
+        "cost": "{4}{U}{U}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Hand",
+        "count": 3,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 5 card(s) in library",
+      "action": "activated ({4}{U}{U}, {T})",
+      "result": "no cards in your hand, opponent mills nothing"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Water Crystal",
+        "instanceId": 1,
+        "cost": "{4}{U}{U}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Hand",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "player": "opp0",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{U}{U}, {T}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Water Crystal",
+        "instanceId": 1,
+        "cost": "{4}{U}{U}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Hand",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "legendRule",
+        "card": "The Water Crystal",
+        "player": "you"
+      }
+    ]
+  }
+]

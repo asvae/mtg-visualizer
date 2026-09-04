@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 0/1 black Wizard creature token"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Mysidian Elder",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  }
+]

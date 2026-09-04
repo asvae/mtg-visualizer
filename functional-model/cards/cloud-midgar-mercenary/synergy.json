@@ -1,0 +1,12 @@
+{
+  "produces": [
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "ease": 5,
+      "strength": 1,
+      "sourceText": "When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle."
+    }
+  ],
+  "wants": []
+}

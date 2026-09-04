@@ -9,8 +9,8 @@
 
 const { GameState, wrapPlayer, wrapCard, effectivePT } = await import('../state.ts');
 const { resolveCard } = await import('../card.ts');
-const { theFinalDays } = await import('../cards/the-final-days/index.ts');
-const { warrenElder } = await import('../cards/warren-elder/index.ts');
+const { theFinalDays } = await import('../cards/the-final-days/definition.ts');
+const { warrenElder } = await import('../cards/warren-elder/definition.ts');
 
 const state = new GameState();
 const you = state.addPlayer('you');

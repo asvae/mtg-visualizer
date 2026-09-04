@@ -1,0 +1,12 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "ease": 1,
+      "strength": 1
+    }
+  ],
+  "wants": []
+}

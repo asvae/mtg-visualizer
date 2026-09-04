@@ -1,0 +1,58 @@
+{
+  "produces": [
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "ease": 4,
+      "strength": 1
+    },
+    {
+      "zone": "Exile",
+      "controller": "you",
+      "subject": "self",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "event": "damage",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "ease": 5,
+      "strength": 5
+    }
+  ],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 5
+    },
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "ease": 3
+    }
+  ]
+}

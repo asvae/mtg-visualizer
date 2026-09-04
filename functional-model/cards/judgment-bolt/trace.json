@@ -1,0 +1,130 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 Equipment; opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "deals 5 damage to the target creature and 2 damage to its controller"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Judgment Bolt",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Judgment Bolt",
+        "target": "opp0-creature-token-0",
+        "amount": 5
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-equipment-0",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-equipment-1",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-1",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Judgment Bolt",
+        "target": "opp0",
+        "amount": 2
+      },
+      {
+        "fn": "move",
+        "card": "Judgment Bolt",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "deals 5 damage to the target creature and 0 damage to its controller (no Equipment controlled)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Judgment Bolt",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Judgment Bolt",
+        "target": "opp0-creature-token-0",
+        "amount": 5
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Judgment Bolt",
+        "target": "opp0",
+        "amount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Judgment Bolt",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

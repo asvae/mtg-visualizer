@@ -1,0 +1,85 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "the opponent sacrifices a creature; you create a 0/1 black Wizard token"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cornered by Black Mages",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}{B}"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "opp0-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": null
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Cornered by Black Mages",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "no legal creature for the opponent to sacrifice; you still create the token"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cornered by Black Mages",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}{B}"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "opp0",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": null
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Wizard",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "move",
+        "card": "Cornered by Black Mages",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

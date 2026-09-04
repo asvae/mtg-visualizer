@@ -1,0 +1,92 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 6 card(s) in library",
+      "action": "cast from hand",
+      "result": "mills 4 generic (noncreature) library cards to the graveyard; none qualify to enter the battlefield under this harness (see reported gap: no way to seed library creature cards)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Random Encounter",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{R}{R}"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 4,
+        "validType": "any"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-3",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "card": "Random Encounter",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"atNextEndStep\" trigger fires",
+      "result": "at the next end step, creature cards you control return to hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Random Encounter",
+        "instanceId": 1,
+        "name": "atNextEndStep"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-1",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Random Encounter",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Battlefield",
+        "to": "Hand",
+        "qty": 4,
+        "validType": "creature"
+      }
+    ]
+  }
+]

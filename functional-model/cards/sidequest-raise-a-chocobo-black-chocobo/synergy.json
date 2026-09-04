@@ -1,0 +1,42 @@
+{
+  "produces": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "g_2_2_bird_landfall"
+      },
+      "ease": 4,
+      "strength": 1
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "ease": 4,
+      "strength": 1
+    }
+  ],
+  "wants": [
+    {
+      "event": "landfall",
+      "controller": "you",
+      "ease": 5
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature",
+          "Bird"
+        ]
+      },
+      "ease": 5
+    }
+  ]
+}

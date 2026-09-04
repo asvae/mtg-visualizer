@@ -1,0 +1,27 @@
+{
+  "produces": [],
+  "wants": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Equipment"
+        ]
+      },
+      "ease": 5,
+      "sourceText": "At the beginning of combat on your turn, if you control an Equipment, you may pay {1}."
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "ease": 2,
+      "sourceText": "When you do, attach target Equipment you control to target creature you control."
+    }
+  ]
+}

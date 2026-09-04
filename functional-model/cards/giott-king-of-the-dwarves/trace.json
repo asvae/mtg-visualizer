@@ -1,0 +1,53 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand",
+      "action": "\"onDwarfOrEquipmentEnters\" trigger fires",
+      "result": "discards a card, then draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Giott, King of the Dwarves",
+        "instanceId": 1,
+        "name": "onDwarfOrEquipmentEnters"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Giott, King of the Dwarves",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Giott, King of the Dwarves",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Giott, King of the Dwarves",
+        "player": "you"
+      }
+    ]
+  }
+]

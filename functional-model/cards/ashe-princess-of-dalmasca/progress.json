@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "empty",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "dig effect (library search) logs zero read: lines even after full trace regen — harness instrumentation gap, not a synergy-authoring gap; file is legitimately empty but the real search ability is completely unrepresented"
+  ]
+}

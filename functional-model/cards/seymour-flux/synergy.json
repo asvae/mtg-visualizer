@@ -1,0 +1,18 @@
+{
+  "produces": [
+    {
+      "event": "lifeloss",
+      "controller": "you",
+      "ease": 5,
+      "strength": 1
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "target": "self",
+      "ease": 5,
+      "strength": 1
+    }
+  ],
+  "wants": []
+}

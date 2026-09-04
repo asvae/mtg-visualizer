@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-04",
+  "notes": "",
+  "textCoverageAudited": false,
+  "knownGaps": [
+    "landDrop effect's trace evidence is an unconditional log line — the trace's own comment says this never actually succeeds in this harness (no land-typed hand cards modeled), so the 'evidence' is weaker than it looks; becomePowerOfTowns is a pure no-op, completely unmodeled"
+  ]
+}

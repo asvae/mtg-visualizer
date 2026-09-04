@@ -1,0 +1,52 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "activated ({5})",
+      "result": "attaches to the target creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Aettir and Priwen",
+        "instanceId": 1,
+        "cost": "{5}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "equip",
+        "equipment": "Aettir and Priwen",
+        "target": "you-creature-token-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}), a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Aettir and Priwen",
+        "instanceId": 1,
+        "cost": "{5}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "legendRule",
+        "card": "Aettir and Priwen",
+        "player": "you"
+      }
+    ]
+  }
+]

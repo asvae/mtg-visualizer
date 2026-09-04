@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onOtherCreatureEnters\" trigger fires",
+      "result": "gets +1/+1 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Loporrit Scout",
+        "instanceId": 1,
+        "name": "onOtherCreatureEnters"
+      },
+      {
+        "fn": "pump",
+        "target": "Loporrit Scout",
+        "power": 1,
+        "toughness": 1
+      }
+    ]
+  }
+]

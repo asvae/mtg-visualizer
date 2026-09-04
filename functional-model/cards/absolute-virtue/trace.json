@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield with no resolvable effect — \"can't be countered\" and protection from opponents are both continuous static rules"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Absolute Virtue",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{6}{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Absolute Virtue",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Absolute Virtue",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{6}{W}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Absolute Virtue",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Absolute Virtue",
+        "player": "you"
+      }
+    ]
+  }
+]

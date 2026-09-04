@@ -1,0 +1,54 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creates a 1/1 colorless Hero creature token, then attaches to it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Warrior's Sword",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Hero",
+        "qty": 1,
+        "tapped": false
+      },
+      {
+        "fn": "equip",
+        "equipment": "Warrior's Sword",
+        "target": "Hero"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "activated ({5})",
+      "result": "attaches to target creature you control"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Warrior's Sword",
+        "instanceId": 1,
+        "cost": "{5}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Warrior's Sword",
+        "target": "you-creature-token-0"
+      }
+    ]
+  }
+]

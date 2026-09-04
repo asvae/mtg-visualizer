@@ -1,0 +1,100 @@
+[
+  {
+    "scenario": {
+      "setup": "opp0: 1 creature(s)",
+      "action": "\"onNoncreatureSpellCastGE4Mana\" trigger fires",
+      "result": "taps the opponent creature and puts a stun counter on it"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCastGE4Mana"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-creature-token-0"
+      },
+      {
+        "fn": "putCounter",
+        "target": "opp0-creature-token-0",
+        "counterType": "Stun",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCastGE4Mana\" trigger fires",
+      "result": "no opponent creature present, no legal target"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCastGE4Mana"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onNoncreatureSpellCastGE8Mana\" trigger fires",
+      "result": "puts 8 +1/+1 counters on itself"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "name": "onNoncreatureSpellCastGE8Mana"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Ultros, Obnoxious Octopus",
+        "counterType": "+1/+1",
+        "amount": 8
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Ultros, Obnoxious Octopus",
+        "player": "you"
+      }
+    ]
+  }
+]

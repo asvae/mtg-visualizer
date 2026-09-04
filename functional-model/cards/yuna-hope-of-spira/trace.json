@@ -1,0 +1,56 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature card(s) in graveyard",
+      "action": "\"onEndStep\" trigger fires",
+      "result": "no enchantment card in the graveyard (this model has no way to seed a typed graveyard card), no legal target, nothing returned"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Yuna, Hope of Spira",
+        "instanceId": 1,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "you-gy-creature-0",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Yuna, Hope of Spira",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Yuna, Hope of Spira",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Yuna, Hope of Spira",
+        "player": "you"
+      }
+    ]
+  }
+]

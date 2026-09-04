@@ -1,0 +1,163 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 Cleric creature(s)",
+      "action": "\"onLifeGained\" trigger fires",
+      "result": "puts a +1/+1 counter on self and both other Clerics (3 total)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Minwu, White Mage",
+        "instanceId": 1,
+        "name": "onLifeGained"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Cleric",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-0",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Cleric",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "you-creature-token-1",
+        "counterType": "+1/+1",
+        "amount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Minwu, White Mage",
+        "subtype": "Cleric",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Minwu, White Mage",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"onLifeGained\" trigger fires",
+      "result": "puts a +1/+1 counter on self only — the other 2 creatures are not Clerics"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Minwu, White Mage",
+        "instanceId": 1,
+        "name": "onLifeGained"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Cleric",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Cleric",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Minwu, White Mage",
+        "subtype": "Cleric",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Minwu, White Mage",
+        "counterType": "+1/+1",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Minwu, White Mage",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Minwu, White Mage",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Minwu, White Mage",
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Minwu, White Mage",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Minwu, White Mage",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Minwu, White Mage",
+        "player": "you"
+      }
+    ]
+  }
+]
