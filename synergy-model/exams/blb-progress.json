@@ -19,7 +19,8 @@
         "Star Charter",
         "Bonecache Overseer",
         "Waterspout Warden (trigger-gate variant)",
-        "Bandit's Talent"
+        "Bandit's Talent",
+        "Starlit Soothsayer"
       ]
     },
     "Delayed conditional return (DelayedTrigger + WithCountersType)": {
@@ -40,7 +41,8 @@
     "Pawprint$ weighted/repeatable modal choice": {
       "description": "Forge's Bloomburrow-specific 'choose up to N {P} worth of modes, may repeat' point-buy modal system (Season of the Burrow). SCHEMA's `combine` convention only supports a fixed choose-N-of-the-following shape, not a weighted/repeatable point-buy one. Individual mode effects still translate correctly; only the modal-choice wrapper itself is misrepresented (reads as a plain 'choose one').",
       "cards": [
-        "Season of the Burrow"
+        "Season of the Burrow",
+        "Season of Loss"
       ]
     },
     "Dig's look-then-selectively-reveal-to-hand shape": {
@@ -106,7 +108,9 @@
         "Dire Downdraft",
         "Pearl of Wisdom",
         "Huskburster Swarm",
-        "Stormcatch Mentor"
+        "Stormcatch Mentor",
+        "Scales of Shale (K:Affinity variant)",
+        "Rottenmouth Viper (Sac<X/...> cost-reduction variant)"
       ]
     },
     "TargetsWithDifferentControllers$ (a multi-target restriction)": {
@@ -232,9 +236,10 @@
       ]
     },
     "Remembered$CardManaCost / other Remembered-value dynamic scalers": {
-      "description": "Darkstar Augur's own upkeep trigger (\"lose life equal to its mana value\") ties a LoseLife$ amount to SVar:X:Remembered$CardManaCost -- the mana value of whatever card was dug/revealed earlier in the SAME chain (RememberChanged$True on the Dig step). No := / = binding connects the Dig node to the LoseLife node's qty; the generic emit builder stamps the literal SVar name \"X\" onto qty instead of resolving or at least naming the binding. Needs a real scaler-node mechanism analogous to Beza's sensor pair, not attempted.",
+      "description": "Darkstar Augur's own upkeep trigger (\"lose life equal to its mana value\") ties a LoseLife$ amount to SVar:X:Remembered$CardManaCost -- the mana value of whatever card was dug/revealed earlier in the SAME chain (RememberChanged$True on the Dig step). No := / = binding connects the Dig node to the LoseLife node's qty; the generic emit builder stamps the literal SVar name \"X\" onto qty instead of resolving or at least naming the binding. Needs a real scaler-node mechanism analogous to Beza's sensor pair, not attempted. Also seen as a general unbound Count$ scaler need beyond Remembered-value specifically: Season of Loss's own qty:Y/qty:X (Count$ThisTurnEntered_Graveyard_from_Battlefield vs Count$ValidGraveyard -- two DIFFERENT graveyard-count formulas, not interchangeable) have no scaler node or := binding at all.",
       "cards": [
-        "Darkstar Augur"
+        "Darkstar Augur",
+        "Season of Loss"
       ]
     },
     "AB$Effect with nested StaticAbilities$/Triggers$ sub-ability chain": {
@@ -253,6 +258,18 @@
       "description": "A predicate like ValidAttackers$ Creature.YouCtrl+Rat correctly derives thing:creature and owner, but the +Rat subtype restriction itself has no fixed vocabulary the way YouCtrl/token/nonLand/etc. do (Forge names hundreds of possible subtypes here) and is silently dropped. A generic \"any leftover capitalized qualifier is a subtype\" fallback was attempted and reverted after immediately producing a false positive (IsRemembered, a Forge boolean predicate, got mistagged as cond:subtype_isremembered on Starfall Invocation) -- too broad a heuristic for Forge's open-ended qualifier vocabulary. Needs a real allowlist or a different detection strategy, not attempted further.",
       "cards": [
         "Persistent Marshstalker"
+      ]
+    },
+    "Flashback with a shared, cast-context-dependent spell ability": {
+      "description": "Ruthless Negotiation's own \"exile a card... if this spell was cast from a graveyard, draw a card\" -- ONE spell ability (SP$ ChangeZone) reused by BOTH the hand-cast and the Flashback-cast roots, with a downstream draw step gated on ConditionPresent$Card.wasCastFromGraveyard (true only on the Flashback path). The current Flashback handling only wires its own cast root to the built-in resolve-to-exile-instead-of-gy step, never to the shared spell effect -- and even fixing that naively (duplicating or sharing the effect chain under both roots) would need real cast-context threading to gate the draw correctly per path, not just structural sharing. Genuinely architectural, not attempted.",
+      "cards": [
+        "Ruthless Negotiation"
+      ]
+    },
+    "DB$Repeat (repeat an effect N times based on a dynamic count)": {
+      "description": "Rottenmouth Viper's own \"for each blight counter, each opponent loses 4 life unless they sacrifice a nonland permanent or discard a card\" -- Forge's DB$Repeat (looping a sub-effect Count$CardCounters.BLIGHT times) wrapping a DB$GenericChoice (an UnlessCost choice) has zero representation. Genuinely complex -- needs a repeat/loop node concept plus the already-separately-gapped GenericChoice shape.",
+      "cards": [
+        "Rottenmouth Viper"
       ]
     }
   },
@@ -965,6 +982,41 @@
       "status": "issues-open",
       "attempts": 2,
       "note": "Fixed 2 real bugs: ValidAttackers$ never read by trigger predicate detection (fell back to self), Threshold$True never read on trigger rows (only static rows' Condition$Threshold). Remaining, deliberately deferred: static +X/+0 SVar scaler unresolved, graveyard-reanimation return shape (Tapped$/Cost$/Attacking$/TriggerZones$Graveyard) unmodeled, and a newly-found narrower gap -- ValidAttackers$'s own +Rat subtype qualifier isn't carried into a cond: flag (a generic subtype-qualifier fallback was attempted and reverted after producing a false positive on IsRemembered elsewhere -- too risky to generalize)."
+    },
+    "Scales of Shale": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Modal +2/+0 lifelink/indestructible effect correct. K:Affinity:Lizard (cost reduction per Lizard controlled) never handled -- same concept as the already-documented S:ReduceCost gap class, just via a K: line instead of S:."
+    },
+    "Starlit Soothsayer": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Flying + phase trigger correct. CheckSVar$X gating the end-step trigger (\"if you gained or lost life this turn\", an OR via Plus.Y) never read -- matches known ConditionCheckSVar/CheckSVar dynamic-condition class, trigger-gate variant."
+    },
+    "Season of Loss": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Sacrifice mode correct. Pawprint$5 weighted/repeatable modal choice flattened to plain choose-one (matches known Season of the Burrow gap class). Also two unbound Count$ scalers (qty:X/qty:Y) with no := binding, distinct formulas -- extends the general dynamic-scaler-binding gap class."
+    },
+    "Ruthless Negotiation": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Exile-from-opponent-hand effect and Flashback cost/exile-instead-of-gy both correct individually. Two related gaps: (1) Flashback's own cast root never shares the spell's real effect chain (only wired to the built-in resolve-to-exile step), so the effect only ever fires under the hand-cast root. (2) ConditionPresent$Card.wasCastFromGraveyard gating the draw is never read at all -- would need cast-context threaded through the recursive translator to gate correctly per which cast triggered it. New gap class, genuinely architectural."
+    },
+    "Rottenmouth Viper": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Mana cost/PT correct. Two gaps: Sac<X/Permanent.nonLand>-based cost reduction (matches S:ReduceCost family), and DB$Repeat + GenericChoice(SacNonland,Discard) + BLIGHT-counter-scaled LoseLife payoff -- the card's whole point -- entirely unhandled. New DB$Repeat gap class."
+    },
+    "Stargaze": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed 2 real bugs: Dig's DestinationZone fallback was hardcoded 'exile' instead of Forge's real default 'hand'; DestinationZone2$ (a two-pile split) had no handling at all -- added a second sibling move node for the remainder. Remaining: qty on both piles doesn't distinguish ChangeNum (X, the primary pile) from DigNum (Y=2X, total looked at), and X/Y aren't bound via := to the shared {X} mana-cost variable -- extends the general dynamic-scaler-binding gap class."
+    },
+    "Sinister Monolith": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: SorcerySpeed$True missing from the Sac<>-cost branch (already read on the plain mana+tap branch). Full match on attempt 2."
     }
   }
 }

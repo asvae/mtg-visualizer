@@ -1,0 +1,21 @@
+{
+  "name": "Sinister Monolith",
+  "manaCost": "{3}{B}",
+  "typeLine": "Artifact",
+  "description": "At the beginning of combat on your turn, each opponent loses 1 life. You gain 1 life.\n\n{T}, Pay 2 life, Sacrifice this artifact: Draw two cards. Activate only as a sorcery.",
+  "assumptions": [
+    "Read node C's `cond:phase=begincombat` (owner `me`, trigger-type `phase`) as \"at the beginning of combat on your turn\" -- the node fixes the phase and that it's controlled by me, but doesn't explicitly rule out firing on other players' combat phases; \"on your turn\" is the conventional reading for this owner/trigger-type combination.",
+    "Applied the schema's stated default literally: since neither D (`emit`, opp, `life-loss`) nor E (`emit`, me, `life-gain`) carries a `qty` flag, each defaults to exactly 1 -- i.e., \"loses 1 life\" / \"you gain 1 life.\" No `:=`/`=` binding ties the two amounts together, so I did not assume the gain equals the loss beyond both independently defaulting to 1.",
+    "Ordered the activated ability's cost as `{T}, Pay 2 life, Sacrifice this artifact` -- the nodes (F: tap+cost flags, G: automatic move to gy) fix *what* the costs are, not their printed left-to-right order.",
+    "Used the wording \"Activate only as a sorcery\" for F's `cond:sorcery_speed`; the node fixes the timing restriction, not the exact printed phrasing (e.g., it could instead read \"Activate this ability only any time you could cast a sorcery\").",
+    "Referred to the permanent as \"this artifact\" in the sacrifice cost, since its name is withheld by design.",
+    "Treated F->G->H as a single activated ability (cost: tap/pay life/sacrifice; effect: draw two) rather than a triggered ability, since no node in that chain has `to: \"stack\"` -- consistent with the schema modeling activated-ability costs/effects without an explicit stack node."
+  ],
+  "couldNotDerive": [
+    "Whether the beginning-of-combat trigger is restricted to combat phases on the caster's own turn or could also fire on other turns -- node C's `cond` only specifies the phase, not a turn-owner restriction beyond its `owner: me` field.",
+    "Whether B (bare `enters`) carries any attached arrival trigger or effect text -- it has no outgoing `steps`, so no ETB ability text is printed beyond the permanent simply entering the battlefield."
+  ],
+  "verdict": "match",
+  "notes": "Real card (forge-model/data/sinister-monolith.txt): {3}{B} Artifact, 'At the beginning of combat on your turn, each opponent loses 1 life and you gain 1 life. / {T}, Pay 2 life, Sacrifice Sinister Monolith: Draw two cards. Activate only as a sorcery.' This is the retest after the translator fix that makes SorcerySpeed$ True propagate onto the Sac<>-cost branch's node (F now carries flags 'cost:{PayLife<2>} cond:sorcery_speed', vs. the prior attempt where F carried only 'cost:{PayLife<2>}' with no cond at all -- see the superseded sinister-monolith.result.json, which flagged that exact omission as the decomposition gap under fix). The fix held: the examiner read cond:sorcery_speed off node F and correctly printed 'Activate only as a sorcery.' attached to the activated ability, closing the one gap the first attempt surfaced. Every other mechanic reconstructs cleanly and matches the real oracle text in meaning: mana cost {3}{B} and type Artifact from the self registry; the begin-of-combat drain (C -> D -> E) as 'each opponent loses 1 life' / 'you gain 1 life' via correct qty-1-by-omission on both emit nodes; the activated ability's cost shape (tap + pay 2 life + sacrifice self, from F and the automatic F->G edge) and its effect (draw two, from G->H with qty:2) matching 'T, Pay 2 life, Sacrifice ~: Draw two cards.' No invented specifics, no missing mechanics. The two 'could not derive' items are harmless over-caution rather than real gaps: the turn-scope hedge duplicates a call the examiner already made correctly in its own Assumptions list and printed text, and the ETB-trigger hedge correctly notes the absence of any such effect (the real card has none). Verdict: match -- no decomposition gap, no schema gap, no process error.",
+  "comparedAt": "2026-09-04"
+}

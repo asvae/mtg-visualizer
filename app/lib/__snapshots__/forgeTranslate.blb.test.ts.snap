@@ -2352,6 +2352,59 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Rabb
 }
 `;
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Savor 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+    ],
+    "steps": {
+      "A": [
+        "B",
+        "C",
+      ],
+      "C": [
+        "D",
+      ],
+    },
+  },
+  "name": "Savor",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "target lifetime:turn cond:pt_delta=-2/-2",
+      "from": "--",
+      "owner": "any",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "food",
+      "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Seasoned Warrenguard 1`] = `
 {
   "flow": {
@@ -2515,6 +2568,103 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Shri
       "role": "modifier",
       "thing": "self",
       "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Sinister Monolith 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "F",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "C": [
+        "D",
+      ],
+      "D": [
+        "E",
+      ],
+      "F": [
+        "G",
+      ],
+      "G": [
+        "H",
+      ],
+    },
+  },
+  "name": "Sinister Monolith",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "cond:phase=begincombat",
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "phase",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "opp",
+      "role": "emit",
+      "thing": "life-loss",
+      "to": "--",
+    },
+    "E": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-gain",
+      "to": "--",
+    },
+    "F": {
+      "flags": "cost:{PayLife<2>} cond:sorcery_speed",
+      "from": "bf",
+      "owner": "me",
+      "role": "tap",
+      "thing": "self",
+      "to": "bf",
+    },
+    "G": {
+      "flags": undefined,
+      "from": "bf",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "H": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
     },
   },
   "unmapped": [],

@@ -900,8 +900,14 @@ function translateEffectRow(
     // the sac-move — folding the tap into the sac-move's own cost: flag
     // would silently drop the fact that this ALSO requires tapping (a real
     // state change, not just a mana payment).
+    // SorcerySpeed$True ("Activate only as a sorcery," Sinister Monolith's
+    // own {T}, Pay 2 life, Sacrifice-this cost) was already read on the
+    // plain mana+tap Cost$ branch below, but not here on the Sac<>-cost
+    // branch -- the exact same restriction, just on a differently-shaped
+    // cost line, silently dropped.
+    const sorceryOnly = fields.SorcerySpeed === 'True' ? 'cond:sorcery_speed' : undefined;
     if (hasTap) {
-      const tapId = addNode(ctx, { role: 'tap', owner: 'me', from: 'bf', to: 'bf', thing: selfThing, flags: manaCost ? `cost:${manaCost}` : undefined });
+      const tapId = addNode(ctx, { role: 'tap', owner: 'me', from: 'bf', to: 'bf', thing: selfThing, flags: [manaCost ? `cost:${manaCost}` : undefined, sorceryOnly].filter(Boolean).join(' ') || undefined });
       attach(tapId);
       const leafIds = wireSacCost(ctx, sacToken, inTrigger, (step) => link(ctx, tapId, step));
       for (const leafId of leafIds) translateOwnEffect(ctx, tree, leafId, selfThing, inTrigger, granted, false);
@@ -1231,7 +1237,12 @@ function translateOwnEffect(
 
   if (ek === 'Dig') {
     const owner = deriveOwner(fields.Defined);
-    const to = zone(fields.DestinationZone) === '--' ? 'exile' : zone(fields.DestinationZone);
+    // Forge's real default DestinationZone$ (Stargaze's own "look at twice
+    // X, put X into hand, rest into graveyard" -- no DestinationZone$ set
+    // at all) is Hand, not the hardcoded 'exile' fallback here -- every
+    // OTHER Dig-using card in this corpus sets DestinationZone$ explicitly
+    // whenever it actually means exile.
+    const to = zone(fields.DestinationZone) === '--' ? 'hand' : zone(fields.DestinationZone);
     // Reveal$True (Darkstar Augur's own upkeep dig -- "reveal a card from
     // your library...") had no handling, unlike the neighboring
     // Cycling/Landcycling handler's own `;reveal` fact for the identical
@@ -1239,6 +1250,14 @@ function translateOwnEffect(
     const reveal = fields.Reveal === 'True' ? ';reveal' : '';
     const id = addNode(ctx, { role: 'move', owner, from: 'lib', to, thing: 'any', flags: `qty:${fields.DigNum ?? '1'} cond:dig${reveal}` });
     attach(id);
+    // DestinationZone2$ (Stargaze's own two-pile split -- ChangeNum cards
+    // to DestinationZone, the REST to DestinationZone2; Fecund Greenshell's
+    // own "if it's a land, put it onto the battlefield -- otherwise, put it
+    // into your hand" is the same field pair) had no handling at all --
+    // the second pile silently vanished with no trace.
+    if (fields.DestinationZone2) {
+      attach(addNode(ctx, { role: 'move', owner, from: 'lib', to: zone(fields.DestinationZone2), thing: 'any', flags: 'cond:dig;remainder' }));
+    }
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
   }
