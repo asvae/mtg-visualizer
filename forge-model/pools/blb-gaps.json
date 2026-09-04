@@ -1,6 +1,6 @@
 {
   "_comment": "Per-card unmapped translator entries from translateForgeCard, for cards where at least one effect line couldn't be classified. Empty entry = fully clean. Regenerate via forge-model's own dev workflow after extending app/lib/forgeTranslate.ts's EFFECT_ROLE table.",
-  "generatedAt": "2026-09-04T01:05:54.255Z",
+  "generatedAt": "2026-09-04T01:25:49.158Z",
   "clean": 195,
   "gaps": 79,
   "totalUnmapped": 109,

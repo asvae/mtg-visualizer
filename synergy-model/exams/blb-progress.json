@@ -217,6 +217,24 @@
       "cards": [
         "Stormchaser's Talent"
       ]
+    },
+    "K:AlternateAdditionalCost (Forage or similar branching additional-cost keyword)": {
+      "description": "A K: keyword naming a CHOICE of additional cost (Feed the Cycle's own Forage: exile three cards from your graveyard OR sacrifice a Food) falls through translateKeyword()'s bare-keyword/special-case list into the generic unmapped fallback with zero trace -- not even an honest unmapped-only gap, since K: keywords with real mechanical content are expected to produce a node. Needs a real cost-choice node shape plus a registries.json 'forage' action entry.",
+      "cards": [
+        "Feed the Cycle"
+      ]
+    },
+    "Chooser$Targeted (a non-caster player selects the specific object)": {
+      "description": "Early Winter's own \"target opponent EXILES an enchantment THEY control\" -- the targeted PLAYER (not the caster) picks which of their own objects gets affected, via Forge's Chooser$Targeted field. Structurally indistinguishable in the current schema from a normal caster-picks-the-object target (flags:target alone) -- fields.Chooser is never read anywhere in forgeTranslate.ts. A narrower nuance of the broader AlternativeDecider$ non-caster-choice family, not attempted.",
+      "cards": [
+        "Early Winter"
+      ]
+    },
+    "Remembered$CardManaCost / other Remembered-value dynamic scalers": {
+      "description": "Darkstar Augur's own upkeep trigger (\"lose life equal to its mana value\") ties a LoseLife$ amount to SVar:X:Remembered$CardManaCost -- the mana value of whatever card was dug/revealed earlier in the SAME chain (RememberChanged$True on the Dig step). No := / = binding connects the Dig node to the LoseLife node's qty; the generic emit builder stamps the literal SVar name \"X\" onto qty instead of resolving or at least naming the binding. Needs a real scaler-node mechanism analogous to Beza's sensor pair, not attempted.",
+      "cards": [
+        "Darkstar Augur"
+      ]
     }
   },
   "done": {
@@ -848,6 +866,21 @@
       "status": "issues-open",
       "attempts": 0,
       "note": "Pre-classified, no examiner agent spent. Only gap is the ImmediateTrigger/DB$Play co-requirement class."
+    },
+    "Feed the Cycle": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Destroy effect correct. K:AlternateAdditionalCost:Forage:B (an additional-cost CHOICE -- forage or pay {B}) entirely unhandled, falls to the generic K: unmapped fallback with zero trace. New gap class, genuinely needs a new cost-choice representation + registries.json forage action, not attempted."
+    },
+    "Early Winter": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: ValidTgts$ Opponent (a bare player predicate) was mis-read as an object-type predicate, producing a bogus thing:\"opponent\" and wrong owner; ChangeType$Enchantment now correctly supplies the object type. Remaining, deliberately deferred: Chooser$Targeted (the targeted opponent, not the caster, picks which enchantment) has no schema representation -- new gap class."
+    },
+    "Darkstar Augur": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed 2 real bugs: Offspring token now correctly noted as 1/1 (was inheriting full stats), Dig now carries a reveal fact when Reveal$True. Remaining, deliberately deferred: SVar:X:Remembered$CardManaCost dynamic life-loss amount has no scaler/binding mechanism -- matches new Remembered-value-scaler gap class. (A round-2 examiner also misread the dual-root enters structure as one event rather than two separate arrivals -- confirmed by the agent itself as its own misinterpretation, not a decomposition bug -- no fix needed.)"
     }
   }
 }

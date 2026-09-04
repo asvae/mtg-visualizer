@@ -322,6 +322,10 @@ export function qualifierFlags(v: string | undefined): string[] {
   // control") isn't a free choice, it's a forced pick constrained to
   // whichever creature(s) tie for highest power.
   if (/greatestPowerControlledByTargeted\b/.test(v)) flags.push('cond:greatest_power');
+  // wasDealtDamageThisTurn (Downwind Ambusher's own "destroy target creature
+  // an opponent controls THAT WAS DEALT DAMAGE THIS TURN" -- the second half
+  // of its Charm) is a real, printed restriction, not a free destroy.
+  if (/[.+]wasDealtDamageThisTurn\b/.test(v)) flags.push('cond:was_damaged_this_turn');
   return flags;
 }
 
@@ -1109,14 +1113,27 @@ function translateOwnEffect(
     // permanent it actually targets (found on Banishing Light's real
     // ValidTgts$ Permanent.nonLand+OppCtrl — an opponent's permanent).
     const targeted = !!fields.ValidTgts;
-    const changeTypePredicate = !targeted && !selfMove ? fields.ChangeType : undefined;
+    // ValidTgts$ You/Opponent/Player (Early Winter's own second Charm mode,
+    // "TARGET OPPONENT exiles an enchantment they control") names the
+    // targeted PLAYER, not an object type -- a genuinely different Forge
+    // predicate vocabulary (deriveOwner's own You/Opponent/Player, not
+    // ownerFromTargetPredicate's dotted-qualifier object predicates). Left
+    // undetected, `thing` read the bare word "opponent" as a bogus coarse
+    // type (ChangeType$'s own real object type, "Enchantment", went
+    // unread), and owner fell through to the wrong default ('any') since
+    // ownerFromTargetPredicate's regexes only match a qualifier AFTER a
+    // ./+ separator, never a bare whole-string player word.
+    const validTgtsIsPlayer = targeted && /^(You|Opponent|Player)$/.test(fields.ValidTgts ?? '');
+    const changeTypePredicate = (validTgtsIsPlayer || !targeted) && !selfMove ? fields.ChangeType : undefined;
     const owner = selfMove
       ? 'me'
-      : targeted
-        ? ownerFromTargetPredicate(fields.ValidTgts)
-        : changeTypePredicate
-          ? ownerFromTargetPredicate(changeTypePredicate)
-          : deriveOwner(fields.Defined);
+      : validTgtsIsPlayer
+        ? deriveOwner(fields.ValidTgts)
+        : targeted
+          ? ownerFromTargetPredicate(fields.ValidTgts)
+          : changeTypePredicate
+            ? ownerFromTargetPredicate(changeTypePredicate)
+            : deriveOwner(fields.Defined);
     const qty = fields.TargetMax ? `qty:${fields.TargetMin ?? 0}..${fields.TargetMax}` : undefined;
     // Duration$UntilHostLeavesPlay — the "exile ... until CARDNAME leaves the
     // battlefield" O-Ring pattern (Banishing Light and its many relatives):
@@ -1128,9 +1145,9 @@ function translateOwnEffect(
     // gate already handled for Pump/PumpAll, missing here entirely.
     const giftFact = giftGateFact(fields.ConditionPresent, fields.ConditionCompare);
     const giftGateFlag = giftFact ? `cond:${giftFact}` : undefined;
-    const qualifiers = targeted ? qualifierFlags(fields.ValidTgts) : changeTypePredicate ? qualifierFlags(changeTypePredicate) : [];
+    const qualifiers = changeTypePredicate ? qualifierFlags(changeTypePredicate) : targeted ? qualifierFlags(fields.ValidTgts) : [];
     const flags = withMay([qty, targeted ? 'target' : undefined, untilSelfLeaves, giftGateFlag, ...qualifiers].filter(Boolean).join(' ') || undefined);
-    const thing = selfMove ? selfThing : coarseType(fields.ValidTgts ?? fields.SacValid ?? changeTypePredicate);
+    const thing = selfMove ? selfThing : validTgtsIsPlayer ? coarseType(changeTypePredicate) : coarseType(fields.ValidTgts ?? fields.SacValid ?? changeTypePredicate);
     // ValidTgts$ multi-type OR (Stormchaser's Talent's own "return target
     // INSTANT OR SORCERY card" -- Instant.YouCtrl,Sorcery.YouCtrl) previously
     // only read the first clause, silently dropping "or sorcery" entirely.
@@ -1167,7 +1184,12 @@ function translateOwnEffect(
   if (ek === 'Dig') {
     const owner = deriveOwner(fields.Defined);
     const to = zone(fields.DestinationZone) === '--' ? 'exile' : zone(fields.DestinationZone);
-    const id = addNode(ctx, { role: 'move', owner, from: 'lib', to, thing: 'any', flags: `qty:${fields.DigNum ?? '1'}` });
+    // Reveal$True (Darkstar Augur's own upkeep dig -- "reveal a card from
+    // your library...") had no handling, unlike the neighboring
+    // Cycling/Landcycling handler's own `;reveal` fact for the identical
+    // real-world mechanic — the word "reveal" vanished entirely.
+    const reveal = fields.Reveal === 'True' ? ';reveal' : '';
+    const id = addNode(ctx, { role: 'move', owner, from: 'lib', to, thing: 'any', flags: `qty:${fields.DigNum ?? '1'} cond:dig${reveal}` });
     attach(id);
     for (const child of tree.children) translateEffectRow(ctx, child, id, selfThing, inTrigger, granted);
     return;
@@ -1604,7 +1626,12 @@ function translateKeyword(ctx: Ctx, row: ForgeRow, selfThing: string) {
     // "{1}{U}" (only ever noticed on single-symbol Offspring costs before,
     // where "{N}" happens to look identical either way).
     const cost = manaCostToBraced(params[0] ?? '');
-    ctx.roots.push(addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cost:${cost} cond:token;paid_at_cast` }));
+    // The token is a 1/1 copy, not a full-stat copy (702.192a) -- a fixed
+    // rule Forge never spells out in this SVar-free keyword (unlike a
+    // printed Power$/Toughness$ override elsewhere), so it's stated
+    // directly rather than derived from any field. Missing this, the
+    // reconstruction inherited the original creature's own printed P/T.
+    ctx.roots.push(addNode(ctx, { role: 'enters', owner: 'me', from: '--', to: 'bf', thing: selfThing, flags: `cost:${cost} cond:token;paid_at_cast;set=1/1` }));
     return;
   }
   if (row.role === 'Equip') {

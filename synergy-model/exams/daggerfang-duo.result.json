@@ -1,0 +1,19 @@
+{
+  "name": "Daggerfang Duo",
+  "manaCost": "{2}{B}",
+  "typeLine": "Creature — Rat Squirrel",
+  "description": "Deathtouch\n\nWhen this creature enters the battlefield, you may mill two cards.",
+  "assumptions": [
+    "Node E was not explicitly tagged as invoking the named mill-N action — matched it structurally against the mill-N registry expansion (role/owner/zoneFrom/zoneTo/thing all identical, only flags differs by qty value and the added may) to render it as \"mill two cards\" rather than leaving it as an unlabeled \"put the top two cards of your library into your graveyard.\" Judged a safe structural match rather than a guess, but flagged since the node doesn't cite the action key directly.",
+    "Rendered the unnamed card as \"this creature\" in the trigger text, since no name or placeholder may be used."
+  ],
+  "couldNotDerive": [
+    "Card name (deliberately withheld).",
+    "Rarity (explicitly withheld).",
+    "Any supertype (e.g., legendary) — the self registry's type line doesn't include one, so none is assumed.",
+    "Ordering/templating nuance of whether \"Deathtouch\" or the ETB trigger was printed first on the actual card — root list order (C before D) was used, but the graph doesn't independently fix print order beyond that."
+  ],
+  "verdict": "match",
+  "notes": "Clean match. Real card (forge-model/data/daggerfang-duo.txt / Oracle text): {2}{B} Creature — Rat Squirrel 3/2, \"Deathtouch\\nWhen Daggerfang Duo enters, you may mill two cards.\" The reconstruction got mana cost, type line, P/T, the deathtouch static, and the optional mill-2 ETB trigger exactly right; the only difference is the unavoidable name substitution (\"this creature enters the battlefield\" vs. \"Daggerfang Duo enters\"), which is by design since the name is withheld. Verified the underlying edge decomposition against forgeTranslate.ts directly: node C (modifier, thing:self, flags:\"deathtouch\") correctly reflects Forge's bare `K:Deathtouch` line via translateKeyword() (app/lib/forgeTranslate.ts ~line 1670, the bare-combat-keyword path). Node D (trigger, trigger-type:\"enter\", to:\"stack\") plus its step E (source, owner:me, from:\"--\", to:\"gy\", thing:\"any\", flags:\"may qty:2\") is an exact, field-for-field match of the T:...Execute$ TrigMill trigger resolving to SVar:TrigMill:DB$ Mill | NumCards$ 2 | Defined$ You | Optional$ True, run through the Mill handling in forgeTranslate.ts (ek === 'Mill' branch, ~lines 1176-1189): Optional$ True -> 'may' flag, NumCards$ 2 -> 'qty:2', Defined$ You -> owner 'me' via deriveOwner (no ValidTgts, so untargeted path), DB$ Mill -> role:'source'/to:'gy'/thing:'any' per SCHEMA.md's own mill-N worked example. No decomposition gap, no schema gap, no forgeTranslate.ts bug found for this card — both the Deathtouch keyword path and the Mill effect path translate faithfully. No action needed on forgeTranslate.ts from this exam.",
+  "comparedAt": "2026-09-04"
+}

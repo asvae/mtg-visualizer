@@ -854,7 +854,7 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Coru
       "to": "bf",
     },
     "C": {
-      "flags": "cost:{2} cond:token;paid_at_cast",
+      "flags": "cost:{2} cond:token;paid_at_cast;set=1/1",
       "from": "--",
       "owner": "me",
       "role": "enters",
@@ -876,6 +876,142 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Coru
       "owner": "opp",
       "role": "emit",
       "thing": "damage",
+      "to": "--",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Daggerfang Duo 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+    },
+  },
+  "name": "Daggerfang Duo",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "deathtouch",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "may qty:2",
+      "from": "--",
+      "owner": "me",
+      "role": "source",
+      "thing": "any",
+      "to": "gy",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Diresight 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+      "E": [
+        "F",
+      ],
+    },
+  },
+  "name": "Diresight",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "qty:0..2",
+      "from": "--",
+      "owner": "me",
+      "role": "source",
+      "thing": "any",
+      "to": "gy",
+    },
+    "D": {
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "library-look",
+      "to": "--",
+    },
+    "E": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "draw",
+      "to": "--",
+    },
+    "F": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-loss",
       "to": "--",
     },
   },
@@ -952,6 +1088,84 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Dour
       "role": "move",
       "thing": "creature",
       "to": "hand",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Downwind Ambusher 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        {
+          "combine": 1,
+          "of": [
+            "E",
+            "F",
+          ],
+        },
+      ],
+    },
+  },
+  "name": "Downwind Ambusher",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flash",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "target lifetime:turn cond:pt_delta=-1/-1",
+      "from": "--",
+      "owner": "opp",
+      "role": "modifier",
+      "thing": "creature",
+      "to": "bf",
+    },
+    "F": {
+      "flags": "target cond:was_damaged_this_turn",
+      "from": "bf",
+      "owner": "opp",
+      "role": "move",
+      "thing": "creature",
+      "to": "gy",
     },
   },
   "unmapped": [],
@@ -1115,6 +1329,48 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Feat
 }
 `;
 
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Fell 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "C",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+    },
+  },
+  "name": "Fell",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "stack",
+      "owner": "me",
+      "role": "move",
+      "thing": "self",
+      "to": "gy",
+    },
+    "C": {
+      "flags": "target",
+      "from": "bf",
+      "owner": "any",
+      "role": "move",
+      "thing": "creature",
+      "to": "gy",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
 exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Finch Formation 1`] = `
 {
   "flow": {
@@ -1151,7 +1407,7 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Finc
       "to": "bf",
     },
     "C": {
-      "flags": "cost:{3} cond:token;paid_at_cast",
+      "flags": "cost:{3} cond:token;paid_at_cast;set=1/1",
       "from": "--",
       "owner": "me",
       "role": "enters",
@@ -1182,6 +1438,81 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Finc
       "role": "modifier",
       "thing": "creature",
       "to": "bf",
+    },
+  },
+  "unmapped": [],
+}
+`;
+
+exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Glidedive Duo 1`] = `
+{
+  "flow": {
+    "roots": [
+      "A",
+      "B",
+      "C",
+      "D",
+    ],
+    "steps": {
+      "A": [
+        "B",
+      ],
+      "D": [
+        "E",
+      ],
+      "E": [
+        "F",
+      ],
+    },
+  },
+  "name": "Glidedive Duo",
+  "nodes": {
+    "A": {
+      "from": "hand",
+      "owner": "me",
+      "role": "cast",
+      "thing": "self",
+      "to": "stack",
+    },
+    "B": {
+      "from": "--",
+      "owner": "me",
+      "role": "enters",
+      "thing": "self",
+      "to": "bf",
+    },
+    "C": {
+      "flags": "flying",
+      "from": "--",
+      "owner": "me",
+      "role": "modifier",
+      "thing": "self",
+      "to": "bf",
+    },
+    "D": {
+      "flags": undefined,
+      "from": "--",
+      "owner": "me",
+      "role": "trigger",
+      "thing": "self",
+      "to": "stack",
+      "trigger-type": "enter",
+    },
+    "E": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "opp",
+      "role": "emit",
+      "thing": "life-loss",
+      "to": "--",
+    },
+    "F": {
+      "flags": "qty:2",
+      "from": "--",
+      "owner": "me",
+      "role": "emit",
+      "thing": "life-gain",
+      "to": "--",
     },
   },
   "unmapped": [],
@@ -1265,7 +1596,7 @@ exports[`BLB examiner-verified cards (forge -> parse -> synergy snapshot) > Intr
       "to": "bf",
     },
     "C": {
-      "flags": "cost:{1} cond:token;paid_at_cast",
+      "flags": "cost:{1} cond:token;paid_at_cast;set=1/1",
       "from": "--",
       "owner": "me",
       "role": "enters",
