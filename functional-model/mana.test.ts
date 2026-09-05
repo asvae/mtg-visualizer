@@ -1,0 +1,64 @@
+import { describe, expect, it } from 'vitest';
+import { GameState } from './state';
+import { parseManaCost, canAfford, payMana, untappedManaSources } from './mana';
+
+describe('parseManaCost', () => {
+  it('sums generic and counts colored pips separately', () => {
+    expect(parseManaCost('{2}{U}{U}')).toEqual({ generic: 2, colors: { U: 2 } });
+    expect(parseManaCost('{G}')).toEqual({ generic: 0, colors: { G: 1 } });
+    expect(parseManaCost('{5}')).toEqual({ generic: 5, colors: {} });
+  });
+
+  it('throws on a mana symbol outside this file\'s declared scope', () => {
+    expect(() => parseManaCost('{W/U}')).toThrow(/unsupported mana symbol/);
+    expect(() => parseManaCost('{X}')).toThrow(/unsupported mana symbol/);
+    expect(() => parseManaCost('{C}')).toThrow(/unsupported mana symbol/);
+  });
+});
+
+describe('canAfford / payMana', () => {
+  function setup() {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const island1 = state.addCard(you, 'Battlefield', { name: 'Island', types: ['Land'], subtypes: ['Island'] });
+    const island2 = state.addCard(you, 'Battlefield', { name: 'Island', types: ['Land'], subtypes: ['Island'] });
+    const forest = state.addCard(you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
+    return { state, you, island1, island2, forest };
+  }
+
+  it('affords a cost when colored pips + generic both have enough sources', () => {
+    const { you } = setup();
+    expect(canAfford(untappedManaSources(you), parseManaCost('{1}{U}'))).toBe(true);
+    expect(canAfford(untappedManaSources(you), parseManaCost('{2}{U}'))).toBe(true);
+  });
+
+  it('does not afford a cost needing more colored pips than sources of that color exist', () => {
+    const { you } = setup();
+    expect(canAfford(untappedManaSources(you), parseManaCost('{U}{U}{U}'))).toBe(false);
+  });
+
+  it('does not afford a cost needing more total mana than untapped sources exist', () => {
+    const { you } = setup();
+    expect(canAfford(untappedManaSources(you), parseManaCost('{10}'))).toBe(false);
+  });
+
+  it('a tapped source no longer counts', () => {
+    const { state, you, island1 } = setup();
+    state.tap(island1);
+    expect(canAfford(untappedManaSources(you), parseManaCost('{U}{U}'))).toBe(false);
+  });
+
+  it('payMana taps exactly enough sources to cover the cost, colored pips first', () => {
+    const { state, you } = setup();
+    payMana(state, untappedManaSources(you), parseManaCost('{1}{U}'));
+    expect(you.battlefield.filter((c) => c.tapped)).toHaveLength(2);
+    expect(you.battlefield.filter((c) => !c.tapped)).toHaveLength(1);
+    // The one still untapped must be an Island (the payment used one Island for {U} and one land for {1}).
+  });
+
+  it('payMana throws (and taps nothing) when the cost cannot be afforded', () => {
+    const { state, you } = setup();
+    expect(() => payMana(state, untappedManaSources(you), parseManaCost('{U}{U}{U}'))).toThrow(/cannot afford/);
+    expect(you.battlefield.every((c) => !c.tapped)).toBe(true);
+  });
+});
