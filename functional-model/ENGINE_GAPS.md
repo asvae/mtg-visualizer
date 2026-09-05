@@ -61,15 +61,33 @@ so a future pass doesn't mistake them for missing work:
    `PhaseType.java` line 23) is still not a literal `turn.ts` phase — see
    gap #9 below, unchanged, since the two-internal-pass approach only
    fixes damage ORDERING, not phase-list completeness.
-2. **State-based actions (704).** No equivalent anywhere in this codebase.
-   Real Forge: `GameAction.java`'s state-based-effects pass (rule citations
-   like `704.5f`/`704.5g`/`704.5h` appear directly in that method's own
-   comments, ~lines 1455-1760) — lethal damage, 0-toughness, legend rule,
-   aura/equipment attachment legality, etc., all rechecked after every
-   priority pass. There is no `StateBasedAction` class by that name; it's
-   folded into `GameAction`'s own method. Without this, a creature reduced
-   to 0 toughness or dealt lethal damage simply... doesn't die, unless some
-   effect explicitly calls `destroy`.
+2. ~~**State-based actions (704).**~~ **CLOSED for a narrow, real subset**
+   (`sba.ts`'s `checkStateBasedActions`, `sba.test.ts`): 704.5f (toughness
+   <= 0 → graveyard, bypassing Indestructible), 704.5g (lethal marked
+   damage → destroy, respecting Indestructible), 704.5h (any Deathtouch
+   damage → destroy), and 704.5j (the legend rule — already real,
+   pre-existing `state.checkLegendRule`, now folded into this same
+   loop-until-stable sweep, 704.3). Required a real, necessary change to
+   `state.dealDamage`: damage to a creature used to be a documented no-op
+   (nothing consumed it) — now genuinely marks `card.damageMarked`/
+   `deathtouchDamaged` (120.3/702.2b), which `engine.ts`'s
+   `resolveCombatDamage` also reads (via the same shared
+   `state.isLethallyDamaged`, so combat's own lethal-flag and this sweep's
+   destroy-decision never disagree). Real reference:
+   `GameAction.java`'s state-based-effects pass (forge-game/.../game/
+   GameAction.java, rule citations directly in that method's own comments,
+   ~lines 1455-1760 for 704.5f/g/h, ~2006-2065 for 704.5j) — there is no
+   `StateBasedAction` class by that name; it's folded into `GameAction`'s
+   own method, same here.
+   **What's still NOT done, real gaps**: 704.5a (a player at 0-or-less
+   life loses the game — no "game over"/game-loss concept exists anywhere
+   in this codebase yet, a separate primitive); 704.5i (planeswalker
+   loyalty 0 — no FIN card in this pool has a Planeswalker typeLine today,
+   checked); damage CLEARING at cleanup (514.2 — a separate rule from the
+   SBA check itself, folds into gap #3's turn-structure-completeness work,
+   since `turn.ts`'s own Cleanup phase still does nothing automatic);
+   aura/equipment illegal-attachment SBAs (no attachment-legality tracking
+   exists anywhere in this codebase to check against).
 3. **Turn-structure completeness (2-player only — see Accepted
    simplifications above for the >2-player exclusion).** Two real gaps,
    both raised to High priority: (a) **upkeep/end-step triggers, cleanup's
@@ -140,9 +158,11 @@ so a future pass doesn't mistake them for missing work:
    (`PhaseType.COMBAT_FIRST_STRIKE_DAMAGE`) this engine's `PHASES` list
    doesn't even include, not just an unimplemented step within an existing
    one.
-10. **Legend rule / other SBA-adjacent state cleanup** — subsumed by gap #2;
-    called out because it's a commonly-hit case (Jill's own card is
-    Legendary) worth testing first once SBAs exist.
+10. ~~**Legend rule / other SBA-adjacent state cleanup**~~ **CLOSED** — was
+    subsumed by gap #2, now folded into `sba.ts`'s own loop
+    (`state.checkLegendRule`); `sba.test.ts` specifically tests two
+    same-named Legendary permanents (Jill's own card is Legendary) both
+    alone and combined with a lethal-damage case in the same sweep.
 11. **Activated-ability cost components beyond `{T}` + mana.** Just closed
     partially this pass: `canActivateAbility` now explicitly REJECTS (rather
     than silently mispaying) costs like `Sacrifice another artifact or
@@ -162,6 +182,8 @@ so a future pass doesn't mistake them for missing work:
   rejected-unsupported-cost shape, and the `resolveCard` dispatch collision
   for permanents with both an ETB trigger and their own activation ability.
 - Combat: blocker legality (509.1, Menace), and real damage assignment
-  including Trample/Deathtouch/First-and-Double-Strike ordering (510) — see
-  gap #1's own "CLOSED" note above for the one thing still deferred
-  (creature death from lethal damage, which needs SBAs, gap #2).
+  including Trample/Deathtouch/First-and-Double-Strike ordering (510).
+- State-based actions: a narrow, real 704.5f/704.5g/704.5h/704.5j subset
+  (`sba.ts`) — see gap #2's own "CLOSED for a narrow, real subset" note
+  above for exactly what's covered vs. still deferred (life-loss,
+  loyalty, cleanup-timed damage clearing, aura/equipment attachment).

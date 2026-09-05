@@ -1,4 +1,4 @@
-# Turn-based engine (`engine.ts`, `mana.ts`, + existing `turn.ts`/`stack.ts`/`priority.ts`/`layers.ts`)
+# Turn-based engine (`engine.ts`, `mana.ts`, `sba.ts`, + existing `turn.ts`/`stack.ts`/`priority.ts`/`layers.ts`)
 
 ## Why this exists
 
@@ -38,6 +38,11 @@ declareAttackers(engine, [creature1, creature2]);
 canBlock(engine, blocker, attacker);
 declareBlockers(engine, [{ blocker, attacker }, ...]);
 resolveCombatDamage(engine); // applies real damage; returns which creatures took lethal damage (see below — doesn't destroy them itself)
+
+// State-based actions (704) — a caller runs this after anything that could
+// have created one (combat damage, above, is the main source today).
+// From sba.ts, not engine.ts — see below for why it's a separate file:
+checkStateBasedActions(engine.state, engine.players);
 
 // Activated abilities (602.1) — same read-only-check + mutating-action pair:
 canActivateAbility(engine, you, permanentReal, cardDef, abilityName?);
@@ -110,11 +115,49 @@ excluded from the second, same effective ordering a real SBA check between
 the two real sub-steps produces.
 
 **What this does NOT do:** destroy anything. Real creature death from
-combat damage is a state-based action (704.5g/704.5h) — a separate,
-not-yet-built gap (`ENGINE_GAPS.md` #2, "state-based actions"). Instead,
-`resolveCombatDamage` returns `CombatDamageResult` — every creature that
-took damage this call, and whether that damage was lethal — so a future SBA
-pass can act on it directly instead of recomputing "was this lethal" itself.
+combat damage is a state-based action (704.5g/704.5h) — see the next
+section. Instead, `resolveCombatDamage` returns `CombatDamageResult` —
+every creature that took damage this call, and whether that damage was
+lethal — computed via the SAME shared `isLethallyDamaged` (state.ts) the
+next section's `checkStateBasedActions` uses, so the two never disagree.
+
+### State-based actions (704) — `sba.ts`, a narrow real subset
+
+A new, separate file (not folded into `engine.ts`) since SBAs are checked
+against `GameState`/`RealPlayer` alone — no stack, no turn, no priority
+concept needed — matching `GameAction.java`'s own real shape (a `Game`-level
+concern, not a spell-resolution one). `checkStateBasedActions(state,
+players)` loops (704.3: "repeats... until there are no further
+state-based actions to be performed") over a narrow, explicitly real
+subset:
+
+- **704.5f** — a creature with toughness 0 or less is put DIRECTLY into the
+  graveyard, bypassing Indestructible entirely (a real, different rule from
+  "destroy").
+- **704.5g** — a creature with damage marked >= its toughness is destroyed
+  (`state.destroy` — respects Indestructible, 702.12b).
+- **704.5h** — a creature dealt ANY damage by a Deathtouch source is
+  destroyed, regardless of toughness (702.2b).
+- **704.5j** — the legend rule, via the pre-existing (already real, already
+  committed before this pass) `state.checkLegendRule`, folded into the same
+  loop rather than left for a caller to remember separately.
+
+This required a real, necessary change to `state.dealDamage` itself: damage
+to a creature USED TO be a documented no-op (nothing consumed it, so
+tracking it would've been pure unused bookkeeping) — now that SBAs exist to
+consume it, `dealDamage` genuinely marks `card.damageMarked`/
+`card.deathtouchDamaged` (120.3/702.2b), the same fields
+`resolveCombatDamage`'s own `isLethallyDamaged` check reads.
+
+**Explicitly NOT in scope** (real, plainly-flagged gaps): 704.5a (0-or-less
+life loses the game — no "game over" concept exists anywhere in this
+codebase); 704.5i (planeswalker loyalty 0 — no FIN card needs it, checked);
+damage CLEARING at cleanup (514.2 — a separate rule from the SBA check
+itself; `turn.ts`'s Cleanup phase still does nothing automatic, so
+`damageMarked` only ever grows within one pilot session — see
+`ENGINE_GAPS.md`'s turn-structure-completeness gap); aura/equipment
+illegal-attachment SBAs (no attachment-legality tracking exists to check
+against).
 
 ## In scope for this first slice
 
@@ -144,6 +187,11 @@ pass can act on it directly instead of recomputing "was this lethal" itself.
   (702.2e), and **First/Double Strike**'s two-sub-step ordering (510.5) —
   see "Combat" above for the one thing it deliberately does NOT do
   (destroy a lethally-damaged creature).
+- **State-based actions (704)** — a narrow, real subset (`sba.ts`):
+  0-or-less toughness (704.5f, bypasses Indestructible), lethal marked
+  damage (704.5g), any Deathtouch damage (704.5h), and the legend rule
+  (704.5j) — see "State-based actions" above for the full scope and what's
+  deliberately NOT covered.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -152,8 +200,13 @@ pass can act on it directly instead of recomputing "was this lethal" itself.
   resolution time — there's no pre-resolution "declare and validate targets"
   step anywhere in this codebase to hook a legality check onto. Retrofitting
   one means redesigning `Effect`'s entire resolution model; not attempted here.
-- **State-based actions (704).** A lethally-damaged creature (from combat
-  damage or anything else) doesn't actually die — see `ENGINE_GAPS.md` #2.
+- **A player losing the game (704.5a) / planeswalker loyalty 0 (704.5i).**
+  No "game over" concept exists anywhere in this codebase yet, and no FIN
+  card needs the loyalty case today — see `sba.ts`'s own header.
+- **Damage clearing at cleanup (514.2).** A real, separate rule from the SBA
+  check itself — `turn.ts`'s Cleanup phase still has no automatic action, so
+  `card.damageMarked`/`deathtouchDamaged` only ever grow within one pilot
+  session. See `ENGINE_GAPS.md`'s turn-structure-completeness gap.
 - **Priority-holder tracking between calls.** Real 117.1a also requires the
   caster hold priority at the moment of casting; `priority.ts`'s own header
   already documents why this simplified model has no persistent "who
@@ -171,11 +224,13 @@ pass can act on it directly instead of recomputing "was this lethal" itself.
 ## Tests
 
 `mana.test.ts` (cost parsing, affordability, payment, `basicLandsFor` — legal
-and illegal cases) and `engine.test.ts` (sorcery-speed timing, affordability,
+and illegal cases), `engine.test.ts` (sorcery-speed timing, affordability,
 attacker/blocker legality, combat damage — unblocked/blocked/Trample/
 Deathtouch/First-and-Double-Strike, all-or-nothing declaration — activated-
 ability legality/resolution, and the `resolveCard`-dispatch-collision fix —
-again both legal and illegal cases throughout).
+again both legal and illegal cases throughout), and `sba.test.ts` (704.5f/g/
+h/j — including Indestructible correctly blocking 704.5g but NOT 704.5f,
+and a combined multi-issue sweep proving the 704.3 loop-until-stable shape).
 
 ## Gap analysis vs. real Forge
 

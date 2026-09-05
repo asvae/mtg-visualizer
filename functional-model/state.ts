@@ -68,6 +68,10 @@ export interface RealCard {
   ptFormula?: { kind: 'addPerEquipmentControlled'; power: number; toughness: number } | { kind: 'setToCreaturesControlled' };
   /** Real mana value (Card.java's own `getCMC()`, ~line 7227) — omit when nothing needs it (most cards, and every generated filler object). Dark Confidant's own upkeep life-loss is the reference case (needs a REAL number off the revealed card, not a `triggerInput`-supplied stand-in). */
   cmc?: number;
+  /** Real 120.3 "damage marked on it" — `Card.java`'s own `damage` field (~line 219/`addDamage`). Persists across multiple `dealDamage` calls (a creature blocked by two attackers accumulates both) until cleared — 514.2's own cleanup-step clearing is a real, separate, not-yet-implemented gap (ENGINE_GAPS.md's turn-structure-completeness item), so this only ever goes up within a single test/pilot session today. Consumed by `isLethallyDamaged`/`sba.ts`'s `checkStateBasedActions` (704.5g); never read by `state.ts` itself for anything else. */
+  damageMarked?: number;
+  /** Whether ANY of this card's marked damage came from a source with Deathtouch (702.2b/704.5h) — any nonzero amount from such a source is lethal regardless of accumulated total, so this is tracked as a flag rather than trying to recover "was source X deathtouch" from the summed `damageMarked` number alone. Same clearing caveat as `damageMarked`. */
+  deathtouchDamaged?: boolean;
 }
 
 /** Layer 4 (TYPE) applied — the card's CURRENT type list, not just its printed one. Use this instead of raw `card.types` anywhere "is this a creature/artifact/etc. right now" matters (an `animate`d permanent really does count). */
@@ -105,6 +109,27 @@ export function effectivePT(state: GameState, card: RealCard): [number, number] 
   base += card.counters['+1/+1'] ?? 0;
   baseT += card.counters['+1/+1'] ?? 0;
   return card.layers.computePT(base, baseT);
+}
+
+/**
+ * Real 704.5g (marked damage >= toughness) or 704.5h (any nonzero damage
+ * from a Deathtouch source, 702.2b) — the two damage-based state-based-
+ * action tests (`GameAction.java`'s own state-based-effects pass, rule
+ * citations directly in that method's comments, ~lines 1455-1760).
+ * Deliberately does NOT cover 704.5f (toughness <= 0, which bypasses
+ * Indestructible entirely — a different rule, checked separately by
+ * `sba.ts`'s `checkStateBasedActions`, not folded in here since 704.5f
+ * isn't itself a "damage" test). The single shared source both `sba.ts`
+ * (which acts on it) and `engine.ts`'s `resolveCombatDamage` (which only
+ * REPORTS it — see that function's own doc comment) read, so the two never
+ * compute "was this lethal" differently.
+ */
+export function isLethallyDamaged(state: GameState, card: RealCard): boolean {
+  const damage = card.damageMarked ?? 0;
+  if (damage <= 0) return false;
+  if (card.deathtouchDamaged) return true;
+  const [, toughness] = effectivePT(state, card);
+  return damage >= toughness;
 }
 
 export interface RealPlayer {
@@ -455,13 +480,19 @@ export class GameState {
   }
 
   /**
-   * `GameEntity.addDamage(...)`/combat damage assignment — simplified: no
-   * state-based actions here (see this file's own header — a 0-toughness
-   * creature doesn't die), so damage to a CREATURE has no observable
-   * persistent effect in this model and is a no-op; damage to a PLAYER is
-   * real and persistent (mirrors real Forge's own eventual life-total
-   * consequence, minus the intermediate "damage marked, then SBA checks
-   * life <= 0" step this model doesn't track separately).
+   * `GameEntity.addDamage(...)` (real Forge marks damage on ANY
+   * `GameEntity` — player or permanent — and lets a LATER state-based-
+   * action pass react to it, rather than resolving the consequence
+   * inline). Damage to a PLAYER stays real and immediate here (a life
+   * total has no separate "marked, then consequence" step worth splitting
+   * apart). Damage to a CREATURE now genuinely marks `card.damageMarked`
+   * (120.3) and `card.deathtouchDamaged` (702.2b/704.5h) — this USED TO be
+   * a documented no-op (this file's own prior header note: "no state-based
+   * actions here... damage to a CREATURE has no observable persistent
+   * effect"), fixed alongside `sba.ts`'s `checkStateBasedActions` (704.5g/
+   * 704.5h), the thing that actually CONSUMES this now. `isLethallyDamaged`
+   * (below) is the shared read both `sba.ts` and `engine.ts`'s
+   * `resolveCombatDamage` use — never recomputed differently in two places.
    *
    * `source`, when given, carries out real rule 702.15e — confirmed against
    * `GameAction.java` (~line 2732-2735): `if (sum > 0 &&
@@ -477,7 +508,12 @@ export class GameState {
    * (harness.ts) can log it as a real, visible fact.
    */
   dealDamage(target: RealPlayer | RealCard, amount: number, source?: RealCard): number {
-    if ('life' in target) target.life -= amount;
+    if ('life' in target) {
+      target.life -= amount;
+    } else {
+      target.damageMarked = (target.damageMarked ?? 0) + amount;
+      if (amount > 0 && source?.keywords.includes('Deathtouch')) target.deathtouchDamaged = true;
+    }
     if (source?.keywords.includes('Lifelink')) {
       const controller = this.players.get(source.controllerId);
       if (controller) {
@@ -535,6 +571,10 @@ export function wrapPlayer(state: GameState, real: RealPlayer): Player {
     },
     drawCard: () => wrapAll(state.drawCards(real, 1)),
     drawCards: (n: number) => wrapAll(state.drawCards(real, n)),
+    // See interfaces.ts's own `Player.addMana` doc comment — deliberately
+    // a no-op against real game state (no ManaPool modeled anywhere), only
+    // ever meaningful through harness.ts's logging wrapper.
+    addMana: () => {},
     getCreaturesInPlay: () => wrapAll(real.battlefield.filter((c) => effectiveTypes(c).includes('Creature'))),
     getLandsInPlay: () => wrapAll(real.battlefield.filter((c) => effectiveTypes(c).includes('Land'))),
     getCardsIn: (zone: ZoneType) => wrapAll(zoneArray(real, zone) ?? []),

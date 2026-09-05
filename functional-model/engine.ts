@@ -37,6 +37,13 @@
 //   resolveCombatDamage(engine) -> CombatDamageResult        // applies real damage; see its own doc comment for the lethal-flag/no-SBA caveat
 //   advance(engine) -> void                                 // pass to next phase directly
 //
+// Real state-based actions (704) — checkStateBasedActions(engine.state,
+// engine.players) — live in a SEPARATE file, `sba.ts`, not here: SBAs are
+// checked against GameState/RealPlayer alone (no stack/turn/priority
+// concept needed), matching GameAction.java's own real shape. A caller
+// runs it after anything that could have created one (combat damage,
+// above, is the main source today) — this file never calls it implicitly.
+//
 // ── The resolveCard dispatch collision (fixed here) ──────────────────────
 // A permanent with BOTH a named ETB trigger AND a later activated ability
 // declared the common way (`activationCost`+`effects` — Jill, Shiva's
@@ -92,7 +99,9 @@
 //    ordering (510.5) modeled as two internal passes. See
 //    `resolveCombatDamage`'s own doc comment for the one real thing it
 //    does NOT do (destroy a lethally-damaged creature — that's SBAs,
-//    ENGINE_GAPS.md #2, a separate gap).
+//    checked separately via `sba.ts`, not this file).
+//  - A narrow, real subset of state-based actions (704) — see `sba.ts`,
+//    a separate file (not this one): 704.5f/704.5g/704.5h/704.5j.
 // OUT (real, plainly-flagged gaps, not silently assumed away):
 //  - Target-legality checking at cast/declare time. This model's own
 //    existing effect system (card.ts) resolves/chooses targets LAZILY,
@@ -100,8 +109,9 @@
 //    "declare and validate targets" step anywhere in this codebase to hook
 //    a legality check onto. Retrofitting one would mean redesigning
 //    `Effect`'s entire resolution model, which is out of scope here.
-//  - State-based actions (704) — a lethally-damaged creature (from combat
-//    or anything else) doesn't actually die; see ENGINE_GAPS.md #2.
+//  - The rest of 704 (player loses at 0 life, planeswalker loyalty 0,
+//    damage clearing at cleanup) — see `sba.ts`'s own header for exactly
+//    what's covered vs. not.
 //  - Alternate costs, X spells, split/modal costs, casting from anywhere
 //    but hand.
 //  - A real "does the AI/player want to respond" decision process —
@@ -111,7 +121,7 @@
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { resolveCard } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
-import { effectivePT, effectiveTypes } from './state';
+import { effectivePT, effectiveTypes, isLethallyDamaged } from './state';
 import { Stack, type StackObject } from './stack';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
 import { startGame, currentPhase, activePlayer, advancePhase, type TurnState } from './turn';
@@ -487,14 +497,6 @@ export interface CombatDamageResult {
   entries: CombatDamageEntry[];
 }
 
-/** 704.5g (damage >= toughness) or 704.5h (any nonzero damage from a Deathtouch source) — the two real state-based-action tests for "this damage was lethal." Does NOT destroy anything (see `resolveCombatDamage`'s own doc comment) — just answers the question. */
-function isLethalDamage(state: GameState, card: RealCard, damageTotal: number, tookDeathtouchHit: boolean): boolean {
-  if (damageTotal <= 0) return false;
-  if (tookDeathtouchHit) return true;
-  const [, toughness] = effectivePT(state, card);
-  return damageTotal >= toughness;
-}
-
 /**
  * Real combat damage (510) for the current `engine.attackers`/
  * `engine.blockers` — `CombatUtil`'s own damage-assignment shape
@@ -528,16 +530,16 @@ function isLethalDamage(state: GameState, card: RealCard, damageTotal: number, t
  * This function does NOT call `state.destroy` on anything, even a
  * creature this pass computes as lethally damaged — real creature death
  * from combat damage is a state-based action (704.5g/704.5h), and general
- * SBAs are a separate, not-yet-built gap (ENGINE_GAPS.md #2). What this
+ * SBAs are a separate gap (`sba.ts`'s `checkStateBasedActions`, not called
+ * from here — a caller runs that itself once combat's over). What this
  * function DOES do: apply every real damage amount via `state.dealDamage`
- * (so player life totals and Lifelink both take their real, correct
- * effect) and report, per creature that took any damage this call,
- * whether that damage was lethal — a future SBA pass consumes this
- * directly rather than recomputing it.
+ * (so player life totals, Lifelink, AND `card.damageMarked`/
+ * `deathtouchDamaged` all take their real, correct effect — `state.ts`'s
+ * own doc comment) and report, per creature that took any damage this
+ * call, whether that accumulated damage is lethal (`isLethallyDamaged`,
+ * the SAME shared read `sba.ts` uses, so the two never disagree).
  */
 export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
-  const damageTaken = new Map<number, number>();
-  const deathtouchHit = new Set<number>();
   const lethalSoFar = new Set<number>();
 
   const dealsFirst = (c: RealCard) => c.keywords.includes('FirstStrike') || c.keywords.includes('DoubleStrike');
@@ -565,15 +567,13 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
           let remaining = power;
           for (let i = 0; i < livingBlockers.length; i++) {
             const blocker = livingBlockers[i]!;
-            const already = damageTaken.get(blocker.id) ?? 0;
+            const already = blocker.damageMarked ?? 0;
             const [, toughness] = effectivePT(engine.state, blocker);
             const lethalNeeded = deathtouch ? 1 : Math.max(toughness - already, 0);
             const isLast = i === livingBlockers.length - 1;
             const assign = trample ? Math.min(remaining, lethalNeeded) : isLast ? remaining : Math.min(remaining, lethalNeeded);
             if (assign > 0) {
               engine.state.dealDamage(blocker, assign, attacker);
-              damageTaken.set(blocker.id, already + assign);
-              if (deathtouch) deathtouchHit.add(blocker.id);
               remaining -= assign;
             }
           }
@@ -584,10 +584,7 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
       for (const blocker of livingBlockers) {
         if (include(blocker)) {
           const [blockerPower] = effectivePT(engine.state, blocker);
-          const already = damageTaken.get(attacker.id) ?? 0;
           engine.state.dealDamage(attacker, blockerPower, blocker);
-          damageTaken.set(attacker.id, already + blockerPower);
-          if (blocker.keywords.includes('Deathtouch')) deathtouchHit.add(attacker.id);
         }
       }
     }
@@ -597,8 +594,7 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
     for (const attacker of engine.attackers) {
       for (const card of [attacker, ...(engine.blockers.get(attacker.id) ?? [])]) {
         if (lethalSoFar.has(card.id)) continue;
-        const dmg = damageTaken.get(card.id) ?? 0;
-        if (isLethalDamage(engine.state, card, dmg, deathtouchHit.has(card.id))) lethalSoFar.add(card.id);
+        if (isLethallyDamaged(engine.state, card)) lethalSoFar.add(card.id);
       }
     }
   }
@@ -614,7 +610,7 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
     for (const card of [attacker, ...(engine.blockers.get(attacker.id) ?? [])]) {
       if (seen.has(card.id)) continue;
       seen.add(card.id);
-      const damage = damageTaken.get(card.id) ?? 0;
+      const damage = card.damageMarked ?? 0;
       if (damage > 0) entries.push({ card, damage, lethal: lethalSoFar.has(card.id) });
     }
   }

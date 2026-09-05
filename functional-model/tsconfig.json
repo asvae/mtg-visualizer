@@ -9,5 +9,5 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["interfaces.ts", "tokens.ts", "card.ts", "state.ts", "layers.ts", "turn.ts", "stack.ts", "priority.ts", "mana.ts", "engine.ts", "harness.ts", "synergy.ts", "*.test.ts", "data/**/*.ts", "cards/**/*.ts"]
+  "include": ["interfaces.ts", "tokens.ts", "card.ts", "state.ts", "layers.ts", "turn.ts", "stack.ts", "priority.ts", "mana.ts", "engine.ts", "sba.ts", "harness.ts", "synergy.ts", "*.test.ts", "data/**/*.ts", "cards/**/*.ts"]
 }
