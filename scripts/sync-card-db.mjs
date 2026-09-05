@@ -119,12 +119,21 @@ function shouldKeep(card) {
 }
 
 // "Normal art" = not full-art, not borderless, has a plain nonfoil finish
-// available — exactly the three things the user named as exclusions. A
-// showcase/extended-art/etc. printing isn't explicitly excluded by name,
-// but in practice almost always fails one of these three anyway (showcase
-// treatments are nearly always also full-art or borderless).
+// available, and not a Secret Lair Drop/Countdown/Ultimate Edition/Promo
+// (set_name always starts with "Secret Lair" across all of those — checked
+// live: sld/slc/slu/slp, not just one set code, so matching the name
+// prefix rather than hardcoding codes also covers a future Secret Lair
+// sub-brand). A showcase/extended-art/etc. printing isn't explicitly
+// excluded by name, but in practice almost always fails one of the first
+// three checks anyway (showcase treatments are nearly always also
+// full-art or borderless).
 function isNormalArt(card) {
-  return !card.full_art && card.border_color !== 'borderless' && (card.finishes ?? []).includes('nonfoil');
+  return (
+    !card.full_art &&
+    card.border_color !== 'borderless' &&
+    (card.finishes ?? []).includes('nonfoil') &&
+    !(card.set_name ?? '').startsWith('Secret Lair')
+  );
 }
 
 // Streamed line-by-line (gunzip -> readline), never loaded as one JSON.parse
