@@ -7,94 +7,24 @@
 // in. Nitro deploys this route as a Netlify Function automatically (see
 // nuxt.config.ts's netlify preset).
 //
-// GET /api/cards?q=<scryfall search syntax>
+// POST /api/cards, body { q: <scryfall search syntax> } — POST (not the `q`
+// query-string param the shareable `/app?sf=...` page URL itself still uses)
+// so this and server/api/cards/by-names.ts's deck-import lookup share one
+// calling convention from useGraphStore.ts's own load().
 
-import relationsData from '../../data/global_relations.json';
-import finRelationsData from '../../data/fin/fin_relations.json';
-import themesData from '../../data/global_themes.json';
+import { minimalCard, relationsAndThemes, type ScryfallCard } from './_cardShaping';
 
 // Hard cap on cards fetched/returned per query, regardless of how many the
 // query actually matches — keeps one broad query from paginating for minutes
 // or shipping a multi-MB response. Never fetched past; see `truncated` below.
 const MAX_CARDS = 500;
 
-interface RelationsEntry {
-  name: string;
-  themes: Record<string, Record<string, number>>;
-}
-
-// data/fin/fin_relations.json wins over data/global_relations.json by name —
-// FIN hasn't been chronologically merged into the historical sweep yet, so
-// global_relations.json's own FIN entries are still the untouched produce-only
-// script baseline even for names fin_relations.json has since fully reviewed
-// (produce/consume/grant/atypical/magnifier). See GLOBAL_TAGGING_RULES.md's
-// "A name's status can legitimately outrun..." note. Without this, every
-// theme reachable only through FIN cards looks purely one-sided (all
-// `produce`, no `consume`) and computeWeakThemeIds classifies it as weak —
-// which zeroes out the default/reset/"Strong" theme selection entirely for
-// any `sf=` query that resolves to FIN cards (e.g. `sf=set:fin`).
-const relationsByName = new Map<string, RelationsEntry>([
-  ...(relationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
-  ...(finRelationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
-]);
-
-interface ImageUris {
-  normal: string;
-}
-interface CardFace {
-  colors?: string[];
-  type_line?: string;
-  keywords?: string[];
-  image_uris?: ImageUris;
-}
-interface ScryfallCard {
-  id: string;
-  name: string;
-  cmc?: number;
-  colors?: string[];
-  color_identity?: string[];
-  type_line?: string;
-  rarity?: string;
-  scryfall_uri: string;
-  keywords?: string[];
-  digital?: boolean;
-  image_uris?: ImageUris;
-  card_faces?: CardFace[];
-  set?: string;
-  collector_number?: string;
-}
-
-// Strips a raw Scryfall card down to only the fields buildGraph.ts reads —
-// drops legalities/prices/rulings_uri/etc, which dwarf the fields we keep.
-function minimalCard(c: ScryfallCard) {
-  return {
-    id: c.id,
-    name: c.name,
-    cmc: c.cmc,
-    colors: c.colors,
-    color_identity: c.color_identity,
-    type_line: c.type_line,
-    rarity: c.rarity,
-    scryfall_uri: c.scryfall_uri,
-    keywords: c.keywords,
-    digital: c.digital,
-    image_uris: c.image_uris ? { normal: c.image_uris.normal } : undefined,
-    card_faces: c.card_faces?.map((f) => ({
-      colors: f.colors,
-      type_line: f.type_line,
-      keywords: f.keywords,
-      image_uris: f.image_uris ? { normal: f.image_uris.normal } : undefined,
-    })),
-    set: c.set,
-    collector_number: c.collector_number,
-  };
-}
-
 export default defineEventHandler(async (event) => {
-  const q = getQuery(event).q as string | undefined;
+  const body = await readBody(event).catch(() => null);
+  const q = body?.q as string | undefined;
   if (!q) {
     setResponseStatus(event, 400);
-    return { error: 'missing "q" query param' };
+    return { error: 'missing "q" in request body' };
   }
 
   const cards: ScryfallCard[] = [];
@@ -124,18 +54,7 @@ export default defineEventHandler(async (event) => {
 
   const matched = cards.slice(0, MAX_CARDS);
   const truncated = totalCards > matched.length;
-
-  const relations: { name: string; themes: RelationsEntry['themes'] }[] = [];
-  const usedThemeIds = new Set<string>();
-  for (const c of matched) {
-    const entry = relationsByName.get(c.name);
-    if (!entry) continue;
-    relations.push({ name: entry.name, themes: entry.themes });
-    for (const byTheme of Object.values(entry.themes ?? {})) {
-      for (const themeId of Object.keys(byTheme ?? {})) usedThemeIds.add(themeId);
-    }
-  }
-  const themes = (themesData as { id: string; label: string }[]).filter((t) => usedThemeIds.has(t.id));
+  const { relations, themes } = relationsAndThemes(matched);
 
   return {
     cards: matched.map(minimalCard),
