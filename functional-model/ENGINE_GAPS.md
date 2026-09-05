@@ -10,6 +10,53 @@ Forge."
 Every row below is checked against `../mtg-forge`'s actual source, not
 guessed — file/line citations follow each item.
 
+**Scope note (user's own words):** "Generally I want all mechanics for FIN
+be implemented. As we're focusing on that set right now." Priority from
+here on is justified by "does a real FIN card (`functional-model/cards/*`,
+~312 cards) actually need this" — grep the real pool first, same discipline
+already used for activation-cost shapes, the replacement-effect scope cut,
+and this doc's own turn-structure-completeness closure — not abstract
+"parity with Forge in general." The prioritized list below stays as a guide
+to the underlying rules-engine gaps, but a new item's priority (or whether
+it's worth building at all) should cite a real card, not a hypothetical one.
+
+## FIN-specific mechanics closed (real, checked against the pool)
+
+- **Saga lore-counter automation (714)** — `saga.ts` (new file). Verified
+  first: 22 real FIN cards model Saga chapters as named `chapterI`/
+  `chapterII`/`chapterIII`/(`chapterIV`) triggers (grep `chapterI` across
+  `functional-model/cards/<slug>/definition.ts`), 3 of them transforming
+  (Jill, Shiva's Dominant // Shiva, Warden of Ice; Dion, Bahamut's Dominant
+  // Bahamut, Warden of Light; Jecht, Reluctant Guardian // Braska's Final
+  Aeon). `advanceSaga` puts a real lore counter (`RealCard.counters`,
+  reusing the existing `putCounter` primitive — no parallel counter
+  mechanism invented) and fires the matching chapter (714.2b/c), then
+  checks 714.4's own sacrifice once the greatest chapter number is reached
+  — SKIPPED, with no card-specific special-casing, when the chapter's own
+  effect already reset the permanent's lore counters via a real zone change
+  (`state.move`'s existing 400.7 reset) — the exact, general signal that
+  distinguishes Jill/Dion's own "transform back instead of being
+  sacrificed" chapter III from Jecht/Braska's own "just gets sacrificed
+  normally" chapter III, with zero per-card logic. `engine.ts`'s
+  `resolveTop` calls it on a fresh Saga's own ETB; a new
+  `advanceSagasAfterDrawStep` (called from `doAdvance` on entering Main1,
+  structurally exact for "the draw step just ended" in this engine's fixed
+  phase list) calls it for the ACTIVE player's own Sagas each turn.
+  `transformPermanent` handles the "transforms INTO a Saga" direction
+  (Jill/Dion/Jecht's own front-face activated ability) by re-registering
+  `GameEngine.resolvedPermanents` to the new face and immediately running
+  the same 714.2b/c initialization.
+  **Real, deliberately scoped gap**: a transforming card's own `custom`
+  effect (card.ts, engine-agnostic by design) has no way to call
+  `transformPermanent` itself — a caller piloting the game must call it
+  explicitly right after running the transform's own activated ability,
+  same "explicit signal, not auto-inferred" convention `harness.ts`'s own
+  `SequenceStep.face` field already established. Retrofitting the 3
+  transforming cards' own effects to somehow trigger this automatically is
+  out of scope (there's no hook for them to call even if retrofitted).
+  "Skip a lore counter"/"add an extra lore counter" effects: no FIN card
+  needs either (checked).
+
 ## Accepted simplifications — NOT gaps to close
 
 These came up in conversation explicitly ("we don't need AI yet, and we

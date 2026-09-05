@@ -126,6 +126,7 @@ import { Stack, type StackObject } from './stack';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
 import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn as turnQueueExtraTurn, type TurnState } from './turn';
 import { parseManaCost, canAfford, payMana, untappedManaSources } from './mana';
+import { advanceSaga, advanceSagasAfterDrawStep } from './saga';
 
 export type ActionResult = { ok: true } | { ok: false; reason: string };
 
@@ -380,6 +381,9 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       engine.state.move(real, 'Battlefield');
       engine.enteredThisTurn.set(real.id, engine.turn.turnNumber);
       engine.resolvedPermanents.set(real.id, { card: resolved.card, ctx: resolved.ctx, actions: resolved.actions });
+      // Real 714.2b: a Saga enters with no lore counters, then immediately
+      // gets its first (see saga.ts's own header for the full 714 writeup).
+      advanceSaga(engine, real, engine.resolvedPermanents.get(real.id)!);
       const enterTrigger = resolved.card.triggers?.find((t) => t.on === 'enter');
       if (enterTrigger) resolveCard(resolved.card, resolved.ctx, resolved.actions, enterTrigger.name);
     } else {
@@ -415,6 +419,15 @@ function fireOnPhaseEnterTriggers(engine: GameEngine): void {
 function doAdvance(engine: GameEngine): void {
   engine.turn = advancePhase(engine.state, engine.turn, engine.players);
   fireOnPhaseEnterTriggers(engine);
+  // Real 714.2c: "after each of its controller's draw steps." Entering
+  // Main1 always means the Draw step just ended in this engine's fixed
+  // 12-phase list (turn.ts's own PHASES), whether or not a card was
+  // actually drawn (the first-turn draw-skip only skips the draw ACTION,
+  // not the step itself — see turn.ts's own shouldSkipDraw) — so this is
+  // a structurally exact stand-in, not an approximation with edge cases.
+  if (currentPhase(engine.turn) === 'Main1') {
+    advanceSagasAfterDrawStep(engine, activePlayer(engine.turn, engine.players));
+  }
 }
 
 /**

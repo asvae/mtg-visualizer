@@ -1,4 +1,4 @@
-# Turn-based engine (`engine.ts`, `mana.ts`, `sba.ts`, + existing `turn.ts`/`stack.ts`/`priority.ts`/`layers.ts`)
+# Turn-based engine (`engine.ts`, `mana.ts`, `sba.ts`, `saga.ts`, + existing `turn.ts`/`stack.ts`/`priority.ts`/`layers.ts`)
 
 ## Why this exists
 
@@ -203,6 +203,64 @@ Three real pieces, closing `ENGINE_GAPS.md`'s former gap #3:
 today — checked): "each player's"/"each opponent's" upkeep/end-step
 triggers (as opposed to "your own"); "skip your next X step/phase" effects.
 
+### Saga lore-counter automation (714) — `saga.ts`
+
+Verified against the real pool first: 22 FIN cards model Saga chapters as
+named `chapterI`/`chapterII`/`chapterIII`/(`chapterIV`) triggers (grep
+`chapterI` across `functional-model/cards/<slug>/definition.ts`), 3 of them
+transforming DFCs (Jill, Shiva's Dominant // Shiva, Warden of Ice; Dion,
+Bahamut's Dominant // Bahamut, Warden of Light; Jecht, Reluctant Guardian //
+Braska's Final Aeon).
+
+`advanceSaga(engine, real, registered)` is the one real function behind
+both 714.2b (a Saga's own ETB: 0 lore counters, then immediately its
+first) and 714.2c (another lore counter after each subsequent controller's
+draw step) — the same real triggered ability, just two different timings.
+It puts a real lore counter (`RealCard.counters`, via the existing
+`state.putCounter` — no parallel counter mechanism), fires whichever
+`chapterN` trigger matches the new count, and — only once the count
+reaches the Saga's own greatest chapter number — checks 714.4's sacrifice.
+
+The 714.4 check is where this gets interesting: Jill/Dion's own chapter III
+doesn't just resolve and let the Saga get swept away — it exiles-and-
+returns itself (transforming back), while Jecht/Braska's own chapter III
+(sacrifice 2 opponent creatures) does nothing to its own zone. Rather than
+special-case "is this specific card one that transforms back," `advanceSaga`
+uses a real, EXISTING mechanic as the signal: `state.move()`'s own 400.7
+zone-change reset already wipes `RealCard.counters` (lore counters
+included) the instant a chapter's own effect changes the permanent's zone.
+So after firing the final chapter, `advanceSaga` checks whether the lore
+count it JUST SET is still there — if a zone change already reset it, 714.4's
+sacrifice is skipped, correctly and for free, no per-card logic anywhere.
+
+```ts
+advanceSaga(engine, real, registered); // 714.2b/c + 714.4, one function
+transformPermanent(engine, real, newFace, ctx, actions); // 714.2b's "or transforms into a Saga"
+```
+
+`resolveTop` calls `advanceSaga` on a fresh Saga's own ETB; a new
+`advanceSagasAfterDrawStep` (called from `doAdvance` on entering Main1 —
+structurally exact for "the draw step just ended" in this engine's fixed
+phase list, same reasoning `fireOnPhaseEnterTriggers` already established)
+calls it for the ACTIVE player's own registered Sagas each turn.
+
+`transformPermanent` covers the OTHER direction — a permanent transforming
+INTO a Saga (Jill/Dion/Jecht's own front-face activated ability): it
+re-registers `GameEngine.resolvedPermanents` to the new face and
+immediately runs the same 714.2b/c initialization, since a front face isn't
+a Saga at all and would otherwise never get a lore counter.
+
+**Real, deliberately scoped gap:** a transforming card's own `custom`
+effect (card.ts, engine-agnostic by design — it only ever receives
+`ctx`/`actions`, never a `GameEngine` reference) has NO way to call
+`transformPermanent` itself. A caller piloting the game must call it
+explicitly right after running the transform's own activated ability — the
+same "explicit signal, not auto-inferred" convention `harness.ts`'s own
+`SequenceStep.face` field already established for this exact problem.
+Retrofitting the 3 real transforming cards' own effects to somehow trigger
+this automatically is out of scope here (there's no hook for them to call
+even if retrofitted).
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -241,6 +299,12 @@ triggers (as opposed to "your own"); "skip your next X step/phase" effects.
   `on: 'upkeep'`/`'endStep'` trigger auto-fire for the active player's own
   permanents, and extra turns (500.7) — see "Turn-structure completeness"
   above for the full scope and what's still deferred.
+- **Saga lore-counter automation (714)** — `saga.ts`: real lore counters,
+  chapter auto-fire on ETB and each subsequent controller draw step, and
+  714.4's own completion-sacrifice (correctly skipped for a chapter that
+  transforms the Saga back instead) — see "Saga lore-counter automation"
+  above for the full scope and its one deliberately deferred gap
+  (per-card auto-detection of a transform).
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -282,9 +346,13 @@ upkeep/end-step trigger auto-fire — including the "not registered"/"wrong
 player" non-firing cases — and `queueExtraTurn`), `sba.test.ts` (704.5f/g/
 h/j — including Indestructible correctly blocking 704.5g but NOT 704.5f,
 and a combined multi-issue sweep proving the 704.3 loop-until-stable
-shape), and `turn.test.ts` (Cleanup's own 514.1/514.2 actions, and extra
+shape), `turn.test.ts` (Cleanup's own 514.1/514.2 actions, and extra
 turns taking priority over the normal rotation, including FIFO ordering
-for multiple queued turns).
+for multiple queued turns), and `saga.test.ts` (a plain multi-chapter
+Saga's own ETB-through-final-sacrifice arc across several real turns,
+controller-scoping, a transform-back Saga surviving instead of being
+sacrificed, `transformPermanent`'s own "transforms into a Saga" vs.
+"transforms into a non-Saga" cases, and `advanceSaga`'s defensive no-ops).
 
 ## Gap analysis vs. real Forge
 
