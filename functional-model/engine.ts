@@ -311,6 +311,14 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
   if (costRequiresTap(cost) && permanent.tapped) {
     return { ok: false, reason: `"${card.name}"'s cost requires tapping it, but it's already tapped` };
   }
+  if (costRequiresTap(cost)) {
+    // Real 302.6: summoning sickness restricts a creature from both
+    // attacking AND activating a {T}/{Q}-cost ability, not just attacking
+    // (see `canAttack`'s own identical check) — Haste exempts either.
+    const enteredTurn = engine.enteredThisTurn.get(permanent.id);
+    const sick = enteredTurn === engine.turn.turnNumber && !permanent.keywords.includes('Haste');
+    if (sick) return { ok: false, reason: "summoning sickness (302.6): hasn't been under its controller's control continuously since their most recent turn began, so its {T} cost can't be paid" };
+  }
   const unsupported = unsupportedCostComponent(cost);
   if (unsupported) {
     return { ok: false, reason: `activation cost includes an unsupported component ("${unsupported}") — this engine only pays {T} + mana costs so far` };

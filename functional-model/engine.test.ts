@@ -537,7 +537,11 @@ describe('resolveCard dispatch collision (a permanent with BOTH an on:"enter" tr
     const { state, you, engine, youPlayer, oppPlayer } = setupGame();
     const order: string[] = [];
     const card = dualCard(order);
-    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    // Haste — this test is about dispatch (ETB vs. ability effects), not
+    // 302.6 summoning sickness (a real, separate restriction this same
+    // session added to `canActivateAbility` for its {T} cost); Haste keeps
+    // the {T} activation legal the same turn without conflating the two.
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'], keywords: ['Haste'] });
     const self = wrapCard(state, real);
     castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
     resolveTop(engine);

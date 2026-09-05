@@ -15,6 +15,10 @@ export const jillShivasDominant: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      // Real 603.6b "enters the battlefield" trigger — auto-fired by
+      // `engine.ts`'s own `resolveTop` the moment Jill resolves onto the
+      // battlefield, no scenario/player naming it explicitly.
+      on: 'enter',
       effects: [
         // Real ValidTgts$ Permanent.nonLand+Other, TargetMax$1 — up to one
         // OTHER nonland permanent, any player's. Same cross-player-pool
