@@ -21,3 +21,8 @@ deno.lock
 
 # Scratch/regenerable downloads (e.g. Scryfall bulk-data dumps), not source.
 tmp/
+
+# Local card database + its Scryfall bulk-data cache — regenerated via
+# scripts/sync-card-db.mjs, not meaningful project history (multi-hundred-MB).
+data/cards.db
+data/.bulk-default-cards.jsonl.gz
