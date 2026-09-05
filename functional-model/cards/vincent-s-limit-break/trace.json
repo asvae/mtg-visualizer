@@ -1,0 +1,166 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 2)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "target creature you control set to 3/2 until end of turn (2/2 -> 3/2)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "move",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 2)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "target creature you control set to 5/2 until end of turn (2/2 -> 5/2)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 3,
+        "toughness": 0
+      },
+      {
+        "fn": "move",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 2)",
+      "action": "cast from hand, mode 2 chosen",
+      "result": "target creature you control set to 7/2 until end of turn (2/2 -> 7/2)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "read:getNetToughness",
+        "target": "you-creature-token-0",
+        "result": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 5,
+        "toughness": 0
+      },
+      {
+        "fn": "move",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "no creature you control on the battlefield, nothing happens"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{B}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "move",
+        "card": "Vincent's Limit Break",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

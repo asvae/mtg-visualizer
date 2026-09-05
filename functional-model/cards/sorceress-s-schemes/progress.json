@@ -1,0 +1,14 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-05",
+  "notes": "Return-from-graveyard modeled via move(validType:'any') — no instant/sorcery filter exists on move, AND no Card method anywhere in this model (interfaces.ts) can distinguish an instant/sorcery card once it's in a zone (isCreature/isLand/isEnchantment/isArtifact exist; no isInstant/isSorcery, no typeLine accessor), so a custom filter isn't possible either — a genuinely absent capability, not just a declarative-shape gap. No PlayerState field seeds a non-creature graveyard card, so the real success case can't be scenario-tested at all; only the empty-graveyard no-op is demonstrated.",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "return-target-instant-or-sorceryfrom-graveyard has no real type filter available anywhere in the runtime model (only the synergy.json fact's own types.hasAny declares it, unenforced by definition.ts's move effect)",
+    "'or exiled card with flashback you own' alternate source zone is entirely undeclared (move only supports one from-zone)",
+    "'Add {R}' is unmodeled — no mana-pool concept anywhere in this model",
+    "no PlayerState field can seed a graveyard with a non-creature card, so the actual return-to-hand success case has zero scenario coverage"
+  ]
+}

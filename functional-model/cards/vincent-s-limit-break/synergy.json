@@ -1,0 +1,25 @@
+{
+  "source": [
+    {
+      "id": "self-graveyard",
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "sourceText": "(baseline — instant resolves then goes to graveyard, no special ability text)"
+    }
+  ],
+  "sink": [
+    {
+      "id": "wants-creature-you-control",
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": ["Creature"]
+      },
+      "value": 1,
+      "sourceText": "Until end of turn, target creature you control gains \"When this creature dies, return it to the battlefield tapped under its owner's control\" and has the chosen base power and toughness.",
+      "highlight": "target creature you control"
+    }
+  ]
+}

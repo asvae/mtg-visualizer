@@ -1,0 +1,12 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-05",
+  "notes": "Tiered (choose one additional cost) modeled as modal, per-mode additional cost {0}/{1}/{3} folded into each mode's describe text only (no field for it — see tifa-s-limit-break precedent). Each mode's 'has the chosen base power and toughness' modeled as an absolute-set custom effect (delta to target's real current P/T, same shape ride-the-shoopuf's own 'becomes a 7/7' uses).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "the granted 'when this creature dies, return it to the battlefield tapped under its owner's control' ability has no Effect kind for granting a new triggered ability at resolution time — documented no-op, same gap galuf-s-final-act's own granted death-trigger already establishes",
+    "per-mode additional cost ({0}/{1}/{3} on top of the base {1}{B}) is documentary text only, not enforced/tracked anywhere"
+  ]
+}
