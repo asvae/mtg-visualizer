@@ -23,6 +23,7 @@ import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types'
 import { findInteractionsForCard, annotateCardText } from '../../../../functional-model/synergy';
 import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
+import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
@@ -126,6 +127,15 @@ interface FinScryfallCard {
   collector_number: string;
   image_uris?: { normal?: string };
   card_faces?: { name: string; image_uris?: { normal?: string } }[];
+  // Only present on a live Scryfall response (never on fin_scryfall.json's
+  // own stripped-down shape) — read by isStandardPrint() in
+  // resolveLiveCardMeta below, so optional rather than a separate type.
+  full_art?: boolean;
+  promo?: boolean;
+  border_color?: string;
+  finishes?: string[];
+  frame_effects?: string[];
+  set_name?: string;
 }
 function resolveFinCardMeta(name: string): { set: string; collectorNumber: string; image: string | null } | null {
   const entries = loadJsonFresh('data/fin/fin_scryfall.json', [] as FinScryfallCard[]);
@@ -181,8 +191,29 @@ async function resolveLiveCardMeta(name: string): Promise<{ set: string; collect
   try {
     const res = await scryfallFetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`);
     if (!res.ok) return null;
-    const c: FinScryfallCard = await res.json();
+    let c: FinScryfallCard = await res.json();
+    // Scryfall's own "default printing" pick for a bare name isn't
+    // guaranteed to be is_normal-worthy (showcase/extended-art/promo can win
+    // — the same gap the local DB's is_normal column exists to close, see
+    // scripts/sync-card-db.mjs). Re-resolve via search when it isn't; only
+    // hit for a flagged card, so this stays rare.
+    if (!isStandardPrint(c)) {
+      const standard = await fetchStandardPrintForName(name);
+      if (standard) c = standard;
+    }
     return { set: c.set, collectorNumber: c.collector_number, image: c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchStandardPrintForName(name: string): Promise<FinScryfallCard | null> {
+  try {
+    const q = `!"${name}" -is:extendedart -is:showcase -is:borderless -is:colorshifted -is:full -is:promo`;
+    const res = await scryfallFetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=released&dir=desc`);
+    if (!res.ok) return null;
+    const data: { data: FinScryfallCard[] } = await res.json();
+    return data.data[0] ?? null;
   } catch {
     return null;
   }

@@ -118,20 +118,36 @@ function shouldKeep(card) {
   return card.lang === 'en' && card.set_type !== 'memorabilia';
 }
 
-// "Normal art" = not full-art, not borderless, has a plain nonfoil finish
-// available, and not a Secret Lair Drop/Countdown/Ultimate Edition/Promo
-// (set_name always starts with "Secret Lair" across all of those — checked
-// live: sld/slc/slu/slp, not just one set code, so matching the name
-// prefix rather than hardcoding codes also covers a future Secret Lair
-// sub-brand). A showcase/extended-art/etc. printing isn't explicitly
-// excluded by name, but in practice almost always fails one of the first
-// three checks anyway (showcase treatments are nearly always also
-// full-art or borderless).
+// frame_effects markers that mean "this printing has a different visual
+// treatment than the standard black-border frame" — extendedart/showcase/
+// inverted/colorshifted/borderless/shatteredglass. NOT included: legendary,
+// enchantment, devoid, tombstone, snow, miracle, draft, spree, *dfc,
+// companion, convertdfc, lesson, etc — those are functional/layout markers
+// every normal printing of that card type also carries, not art variants.
+// Found the hard way: "Formidable Speaker" (ecl/366) has
+// frame_effects:["extendedart"], border_color:"black", full_art:false,
+// finishes:["nonfoil"] — passes every other check below, so without this it
+// still landed as is_normal:1 (flagged by a peer session auditing real
+// browsing results, not caught by this script's own earlier verification).
+const NONSTANDARD_FRAME_EFFECTS = new Set(['extendedart', 'showcase', 'inverted', 'colorshifted', 'borderless', 'shatteredglass']);
+
+// "Normal art" = not full-art, not a promo (Scryfall's own `promo` flag —
+// catches prerelease/love-your-lgs/set-promo stamps generally, not just
+// Secret Lair; found via a tie: "Formidable Speaker" had two is_normal
+// candidates released the same day, and the promo printing was winning the
+// tiebreak), not borderless, has a plain nonfoil finish available, no
+// non-standard frame treatment (see NONSTANDARD_FRAME_EFFECTS above), and
+// not a Secret Lair Drop/Countdown/Ultimate Edition (set_name starts with
+// "Secret Lair" — kept as its own check alongside `promo` since it's the
+// more specific/legible signal for that one case, even though `promo` alone
+// already covers most Secret Lair printings too).
 function isNormalArt(card) {
   return (
     !card.full_art &&
+    !card.promo &&
     card.border_color !== 'borderless' &&
     (card.finishes ?? []).includes('nonfoil') &&
+    !(card.frame_effects ?? []).some((fx) => NONSTANDARD_FRAME_EFFECTS.has(fx)) &&
     !(card.set_name ?? '').startsWith('Secret Lair')
   );
 }

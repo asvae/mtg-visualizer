@@ -66,6 +66,14 @@ export interface ScryfallCard {
   card_faces?: CardFace[];
   set?: string;
   collector_number?: string;
+  // Only present on a live Scryfall response — read by isStandardPrint() in
+  // by-names.ts's own prod (no local DB) fallback path.
+  full_art?: boolean;
+  promo?: boolean;
+  border_color?: string;
+  finishes?: string[];
+  frame_effects?: string[];
+  set_name?: string;
 }
 
 // Strips a raw Scryfall card down to only the fields buildGraph.ts reads —

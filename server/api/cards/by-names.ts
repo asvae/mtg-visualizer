@@ -25,6 +25,7 @@ import { existsSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { minimalCard, relationsAndThemes, type ScryfallCard } from '../_cardShaping';
+import { isStandardPrint } from '../../utils/isStandardPrint';
 
 // data/cards.db is gitignored (600MB+, regenerated locally via
 // scripts/sync-card-db.mjs, never committed) — a deployed instance (Netlify
@@ -111,6 +112,36 @@ async function fetchLiveFuzzy(name: string): Promise<ScryfallCard | null> {
   }
 }
 
+// Neither /cards/collection nor /cards/named picks by our own is_normal
+// criteria — Scryfall's own "default printing" pick can still be a
+// showcase/extended-art/promo variant (the same gap the local DB's
+// is_normal column exists to close, see scripts/sync-card-db.mjs). Only hit
+// for a card the live fallback actually flagged as non-standard, so this
+// stays rare in practice — most decks resolve entirely through
+// fetchLiveCollection with no extra requests at all.
+async function fetchStandardPrintForName(name: string): Promise<ScryfallCard | null> {
+  try {
+    const q = `!"${name}" -is:extendedart -is:showcase -is:borderless -is:colorshifted -is:full -is:promo`;
+    const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=released&dir=desc`, {
+      headers: { 'User-Agent': 'mtg-visualizer/0.1', Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+    const data: { data: ScryfallCard[] } = await res.json();
+    return data.data[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Re-resolves a live-fallback result to a standard printing when Scryfall's
+// own pick wasn't one — falls back to the original card (better than
+// nothing) if the re-resolve search comes up empty.
+async function preferStandardPrint(card: ScryfallCard): Promise<ScryfallCard> {
+  if (isStandardPrint(card)) return card;
+  const standard = await fetchStandardPrintForName(card.name);
+  return standard ?? card;
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => null);
   const names: string[] | undefined = body?.names;
@@ -131,10 +162,10 @@ export default defineEventHandler(async (event) => {
     }
   } else {
     const { found: liveFound, notFound } = await fetchLiveCollection(uniqueNames);
-    found.push(...liveFound);
+    found.push(...(await Promise.all(liveFound.map(preferStandardPrint))));
     for (const name of notFound) {
       const fuzzy = await fetchLiveFuzzy(name);
-      if (fuzzy) found.push(fuzzy);
+      if (fuzzy) found.push(await preferStandardPrint(fuzzy));
       else unmatched.push(name);
     }
   }
