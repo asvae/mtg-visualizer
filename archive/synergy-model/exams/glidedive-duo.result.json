@@ -1,0 +1,16 @@
+{
+  "name": "Glidedive Duo",
+  "manaCost": "{4}{B}",
+  "typeLine": "Creature — Bat Lizard",
+  "description": "Flying. When this creature enters, each opponent loses 2 life and you gain 2 life.",
+  "assumptions": [
+    "Printed order of the two independent abilities (Flying, then the ETB trigger) — the flow graph doesn't fix relative ordering between separate roots C and D; followed the standard convention of listing a keyword line before a triggered ability.",
+    "Rendered the enter trigger as \"When this creature enters,\" (rather than \"...enters the battlefield\") and joined the life-loss/life-gain nodes into one sentence with \"and\" — stylistic renderings of the same underlying node chain, not changes to substance."
+  ],
+  "couldNotDerive": [
+    "Supertype and rarity — not present in the nodes or the self registry, so omitted rather than guessed."
+  ],
+  "verdict": "match",
+  "notes": "Confirmed via forge-model/data/glidedive-duo.txt (Name Glidedive Duo, ManaCost 4 B, Types Creature Bat Lizard, PT 3/3, K:Flying, T:Mode$ ChangesZone|Origin$ Any|Destination$ Battlefield|ValidCard$ Card.Self|Execute$ TrigDrain, SVar:TrigDrain:DB$ LoseLife|Defined$ Player.Opponent|LifeAmount$ 2|SubAbility$ DBGainLife, SVar:DBGainLife:DB$ GainLife|Defined$ You|LifeAmount$ 2, Oracle: 'Flying\\nWhen Glidedive Duo enters, each opponent loses 2 life and you gain 2 life.'). Full match: mana cost {4}{B}, type line Creature — Bat Lizard, P/T 3/3 (from the self registry, consistent though not itself part of the reconstructed text), the standalone Flying static keyword (node C, modifier root with flags 'flying'), and the ETB trigger chain (D trigger-type:enter -> E emit life-loss owner:opp qty:2, no target flag so 'each opponent' not a targeted drain -> F emit life-gain owner:me qty:2, matching TrigDrain's LoseLife on Player.Opponent chained via SubAbility to DBGainLife's GainLife on You) all reconstructed correctly with nothing invented and nothing missing. No decomposition gap, no schema gap, no misinterpretation found on this card — clean round trip.",
+  "comparedAt": "2026-09-04"
+}

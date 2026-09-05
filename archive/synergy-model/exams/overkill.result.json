@@ -1,0 +1,15 @@
+{
+  "name": "Overkill",
+  "manaCost": "{2}{B}",
+  "typeLine": "Instant",
+  "description": "Target creature gets -0/-9999 until end of turn.",
+  "assumptions": [
+    "Applied lifetime:turn (documented mainly for enters edges) as a duration on this modifier edge, since it's the only duration vocabulary the schema defines.",
+    "Rendered cond:pt_delta=-0/-9999 literally as printed values rather than reinterpreting.",
+    "Treated 1.1 (move me stack gy self) as non-printed resolution bookkeeping, not oracle text."
+  ],
+  "couldNotDerive": ["Name (withheld by design).", "Subtype/supertype/rarity."],
+  "verdict": "match",
+  "notes": "Retest after cast=self + self registry (mana cost/type line now pulled from the registry, no cost: on the visible cast edge). No regression: {2}{B}/Instant/rules text all still exact, target/lifetime:turn/cond:pt_delta pattern unaffected since this card has no power/toughness or subtype of its own to gain from the registry.",
+  "comparedAt": "2026-09-03"
+}

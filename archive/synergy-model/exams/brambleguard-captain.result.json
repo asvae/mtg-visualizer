@@ -1,0 +1,16 @@
+{
+  "name": "Brambleguard Captain",
+  "manaCost": "{3}{R}",
+  "typeLine": "Creature — Mouse Soldier",
+  "description": "At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn.",
+  "assumptions": [
+    "Rendered `trigger-type: \"phase\"` with `cond:phase=begincombat` (owner `me`, thing `self`) as the standard printed phrasing \"At the beginning of combat on your turn,\" rather than some other wording for the same condition.",
+    "Read node D's `owner: me` (on a `modifier` whose `thing` is the coarse type `creature`) as restricting the target to a creature you control, by analogy with how `owner` fixes control elsewhere in the schema -- the flags themselves don't spell out \"you control\" in words."
+  ],
+  "couldNotDerive": [
+    "The actual numeric value of the power bonus. Node D's payload is `cond:pt_delta=+X/+0` -- an explicitly symbolic `X` -- and no `scaler`/`sensor` node or `:=` binding anywhere in the graph measures or fixes what `X` equals, so the amount of the \"+X/+0\" is left as given rather than assigned a number."
+  ],
+  "verdict": "issues-open",
+  "notes": "Everything else reconstructs correctly: mana cost {3}{R}, type line Creature -- Mouse Soldier, P/T 2/3 (from the self registry), the begin-combat-on-your-turn trigger (node C), and the target-creature-you-control +X/+0-until-end-of-turn modifier (node D) all match the real card exactly. The one real gap is precisely what the examiner flagged as could-not-derive: the real Forge script defines the pump amount via a *separate* SVar -- `SVar:X:Count$CardPower` -- referenced by `SVar:TrigPump:DB$ Pump | ... | NumAtt$ +X`, i.e. X is explicitly \"this card's own power\" (Brambleguard Captain's power, per the Oracle text: \"where X is Brambleguard Captain's power\"). The edge decomposition never encodes that binding: node D's `cond:pt_delta=+X/+0` uses a bare literal `X` with no `:=` declaration anywhere upstream tying X to a scaler reading self's power. SCHEMA.md's own binding vocabulary (`<name>:=<label>` on the node that first fixes a value, referenced downstream via bare `<field>=<label>`) is exactly built to express this -- e.g. a `scaler` node reading self's power with `power:=X` (or similar), then D's flags reading `pt_delta=+X/+0` referencing that bound name -- but no such scaler node exists in this card's edge set, and D's `X` is left unbound. This is a decomposition gap, not a schema gap: the vocabulary to express \"the bonus equals this permanent's own power\" already exists in SCHEMA.md's binding rules, it just wasn't used when this card was decomposed. Fix belongs in edges.json via REVIEW_PROCESS.md: add a `scaler` node (owner me, thing self, reading power) with a `:=` binding, and have node D's `pt_delta` flag reference that bound name instead of a bare literal `X`. Flagging for the forgeTranslate.ts bug-fixing pass: this is the `Count$CardPower` (source's-own-power-as-a-dynamic-value) idiom feeding a `Pump`/`NumAtt$` SVar reference -- worth checking whether forgeTranslate.ts's SVar-reference resolution generally loses self-referential Count$CardPower-style bindings when translating into the node/flow edges, since this card is a clean, minimal example of exactly that pattern.",
+  "comparedAt": "2026-09-04"
+}

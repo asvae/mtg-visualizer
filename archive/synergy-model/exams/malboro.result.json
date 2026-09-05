@@ -1,0 +1,19 @@
+{
+  "name": "Malboro",
+  "manaCost": "{4}{B}{B}",
+  "typeLine": "Creature — Plant Horror",
+  "description": "When this creature enters, each opponent discards a card, loses 2 life, and exiles the top three cards of their library. {2}, Discard this card: Search your library for a Swamp card and put it into your hand.",
+  "assumptions": [
+    "Treated the swampcyclingFind node's zone_from \"--\" as the library, given the effect shape.",
+    "Read owner:\"opp\" with no target flag as \"each opponent\" acting on their own zones."
+  ],
+  "couldNotDerive": [
+    "Whether the library is shuffled after the search.",
+    "Whether the found card is revealed before going to hand.",
+    "Rarity.",
+    "Supertype."
+  ],
+  "verdict": "issues",
+  "notes": "Decomposition gap, confirmed by checking the actual node: node:swampcyclingFind has flags \"target cond:subtype_swamp\" with no reveal/shuffle marker at all. Real oracle text is explicit: \"Search your library for a Swamp card, reveal it, put it into your hand, then shuffle.\" Both \"reveal it\" and \"then shuffle\" are real, separate printed facts (shuffle specifically is not automatically implied by a search under current rules — a card must say \"then shuffle\" explicitly) that our schema currently has no flag for on a search-type move. Worth a reveal:/shuffle: flag or equivalent. Ability name (\"Bad Breath\", \"Swampcycling\") correctly omitted — expected, not counted, same as other unencoded ability names.",
+  "comparedAt": "2026-09-03"
+}

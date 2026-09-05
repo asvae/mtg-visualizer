@@ -1,0 +1,17 @@
+{
+  "name": "Innkeeper's Talent",
+  "manaCost": "{1}{G}",
+  "typeLine": "Enchantment — Class",
+  "description": "At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. {G}: Level 2 — Permanents you control with counters on them have ward {1}. {3}{G}: Level 3 — If you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters instead.",
+  "assumptions": [
+    "Read the PutCounter target as unrestricted \"target creature\" since the reconstructing agent saw no ownership qualifier on that node."
+  ],
+  "couldNotDerive": [
+    "The specific phase (trigger-type was generic 'phase', not 'beginning of combat').",
+    "Level 2's ward-for-counters keyword grant and Level 3's double-counters replacement mechanic -- both now surface honestly as unmapped entries (S:AddKeyword:Ward:1, S:Event:AddCounter) rather than vanishing silently, but neither has a real node/schema representation yet.",
+    "Rarity."
+  ],
+  "verdict": "issues",
+  "notes": "Checked node D directly: owner is correctly \"me\" (PutCounter's ValidTgts$ Creature.YouCtrl IS read correctly via the shared ownerFromTargetPredicate helper) -- the examining agent's own prose just failed to render owner:me as \"you control\" and called it unrestricted; not a translator bug. Investigating why Level 2's ward-for-counters ability (which DOES use the already-handled AddStaticAbility$) was missing from the reconstruction found a real, separate silent-drop bug: the static-ability handler's fallback-unmapped check used `!fields.AddKeyword`, which treats ANY AddKeyword$ value as \"already handled\" -- but the handler only actually builds a node for AddKeyword$ Flying specifically; AddKeyword$ Ward:1 (or any other keyword) matched neither a real branch nor the fallback, vanishing with zero trace. Fixed by tracking a `handled` flag set only when a branch actually fires, so any other granted keyword now correctly surfaces as an unmapped entry (`S:AddKeyword:Ward:1`) instead of disappearing silently -- same fix, by extension, protects any other BLB/future card granting a keyword besides Flying via a static. Two smaller gaps remain, not fixed this round: (1) Mode$ Phase's Phase$ field (BeginCombat, etc.) is never read, so \"at the beginning of combat\" collapses to a bare generic 'phase' trigger-type -- same shape as the already-fixed enter/attack/dies genericness, just not yet extended to Phase$. (2) AddReplacementEffect$ (Level 3's DoubleCounters) was a THIRD grant-via-referenced-SVar field, distinct from AddTrigger$/AddStaticAbility$ (both handled) -- entirely unfollowed in forgeScript.ts, so Level 3 vanished with no trace at all, not even unmapped. Fixed by wiring it the same way as AddStaticAbility$ (routes to an 'S' row); its own SVar uses Event$/ValidSource$/ReplaceWith$ rather than Mode$/Affected$ (a genuinely different Forge field vocabulary for replacement effects vs. continuous statics), which also exposed a labeling bug where the unmapped fallback stringified a missing Mode$ into the literal text 'undefined' -- fixed by checking fields.Event explicitly first. Both gaps now surface honestly as S:AddKeyword:Ward:1 and S:Event:AddCounter; SCHEMA has no real role for either mechanic yet (a granted non-Flying keyword, or a replacement effect), so no node is built -- correctly deferred rather than guessed at.",
+  "comparedAt": "2026-09-04"
+}

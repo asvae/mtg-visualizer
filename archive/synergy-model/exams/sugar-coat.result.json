@@ -1,0 +1,11 @@
+{
+  "name": "Sugar Coat",
+  "manaCost": "{2}{U}",
+  "typeLine": "Enchantment — Aura",
+  "description": "Flash. Enchant creature or Food. Enchanted permanent is a colorless Food artifact with \"{2}, {T}, Sacrifice this artifact: You gain 3 life\" and loses all other card types and abilities.",
+  "assumptions": [],
+  "couldNotDerive": ["The full total-type-replacement effect (loses all other types/abilities, becomes colorless, gains a brand-new granted activated ability) -- only the bare AddType tag was captured, everything else silently dropped."],
+  "verdict": "issues-open",
+  "notes": "Flash and Enchant creature,Food reconstruct correctly. The static's real effect is a whole 'becomes ONLY a Food artifact, loses everything else, gains a new granted ability' combo (SetColor$/RemoveCardTypes$/RemoveAllAbilities$/AddAbility$ referencing a separate SVar) -- only AddType is read by the current handler, the rest (color change, type/ability removal, and the granted AB$ GainLife ability itself) are silently ignored with no unmapped trace. A new, real gap class -- genuinely complex (a full identity-replacement shape), not attempted this round.",
+  "comparedAt": "2026-09-04"
+}

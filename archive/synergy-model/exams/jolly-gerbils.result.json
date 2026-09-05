@@ -1,0 +1,11 @@
+{
+  "name": "Jolly Gerbils",
+  "manaCost": "{1}{W}",
+  "typeLine": "Creature — Hamster Citizen",
+  "description": "Whenever you give a gift, draw a card.",
+  "assumptions": [],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "Exact match against forge-model/data/jolly-gerbils.txt's real oracle text on first attempt. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

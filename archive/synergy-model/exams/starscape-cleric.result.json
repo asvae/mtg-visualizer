@@ -1,0 +1,20 @@
+{
+  "name": "Starscape Cleric",
+  "manaCost": "{1}{B}",
+  "typeLine": "Creature — Bat Cleric",
+  "description": "Offspring {2}{B} (You may pay an additional {2}{B} as you cast this spell. If you do, put a 1/1 token copy of it onto the battlefield.) Flying. Whenever you gain life, each opponent loses 1 life.",
+  "assumptions": [
+    "Named node C's pattern (`cost:{2}{B} cond:token;paid_at_cast;set=1/1` on a second `enters` root for `thing: self`) as the keyword **Offspring**, and used its standard reminder-text wording. This is only because the schema's own description of this exact flag combination explicitly calls it out by that name as its worked example (\"Offspring's own second `enters` root... means an EXTRA 1/1 token copy ALSO enters if that extra cost was paid\") — not from outside knowledge of any specific printed card.",
+    "Named node D's `flying` flag as the keyword **Flying** — a direct, low-risk translation of the flag name to its printed keyword.",
+    "Chose the print order Offspring → Flying → triggered ability. The flow graph doesn't specify a display order for independent roots (C, D, E), so this follows the order they're listed in `flow.roots` after the cast/enters pair (A, B).",
+    "Read F's life-loss amount as exactly 1, applying the stated rule that an absent `qty` flag means a count of exactly 1 — this rule is stated for countable stock/effects generally, and I extended it to a life-total change on an `emit` node.",
+    "Rendered F as \"each opponent loses 1 life\" rather than \"target opponent,\" since F's owner is `opp` (every opponent, symmetric) and it carries no `target` flag."
+  ],
+  "couldNotDerive": [
+    "Supertype and rarity — not present in the self registry or nodes, so left off entirely rather than guessed.",
+    "Whether the Offspring-created token enters tapped or with any properties beyond \"1/1 copy\" — no such flags appear on node C beyond `set=1/1`."
+  ],
+  "verdict": "issues-open",
+  "notes": "One real mechanic is completely missing from the packet, and it's a translator gap, not an examiner error: the real card's third static line, `S:Mode$ CantBlock | ValidCard$ Card.Self | Description$ CARDNAME can't block.` (forge-model/data/starscape-cleric.txt line 7), produces zero synergy node. app/lib/forgeTranslate.ts's static-row handler (the `row.lineType === 'S'` block starting at line 686) only has a branch for `eventMode(row) === 'CantBlockBy'` (line 835 — \"can't be blocked BY X\"), which is the mechanically opposite restriction from this card's `Mode$ CantBlock` (\"this creature can't block\", a restriction on itself, not on who can block it). Since this static has none of AddPower/AddToughness/AddKeyword/AddType/GainControl and doesn't match CastWithFlash or CantBlockBy, it falls through to the `if (!handled)` branch (lines 849-859) and is silently recorded only as `ctx.unmapped.push('S:CantBlock')` — no node is emitted, so unlike a node that's merely wrong, this ability leaves literally no trace in nodes/flow for a reconstruction to work from. Everything else on the card reconstructed cleanly and matches real oracle text exactly: mana cost {1}{B}, type line Creature — Bat Cleric, P/T 2/1, Offspring {2}{B} (node C, correctly read as a 1/1 token copy paid at cast), Flying (node D), and the lifegain-drain trigger (nodes E/F, \"Whenever you gain life, each opponent loses 1 life\"). Fix: add a `Mode$ CantBlock` branch alongside the existing `CantBlockBy` one (~line 835), emitting a `modifier` node on `selfThing` with something like `cond:cant_block`, analogous to how `CantBlockBy` emits `cond:not_blocked_by=...`/`cond:unblockable`.",
+  "comparedAt": "2026-09-04"
+}

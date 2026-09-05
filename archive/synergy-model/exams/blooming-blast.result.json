@@ -1,0 +1,21 @@
+{
+  "name": "Blooming Blast",
+  "manaCost": "{1}{R}",
+  "typeLine": "Instant",
+  "description": "Each opponent creates a Treasure token. This spell deals 2 damage to any target. You take 3 damage.",
+  "assumptions": [
+    "Assumed the flat node order under root A (B, C, D, then E under D) reflects the printed clause order, since the schema fixes dependency but not sibling ordering.",
+    "Read node E's `owner: me` as \"damage dealt to the caster\" (\"you take 3 damage\"), treating `owner` on a damage emit as identifying who the damage is dealt to, consistent with how it's used for life-loss/draw effects elsewhere in the schema.",
+    "Read node D's `owner: any` plus its `target` flag as the standard \"any target\" (creature, player, or planeswalker) template, since `any` denotes an unrestricted recipient side rather than a type-restricted one.",
+    "Treated node B (self, stack→gy) as the ordinary post-resolution trip of a resolved instant to its owner's graveyard, not printed text, since that's a baseline rule for instants rather than card-specific wording.",
+    "Read node C (`enters`, owner: opp, no flags) as an unconditional, non-optional effect (\"Each opponent creates a Treasure token\"), since no `may` flag or conditional annotation appears on it."
+  ],
+  "couldNotDerive": [
+    "Card name and rarity — deliberately withheld.",
+    "Whether node E (\"you take 3 damage\") is a flat automatic consequence of the spell resolving or conditioned on something else; the flow only shows it strictly following D, with no branch/condition data beyond that dependency.",
+    "Any supertype or additional type-line detail beyond \"Instant\" — the self registry entry provides only that."
+  ],
+  "verdict": "issues-open",
+  "notes": "Real card uses K:Gift (\"Gift a Treasure\"): SVar:GiftAbility creates the Treasure via an OPTIONAL cast-time promise to an opponent (TokenOwner$ Promised), not an unconditional ETB — node C carries no `may` flag or any other optionality marker, so the reconstruction (correctly, given the edges) read it as mandatory. This is a decomposition gap: C needs to encode the Gift's cast-time optional choice. Second, and more serious: the real damage spell is `A:SP$ DealDamage | ValidTgts$ Creature | NumDmg$ 2`, restricted to target CREATURE only, but node D (`owner:any`, `flags:\"target qty:2\"`) carries no field encoding a target-type restriction at all, so it reads as generic \"any target\" — a real behavioral mismatch, and arguably also a schema gap since nothing in the flags vocabulary (cond:, thing:) is documented as the place to put a target's required type/zone class. Third and most significant: `SVar:DBDealDamage:DB$ DealDamage | Defined$ TargetedController | NumDmg$ 3 | ConditionZone$ Stack | ConditionPresent$ Card.Self+PromisedGift | ConditionCompare$ EQ1` means (a) the 3 damage goes to the CONTROLLER OF THE CREATURE TARGETED BY D, not to the caster — node E's `owner: \"me\"` is simply wrong; it should be a bound reference to D's target's controller (e.g. a `:=` binding declared on D consumed via `player=<label>` on E), and (b) the 3 damage is CONDITIONAL on whether the Gift was promised (i.e. on C having happened) — the packet's flow only has an unconditioned `D -> E` edge (automatic continuation, since D's `to` is `--`), with no gating edge from C into E at all. Net effect: the blind reconstruction produced \"you take 3 damage, unconditionally\" for what the real card is \"if the gift was promised, also deal 3 damage to that creature's controller\" — opposite recipient, and a missing conditional link entirely. Fix targets for app/lib/forgeTranslate.ts: (1) `Defined$ TargetedController` must map to a bound-controller owner, never a literal `me`/`opp`; (2) `ConditionPresent$ Card.Self+PromisedGift` (a Gift-mechanic condition) must produce a real gating edge from the Gift/token-creation node into the conditioned DealDamage node, not be dropped; (3) `ValidTgts$ Creature` needs to surface as a target-type restriction on the DealDamage emit node, currently absent.",
+  "comparedAt": "2026-09-04"
+}

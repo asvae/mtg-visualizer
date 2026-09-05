@@ -1,0 +1,18 @@
+{
+  "name": "Agate Assault",
+  "manaCost": "{2}{R}",
+  "typeLine": "Sorcery",
+  "description": "Choose one —\n• This spell deals 4 damage to target creature or player.\n• Exile target artifact.",
+  "assumptions": [
+    "Rendered the modal choice as \"Choose one —\" per the schema's rule that a combine node with a number (here 1) is a genuine modal choice, with bullets in the order given in of: [\"C\", \"D\"].",
+    "For node C (emit, owner any, thing damage, flags target qty:4), inferred the target category as \"target creature or player\" — the minimal, most common templating for a targeted damage effect whose owner can be either side. Did not narrow this further (e.g., to include planeswalkers or battles), since nothing in the node specifies that.",
+    "Treated node B (move, self, stack→gy) as the sorcery's ordinary post-resolution trip to the graveyard — not printed text — since it's the default resting-zone move for any resolved sorcery, not a keyworded or unusual effect. Omitted it from the rules text accordingly."
+  ],
+  "couldNotDerive": [
+    "The exact legal target types for the damage effect (node C) — whether it reads \"target creature or player,\" \"any target,\" or something narrower/broader (e.g., excluding or including planeswalkers/battles) is not determinable from the node data alone.",
+    "Supertype and rarity (both explicitly withheld/undetermined by the given data)."
+  ],
+  "verdict": "issues-open",
+  "notes": "Mana cost ({2}{R}), type line (Sorcery), the modal/combine=1 structure, and mode 2 (exile target artifact, node D) all reconstruct correctly and match the real card. Mode 1 (node C) has two decomposition gaps against the real Forge script (forge-model/data/agate-assault.txt), both traceable to SVar:DBDealDamage: (1) ValidTgts$ Creature is not reflected anywhere on node C — the node carries only `flags: \"target qty:4\"` with no creature-type restriction (e.g. a `cond:creature` flag), so the target reads as unrestricted and the examiner reasonably but incorrectly guessed 'target creature or player' instead of the real 'target creature'. (2) ReplaceDyingDefined$ Targeted is entirely unmodeled — there is no node/edge anywhere in this card's decomposition representing 'If that creature would die this turn, exile it instead.' This is a real, printed replacement effect scoped to node C's own target for the rest of the turn (a `modifier`/`suppress`-role candidate — it pipes over the death/state-based-action event for that specific object, likely with `lifetime:turn` and a `cond:` describing the redirect to exile), not a derived/default consequence like node B's stack→gy move. Its total absence caused the examiner to drop the 'If that creature would die...' clause completely rather than mis-word it. Both are decomposition gaps in this card's edges, not a schema gap (SCHEMA.md's cond: flag and modifier/suppress roles look expressive enough to have captured both), not agent misinterpretation (the data to derive either fact simply wasn't present in the packet), and not a process error (confirmed via forge-model/data/agate-assault.txt and the packet's own self-registry/node data that the packet the examiner read is complete and correctly generated). For the forgeTranslate.ts bug-fixing pass: look at how DBDealDamage's `ValidTgts$` param is (or isn't) mapped onto the resulting emit node's flags, and add handling so `ReplaceDyingDefined$ Targeted` produces its own node/edge instead of being silently dropped.",
+  "comparedAt": "2026-09-04"
+}

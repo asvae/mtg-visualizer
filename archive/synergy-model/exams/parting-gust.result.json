@@ -1,0 +1,11 @@
+{
+  "name": "Parting Gust",
+  "manaCost": "{W}{W}",
+  "typeLine": "Instant",
+  "description": "Gift a tapped Fish. Exile target nontoken creature. If the gift wasn't promised, return that creature to the battlefield under its owner's control with a +1/+1 counter on it at the beginning of the next end step.",
+  "assumptions": [],
+  "couldNotDerive": ["The entire conditional/delayed return clause -- correctly absent from the data rather than shown wrong."],
+  "verdict": "issues-fixed",
+  "notes": "First attempt found a serious bug, more severe than a simple gap: DB$ DelayedTrigger's Execute$ child was auto-walked and attached as an UNCONDITIONAL, IMMEDIATE continuation of the exile step (forgeScript.ts's generic Execute$-follow logic doesn't distinguish a delayed trigger's own conditional/future-timed payload from a guaranteed SubAbility$ chain) -- producing factually WRONG data: the reconstruction said \"exile target creature... then put it onto the battlefield under YOUR control\" when the real card is \"exile target nontoken creature. If the gift WASN'T promised [opposite polarity of every other gift_promised check so far], return it under ITS OWNER's control with a +1/+1 counter, at the beginning of the NEXT END STEP.\" This is a wrong-value bug of the kind the examiner process exists to catch, not just an honest gap. Fixed by suppressing DelayedTrigger's child-walk specifically (it's the one exception to the general unmapped-fallback's \"still walk children\" rule) -- verified the wrong node no longer appears, honest ?:DelayedTrigger unmapped entry remains instead. Properly modeling the conditional+delayed+WithCountersType return itself is real, non-trivial work (a delayed-trigger timing dimension on top of the existing gift-condition machinery) -- left as an open gap, correctly absent now rather than wrong.",
+  "comparedAt": "2026-09-04"
+}

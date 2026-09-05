@@ -1,0 +1,19 @@
+{
+  "name": "Builder's Talent",
+  "manaCost": "{1}{W}",
+  "typeLine": "Enchantment — Class",
+  "description": "When this Class enters, create a 0/4 white Wall creature token with defender.\n\n{W}: Level 2.\n\nWhen this Class becomes level 2, put a +1/+1 counter on target creature.\n\n{4}{W}: Level 3.\n\nWhen this Class becomes level 3, return target permanent card from your graveyard to the battlefield.",
+  "assumptions": [
+    "Decoded the non-registry thing key w_0_4_wall_defender (node D) as a 0/4 white Wall creature token with defender by reading its own segments the same way registry entries like hero-token/horror-1 encode color/stats/subtype/keyword.",
+    "Treated node F (trigger-type \"enter\") as parallel to node I (trigger-type \"classlevelgained\") — both a \"this Class reaches a new level\" trigger — since both sit downstream of a becomes node with cond:class_level=N in the same shape.",
+    "Rendered the two becomes nodes carrying cost:{...} and cond:class_level=N (E, H) as the standard Class activated-ability line \"{cost}: Level N.\""
+  ],
+  "couldNotDerive": [
+    "Whether the level-2 and level-3 triggered abilities are worded differently in print, given the data distinguishes their trigger-type values without explaining what textual difference that signals.",
+    "Any restriction narrower than bare type on G's target creature or J's target permanent card.",
+    "Rarity and any supertype."
+  ],
+  "verdict": "match",
+  "notes": "Second attempt (2026-09-03) found node F's thing had silently fallen back to 'self' (ValidCard$/ValidCards$ field-name split bug) and lost the nonCreature+nonLand qualifiers entirely (qualifierFlags had no .nonCreature support). Both fixed; re-verified directly against the regenerated packet on 2026-09-04 rather than a 3rd live exam: node D correctly resolves to the wall-1 token (0/4 white Wall, defender), F now carries 'cond:nonland cond:noncreature' exactly matching \"noncreature, nonland permanents,\" G's PutCounter target/owner are correct, and J (Level 3's graveyard-return) correctly carries the same nonland+noncreature qualifiers with owner:me via ValidTgts$...YouOwn. All three Class levels now fully match forge-model/data/builder-s-talent.txt's real oracle text. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

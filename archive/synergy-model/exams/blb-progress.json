@@ -1,0 +1,1027 @@
+{
+  "_comment": "Tracks the full-set examiner pass over BLB (274 cards), goal: every card gets 1-3 examiner/parser-fix iterations, stopping early on a full match or when the remaining gap needs a design decision; non-success cards are left as-is for the user. status: 'match' (full reconstruction confirmed correct -- ALSO added to blb-success.json, which drives app/lib/forgeTranslate.blb.test.ts's snapshot suite) | 'issues-fixed' (a real bug was found+fixed but the card still has an unrelated unfixed gap, so NOT a full match) | 'issues-open' (real gap identified, not fixed -- either narrower than worth a fix pass, or blocked on a bigger schema change) | 'skipped-attempts' (3 examiner loops used, still issues) | 'skipped-rework' (needs a design decision, see note). attempts counts examiner agent runs used (a fix verified by direct node inspection instead of a fresh agent run, to save budget, still counts as using that attempt's slot).",
+  "_strategy": "Batch 1 (5 cards, full blind examiner each) showed exhaustive per-card examining doesn't scale (~400k+ tokens for 5 cards). Switched to audit-first triage starting batch 2: a static risk-pattern scan (scripts under the job scratch dir, not checked into the repo) flags cards using fragile Forge field shapes; cards hitting only ALREADY-FIXED shared-logic patterns are not re-examined individually (the fix applies uniformly to every card using that pattern); a small diverse spot-check sample is examined per round instead to catch NEW bug classes, and known architectural gaps (see known_gap_classes) are recorded once and applied to every card in that class without spending agent budget on each.",
+  "known_gap_classes": {
+    "ConditionCheckSVar/ConditionSVarCompare/CheckSVar (dynamic conditional effect)": {
+      "description": "RESOLVED for Beza's own exact shape (2026-09-04, user design call): ConditionCheckSVar$ X<Metric> compared against ConditionSVarCompare$ <op>Y<Metric> (a real two-player comparison) now produces two `sensor` nodes (your count, opp count, named via SCHEMA's := binding) plus a loose cond:compare= fact on the gated effect -- see svarComparisonFact(). NOT resolved: CheckSVar$ on a static (Essence Channeler's 'as long as you've lost life this turn' -- single-player, not a two-player comparison), and a ConditionCheckSVar$/ConditionSVarCompare$ pair compared against a plain NUMBER instead of a Y-prefixed variable (Harvestrite Host's own EQ2, Cache Grab's own GT0, Mistbreath Elder's own LE0 -- confirmed by spot-checking 4 of the remaining 10 cards, none use Beza's clean X/Y convention) -- svarComparisonFact() deliberately bails out on these rather than fabricating a wrong opponent-side fact. The remaining 10 cards need individual re-checking, not assumed fixed by Beza's resolution. (A narrower, single-object property check on an earlier target -- ConditionDefined$Targeted + ConditionPresent$ Type.powerLEN, or a boolean ConditionPresent$...PromisedGift check -- was already a separate, already-implemented case.) Also confirmed on Bonecache Overseer (AB$ activated-ability variant: CheckSVar$X|SVarCompare$GE3, X folded from two ORed conditions via a Count$.../Plus.Y-with-Times.N-multiplier idiom -- a third attachment point beyond ConditionCheckSVar$ on a downstream effect and CheckSVar$ on a trigger) and Waterspout Warden (CheckSVar$ gating a TRIGGER itself, a plain single-value existence count rather than a comparison -- \"if another creature entered this turn\") and Bandit's Talent Level 2 (CheckSVar$X|SVarCompare$LE1 gating an activated static trigger). None of these three attachment-point variants are implemented -- only Beza's own downstream two-player X/Y comparison shape is.",
+      "cards": [
+        "Harvestrite Host",
+        "Portent of Calamity",
+        "Shoreline Looter",
+        "Coiling Rebirth",
+        "Thought-Stalker Warlock",
+        "Wick, the Whorled Mind",
+        "Reptilian Recruiter",
+        "Cache Grab",
+        "Mistbreath Elder",
+        "Finneas, Ace Archer",
+        "Essence Channeler",
+        "Star Charter",
+        "Bonecache Overseer",
+        "Waterspout Warden (trigger-gate variant)",
+        "Bandit's Talent",
+        "Starlit Soothsayer"
+      ]
+    },
+    "Delayed conditional return (DelayedTrigger + WithCountersType)": {
+      "description": "The real mechanic behind Parting Gust/Salvation Swan's own exile-then-conditionally-return effects: a DelayedTrigger (fires at a future phase) gated by its own ConditionPresent$/ConditionCompare$, returning the object under its OWNER's control (not the caster's) with a counter added. DelayedTrigger's Execute$ child is correctly suppressed now (no longer produces WRONG data), but the mechanic itself has no positive representation -- real, non-trivial modeling work (a delayed-timing dimension on top of the existing gift-condition machinery).",
+      "cards": [
+        "Parting Gust",
+        "Salvation Swan",
+        "Dragonhawk, Fate's Tempest"
+      ]
+    },
+    "Stat-threshold ValidTgts$ qualifiers (powerGE/toughnessGE/powerLE/etc, incl. OR)": {
+      "description": "A target's own printed power/toughness compared to a threshold, written directly into ValidTgts$ (Repel Calamity's own Creature.powerGE4,Creature.toughnessGE4 -- an OR of two stat checks; Sonar Strike's Creature.attacking,Creature.blocking,Creature.tapped is the same OR-of-qualifiers shape but for combat states). qualifierFlags' current design (an array of independently AND'd facts) doesn't cleanly support OR of qualifiers. Distinct from the already-implemented ConditionDefined$Targeted+ConditionPresent$ shape (a condition on an EARLIER target elsewhere in the chain, not the primary ValidTgts$ predicate).",
+      "cards": [
+        "Repel Calamity",
+        "Sonar Strike"
+      ]
+    },
+    "Pawprint$ weighted/repeatable modal choice": {
+      "description": "Forge's Bloomburrow-specific 'choose up to N {P} worth of modes, may repeat' point-buy modal system (Season of the Burrow). SCHEMA's `combine` convention only supports a fixed choose-N-of-the-following shape, not a weighted/repeatable point-buy one. Individual mode effects still translate correctly; only the modal-choice wrapper itself is misrepresented (reads as a plain 'choose one').",
+      "cards": [
+        "Season of the Burrow",
+        "Season of Loss"
+      ]
+    },
+    "Dig's look-then-selectively-reveal-to-hand shape": {
+      "description": "The current Dig handler only supports 'look at N, move the remainder to a stated DestinationZone$' -- it doesn't read Optional$/ChangeValid$/RestRandomOrder$/DestinationZone$-absent, all needed for Forge's very common 'look at the top N, you may reveal ONE matching card and put it into your hand, put the rest on the bottom in random order' idiom (Star Charter). Worth a real look since this shape recurs across many card types (not BLB-specific).",
+      "cards": [
+        "Star Charter",
+        "Thundertrap Trainer"
+      ]
+    },
+    "DB$ Play (cast from an alternate zone, optionally without cost)": {
+      "description": "A whole alternate-casting mechanic (\"cast target instant/sorcery from your graveyard without paying its mana cost,\" Daring Waverider's own) plus its own replacement effect for where the spell goes afterward (ReplaceGraveyard$Exile). Zero handling -- genuinely new, moderately complex effect type, not a quick fix. Wishing Well needs this PLUS two co-requirements to reach full match: DB$ ImmediateTrigger (an SVar-chained \"when you do\" sub-trigger, falls through to the generic unmapped path with no role:trigger node) and a Count$CardCounters.<Type> scaler (no code path turns it into a role:scaler node) and ReplaceGraveyard$ (an \"exile instead of graveyard\" replacement effect, never read anywhere in the file).",
+      "cards": [
+        "Daring Waverider",
+        "Wishing Well",
+        "Wick's Patrol",
+        "Curious Forager",
+        "Zoraline, Cosmos Caller"
+      ]
+    },
+    "AlternativeDecider$ (a non-caster player choosing between two outcomes)": {
+      "description": "Dire Downdraft's own \"target creature's owner puts it on the TOP OR BOTTOM of their library\" -- AlternativeDecider$ names WHO makes the choice (here, the target's owner, not the caster), between DestinationAlternative$/LibraryPositionAlternative$-named outcomes. A genuinely new decision-maker/choice concept, entirely unread.",
+      "cards": [
+        "Dire Downdraft"
+      ]
+    },
+    "Count$PromisedGift.N.M (dynamic gift-conditional QUANTITY)": {
+      "description": "A narrower cousin of the Condition class above: Dewdrop Cure's own SVar:X:Count$PromisedGift.3.2 means \"3 if the gift was promised, else 2\" -- swaps a NUMBER rather than gating an effect on/off (which the existing cond:gift_promised/gift_not_promised boolean flags already handle). Also covers the exclusive-or shape (Long River's Pull/Into the Flood Maw/Mind Spiral's own TargetMin$X/TargetMax$X where X = Count$PromisedGift.0.1 or .1.0 -- zeroing out one of two sibling effects depending on gift status, rendered as both happening unconditionally instead). Needs recognizing this specific Count$ shape and binding qty to a declared value via SCHEMA's :=/= label convention. Real modeling work, not a quick fix.",
+      "cards": [
+        "Dewdrop Cure",
+        "Into the Flood Maw",
+        "Long River's Pull",
+        "Mind Spiral",
+        "Consumed by Greed"
+      ]
+    },
+    "Defined$<sibling-effect-target> self-references (ParentTarget, TriggeredSourceLKICopy, etc.)": {
+      "description": "Forge has a whole family of Defined$ values naming 'the object some OTHER effect in this same chain already resolved to' (Targeted, ParentTarget, TriggeredSourceLKICopy, Remembered, DelayTriggerRememberedLKI, ...) -- deriveOwner/coarseType have no general case for any of them, so they fall to defaults (owner:'me', thing:selfThing) that are only coincidentally correct when the referenced object happens to be self-controlled. Mind Spiral's own Defined$ParentTarget (referring to a SIBLING effect's own opponent-controlled target) is a concrete case that resolves wrong. Same broader gap as the already-documented Defined$Targeted entry -- would need threading the parent effect's own resolved owner/thing down into children, a broader signature change.",
+      "cards": [
+        "Crumb and Get It",
+        "Azure Beastbinder",
+        "Mind Spiral",
+        "Otterball Antics",
+        "Shore Up",
+        "Splash Portal"
+      ]
+    },
+    "K:ETBReplacement (enters-as-a-copy / conditional-arrival replacement)": {
+      "description": "Forge's ETB replacement-effect keyword family (enters tapped conditionally, enters as a copy of another permanent, etc.) has no handler. Genuinely varied shapes, real feature work.",
+      "cards": [
+        "Eddymurk Crab",
+        "Mockingbird",
+        "Gev, Scaled Scorch",
+        "Patchwork Banner",
+        "Three Tree City",
+        "Uncharted Haven"
+      ]
+    },
+    "S:ReduceCost (cost reduction)": {
+      "description": "No schema representation for cost reduction at all -- SCHEMA's `cost:` convention is for stating what something costs, not for a rule that lowers a printed cost under a condition. Recurring across several cards; now honestly surfaces as an unmapped S:ReduceCost entry (fixed earlier this session) rather than silently vanishing, but still unimplemented.",
+      "cards": [
+        "Eddymurk Crab",
+        "Eluge, the Shoreless Sea",
+        "Dire Downdraft",
+        "Pearl of Wisdom",
+        "Huskburster Swarm",
+        "Stormcatch Mentor",
+        "Scales of Shale (K:Affinity variant)",
+        "Rottenmouth Viper (Sac<X/...> cost-reduction variant)"
+      ]
+    },
+    "TargetsWithDifferentControllers$ (a multi-target restriction)": {
+      "description": "Run Away Together's own \"choose two target creatures controlled by DIFFERENT players\" -- a real, narrow targeting-restriction concept (relating two targets to each other) with no representation. Distinct from a single target's own qualifiers.",
+      "cards": [
+        "Run Away Together"
+      ]
+    },
+    "ConditionPresent$ Card.wasCast+!wasCastFromYourHand (cast-origin condition)": {
+      "description": "Otterball Antics's own \"if this spell was cast from anywhere other than your hand\" -- a real, narrow dynamic condition (checking THIS spell's own casting zone), distinct from the gift-promised/Threshold conditions already handled.",
+      "cards": [
+        "Otterball Antics"
+      ]
+    },
+    "A:CopySpellAbility (copy target spell)": {
+      "description": "Zero handling -- a genuinely new, moderately complex effect type (Kitsa, Otterball Elite's own \"copy target instant or sorcery spell you control, may choose new targets\"), plus its own self-referential IsPresent$ Card.powerGE3+Self activation-gate on the activated ability's cost (a third IsPresent$/ConditionPresent$ context beyond trigger-level and effect-level).",
+      "cards": [
+        "Kitsa, Otterball Elite"
+      ]
+    },
+    "CopyPermanent (create a token copy of target permanent)": {
+      "description": "DB$ CopyPermanent has no handler at all -- a genuinely new effect type (not a quick field/regex fix), but not big-rework/design-decision-needed either. Real backlog item, not blocking.",
+      "cards": [
+        "Caretaker's Talent",
+        "Season of Weaving",
+        "Coiling Rebirth",
+        "Stormsplitter",
+        "For the Common Good"
+      ]
+    },
+    "ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger": {
+      "description": "\"Whenever this becomes the target of a spell or ability YOU CONTROL\" -- the trigger node's owner field already means \"whose occurrence\" (self, correctly 'me'), but WHO CONTROLS THE TRIGGERING SOURCE is a different dimension with no home in the current trigger vocabulary. Narrower than the big Condition class -- a real, recurring gap (Flowerfoot Swordmaster, Mouse Trapper, Nettle Guard all hit it) worth a follow-up flag/field addition, not a full redesign.",
+      "cards": [
+        "Flowerfoot Swordmaster",
+        "Mouse Trapper",
+        "Nettle Guard",
+        "Whiskervale Forerunner"
+      ]
+    },
+    "Pure mana-only activated-ability cost (no T, no Sac<>)": {
+      "description": "The generic activation-cost handler only recognizes a Cost$ containing T (tap) or Sac<> (sacrifice) -- a plain \"{3}{W}: effect\" cost with neither falls through completely uncosted (Warren Elder's own PumpAll). Would need a parallel cost-node path for the mana-only case.",
+      "cards": [
+        "Warren Elder",
+        "Ravine Raider"
+      ]
+    },
+    "AddReplacementEffect$ / non-Flying AddKeyword$ on a static": {
+      "description": "Fixed this batch -- both now surface honestly as unmapped entries instead of vanishing silently. No node built yet (no schema role for either mechanic), but no longer a silent-drop bug.",
+      "cards": [
+        "Innkeeper's Talent"
+      ]
+    },
+    "S: Full type/ability replacement (SetColor$/RemoveCardTypes$/RemoveAllAbilities$/AddAbility$)": {
+      "description": "A static that turns a permanent into ONLY a new type (e.g. Sugar Coat's \"becomes a colorless Food artifact, loses all other types/abilities, gains a new granted ability\") -- a full identity replacement, not a simple AddType/AddKeyword tag. Currently only AddType is read; the rest (SetColor$, RemoveCardTypes$, RemoveAllAbilities$, and the granted AddAbility$ referencing a separate SVar) are silently dropped. A minimal S:TypeReplacement unmapped marker was added for honesty, not a real implementation -- genuinely complex, needs its own node shape.",
+      "cards": [
+        "Sugar Coat",
+        "Ygra, Eater of All"
+      ]
+    },
+    "Multi-clause ValidTgts$/ValidCards$ on a single-target effect (ChangeZone/Pump/PutCounter/DealDamage/Destroy)": {
+      "description": "A comma-separated multi-type predicate (e.g. Instant.YouCtrl,Sorcery.YouCtrl) on a targeted non-trigger/non-static effect only reads the first clause, dropping the rest. Triggers and statics already got multi-clause support (specs/affectedSpecs) earlier this session; this is a third, still-unhandled context.",
+      "cards": [
+        "Stormchaser's Talent"
+      ]
+    },
+    "AB$Effect/DB$Effect (Forge's raw generic scripted ability, Execute$-driven)": {
+      "description": "A whole separate Forge ability API: instead of a typed effect (Pump/Draw/Token/etc), the card uses a generic Effect$ SVar chain driven by raw Execute$/Static-ability scripting bolted onto a placeholder permanent. Zero translator support -- needs its own investigation, likely several distinct sub-shapes rather than one fix.",
+      "cards": [
+        "Cruelclaw's Heist",
+        "Alania's Pathmaker",
+        "Dragonhawk, Fate's Tempest",
+        "Emberheart Challenger",
+        "Harnesser of Storms",
+        "Season of the Bold",
+        "Fireglass Mentor",
+        "Hugs, Grisly Guardian",
+        "Muerra, Trash Tactician",
+        "Ral, Crackling Wit",
+        "Bria, Riptide Rogue"
+      ]
+    },
+    "S:Mode$Continuous (a distinct static shape from the handled Static/Trigger/etc modes)": {
+      "description": "A static ability line whose Mode$ is Continuous -- a different shape from the already-handled AddPower/AddKeyword/etc static modes, not yet read at all.",
+      "cards": [
+        "Maha, Its Feathers Night",
+        "Festival of Embers",
+        "Lumra, Bellow of the Woods",
+        "Burrowguard Mentor",
+        "Clement, the Worrywort",
+        "Glarb, Calamity's Augur",
+        "Hugs, Grisly Guardian"
+      ]
+    },
+    "PutCounterAll (put counters on all matching permanents, plural form of PutCounter)": {
+      "description": "The plural sibling of PutCounter -- analogous to DestroyAll/DamageAll already implemented for Destroy/DealDamage, but PutCounter's own all-targets variant isn't handled yet. Likely a cheap, well-scoped fix (mirror the DestroyAll/DamageAll pattern).",
+      "cards": [
+        "Kastral, the Windcrested"
+      ]
+    },
+    "PeekAndReveal/ChooseCard (multi-step peek-then-choose effect chain)": {
+      "description": "A multi-step chain: peek at a zone, then choose a card from among the peeked cards to move/reveal, using PeekAndReveal$/ChooseCard$ SVars with no handler support at any step -- distinct from the simpler Dig look-then-move shape. Whiskervale Forerunner also separately hits the already-documented ValidSource$YouCtrl gap.",
+      "cards": [
+        "Whiskervale Forerunner",
+        "Fireglass Mentor"
+      ]
+    },
+    "Token registry entries carry no keyword-ability field": {
+      "description": "A created token can itself have a printed keyword (Stormchaser's Talent's own Otter token \"with prowess\", matching TOKEN_SCRIPT_MAP's own ur_1_1_otter_prowess key) but synergy-model/data/registries.json's label entries (labels/stats/subtype only) have no field to carry it, so any granted keyword on a created token is silently lost even though the underlying Forge token-script id literally names it. A real, cheap-looking fix (extend the registry schema with an abilities/keywords field) deferred as a data-schema decision, not attempted.",
+      "cards": [
+        "Stormchaser's Talent"
+      ]
+    },
+    "K:AlternateAdditionalCost (Forage or similar branching additional-cost keyword)": {
+      "description": "A K: keyword naming a CHOICE of additional cost (Feed the Cycle's own Forage: exile three cards from your graveyard OR sacrifice a Food) falls through translateKeyword()'s bare-keyword/special-case list into the generic unmapped fallback with zero trace -- not even an honest unmapped-only gap, since K: keywords with real mechanical content are expected to produce a node. Needs a real cost-choice node shape plus a registries.json 'forage' action entry.",
+      "cards": [
+        "Feed the Cycle"
+      ]
+    },
+    "Chooser$Targeted (a non-caster player selects the specific object)": {
+      "description": "Early Winter's own \"target opponent EXILES an enchantment THEY control\" -- the targeted PLAYER (not the caster) picks which of their own objects gets affected, via Forge's Chooser$Targeted field. Structurally indistinguishable in the current schema from a normal caster-picks-the-object target (flags:target alone) -- fields.Chooser is never read anywhere in forgeTranslate.ts. A narrower nuance of the broader AlternativeDecider$ non-caster-choice family, not attempted.",
+      "cards": [
+        "Early Winter"
+      ]
+    },
+    "Remembered$CardManaCost / other Remembered-value dynamic scalers": {
+      "description": "Darkstar Augur's own upkeep trigger (\"lose life equal to its mana value\") ties a LoseLife$ amount to SVar:X:Remembered$CardManaCost -- the mana value of whatever card was dug/revealed earlier in the SAME chain (RememberChanged$True on the Dig step). No := / = binding connects the Dig node to the LoseLife node's qty; the generic emit builder stamps the literal SVar name \"X\" onto qty instead of resolving or at least naming the binding. Needs a real scaler-node mechanism analogous to Beza's sensor pair, not attempted. Also seen as a general unbound Count$ scaler need beyond Remembered-value specifically: Season of Loss's own qty:Y/qty:X (Count$ThisTurnEntered_Graveyard_from_Battlefield vs Count$ValidGraveyard -- two DIFFERENT graveyard-count formulas, not interchangeable) have no scaler node or := binding at all.",
+      "cards": [
+        "Darkstar Augur",
+        "Season of Loss"
+      ]
+    },
+    "AB$Effect with nested StaticAbilities$/Triggers$ sub-ability chain": {
+      "description": "Osteomancer Adept's own \"{T}: until end of turn, you may cast creature spells from your graveyard by foraging... that creature enters with a finality counter\" -- Forge wraps a whole nested ability (a graveyard-cast permission SVar plus a static \"if you cast this way\" trigger plus a replacement-effect chain granting a counter) inside a single AB$Effect via StaticAbilities$/Triggers$ sub-fields. forgeTranslate.ts emits the tap-cost node but never walks into the nested sub-abilities at all. Also touches the same Forage mechanic as Feed the Cycle's K:AlternateAdditionalCost gap (registries.json has no forage action entry either way) and needs a new flag idiom for granting a named counter type on ETB.",
+      "cards": [
+        "Osteomancer Adept"
+      ]
+    },
+    "Secondary$True (a same-named ability split across two paired trigger lines)": {
+      "description": "Forge sometimes writes ONE named ability as two T: lines watching different events (LifeGained + LifeLost) with the second marked Secondary$True, meaning they SHARE one activation-limit counter, not two independent ones. Harmless when neither carries an ActivationLimit (Carrot Cake, Wax-Wane Witness -- already matched) but produces a real over-count bug when both carry ActivationLimit$1 (Moonstone Harbinger, allows 2 fires/turn instead of 1). No handling for Secondary$ anywhere in forgeTranslate.ts, and SCHEMA.md has no flag vocabulary for \"once per turn, shared across two root trigger nodes\" either.",
+      "cards": [
+        "Moonstone Harbinger"
+      ]
+    },
+    "Subtype qualifiers on multi-part predicates (e.g. +Rat) not carried into cond:": {
+      "description": "A predicate like ValidAttackers$ Creature.YouCtrl+Rat correctly derives thing:creature and owner, but the +Rat subtype restriction itself has no fixed vocabulary the way YouCtrl/token/nonLand/etc. do (Forge names hundreds of possible subtypes here) and is silently dropped. A generic \"any leftover capitalized qualifier is a subtype\" fallback was attempted and reverted after immediately producing a false positive (IsRemembered, a Forge boolean predicate, got mistagged as cond:subtype_isremembered on Starfall Invocation) -- too broad a heuristic for Forge's open-ended qualifier vocabulary. Needs a real allowlist or a different detection strategy, not attempted further.",
+      "cards": [
+        "Persistent Marshstalker"
+      ]
+    },
+    "Flashback with a shared, cast-context-dependent spell ability": {
+      "description": "Ruthless Negotiation's own \"exile a card... if this spell was cast from a graveyard, draw a card\" -- ONE spell ability (SP$ ChangeZone) reused by BOTH the hand-cast and the Flashback-cast roots, with a downstream draw step gated on ConditionPresent$Card.wasCastFromGraveyard (true only on the Flashback path). The current Flashback handling only wires its own cast root to the built-in resolve-to-exile-instead-of-gy step, never to the shared spell effect -- and even fixing that naively (duplicating or sharing the effect chain under both roots) would need real cast-context threading to gate the draw correctly per path, not just structural sharing. Genuinely architectural, not attempted.",
+      "cards": [
+        "Ruthless Negotiation"
+      ]
+    },
+    "DB$Repeat (repeat an effect N times based on a dynamic count)": {
+      "description": "Rottenmouth Viper's own \"for each blight counter, each opponent loses 4 life unless they sacrifice a nonland permanent or discard a card\" -- Forge's DB$Repeat (looping a sub-effect Count$CardCounters.BLIGHT times) wrapping a DB$GenericChoice (an UnlessCost choice) has zero representation. Genuinely complex -- needs a repeat/loop node concept plus the already-separately-gapped GenericChoice shape.",
+      "cards": [
+        "Rottenmouth Viper"
+      ]
+    }
+  },
+  "done": {
+    "Brightblade Stoat": {
+      "status": "match",
+      "attempts": 1
+    },
+    "Builder's Talent": {
+      "status": "match",
+      "attempts": 2,
+      "note": "See result.json -- ValidCard/ValidCards field-name split and missing .nonCreature qualifier both fixed 2026-09-04, all 3 Class levels now fully match. In blb-success.json."
+    },
+    "Crumb and Get It": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed 2 real gaps 2026-09-04: Pump's KW$ field (a granted keyword, e.g. Indestructible, distinct from a P/T delta) was completely unhandled; ConditionPresent$...PromisedGift is now read as a narrow cond:gift_promised flag (distinct from the general unimplemented ConditionCheckSVar$ class). One precision gap remains open: the indestructible-grant node's `thing` is 'any' instead of 'creature' because Defined$Targeted (\"the same creature the earlier Pump targeted\") isn't resolved back to the sibling's target type -- would need threading target-type context between chained effects, a broader signature change not done here. Also confirmed the c_a_food_sac registries.json gap (flagged by the exam) is now fixed via this session's token-registry fill-out."
+    },
+    "Coruscation Mage": {
+      "status": "match",
+      "attempts": 1,
+      "note": "See result.json -- .nonCreature qualifier fix (shared with Builder's Talent) plus a new Offspring cond:paid_at_cast marker both fixed 2026-09-04, full match. In blb-success.json."
+    },
+    "Beza, the Bounding Spring": {
+      "status": "match",
+      "attempts": 1,
+      "note": "User made the design call: two sensor nodes (your count, opp count) via SCHEMA's := binding, plus a loose cond:compare= fact -- not fully parametrized, just shows what the card measures. Implemented as svarComparisonFact(), fires only on the exact X<Metric>/Y<Metric> shape (tightened after finding other cards compare against a plain number instead). In blb-success.json."
+    },
+    "Banishing Light": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Attempt 1 missed the .nonLand qualifier and .OppCtrl owner (Forge's Permanent.nonLand+OppCtrl chains qualifiers with + past the first, which the owner/qualifier regexes only matched right after a literal dot). Fixed the regex, plus wired qualifierFlags() into the ChangeZone targeted-move handler (it had .nonLand support added earlier but never actually called). Full 1-ability card now fully matches oracle text -- verified directly against the regenerated packet, not a 3rd live agent run. In blb-success.json."
+    },
+    "Brave-Kin Duo": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Attempt 2 (post Cost$/tap fix) correctly reconstructed the full activated ability except \"Activate only as a sorcery\" (SorcerySpeed$True had no flag). Added cond:sorcery_speed -- full 1-ability card now fully matches. Verified via forgeTranslate.test.ts, not a 3rd live agent run. In blb-success.json."
+    },
+    "Caretaker's Talent": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Level 3 anthem confirmed correct (AddStaticAbility$ fix from attempt 1 working). Fixed ActivationLimit$1 (\"triggers only once each turn\") -> cond:once_per_turn. See known_gap_classes.CopyPermanent for the remaining Level 2 gap."
+    },
+    "Innkeeper's Talent": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Confirmed PutCounter's owner (Creature.YouCtrl) already correct -- examining agent misread it, not a translator bug. Found and fixed a real silent-drop bug: the static handler's unmapped-fallback treated ANY AddKeyword$ value as \"handled\" (only Flying actually built a node), so AddKeyword$ Ward:1 vanished with zero trace. Fixed via a `handled` tracking flag. Also found AddReplacementEffect$ (a third grant-via-SVar field, distinct from AddTrigger$/AddStaticAbility$) was completely unwired -- fixed in forgeScript.ts, plus fixed a label bug where a missing Mode$ stringified to the literal text 'undefined'. Remaining open: Mode$ Phase's Phase$ field is unread (generic 'phase' trigger-type instead of 'beginning of combat'); Ward/replacement-effect mechanics themselves have no schema role yet (see known_gap_classes)."
+    },
+    "Eluge, the Shoreless Sea": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Spot-check batch 2. No new bug class found -- confirms two already-known gaps: CharacteristicDefining$ (dynamic */* P/T, likely a smaller sibling of the sensor-role gap, not full Beza-tier) and a second Mode$ ReduceCost (same shape as Eddymurk Crab's, now at least surfaces honestly post this batch's static-handler fix). The nested SubAbility$->StaticAbilities$ 'remembered object gets a static ability' shape (granting the flooded land its Island type) also isn't followed -- not chased down further."
+    },
+    "Eddymurk Crab": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Found and fixed a real silent-drop bug: Mode$ ReduceCost (this card's own cost-reduction clause) matched none of the static handler's branches and vanished with no node AND no unmapped entry -- same fix as Innkeeper's Talent's AddKeyword bug (a `handled` flag + honest fallback), now surfaces as S:ReduceCost. Tap-as-effect (this card's own ETB tap-two-creatures) is now implemented (2026-09-04, Mouse Trapper's batch) -- confirmed via regenerated packet, this card's own Tap unmapped entry is gone. Two open gaps remain: S:ReduceCost (cost reduction has no schema representation) and K:ETBReplacement (enters-tapped-conditionally)."
+    },
+    "Jackdaw Savior": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Found and fixed a systemic gap, not card-specific: ChangesZone/ChangesZoneAll with Origin$Battlefield->Destination$Graveyard (rule 700.4 'dies') fell through to the unreadable literal string 'changeszone' -- added an isDies check mirroring the existing isEnter one. Confirmed this also fixed Scavenger's Talent's base trigger in the same batch, so likely benefits several more untested BLB cards using 'whenever ~ dies'. Two narrower, card-specific qualifier gaps left open (multi-clause .YouCtrl/.withFlying, and a Beza-adjacent-but-narrower dynamic mana-value comparison on the return target)."
+    },
+    "Hop to It": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match on first attempt. In blb-success.json."
+    },
+    "Carrot Cake": {
+      "status": "match",
+      "attempts": 1,
+      "note": "All facts correct on first attempt; only a structural/presentational difference (2 paragraphs vs. the real card's 1 combined sentence for 2 trigger conditions) -- not a wrong fact, counted as match. In blb-success.json."
+    },
+    "Driftgloom Coyote": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed a real gap: ConditionDefined$Targeted+ConditionPresent$ Type.powerLEN (\"if that creature had power 2 or less\") had no handling. Added a narrow if_targeted_<stat>_<le|ge>=<N> flag to PutCounter. Full match after fix, verified via regenerated packet. In blb-success.json."
+    },
+    "Feather of Flight": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed a real gap: .EnchantedBy (Aura) wasn't recognized alongside .EquippedBy (Equipment) for the same \"attached creature gets X\" mechanical fact. Extended the equipped-flag check. Full match after fix. In blb-success.json."
+    },
+    "Dawn's Truce": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Found and fixed a broadly-applicable bug: PumpAll fabricated a fake cond:pt_delta=+0/+0 on every KW$-only grant (no NumAtt$/NumDef$ at all) and had none of Pump's KW$/gift_promised handling -- mirrored Pump's logic exactly. Affects every KW$-only PumpAll card, not just this one. One narrower gap remains open: compound Defined$ \"You & Valid Permanent.YouCtrl\" (a player AND their permanents in one effect) isn't parsed."
+    },
+    "Dewdrop Cure": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "See known_gap_classes['Count$PromisedGift.N.M (dynamic gift-conditional QUANTITY)']. The qty:0..X rendering is working as designed (honest unresolved variable), not a bug -- X's binding just isn't implemented yet."
+    },
+    "Essence Channeler": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Two real gaps: CheckSVar$ conditional static (added to the Condition known_gap_class) and PutCounter's CounterType$EachFromSource passing through as a raw literal instead of a readable value. Neither fixed this round."
+    },
+    "Flowerfoot Swordmaster": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed Valiant$True (\"for the first time each turn\") by reusing cond:once_per_turn. One narrower gap remains open: ValidSource$SpellAbility.YouCtrl (who controls the triggering spell/ability) has no home in the trigger vocabulary's current owner slot."
+    },
+    "Mindwhisker": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Found and fixed a real, serious bug: S: static handler hardcoded owner:'me' regardless of Affected$'s own qualifiers -- 'creatures your opponents control get -1/-0' wrongly rendered as affecting the caster's own creatures. Fixed by computing owner per Affected$ clause. Also fixed Condition$Threshold. Phase$Upkeep specificity (generic 'phase' trigger-type) remains open."
+    },
+    "Mockingbird": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "K:ETBReplacement (enters-as-a-copy mechanic), same known gap class as Eddymurk Crab."
+    },
+    "Nightwhorl Hermit": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed CantBlockBy-with-no-ValidBlocker$ (blanket unblockable) and Condition$Threshold. In blb-success.json."
+    },
+    "Otterball Antics": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Defined$Remembered (new instance of the Defined$<sibling-reference> family) resolves wrong; ConditionPresent$ Card.wasCast+!wasCastFromYourHand (a new, narrow dynamic condition) not represented."
+    },
+    "Pearl of Wisdom": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "S:ReduceCost, known gap."
+    },
+    "Plumecreed Escort": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Run Away Together": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "TargetsWithDifferentControllers$True (a real, new targeting-restriction concept) not represented."
+    },
+    "Shore Up": {
+      "status": "match",
+      "attempts": 1,
+      "note": "All facts correct; Untap's Defined$Targeted resolves to an imprecise but not misleading thing value (same family as other Defined$<sibling> gaps), didn't block the correct reconstruction. In blb-success.json."
+    },
+    "Into the Flood Maw": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Count$PromisedGift.N.M dynamic exclusive-or shape, same class as Dewdrop Cure."
+    },
+    "Kitnap": {
+      "status": "match",
+      "attempts": 1,
+      "note": "4 real bugs found and fixed on this card alone: Mode$Continuous+GainControl$ (zero handling), Defined$Enchanted resolving to a meaningless literal instead of 'creature', PutCounter missing gift-condition handling entirely, and a latent polarity bug in the gift-condition helper (every site hardcoded gift_promised regardless of ConditionCompare$). In blb-success.json."
+    },
+    "Kitsa, Otterball Elite": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "A:CopySpellAbility has zero handling -- new complex effect type, plus its own self-referential power>=3 activation gate."
+    },
+    "Knightfisher": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Lightshell Duo": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Found and fixed a real modeling bug in Surveil: zones were literally backwards, and it collapsed the real 2-node source+emit shape into one invented node. Also fixed the FIN hand-authored ground truth (Namazu Trader), which encoded the same bug. In blb-success.json."
+    },
+    "Long River Lurker": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Found and fixed a real bug: static AddKeyword$ always hardcoded thing:selfThing regardless of Affected$, making a self-Ward and an other-Frogs-Ward grant render identically. Wired into the existing affectedSpecs mechanism. ETB unblockable/blink hits the known ?:Effect gap."
+    },
+    "Long River's Pull": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Benefited from A:Counter. Real card is an exclusive gift-gated either/or, rendered as unconditional both -- same PromisedGift.N.M dynamic-quantity class as Dewdrop Cure."
+    },
+    "Mind Spiral": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Benefited from the gift-condition polarity fix (this card uses EQ1). Defined$ParentTarget owner/thing resolution still wrong (Defined$Targeted-family gap); tap/counter effect's own gift-gating not resolved (PromisedGift.N.M class)."
+    },
+    "Bellowing Crier": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Calamitous Tide": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Daring Waverider": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "DB$ Play (cast from an alternate zone without paying cost) has zero handling -- a genuinely new, moderately complex effect type. Not attempted."
+    },
+    "Dazzling Denial": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Implemented A:Counter (zero handling before). Concrete unless-pay dollar amount is a dynamic SVar, captured only as a boolean cond:unless_pay, not the number."
+    },
+    "Dire Downdraft": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "S:ReduceCost (known gap) plus a new AlternativeDecider$ shape (a NON-caster player choosing between two outcomes) -- entirely unread, a genuinely new decision-maker concept."
+    },
+    "Dour Port-Mage": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed a real gap: 'leaves the battlefield without dying' (Destination$ = comma list excluding Graveyard) had no trigger-type -- added isLeavesWithoutDying. In blb-success.json."
+    },
+    "Finch Formation": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed a consistency bug: Pump's KW$ Flying used a plain grant=flying instead of the richer blocked_by=flying_or_reach the static handler already had for the same fact -- extracted shared keywordGrantFact() helper. In blb-success.json."
+    },
+    "Gossip's Talent": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Level 1 correct. Level 2 hits the known ?:Effect gap class (granted static on a remembered/targeted object). Level 3 likely hits the Defined$Targeted-family gap."
+    },
+    "Starfall Invocation": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Implemented DestroyAll/DamageAll (had zero handling) and gift_promised on ChangeZone. In blb-success.json."
+    },
+    "Thistledown Players": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Node data was already correct; fixed the packet's own documentation ambiguity around cond:state=tapped/untapped (was readable as a precondition, not the effect). In blb-success.json."
+    },
+    "Valley Questcaller": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed multi-clause Affected$ on static AddPower/AddToughness/AddType (only read the first of 4 comma-joined subtypes before) -- a systemic fix for tribal anthems. In blb-success.json."
+    },
+    "Warren Elder": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "A pure mana-cost activated ability (no T, no Sac<>) has no cost handling at all -- same narrower gap noted early this session for Pump, now confirmed hit by a real card. Not fixed."
+    },
+    "Warren Warleader": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed TokenAttacking$True (no handling existed, only TokenTapped$ did). One narrower gap remains: Mode$AttackersDeclared's generic trigger-type."
+    },
+    "Wax-Wane Witness": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed PlayerTurn$True on triggers (reused existing cond:your_turn naming). In blb-success.json."
+    },
+    "Whiskervale Forerunner": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Genuinely complex multi-step effect chain (PeekAndReveal/ChooseCard/conditionally-gated ChangeZone branches) with no handler support at any step -- correctly absent rather than wrong. Left for a dedicated pass. Also hits the ValidSource$YouCtrl gap."
+    },
+    "Azure Beastbinder": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed CantBlockBy (zero handling) and Animate's RemoveAllAbilities$/Power$+Toughness$-only shape (silent-drop, plus Animate always wrongly assumed self-targeting). Primary fact (opponent's permanent loses abilities) now correct. Two narrower gaps remain: 3-way target-type OR not split, and the second Animate node's Defined$Targeted owner/thing still wrong."
+    },
+    "Shrike Force": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Seasoned Warrenguard": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed IsPresent$ (trigger-level board-state check) via new ifPresentFlag helper. In blb-success.json."
+    },
+    "Rabbit Response": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Fixed ConditionPresent$ on chained Scry via ifPresentFlag. In blb-success.json."
+    },
+    "Sonar Strike": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed ConditionPresent$ Bat.YouCtrl via ifPresentFlag. One gap remains: ValidTgts$ comma-OR of 3 combat-state qualifiers (attacking/blocking/tapped) has no representation."
+    },
+    "Repel Calamity": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "ValidTgts$ Creature.powerGE4,Creature.toughnessGE4 (power OR toughness threshold) not represented -- qualifierFlags has no stat-threshold or OR support."
+    },
+    "Salvation Swan": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Confirms 2 of this batch's fixes (withoutFlying, DelayedTrigger honest-absence). Real gap: the delayed conditional return with a flying counter itself -- see known_gap_classes['Delayed conditional return (DelayedTrigger + WithCountersType)']."
+    },
+    "Season of the Burrow": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Pawprint$ weighted/repeatable modal choice (choose up to 5 pips worth of modes) has no schema representation -- read as a plain 'choose one'. Individual mode effects reconstructed correctly."
+    },
+    "Star Charter": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "3 gaps on one card: Phase$ specificity (known gap), CheckSVar$ dynamic condition (known gap, card added to that class), and Dig's real capability gap (look-then-selectively-reveal-to-hand-with-rest-bottomed shape not supported, only a simple look-then-move-remainder shape is)."
+    },
+    "Intrepid Rabbit": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Jolly Gerbils": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Lifecreed Duo": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Exact match. In blb-success.json."
+    },
+    "Mabel's Mettle": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed a real gap: Pump had no TargetMax$/TargetMin$ qty handling (unlike ChangeZone/PutCounter's identical convention) -- \"up to one other target\" read as mandatory. Added qty:0..N support, a systemic fix for every Pump with TargetMax$. TargetUnique$True (\"OTHER target\") remains open -- deliberately not approximated with not:self, a different and wrong fact."
+    },
+    "Mouse Trapper": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Made the schema call to implement Tap as a standalone effect (DB$/AB$ Tap, distinct from SCHEMA's cost/drain-only `tap` role) -- modeled as modifier+cond:state=tapped/untapped. A systemic fix, not card-specific -- also fixed Eddymurk Crab's own ETB tap effect for free. See known_gap_classes['ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger'] for the one remaining open gap."
+    },
+    "Nettle Guard": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed a real, systemic bug: Cost$ combining mana+Sac<> (not Sac<> alone) matched no existing detection at all, dropping the entire activated ability. Fixed with a bracket-aware Sac<...> extraction (caught and fixed a regression from the first fix attempt -- Sac<>'s own description clause can contain spaces, breaking a naive space-split) plus coarseType('CARDNAME')->'self'. See known_gap_classes['ValidSource$SpellAbility.YouCtrl on a BecomesTarget trigger'] for the one remaining open gap (on the Valiant trigger, not the fixed sac-cost ability)."
+    },
+    "Parting Gust": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Found and fixed a real WRONG-DATA bug (not just a gap): DelayedTrigger's Execute$ child was auto-walked as an unconditional immediate continuation, producing a factually wrong reconstruction (unconditional 'return under your control' instead of the real conditional/delayed/owner's-control/+1-counter return). Fixed by suppressing DelayedTrigger's child-walk specifically. The real delayed+conditional return mechanic itself remains unmodeled (real, non-trivial work) but now correctly absent rather than wrong."
+    },
+    "Pileated Provisioner": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Found and fixed a real gap: PutCounter never called qualifierFlags(ValidTgts$) at all (unlike its siblings) -- .withoutFlying was silently lost. Fixed, plus added .withFlying/.withoutFlying to qualifierFlags' vocabulary. In blb-success.json."
+    },
+    "Harvestrite Host": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty (the ConditionCheckSVar$/ConditionSVarCompare$ gate is a FIELD silently dropped from an otherwise-recognized effect, not a distinct effect key, so it never shows as unmapped at all). See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Portent of Calamity": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has 3 unrelated unmapped entries (A:PeekAndReveal, ?:RepeatEach, ?:Play) not investigated further since the Condition gap already rules out a full match."
+    },
+    "Shoreline Looter": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated S:CantBlockBy unmapped entry, not investigated further."
+    },
+    "Coiling Rebirth": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also hits known_gap_classes.CopyPermanent (?:CopyPermanent unmapped)."
+    },
+    "Thought-Stalker Warlock": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated ?:Branch unmapped entry (a Forge modal-choice effect with no handler), not investigated further."
+    },
+    "Wick, the Whorled Mind": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated ?:Branch unmapped entry, not investigated further."
+    },
+    "Reptilian Recruiter": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty (same silent-field-drop shape as Harvestrite Host). See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Cache Grab": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty. See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Mistbreath Elder": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified via direct node inspection, no examiner agent spent -- unmapped is empty. See known_gap_classes.ConditionCheckSVar/ConditionSVarCompare."
+    },
+    "Finneas, Ace Archer": {
+      "status": "skipped-rework",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Blocked on known_gap_classes.ConditionCheckSVar/ConditionSVarCompare; also has an unrelated ?:PutCounterAll unmapped entry (PutCounter's ValidCards$-plural, non-targeted sibling -- not yet implemented, same shape gap as Pump/PumpAll), not investigated further."
+    },
+    "Season of Weaving": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is known_gap_classes.CopyPermanent -- a real backlog item, not a design-decision blocker, so not skipped-rework tier."
+    },
+    "Stormsplitter": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is known_gap_classes.CopyPermanent."
+    },
+    "For the Common Good": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is known_gap_classes.CopyPermanent."
+    },
+    "Scavenger's Talent": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Spot-check batch 2. Benefited from two shared-logic fixes made earlier in this same batch: the dies-trigger fix (base ability) and a new ChangeType$ fix (Level 3's non-targeted 'return a creature card' idiom via ChangeType$ Creature.YouOwn was wrongly read as 'this enchantment returns' -- selfMove's heuristic didn't know about ChangeType$ as a third way Forge names an external subject, alongside ValidTgts$/SacValid$). Fixed by adding ChangeType$ handling to the ChangeZone handler (owner/thing/qualifiers all now derived from it same as ValidTgts$). DB$ Mill (Level 2's effect) is now implemented (2026-09-04, mirrors SCHEMA's own mill-N worked example) -- card now shows zero unmapped entries. One precision gap remains open: WithCountersType$FINALITY on the Level 3 return (a counter placed on the returned object as part of the same effect) has no representation -- narrow, not fixed."
+    },
+    "Skyskipper Duo": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Exile-and-target half correct; delayed end-step return (DelayedTrigger) unrepresented, same gap class as Parting Gust/Salvation Swan."
+    },
+    "Spellgyre": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Found and fixed 2 real bugs (Charm branch-capture single-id assumption, Surveil missing children-walk). Both Charm modes now reconstruct correctly."
+    },
+    "Splash Lasher": {
+      "status": "issues-fixed",
+      "attempts": 1,
+      "note": "Fixed real Offspring multi-symbol mana bracing bug. Remaining gap: PutCounter Defined$Targeted resolves to self instead of the tapped creature (Defined$<sibling-reference> family)."
+    },
+    "Splash Portal": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "New instance of Defined$<sibling-reference> family: ChangeZone selfMove heuristic wrongly fires on Defined$Remembered referring to an externally-targeted object, producing a nonsensical fact."
+    },
+    "Stormchaser's Talent": {
+      "status": "issues-open",
+      "attempts": 3,
+      "note": "Fixed real bug (batch 11 carryover from batch 10): ChangeZone's new multi-clause ValidTgts$ support initially attached each type-clause as an independent sibling (read as \"return BOTH\"), instead of wrapping in combine:\"any\" (a single disjunctive choice) -- caught by attempt 3's own exam misreading the fix's first version. Remaining gap: token registry entries (otter-1) carry no field for a token's own printed keywords (prowess), a data-schema limitation, not a translator bug."
+    },
+    "Sugar Coat": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Flash/Enchant correct. New gap class: total type/ability replacement (SetColor$/RemoveCardTypes$/RemoveAllAbilities$/AddAbility$) not implemented, only a minimal S:TypeReplacement unmapped marker added."
+    },
+    "Thought Shucker": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Confirms known pure-mana-cost activated-ability gap (same as Warren Elder); also surfaces Activation$Threshold and GameActivationLimit$ as new narrower gaps."
+    },
+    "Thundertrap Trainer": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Offspring correct. Same Dig look-then-selectively-reveal-to-hand gap as Star Charter."
+    },
+    "Cruelclaw's Heist": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Huskburster Swarm": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:ReduceCost\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Maha, Its Feathers Night": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Alania's Pathmaker": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Dragonhawk, Fate's Tempest": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\",\"?:DelayedTrigger\",\"?:Effect\",\"?:DelayedTrigger\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Emberheart Challenger": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Festival of Embers": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Harnesser of Storms": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Season of the Bold": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\",\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Lumra, Bellow of the Woods": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Burrowguard Mentor": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Clement, the Worrywort": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Fireglass Mentor": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:ChooseCard\",\"?:undefined\",\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Gev, Scaled Scorch": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Glarb, Calamity's Augur": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:Continuous\",\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Hugs, Grisly Guardian": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\",\"S:Continuous\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Kastral, the Windcrested": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:PutCounterAll\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Muerra, Trash Tactician": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Ral, Crackling Wit": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Stormcatch Mentor": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:ReduceCost\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Ygra, Eater of All": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"S:TypeReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Patchwork Banner": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Three Tree City": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Uncharted Haven": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"K:ETBReplacement\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Bria, Riptide Rogue": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified without spending an examiner agent: unmapped tags ([\"?:Effect\"]) match only already-documented, still-open known_gap_classes entries -- translation is expected to hit the same gap, not re-verified via blind reconstruction."
+    },
+    "Bonecache Overseer": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Tap+pay-1-life-draw ability correct. Activation gate (CheckSVar$X|SVarCompare$GE3, an OR of two conditions folded via Times.N) matches known ConditionCheckSVar/CheckSVar dynamic-condition class, AB$ variant -- not implemented, per Beza-only design scope."
+    },
+    "Wishing Well": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Coin-counter half correct. The defining mechanic (DB$Play cast-from-graveyard + DB$ImmediateTrigger + Count$CardCounters scaler + ReplaceGraveyard$ exile-instead) entirely unrepresented -- matches known DB$ Play gap class, a real architectural gap needing design input, not attempted."
+    },
+    "Valley Floodcaller": {
+      "status": "match",
+      "attempts": 3,
+      "note": "Found and fixed 3 real bugs across 3 attempts: missing S:Mode$CastWithFlash static, ValidCards$ multi-type truncation on PumpAll (bird-only), and the same truncation on the chained UntapAll SubAbility (fixed separately since it wasn't propagated from the PumpAll fix). Full match on attempt 3."
+    },
+    "Waterspout Warden": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: trigger ValidCard$Creature.Self wasn't recognized as self-only (only bare Card.Self matched), widening \"this creature attacks\" into \"a creature attacks\". Remaining gap: CheckSVar$X gating the trigger itself (\"if another creature entered this turn\") -- matches known ConditionCheckSVar/CheckSVar class, trigger-gate variant, not implemented."
+    },
+    "Agate-Blade Assassin": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: deriveOwner had no case for Defined$TriggeredDefendingPlayer, defaulting to 'me' and collapsing \"defending player loses life\" into \"you lose life\". Full match on attempt 2."
+    },
+    "Bandit's Talent": {
+      "status": "issues-open",
+      "attempts": 3,
+      "note": "Fixed 2 real bugs: trigger owner hardcoded 'me' regardless of ValidPlayer$Opponent (flipped \"each opponent's upkeep\" into \"your upkeep\"), and UnlessType$'s nonLand qualifier collapsing to coarseType's generic Card->any rule. Remaining, deliberately deferred: CheckSVar$/SVarCompare$ hand-size gate on both level-2/3 abilities, and the PlayerCountOpponents$ dynamic draw-count scaler -- both match the known dynamic-condition/scaler classes."
+    },
+    "Bonebind Orator": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: Cost$ ExileFromGrave<N/CARDNAME> (a graveyard-activated ability's compound cost) had zero handling, silently dropping both the mana AND the self-exile. New wireExileGraveCost() mirrors wireSacCost's Sac<> pattern. Full match on attempt 2."
+    },
+    "Consumed by Greed": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: Sacrifice never read ValidTgts$ (only Defined$), defaulting every targeted-sacrifice effect to owner:me; also added a greatestPowerControlledByTargeted qualifier. Remaining, deliberately deferred: Gift's own may/single-target-opponent semantics on the generic Draw fallback, and the Count$PromisedGift.1.0 dynamic return-count binding -- both known, documented classes."
+    },
+    "Wick's Patrol": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is the ImmediateTrigger/DB$Play co-requirement class."
+    },
+    "Curious Forager": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is the ImmediateTrigger/DB$Play co-requirement class."
+    },
+    "Zoraline, Cosmos Caller": {
+      "status": "issues-open",
+      "attempts": 0,
+      "note": "Pre-classified, no examiner agent spent. Only gap is the ImmediateTrigger/DB$Play co-requirement class."
+    },
+    "Feed the Cycle": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Destroy effect correct. K:AlternateAdditionalCost:Forage:B (an additional-cost CHOICE -- forage or pay {B}) entirely unhandled, falls to the generic K: unmapped fallback with zero trace. New gap class, genuinely needs a new cost-choice representation + registries.json forage action, not attempted."
+    },
+    "Early Winter": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: ValidTgts$ Opponent (a bare player predicate) was mis-read as an object-type predicate, producing a bogus thing:\"opponent\" and wrong owner; ChangeType$Enchantment now correctly supplies the object type. Remaining, deliberately deferred: Chooser$Targeted (the targeted opponent, not the caster, picks which enchantment) has no schema representation -- new gap class."
+    },
+    "Darkstar Augur": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed 2 real bugs: Offspring token now correctly noted as 1/1 (was inheriting full stats), Dig now carries a reveal fact when Reveal$True. Remaining, deliberately deferred: SVar:X:Remembered$CardManaCost dynamic life-loss amount has no scaler/binding mechanism -- matches new Remembered-value-scaler gap class. (A round-2 examiner also misread the dual-root enters structure as one event rather than two separate arrivals -- confirmed by the agent itself as its own misinterpretation, not a decomposition bug -- no fix needed.)"
+    },
+    "Daggerfang Duo": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (Deathtouch + optional ETB mill 2)."
+    },
+    "Diresight": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (Surveil 2, draw 2, lose 2 life chain)."
+    },
+    "Downwind Ambusher": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: wasDealtDamageThisTurn qualifier on Destroy ValidTgts$ was dropped entirely. Full match on attempt 2."
+    },
+    "Fell": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (plain Destroy target creature). A duplicate/misfired re-run dissented on roots-vs-steps shape -- confirmed against corpus-wide precedent and reverted, not a real bug."
+    },
+    "Glidedive Duo": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (Flying + ETB symmetric drain)."
+    },
+    "Ravine Raider": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Menace correct. AB$ Pump Cost$ 1 B (pure mana-only activated ability) never wired to a cost: flag -- matches known Pure mana-only activated-ability cost gap class."
+    },
+    "Osteomancer Adept": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Deathtouch + tap cost correct. AB$Effect | StaticAbilities$/Triggers$ nested sub-ability chain (graveyard-cast permission + finality-counter ETB replacement) entirely unhandled -- new gap class, genuinely complex."
+    },
+    "Moonstone Harbinger": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Surface facts correct. Secondary$True (a LifeGained/LifeLost trigger pair sharing ONE activation-limit counter) never read -- produces 2 independent cond:once_per_turn nodes instead of one shared cap. New gap class."
+    },
+    "Hazel's Nocturne": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real, corpus-wide bug: an Instant/Sorcery own printed effect was pushed as an independent, ungated flow root instead of a step under its cast node. Full match on attempt 2."
+    },
+    "Iridescent Vinelasher": {
+      "status": "match",
+      "attempts": 3,
+      "note": "Fixed real bug: ownerFromTargetPredicate generalized to handle bare whole-string player predicates (You/Opponent/Player), fixing DealDamage/Destroy/Pump/etc all at once (previously only special-cased for ChangeZone). Also fixed a recurring examiner-side misread (Offspring dual-root additive-not-exclusive) by clarifying the exam packet schema summary -- 3rd occurrence of this exact misread, now resolved at the documentation level for all future Offspring cards."
+    },
+    "Psychic Whorl": {
+      "status": "issues-open",
+      "attempts": 4,
+      "note": "Fixed 2 real bugs: Discard never read ValidTgts$ (self-discard default), then a second bug in that same fix (owner \"all\" instead of \"any\" for a targeted single-player discard); Surveil never wired ifPresentFlag for its ConditionPresent$/ConditionCompare$ gate. Also renamed the ambiguous if_present= flag to you_control= (confirmed fixing a real misread). Final attempt is pure examiner variance -- misread an already-elsewhere-validated surveil-N node shape as mill+scry -- data confirmed correct, not a real gap."
+    },
+    "Nocturnal Hunger": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed real bug: giftGateFact was never wired into the generic Draw/GainLife/LoseLife emit fallback (only Pump/ChangeZone/PutCounter had it) -- \"if the gift wasn't promised, you lose 2 life\" was silently dropped. Remaining, deliberately deferred: Gift's own may/single-target-opponent semantics on the Food-token creation."
+    },
+    "Persistent Marshstalker": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed 2 real bugs: ValidAttackers$ never read by trigger predicate detection (fell back to self), Threshold$True never read on trigger rows (only static rows' Condition$Threshold). Remaining, deliberately deferred: static +X/+0 SVar scaler unresolved, graveyard-reanimation return shape (Tapped$/Cost$/Attacking$/TriggerZones$Graveyard) unmodeled, and a newly-found narrower gap -- ValidAttackers$'s own +Rat subtype qualifier isn't carried into a cond: flag (a generic subtype-qualifier fallback was attempted and reverted after producing a false positive on IsRemembered elsewhere -- too risky to generalize)."
+    },
+    "Scales of Shale": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Modal +2/+0 lifelink/indestructible effect correct. K:Affinity:Lizard (cost reduction per Lizard controlled) never handled -- same concept as the already-documented S:ReduceCost gap class, just via a K: line instead of S:."
+    },
+    "Starlit Soothsayer": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Flying + phase trigger correct. CheckSVar$X gating the end-step trigger (\"if you gained or lost life this turn\", an OR via Plus.Y) never read -- matches known ConditionCheckSVar/CheckSVar dynamic-condition class, trigger-gate variant."
+    },
+    "Season of Loss": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Sacrifice mode correct. Pawprint$5 weighted/repeatable modal choice flattened to plain choose-one (matches known Season of the Burrow gap class). Also two unbound Count$ scalers (qty:X/qty:Y) with no := binding, distinct formulas -- extends the general dynamic-scaler-binding gap class."
+    },
+    "Ruthless Negotiation": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Exile-from-opponent-hand effect and Flashback cost/exile-instead-of-gy both correct individually. Two related gaps: (1) Flashback's own cast root never shares the spell's real effect chain (only wired to the built-in resolve-to-exile step), so the effect only ever fires under the hand-cast root. (2) ConditionPresent$Card.wasCastFromGraveyard gating the draw is never read at all -- would need cast-context threaded through the recursive translator to gate correctly per which cast triggered it. New gap class, genuinely architectural."
+    },
+    "Rottenmouth Viper": {
+      "status": "issues-open",
+      "attempts": 1,
+      "note": "Mana cost/PT correct. Two gaps: Sac<X/Permanent.nonLand>-based cost reduction (matches S:ReduceCost family), and DB$Repeat + GenericChoice(SacNonland,Discard) + BLIGHT-counter-scaled LoseLife payoff -- the card's whole point -- entirely unhandled. New DB$Repeat gap class."
+    },
+    "Stargaze": {
+      "status": "issues-open",
+      "attempts": 2,
+      "note": "Fixed 2 real bugs: Dig's DestinationZone fallback was hardcoded 'exile' instead of Forge's real default 'hand'; DestinationZone2$ (a two-pile split) had no handling at all -- added a second sibling move node for the remainder. Remaining: qty on both piles doesn't distinguish ChangeNum (X, the primary pile) from DigNum (Y=2X, total looked at), and X/Y aren't bound via := to the shared {X} mana-cost variable -- extends the general dynamic-scaler-binding gap class."
+    },
+    "Sinister Monolith": {
+      "status": "match",
+      "attempts": 2,
+      "note": "Fixed real bug: SorcerySpeed$True missing from the Sac<>-cost branch (already read on the plain mana+tap branch). Full match on attempt 2."
+    },
+    "Savor": {
+      "status": "match",
+      "attempts": 1,
+      "note": "Clean match, no bugs found (-2/-2 pump + Food token)."
+    }
+  }
+}

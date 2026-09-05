@@ -1,0 +1,14 @@
+{
+  "name": "Fight On!",
+  "manaCost": "{2}{B}",
+  "typeLine": "Instant",
+  "description": "Return up to two target creature cards from your graveyard to your hand.",
+  "assumptions": [],
+  "couldNotDerive": [
+    "Rarity (withheld by the packet).",
+    "Supertype, and any subtype — the self registry's typeLine gives only \"Instant,\" and nothing in the nodes adds to it."
+  ],
+  "verdict": "match",
+  "notes": "Exact match on mana cost, type line, and full rules text against real oracle text. Correctly treated the spell's own post-resolution move to graveyard (node:selfToGy) as an unprinted default fact per schema convention, not rendered as a sentence.",
+  "comparedAt": "2026-09-03"
+}

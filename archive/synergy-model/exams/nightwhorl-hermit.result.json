@@ -1,0 +1,11 @@
+{
+  "name": "Nightwhorl Hermit",
+  "manaCost": "{2}{U}",
+  "typeLine": "Creature — Rat Rogue",
+  "description": "Vigilance. Threshold -- As long as there are seven or more cards in your graveyard, this creature gets +1/+0 and can't be blocked.",
+  "assumptions": [],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "First attempt found 2 real gaps, both fixed: (1) CantBlockBy with no ValidBlocker$ at all (a blanket 'can't be blocked', distinct from 'can't be blocked BY X') wasn't recognized as CantBlockBy at all since the old check only fired on ValidBlocker$'s presence -- fixed by detecting Mode$ itself via eventMode(row). (2) Condition$Threshold (a fixed, well-known ability word, not a dynamic value) had no handling -- added a direct cond:threshold flag. Verified: both static nodes now correctly show cond:unblockable/cond:threshold and cond:delta=+1/+0;cond:threshold. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

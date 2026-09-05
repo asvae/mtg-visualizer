@@ -1,0 +1,19 @@
+{
+  "name": "Namazu Trader",
+  "manaCost": "{3}{B}",
+  "typeLine": "Creature — Fish Citizen",
+  "description": "When this creature enters, you lose 1 life and create a Treasure token. Whenever this creature attacks, you may sacrifice another creature or artifact. If you do, surveil 2.",
+  "assumptions": [
+    "Treated the unflagged treasure node as exactly one Treasure token, by analogy with other unflagged single-token nodes.",
+    "Rendered the gate between the optional sacrifice and surveil as \"If you do\" — the schema fixes that surveil is gated on the sac happening, not the exact phrasing.",
+    "Ordered ETB-then-attack ability matching flow.roots order."
+  ],
+  "couldNotDerive": [
+    "Supertype (e.g. Legendary).",
+    "Rarity (withheld by the packet).",
+    "Card name."
+  ],
+  "verdict": "match",
+  "notes": "Exact match on mana cost, type line, P/T, and full rules text (both abilities, including the optional sac / surveil 2 conditional) against real oracle text. This is the schema's own original worked example (SCHEMA.md §6) — a clean match here confirms the node/flow rewrite preserved fidelity through the whole redesign, not just that the schema handles simple cards.",
+  "comparedAt": "2026-09-03"
+}

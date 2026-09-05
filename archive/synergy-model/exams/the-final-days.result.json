@@ -1,0 +1,20 @@
+{
+  "name": "The Final Days",
+  "manaCost": "{2}{B}{B} (normal) / {4}{B}{B} (flashback)",
+  "typeLine": "Sorcery",
+  "description": "Create two tapped 2/2 black Horror creature tokens. Flashback {4}{B}{B}. If you cast this spell using flashback, create a number of tapped 2/2 black Horror creature tokens equal to the number of creature cards in your graveyard.",
+  "assumptions": [
+    "Named the alt-cost-from-graveyard-then-exile pattern \"Flashback\" — schema's own vocabulary for altCost.",
+    "Used the standard fixed Flashback reminder-text wording.",
+    "Invented connective phrasing to join the two independent cast-root branches into one paragraph; the underlying fact (two branches, different token counts) is derived, the exact glue is the examiner's own wording.",
+    "Left the sorcery's own default resting-zone move (stack->gy) out of print, since it states nothing beyond the default."
+  ],
+  "couldNotDerive": [
+    "Card name.",
+    "Rarity.",
+    "Supertype."
+  ],
+  "verdict": "match",
+  "notes": "Full mechanical meaning preserved: normal cast makes 2 tokens, flashback cast makes X tokens (X = creature cards in graveyard) instead, flashback cost and post-resolution exile both correct. Real oracle text phrases the conditional as one paragraph (\"If this spell was cast from a graveyard, instead create X...\") with Flashback as a separate trailing line, rather than the examiner's two-cast-roots-then-Flashback-reminder ordering — a presentation/ordering difference, not a mechanical one, and the examiner itself flagged this as invented connective wording rather than a derived fact.",
+  "comparedAt": "2026-09-03"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Starlit Soothsayer",
+  "manaCost": "{2}{B}",
+  "typeLine": "Creature — Bat Cleric (2/2)",
+  "description": "Flying\n\nAt the beginning of your end step, surveil 1.",
+  "assumptions": [
+    "Rendered the trigger condition (`trigger-type: \"phase\"`, `cond:phase=end of turn`, `owner: me`) as \"At the beginning of your end step\" — the owner:me tells us it's the controller's own end step, so this isn't a guess, but the exact wording convention (\"your end step\" vs. some other phrasing) is a stylistic call.",
+    "Rendered the E→F pair (source qty:0..1 to gy, then emit library-look) as the keyword \"Surveil 1,\" since it matches the `surveil-N` registry action exactly with N=1. Using the keyword form rather than spelling out the full reminder-text wording is a presentation choice.",
+    "Ordered \"Flying\" before the triggered ability, following standard Magic card convention (static keyword abilities before triggered abilities) — the flow graph itself doesn't specify a print order between the two independent roots (C and D)."
+  ],
+  "couldNotDerive": [
+    "Rarity — explicitly withheld.",
+    "Any supertype (e.g., Legendary) — not indicated by any node or the self registry."
+  ],
+  "verdict": "issues-open",
+  "notes": "Mana cost ({2}{B}), type line (Creature — Bat Cleric, 2/2), Flying, and the end-of-turn Surveil 1 effect all match the real printed card (Starlit Soothsayer, Bloomburrow #115) exactly. But the reconstruction is missing the trigger's intervening-if condition: the real card only surveils 'if you gained or lost life this turn.' In forge-model/data/starlit-soothsayer.txt, the trigger line carries `CheckSVar$ X`, where `SVar:X:Count$LifeYouGainedThisTurn/Plus.Y` and `SVar:Y:PlayerCountPropertyYou$LifeLostThisTurn` — i.e. the ability only fires when (life gained this turn + life lost this turn) > 0. Node D in the packet's edges carries only `flags: \"cond:phase=end of turn\"`; there is no second cond: clause expressing this life-change gate anywhere on D or elsewhere in the six-node graph. This is a decomposition gap, not a schema gap: SCHEMA.md's `cond:` flag is documented as a free-text game-state precondition slot and this exact node already uses it once (for the phase timing), so a second clause (e.g. `cond:life_changed_this_turn`) was representable but wasn't written. The root cause is in app/lib/forgeTranslate.ts's trigger-node translation: it reads Mode$/Phase$ off the card's `T:` line to produce `cond:phase=...` but has no handling for `CheckSVar$` (or the SVar chain it points at — `Count$LifeYouGainedThisTurn/Plus.Y` composed with `PlayerCountPropertyYou$LifeLostThisTurn`) when building the trigger node's cond: flags, so that intervening-if condition is silently dropped during translation rather than surfaced as an unmapped case. Because the condition never reached the edges, the decoding agent (correctly, given only what it was handed) reconstructed the trigger as unconditional ('At the beginning of your end step, surveil 1.') instead of the real, life-change-gated version. Everything else on the card — the surveil-N action shape (nodes E/F matching qty:0..1 to gy + library-look emit), the Flying modifier (node C), and the cast/enters roots (A/B) — was faithfully round-tripped with no other discrepancies.",
+  "comparedAt": "2026-09-04"
+}

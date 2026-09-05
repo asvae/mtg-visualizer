@@ -1,0 +1,16 @@
+{
+  "name": "Jackdaw Savior",
+  "manaCost": "{2}{W}",
+  "typeLine": "Creature — Bird Cleric",
+  "description": "Flying. Whenever Jackdaw Savior or another creature you control with flying dies, return another target creature card with lesser mana value from your graveyard to the battlefield.",
+  "assumptions": [
+    "Read owner:\"me\" on the trigger and move nodes as \"you control\"/\"your graveyard\" by analogy with the card's other me-owned nodes."
+  ],
+  "couldNotDerive": [
+    "Whether the trigger is restricted to flying creatures (the multi-clause ValidCard's .withFlying qualifier isn't read).",
+    "The \"lesser mana value\" and \"another\" (excluding the dying creature) restrictions on the return target."
+  ],
+  "verdict": "issues",
+  "notes": "Found and fixed a systemic gap: this card's trigger is ChangesZone with Origin$Battlefield/Destination$Graveyard (a rule-700.4 'dies' event), but the trigger-type derivation only special-cased Destination$Battlefield ('enter') -- everything else fell through to the literal, unreadable string mode.toLowerCase() = 'changeszone'. Added the same-shape isDies check (Origin Battlefield + Destination Graveyard) alongside the existing isEnter one, now correctly reads trigger-type:\"dies\". This is a general fix, not card-specific -- benefits every 'whenever ~ dies' BLB card using ChangesZone/ChangesZoneAll (confirmed it also fixed Scavenger's Talent's base ability in the same batch). Two narrower, card-specific qualifier gaps remain, not fixed: the multi-clause ValidCard's .YouCtrl/.withFlying qualifiers (on \"another creature you control with flying\") aren't read by qualifierFlags() at all, and the return target's .cmcLTX+YouOwn+NotDefinedTriggeredCard (a mana-value-relative, dynamic-SVar-driven \"another, lesser cost\" restriction, X = TriggeredCard$CardManaCost) is a real, non-trivial dynamic comparison -- similar in kind to Beza's flagged gap but narrower in scope (comparing to the triggering object's own value, not another player's board state). Left as documented backlog rather than attempted.",
+  "comparedAt": "2026-09-04"
+}

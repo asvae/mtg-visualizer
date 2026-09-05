@@ -1,0 +1,11 @@
+{
+  "name": "Plumecreed Escort",
+  "manaCost": "{1}{U}",
+  "typeLine": "Creature — Bird Scout",
+  "description": "Flash. Flying. When this creature enters, target creature you control gains hexproof until end of turn.",
+  "assumptions": [],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "Exact match against forge-model/data/plumecreed-escort.txt -- node data was already fully correct (owner:me on the Pump target unambiguously means \"you control\", per the same convention confirmed correct many times this session); the examining agent's own prose just expressed uncertainty about the English rendering of owner:me, not a data issue. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

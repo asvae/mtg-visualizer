@@ -1,0 +1,20 @@
+{
+  "name": "Coruscation Mage",
+  "manaCost": "{1}{R}",
+  "typeLine": "Creature — Otter Wizard",
+  "description": "{2}: Create a token that's a copy of this creature.\n\nWhenever you cast a spell, this creature deals damage to each opponent.",
+  "assumptions": [
+    "Rendered node C's cond:token + thing:self as \"Create a token that's a copy of this creature\" — the node establishes that a token copy of the card's own identity enters the battlefield for {2}, but the exact verb/phrasing isn't itself fixed by the schema.",
+    "Assumed the damage in D→E is dealt by this creature (the ability's own source), since no other source is named on node E.",
+    "Rendered trigger-type \"spellcast\" with thing: any as unrestricted \"Whenever you cast a spell\" (not limited to instant/sorcery), since any denotes an unspecified card rather than a restricted type.",
+    "Assumed node E's owner: opp phrasing is \"each opponent\" rather than \"target opponent,\" since node E carries no target flag."
+  ],
+  "couldNotDerive": [
+    "The amount of damage dealt to each opponent — node E has no qty flag, so no number is given.",
+    "Any restriction on the {2} activated ability (once-per-turn limiter, sorcery-speed clause, tap cost) — none present on node C beyond the {2} mana cost.",
+    "Rarity and any supertype."
+  ],
+  "verdict": "match",
+  "notes": "Both gaps from the first attempt fixed on 2026-09-04, verified directly against the regenerated packet: (1) qualifierFlags() already gained .nonCreature support (added for Builder's Talent), which turned out to ALSO fix this card's SpellCast trigger predicate for free -- node D now carries cond:noncreature, correctly matching \"whenever you cast a noncreature spell.\" (2) Offspring's enters node now carries cond:token;paid_at_cast, distinguishing its one-time additional-cast-time cost from a repeatable activated ability's cost -- resolves the ambiguity that led the first attempt to misread it as \"{2}: create a token copy\" instead of Offspring's real \"pay an additional {2} as you cast this spell\" framing. Also improved both make-exam.mjs and make-exam-forge.mjs's shared schema summary to state explicitly that an absent qty flag means a fixed count of 1 (was ambiguous, causing the first attempt to flag NumDmg$1's default correctly-omitted qty as undeterminable). Full card now matches forge-model/data/coruscation-mage.txt's real oracle text. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

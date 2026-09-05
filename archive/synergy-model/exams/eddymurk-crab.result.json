@@ -1,0 +1,15 @@
+{
+  "name": "Eddymurk Crab",
+  "manaCost": "{5}{U}{U}",
+  "typeLine": "Creature — Elemental Crab",
+  "description": "Flash. This spell costs {1} less to cast for each instant and sorcery card in your graveyard. Eddymurk Crab enters tapped if it's not your turn. When Eddymurk Crab enters, tap up to two target creatures.",
+  "assumptions": [
+    "Read flags:\"flash\" on a modifier node as the literal keyword Flash."
+  ],
+  "couldNotDerive": [
+    "The cost-reduction ability, the enters-tapped-conditionally replacement, and the ETB tap effect -- all three untranslated at the time of the exam."
+  ],
+  "verdict": "issues",
+  "notes": "Found and fixed one real silent-drop bug this round: the S: (static) handler only recognized AddPower/AddToughness/AddKeyword=Flying/AddType -- Mode$ ReduceCost (this card's own cost-reduction clause) matched none of those and vanished with NO node and NO unmapped entry, same silent-drop shape as the K:-keyword bug fixed earlier this session. Added a `handled` tracking flag and an honest S:${mode} unmapped fallback -- now correctly surfaces as S:ReduceCost. UPDATE 2026-09-04: DB$ Tap as a standalone effect is now implemented (found via Mouse Trapper, modeled as a modifier with cond:state=tapped) -- confirmed this card's own ETB tap-up-to-two-creatures now translates. Two gaps remain: K:ETBReplacement (enters-tapped-conditionally) has no handler, and S:ReduceCost (cost reduction) has no schema representation for the reduction itself, only an honest unmapped marker.",
+  "comparedAt": "2026-09-04"
+}

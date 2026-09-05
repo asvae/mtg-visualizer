@@ -1,0 +1,11 @@
+{
+  "name": "Dour Port-Mage",
+  "manaCost": "{1}{U}",
+  "typeLine": "Creature — Frog Wizard",
+  "description": "Whenever one or more other creatures you control leave the battlefield without dying, draw a card. {1}{U}, {T}: Return another target creature you control to its owner's hand.",
+  "assumptions": [],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "Found and fixed a real gap: \"leaves the battlefield WITHOUT DYING\" (Destination$ being a comma list of every zone except Graveyard) is a distinct, real rules concept from plain \"dies\" -- fell through to the unreadable literal 'changeszoneall' before. Added an isLeavesWithoutDying check mirroring isEnter/isDies exactly. Verified node C now shows trigger-type:\"leaves-without-dying\". In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

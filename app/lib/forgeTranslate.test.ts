@@ -10,7 +10,7 @@ interface EdgesEntry {
   nodes: Record<string, SynergyNode>;
 }
 
-const edges: EdgesEntry[] = JSON.parse(readFileSync(join(process.cwd(), 'synergy-model/data/edges.json'), 'utf8'));
+const edges: EdgesEntry[] = JSON.parse(readFileSync(join(process.cwd(), 'archive/synergy-model/data/edges.json'), 'utf8'));
 
 function loadForge(slug: string) {
   return parseForgeScript(readFileSync(join(process.cwd(), `forge-model/data/${slug}.txt`), 'utf8'));

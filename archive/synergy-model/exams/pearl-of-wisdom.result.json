@@ -1,0 +1,11 @@
+{
+  "name": "Pearl of Wisdom",
+  "manaCost": "{2}{U}",
+  "typeLine": "Sorcery",
+  "description": "This spell costs {1} less to cast if you control an Otter. Draw two cards.",
+  "assumptions": [],
+  "couldNotDerive": ["The cost reduction and its IsPresent$ Otter.YouCtrl condition -- known S:ReduceCost gap, no schema representation."],
+  "verdict": "issues-open",
+  "notes": "S:ReduceCost, already a known backlog item (no schema representation for cost reduction at all). The draw-two-cards effect reconstructs correctly.",
+  "comparedAt": "2026-09-04"
+}

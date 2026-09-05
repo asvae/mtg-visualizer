@@ -1,0 +1,11 @@
+{
+  "name": "Intrepid Rabbit",
+  "manaCost": "{2}{W}",
+  "typeLine": "Creature — Rabbit Soldier",
+  "description": "Offspring {1}. When this creature enters, target creature you control gets +1/+1 until end of turn.",
+  "assumptions": [],
+  "couldNotDerive": ["Rarity, supertype."],
+  "verdict": "match",
+  "notes": "Exact match against forge-model/data/intrepid-rabbit.txt's real oracle text on first attempt -- both the Offspring paid_at_cast fix and existing ETB-pump handling already covered this fully. In blb-success.json.",
+  "comparedAt": "2026-09-04"
+}

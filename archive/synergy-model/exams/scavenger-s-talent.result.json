@@ -1,0 +1,18 @@
+{
+  "name": "Scavenger's Talent",
+  "manaCost": "{B}",
+  "typeLine": "Enchantment — Class",
+  "description": "Whenever one or more creatures you control die, create a Food token. This ability triggers only once each turn. {1}{B}: Level 2 -- Whenever you sacrifice a permanent, target player mills two cards. {2}{B}: Level 3 -- At the beginning of your end step, you may sacrifice three other nonland permanents. If you do, return a creature card from your graveyard to the battlefield with a finality counter on it.",
+  "assumptions": [
+    "Bridged the optional sacrifice (node I, flagged may) to its consequence (node J) with the standard oracle phrasing \"If you do.\""
+  ],
+  "couldNotDerive": [
+    "The Level 2 mill effect (DB$ Mill is unmapped).",
+    "The token's identity (c_a_food_sac isn't in the given labels registry).",
+    "The specific phase for the level-3 trigger.",
+    "The finality counter on the returned creature."
+  ],
+  "verdict": "issues",
+  "notes": "This card benefited from two of this batch's shared-logic fixes, both confirmed directly in the regenerated node data: (1) the base trigger (ChangesZoneAll, Battlefield->Graveyard) now correctly shows trigger-type:\"dies\" instead of the old literal \"changeszoneall\". (2) Level 3's return step (AB$ ChangeZone with ChangeType$ Creature.YouOwn, no ValidTgts$ -- a non-targeted 'return A creature card' idiom) was WRONGLY reconstructed as 'this card (the enchantment) enters the battlefield' before the ChangeType$ fix -- selfMove's heuristic only excluded ValidTgts$/SacValid$/Defined$, missing ChangeType$ as a third way Forge names an external subject. Now correctly shows role:move, from:gy, to:bf, thing:creature. Two smaller gaps remain, not fixed: DB$ Mill (Level 2's effect) is a genuinely unimplemented effect type, and the WithCountersType$FINALITY flag on the level-3 return (a counter placed on the returned object as part of the same effect) has no representation -- both narrow enough to leave as backlog rather than blocking.",
+  "comparedAt": "2026-09-04"
+}
