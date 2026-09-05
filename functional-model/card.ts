@@ -168,6 +168,21 @@ export interface EffectContext {
   triggerInput?: Record<string, unknown>;
   /** Real Forge `Count$xPaid` (Choco-Comet's own "deals X damage," e.g.) — the value chosen for a card's own printed `X` in its mana cost, fixed once at cast time (601.2b/601.2f) the same way `mode`/`castFrom` are, not something an effect computes. A scenario sets this the same way it sets those — a real player-visible fact fixed by the cast, not authored per-effect. */
   xPaid?: number;
+  /**
+   * Real `TargetMin$ 0` in practice — a player genuinely declining an
+   * `optional` targeted effect rather than being forced onto whatever
+   * `chooseTarget` would deterministically pick (Summon: Bahamut's own
+   * chapter I/II "destroy up to one target nonland permanent" is the
+   * reference case: self is always the first candidate in an unrestricted
+   * pool, so without this a scenario could only ever demonstrate the card
+   * blowing itself up). Set per-trigger by `harness.ts`'s own
+   * `Scenario.declineTriggers`, not authored per-effect — same "a real
+   * player-visible fact fixed by the event, not computed" pattern
+   * `mode`/`castFrom`/`xPaid` already use above. Only `destroy` reads this
+   * today; extend to other `optional`-bearing effects only once a real card
+   * needs the same demonstration.
+   */
+  declineOptional?: boolean;
 }
 
 /**
@@ -196,6 +211,12 @@ export type EffectOwner = 'you' | 'opponents' | 'each';
 export type Effect =
   | { kind: 'createToken'; token: TokenInfo; amount: Computed<number>; tapped?: boolean }
   | { kind: 'gainLife'; amount: Computed<number> }
+  | {
+      /** `Player.getManaPool().addMana(...)` (see interfaces.ts's own `Player.addMana` doc comment for why this is a deliberately inert observation point, not a real spendable pool). Add for a "{T}: Add X mana" activated ability so it leaves a real, checkable trace line instead of being invisible to scripts/verify-synergy.mjs — same "promote a real ability off the unmodeled-list" reasoning `drawCard` already got (2026-09-05). */
+      kind: 'addMana';
+      color: string;
+      amount: Computed<number>;
+    }
   | { kind: 'drawCard'; amount?: Computed<number> }
   | {
       /** Forge's own `PumpAll` (Warren Elder's own "creatures you control get +1/+1 until end of turn") — every creature matching `predicate` gets the same delta, as opposed to `custom`'s one-target `pump`. Only `'creatures-you-control'` modeled so far; extend the union as more predicates show up. */
@@ -621,6 +642,9 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     case 'gainLife':
       ctx.you.gainLife(resolve(effect.amount, ctx));
       return;
+    case 'addMana':
+      ctx.you.addMana(effect.color, resolve(effect.amount, ctx));
+      return;
     case 'drawCard': {
       const amount = resolve(effect.amount ?? 1, ctx);
       for (let i = 0; i < amount; i++) ctx.you.drawCard();
@@ -708,6 +732,11 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       return;
     }
     case 'destroy': {
+      // A real player genuinely declining the "up to one" — see
+      // `EffectContext.declineOptional`'s own doc comment. Only meaningful
+      // when `optional` is actually set (TargetMin$0); an effect that MUST
+      // find a target ignores this.
+      if (effect.optional && ctx.declineOptional) return;
       const minPower = effect.minPower === undefined ? undefined : resolve(effect.minPower, ctx);
       const pool = playersFor(effect.owner ?? 'each', ctx)
         .flatMap((p) => p.getCardsIn('Battlefield'))
@@ -852,6 +881,9 @@ export function synergyTags(card: CardDefinition): string[] {
         break;
       case 'gainLife':
         tags.push('lifegain');
+        break;
+      case 'addMana':
+        tags.push(`mana:${effect.color}`);
         break;
       case 'drawCard':
         tags.push('draw');

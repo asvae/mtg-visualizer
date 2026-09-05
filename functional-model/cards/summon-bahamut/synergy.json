@@ -1,6 +1,16 @@
 {
   "source": [
     {
+      "id": "self-battlefield",
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "sourceText": "Flying (Summon: Bahamut is itself a flying creature permanent on your battlefield).",
+      "highlight": "Flying"
+    },
+    {
+      "id": "destroy-nonland",
       "event": "dies",
       "target": {
         "types": {
@@ -10,21 +20,58 @@
         }
       },
       "value": 4,
-      "sourceText": "I, II — Destroy up to one target nonland permanent."
+      "sourceText": "I, II — Destroy up to one target nonland permanent.",
+      "highlight": "Destroy up to one target nonland permanent"
+    },
+    {
+      "id": "chapter-iii-draw",
+      "event": "drawCard",
+      "controller": "you",
+      "value": 4,
+      "sourceText": "III — Draw two cards.",
+      "highlight": "Draw two cards"
+    },
+    {
+      "id": "chapter-iv-damage",
+      "event": "damage",
+      "controller": "you",
+      "value": 5,
+      "sourceText": "IV — Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "highlight": "deals damage equal to the total mana value of other permanents you control to each opponent"
+    },
+    {
+      "id": "self-sacrifice",
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "sourceText": "Sacrifice after IV.",
+      "highlight": "Sacrifice after IV"
+    },
+    {
+      "id": "self-dies",
+      "event": "dies",
+      "target": "self",
+      "value": 1,
+      "sourceText": "(baseline — the real 704.5x sacrifice after chapter IV is still Bahamut dying, whatever the cause)"
     }
   ],
   "sink": [
     {
+      "id": "mega-flare-you",
       "zone": "Battlefield",
       "controller": "you",
       "sourceText": "Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
-      "value": 1
+      "value": 1,
+      "highlight": "deals damage equal to the total mana value of other permanents you control to each opponent"
     },
     {
+      "id": "mega-flare-opp",
       "zone": "Battlefield",
       "controller": "opp",
-      "sourceText": "Mega Flare — ...deals damage equal to the total mana value of other permanents you control to each opponent.",
-      "value": 1
+      "sourceText": "Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "value": 1,
+      "highlight": "deals damage equal to the total mana value of other permanents you control to each opponent"
     }
   ]
 }

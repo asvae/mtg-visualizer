@@ -53,6 +53,50 @@ export interface Scenario {
   mode?: number;
   /** A trigger's own fixed variable info (Kain's "that player"/"that much damage") — see card.ts's own `EffectContext.triggerInput`. */
   triggerInput?: Record<string, unknown>;
+  /**
+   * Fires MULTIPLE named triggers in order, one `resolveCard` call each,
+   * against ONE shared `GameState` — the "joint-scenario driver" this
+   * file's own `runScenario` doc comment already anticipated ("nothing
+   * calls it that way yet"). Built for a real Saga's own real 714.3a/b
+   * chapter sequence (Summon: Bahamut's own "I, II — Destroy...", "III —
+   * Draw...", "IV — Mega Flare...", one scenario per chapter previously,
+   * per the user's own request: "we only need one scenario... all
+   * triggers will be there") rather than one scenario per chapter — real
+   * lore-counter/turn tracking still isn't modeled (this doesn't simulate
+   * 3 real turns passing, it just fires each named trigger back-to-back),
+   * so a card whose chapter timing genuinely matters (an effect reading
+   * `getCounters('lore')`, e.g.) still needs turn-level fidelity this
+   * doesn't provide — a documentary shortcut for "all these triggers
+   * really do fire in this order over the game," not a real turn
+   * simulator. Mutually exclusive with `trigger`/`ability` (ignored if
+   * `sequence` is set).
+   */
+  sequence?: string[];
+  /**
+   * Real 704.5x — a Saga (or any "sacrifice this" self-rule) with no
+   * ability of its own text to blame is sacrificed as a rule action, not a
+   * card effect (`card.effects`/`triggers` shouldn't own it) — set after a
+   * `sequence` reaches its final named chapter (Summon: Bahamut's own
+   * "Sacrifice after IV," fired the same real way `sacrifice` already logs
+   * for any other card, so a `{zone:'Graveyard', subject:'self'}`/
+   * `{event:'dies', target:'self'}` produce fact gets real supporting
+   * evidence instead of none).
+   */
+  sacrificeSelfAfter?: boolean;
+  /**
+   * Names of triggers (within `sequence`, or the single `trigger`) where an
+   * `optional` effect should genuinely decline rather than take whatever
+   * `chooseTarget` would deterministically pick — real `EffectContext
+   * .declineOptional` (card.ts), set fresh before each named trigger fires.
+   * Summon: Bahamut's own reference case: chapter I/II's "destroy up to one
+   * target nonland permanent" would otherwise always hit Bahamut itself
+   * (self is unavoidably the first candidate in an unrestricted pool — see
+   * card.ts's own `EffectContext.declineOptional` doc comment for why), so a
+   * scenario demonstrating the common, sane line (don't blow yourself up)
+   * needs a real way to say "this one whiffs," not just "no legal target
+   * existed."
+   */
+  declineTriggers?: string[];
   /** Real counters already on `self` when this scenario starts (Aerith Gainsborough's own death trigger reads `ctx.self.getCounters('+1/+1')` — needs a way to seed that count before the trigger fires). Omit for a card whose effects don't depend on its own prior counter state. */
   selfCounters?: Record<string, number>;
   /**
@@ -458,6 +502,10 @@ function loggingPlayer(state: GameState, real: RealPlayer, log: LogEntry[]): Pla
       log.push({ fn: 'read:getCardsIn', player: name, zone, count: result.length, creatureCount });
       return result.map(toLogging);
     },
+    addMana: (color: string, amount: number) => {
+      base.addMana(color, amount);
+      log.push({ fn: 'addMana', player: name, color, amount });
+    },
   } as unknown as Player;
 }
 
@@ -646,6 +694,12 @@ function isInstantOrSorcery(typeLine: string): boolean {
  *    than moving to a zone.
  */
 function lifecycleBefore(card: CardDefinition, scenario: Scenario, instanceId: number): LogEntry[] {
+  // `sequence` (see runScenario's own sequence branch, run AFTER the
+  // normal cast->enters lifecycle below) still goes through a REAL cast —
+  // a Saga genuinely enters the battlefield before any of its chapters can
+  // trigger, same as any other permanent; only `trigger`/`ability` skip
+  // straight to "already on the battlefield" for a card being tested
+  // mid-game rather than from a fresh cast.
   if (scenario.trigger) return [{ fn: 'trigger', card: card.name, instanceId, name: scenario.trigger }];
   if (scenario.ability) {
     const ability = card.abilities?.find((a) => a.name === scenario.ability);
@@ -712,10 +766,36 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
   const youLogging = loggingPlayer(state, you, log);
   const opponentsLogging = opponents.map((o) => loggingPlayer(state, o, log));
   const self = loggingCard(state, selfReal, log);
-  const ctx: EffectContext = { self, you: youLogging, opponents: opponentsLogging, castFrom: scenario.castFrom ?? 'hand', mode: scenario.mode, triggerInput: scenario.triggerInput, xPaid: scenario.xPaid };
+  const ctx: EffectContext = {
+    self,
+    you: youLogging,
+    opponents: opponentsLogging,
+    castFrom: scenario.castFrom ?? 'hand',
+    mode: scenario.mode,
+    triggerInput: scenario.triggerInput,
+    xPaid: scenario.xPaid,
+    declineOptional: scenario.declineTriggers?.includes(scenario.trigger ?? '') ?? false,
+  };
   const actions = loggingActions(state, log, selfReal.id);
   resolveCard(effectiveCard, ctx, actions, scenario.trigger, scenario.ability);
   log.push(...lifecycleAfter(effectiveCard, scenario, instanceId, state, selfReal));
+  // `sequence` fires AFTER the normal cast->enters lifecycle just above —
+  // self is genuinely on the battlefield by now, same as `trigger`/
+  // `ability` scenarios assume from the start, so the self-battlefield
+  // baseline fact (and anything else "enters" backs) still gets real
+  // evidence even for a card whose own behavior lives entirely in
+  // `sequence`-fired triggers.
+  if (scenario.sequence) {
+    for (const name of scenario.sequence) {
+      log.push({ fn: 'trigger', card: effectiveCard.name, instanceId, name });
+      ctx.declineOptional = scenario.declineTriggers?.includes(name) ?? false;
+      resolveCard(effectiveCard, ctx, actions, name, undefined);
+    }
+  }
+  if (scenario.sacrificeSelfAfter) {
+    state.move(selfReal, 'Graveyard');
+    log.push({ fn: 'sacrifice', player: you.name, card: effectiveCard.name });
+  }
   // Real phase advancement, only when a scenario actually needs to prove a
   // delayed trigger's timing (see `Scenario.advanceToPhase`'s own doc
   // comment) — starts from Main1 (this harness's own implicit baseline
