@@ -139,6 +139,7 @@ export function buildGraph(setCode: string, allRaw: ScryfallCard[], tokensById: 
     id: c.id,
     name: c.name,
     cmc: c.cmc ?? 0,
+    manaCost: c.mana_cost ?? c.card_faces?.[0]?.mana_cost ?? null,
     colors: c.colors || (c.card_faces ? c.card_faces.flatMap((f) => f.colors || []) : []),
     colorIdentity: c.color_identity || [],
     typeLine: c.type_line || '',

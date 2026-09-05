@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { inject } from 'vue';
+import { computed, inject } from 'vue';
 import { StoreKey, type Store } from '../composables/useGraphStore';
 
 const store = inject(StoreKey)!;
 
 interface SliderDef {
-  key: keyof Pick<Store, 'cardCharge' | 'gravity' | 'linkStrength' | 'alphaDecay' | 'velocityDecay'>;
+  key: keyof Pick<Store, 'cardCharge' | 'gravity' | 'linkStrength' | 'alphaDecay' | 'velocityDecay' | 'sourceNormBudget' | 'sinkNormBudget' | 'qtyBoost'>;
   label: string;
   help: string;
   min: number;
   max: number;
   step: number;
   format: (v: number) => string;
+  // manaCost mode repurposes/ignores this force entirely (see
+  // graphRenderer.ts's xTargetFor/cardChargeFor) — hidden there rather than
+  // shown as a live but silently-inert slider.
+  hideInManaCostMode?: boolean;
 }
 
 const SLIDERS: SliderDef[] = [
@@ -23,6 +27,7 @@ const SLIDERS: SliderDef[] = [
     max: -5,
     step: 5,
     format: (v) => `${v}`,
+    hideInManaCostMode: true,
   },
   {
     key: 'gravity',
@@ -32,6 +37,7 @@ const SLIDERS: SliderDef[] = [
     max: 0.15,
     step: 0.001,
     format: (v) => v.toFixed(3),
+    hideInManaCostMode: true,
   },
   {
     key: 'linkStrength',
@@ -60,7 +66,36 @@ const SLIDERS: SliderDef[] = [
     step: 0.01,
     format: (v) => v.toFixed(2),
   },
+  {
+    key: 'sourceNormBudget',
+    label: 'Source spread',
+    help: 'How much total "output" a single source fact splits across everyone who consumes it. Higher means a fact matched by many cards still counts for a lot per edge; lower shrinks a widely-shared fact\'s influence toward the narrow, specific ones.',
+    min: 0,
+    max: 30,
+    step: 0.5,
+    format: (v) => v.toFixed(1),
+  },
+  {
+    key: 'sinkNormBudget',
+    label: 'Sink spread',
+    help: 'Same as Source spread, but for the demand side — how much total "demand" a single sink fact splits across everyone who supplies it.',
+    min: 0,
+    max: 30,
+    step: 0.5,
+    format: (v) => v.toFixed(1),
+  },
+  {
+    key: 'qtyBoost',
+    label: 'Qty boost',
+    help: 'In deck-import mode, how much a pair\'s own copy counts amplify its edge — 4 copies of each card paired together pulls harder than a 1-of pairing the same way. 0 ignores quantities entirely.',
+    min: 0,
+    max: 2,
+    step: 0.05,
+    format: (v) => v.toFixed(2),
+  },
 ];
+
+const visibleSliders = computed(() => SLIDERS.filter((s) => !s.hideInManaCostMode || store.gravityMode.value !== 'manaCost'));
 </script>
 
 <template>
@@ -68,12 +103,28 @@ const SLIDERS: SliderDef[] = [
     <UButton icon="i-lucide-settings-2" color="neutral" variant="subtle" square aria-label="Physics controls" />
     <template #content>
       <div class="flex max-h-[80vh] w-56 flex-col gap-3 overflow-y-auto p-3">
-        <div v-for="s in SLIDERS" :key="s.key" class="flex flex-col gap-1">
+        <div v-for="s in visibleSliders" :key="s.key" class="flex flex-col gap-1">
           <label :title="s.help" class="flex cursor-help justify-between text-[11px] text-muted">
             <span>{{ s.label }} <span class="text-[10px]">ⓘ</span></span>
             <span>{{ s.format(store[s.key].value) }}</span>
           </label>
-          <USlider v-model="store[s.key].value" :min="s.min" :max="s.max" :step="s.step" size="sm" />
+          <!-- Explicit :model-value/@update:model-value (not v-model) — USlider
+               emits an array (its own multi-thumb model shape) on every drag,
+               and its single-thumb unwrap doesn't reliably run before that
+               reaches here, which used to write a real array into the store
+               ref (crashing `format`'s own `.toFixed` immediately, and
+               persisting as e.g. `"gravity":[0.02]` — the exact stale-array
+               shape loadSavedForces's own sanitizer guards a RELOAD against,
+               but not the live crash in the same session). Unwrapped here
+               instead, once, so the store ref only ever holds a plain number. -->
+          <USlider
+            :model-value="store[s.key].value"
+            @update:model-value="(v) => (store[s.key].value = Array.isArray(v) ? v[0]! : v)"
+            :min="s.min"
+            :max="s.max"
+            :step="s.step"
+            size="sm"
+          />
         </div>
         <UButton color="neutral" variant="subtle" block @click="store.resetForces()">Reset physics</UButton>
         <UButton

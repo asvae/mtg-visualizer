@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, inject, onMounted, onUnmounted, ref } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
 import { describeFact } from '../../../../../functional-model/synergy';
 import type { Fact, AnnotatedText } from '../../../../../functional-model/synergy';
 import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
 import type { CardData, EdgeData, ThemeData } from '../../../../types';
-import { getKnownDeckCards, getActiveFilterMode } from '../../../../composables/useGraphStore';
+import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
 
 definePageMeta({ layout: 'graph' });
 
 const route = useRoute();
+const store = inject(StoreKey)!;
 
 interface CardResponse {
   card: CardData;
@@ -149,8 +150,10 @@ const filterNames = computed<string[] | null>(() => (filterOrder.value ? filterO
 // Not awaited: this route is ssr:false (client-only) anyway, and awaiting
 // would suspend this component's own render until the fetch resolves —
 // meaning `pending` is already false by the time anything renders, so the
-// spinner below never shows on a fresh visit (only on a later Previous/Next
-// reactive refetch, once the component's already mounted).
+// spinner below never shows on a fresh visit (only for a genuine
+// Previous/Next navigation — see hasLoadedCard below for why the OTHER
+// reactive refetch this same call can trigger, filterNames settling, no
+// longer shows it too).
 // POST (not GET) so `filterNames` can ride along in the body — a reactive
 // getter, same as the URL above, so this automatically refetches once
 // filterOrder (and therefore filterNames) settles after mount, picking up
@@ -158,6 +161,22 @@ const filterNames = computed<string[] | null>(() => (filterOrder.value ? filterO
 const { data, pending, error } = useFetch<CardResponse>(() => `/api/card/${route.params.set}/${route.params.number}`, {
   method: 'POST',
   body: computed(() => (filterNames.value ? { filterNames: filterNames.value } : undefined)),
+});
+
+// Real full-screen spinner only for the very first fetch of whichever card
+// is currently on screen — the automatic refetch above (once filterNames
+// settles a moment after mount) flips `pending` true again for an instant,
+// which used to blank the whole page back to the spinner and right back
+// (a visible flash) even though `data` itself never actually goes stale —
+// useFetch keeps the previous response on screen until the new one lands.
+// Reset per-card (not just once ever) so a genuine Previous/Next navigation
+// still shows the spinner for ITS first fetch.
+const hasLoadedCard = ref(false);
+watch(data, (v) => {
+  if (v) hasLoadedCard.value = true;
+});
+watch(() => route.params.number, () => {
+  hasLoadedCard.value = false;
 });
 
 const card = computed(() => data.value?.card ?? null);
@@ -235,8 +254,12 @@ const hoveredFactKey = ref<string | null>(null);
 // AI-authored+verified representation this page leads with), the other
 // three are progressively rawer looks at the same card (its trace.json
 // scenario log, the synergy facts as literal JSON, then the hand-authored
-// CardDefinition source itself).
-const functionalModelTab = ref<'facts' | 'scenarios' | 'json' | 'definition'>('facts');
+// CardDefinition source itself). The active tab itself lives on the shared
+// store (store.functionalModelTab), not a local ref here — this page
+// component unmounts/remounts navigating to/from the graph view (a
+// different route), and the tab should stay put across that, not reset to
+// 'facts' every time; see the store's own comment for why it's still
+// session-only, not localStorage-persisted.
 const functionalModelTabs = [
   { label: 'Facts', value: 'facts' as const },
   { label: 'Scenarios', value: 'scenarios' as const },
@@ -278,7 +301,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 <template>
   <div class="flex-1 overflow-y-auto p-6">
-    <div v-if="pending" class="flex flex-1 items-center justify-center">
+    <div v-if="pending && !hasLoadedCard" class="flex flex-1 items-center justify-center">
       <div
         class="size-8 animate-spin rounded-full border-[3px] border-border border-t-produce"
         aria-hidden="true"
@@ -332,22 +355,24 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             :text="data.functionalModel.annotatedText.text"
             :facts="data.functionalModel.annotatedText.facts"
             :highlight-key="hoveredFactKey"
+            @hover="hoveredFactKey = $event"
           />
         </div>
 
         <!-- Same "strip only, content switched separately" split AppHeader.vue's
              own filter-mode UTabs already uses — nothing here depends on
              UTabs rendering slotted content itself. -->
-        <UTabs v-model="functionalModelTab" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
+        <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
 
-        <template v-if="functionalModelTab === 'facts'">
+        <template v-if="store.functionalModelTab.value === 'facts'">
           <div v-if="synergy" class="overflow-x-auto">
             <table class="border-collapse text-xs whitespace-nowrap">
               <tbody>
                 <tr
                   v-for="(fact, fi) in [...synergy.sink, ...synergy.source]"
                   :key="fi"
-                  class="align-middle hover:bg-surface/25"
+                  class="align-middle"
+                  :class="hoveredFactKey === factKey(fact) ? 'bg-surface/60' : 'hover:bg-surface/25'"
                   @mouseenter="hoveredFactKey = factKey(fact)"
                   @mouseleave="hoveredFactKey = null"
                 >
@@ -369,12 +394,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
           <div v-else class="text-xs text-muted italic">Not yet migrated to v2 synergy.json.</div>
         </template>
 
-        <template v-else-if="functionalModelTab === 'scenarios'">
+        <template v-else-if="store.functionalModelTab.value === 'scenarios'">
           <TraceViewer v-if="data.functionalModel.traces?.length" :traces="data.functionalModel.traces" />
           <div v-else class="text-xs text-muted italic">No scenarios recorded.</div>
         </template>
 
-        <template v-else-if="functionalModelTab === 'json'">
+        <template v-else-if="store.functionalModelTab.value === 'json'">
           <pre class="max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
             functionalModelJson
           }}</pre>
@@ -399,7 +424,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
           <li
             v-for="(group, gi) in data.interactions"
             :key="gi"
-            class="rounded-md border border-border bg-panel px-2.5 py-1.5 text-xs text-text"
+            class="rounded-md border border-border px-2.5 py-1.5 text-xs text-text"
+            :class="hoveredFactKey === factKey(group.fact) ? 'bg-surface/60' : 'bg-panel'"
+            @mouseenter="hoveredFactKey = factKey(group.fact)"
+            @mouseleave="hoveredFactKey = null"
           >
             <details>
               <summary class="flex cursor-pointer items-center gap-1.5">

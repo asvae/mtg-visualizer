@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { provide, onMounted, watch, computed } from 'vue';
 import { useGraphStore, StoreKey } from '../composables/useGraphStore';
+import type { GravityMode } from '../lib/graphRenderer';
+
+const GRAVITY_MODE_ITEMS: { label: string; value: GravityMode }[] = [
+  { label: 'Layout: Default', value: 'default' },
+  { label: 'Layout: Mana cost', value: 'manaCost' },
+];
 
 // Physics controls only make sense on the graph page itself (they tune the
 // D3 simulation index.vue renders) — not on the card detail page, which
@@ -42,7 +48,13 @@ watch(
            Reka UI's positioning logic ("parentNode is null"). AppHeader
            never had that problem for the same reason: it's also up here,
            never inside the page. -->
-      <div v-if="isGraphPage && store.graph.value" class="absolute top-3 right-3 z-10">
+      <div v-if="isGraphPage && store.graph.value" class="absolute right-3 bottom-3 z-10 flex items-center gap-2">
+        <USelect
+          :model-value="store.gravityMode.value"
+          @update:model-value="(v) => (store.gravityMode.value = v as GravityMode)"
+          :items="GRAVITY_MODE_ITEMS"
+          class="w-36"
+        />
         <PhysicsControls />
       </div>
     </div>

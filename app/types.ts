@@ -7,6 +7,10 @@ export interface CardData {
   id: string;
   name: string;
   cmc: number;
+  // Front face's raw Scryfall mana cost string (e.g. "{2}{U}{U}"), null for
+  // a face with none (lands) — the graph node's title bar renders this via
+  // the same {X}-symbol data URIs ManaSymbol.vue uses.
+  manaCost: string | null;
   colors: string[];
   colorIdentity: string[];
   typeLine: string;
@@ -44,15 +48,20 @@ export interface EdgeData {
 }
 
 // One matched fact behind a CardLink — `description` is the human-readable
-// text (functional-model/synergy.ts's `describeFact`), `weight` is the
-// match's combined two-sided strength (`Math.sqrt(mineTotal * theirTotal)`,
-// each a `factTotal` — see functional-model/synergy.ts's own doc comments on
-// `Weight`/`factTotal`), 1-25, or `null` if either side's fact predates the
-// weight fields (treat as "unweighted," never as 1 — a real 1 means
-// "verified minimum-strength match," not "unknown").
+// text (functional-model/synergy.ts's `describeFact`). Combined edge
+// strength is NOT baked in server-side (see graph-links.ts's own header
+// comment) — `sourceShareRatio`/`sinkShareRatio` are this one match's own
+// slice of two separate pool-wide totals (how many OTHER matches split the
+// same source fact's output, and separately how many split the same sink
+// fact's demand), each in (0, 1]. graphRenderer.ts's `reasonWeight` turns
+// these into an actual number by multiplying each ratio by a user-tunable
+// budget (PhysicsControls.vue's "Source spread"/"Sink spread" sliders) —
+// kept as raw ratios here (not a value×budget product) specifically so a
+// slider drag never needs a server round-trip to see its effect.
 export interface GraphReason {
   description: string;
-  weight: number | null;
+  sourceShareRatio: number;
+  sinkShareRatio: number;
   // Which of the parent CardLink's `a`/`b` is the source (arrow tail) for
   // this specific reason — 'a' means a is the source and b the sink, 'b' the
   // reverse. Two reasons on the same pair can point opposite ways (each

@@ -18,7 +18,30 @@ function currentFilters(): AttrFilters {
   };
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // graphRenderer.ts's title-fitting (fitTitleText/measureTextWidth) measures
+  // via an offscreen <canvas> context — which silently substitutes a fallback
+  // font if 'EB Garamond' (nuxt.config.ts's head link) hasn't actually
+  // finished loading yet, WITHOUT erroring. Node titles are only ever fit
+  // once (at render time, not re-computed later), so any node whose title
+  // got measured against that fallback during this race stays wrong —
+  // over-shrunk relative to the space really available — for the rest of
+  // this graph's life. Waiting here (a few ms at most, thanks to the
+  // preconnect) means every node's very first render already has the real
+  // font loaded to measure against. No-ops harmlessly if the Font Loading
+  // API isn't available.
+  if (typeof document !== 'undefined' && document.fonts) {
+    // .load() (not just .ready) — nothing on the page has actually USED this
+    // font before now, so nothing may have triggered the browser to start
+    // fetching it yet; .ready only waits for loads already in flight, and
+    // could resolve trivially fast without this explicit request.
+    try {
+      await document.fonts.load('600 16px "EB Garamond"');
+    } catch {
+      // network hiccup fetching the font — proceed anyway, title-fitting
+      // just risks the fallback-font race this was meant to avoid
+    }
+  }
   // Created once. render()/applySearch() below only ever mutate this same instance's
   // persistent node objects — Vue never re-mounts this <svg>, so node positions,
   // zoom, and drag state all survive every filter/search change untouched.
@@ -77,9 +100,31 @@ onMounted(() => {
     (id) => renderer!.setLookupHighlight(id)
   );
   watch(
-    () => [store.cardCharge.value, store.gravity.value, store.linkStrength.value, store.linkDistanceScale.value, store.collidePadding.value, store.alphaDecay.value, store.velocityDecay.value],
-    ([cardCharge, gravity, linkStrength, linkDistanceScale, collidePadding, alphaDecay, velocityDecay]) =>
-      renderer!.setForces({ cardCharge, gravity, linkStrength, linkDistanceScale, collidePadding, alphaDecay, velocityDecay }),
+    () => [
+      store.cardCharge.value,
+      store.gravity.value,
+      store.linkStrength.value,
+      store.linkDistanceScale.value,
+      store.collidePadding.value,
+      store.alphaDecay.value,
+      store.velocityDecay.value,
+      store.sourceNormBudget.value,
+      store.sinkNormBudget.value,
+      store.qtyBoost.value,
+    ],
+    ([cardCharge, gravity, linkStrength, linkDistanceScale, collidePadding, alphaDecay, velocityDecay, sourceNormBudget, sinkNormBudget, qtyBoost]) =>
+      renderer!.setForces({
+        cardCharge,
+        gravity,
+        linkStrength,
+        linkDistanceScale,
+        collidePadding,
+        alphaDecay,
+        velocityDecay,
+        sourceNormBudget,
+        sinkNormBudget,
+        qtyBoost,
+      }),
     // Without this, the renderer starts on DEFAULT_FORCES and only picks up the
     // real (possibly localStorage-restored) slider values once something actually
     // changes them — immediate applies whatever's currently loaded right away.
@@ -89,6 +134,10 @@ onMounted(() => {
     () => store.rerenderTrigger.value,
     () => renderer!.resetLayout(currentFilters())
   );
+  // immediate: true — same reasoning as the forces watch above, so a
+  // localStorage-restored 'manaCost' mode applies from the first render
+  // instead of starting on 'default' and flipping a tick later.
+  watch(() => store.gravityMode.value, (mode) => renderer!.setGravityMode(mode), { immediate: true });
 });
 
 onBeforeUnmount(() => {
@@ -120,11 +169,18 @@ svg#graph {
 }
 
 .link {
+  /* Overridden per-edge by graphRenderer.ts's applyEdgeStyle (inline style,
+     always wins over this class rule) — this is just the pre-first-paint
+     fallback before that ever runs. */
   stroke: var(--color-produce);
 }
 
 .search-dim {
-  opacity: 0.08;
+  /* !important: a dimmed link/node still carries graphRenderer.ts's own
+     inline opacity style (the strength gradient) — without this, that
+     inline style (higher precedence than a plain class rule) would win and
+     search-dimming would silently stop working on edges. */
+  opacity: 0.08 !important;
 }
 
 .search-match {

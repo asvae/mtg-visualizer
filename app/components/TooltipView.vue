@@ -2,6 +2,7 @@
 import { inject, computed, ref, watch, nextTick } from 'vue';
 import { computePosition, offset, flip, shift, size, type VirtualElement } from '@floating-ui/dom';
 import { StoreKey, type HoveredCard } from '../composables/useGraphStore';
+import { reasonWeight, qtyMultiplier } from '../lib/graphRenderer';
 
 const store = inject(StoreKey)!;
 
@@ -21,18 +22,23 @@ const isWide = computed(() => {
 // first. Counts distinct CARDS per relation (a Set, not a running tally) since a
 // card can carry the same description only once per link anyway (graph-links.ts
 // already dedupes that), but this stays correct even if that ever changes.
-// Missing weight (a reason predating the weight fields) counts as 1 for the
-// average — same floor graphRenderer.ts's linkQuality uses, so what's displayed
-// here matches what's actually driving the graph's own physics.
+// Same reasonWeight/qtyMultiplier formula graphRenderer.ts's own linkQuality
+// uses (against the CURRENT budget/qtyBoost slider values, read straight off
+// the store), so what's displayed here always matches what's actually
+// driving the graph's own physics right now.
 const relationCounts = computed(() => {
   if (!cardTooltip.value) return [];
+  const budgets = { sourceNormBudget: store.sourceNormBudget.value, sinkNormBudget: store.sinkNormBudget.value };
+  const qtyForces = { qtyBoost: store.qtyBoost.value };
+  const hoveredQty = cardTooltip.value.card.qty;
   const byDescription = new Map<string, { cards: Set<string>; weightSum: number; weightCount: number }>();
   for (const l of cardTooltip.value.links) {
+    const qty = qtyMultiplier(hoveredQty, l.card.qty, qtyForces);
     for (const r of l.reasons) {
       if (!byDescription.has(r.description)) byDescription.set(r.description, { cards: new Set(), weightSum: 0, weightCount: 0 });
       const g = byDescription.get(r.description)!;
       g.cards.add(l.card.id);
-      g.weightSum += r.weight ?? 1;
+      g.weightSum += reasonWeight(r, budgets) * qty;
       g.weightCount++;
     }
   }

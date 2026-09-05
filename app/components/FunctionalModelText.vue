@@ -11,6 +11,12 @@ import type { AnnotatedFactRef } from '../../functional-model/synergy';
 // component only ever sees the narrower `AnnotatedFactRef`). `null`/unset =
 // nothing hovered, no segment highlighted.
 const props = defineProps<{ text: string; facts: AnnotatedFactRef[][]; highlightKey?: string | null }>();
+// Lets the parent (the card page) mirror this panel's own hover into the
+// Facts table row / Interactions row sharing the same fact — the three-way
+// sync `highlightKey` above drives is bidirectional: this component receives
+// a highlight from elsewhere via the prop, and reports its own hover back up
+// via this emit so the other two panels can highlight in turn.
+const emit = defineEmits<{ hover: [key: string | null] }>();
 
 interface RenderSegment {
   text: string;
@@ -70,6 +76,11 @@ let positionRequestId = 0;
 
 async function show(seg: RenderSegment, e: MouseEvent) {
   hovered.value = seg;
+  // Only the first fact behind this phrase drives the cross-panel highlight
+  // — a segment with more than one fact is rare (see the tooltip's own
+  // multi-fact rendering below), and the table/interactions side has no
+  // notion of "this row is one of several" to match against anyway.
+  emit('hover', seg.facts?.[0] ? factKey(seg.facts[0]) : null);
   const anchor = e.currentTarget as HTMLElement;
   const requestId = ++positionRequestId;
   await nextTick();
@@ -95,6 +106,7 @@ async function show(seg: RenderSegment, e: MouseEvent) {
 }
 function hide() {
   hovered.value = null;
+  emit('hover', null);
 }
 </script>
 
@@ -104,7 +116,7 @@ function hide() {
       <span
         v-if="seg.facts?.length"
         class="cursor-help rounded underline decoration-dashed decoration-1 underline-offset-4 transition-colors"
-        :class="[segColor(seg), isRowHighlighted(seg) ? 'bg-surface/25' : '']"
+        :class="[segColor(seg), isRowHighlighted(seg) ? 'bg-surface/60' : '']"
         @mouseenter="show(seg, $event)"
         @mouseleave="hide"
         ><template v-for="(ms, mi) in parseManaSegments(seg.text)" :key="mi"

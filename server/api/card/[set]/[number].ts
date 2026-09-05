@@ -419,6 +419,7 @@ export default defineEventHandler(async (event) => {
     id: card.id,
     name: card.name,
     cmc: card.cmc ?? 0,
+    manaCost: card.mana_cost ?? card.card_faces?.[0]?.mana_cost ?? null,
     colors: card.colors || (card.card_faces ? card.card_faces.flatMap((f) => f.colors || []) : []),
     colorIdentity: card.color_identity || [],
     typeLine: card.type_line || '',

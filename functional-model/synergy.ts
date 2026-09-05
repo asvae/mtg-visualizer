@@ -274,6 +274,8 @@ export interface InteractionMatch {
   selfInteraction?: SelfInteractionKind;
   /** `factTotal` of the OTHER side's specific fact that satisfied this match (the group's own `fact` is `mine`'s side — see `InteractionGroup`) — a caller wanting this match's full two-sided value combines both (e.g. `Math.sqrt(mine * theirs)`), not just `mine` alone. `null` if that fact predates the weight fields. */
   theirTotal: number | null;
+  /** `theirs.id` — identifies exactly which fact on `card` this match satisfied, distinct from `mine`'s own `fact.id` on `InteractionGroup`. Used by `server/api/graph-links.ts` to group every match pointing at the SAME sink fact (possibly from many different producer cards) for its own supply-side normalization — same tolerate-`undefined` convention as every other fact id here (a fact authored before per-fact ids won't have one). */
+  theirFactId?: string;
 }
 
 export interface InteractionGroup {
@@ -517,7 +519,12 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
       for (const theirs of otherFacts) {
         if (factsInteract(mine, mineCard, mineRole, theirs, other, tokens)) {
           const isSelf = other.name === mineCard.name;
-          matches.push({ card: other.name, selfInteraction: isSelf ? selfInteractionKind(mine, mineCard) : undefined, theirTotal: factTotal(theirs) });
+          matches.push({
+            card: other.name,
+            selfInteraction: isSelf ? selfInteractionKind(mine, mineCard) : undefined,
+            theirTotal: factTotal(theirs),
+            theirFactId: theirs.id,
+          });
         }
       }
     }
@@ -525,12 +532,14 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
     return { direction: mineRole, fact: mine, theme: themeOf(mine), description: describeFact(mine), matches };
   }
 
-  for (const fact of self.source) {
-    const group = matchOne(fact, self, 'source');
-    if (group) groups.push(group);
-  }
+  // Sink before source — same order the card page's own Facts tab renders
+  // ([...sink, ...source]; see the card page's own comment for why).
   for (const fact of self.sink) {
     const group = matchOne(fact, self, 'sink');
+    if (group) groups.push(group);
+  }
+  for (const fact of self.source) {
+    const group = matchOne(fact, self, 'source');
     if (group) groups.push(group);
   }
   return groups;

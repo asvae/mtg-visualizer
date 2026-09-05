@@ -50,6 +50,7 @@ export interface CardFace {
   type_line?: string;
   keywords?: string[];
   image_uris?: ImageUris;
+  mana_cost?: string;
 }
 export interface ScryfallCard {
   id: string;
@@ -64,6 +65,7 @@ export interface ScryfallCard {
   digital?: boolean;
   image_uris?: ImageUris;
   card_faces?: CardFace[];
+  mana_cost?: string;
   set?: string;
   collector_number?: string;
   // Only present on a live Scryfall response — read by isStandardPrint() in
@@ -91,12 +93,14 @@ export function minimalCard(c: ScryfallCard) {
     keywords: c.keywords,
     digital: c.digital,
     image_uris: c.image_uris ? { normal: c.image_uris.normal, art_crop: c.image_uris.art_crop } : undefined,
+    mana_cost: c.mana_cost,
     card_faces: c.card_faces?.map((f) => ({
       name: f.name,
       colors: f.colors,
       type_line: f.type_line,
       keywords: f.keywords,
       image_uris: f.image_uris ? { normal: f.image_uris.normal, art_crop: f.image_uris.art_crop } : undefined,
+      mana_cost: f.mana_cost,
     })),
     set: c.set,
     collector_number: c.collector_number,

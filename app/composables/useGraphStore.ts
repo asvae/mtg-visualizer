@@ -2,7 +2,7 @@ import { computed, onMounted, reactive, ref, shallowRef, watch, type InjectionKe
 import type { CardData, GraphFile, GraphReason } from '../types';
 import { COLOR_ORDER, RARITY_ORDER } from '../lib/constants';
 import { availableRarities as computeAvailableRarities, availableTypes as computeAvailableTypes } from '../lib/filters';
-import { DEFAULT_FORCES, type ForceConfig } from '../lib/graphRenderer';
+import { DEFAULT_FORCES, type ForceConfig, type GravityMode } from '../lib/graphRenderer';
 import { buildGraph, type NameLink, type ScryfallCard, type TokensById } from '../lib/buildGraph';
 import { parseDecklist, type ParsedDeckCard } from '../lib/deckImport';
 
@@ -202,6 +202,15 @@ export function getActiveFilterMode(): ActiveFilter {
 const STORAGE_KEY = `mtg-visualizer-filters-${SET_CODE}`;
 const FORCES_STORAGE_KEY = `mtg-visualizer-forces-${SET_CODE}`;
 const SEARCH_STORAGE_KEY = `mtg-visualizer-search-${SET_CODE}`;
+// Separate key, not folded into FORCES_STORAGE_KEY's own JSON blob — that
+// one's sanitized as a flat numeric-fields-only object (see
+// loadSavedForces/NUMERIC_FORCE_KEYS below), and a non-numeric value there
+// would just get silently dropped by that same guard.
+const GRAVITY_MODE_STORAGE_KEY = `mtg-visualizer-gravity-mode-${SET_CODE}`;
+// Not namespaced by SET_CODE — unlike the filter/force state above, "which of
+// the four functional-model views you last looked at" isn't really a
+// per-set preference, just a standing UI habit.
+const FUNCTIONAL_MODEL_TAB_STORAGE_KEY = 'mtg-visualizer-functional-model-tab';
 
 // Second half of the shareable-link restore started near the top of this
 // file — colors/rarities/types/search couldn't be applied there since
@@ -270,6 +279,9 @@ const NUMERIC_FORCE_KEYS: (keyof ForceConfig)[] = [
   'collidePadding',
   'alphaDecay',
   'velocityDecay',
+  'sourceNormBudget',
+  'sinkNormBudget',
+  'qtyBoost',
 ];
 function loadSavedForces(): Partial<ForceConfig> | null {
   try {
@@ -386,11 +398,36 @@ export function useGraphStore() {
   const linkStrength = ref(savedForces?.linkStrength ?? DEFAULT_FORCES.linkStrength);
   const alphaDecay = ref(savedForces?.alphaDecay ?? DEFAULT_FORCES.alphaDecay);
   const velocityDecay = ref(savedForces?.velocityDecay ?? DEFAULT_FORCES.velocityDecay);
+  const sourceNormBudget = ref(savedForces?.sourceNormBudget ?? DEFAULT_FORCES.sourceNormBudget);
+  const sinkNormBudget = ref(savedForces?.sinkNormBudget ?? DEFAULT_FORCES.sinkNormBudget);
+  const qtyBoost = ref(savedForces?.qtyBoost ?? DEFAULT_FORCES.qtyBoost);
   // collidePadding/linkDistanceScale are no longer user-tunable (sliders removed) —
   // fixed at their DEFAULT_FORCES value regardless of what an older save might
   // have, never read from/written to storage.
   const linkDistanceScale = ref(DEFAULT_FORCES.linkDistanceScale);
   const collidePadding = ref(DEFAULT_FORCES.collidePadding);
+
+  // 'default' (usual force layout) or 'manaCost' (a mana curve — see
+  // graphRenderer.ts's own GravityMode/setGravityMode). Restored synchronously
+  // same as the sliders above, and sanitized against a stale/corrupt value
+  // the same reason loadSavedForces guards the numeric sliders — an
+  // unrecognized string here would otherwise reach GraphCanvas.vue's watch
+  // and get handed straight to the renderer.
+  let savedGravityMode: GravityMode = 'default';
+  try {
+    const raw = localStorage.getItem(GRAVITY_MODE_STORAGE_KEY);
+    if (raw === 'manaCost') savedGravityMode = 'manaCost';
+  } catch {
+    // storage blocked — just start on 'default'
+  }
+  const gravityMode = ref<GravityMode>(savedGravityMode);
+  watch(gravityMode, (mode) => {
+    try {
+      localStorage.setItem(GRAVITY_MODE_STORAGE_KEY, mode);
+    } catch {
+      // storage full/blocked — mode just won't persist
+    }
+  });
 
   function resetForces() {
     cardCharge.value = DEFAULT_FORCES.cardCharge;
@@ -398,6 +435,9 @@ export function useGraphStore() {
     linkStrength.value = DEFAULT_FORCES.linkStrength;
     alphaDecay.value = DEFAULT_FORCES.alphaDecay;
     velocityDecay.value = DEFAULT_FORCES.velocityDecay;
+    sourceNormBudget.value = DEFAULT_FORCES.sourceNormBudget;
+    sinkNormBudget.value = DEFAULT_FORCES.sinkNormBudget;
+    qtyBoost.value = DEFAULT_FORCES.qtyBoost;
   }
 
   // Bumped by the "Rerender" button — GraphCanvas watches this and rebuilds the
@@ -409,13 +449,19 @@ export function useGraphStore() {
     rerenderTrigger.value++;
   }
 
-  watch([cardCharge, gravity, linkStrength, alphaDecay, velocityDecay], () => {
-    const payload: Pick<ForceConfig, 'cardCharge' | 'gravity' | 'linkStrength' | 'alphaDecay' | 'velocityDecay'> = {
+  watch([cardCharge, gravity, linkStrength, alphaDecay, velocityDecay, sourceNormBudget, sinkNormBudget, qtyBoost], () => {
+    const payload: Pick<
+      ForceConfig,
+      'cardCharge' | 'gravity' | 'linkStrength' | 'alphaDecay' | 'velocityDecay' | 'sourceNormBudget' | 'sinkNormBudget' | 'qtyBoost'
+    > = {
       cardCharge: cardCharge.value,
       gravity: gravity.value,
       linkStrength: linkStrength.value,
       alphaDecay: alphaDecay.value,
       velocityDecay: velocityDecay.value,
+      sourceNormBudget: sourceNormBudget.value,
+      sinkNormBudget: sinkNormBudget.value,
+      qtyBoost: qtyBoost.value,
     };
     try {
       localStorage.setItem(FORCES_STORAGE_KEY, JSON.stringify(payload));
@@ -427,6 +473,29 @@ export function useGraphStore() {
   const hovered = shallowRef<HoveredCard | null>(null);
   const mouseX = ref(0);
   const mouseY = ref(0);
+
+  // Card detail page's Facts/Scenarios/JSON/Definition tab — lives here (not
+  // a local ref on that page) so it survives navigating away and back (this
+  // store outlives the page component; see graph.vue's layout-level provide),
+  // AND persisted to localStorage, same sanitize-against-a-stale-value
+  // reasoning as gravityMode above.
+  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'definition'] as const;
+  type FunctionalModelTab = (typeof FUNCTIONAL_MODEL_TABS)[number];
+  let savedFunctionalModelTab: FunctionalModelTab = 'facts';
+  try {
+    const raw = localStorage.getItem(FUNCTIONAL_MODEL_TAB_STORAGE_KEY);
+    if ((FUNCTIONAL_MODEL_TABS as readonly string[]).includes(raw ?? '')) savedFunctionalModelTab = raw as FunctionalModelTab;
+  } catch {
+    // storage blocked — just start on 'facts'
+  }
+  const functionalModelTab = ref<FunctionalModelTab>(savedFunctionalModelTab);
+  watch(functionalModelTab, (tab) => {
+    try {
+      localStorage.setItem(FUNCTIONAL_MODEL_TAB_STORAGE_KEY, tab);
+    } catch {
+      // storage full/blocked — tab just won't persist
+    }
+  });
 
   const availableRarities = ref<string[]>([]);
   const availableTypes = ref<string[]>([]);
@@ -529,18 +598,27 @@ export function useGraphStore() {
         // right before it navigated here) is the source of truth, not the URL —
         // parse it fresh on every load so an edited/re-pasted deck under the
         // same `?deck=1` flag always reflects what's actually in storage right
-        // now. No synergy links (same reasoning as query mode below) and no
-        // token hover art (this endpoint doesn't fetch token images either).
+        // now. Real synergy links via /api/graph-links below — no token hover
+        // art though (this endpoint doesn't fetch token images either).
         const parsed = getActiveDeckCards();
         if (!parsed) {
           loadError.value = 'No cards recognized in the pasted decklist.';
           return;
         }
-        const res = await fetch('/api/cards/by-names', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ names: [...new Set(parsed.map((c) => c.name))] }),
-        });
+        // graph-links is the whole functional-model pool's synergy edges,
+        // fetched in parallel with the deck's own card lookup — buildGraph
+        // already drops any link whose name isn't in this deck's `raw` (see
+        // its own resolvedLinks loop), so no client-side filtering needed
+        // here; same whole-pool-then-resolve shape the plain (no filter)
+        // branch below already uses.
+        const [res, linksRes] = await Promise.all([
+          fetch('/api/cards/by-names', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ names: [...new Set(parsed.map((c) => c.name))] }),
+          }),
+          fetch('/api/graph-links'),
+        ]);
         const body = await res.json();
         if (!res.ok) {
           loadError.value = body.error || `deck import failed (${res.status})`;
@@ -550,7 +628,7 @@ export function useGraphStore() {
         // server/api/cards/by-names.ts's own header comment) — merged back
         // in via the same stampKnownQty every other branch uses below.
         raw = stampKnownQty(body.cards as ScryfallCard[]);
-        links = [];
+        links = linksRes.ok ? ((await linksRes.json()).links as NameLink[]) : [];
         tokensById = {};
         dataWarning.value = body.unmatched?.length
           ? `${body.unmatched.length} card${body.unmatched.length === 1 ? '' : 's'} not found: ${body.unmatched.join(', ')}`
@@ -559,20 +637,23 @@ export function useGraphStore() {
         // Query mode: resolve against the Netlify function instead of the
         // static per-set files — see netlify/functions/cards.mts. No token
         // images in this mode (function doesn't fetch them), so no hover art.
-        // functional-model only covers FIN right now, so an arbitrary Scryfall
-        // query gets no synergy links — cards render with no connections.
-        const res = await fetch('/api/cards', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: scryfallQuery }),
-        });
+        // Real synergy links via /api/graph-links, same whole-pool-then-let-
+        // buildGraph-resolve shape the deck branch above uses.
+        const [res, linksRes] = await Promise.all([
+          fetch('/api/cards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ q: scryfallQuery }),
+          }),
+          fetch('/api/graph-links'),
+        ]);
         const body = await res.json();
         if (!res.ok) {
           loadError.value = body.error || `query failed (${res.status})`;
           return;
         }
         raw = stampKnownQty(body.cards);
-        links = [];
+        links = linksRes.ok ? ((await linksRes.json()).links as NameLink[]) : [];
         tokensById = {};
         dataWarning.value = body.truncated
           ? `Showing ${body.cards.length} of ${body.totalCards} matching cards — narrow your search to see the rest.`
@@ -650,12 +731,17 @@ export function useGraphStore() {
     collidePadding,
     alphaDecay,
     velocityDecay,
+    sourceNormBudget,
+    sinkNormBudget,
+    qtyBoost,
+    gravityMode,
     resetForces,
     rerenderTrigger,
     rerenderLayout,
     hovered,
     mouseX,
     mouseY,
+    functionalModelTab,
   };
 }
 

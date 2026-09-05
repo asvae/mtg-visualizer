@@ -13,11 +13,60 @@
 // calling convention from useGraphStore.ts's own load().
 
 import { minimalCard, relationsAndThemes, type ScryfallCard } from './_cardShaping';
+import { isStandardPrint } from '../utils/isStandardPrint';
 
 // Hard cap on cards fetched/returned per query, regardless of how many the
 // query actually matches — keeps one broad query from paginating for minutes
 // or shipping a multi-MB response. Never fetched past; see `truncated` below.
 const MAX_CARDS = 500;
+
+// Scryfall's own `unique=cards` already collapses each match to one
+// representative printing, but ITS pick isn't always a standard one — same
+// gap server/api/cards/by-names.ts's own preferStandardPrint closes for a
+// name lookup. Skipped entirely when the user's own query already expresses
+// printing intent (frame/border/finish/etc.) — unlike a plain name lookup, a
+// free-typed Scryfall query CAN deliberately ask for a showcase/foil/full-art
+// printing, and silently swapping every match back to a standard print would
+// defeat that search outright rather than just picking a nicer default.
+const PRINTING_INTENT_RE = /\b(is|not|frame|border|finish|stamp|game|art|lang):|(?:^|\s)(foil|nonfoil|etched)\b/i;
+
+async function fetchStandardPrintForName(name: string): Promise<ScryfallCard | null> {
+  try {
+    const q = `!"${name}" -is:extendedart -is:showcase -is:borderless -is:colorshifted -is:full -is:promo`;
+    const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=released&dir=desc`, {
+      headers: { 'User-Agent': 'mtg-visualizer/0.1', Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+    const data: { data: ScryfallCard[] } = await res.json();
+    return data.data[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+// Falls back to the original card (better than nothing) if the re-resolve
+// search comes up empty — e.g. a card that genuinely only ever got a
+// showcase/full-art treatment, no standard printing to swap to.
+async function preferStandardPrint(card: ScryfallCard): Promise<ScryfallCard> {
+  if (isStandardPrint(card)) return card;
+  const standard = await fetchStandardPrintForName(card.name);
+  return standard ?? card;
+}
+// Small concurrency cap with a stagger between chunks — a broad query can
+// flag a lot more matches at once than a typical decklist (by-names.ts's own
+// equivalent has no such cap, but that route only ever sees as many names as
+// a real decklist has; this one can hit MAX_CARDS), and this is the same
+// class of per-request burst that tripped a real Scryfall 429 lockout
+// earlier this project.
+const REPRINT_CHUNK_SIZE = 10;
+async function preferStandardPrints(cards: ScryfallCard[]): Promise<ScryfallCard[]> {
+  const result: ScryfallCard[] = [];
+  for (let i = 0; i < cards.length; i += REPRINT_CHUNK_SIZE) {
+    const chunk = cards.slice(i, i + REPRINT_CHUNK_SIZE);
+    result.push(...(await Promise.all(chunk.map(preferStandardPrint))));
+    if (i + REPRINT_CHUNK_SIZE < cards.length) await new Promise((r) => setTimeout(r, 100));
+  }
+  return result;
+}
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => null);
@@ -52,8 +101,9 @@ export default defineEventHandler(async (event) => {
     if (nextUrl && cards.length < MAX_CARDS) await new Promise((r) => setTimeout(r, 100)); // be polite to Scryfall
   }
 
-  const matched = cards.slice(0, MAX_CARDS);
-  const truncated = totalCards > matched.length;
+  const rawMatched = cards.slice(0, MAX_CARDS);
+  const truncated = totalCards > rawMatched.length;
+  const matched = PRINTING_INTENT_RE.test(q) ? rawMatched : await preferStandardPrints(rawMatched);
   const { relations, themes } = relationsAndThemes(matched);
 
   return {
