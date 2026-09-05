@@ -13,6 +13,18 @@ import { PHASES, currentPhase, advancePhase, type Phase } from './turn';
  * not disposable static snapshots).
  * Lives at functional-model/cards/<slug>/scenarios.ts, one array per card.
  */
+/** One step of a `Scenario.sequence` richer than a bare trigger name — see that field's own doc comment. Exactly one of `trigger`/`ability`/`activate` should be set. */
+export interface SequenceStep {
+  /** Fires this named trigger (`resolveCard(..., triggerName)`), same as a bare string entry. */
+  trigger?: string;
+  /** Runs this named entry from `card.abilities` (`resolveCard(..., undefined, abilityName)`). */
+  ability?: string;
+  /** Runs the card's own `activationCost`-gated `effects` (`resolveCard` with no trigger/ability name) — the single-ability common case `lifecycleBefore`'s own top-level `card.activationCost` branch already covers, just mid-sequence. */
+  activate?: boolean;
+  /** Which face's `CardDefinition` this step resolves against — omit to keep whatever face the PREVIOUS step (or the scenario's own opening move) used. Set once, right when a transform actually happens (Jill's own "activate" step doesn't need this; the FOLLOWING `chapterI` step does, `face:'back'`). */
+  face?: 'front' | 'back';
+}
+
 export interface Scenario {
   /**
    * Legacy single-sentence label — still supported (used as the `result`
@@ -70,8 +82,20 @@ export interface Scenario {
    * really do fire in this order over the game," not a real turn
    * simulator. Mutually exclusive with `trigger`/`ability` (ignored if
    * `sequence` is set).
+   *
+   * A bare string is shorthand for `{ trigger: name }` against the same
+   * face `runScenario` already resolved for the whole scenario (Summon:
+   * Bahamut's own single-faced case). A step object additionally covers a
+   * transforming DFC whose own real arc crosses BOTH faces within one
+   * scenario (Jill, Shiva's Dominant // Shiva, Warden of Ice's own "enters,
+   * ETB fires, later activates its own transform, then the BACK face's own
+   * Saga chapters fire" — `card.effects` on either face for `activate`,
+   * `card.backFace`'s own `triggers` once `face:'back'` is set on a later
+   * step). `ability`/`activate` reuse the same real cost-paying semantics
+   * `lifecycleBefore`'s own top-level ability/activationCost branches use,
+   * just mid-sequence instead of as the scenario's own opening move.
    */
-  sequence?: string[];
+  sequence?: (string | SequenceStep)[];
   /**
    * Real 704.5x — a Saga (or any "sacrifice this" self-rule) with no
    * ability of its own text to blame is sacrificed as a rule action, not a
@@ -786,10 +810,23 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
   // evidence even for a card whose own behavior lives entirely in
   // `sequence`-fired triggers.
   if (scenario.sequence) {
-    for (const name of scenario.sequence) {
-      log.push({ fn: 'trigger', card: effectiveCard.name, instanceId, name });
-      ctx.declineOptional = scenario.declineTriggers?.includes(name) ?? false;
-      resolveCard(effectiveCard, ctx, actions, name, undefined);
+    let stepFace = effectiveCard;
+    for (const rawStep of scenario.sequence) {
+      const step: SequenceStep = typeof rawStep === 'string' ? { trigger: rawStep } : rawStep;
+      if (step.face === 'back') stepFace = card.backFace ?? stepFace;
+      else if (step.face === 'front') stepFace = card;
+      if (step.trigger) {
+        log.push({ fn: 'trigger', card: stepFace.name, instanceId, name: step.trigger });
+        ctx.declineOptional = scenario.declineTriggers?.includes(step.trigger) ?? false;
+        resolveCard(stepFace, ctx, actions, step.trigger, undefined);
+      } else if (step.ability) {
+        const ability = stepFace.abilities?.find((a) => a.name === step.ability);
+        log.push({ fn: 'activate', card: stepFace.name, instanceId, cost: ability?.cost ?? '', ability: step.ability });
+        resolveCard(stepFace, ctx, actions, undefined, step.ability);
+      } else if (step.activate) {
+        log.push({ fn: 'activate', card: stepFace.name, instanceId, cost: stepFace.activationCost ?? '' });
+        resolveCard(stepFace, ctx, actions, undefined, undefined);
+      }
     }
   }
   if (scenario.sacrificeSelfAfter) {

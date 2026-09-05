@@ -20,7 +20,10 @@ export const jillShivasDominant: CardDefinition = {
         // OTHER nonland permanent, any player's. Same cross-player-pool
         // gap Eject's own `move` effect hits (see that card's comment):
         // `owner: 'opponents'` stands in for the representative case.
-        { kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'any', target: true, optional: true } satisfies Effect,
+        // `nonLand: true` — real printed text excludes lands (found while
+        // rebuilding this card's scenarios: the old `validType: 'any'`
+        // alone let a land through, which the real card never allows).
+        { kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'any', nonLand: true, target: true, optional: true } satisfies Effect,
       ],
     },
   ],
@@ -46,46 +49,30 @@ export const jillShivasDominant: CardDefinition = {
       {
         name: 'chapterI',
         effects: [
-          {
-            // "Target creature can't be blocked this turn" — a temporary
-            // evasion GRANT to a target has no fitting Effect kind, and no
-            // Actions primitive anywhere in this model tracks "can't be
-            // blocked" state at all (unlike a P/T delta, counter, or tap,
-            // there's simply nothing to mutate). The true escape hatch per
-            // card.ts's own header, with no mutation to pair it with —
-            // nothing beyond the trigger firing itself is observable in
-            // the trace. Flagged as a gap in the batch report.
-            kind: 'custom',
-            describe: "Mesmerize — target creature can't be blocked this turn",
-            run: () => {},
-          } satisfies Effect,
+          // "Target creature can't be blocked this turn" — real Forge
+          // shape is a temporary static-ability grant (Mode$ CantBlockBy,
+          // see vampire_gourmand.txt's own DBUnblockable/Unblockable SVar
+          // pair in the real ../mtg-forge checkout), approximated here via
+          // the SAME `grantKeywordTarget`/`hasKeyword` machinery a real
+          // keyword grant uses (card.ts's own `Keyword` doc comment on
+          // 'Unblockable' explains why) — a genuinely trackable mutation
+          // now, not a no-op `custom` escape hatch.
+          { kind: 'grantKeywordTarget', keyword: 'Unblockable', validType: 'creature' } satisfies Effect,
         ],
       },
       {
         name: 'chapterII',
-        effects: [
-          {
-            kind: 'custom',
-            describe: "Mesmerize — target creature can't be blocked this turn",
-            run: () => {},
-          } satisfies Effect,
-        ],
+        effects: [{ kind: 'grantKeywordTarget', keyword: 'Unblockable', validType: 'creature' } satisfies Effect],
       },
       {
         name: 'chapterIII',
         effects: [
+          // Real "Tap all lands your opponents control" — a
+          // predicate-based board-wide action, the same declarative shape
+          // as `pumpAll`/`putCounterAll` but for `tap` (card.ts's own new
+          // `tapAll` Effect kind).
+          { kind: 'tapAll', predicate: 'lands', owner: 'opponents' } satisfies Effect,
           {
-            // Real "Tap all lands your opponents control" — a
-            // predicate-based board-wide action, the same declarative
-            // shape as `pumpAll`/`putCounterAll` but for `tap`; no such
-            // `tapAll` Effect kind exists yet (card.ts's own `tapTarget`
-            // doc comment explicitly anticipates this: "a board-wide
-            // tap-all this batch doesn't need yet"). Not modeled here —
-            // flagged as a gap rather than hacked via `custom` looping
-            // `actions.tap()` (a real Effect kind should model a
-            // predicate-based board-wide action, same reasoning
-            // `pumpAll`/`putCounterAll` already established as first-class
-            // kinds instead of ad hoc loops).
             kind: 'custom',
             describe: 'Cold Snap — exile Shiva, then return it to the battlefield (front face up)',
             run: (ctx: EffectContext, actions: Actions) => {

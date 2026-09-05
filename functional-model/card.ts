@@ -272,6 +272,8 @@ export type Effect =
       target?: boolean;
       /** "return ANOTHER permanent you control" (Ambrosia Whiteheart) — excludes `ctx.self` from the candidate pool, same reasoning as `sacrifice`'s own `notSelf`. */
       notSelf?: boolean;
+      /** Real `Permanent.nonLand` (Jill, Shiva's Dominant's own "return up to one other target NONLAND permanent") — same `nonLand` vocabulary `destroy` already carries, for the same reason: `validType: 'any'` alone can't exclude lands from an otherwise-unrestricted pool. */
+      nonLand?: boolean;
       /** Forge's own `OptionalDecider$ You` (Ambrosia Whiteheart's own ETB) — a real binary "you MAY," distinct from qty/pool-exhaustion's own "up to N" (which already yields zero for free when nothing qualifies). Documentary only, same as `sacrifice`/`dig`'s own `optional` field: this model has no player-decision engine anywhere (`chooseTarget` always takes the first pool candidate), so a legal-but-declined target isn't actually modeled yet — set this to record the real card text's intent, not to change resolution behavior. */
       optional?: boolean;
     }
@@ -373,12 +375,18 @@ export type Effect =
       keyword: Keyword;
     }
   | {
-      /** `TapEffect`/`TapAllEffect` (forge-game/.../ability/effects/) — a CHOSEN target tapped (Coeurl's own activated ability), as opposed to a board-wide tap-all this batch doesn't need yet. */
+      /** `TapEffect`/`TapAllEffect` (forge-game/.../ability/effects/) — a CHOSEN target tapped (Coeurl's own activated ability), as opposed to `tapAll`'s board-wide predicate. */
       kind: 'tapTarget';
       validType: 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any';
       excludeEnchantment?: boolean;
       /** See `dealDamageTarget`'s own doc comment above — same owner-restriction mechanism, for a card whose real text actually is restricted (Coeurl's own real text is NOT — see that doc comment). */
       owner?: EffectOwner;
+    }
+  | {
+      /** `TapAllEffect` (forge-game/.../ability/effects/) — every land (only predicate needed so far) matching `owner` gets tapped, no target chosen (Shiva, Warden of Ice's own chapter III "Tap all lands your opponents control") — as opposed to `tapTarget`'s single chosen target. Reuses `EffectOwner` the same way `dealDamage`'s player-group target does. */
+      kind: 'tapAll';
+      predicate: 'lands';
+      owner: EffectOwner;
     }
   | {
       /** `UntapEffect` (forge-game/.../ability/effects/) — Forge's own real counterpart to `tapTarget` above (Magic Damper's own "untap target creature"), same shape, `untap` instead of `tap`. */
@@ -473,7 +481,22 @@ export type Keyword =
   | 'Indestructible'
   | 'Ward'
   | 'Flash'
-  | 'Convoke';
+  | 'Convoke'
+  /**
+   * Not literally a `K:` line — real Forge represents "target creature
+   * can't be blocked this turn" (Shiva, Warden of Ice's own Mesmerize) as a
+   * temporary static-ability grant (`Mode$ CantBlockBy`, see
+   * vampire_gourmand.txt's own `DBUnblockable`/`Unblockable` SVar pair in
+   * the real ../mtg-forge checkout), not a permanent keyword. Approximated
+   * here via the SAME `grantKeywordTarget`/`hasKeyword` machinery as a real
+   * keyword grant anyway — the read/mutate shape (a name pushed onto
+   * `RealCard.keywords`, checkable via `hasKeyword`) is identical, and
+   * duplicating a parallel primitive for an outcome this model already
+   * tracks would be pure overhead. Same "duration not tracked" caveat as
+   * every other `grantKeyword*` use: the grant is permanent within a
+   * scenario, not cleared at end of turn.
+   */
+  | 'Unblockable';
 
 /**
  * Every card definition is a plain object of this shape — a data RECORD,
@@ -693,7 +716,8 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
           const pool = player
             .getCardsIn(effect.from)
             .filter((c) => matchesValidType(c, effect.validType))
-            .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
+            .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId())
+            .filter((c) => !effect.nonLand || !c.isLand());
           const targets: Card[] = [];
           for (let i = 0; i < qty; i++) {
             const remaining = pool.filter((c) => !targets.includes(c));
@@ -844,6 +868,10 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       if (target) actions.untap(target);
       return;
     }
+    case 'tapAll': {
+      for (const player of playersFor(effect.owner, ctx)) for (const land of player.getLandsInPlay()) actions.tap(land);
+      return;
+    }
     case 'dig': {
       actions.dig(ctx.you, resolve(effect.qty, ctx), resolve(effect.take, ctx), effect.validType);
       return;
@@ -953,6 +981,9 @@ export function synergyTags(card: CardDefinition): string[] {
         break;
       case 'untapTarget':
         tags.push('untap:target-creature');
+        break;
+      case 'tapAll':
+        tags.push(`tap-all:${effect.predicate}:${effect.owner}`);
         break;
       case 'dig':
         tags.push(`dig:${effect.validType ?? 'any'}`);

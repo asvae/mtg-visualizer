@@ -1,16 +1,38 @@
 {
   "source": [
     {
+      "id": "self-battlefield",
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "sourceText": "(baseline — Jill, Shiva's Dominant is itself a creature permanent on your battlefield, and returns there transformed after each activation/Cold Snap)."
+    },
+    {
+      "id": "bounce-nonland",
       "zone": "Hand",
       "controller": "opp",
-      "value": 1
+      "value": 1,
+      "sourceText": "When Jill enters, return up to one other target nonland permanent to its owner's hand.",
+      "highlight": "return up to one other target nonland permanent to its owner's hand"
+    },
+    {
+      "id": "mesmerize-unblockable",
+      "event": "grantKeyword",
+      "keyword": "Unblockable",
+      "value": 3,
+      "sourceText": "I, II — Mesmerize — Target creature can't be blocked this turn.",
+      "highlight": "Target creature can't be blocked this turn"
     }
   ],
   "sink": [
     {
+      "id": "bounce-target",
       "zone": "Battlefield",
       "controller": "opp",
-      "value": 1
+      "value": 1,
+      "sourceText": "return up to one other target nonland permanent to its owner's hand",
+      "highlight": "return up to one other target nonland permanent to its owner's hand"
     }
   ]
 }

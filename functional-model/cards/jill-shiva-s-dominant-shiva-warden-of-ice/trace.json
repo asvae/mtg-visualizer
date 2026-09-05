@@ -1,9 +1,9 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 1 creature(s)",
+      "setup": "you: 1 creature(s); opp0: 1 land(s); opp0: 1 artifact(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "returns the opponent's nonland permanent to hand"
+      "result": "Jill enters, ETB returns the opponent's artifact (not their land — real text is nonland only) to hand; {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I grants your creature unblockable; chapter II grants it again; chapter III taps all the opponent's lands, then exiles Shiva and returns it front-face-up"
     },
     "log": [
       {
@@ -16,45 +16,24 @@
         "fn": "read:getCardsIn",
         "player": "opp0",
         "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-artifact-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-land-0",
+        "result": true
       },
       {
         "fn": "moveTo",
-        "target": "opp0-creature-token-0",
+        "target": "opp0-artifact-0",
         "zone": "Hand"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "no other nonland permanent to target; nothing returned (optional)"
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Jill, Shiva's Dominant",
-        "instanceId": 1,
-        "name": "onEnter"
       },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({3}{U}{U}, {T} (activate only as a sorcery))",
-      "result": "exiles Jill and returns it transformed into Shiva, Warden of Ice"
-    },
-    "log": [
       {
         "fn": "activate",
         "card": "Jill, Shiva's Dominant",
@@ -70,46 +49,49 @@
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
         "zone": "Battlefield"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterI\" trigger fires, back face",
-      "result": "Mesmerize resolves — no trackable mutation in this model (evasion grant is untracked)"
-    },
-    "log": [
+      },
       {
         "fn": "trigger",
         "card": "Shiva, Warden of Ice",
         "instanceId": 1,
         "name": "chapterI"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterII\" trigger fires, back face",
-      "result": "Mesmerize resolves — no trackable mutation in this model (evasion grant is untracked)"
-    },
-    "log": [
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 0
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Unblockable"
+      },
       {
         "fn": "trigger",
         "card": "Shiva, Warden of Ice",
         "instanceId": 1,
         "name": "chapterII"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 2 land(s)",
-      "action": "\"chapterIII\" trigger fires, back face",
-      "result": "exiles Shiva and returns it to the battlefield front-face-up (tapping opponents' lands is not modeled — no tapAll Effect kind exists yet)"
-    },
-    "log": [
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 0
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Unblockable"
+      },
       {
         "fn": "trigger",
         "card": "Shiva, Warden of Ice",
@@ -117,13 +99,22 @@
         "name": "chapterIII"
       },
       {
+        "fn": "read:getLandsInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "tap",
+        "target": "opp0-land-0"
+      },
+      {
         "fn": "moveTo",
-        "target": "Shiva, Warden of Ice",
+        "target": "Jill, Shiva's Dominant",
         "zone": "Exile"
       },
       {
         "fn": "moveTo",
-        "target": "Shiva, Warden of Ice",
+        "target": "Jill, Shiva's Dominant",
         "zone": "Battlefield"
       }
     ]

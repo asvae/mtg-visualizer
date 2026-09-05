@@ -1,9 +1,14 @@
 {
   "enrichment": "ai",
-  "review": "ai",
+  "review": "human",
   "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Jill, Shiva's Dominant\",\"zone\":\"Exile\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Jill, Shiva's Dominant\",\"zone\":\"Battlefield\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Shiva, Warden of Ice\",\"zone\":\"Exile\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Shiva, Warden of Ice\",\"zone\":\"Battlefield\"}) with no matching declared produce",
-  "textCoverageAudited": false,
-  "knownGaps": []
+  "lastVerified": "2026-09-06",
+  "notes": "User asked for one consolidated scenario covering the whole real arc (enter -> ETB bounce -> transform -> chapter I -> chapter II -> chapter III), same 'one scenario, not six' preference as Summon: Bahamut. Required extending harness.ts's `sequence` to step OBJECTS (`SequenceStep`: trigger/ability/activate + face) since this card, unlike Bahamut, transforms mid-arc and needs to fire an ACTIVATED ability then switch to the back face's own triggers within one shared GameState. Also added two real, previously-missing engine primitives instead of leaving them as untracked no-ops (user: 'no trackable mutation in this model... good reason to add trackable mutation'): (1) `Keyword` gained 'Unblockable', reusing the existing grantKeyword/hasKeyword machinery for Mesmerize's 'can't be blocked' grant (real Forge shape is a temporary Mode$ CantBlockBy static-ability effect, not literally a K: line, but the read/mutate shape is identical to a keyword grant); (2) new `tapAll` Effect kind (predicate:'lands', owner-scoped) for chapter III's 'Tap all lands your opponents control' — a real board-wide predicate action, same shape pumpAll/putCounterAll already established. Also fixed a real pre-existing bug found while rebuilding this: the ETB bounce's `validType:'any'` didn't exclude lands even though real text is nonland-only — added `nonLand` to the `move` Effect (mirrors `destroy`'s own field of the same name).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "Exile-then-return (both the front-face activation and chapter III's Cold Snap) has no Effect-kind vocabulary at all — stays a `custom` no-op pair of moveTo calls, so verify-synergy.mjs still notes those 4 moveTo lines as unexplained. Same category Joshua, Phoenix's Dominant and other transforming DFCs already carry; not solved here.",
+    "The RealCard backing self never actually changes its own name/types/subtypes when 'transforming' (no dynamic-transform mechanism exists) — every moveTo/log entry for this object says 'Jill, Shiva's Dominant' even during back-face chapters. Pre-existing, same as Dion/Jecht's own DFCs.",
+    "`sequence`'s new step objects still don't simulate real turn-by-turn lore-counter timing between chapters — same accepted shortcut as Summon: Bahamut's own `sequence`.",
+    "Unblockable's grant has no duration tracking (permanent within the scenario), same caveat every other grantKeyword* use already carries."
+  ]
 }
