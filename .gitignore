@@ -19,6 +19,5 @@ scripts/review-responses.json
 .netlify
 deno.lock
 
-# Regenerable Scryfall bulk-data downloads (historical-sets pipeline
-# intermediate) — 75MB+/24MB, not source, shouldn't bloat repo history.
-tagging/scryfall-bulk/*.jsonl.gz
+# Scratch/regenerable downloads (e.g. Scryfall bulk-data dumps), not source.
+tmp/

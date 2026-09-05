@@ -38,7 +38,7 @@ downloads. Concretely:
   scryfall/relations/tokens — owned by the "review" role, see below),
   `data/global_themes.json`, `data/global_relations.json`.
 - **`tagging/`** (dev-only, never served, this project's actual working
-  area): `tagging/scryfall-bulk/` (the two huge Scryfall bulk dumps),
+  area): `tmp/scryfall-bulk/` (the two huge Scryfall bulk dumps),
   `tagging/type_themes.json` (creature-subtype id registry, for reference
   only — never fetched by the app), `tagging/card-enrichment-status.json`
   (see below), `tagging/sets/<code>/` (one set's scryfall + relations +
@@ -46,7 +46,7 @@ downloads. Concretely:
 
 ## Data files
 
-- `tagging/scryfall-bulk/oracle-cards-<timestamp>.jsonl.gz` — Scryfall's
+- `tmp/scryfall-bulk/oracle-cards-<timestamp>.jsonl.gz` — Scryfall's
   "Oracle Cards" bulk export, ONE ENTRY PER UNIQUE CARD DESIGN (deduplicated
   by `oracle_id`, picks one arbitrary representative printing). **Do not use
   this for determining per-set card membership** — it silently drops cards
@@ -56,7 +56,7 @@ downloads. Concretely:
   (its own oracle text doesn't change across printings) when set membership
   doesn't matter — that's what `strict_baseline.py`'s whole-database pass
   uses it for.
-- `tagging/scryfall-bulk/default-cards-<timestamp>.jsonl.gz` — Scryfall's
+- `tmp/scryfall-bulk/default-cards-<timestamp>.jsonl.gz` — Scryfall's
   "Default Cards" bulk export, ONE ROW PER PRINTING. This is the correct
   file for anything involving "which set is this card actually in" — use it
   to extract each set's own card list. ~117k rows as of when this was
@@ -154,7 +154,7 @@ name — e.g. `arn`'s 14 reprinted-with-a-new-collector-number cards — and
 Scryfall itself treats each printing as its own row) rather than assumed
 silently:
 
-- Verified across the full history in `tagging/scryfall-bulk/default-cards-
+- Verified across the full history in `tmp/scryfall-bulk/default-cards-
   *.jsonl.gz` (117,608 rows; 39,370 in-scope printings — expansion/core,
   non-basic, non-digital — 26,352 unique names): **zero names map to more
   than one `oracle_id`.** Not just luck-of-the-data — backed by Wizards'
@@ -386,8 +386,8 @@ silently:
   Un-cards like "B.F.M. (Big Furry Monster)" and produced garbage
   creature-subtype ids from its absurd flavor-text subtype line; always
   filter `set_type` explicitly).
-- **`tagging/scryfall-bulk/oracle-cards-*.jsonl.gz` vs
-  `tagging/scryfall-bulk/default-cards-*.jsonl.gz`** — covered above, but
+- **`tmp/scryfall-bulk/oracle-cards-*.jsonl.gz` vs
+  `tmp/scryfall-bulk/default-cards-*.jsonl.gz`** — covered above, but
   worth repeating: mixing these up silently produces wildly incomplete
   per-set card lists for anything older than roughly the last few years of
   real-world Magic history. Always use Default Cards for set extraction.
