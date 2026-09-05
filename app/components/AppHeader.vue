@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue';
-import { StoreKey, DECK_TEXT_STORAGE_KEY, DECK_ACTIVE_KEY, QUERY_ACTIVE_KEY } from '../composables/useGraphStore';
+import { StoreKey, DECK_TEXT_STORAGE_KEY, DECK_ACTIVE_KEY, QUERY_ACTIVE_KEY, buildShareUrl } from '../composables/useGraphStore';
 import { parseDecklist } from '../lib/deckImport';
 
 const store = inject(StoreKey)!;
@@ -8,6 +8,22 @@ const config = useRuntimeConfig();
 const reviewEnabled = config.public.enableReview;
 const appVersion = config.public.appVersion;
 const buildCommit = config.public.buildCommit;
+const toast = useToast();
+
+// Copies a `?share=` link encoding the whole current visualizer state
+// (mode/query/deck, colors/rarities/types, search — see buildShareUrl in
+// useGraphStore.ts) so it can be pasted anywhere; the recipient's own load
+// restores it and immediately cleans the URL back down (see that file's own
+// restore block).
+async function copyShareLink() {
+  const url = buildShareUrl(store);
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.add({ title: 'Link copied', description: 'Paste it anywhere to share this exact view.', color: 'success', icon: 'i-lucide-check' });
+  } catch {
+    toast.add({ title: 'Could not copy link', description: url, color: 'error', icon: 'i-lucide-triangle-alert' });
+  }
+}
 
 // Card-filter modal — two modes sharing one dialog, both a real navigation
 // on submit (SET_CODE/scryfallQuery/deckImportActive in useGraphStore.ts are
@@ -188,6 +204,14 @@ function submitDeckImport(clear = false) {
         square
         aria-label="Filter by Scryfall query or deck import"
         @click="openFilterDialog"
+      />
+      <UButton
+        icon="i-lucide-link"
+        color="neutral"
+        variant="subtle"
+        square
+        aria-label="Copy a shareable link to this exact view"
+        @click="copyShareLink"
       />
       <UButton
         v-if="reviewEnabled"

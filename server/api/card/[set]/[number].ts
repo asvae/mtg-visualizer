@@ -14,7 +14,7 @@
 // whole functional-model corpus. GET (no body) still works identically to
 // before, unscoped, same as a plain page reload with no filter active.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { cardArtCrop, cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
@@ -91,8 +91,35 @@ interface FunctionalModelData {
   // untracked card is certainly not confirmed human-reviewed.
   review: 'ai' | 'human' | null;
 }
+// Cached per slug, invalidated by that card's own folder — a stat-only
+// signature (mtimeMs of its 4 files) is cheap enough to check on every
+// request, so a hand-edit (definition.ts, trace.json via
+// run-scenarios.mjs, progress.json, synergy.json) shows up on the very next
+// load with no server restart, while a request for a card nobody's touched
+// skips the readFileSync/JSON.parse/annotateCardText work entirely. Keyed
+// on cardText too (not just slug) since annotatedText depends on it and it
+// comes from data/cards.db, outside this folder's own signature — cheap
+// insurance against a stale annotation if the card's real oracle text ever
+// changes between requests (a DB re-sync) without the folder itself
+// changing.
+const FM_FOLDER_FILES = ['definition.ts', 'trace.json', 'progress.json', 'synergy.json'] as const;
+function functionalModelSignature(slug: string): string {
+  return FM_FOLDER_FILES.map((f) => {
+    try {
+      return `${f}:${statSync(join(process.cwd(), `functional-model/cards/${slug}/${f}`)).mtimeMs}`;
+    } catch {
+      return `${f}:x`;
+    }
+  }).join('|');
+}
+const functionalModelCache = new Map<string, { signature: string; cardText: string; data: FunctionalModelData | null }>();
 function loadFunctionalModel(name: string, cardText: string): FunctionalModelData | null {
   const slug = slugify(name);
+  const signature = functionalModelSignature(slug);
+  const cached = functionalModelCache.get(slug);
+  if (cached && cached.signature === signature && cached.cardText === cardText) return cached.data;
+
+  let data: FunctionalModelData | null;
   try {
     const source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
     const traces = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/trace.json`), 'utf8'));
@@ -105,10 +132,12 @@ function loadFunctionalModel(name: string, cardText: string): FunctionalModelDat
     } catch {
       // progress.json is optional — a card can exist without one
     }
-    return { source, synergy, traces, annotatedText, review };
+    data = { source, synergy, traces, annotatedText, review };
   } catch {
-    return null;
+    data = null;
   }
+  functionalModelCache.set(slug, { signature, cardText, data });
+  return data;
 }
 
 // data/fin/fin_scryfall.json — real, current Scryfall data for every FIN
@@ -223,12 +252,39 @@ async function fetchStandardPrintForName(name: string): Promise<FinScryfallCard 
 // tries FIN's real Scryfall data first (free, already-parsed, current), then
 // the local bulk DB (see dbLookupByName above) when it exists, then a live
 // Scryfall lookup for whatever neither covers (always the case in prod).
+// Interaction-match thumbnail resolution is the actual cost center on this
+// route — a popular card (e.g. a staple mana dork) can have 100+ matches,
+// each going through resolveFinCardMeta/dbLookupByName/resolveLiveCardMeta
+// below; measured at ~6-7ms apiece (mostly node:sqlite's per-call overhead
+// on its own admittedly-experimental sync API — see the ExperimentalWarning
+// this process logs), which adds up to most of this route's response time
+// on a heavily-interacting card. A name's real set/collectorNumber/image
+// barely ever changes minute-to-minute (only a data/cards.db re-sync or a
+// fin_scryfall.json edit would change it, neither of which happens while
+// this server process is running), so this is cached forever per process
+// rather than folder-mtime-invalidated like loadFunctionalModel above — the
+// same "open once per process, no live invalidation" contract this route's
+// own cardsDb/DECK_ACTIVE_KEY-adjacent DB connections already have. Restart
+// the dev server after a re-sync to see fresh data, same as those.
+const cardMetaCache = new Map<string, { set: string; collectorNumber: string; image: string | null } | null>();
 async function resolveFunctionalModelCardMeta(name: string): Promise<{ set: string; collectorNumber: string; image: string | null } | null> {
+  const cached = cardMetaCache.get(name);
+  if (cached !== undefined) return cached;
+
   const fin = resolveFinCardMeta(name);
-  if (fin) return fin;
+  if (fin) {
+    cardMetaCache.set(name, fin);
+    return fin;
+  }
   const c = dbLookupByName(name);
-  if (c) return { set: c.set, collectorNumber: c.collector_number, image: c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null };
-  return resolveLiveCardMeta(name);
+  if (c) {
+    const resolved = { set: c.set, collectorNumber: c.collector_number, image: c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null };
+    cardMetaCache.set(name, resolved);
+    return resolved;
+  }
+  const live = await resolveLiveCardMeta(name);
+  cardMetaCache.set(name, live);
+  return live;
 }
 
 // InteractionGroup/InteractionMatch (functional-model/synergy.ts v2) carry

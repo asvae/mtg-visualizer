@@ -9,7 +9,7 @@
 // -> `Fact[]` convention) — `null` when synergy.json is missing, unparseable,
 // or still the retired v1 (string-key) shape.
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Fact, PoolCard } from '../../functional-model/synergy';
@@ -52,6 +52,28 @@ export function loadCardSynergy(slug: string): { source: Fact[]; sink: Fact[] } 
 // functional-model/ source tree may not ship in a production bundle at
 // all); this project currently only runs via `npm run dev`, so that's
 // untested, not fixed.
+// Cheap stat-only signature (no JSON.parse, no dynamic import) covering
+// every card folder's synergy.json + definition.ts mtimes, plus the slug
+// list itself (so an added/removed folder changes the signature even if
+// mtimes alone happened to coincide). Comparing this against the last build
+// is what lets a rebuild get skipped entirely on the common case (nobody's
+// touched functional-model/cards/ since the last request) — see the
+// dynamic-import cost this guards against in loadFunctionalModelPool below.
+function poolSignature(cardsDir: string, slugs: string[]): string {
+  const parts: string[] = [`n:${slugs.length}`];
+  for (const slug of slugs) {
+    for (const file of ['synergy.json', 'definition.ts'] as const) {
+      try {
+        parts.push(`${slug}/${file}:${statSync(join(cardsDir, slug, file)).mtimeMs}`);
+      } catch {
+        parts.push(`${slug}/${file}:x`);
+      }
+    }
+  }
+  return parts.join('|');
+}
+let poolCache: { signature: string; pool: PoolCard[] } | null = null;
+
 export async function loadFunctionalModelPool(): Promise<PoolCard[]> {
   const cardsDir = join(process.cwd(), 'functional-model/cards');
   let slugs: string[];
@@ -60,6 +82,9 @@ export async function loadFunctionalModelPool(): Promise<PoolCard[]> {
   } catch {
     return [];
   }
+  const signature = poolSignature(cardsDir, slugs);
+  if (poolCache && poolCache.signature === signature) return poolCache.pool;
+
   const pool: PoolCard[] = [];
   for (const slug of slugs) {
     const synergy = loadCardSynergy(slug);
@@ -82,5 +107,6 @@ export async function loadFunctionalModelPool(): Promise<PoolCard[]> {
       // job owns functional-model/tokens.ts vs tokens/.
     }
   }
+  poolCache = { signature, pool };
   return pool;
 }

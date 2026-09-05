@@ -107,7 +107,7 @@ const PIP_COLOR: Record<string, string> = {
       <NuxtLink
         v-for="a in ARCHETYPES"
         :key="a.name"
-        :to="`/app?colors=${a.colors.join(',')}`"
+        :to="`/app?sf=${encodeURIComponent(`set:fin c<=${a.colors.join('').toLowerCase()}`)}`"
         class="group relative block aspect-[5/4] overflow-hidden rounded-xl border border-border transition-[transform,border-color] duration-150 hover:-translate-y-0.5 hover:border-focus"
       >
         <img :src="a.art" alt="" loading="lazy" class="absolute inset-0 size-full object-cover" />

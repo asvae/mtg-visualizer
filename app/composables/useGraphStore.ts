@@ -1,4 +1,4 @@
-import { computed, reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
+import { computed, onMounted, reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
 import type { CardData, GraphFile, GraphReason } from '../types';
 import { COLOR_ORDER, RARITY_ORDER } from '../lib/constants';
 import { availableRarities as computeAvailableRarities, availableTypes as computeAvailableTypes } from '../lib/filters';
@@ -6,14 +6,9 @@ import { DEFAULT_FORCES, type ForceConfig } from '../lib/graphRenderer';
 import { buildGraph, type NameLink, type ScryfallCard, type TokensById } from '../lib/buildGraph';
 import { parseDecklist, type ParsedDeckCard } from '../lib/deckImport';
 
-// "sf" (scryfall filter) URL param — an arbitrary Scryfall search query,
-// read once on load to switch into query mode (see load() below). Read raw
-// here (module scope, not via readUrlParam below) since a query is a single
-// string, not a comma-split list. This and the one-way colors/rarities/types
-// read (readUrlParam below) are the only URL reads in this file — nothing
-// here ever writes back to the URL; see readUrlParam's own comment.
-const scryfallQuery = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('sf') : null;
-
+// Storage keys referenced by the shareable-link restore block below, so
+// declared before it rather than in their original historical order.
+//
 // Deck mode has no URL flag at all — unlike `sf` (real, shareable query
 // content), "am I in deck mode" is pure UI state with nothing worth putting
 // in an address bar, so it's a sticky localStorage bit instead: it stays set
@@ -24,6 +19,103 @@ const scryfallQuery = typeof window !== 'undefined' ? new URLSearchParams(window
 // previous one rather than accumulating buckets nothing will revisit.
 export const DECK_TEXT_STORAGE_KEY = 'mtg-visualizer-deck-import-text';
 export const DECK_ACTIVE_KEY = 'mtg-visualizer-deck-active';
+// Query mode's own sticky breadcrumb — see its fuller comment further down
+// this file, by getActiveFilterMode. Declared here (rather than in its
+// original spot) only so the shareable-link restore block below can write
+// it before that comment's own read sites run.
+export const QUERY_ACTIVE_KEY = 'mtg-visualizer-active-query';
+
+// --- Shareable link restore --------------------------------------------
+// AppHeader.vue's Share button (see buildShareUrl below) encodes the whole
+// visualizer state — mode, query/decklist, colors/rarities/types, search —
+// as plain, readable `share_*` query params (nothing secret here, no reason
+// to obscure it behind a base64 blob). Restoring it has to happen here, at
+// the very top of this module, BEFORE `scryfallQuery`/`deckImportActive`
+// below read anything: those are computed once, straight off the
+// URL/localStorage, at module-eval time — exactly like a real navigation or
+// a manual paste into the filter modal would leave things, which is
+// deliberately what this block produces (seeds localStorage, and for query
+// mode rewrites the address bar to the same `?sf=` shape
+// submitScryfallQuery already navigates to) rather than inventing a
+// parallel "restored" code path elsewhere in this file. The `share_*`
+// params themselves are stripped immediately after (history.replaceState,
+// no reload, no history entry added) — a share link is a one-time seed, not
+// something that should linger in the address bar or get re-applied on
+// every future refresh of this tab.
+export interface ShareState {
+  mode: 'fin' | 'deck' | 'query';
+  query?: string;
+  deckText?: string;
+  colors?: string[];
+  rarities?: string[];
+  types?: string[];
+  search?: string;
+}
+
+function decodeShareParams(): ShareState | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get('share_mode');
+  if (mode !== 'fin' && mode !== 'deck' && mode !== 'query') return null;
+  const csv = (key: string) => {
+    const v = params.get(key);
+    return v ? v.split(',') : undefined;
+  };
+  return {
+    mode,
+    query: params.get('share_query') ?? undefined,
+    deckText: params.get('share_deck') ?? undefined,
+    colors: csv('share_colors'),
+    rarities: csv('share_rarities'),
+    types: csv('share_types'),
+    search: params.get('share_search') ?? undefined,
+  };
+}
+
+// Applied once, synchronously, before anything below reads localStorage or
+// the URL. `sharedState` (module-scope, not just a local) is re-read further
+// down once STORAGE_KEY/SEARCH_STORAGE_KEY are known, to seed the same
+// colors/rarities/types/search restore through those routes' own existing
+// localStorage-shaped contract — see the second half of this restore, past
+// the SET_CODE section below.
+const sharedState = decodeShareParams();
+if (sharedState && typeof window !== 'undefined') {
+  try {
+    if (sharedState.mode === 'deck' && sharedState.deckText) {
+      localStorage.setItem(DECK_TEXT_STORAGE_KEY, sharedState.deckText);
+      localStorage.setItem(DECK_ACTIVE_KEY, '1');
+      localStorage.removeItem(QUERY_ACTIVE_KEY);
+    } else if (sharedState.mode === 'query' && sharedState.query) {
+      localStorage.setItem(QUERY_ACTIVE_KEY, sharedState.query);
+      localStorage.removeItem(DECK_ACTIVE_KEY);
+    } else {
+      localStorage.removeItem(DECK_ACTIVE_KEY);
+      localStorage.removeItem(QUERY_ACTIVE_KEY);
+    }
+  } catch {
+    // storage blocked (e.g. private browsing) — mode restore just won't stick
+  }
+  // Rewrite the address bar to the canonical shape for whichever mode this
+  // is — `?sf=<query>` for query mode (so the plain `scryfallQuery` read
+  // just below sees it, same as a real `submitScryfallQuery` navigation
+  // would have left), or the bare path otherwise. Either way this also
+  // drops every `share_*` param — done as one replaceState rather than
+  // "inject sf now, strip share_* later" so the address bar never visibly
+  // shows both at once.
+  const url = new URL(window.location.href);
+  url.search = sharedState.mode === 'query' && sharedState.query ? `?sf=${encodeURIComponent(sharedState.query)}` : '';
+  window.history.replaceState(null, '', url.toString());
+}
+
+// "sf" (scryfall filter) URL param — an arbitrary Scryfall search query,
+// read once on load to switch into query mode (see load() below). Read raw
+// here (module scope, not via readUrlParam below) since a query is a single
+// string, not a comma-split list. This, the one-way colors/rarities/types
+// read (readUrlParam below), and the shareable-link restore above are the
+// only URL reads in this file — nothing here ever writes back to the URL on
+// its own afterwards; see readUrlParam's own comment.
+const scryfallQuery = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('sf') : null;
+
 function readDeckActive(): boolean {
   if (typeof window === 'undefined') return false;
   try {
@@ -73,18 +165,19 @@ export function getActiveDeckCards(): ParsedDeckCard[] | null {
   return deckImportActive ? getKnownDeckCards() : null;
 }
 
-// Query mode's own sticky breadcrumb — unlike `sf` itself (real, shareable
-// URL content, read fresh above), a query-mode session otherwise has NO way
-// to signal itself outside that URL param. That's fine for the main graph
-// page (it re-reads `sf` every load anyway) but breaks the standalone card
-// detail page below: GraphCanvas.vue opens it via `window.open` with a bare
-// `/app/card/<set>/<number>` URL, no query string carried over, so without
-// this it has no way to even know a query filter is active elsewhere, let
-// alone what it was. AppHeader.vue writes/clears this right alongside
-// DECK_ACTIVE_KEY (see submitScryfallQuery/submitDeckImport) — same sticky,
-// explicit-clear-only contract DECK_ACTIVE_KEY already has, not auto-cleared
-// by a bare `/app` visit either.
-export const QUERY_ACTIVE_KEY = 'mtg-visualizer-active-query';
+// Query mode's own sticky breadcrumb (QUERY_ACTIVE_KEY, declared near the
+// top of this file alongside DECK_ACTIVE_KEY) — unlike `sf` itself (real,
+// shareable URL content, read fresh above), a query-mode session otherwise
+// has NO way to signal itself outside that URL param. That's fine for the
+// main graph page (it re-reads `sf` every load anyway) but breaks the
+// standalone card detail page below: GraphCanvas.vue opens it via
+// `window.open` with a bare `/app/card/<set>/<number>` URL, no query string
+// carried over, so without this it has no way to even know a query filter
+// is active elsewhere, let alone what it was. AppHeader.vue writes/clears
+// this right alongside DECK_ACTIVE_KEY (see submitScryfallQuery/
+// submitDeckImport) — same sticky, explicit-clear-only contract
+// DECK_ACTIVE_KEY already has, not auto-cleared by a bare `/app` visit
+// either.
 
 export type ActiveFilter = { mode: 'deck'; cards: { name: string; qty: number }[] } | { mode: 'query'; query: string } | null;
 
@@ -109,6 +202,29 @@ export function getActiveFilterMode(): ActiveFilter {
 const STORAGE_KEY = `mtg-visualizer-filters-${SET_CODE}`;
 const FORCES_STORAGE_KEY = `mtg-visualizer-forces-${SET_CODE}`;
 const SEARCH_STORAGE_KEY = `mtg-visualizer-search-${SET_CODE}`;
+
+// Second half of the shareable-link restore started near the top of this
+// file — colors/rarities/types/search couldn't be applied there since
+// STORAGE_KEY/SEARCH_STORAGE_KEY (namespaced by SET_CODE) weren't known
+// yet. Seeded into localStorage under the exact keys/shape
+// loadSavedFilters()/the search-box restore below already read, rather than
+// adding a second, parallel "restored state" code path — a shared link ends
+// up indistinguishable from a visit that had these saved from before.
+if (sharedState) {
+  try {
+    if (sharedState.colors || sharedState.rarities || sharedState.types) {
+      const payload: SavedFilters = {
+        colors: sharedState.colors ?? [],
+        rarities: sharedState.rarities ?? [],
+        types: sharedState.types ?? [],
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+    if (sharedState.search) localStorage.setItem(SEARCH_STORAGE_KEY, sharedState.search);
+  } catch {
+    // storage blocked — filters/search just won't restore, mode still will
+  }
+}
 
 interface SavedFilters {
   colors: string[];
@@ -181,6 +297,23 @@ export interface HoveredCard {
 // Single shared store for this single-instance app — simpler than Pinia for a graph
 // this small, provided to the tree once from App.vue via provide/inject.
 export function useGraphStore() {
+  // Re-asserts the share-link URL cleanup from the restore block near the
+  // top of this file, once mounted. The module-scope replaceState up there
+  // runs during setup (before/during hydration) and gets stomped right back
+  // to the original `?share=...` URL by Nuxt/vue-router's own hydration
+  // reconciliation, which resolves the client route from the URL it saw at
+  // SSR time — confirmed by testing (the actual restore — localStorage
+  // seeding, colors/search — sticks fine; only the visible address bar kept
+  // reverting). onMounted fires strictly after that reconciliation settles,
+  // so this write wins.
+  if (sharedState && typeof window !== 'undefined') {
+    onMounted(() => {
+      const url = new URL(window.location.href);
+      url.search = sharedState.mode === 'query' && sharedState.query ? `?sf=${encodeURIComponent(sharedState.query)}` : '';
+      window.history.replaceState(null, '', url.toString());
+    });
+  }
+
   const graph = shallowRef<GraphFile | null>(null);
   const loadError = ref<string | null>(null);
   // True from just before load()'s first fetch until it settles (success or
@@ -527,6 +660,56 @@ export function useGraphStore() {
 }
 
 export type Store = ReturnType<typeof useGraphStore>;
+
+// AppHeader.vue's Share button: the inverse of the restore block near the
+// top of this file — reads whichever mode/query/deck is currently active
+// straight off the URL/localStorage (same sources that block reads from),
+// plus the live filter/search state off `store`, and encodes all of it as
+// one `?share=` param. Deliberately re-reads the URL/localStorage rather
+// than trusting SET_CODE/scryfallQuery (module-scope consts, frozen at
+// whatever they were on THIS load) — not that it'd differ in practice
+// (nothing in this file changes them after load), but this keeps "what gets
+// shared" honestly sourced from the same place a fresh page load would
+// re-derive it from, not from a value that merely happened to match at
+// import time.
+export function buildShareUrl(store: Store): string {
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const sf = params?.get('sf') ?? null;
+  let deckActive = false;
+  let deckText = '';
+  try {
+    deckActive = localStorage.getItem(DECK_ACTIVE_KEY) === '1';
+    deckText = deckActive ? (localStorage.getItem(DECK_TEXT_STORAGE_KEY) ?? '') : '';
+  } catch {
+    // storage blocked — share as plain fin/query mode, no deck
+  }
+
+  const shared: Omit<ShareState, 'mode' | 'query' | 'deckText'> = {
+    colors: [...store.selectedColors],
+    rarities: [...store.selectedRarities],
+    types: [...store.selectedTypes],
+    search: store.searchQuery.value || undefined,
+  };
+  const state: ShareState =
+    deckActive && deckText
+      ? { mode: 'deck', deckText, ...shared }
+      : sf
+        ? { mode: 'query', query: sf, ...shared }
+        : { mode: 'fin', ...shared };
+
+  const out = new URLSearchParams();
+  out.set('share_mode', state.mode);
+  if (state.query) out.set('share_query', state.query);
+  if (state.deckText) out.set('share_deck', state.deckText);
+  if (state.colors?.length) out.set('share_colors', state.colors.join(','));
+  if (state.rarities?.length) out.set('share_rarities', state.rarities.join(','));
+  if (state.types?.length) out.set('share_types', state.types.join(','));
+  if (state.search) out.set('share_search', state.search);
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}/app?${out.toString()}`;
+}
+
 // Symbol.for (global registry), not a plain Symbol() — this module isn't a
 // Vue SFC, so it has no HMR accept boundary of its own: editing anything it
 // transitively imports (e.g. graphRenderer.ts, for DEFAULT_FORCES/ForceConfig
