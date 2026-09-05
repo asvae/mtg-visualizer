@@ -40,17 +40,27 @@ so a future pass doesn't mistake them for missing work:
 
 ### High priority (load-bearing for "pilot a real game")
 
-1. **Combat: blockers, damage, first/double strike, trample.**
-   `turn.ts`'s own header already flags this: `CombatDeclareBlockers` and
-   `CombatDamage` are reachable phases but do nothing — no blocker
-   assignment, no damage calculation, no first-strike sub-step (the real
-   13th Forge phase, `PhaseType.COMBAT_FIRST_STRIKE_DAMAGE`,
-   `PhaseType.java` line 23, explicitly excluded from `turn.ts`'s own
-   12-phase list). Real logic lives in `CombatUtil.java`
-   (forge-game/.../combat/CombatUtil.java) — blocker legality
-   (`canBlock`/`canBeBlocked`), damage assignment ordering, trample
-   overflow. This is the single biggest gap between "can attack" (already
-   built) and an actually-playable combat.
+1. ~~**Combat: blockers, damage, first/double strike, trample.**~~ **CLOSED**
+   (`engine.ts`'s `canBlock`/`declareBlockers`/`resolveCombatDamage`,
+   `engine.test.ts`): blocker legality (509.1 — controller/tapped/
+   Unblockable/Flying-Reach) and Menace (509.1b/702.111b), both
+   all-or-nothing like `declareAttackers`; real damage assignment for
+   unblocked/blocked/blocked-but-blockers-already-gone attackers, Trample
+   overflow (702.19c), Deathtouch lethal-amount (702.2e), and First/Double
+   Strike's two-sub-step ordering (510.5, modeled as two internal passes
+   within one call rather than a separate `turn.ts` phase — see below).
+   Real reference: `CombatUtil.java` (forge-game/.../combat/CombatUtil.java)
+   for blocker legality shape, `Combat.java`'s own `attackerToBlockers`
+   multimap for the assignment data shape `engine.blockers` mirrors.
+   **What's still NOT done** (folds into gap #2, not re-litigated here): a
+   creature this engine computes as lethally damaged is NOT destroyed —
+   `resolveCombatDamage` returns a `lethal` flag per creature instead of
+   acting on it, since real creature death from damage is itself a
+   state-based action (704.5g/704.5h), and general SBAs don't exist yet.
+   The real 13th Forge phase (`PhaseType.COMBAT_FIRST_STRIKE_DAMAGE`,
+   `PhaseType.java` line 23) is still not a literal `turn.ts` phase — see
+   gap #9 below, unchanged, since the two-internal-pass approach only
+   fixes damage ORDERING, not phase-list completeness.
 2. **State-based actions (704).** No equivalent anywhere in this codebase.
    Real Forge: `GameAction.java`'s state-based-effects pass (rule citations
    like `704.5f`/`704.5g`/`704.5h` appear directly in that method's own
@@ -151,3 +161,7 @@ so a future pass doesn't mistake them for missing work:
 - Activated-ability legality (602.1) for the `{T}` + mana + explicitly-
   rejected-unsupported-cost shape, and the `resolveCard` dispatch collision
   for permanents with both an ETB trigger and their own activation ability.
+- Combat: blocker legality (509.1, Menace), and real damage assignment
+  including Trample/Deathtouch/First-and-Double-Strike ordering (510) — see
+  gap #1's own "CLOSED" note above for the one thing still deferred
+  (creature death from lethal damage, which needs SBAs, gap #2).

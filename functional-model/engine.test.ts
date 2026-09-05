@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { GameState, wrapPlayer, wrapCard } from './state';
-import { createEngine, canCastSpell, castSpell, canActivateAbility, activateAbility, resolveTop, stepPriority, canAttack, declareAttackers, advance } from './engine';
+import type { RealCard } from './state';
+import { createEngine, canCastSpell, castSpell, canActivateAbility, activateAbility, resolveTop, stepPriority, canAttack, declareAttackers, canBlock, declareBlockers, resolveCombatDamage, advance } from './engine';
 import { PHASES } from './turn';
 
 // Same `{} as Actions` stub stack.test.ts/priority.test.ts already use —
@@ -196,6 +197,245 @@ describe('declareAttackers — summoning sickness (302.6) / tapped (508.1a) / Vi
     toCombat(engine);
     expect(declareAttackers(engine, [legal, sick]).ok).toBe(false);
     expect(legal.tapped).toBe(false);
+  });
+});
+
+describe('canBlock / declareBlockers (509)', () => {
+  function toDeclareAttackers(engine: ReturnType<typeof setupGame>['engine']) {
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatDeclareAttackers') advance(engine);
+  }
+  function toDeclareBlockers(engine: ReturnType<typeof setupGame>['engine'], attackers: RealCard[]) {
+    toDeclareAttackers(engine);
+    declareAttackers(engine, attackers);
+    advance(engine);
+  }
+
+  it('allows an opponent creature to block a declared attacker', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(canBlock(engine, blocker, attacker).ok).toBe(true);
+    expect(declareBlockers(engine, [{ blocker, attacker }]).ok).toBe(true);
+    expect(engine.blockers.get(attacker.id)).toEqual([blocker]);
+  });
+
+  it('rejects blocking outside the Declare Blockers step', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'] });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    expect(canBlock(engine, blocker, attacker)).toEqual({ ok: false, reason: expect.stringMatching(/Declare Blockers step/) });
+  });
+
+  it('rejects blocking a creature that never attacked', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    const bystander = state.addCard(you, 'Battlefield', { name: 'Bystander', types: ['Creature'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(canBlock(engine, blocker, bystander)).toEqual({ ok: false, reason: expect.stringMatching(/not a declared attacker/) });
+  });
+
+  it("rejects a blocker controlled by the attacker's own controller", () => {
+    const { state, you, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    const ownBlocker = state.addCard(you, 'Battlefield', { name: 'Own Blocker', types: ['Creature'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(canBlock(engine, ownBlocker, attacker)).toEqual({ ok: false, reason: expect.stringMatching(/opponent/) });
+  });
+
+  it('rejects a tapped blocker', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'] });
+    state.tap(blocker);
+    toDeclareBlockers(engine, [attacker]);
+    expect(canBlock(engine, blocker, attacker)).toEqual({ ok: false, reason: expect.stringMatching(/tapped creatures can't be declared as blockers/) });
+  });
+
+  it('rejects blocking an Unblockable attacker', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Ghost', types: ['Creature'], keywords: ['Unblockable'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(canBlock(engine, blocker, attacker)).toEqual({ ok: false, reason: expect.stringMatching(/can't be blocked/) });
+  });
+
+  it('rejects a non-Flying/Reach blocker against a Flying attacker, allows Reach', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Flier', types: ['Creature'], keywords: ['Flying'] });
+    const grounded = state.addCard(opp, 'Battlefield', { name: 'Grounded', types: ['Creature'] });
+    const reacher = state.addCard(opp, 'Battlefield', { name: 'Reacher', types: ['Creature'], keywords: ['Reach'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(canBlock(engine, grounded, attacker)).toEqual({ ok: false, reason: expect.stringMatching(/only a creature with flying or reach/) });
+    expect(canBlock(engine, reacher, attacker).ok).toBe(true);
+  });
+
+  it('rejects a non-creature blocker', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    const artifact = state.addCard(opp, 'Battlefield', { name: 'Not A Creature', types: ['Artifact'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(canBlock(engine, artifact, attacker)).toEqual({ ok: false, reason: expect.stringMatching(/not a creature/) });
+  });
+
+  it('rejects a Menace attacker blocked by only one creature, mutating nothing', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Menacing', types: ['Creature'], keywords: ['Menace'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(declareBlockers(engine, [{ blocker, attacker }])).toEqual({ ok: false, reason: expect.stringMatching(/menace/) });
+    expect(engine.blockers.size).toBe(0);
+  });
+
+  it('allows a Menace attacker blocked by two creatures', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Menacing', types: ['Creature'], keywords: ['Menace'] });
+    const blocker1 = state.addCard(opp, 'Battlefield', { name: 'Blocker 1', types: ['Creature'] });
+    const blocker2 = state.addCard(opp, 'Battlefield', { name: 'Blocker 2', types: ['Creature'] });
+    toDeclareBlockers(engine, [attacker]);
+    expect(declareBlockers(engine, [{ blocker: blocker1, attacker }, { blocker: blocker2, attacker }]).ok).toBe(true);
+    expect(engine.blockers.get(attacker.id)).toHaveLength(2);
+  });
+
+  it('rejects assigning the same blocker to two attackers, mutating nothing', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker1 = state.addCard(you, 'Battlefield', { name: 'Attacker 1', types: ['Creature'] });
+    const attacker2 = state.addCard(you, 'Battlefield', { name: 'Attacker 2', types: ['Creature'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'] });
+    toDeclareBlockers(engine, [attacker1, attacker2]);
+    expect(declareBlockers(engine, [{ blocker, attacker: attacker1 }, { blocker, attacker: attacker2 }])).toEqual({
+      ok: false,
+      reason: expect.stringMatching(/can only block one attacker/),
+    });
+    expect(engine.blockers.size).toBe(0);
+  });
+
+  it('one illegal pairing in the batch rejects the whole declaration (all-or-nothing)', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker1 = state.addCard(you, 'Battlefield', { name: 'Attacker 1', types: ['Creature'] });
+    const attacker2 = state.addCard(you, 'Battlefield', { name: 'Attacker 2', types: ['Creature'] });
+    const legalBlocker = state.addCard(opp, 'Battlefield', { name: 'Legal Blocker', types: ['Creature'] });
+    const tappedBlocker = state.addCard(opp, 'Battlefield', { name: 'Tapped Blocker', types: ['Creature'] });
+    state.tap(tappedBlocker);
+    toDeclareBlockers(engine, [attacker1, attacker2]);
+    expect(declareBlockers(engine, [{ blocker: legalBlocker, attacker: attacker1 }, { blocker: tappedBlocker, attacker: attacker2 }]).ok).toBe(false);
+    expect(engine.blockers.size).toBe(0);
+  });
+});
+
+describe('resolveCombatDamage (510)', () => {
+  function toDeclareAttackers(engine: ReturnType<typeof setupGame>['engine']) {
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatDeclareAttackers') advance(engine);
+  }
+
+  it('an unblocked attacker deals its full power to the defending player', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'], basePower: 3, baseToughness: 3 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, []);
+    const before = opp.life;
+    const result = resolveCombatDamage(engine);
+    expect(opp.life).toBe(before - 3);
+    expect(result.entries).toEqual([]);
+  });
+
+  it('a 1-1 trade deals damage to both creatures and none to the defending player', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    const before = opp.life;
+    const result = resolveCombatDamage(engine);
+    expect(opp.life).toBe(before);
+    expect(result.entries).toEqual(
+      expect.arrayContaining([
+        { card: attacker, damage: 2, lethal: true },
+        { card: blocker, damage: 2, lethal: true },
+      ]),
+    );
+  });
+
+  it('Trample assigns lethal damage to the blocker and overflows the rest to the defending player', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Trampler', types: ['Creature'], basePower: 5, baseToughness: 5, keywords: ['Trample'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'], basePower: 1, baseToughness: 2 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    const before = opp.life;
+    const result = resolveCombatDamage(engine);
+    expect(opp.life).toBe(before - 3); // 5 power - 2 lethal-to-blocker = 3 tramples over
+    const blockerEntry = result.entries.find((e) => e.card === blocker)!;
+    expect(blockerEntry).toEqual({ card: blocker, damage: 2, lethal: true });
+  });
+
+  it('Deathtouch marks a single point of damage as lethal regardless of toughness', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Toucher', types: ['Creature'], basePower: 1, baseToughness: 1, keywords: ['Deathtouch'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Big Blocker', types: ['Creature'], basePower: 1, baseToughness: 4 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    const result = resolveCombatDamage(engine);
+    const blockerEntry = result.entries.find((e) => e.card === blocker)!;
+    expect(blockerEntry).toEqual({ card: blocker, damage: 1, lethal: true });
+  });
+
+  it('First Strike: a blocker killed in the first-strike step deals no damage back', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Fast Striker', types: ['Creature'], basePower: 3, baseToughness: 3, keywords: ['FirstStrike'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Slow Blocker', types: ['Creature'], basePower: 3, baseToughness: 2 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    const result = resolveCombatDamage(engine);
+    const attackerEntry = result.entries.find((e) => e.card === attacker);
+    expect(attackerEntry).toBeUndefined(); // took no damage at all — the blocker never got to swing
+    const blockerEntry = result.entries.find((e) => e.card === blocker)!;
+    expect(blockerEntry).toEqual({ card: blocker, damage: 3, lethal: true });
+  });
+
+  it('Double Strike deals damage in both sub-steps against a blocker that survives the first', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Double Striker', types: ['Creature'], basePower: 2, baseToughness: 4, keywords: ['DoubleStrike'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Tough Blocker', types: ['Creature'], basePower: 2, baseToughness: 5 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    const result = resolveCombatDamage(engine);
+    const blockerEntry = result.entries.find((e) => e.card === blocker)!;
+    expect(blockerEntry).toEqual({ card: blocker, damage: 4, lethal: false }); // 2 (first strike) + 2 (regular) = 4, still short of 5 toughness
+    const attackerEntry = result.entries.find((e) => e.card === attacker)!;
+    expect(attackerEntry).toEqual({ card: attacker, damage: 2, lethal: false }); // the blocker itself only ever swings once, in the regular step — 2 damage, short of the attacker's own 4 toughness
+  });
+
+  it('a blocked attacker whose blocker already died in the first-strike step deals no further damage without Trample', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Double Striker', types: ['Creature'], basePower: 3, baseToughness: 3, keywords: ['DoubleStrike'] });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Fragile Blocker', types: ['Creature'], basePower: 1, baseToughness: 2 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    const before = opp.life;
+    const result = resolveCombatDamage(engine);
+    expect(opp.life).toBe(before); // no Trample — the second strike has nothing left to hit
+    const attackerEntry = result.entries.find((e) => e.card === attacker);
+    expect(attackerEntry).toBeUndefined(); // the blocker died before ever swinging back
+    const blockerEntry = result.entries.find((e) => e.card === blocker)!;
+    expect(blockerEntry).toEqual({ card: blocker, damage: 3, lethal: true });
   });
 });
 

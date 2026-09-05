@@ -32,6 +32,9 @@
 //   stepPriority(engine, choices) -> PriorityOutcome        // one APNAP round
 //   canAttack(engine, creature) -> ActionResult
 //   declareAttackers(engine, attackers) -> ActionResult
+//   canBlock(engine, blocker, attacker) -> ActionResult
+//   declareBlockers(engine, [{blocker, attacker}, ...]) -> ActionResult
+//   resolveCombatDamage(engine) -> CombatDamageResult        // applies real damage; see its own doc comment for the lethal-flag/no-SBA caveat
 //   advance(engine) -> void                                 // pass to next phase directly
 //
 // ── The resolveCard dispatch collision (fixed here) ──────────────────────
@@ -80,6 +83,16 @@
 //    explicit answer), not silently mispaid.
 //  - Summoning sickness (302.6) and Defender/tapped-creature attack
 //    restrictions (508.1a).
+//  - Blocking legality (509.1: creature/controller/tapped/Unblockable/
+//    Flying-Reach) and Menace (509.1b/702.111b), all-or-nothing like
+//    `declareAttackers`.
+//  - Real combat damage (510): unblocked-vs-blocked-vs-blocked-but-
+//    blockers-gone assignment, Trample overflow (702.19c), Deathtouch
+//    lethal-amount (702.2e), and First/Double Strike's two-sub-step
+//    ordering (510.5) modeled as two internal passes. See
+//    `resolveCombatDamage`'s own doc comment for the one real thing it
+//    does NOT do (destroy a lethally-damaged creature — that's SBAs,
+//    ENGINE_GAPS.md #2, a separate gap).
 // OUT (real, plainly-flagged gaps, not silently assumed away):
 //  - Target-legality checking at cast/declare time. This model's own
 //    existing effect system (card.ts) resolves/chooses targets LAZILY,
@@ -87,9 +100,8 @@
 //    "declare and validate targets" step anywhere in this codebase to hook
 //    a legality check onto. Retrofitting one would mean redesigning
 //    `Effect`'s entire resolution model, which is out of scope here.
-//  - Declaring blockers / real combat damage assignment. `turn.ts`'s own
-//    header already flags `CombatDamage` as reachable-but-inert; this file
-//    adds attacker-declaration legality on top, nothing about blocking.
+//  - State-based actions (704) — a lethally-damaged creature (from combat
+//    or anything else) doesn't actually die; see ENGINE_GAPS.md #2.
 //  - Alternate costs, X spells, split/modal costs, casting from anywhere
 //    but hand.
 //  - A real "does the AI/player want to respond" decision process —
@@ -99,6 +111,7 @@
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { resolveCard } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
+import { effectivePT, effectiveTypes } from './state';
 import { Stack, type StackObject } from './stack';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
 import { startGame, currentPhase, activePlayer, advancePhase, type TurnState } from './turn';
@@ -121,10 +134,26 @@ export interface GameEngine {
    * matching how a scenario's own initial board setup works.
    */
   enteredThisTurn: Map<number, number>;
+  /**
+   * This combat's declared attackers (508.1) — needed because tapped state
+   * alone can't reconstruct "who's attacking" (a Vigilance attacker never
+   * taps at all, `CombatUtil.getAttackers()`'s real equivalent,
+   * forge-game/.../combat/Combat.java's own `attackers` list). Set fresh by
+   * `declareAttackers` on success; empty otherwise (no attack declared yet,
+   * or combat's over).
+   */
+  attackers: RealCard[];
+  /**
+   * This combat's blocking assignments (509) — attacker id -> the blockers
+   * assigned to it (absent/empty = unblocked), same shape as real Forge's
+   * own `Combat.java` `attackerToBlockers` multimap. Set fresh by
+   * `declareBlockers` on success.
+   */
+  blockers: Map<number, RealCard[]>;
 }
 
 export function createEngine(state: GameState, players: RealPlayer[]): GameEngine {
-  return { state, players, turn: startGame(), stack: new Stack(), enteredThisTurn: new Map() };
+  return { state, players, turn: startGame(), stack: new Stack(), enteredThisTurn: new Map(), attackers: [], blockers: new Map() };
 }
 
 function isInstantSpeed(card: CardDefinition): boolean {
@@ -367,5 +396,227 @@ export function declareAttackers(engine: GameEngine, attackers: RealCard[]): Act
   for (const creature of attackers) {
     if (!creature.keywords.includes('Vigilance')) engine.state.tap(creature);
   }
+  engine.attackers = attackers;
+  engine.blockers = new Map();
   return { ok: true };
+}
+
+/**
+ * Real 509.1 blocking legality for ONE proposed (blocker, attacker) pair —
+ * `CombatUtil.canBlock(Card attacker, Card blocker, ...)`
+ * (forge-game/.../combat/CombatUtil.java) is the real equivalent this is
+ * checked against: attacker must be a declared attacker THIS combat,
+ * blocker must be a creature controlled by an opponent of the attacker's
+ * controller, untapped (509.1a — a tapped creature can't be declared as a
+ * blocker), unblockable-attacker (`Unblockable` keyword, see card.ts's own
+ * doc comment on that entry) rejects any block outright, and Flying
+ * (509.1b — needs Flying or Reach on the blocker) is checked. Read-only,
+ * same shape as `canAttack`.
+ */
+export function canBlock(engine: GameEngine, blocker: RealCard, attacker: RealCard): ActionResult {
+  if (currentPhase(engine.turn) !== 'CombatDeclareBlockers') {
+    return { ok: false, reason: 'blockers can only be declared during the Declare Blockers step (509.1)' };
+  }
+  if (!engine.attackers.some((a) => a.id === attacker.id)) {
+    return { ok: false, reason: `"${attacker.name}" is not a declared attacker this combat` };
+  }
+  if (!effectiveTypes(blocker).includes('Creature')) {
+    return { ok: false, reason: `"${blocker.name}" is not a creature and can't block` };
+  }
+  if (blocker.controllerId === attacker.controllerId) {
+    return { ok: false, reason: 'a creature can only block an attacker controlled by an opponent (509.1a)' };
+  }
+  if (blocker.tapped) {
+    return { ok: false, reason: "tapped creatures can't be declared as blockers (509.1a)" };
+  }
+  if (attacker.keywords.includes('Unblockable')) {
+    return { ok: false, reason: `"${attacker.name}" can't be blocked` };
+  }
+  if (attacker.keywords.includes('Flying') && !(blocker.keywords.includes('Flying') || blocker.keywords.includes('Reach'))) {
+    return { ok: false, reason: `"${attacker.name}" has flying — only a creature with flying or reach can block it (509.1b)` };
+  }
+  return { ok: true };
+}
+
+/**
+ * Legality-checks every proposed (blocker, attacker) pair via `canBlock`,
+ * plus two whole-batch rules `canBlock` can't check per-pair: a blocker
+ * can't be assigned to more than one attacker (509.1c), and an attacker
+ * with Menace needs at least 2 blockers or none at all (509.1b/702.111b —
+ * `StaticAbilityCantBeBlockedBy`-adjacent real Forge check, actually
+ * enforced in `CombatUtil.canBeBlocked` inputs, not a separate class of its
+ * own). All-or-nothing, same "don't half-apply an illegal action" contract
+ * `declareAttackers`/`payMana` already use — replaces `engine.blockers`
+ * only if every assignment is legal.
+ */
+export function declareBlockers(engine: GameEngine, assignments: Array<{ blocker: RealCard; attacker: RealCard }>): ActionResult {
+  if (currentPhase(engine.turn) !== 'CombatDeclareBlockers') {
+    return { ok: false, reason: 'blockers can only be declared during the Declare Blockers step (509.1)' };
+  }
+  const seenBlockers = new Set<number>();
+  for (const { blocker, attacker } of assignments) {
+    const check = canBlock(engine, blocker, attacker);
+    if (!check.ok) return check;
+    if (seenBlockers.has(blocker.id)) {
+      return { ok: false, reason: `"${blocker.name}" is already assigned to block another attacker — a creature can only block one attacker (509.1c)` };
+    }
+    seenBlockers.add(blocker.id);
+  }
+  const byAttacker = new Map<number, RealCard[]>();
+  for (const { blocker, attacker } of assignments) {
+    if (!byAttacker.has(attacker.id)) byAttacker.set(attacker.id, []);
+    byAttacker.get(attacker.id)!.push(blocker);
+  }
+  for (const attacker of engine.attackers) {
+    if (attacker.keywords.includes('Menace') && (byAttacker.get(attacker.id)?.length ?? 0) === 1) {
+      return { ok: false, reason: `"${attacker.name}" has menace — it can't be blocked by only one creature (509.1b/702.111b)` };
+    }
+  }
+  engine.blockers = byAttacker;
+  return { ok: true };
+}
+
+/** One creature that took combat damage this call, and whether that damage was lethal — see `resolveCombatDamage`'s own doc comment for what "lethal" means here and why this engine doesn't act on it directly. */
+export interface CombatDamageEntry {
+  card: RealCard;
+  damage: number;
+  lethal: boolean;
+}
+
+export interface CombatDamageResult {
+  entries: CombatDamageEntry[];
+}
+
+/** 704.5g (damage >= toughness) or 704.5h (any nonzero damage from a Deathtouch source) — the two real state-based-action tests for "this damage was lethal." Does NOT destroy anything (see `resolveCombatDamage`'s own doc comment) — just answers the question. */
+function isLethalDamage(state: GameState, card: RealCard, damageTotal: number, tookDeathtouchHit: boolean): boolean {
+  if (damageTotal <= 0) return false;
+  if (tookDeathtouchHit) return true;
+  const [, toughness] = effectivePT(state, card);
+  return damageTotal >= toughness;
+}
+
+/**
+ * Real combat damage (510) for the current `engine.attackers`/
+ * `engine.blockers` — `CombatUtil`'s own damage-assignment shape
+ * (forge-game/.../combat/CombatUtil.java) is the real reference: an
+ * unblocked attacker's full power goes to the defending player (with
+ * exactly 2 players, "the defending player" is simply the other one — see
+ * this file's own "Accepted simplifications" note, ENGINE_GAPS.md); a
+ * blocked attacker assigns damage among its living blockers in the order
+ * they were declared (a real attacking player chooses this order — not
+ * modeled, so declaration order stands in for it), lethal-amount-first
+ * (Deathtouch: 1 point counts as lethal, 702.2e) unless Trample (702.19c),
+ * in which case only the lethal amount goes to blockers and the rest
+ * overflows to the defending player; each living blocker deals its own
+ * full power back to the attacker. A blocked attacker whose blockers have
+ * ALL already left combat (died in an earlier sub-step, see below) deals
+ * NO damage at all UNLESS it has Trample, in which case its full damage
+ * goes to the defending player (real 510.1c) — this is deliberately
+ * different from "unblocked," which always hits the player regardless of
+ * Trample.
+ *
+ * Real 510.5's own first/double-strike ordering (two damage sub-steps
+ * when at least one combatant has First/Double Strike) is modeled as two
+ * internal passes within this ONE call, rather than a second real
+ * `turn.ts` phase (`PhaseType.COMBAT_FIRST_STRIKE_DAMAGE`, excluded from
+ * `turn.ts`'s own `PHASES` list per that file's header) — a creature dealt
+ * lethal damage in the first pass is excluded from dealing OR receiving
+ * damage in the second, same as a real 704-SBA check between the two real
+ * sub-steps would produce, WITHOUT this function actually destroying it
+ * (see below).
+ *
+ * This function does NOT call `state.destroy` on anything, even a
+ * creature this pass computes as lethally damaged — real creature death
+ * from combat damage is a state-based action (704.5g/704.5h), and general
+ * SBAs are a separate, not-yet-built gap (ENGINE_GAPS.md #2). What this
+ * function DOES do: apply every real damage amount via `state.dealDamage`
+ * (so player life totals and Lifelink both take their real, correct
+ * effect) and report, per creature that took any damage this call,
+ * whether that damage was lethal — a future SBA pass consumes this
+ * directly rather than recomputing it.
+ */
+export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
+  const damageTaken = new Map<number, number>();
+  const deathtouchHit = new Set<number>();
+  const lethalSoFar = new Set<number>();
+
+  const dealsFirst = (c: RealCard) => c.keywords.includes('FirstStrike') || c.keywords.includes('DoubleStrike');
+  const dealsRegular = (c: RealCard) => c.keywords.includes('DoubleStrike') || !c.keywords.includes('FirstStrike');
+
+  const defenderOf = (attacker: RealCard): RealPlayer => engine.players.find((p) => p.id !== attacker.controllerId)!;
+
+  function runStep(include: (c: RealCard) => boolean): void {
+    for (const attacker of engine.attackers) {
+      if (lethalSoFar.has(attacker.id)) continue;
+      const originalBlockers = engine.blockers.get(attacker.id) ?? [];
+      const isBlockedAtAll = originalBlockers.length > 0;
+      const livingBlockers = originalBlockers.filter((b) => !lethalSoFar.has(b.id));
+      const defender = defenderOf(attacker);
+
+      if (include(attacker)) {
+        const [power] = effectivePT(engine.state, attacker);
+        const deathtouch = attacker.keywords.includes('Deathtouch');
+        const trample = attacker.keywords.includes('Trample');
+        if (!isBlockedAtAll) {
+          engine.state.dealDamage(defender, power, attacker);
+        } else if (livingBlockers.length === 0) {
+          if (trample) engine.state.dealDamage(defender, power, attacker);
+        } else {
+          let remaining = power;
+          for (let i = 0; i < livingBlockers.length; i++) {
+            const blocker = livingBlockers[i]!;
+            const already = damageTaken.get(blocker.id) ?? 0;
+            const [, toughness] = effectivePT(engine.state, blocker);
+            const lethalNeeded = deathtouch ? 1 : Math.max(toughness - already, 0);
+            const isLast = i === livingBlockers.length - 1;
+            const assign = trample ? Math.min(remaining, lethalNeeded) : isLast ? remaining : Math.min(remaining, lethalNeeded);
+            if (assign > 0) {
+              engine.state.dealDamage(blocker, assign, attacker);
+              damageTaken.set(blocker.id, already + assign);
+              if (deathtouch) deathtouchHit.add(blocker.id);
+              remaining -= assign;
+            }
+          }
+          if (trample && remaining > 0) engine.state.dealDamage(defender, remaining, attacker);
+        }
+      }
+
+      for (const blocker of livingBlockers) {
+        if (include(blocker)) {
+          const [blockerPower] = effectivePT(engine.state, blocker);
+          const already = damageTaken.get(attacker.id) ?? 0;
+          engine.state.dealDamage(attacker, blockerPower, blocker);
+          damageTaken.set(attacker.id, already + blockerPower);
+          if (blocker.keywords.includes('Deathtouch')) deathtouchHit.add(attacker.id);
+        }
+      }
+    }
+  }
+
+  function markLethalPass(): void {
+    for (const attacker of engine.attackers) {
+      for (const card of [attacker, ...(engine.blockers.get(attacker.id) ?? [])]) {
+        if (lethalSoFar.has(card.id)) continue;
+        const dmg = damageTaken.get(card.id) ?? 0;
+        if (isLethalDamage(engine.state, card, dmg, deathtouchHit.has(card.id))) lethalSoFar.add(card.id);
+      }
+    }
+  }
+
+  runStep(dealsFirst);
+  markLethalPass();
+  runStep(dealsRegular);
+  markLethalPass();
+
+  const entries: CombatDamageEntry[] = [];
+  const seen = new Set<number>();
+  for (const attacker of engine.attackers) {
+    for (const card of [attacker, ...(engine.blockers.get(attacker.id) ?? [])]) {
+      if (seen.has(card.id)) continue;
+      seen.add(card.id);
+      const damage = damageTaken.get(card.id) ?? 0;
+      if (damage > 0) entries.push({ card, damage, lethal: lethalSoFar.has(card.id) });
+    }
+  }
+  return { entries };
 }

@@ -35,6 +35,9 @@ advance(engine);
 // Combat:
 canAttack(engine, creature);
 declareAttackers(engine, [creature1, creature2]);
+canBlock(engine, blocker, attacker);
+declareBlockers(engine, [{ blocker, attacker }, ...]);
+resolveCombatDamage(engine); // applies real damage; returns which creatures took lethal damage (see below — doesn't destroy them itself)
 
 // Activated abilities (602.1) — same read-only-check + mutating-action pair:
 canActivateAbility(engine, you, permanentReal, cardDef, abilityName?);
@@ -86,6 +89,33 @@ Later activating that SAME permanent's own ability goes through
 spell-only "move to Battlefield/Graveyard" step for those, since 602.1
 activated abilities don't relocate their source permanent.
 
+### Combat (509/510) — blocking and damage, minus SBAs
+
+`declareBlockers` mirrors `declareAttackers`'s own all-or-nothing shape:
+every proposed `{blocker, attacker}` pair is checked with `canBlock`
+(attacker actually declared this combat, blocker is an untapped creature
+controlled by an opponent, Unblockable/Flying-Reach/Menace), and
+`engine.blockers` (attacker id -> its blockers) is only replaced if every
+pair AND the whole-batch Menace rule pass.
+
+`resolveCombatDamage` then applies real 510 damage: unblocked attackers hit
+the defending player directly; blocked attackers assign damage among living
+blockers in declaration order, lethal-amount-first (Deathtouch: 1 point
+counts as lethal), with Trample overflow to the player; a blocked attacker
+whose blockers are ALL already gone (killed in an earlier sub-step) deals
+nothing UNLESS it has Trample. First/Double Strike's two-sub-step ordering
+(510.5) is modeled as two internal passes within this one call rather than a
+second `turn.ts` phase — a creature dealt lethal damage in the first pass is
+excluded from the second, same effective ordering a real SBA check between
+the two real sub-steps produces.
+
+**What this does NOT do:** destroy anything. Real creature death from
+combat damage is a state-based action (704.5g/704.5h) — a separate,
+not-yet-built gap (`ENGINE_GAPS.md` #2, "state-based actions"). Instead,
+`resolveCombatDamage` returns `CombatDamageResult` — every creature that
+took damage this call, and whether that damage was lethal — so a future SBA
+pass can act on it directly instead of recomputing "was this lethal" itself.
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -107,6 +137,13 @@ activated abilities don't relocate their source permanent.
   pip, generic pips round-robining the colors the cost already needs (Forest
   fallback if the cost has none) — scenario/test-setup convenience, not new
   affordability logic.
+- **Blocking legality** (509.1: creature/controller/tapped/Unblockable/
+  Flying-Reach) and **Menace** (509.1b/702.111b), all-or-nothing.
+- **Combat damage** (510): unblocked/blocked/blocked-but-blockers-gone
+  assignment, **Trample** overflow (702.19c), **Deathtouch** lethal-amount
+  (702.2e), and **First/Double Strike**'s two-sub-step ordering (510.5) —
+  see "Combat" above for the one thing it deliberately does NOT do
+  (destroy a lethally-damaged creature).
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -115,9 +152,8 @@ activated abilities don't relocate their source permanent.
   resolution time — there's no pre-resolution "declare and validate targets"
   step anywhere in this codebase to hook a legality check onto. Retrofitting
   one means redesigning `Effect`'s entire resolution model; not attempted here.
-- **Declaring blockers / combat damage.** `turn.ts`'s own header already
-  flags `CombatDamage` as reachable-but-inert; this only adds attacker-
-  declaration legality on top.
+- **State-based actions (704).** A lethally-damaged creature (from combat
+  damage or anything else) doesn't actually die — see `ENGINE_GAPS.md` #2.
 - **Priority-holder tracking between calls.** Real 117.1a also requires the
   caster hold priority at the moment of casting; `priority.ts`'s own header
   already documents why this simplified model has no persistent "who
@@ -136,10 +172,10 @@ activated abilities don't relocate their source permanent.
 
 `mana.test.ts` (cost parsing, affordability, payment, `basicLandsFor` — legal
 and illegal cases) and `engine.test.ts` (sorcery-speed timing, affordability,
-combat legality, activated-ability legality/resolution, and the
-`resolveCard`-dispatch-collision fix — again both legal and illegal cases,
-plus the all-or-nothing "one illegal attacker rejects the whole declaration"
-behavior).
+attacker/blocker legality, combat damage — unblocked/blocked/Trample/
+Deathtouch/First-and-Double-Strike, all-or-nothing declaration — activated-
+ability legality/resolution, and the `resolveCard`-dispatch-collision fix —
+again both legal and illegal cases throughout).
 
 ## Gap analysis vs. real Forge
 
