@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "\"chapterI\" trigger fires",
-      "result": "exiles the top card of your library (the \"you may play it\" permission is not modeled)"
+      "result": "exiles the top card of your library (the \"you may play it\" permission is not modeled)",
+      "raw": {
+        "result": "exiles the top card of your library (the \"you may play it\" permission is not modeled)",
+        "trigger": "chapterI",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -25,7 +32,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine"
+      "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine",
+      "raw": {
+        "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine",
+        "trigger": "chapterII"
+      }
     },
     "log": [
       {
@@ -40,7 +51,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterIII\" trigger fires",
-      "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine"
+      "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine",
+      "raw": {
+        "result": "no observable effect — no delayed/future-cast-watching mechanism exists in this engine",
+        "trigger": "chapterIII"
+      }
     },
     "log": [
       {

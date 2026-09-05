@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 3 creature card(s) in graveyard; opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "target creature an opponent controls gets -3/-3 until end of turn (3 permanent cards in this player's graveyard)"
+      "result": "target creature an opponent controls gets -3/-3 until end of turn (3 permanent cards in this player's graveyard)",
+      "raw": {
+        "result": "target creature an opponent controls gets -3/-3 until end of turn (3 permanent cards in this player's graveyard)",
+        "trigger": "onEnter",
+        "you": {
+          "graveyardCreatureCount": 3
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -73,7 +85,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "no permanent cards in the graveyard: target creature an opponent controls gets -0/-0"
+      "result": "no permanent cards in the graveyard: target creature an opponent controls gets -0/-0",
+      "raw": {
+        "result": "no permanent cards in the graveyard: target creature an opponent controls gets -0/-0",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -113,7 +134,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

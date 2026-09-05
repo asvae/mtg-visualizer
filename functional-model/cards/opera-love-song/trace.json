@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 4 card(s) in library",
       "action": "cast from hand, mode 0 chosen",
-      "result": "exiles the top two cards of your library"
+      "result": "exiles the top two cards of your library",
+      "raw": {
+        "result": "exiles the top two cards of your library",
+        "castFrom": "hand",
+        "mode": 0,
+        "you": {
+          "libraryCount": 4
+        }
+      }
     },
     "log": [
       {
@@ -35,7 +43,20 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "pumps two target creatures +2/+0 until end of turn"
+      "result": "pumps two target creatures +2/+0 until end of turn",
+      "raw": {
+        "result": "pumps two target creatures +2/+0 until end of turn",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -81,7 +102,15 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "only one legal creature on the battlefield: pumps just that one +2/+0"
+      "result": "only one legal creature on the battlefield: pumps just that one +2/+0",
+      "raw": {
+        "result": "only one legal creature on the battlefield: pumps just that one +2/+0",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

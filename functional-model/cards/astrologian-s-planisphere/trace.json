@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 Hero token and attaches itself to it"
+      "result": "creates a 1/1 Hero token and attaches itself to it",
+      "raw": {
+        "result": "creates a 1/1 Hero token and attaches itself to it",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -30,7 +34,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEquippedCastsNoncreatureSpell\" trigger fires",
-      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)"
+      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
+      "raw": {
+        "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
+        "trigger": "onEquippedCastsNoncreatureSpell"
+      }
     },
     "log": [
       {
@@ -51,7 +59,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEquippedDrawsThirdCardThisTurn\" trigger fires",
-      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)"
+      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
+      "raw": {
+        "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
+        "trigger": "onEquippedDrawsThirdCardThisTurn"
+      }
     },
     "log": [
       {
@@ -72,7 +84,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({2})",
-      "result": "attaches to a creature you control"
+      "result": "attaches to a creature you control",
+      "raw": {
+        "result": "attaches to a creature you control",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

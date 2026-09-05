@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated (Crew 1 (tap creatures with total power 1 or more))",
-      "result": "becomes an artifact creature (crewed)"
+      "result": "becomes an artifact creature (crewed)",
+      "raw": {
+        "result": "becomes an artifact creature (crewed)",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -26,7 +32,11 @@
     "scenario": {
       "setup": "",
       "action": "activated (Crew 1 (tap creatures with total power 1 or more)), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

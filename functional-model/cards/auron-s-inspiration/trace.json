@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)"
+      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
+      "raw": {
+        "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
+        "castFrom": "hand"
+      }
     },
     "log": [
       {
@@ -27,7 +31,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from graveyard",
-      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)"
+      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
+      "raw": {
+        "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
+        "castFrom": "graveyard"
+      }
     },
     "log": [
       {

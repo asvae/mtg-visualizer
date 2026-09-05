@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onActivateCreatureAbility\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onActivateCreatureAbility"
+      }
     },
     "log": [
       {
@@ -22,7 +26,15 @@
     "scenario": {
       "setup": "you: 2 creature(s), 2 nontoken",
       "action": "activated ({5}{U}{U})",
-      "result": "exiles up to two other nonland permanents you control now, then returns them to the battlefield only once the game reaches the end step (not immediately)"
+      "result": "exiles up to two other nonland permanents you control now, then returns them to the battlefield only once the game reaches the end step (not immediately)",
+      "raw": {
+        "result": "exiles up to two other nonland permanents you control now, then returns them to the battlefield only once the game reaches the end step (not immediately)",
+        "you": {
+          "creaturesCount": 2,
+          "nontokenCreaturesCount": 2
+        },
+        "advanceToPhase": "EndOfTurn"
+      }
     },
     "log": [
       {
@@ -56,12 +68,14 @@
       {
         "fn": "moveTo",
         "target": "you-creature-nontoken-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-creature-nontoken-1",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "delayUntil",
@@ -94,12 +108,14 @@
       {
         "fn": "moveTo",
         "target": "you-creature-nontoken-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-creature-nontoken-1",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "phase",
@@ -111,7 +127,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({5}{U}{U})",
-      "result": "no other nonland permanents you control — exiles/returns nothing"
+      "result": "no other nonland permanents you control — exiles/returns nothing",
+      "raw": {
+        "result": "no other nonland permanents you control — exiles/returns nothing",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {

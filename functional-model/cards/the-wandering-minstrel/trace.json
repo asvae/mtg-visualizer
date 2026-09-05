@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 3 land(s)",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "fewer than five Towns controlled (this model has no way to seed a Town-subtype land) — no token created"
+      "result": "fewer than five Towns controlled (this model has no way to seed a Town-subtype land) — no token created",
+      "raw": {
+        "result": "fewer than five Towns controlled (this model has no way to seed a Town-subtype land) — no token created",
+        "trigger": "onBeginCombat",
+        "you": {
+          "landsCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -70,7 +77,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({3}{W}{U}{B}{R}{G})",
-      "result": "no Towns controlled — other creatures you control get +0/+0 until end of turn"
+      "result": "no Towns controlled — other creatures you control get +0/+0 until end of turn",
+      "raw": {
+        "result": "no Towns controlled — other creatures you control get +0/+0 until end of turn",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -146,7 +159,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({3}{W}{U}{B}{R}{G}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

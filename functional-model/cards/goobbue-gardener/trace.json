@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield; the mana ability is a continuous static effect, not a resolvable action in this model"
+      "result": "enters the battlefield; the mana ability is a continuous static effect, not a resolvable action in this model",
+      "raw": {
+        "result": "enters the battlefield; the mana ability is a continuous static effect, not a resolvable action in this model"
+      }
     },
     "log": [
       {

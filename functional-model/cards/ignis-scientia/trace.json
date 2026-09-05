@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)"
+      "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)",
+      "raw": {
+        "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -31,7 +38,13 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "activated ({1}{G}{U}, {T})",
-      "result": "exiles the creature card from your graveyard and creates a Food token"
+      "result": "exiles the creature card from your graveyard and creates a Food token",
+      "raw": {
+        "result": "exiles the creature card from your graveyard and creates a Food token",
+        "you": {
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -55,7 +68,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "createToken",
@@ -70,7 +84,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({1}{G}{U}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

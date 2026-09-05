@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,15 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "cast from hand, back face",
-      "result": "no artifact/enchantment cards in the graveyard (only creature cards) — nothing returned to hand"
+      "result": "no artifact/enchantment cards in the graveyard (only creature cards) — nothing returned to hand",
+      "raw": {
+        "result": "no artifact/enchantment cards in the graveyard (only creature cards) — nothing returned to hand",
+        "face": "back",
+        "castFrom": "hand",
+        "you": {
+          "graveyardCreatureCount": 2
+        }
+      }
     },
     "log": [
       {

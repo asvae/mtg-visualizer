@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "creates a 0/1 black Wizard creature token (its granted \"deals 1 damage on noncreature cast\" ability is not modeled — see definition.ts)"
+      "result": "creates a 0/1 black Wizard creature token (its granted \"deals 1 damage on noncreature cast\" ability is not modeled — see definition.ts)",
+      "raw": {
+        "result": "creates a 0/1 black Wizard creature token (its granted \"deals 1 damage on noncreature cast\" ability is not modeled — see definition.ts)",
+        "face": "back",
+        "castFrom": "hand"
+      }
     },
     "log": [
       {

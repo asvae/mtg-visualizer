@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield (its own ETB-adjacent trigger fires separately below)"
+      "result": "enters the battlefield (its own ETB-adjacent trigger fires separately below)",
+      "raw": {
+        "result": "enters the battlefield (its own ETB-adjacent trigger fires separately below)"
+      }
     },
     "log": [
       {
@@ -25,7 +28,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onOtherElfEnters\" trigger fires",
-      "result": "gets +1/+1 until end of turn"
+      "result": "gets +1/+1 until end of turn",
+      "raw": {
+        "result": "gets +1/+1 until end of turn",
+        "trigger": "onOtherElfEnters"
+      }
     },
     "log": [
       {

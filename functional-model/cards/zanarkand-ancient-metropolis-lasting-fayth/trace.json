@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,15 @@
     "scenario": {
       "setup": "you: 3 land(s)",
       "action": "cast from hand, back face",
-      "result": "creates a 1/1 colorless Hero creature token with three +1/+1 counters on it (3 lands controlled)"
+      "result": "creates a 1/1 colorless Hero creature token with three +1/+1 counters on it (3 lands controlled)",
+      "raw": {
+        "result": "creates a 1/1 colorless Hero creature token with three +1/+1 counters on it (3 lands controlled)",
+        "face": "back",
+        "castFrom": "hand",
+        "you": {
+          "landsCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -76,7 +88,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "creates a 1/1 colorless Hero creature token, no counters (no lands controlled)"
+      "result": "creates a 1/1 colorless Hero creature token, no counters (no lands controlled)",
+      "raw": {
+        "result": "creates a 1/1 colorless Hero creature token, no counters (no lands controlled)",
+        "face": "back",
+        "castFrom": "hand"
+      }
     },
     "log": [
       {

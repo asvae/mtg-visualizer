@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {

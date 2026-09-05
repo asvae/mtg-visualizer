@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "draws two cards"
+      "result": "draws two cards",
+      "raw": {
+        "result": "draws two cards",
+        "castFrom": "hand"
+      }
     },
     "log": [
       {
@@ -35,7 +39,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from graveyard",
-      "result": "draws two cards (cast via Flashback, then exiled instead of returning to the graveyard)"
+      "result": "draws two cards (cast via Flashback, then exiled instead of returning to the graveyard)",
+      "raw": {
+        "result": "draws two cards (cast via Flashback, then exiled instead of returning to the graveyard)",
+        "castFrom": "graveyard"
+      }
     },
     "log": [
       {

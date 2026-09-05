@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 2 card(s) in hand; you: 1 card(s) in library",
       "action": "\"onLandfall\" trigger fires",
-      "result": "discards a card, then draws a card"
+      "result": "discards a card, then draws a card",
+      "raw": {
+        "result": "discards a card, then draws a card",
+        "trigger": "onLandfall",
+        "you": {
+          "handCount": 2,
+          "libraryCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -27,7 +35,15 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "\"onLandfall\" trigger fires",
-      "result": "no card in hand to discard; still draws a card (documentary-only \"if you do\" gate)"
+      "result": "no card in hand to discard; still draws a card (documentary-only \"if you do\" gate)",
+      "raw": {
+        "result": "no card in hand to discard; still draws a card (documentary-only \"if you do\" gate)",
+        "trigger": "onLandfall",
+        "you": {
+          "handCount": 0,
+          "libraryCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -51,7 +67,14 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "activated ({X}, {T} (activate only as a sorcery)), X=2",
-      "result": "no legal target (no Saga card of mana value X in the graveyard — this model has no way to seed a subtype/cmc-matching graveyard card), nothing returned"
+      "result": "no legal target (no Saga card of mana value X in the graveyard — this model has no way to seed a subtype/cmc-matching graveyard card), nothing returned",
+      "raw": {
+        "result": "no legal target (no Saga card of mana value X in the graveyard — this model has no way to seed a subtype/cmc-matching graveyard card), nothing returned",
+        "xPaid": 2,
+        "you": {
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -79,7 +102,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({X}, {T} (activate only as a sorcery)), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

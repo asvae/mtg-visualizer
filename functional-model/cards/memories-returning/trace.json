@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 5 card(s) in library",
       "action": "cast from hand",
-      "result": "3 of the top 5 cards go to your hand, the other 2 to the bottom of your library"
+      "result": "3 of the top 5 cards go to your hand, the other 2 to the bottom of your library",
+      "raw": {
+        "castFrom": "hand",
+        "you": {
+          "libraryCount": 5
+        },
+        "result": "3 of the top 5 cards go to your hand, the other 2 to the bottom of your library"
+      }
     },
     "log": [
       {
@@ -34,7 +41,14 @@
     "scenario": {
       "setup": "you: 5 card(s) in library",
       "action": "cast from graveyard",
-      "result": "cast via Flashback for {7}{U}{U}; same dig, then exiled instead of going to the graveyard"
+      "result": "cast via Flashback for {7}{U}{U}; same dig, then exiled instead of going to the graveyard",
+      "raw": {
+        "castFrom": "graveyard",
+        "you": {
+          "libraryCount": 5
+        },
+        "result": "cast via Flashback for {7}{U}{U}; same dig, then exiled instead of going to the graveyard"
+      }
     },
     "log": [
       {

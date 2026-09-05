@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterI\" trigger fires",
-      "result": "creates three 2/2 Knight tokens"
+      "result": "creates three 2/2 Knight tokens",
+      "raw": {
+        "result": "creates three 2/2 Knight tokens",
+        "trigger": "chapterI"
+      }
     },
     "log": [
       {
@@ -25,7 +29,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "creates three 2/2 Knight tokens"
+      "result": "creates three 2/2 Knight tokens",
+      "raw": {
+        "result": "creates three 2/2 Knight tokens",
+        "trigger": "chapterII"
+      }
     },
     "log": [
       {
@@ -47,7 +55,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterIII\" trigger fires",
-      "result": "creates three 2/2 Knight tokens"
+      "result": "creates three 2/2 Knight tokens",
+      "raw": {
+        "result": "creates three 2/2 Knight tokens",
+        "trigger": "chapterIII"
+      }
     },
     "log": [
       {
@@ -69,7 +81,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterIV\" trigger fires",
-      "result": "creates three 2/2 Knight tokens"
+      "result": "creates three 2/2 Knight tokens",
+      "raw": {
+        "result": "creates three 2/2 Knight tokens",
+        "trigger": "chapterIV"
+      }
     },
     "log": [
       {
@@ -91,7 +107,14 @@
     "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "\"chapterV\" trigger fires",
-      "result": "other creatures you control get +2/+2 and an indestructible counter"
+      "result": "other creatures you control get +2/+2 and an indestructible counter",
+      "raw": {
+        "result": "other creatures you control get +2/+2 and an indestructible counter",
+        "trigger": "chapterV",
+        "you": {
+          "creaturesCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -152,7 +175,14 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterV\" trigger fires",
-      "result": "no other creatures to affect, no-op"
+      "result": "no other creatures to affect, no-op",
+      "raw": {
+        "result": "no other creatures to affect, no-op",
+        "trigger": "chapterV",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {

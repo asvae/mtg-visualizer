@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "cast from hand",
-      "result": "no land cards available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap), so nothing enters the battlefield"
+      "result": "no land cards available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap), so nothing enters the battlefield",
+      "raw": {
+        "result": "no land cards available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap), so nothing enters the battlefield",
+        "castFrom": "hand",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {

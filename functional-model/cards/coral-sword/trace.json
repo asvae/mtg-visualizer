@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "attaches to the creature and grants it first strike until end of turn"
+      "result": "attaches to the creature and grants it first strike until end of turn",
+      "raw": {
+        "result": "attaches to the creature and grants it first strike until end of turn",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -38,7 +45,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated (Equip {1})",
-      "result": "Equip {1} activated: attaches to the target creature"
+      "result": "Equip {1} activated: attaches to the target creature",
+      "raw": {
+        "result": "Equip {1} activated: attaches to the target creature",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 2 land(s); opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "taps the opponent's nonland permanent, puts 2 stun counters on it, and you gain 2 life (2 lands controlled)"
+      "result": "taps the opponent's nonland permanent, puts 2 stun counters on it, and you gain 2 life (2 lands controlled)",
+      "raw": {
+        "result": "taps the opponent's nonland permanent, puts 2 stun counters on it, and you gain 2 life (2 lands controlled)",
+        "trigger": "onEnter",
+        "you": {
+          "landsCount": 2
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -67,7 +79,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

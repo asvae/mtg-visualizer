@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "draws a card, then discards a card"
+      "result": "draws a card, then discards a card",
+      "raw": {
+        "result": "draws a card, then discards a card",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 1,
+          "handCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -27,7 +35,15 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
       "action": "\"onAttacks\" trigger fires",
-      "result": "draws a card, then discards a card"
+      "result": "draws a card, then discards a card",
+      "raw": {
+        "result": "draws a card, then discards a card",
+        "trigger": "onAttacks",
+        "you": {
+          "libraryCount": 1,
+          "handCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -51,7 +67,14 @@
     "scenario": {
       "setup": "you: 14 creature card(s) in graveyard",
       "action": "\"onUpkeep\" trigger fires",
-      "result": "transforms into Hades, Sorcerer of Eld (14+ cards in the graveyard)"
+      "result": "transforms into Hades, Sorcerer of Eld (14+ cards in the graveyard)",
+      "raw": {
+        "result": "transforms into Hades, Sorcerer of Eld (14+ cards in the graveyard)",
+        "trigger": "onUpkeep",
+        "you": {
+          "graveyardCreatureCount": 14
+        }
+      }
     },
     "log": [
       {
@@ -70,12 +93,14 @@
       {
         "fn": "moveTo",
         "target": "Emet-Selch, Unsundered",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Emet-Selch, Unsundered",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -83,7 +108,14 @@
     "scenario": {
       "setup": "you: 5 creature card(s) in graveyard",
       "action": "\"onUpkeep\" trigger fires",
-      "result": "stays Emet-Selch, Unsundered (fewer than 14 cards in the graveyard)"
+      "result": "stays Emet-Selch, Unsundered (fewer than 14 cards in the graveyard)",
+      "raw": {
+        "result": "stays Emet-Selch, Unsundered (fewer than 14 cards in the graveyard)",
+        "trigger": "onUpkeep",
+        "you": {
+          "graveyardCreatureCount": 5
+        }
+      }
     },
     "log": [
       {
@@ -105,7 +137,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onScry\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onScry"
+      }
     },
     "log": [
       {
@@ -22,7 +26,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onSurveil\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onSurveil"
+      }
     },
     "log": [
       {
@@ -41,7 +49,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

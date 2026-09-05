@@ -3,7 +3,17 @@
     "scenario": {
       "setup": "you: 1 Human creature(s)",
       "action": "\"onFirstHumanCreatureCast\" trigger fires",
-      "result": "puts 1 +1/+1 counter on the newly cast Human creature (Torgal itself is the only Dog/Wolf you control)"
+      "result": "puts 1 +1/+1 counter on the newly cast Human creature (Torgal itself is the only Dog/Wolf you control)",
+      "raw": {
+        "result": "puts 1 +1/+1 counter on the newly cast Human creature (Torgal itself is the only Dog/Wolf you control)",
+        "trigger": "onFirstHumanCreatureCast",
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Human"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -70,7 +80,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

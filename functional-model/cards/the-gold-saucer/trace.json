@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "activated ({3}, {T}, Sacrifice two artifacts)",
-      "result": "draws a card (the two sacrificed artifacts are paid as part of the activation cost)"
+      "result": "draws a card (the two sacrificed artifacts are paid as part of the activation cost)",
+      "raw": {
+        "result": "draws a card (the two sacrificed artifacts are paid as part of the activation cost)",
+        "you": {
+          "libraryCount": 1
+        }
+      }
     },
     "log": [
       {

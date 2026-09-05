@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 2 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "taps both of the opponent's creatures"
+      "result": "taps both of the opponent's creatures",
+      "raw": {
+        "result": "taps both of the opponent's creatures",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 2
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -31,7 +40,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onDealsCombatDamage\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onDealsCombatDamage",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -50,7 +66,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

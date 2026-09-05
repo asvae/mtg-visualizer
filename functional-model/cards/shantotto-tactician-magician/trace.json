@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onCastNoncreatureSpell\" trigger fires",
-      "result": "Shantotto gets +4/+0 until end of turn and draws a card (4 mana spent)"
+      "result": "Shantotto gets +4/+0 until end of turn and draws a card (4 mana spent)",
+      "raw": {
+        "result": "Shantotto gets +4/+0 until end of turn and draws a card (4 mana spent)",
+        "trigger": "onCastNoncreatureSpell",
+        "triggerInput": {
+          "manaSpent": 4
+        }
+      }
     },
     "log": [
       {
@@ -28,7 +35,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onCastNoncreatureSpell\" trigger fires",
-      "result": "Shantotto gets +2/+0 until end of turn, no draw (below 4 mana spent)"
+      "result": "Shantotto gets +2/+0 until end of turn, no draw (below 4 mana spent)",
+      "raw": {
+        "result": "Shantotto gets +2/+0 until end of turn, no draw (below 4 mana spent)",
+        "trigger": "onCastNoncreatureSpell",
+        "triggerInput": {
+          "manaSpent": 2
+        }
+      }
     },
     "log": [
       {
@@ -49,7 +63,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

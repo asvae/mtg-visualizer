@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onNoncreatureSpellCastGE4Mana\" trigger fires",
-      "result": "taps the opponent creature and puts a stun counter on it"
+      "result": "taps the opponent creature and puts a stun counter on it",
+      "raw": {
+        "result": "taps the opponent creature and puts a stun counter on it",
+        "trigger": "onNoncreatureSpellCastGE4Mana",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -33,7 +42,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onNoncreatureSpellCastGE4Mana\" trigger fires",
-      "result": "no opponent creature present, no legal target"
+      "result": "no opponent creature present, no legal target",
+      "raw": {
+        "result": "no opponent creature present, no legal target",
+        "trigger": "onNoncreatureSpellCastGE4Mana",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -53,7 +69,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onNoncreatureSpellCastGE8Mana\" trigger fires",
-      "result": "puts 8 +1/+1 counters on itself"
+      "result": "puts 8 +1/+1 counters on itself",
+      "raw": {
+        "result": "puts 8 +1/+1 counters on itself",
+        "trigger": "onNoncreatureSpellCastGE8Mana"
+      }
     },
     "log": [
       {
@@ -74,7 +94,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

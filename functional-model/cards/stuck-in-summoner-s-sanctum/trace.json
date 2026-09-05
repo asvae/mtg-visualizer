@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "taps the enchanted permanent"
+      "result": "taps the enchanted permanent",
+      "raw": {
+        "result": "taps the enchanted permanent",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

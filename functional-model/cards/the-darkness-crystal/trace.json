@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{B}{B}, {T})",
-      "result": "no creature card in your exile zone, nothing returned"
+      "result": "no creature card in your exile zone, nothing returned",
+      "raw": {
+        "result": "no creature card in your exile zone, nothing returned"
+      }
     },
     "log": [
       {
@@ -25,7 +28,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{B}{B}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

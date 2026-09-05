@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "cast from hand, mode 0 chosen",
-      "result": "both creatures you control get +3/+3 until end of turn"
+      "result": "both creatures you control get +3/+3 until end of turn",
+      "raw": {
+        "result": "both creatures you control get +3/+3 until end of turn",
+        "castFrom": "hand",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -44,7 +52,15 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "cast from hand, mode 1 chosen",
-      "result": "2 permanent cards moved from graveyard to hand"
+      "result": "2 permanent cards moved from graveyard to hand",
+      "raw": {
+        "result": "2 permanent cards moved from graveyard to hand",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "graveyardCreatureCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -64,12 +80,14 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -85,7 +103,15 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "cast from hand, mode 1 chosen",
-      "result": "1 permanent card moved from graveyard to hand"
+      "result": "1 permanent card moved from graveyard to hand",
+      "raw": {
+        "result": "1 permanent card moved from graveyard to hand",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -105,7 +131,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -121,7 +148,15 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, mode 1 chosen",
-      "result": "nothing to return, no legal targets"
+      "result": "nothing to return, no legal targets",
+      "raw": {
+        "result": "nothing to return, no legal targets",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "graveyardCreatureCount": 0
+        }
+      }
     },
     "log": [
       {

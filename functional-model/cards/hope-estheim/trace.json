@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "opp0: 5 card(s) in library",
       "action": "\"onEndStep\" trigger fires",
-      "result": "each opponent mills 3 cards (you gained 3 life this turn)"
+      "result": "each opponent mills 3 cards (you gained 3 life this turn)",
+      "raw": {
+        "result": "each opponent mills 3 cards (you gained 3 life this turn)",
+        "trigger": "onEndStep",
+        "triggerInput": {
+          "lifeGainedThisTurn": 3
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -25,7 +37,19 @@
     "scenario": {
       "setup": "opp0: 5 card(s) in library",
       "action": "\"onEndStep\" trigger fires",
-      "result": "no life gained this turn, no cards milled"
+      "result": "no life gained this turn, no cards milled",
+      "raw": {
+        "result": "no life gained this turn, no cards milled",
+        "trigger": "onEndStep",
+        "triggerInput": {
+          "lifeGainedThisTurn": 0
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -47,7 +71,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -81,7 +111,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

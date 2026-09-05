@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttack\" trigger fires",
-      "result": "surveils 1"
+      "result": "surveils 1",
+      "raw": {
+        "trigger": "onAttack",
+        "result": "surveils 1"
+      }
     },
     "log": [
       {

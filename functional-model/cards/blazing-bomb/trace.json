@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onExpensiveNoncreatureSpellCast\" trigger fires",
-      "result": "puts a +1/+1 counter on itself"
+      "result": "puts a +1/+1 counter on itself",
+      "raw": {
+        "result": "puts a +1/+1 counter on itself",
+        "trigger": "onExpensiveNoncreatureSpellCast"
+      }
     },
     "log": [
       {
@@ -24,7 +28,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated ({T}, Sacrifice Blazing Bomb (activate only as a sorcery))",
-      "result": "sacrifices itself, dealing 1 damage (its power) to the target creature"
+      "result": "sacrifices itself, dealing 1 damage (its power) to the target creature",
+      "raw": {
+        "result": "sacrifices itself, dealing 1 damage (its power) to the target creature",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

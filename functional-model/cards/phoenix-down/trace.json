@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "activated ({1}{W}, {T}, Exile this artifact), mode 0 chosen",
-      "result": "returns a creature card from graveyard to the battlefield tapped"
+      "result": "returns a creature card from graveyard to the battlefield tapped",
+      "raw": {
+        "result": "returns a creature card from graveyard to the battlefield tapped",
+        "mode": 0,
+        "you": {
+          "graveyardCreatureCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -32,7 +39,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "tap",
@@ -44,7 +52,14 @@
     "scenario": {
       "setup": "",
       "action": "activated ({1}{W}, {T}, Exile this artifact), mode 0 chosen",
-      "result": "no creature card in graveyard, no-op"
+      "result": "no creature card in graveyard, no-op",
+      "raw": {
+        "result": "no creature card in graveyard, no-op",
+        "mode": 0,
+        "you": {
+          "graveyardCreatureCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -66,7 +81,19 @@
     "scenario": {
       "setup": "opp0: 1 Zombie creature(s)",
       "action": "activated ({1}{W}, {T}, Exile this artifact), mode 1 chosen",
-      "result": "exiles the Zombie"
+      "result": "exiles the Zombie",
+      "raw": {
+        "result": "exiles the Zombie",
+        "mode": 1,
+        "opponents": [
+          {
+            "creaturesCount": 1,
+            "creatureSubtypes": [
+              "Zombie"
+            ]
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -106,7 +133,8 @@
       {
         "fn": "moveTo",
         "target": "opp0-creature-token-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "opp0"
       }
     ]
   },
@@ -114,7 +142,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "activated ({1}{W}, {T}, Exile this artifact), mode 1 chosen",
-      "result": "no legal Skeleton/Spirit/Zombie target, no-op"
+      "result": "no legal Skeleton/Spirit/Zombie target, no-op",
+      "raw": {
+        "result": "no legal Skeleton/Spirit/Zombie target, no-op",
+        "mode": 1,
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "\"searchBasic\" activated",
-      "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found"
+      "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found",
+      "raw": {
+        "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found",
+        "ability": "searchBasic",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -37,7 +44,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "\"searchAny\" activated",
-      "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found"
+      "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found",
+      "raw": {
+        "result": "no land-typed library filler exists in this model to actually match (see definition.ts), so nothing is found",
+        "ability": "searchAny",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {

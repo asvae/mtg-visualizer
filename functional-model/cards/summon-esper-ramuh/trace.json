@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"chapterI\" trigger fires",
-      "result": "deals 0 damage to target creature an opponent controls (no noncreature, nonland cards in your graveyard — this harness has no field to seed one)"
+      "result": "deals 0 damage to target creature an opponent controls (no noncreature, nonland cards in your graveyard — this harness has no field to seed one)",
+      "raw": {
+        "result": "deals 0 damage to target creature an opponent controls (no noncreature, nonland cards in your graveyard — this harness has no field to seed one)",
+        "trigger": "chapterI",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -36,7 +45,17 @@
     "scenario": {
       "setup": "you: 2 Wizard creature(s)",
       "action": "\"chapterII\" trigger fires",
-      "result": "Wizards you control get +1/+0 until end of turn"
+      "result": "Wizards you control get +1/+0 until end of turn",
+      "raw": {
+        "result": "Wizards you control get +1/+0 until end of turn",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 2,
+          "creatureSubtypes": [
+            "Wizard"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -92,7 +111,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterII\" trigger fires",
-      "result": "no other Wizards present, no other creature is pumped"
+      "result": "no other Wizards present, no other creature is pumped",
+      "raw": {
+        "result": "no other Wizards present, no other creature is pumped",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -136,7 +162,17 @@
     "scenario": {
       "setup": "you: 1 Wizard creature(s)",
       "action": "\"chapterIII\" trigger fires",
-      "result": "Wizards you control get +1/+0 until end of turn"
+      "result": "Wizards you control get +1/+0 until end of turn",
+      "raw": {
+        "result": "Wizards you control get +1/+0 until end of turn",
+        "trigger": "chapterIII",
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Wizard"
+          ]
+        }
+      }
     },
     "log": [
       {

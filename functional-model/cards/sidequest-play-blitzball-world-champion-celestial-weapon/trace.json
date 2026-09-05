@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "target creature you control gets +2/+0 until end of turn"
+      "result": "target creature you control gets +2/+0 until end of turn",
+      "raw": {
+        "result": "target creature you control gets +2/+0 until end of turn",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -29,7 +36,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEndCombat\" trigger fires",
-      "result": "attaches to a creature you control (transform + turn-damage condition not tracked by this engine)"
+      "result": "attaches to a creature you control (transform + turn-damage condition not tracked by this engine)",
+      "raw": {
+        "result": "attaches to a creature you control (transform + turn-damage condition not tracked by this engine)",
+        "trigger": "onEndCombat",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -54,7 +68,15 @@
     "scenario": {
       "setup": "you: 1 creature(s); World Champion, Celestial Weapon's own Equip {3} ability (card.activationCost)",
       "action": "activated ({3}), back face",
-      "result": "equips to a creature you control"
+      "result": "equips to a creature you control",
+      "raw": {
+        "result": "equips to a creature you control",
+        "face": "back",
+        "you": {
+          "creaturesCount": 1
+        },
+        "setupNote": "World Champion, Celestial Weapon's own Equip {3} ability (card.activationCost)"
+      }
     },
     "log": [
       {

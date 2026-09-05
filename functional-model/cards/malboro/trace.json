@@ -3,7 +3,18 @@
     "scenario": {
       "setup": "opp0: 4 card(s) in hand; opp0: 40 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled"
+      "result": "opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
+      "raw": {
+        "result": "opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "handCount": 4,
+            "life": 20,
+            "libraryCount": 40
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -35,7 +46,23 @@
     "scenario": {
       "setup": "opp0: 4 card(s) in hand; opp0: 40 card(s) in library; opp1: at 12 life; opp1: 2 card(s) in hand; opp1: 30 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "each opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled"
+      "result": "each opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
+      "raw": {
+        "result": "each opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "handCount": 4,
+            "life": 20,
+            "libraryCount": 40
+          },
+          {
+            "handCount": 2,
+            "life": 12,
+            "libraryCount": 30
+          }
+        ]
+      }
     },
     "log": [
       {

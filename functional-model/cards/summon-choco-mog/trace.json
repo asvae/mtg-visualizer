@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterI\" trigger fires",
-      "result": "other creatures you control get +1/+0"
+      "result": "other creatures you control get +1/+0",
+      "raw": {
+        "result": "other creatures you control get +1/+0",
+        "trigger": "chapterI",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -35,7 +42,14 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "no other creatures to pump, no-op"
+      "result": "no other creatures to pump, no-op",
+      "raw": {
+        "result": "no other creatures to pump, no-op",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -55,7 +69,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterIII\" trigger fires",
-      "result": "other creatures you control get +1/+0"
+      "result": "other creatures you control get +1/+0",
+      "raw": {
+        "result": "other creatures you control get +1/+0",
+        "trigger": "chapterIII",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -87,7 +108,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterIV\" trigger fires",
-      "result": "other creatures you control get +1/+0"
+      "result": "other creatures you control get +1/+0",
+      "raw": {
+        "result": "other creatures you control get +1/+0",
+        "trigger": "chapterIV",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

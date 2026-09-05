@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 4 creature(s); opp0: 4 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "each player sacrifices 2 of their own creatures (half of 4 non-God creatures each, rounded down) — Zodiark itself excluded from both the count and the sacrifice pool"
+      "result": "each player sacrifices 2 of their own creatures (half of 4 non-God creatures each, rounded down) — Zodiark itself excluded from both the count and the sacrifice pool",
+      "raw": {
+        "result": "each player sacrifices 2 of their own creatures (half of 4 non-God creatures each, rounded down) — Zodiark itself excluded from both the count and the sacrifice pool",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 4
+        },
+        "opponents": [
+          {
+            "creaturesCount": 4
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -79,7 +91,19 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "too few non-God creatures on either side to halve into a whole one, nobody sacrifices"
+      "result": "too few non-God creatures on either side to halve into a whole one, nobody sacrifices",
+      "raw": {
+        "result": "too few non-God creatures on either side to halve into a whole one, nobody sacrifices",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -125,7 +149,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onCreatureSacrificed\" trigger fires",
-      "result": "puts a +1/+1 counter on Zodiark"
+      "result": "puts a +1/+1 counter on Zodiark",
+      "raw": {
+        "result": "puts a +1/+1 counter on Zodiark",
+        "trigger": "onCreatureSacrificed"
+      }
     },
     "log": [
       {
@@ -146,7 +174,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand, mode 0 chosen",
-      "result": "deals 2 damage to target creature (Thunder)"
+      "result": "deals 2 damage to target creature (Thunder)",
+      "raw": {
+        "result": "deals 2 damage to target creature (Thunder)",
+        "castFrom": "hand",
+        "mode": 0,
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -43,7 +53,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "deals 4 damage to target creature (Thundara)"
+      "result": "deals 4 damage to target creature (Thundara)",
+      "raw": {
+        "result": "deals 4 damage to target creature (Thundara)",
+        "castFrom": "hand",
+        "mode": 1,
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -83,7 +103,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand, mode 2 chosen",
-      "result": "deals 8 damage to target creature (Thundaga)"
+      "result": "deals 8 damage to target creature (Thundaga)",
+      "raw": {
+        "result": "deals 8 damage to target creature (Thundaga)",
+        "castFrom": "hand",
+        "mode": 2,
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

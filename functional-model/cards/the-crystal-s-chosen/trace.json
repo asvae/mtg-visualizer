@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "cast from hand",
-      "result": "creates four 1/1 Hero tokens, then puts a +1/+1 counter on each creature you control (including the new tokens)"
+      "result": "creates four 1/1 Hero tokens, then puts a +1/+1 counter on each creature you control (including the new tokens)",
+      "raw": {
+        "result": "creates four 1/1 Hero tokens, then puts a +1/+1 counter on each creature you control (including the new tokens)",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

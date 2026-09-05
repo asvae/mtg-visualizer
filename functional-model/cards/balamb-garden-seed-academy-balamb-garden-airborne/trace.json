@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({5}{G}{U}, {T} (costs {1} less for each other Town you control))",
-      "result": "transforms into Balamb Garden, Airborne (approximated as exile then return to the battlefield — see definition.ts)"
+      "result": "transforms into Balamb Garden, Airborne (approximated as exile then return to the battlefield — see definition.ts)",
+      "raw": {
+        "result": "transforms into Balamb Garden, Airborne (approximated as exile then return to the battlefield — see definition.ts)"
+      }
     },
     "log": [
       {
@@ -46,12 +53,14 @@
       {
         "fn": "moveTo",
         "target": "Balamb Garden, SeeD Academy",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Balamb Garden, SeeD Academy",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -59,7 +68,12 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttacks\" trigger fires, back face",
-      "result": "attacks and draws a card"
+      "result": "attacks and draws a card",
+      "raw": {
+        "result": "attacks and draws a card",
+        "face": "back",
+        "trigger": "onAttacks"
+      }
     },
     "log": [
       {
@@ -78,7 +92,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face, a duplicate legendary copy enters",
-      "result": "legend rule: a second copy of Balamb Garden, Airborne enters and is put into the graveyard"
+      "result": "legend rule: a second copy of Balamb Garden, Airborne enters and is put into the graveyard",
+      "raw": {
+        "result": "legend rule: a second copy of Balamb Garden, Airborne enters and is put into the graveyard",
+        "face": "back",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttacks\" trigger fires",
-      "result": "creates Darkstar, a legendary 2/2 white and black Dog token (you don't control one)"
+      "result": "creates Darkstar, a legendary 2/2 white and black Dog token (you don't control one)",
+      "raw": {
+        "result": "creates Darkstar, a legendary 2/2 white and black Dog token (you don't control one)",
+        "trigger": "onAttacks"
+      }
     },
     "log": [
       {
@@ -30,7 +34,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

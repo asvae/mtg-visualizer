@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttack\" trigger fires",
-      "result": "gets +9999/+0 until end of turn"
+      "result": "gets +9999/+0 until end of turn",
+      "raw": {
+        "result": "gets +9999/+0 until end of turn",
+        "trigger": "onAttack"
+      }
     },
     "log": [
       {

@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({2})",
-      "result": "attaches to the target creature you control"
+      "result": "attaches to the target creature you control",
+      "raw": {
+        "result": "attaches to the target creature you control",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -28,7 +34,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEquippedDealsDamage\" trigger fires",
-      "result": "draws a card (the free-cast clause is not modeled)"
+      "result": "draws a card (the free-cast clause is not modeled)",
+      "raw": {
+        "result": "draws a card (the free-cast clause is not modeled)",
+        "trigger": "onEquippedDealsDamage"
+      }
     },
     "log": [
       {

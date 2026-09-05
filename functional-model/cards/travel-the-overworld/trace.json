@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "draws 4 cards"
+      "result": "draws 4 cards",
+      "raw": {
+        "castFrom": "hand",
+        "result": "draws 4 cards"
+      }
     },
     "log": [
       {

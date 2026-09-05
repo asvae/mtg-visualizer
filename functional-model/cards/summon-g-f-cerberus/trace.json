@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterI\" trigger fires",
-      "result": "looks at the top card of your library, may put it into the graveyard"
+      "result": "looks at the top card of your library, may put it into the graveyard",
+      "raw": {
+        "result": "looks at the top card of your library, may put it into the graveyard",
+        "trigger": "chapterI"
+      }
     },
     "log": [
       {
@@ -23,7 +27,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "no observable effect — no spell-copy mechanism exists in this engine"
+      "result": "no observable effect — no spell-copy mechanism exists in this engine",
+      "raw": {
+        "result": "no observable effect — no spell-copy mechanism exists in this engine",
+        "trigger": "chapterII"
+      }
     },
     "log": [
       {
@@ -38,7 +46,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterIII\" trigger fires",
-      "result": "no observable effect — no spell-copy mechanism exists in this engine"
+      "result": "no observable effect — no spell-copy mechanism exists in this engine",
+      "raw": {
+        "result": "no observable effect — no spell-copy mechanism exists in this engine",
+        "trigger": "chapterIII"
+      }
     },
     "log": [
       {

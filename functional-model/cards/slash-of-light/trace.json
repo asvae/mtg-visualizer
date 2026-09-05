@@ -3,7 +3,21 @@
     "scenario": {
       "setup": "you: 2 creature(s); you: 1 Equipment; opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "deals 3 damage to target creature"
+      "result": "deals 3 damage to target creature",
+      "raw": {
+        "result": "deals 3 damage to target creature",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 2,
+          "equipmentCount": 1,
+          "artifactsCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -73,7 +87,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "deals 0 damage to target creature"
+      "result": "deals 0 damage to target creature",
+      "raw": {
+        "result": "deals 0 damage to target creature",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

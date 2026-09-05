@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 1 Equipment; opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "gains control of the target creature, untaps it and grants it haste, and attaches your Equipment to it"
+      "result": "gains control of the target creature, untaps it and grants it haste, and attaches your Equipment to it",
+      "raw": {
+        "result": "gains control of the target creature, untaps it and grants it haste, and attaches your Equipment to it",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ],
+        "you": {
+          "equipmentCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -69,7 +81,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "gains control of the target creature and grants it haste (no Equipment you control to attach)"
+      "result": "gains control of the target creature and grants it haste (no Equipment you control to attach)",
+      "raw": {
+        "result": "gains control of the target creature and grants it haste (no Equipment you control to attach)",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

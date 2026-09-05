@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onDies\" trigger fires",
-      "result": "Rat Tail — creates a Treasure token"
+      "result": "Rat Tail — creates a Treasure token",
+      "raw": {
+        "result": "Rat Tail — creates a Treasure token",
+        "trigger": "onDies"
+      }
     },
     "log": [
       {

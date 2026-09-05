@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 2 card(s) in hand; you: 2 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "discards 2 cards, then draws 2 cards"
+      "result": "discards 2 cards, then draws 2 cards",
+      "raw": {
+        "result": "discards 2 cards, then draws 2 cards",
+        "trigger": "onEnter",
+        "you": {
+          "handCount": 2,
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -31,7 +39,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({3}{R}{W}, {T} (activate only as a sorcery))",
-      "result": "exiles Joshua and returns it transformed into Phoenix, Warden of Fire"
+      "result": "exiles Joshua and returns it transformed into Phoenix, Warden of Fire",
+      "raw": {
+        "result": "exiles Joshua and returns it transformed into Phoenix, Warden of Fire"
+      }
     },
     "log": [
       {
@@ -43,12 +54,14 @@
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -56,7 +69,15 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterI\" trigger fires, back face",
-      "result": "Rising Flames: deals 2 damage to each opponent"
+      "result": "Rising Flames: deals 2 damage to each opponent",
+      "raw": {
+        "result": "Rising Flames: deals 2 damage to each opponent",
+        "face": "back",
+        "trigger": "chapterI",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -83,7 +104,15 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires, back face",
-      "result": "Rising Flames: deals 2 damage to each opponent"
+      "result": "Rising Flames: deals 2 damage to each opponent",
+      "raw": {
+        "result": "Rising Flames: deals 2 damage to each opponent",
+        "face": "back",
+        "trigger": "chapterII",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -110,7 +139,15 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "\"chapterIII\" trigger fires, back face",
-      "result": "Flames of Rebirth: returns creature cards from your graveyard to the battlefield, then exiles Phoenix and returns it front face up (total mana value cap not tracked, see definition.ts)"
+      "result": "Flames of Rebirth: returns creature cards from your graveyard to the battlefield, then exiles Phoenix and returns it front face up (total mana value cap not tracked, see definition.ts)",
+      "raw": {
+        "result": "Flames of Rebirth: returns creature cards from your graveyard to the battlefield, then exiles Phoenix and returns it front face up (total mana value cap not tracked, see definition.ts)",
+        "face": "back",
+        "trigger": "chapterIII",
+        "you": {
+          "graveyardCreatureCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -139,22 +176,26 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -162,7 +203,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "result": "Lifelink: deals 3 combat damage to an opponent",
+        "face": "back",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -196,7 +244,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({3}{R}{W}, {T} (activate only as a sorcery)), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {
@@ -208,12 +260,14 @@
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "legendRule",

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 artifact(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "draws 2 cards, one for each of the 2 artifacts you control"
+      "result": "draws 2 cards, one for each of the 2 artifacts you control",
+      "raw": {
+        "result": "draws 2 cards, one for each of the 2 artifacts you control",
+        "trigger": "onEnter",
+        "you": {
+          "artifactsCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -48,7 +55,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no artifacts you control, draws no cards"
+      "result": "no artifacts you control, draws no cards",
+      "raw": {
+        "result": "no artifacts you control, draws no cards",
+        "trigger": "onEnter",
+        "you": {
+          "artifactsCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -75,7 +89,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

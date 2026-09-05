@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is real text, not mechanically enforced — see definition.ts comment)"
+      "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is real text, not mechanically enforced — see definition.ts comment)",
+      "raw": {
+        "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is real text, not mechanically enforced — see definition.ts comment)"
+      }
     },
     "log": [
       {

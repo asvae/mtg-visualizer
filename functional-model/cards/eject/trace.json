@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "returns the opponent's nonland permanent (a creature) to hand and draws a card"
+      "result": "returns the opponent's nonland permanent (a creature) to hand and draws a card",
+      "raw": {
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ],
+        "result": "returns the opponent's nonland permanent (a creature) to hand and draws a card"
+      }
     },
     "log": [
       {
@@ -23,7 +32,8 @@
       {
         "fn": "moveTo",
         "target": "opp0-creature-token-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "opp0"
       },
       {
         "fn": "drawCard",
@@ -43,7 +53,16 @@
     "scenario": {
       "setup": "opp0: 1 artifact(s)",
       "action": "cast from hand",
-      "result": "returns the opponent's nonland permanent (an artifact) to hand and draws a card"
+      "result": "returns the opponent's nonland permanent (an artifact) to hand and draws a card",
+      "raw": {
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "artifactsCount": 1
+          }
+        ],
+        "result": "returns the opponent's nonland permanent (an artifact) to hand and draws a card"
+      }
     },
     "log": [
       {
@@ -63,7 +82,8 @@
       {
         "fn": "moveTo",
         "target": "opp0-artifact-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "opp0"
       },
       {
         "fn": "drawCard",
@@ -83,7 +103,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "no legal nonland permanent to target; nothing bounced, but still draws a card"
+      "result": "no legal nonland permanent to target; nothing bounced, but still draws a card",
+      "raw": {
+        "castFrom": "hand",
+        "opponents": [
+          {}
+        ],
+        "result": "no legal nonland permanent to target; nothing bounced, but still draws a card"
+      }
     },
     "log": [
       {

@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({3}{W})",
-      "result": "no creatures to pump, no-op"
+      "result": "no creatures to pump, no-op",
+      "raw": {
+        "result": "no creatures to pump, no-op",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -29,7 +35,13 @@
     "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "activated ({3}{W})",
-      "result": "creatures you control get +1/+1"
+      "result": "creatures you control get +1/+1",
+      "raw": {
+        "result": "creatures you control get +1/+1",
+        "you": {
+          "creaturesCount": 3
+        }
+      }
     },
     "log": [
       {

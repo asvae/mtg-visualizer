@@ -3,7 +3,18 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
       "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
-      "result": "draws a card, then discards a card"
+      "result": "draws a card, then discards a card",
+      "raw": {
+        "result": "draws a card, then discards a card",
+        "trigger": "onDealsCombatDamageToPlayer",
+        "you": {
+          "libraryCount": 1,
+          "handCount": 1
+        },
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -27,7 +38,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -61,7 +78,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

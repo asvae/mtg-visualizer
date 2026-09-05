@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 2 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "chooses an opponent creature; every other creature (both players', except Zenos and the chosen one) gets -2/-2 until end of turn"
+      "result": "chooses an opponent creature; every other creature (both players', except Zenos and the chosen one) gets -2/-2 until end of turn",
+      "raw": {
+        "result": "chooses an opponent creature; every other creature (both players', except Zenos and the chosen one) gets -2/-2 until end of turn",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 2
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -45,7 +57,16 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no opponent creature to choose, no resolvable effect"
+      "result": "no opponent creature to choose, no resolvable effect",
+      "raw": {
+        "result": "no opponent creature to choose, no resolvable effect",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 0
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -65,7 +86,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onChosenCreatureLeaves\" trigger fires",
-      "result": "the chosen creature left the battlefield: Zenos transforms into Shinryu (represented as exile-then-return)"
+      "result": "the chosen creature left the battlefield: Zenos transforms into Shinryu (represented as exile-then-return)",
+      "raw": {
+        "result": "the chosen creature left the battlefield: Zenos transforms into Shinryu (represented as exile-then-return)",
+        "trigger": "onChosenCreatureLeaves"
+      }
     },
     "log": [
       {
@@ -77,12 +102,14 @@
       {
         "fn": "moveTo",
         "target": "Zenos yae Galvus",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Zenos yae Galvus",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -90,7 +117,12 @@
     "scenario": {
       "setup": "",
       "action": "\"onChosenPlayerLosesGame\" trigger fires, back face",
-      "result": "Burning Chains — no resolvable effect in this model (loses-the-game and chosen-player tracking are both missing — see this batch's final report)"
+      "result": "Burning Chains — no resolvable effect in this model (loses-the-game and chosen-player tracking are both missing — see this batch's final report)",
+      "raw": {
+        "result": "Burning Chains — no resolvable effect in this model (loses-the-game and chosen-player tracking are both missing — see this batch's final report)",
+        "face": "back",
+        "trigger": "onChosenPlayerLosesGame"
+      }
     },
     "log": [
       {
@@ -105,7 +137,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

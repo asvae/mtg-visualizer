@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterI\" trigger fires",
-      "result": "creates a 2/2 green Bird creature token (the token's own granted landfall pump ability is not modeled)"
+      "result": "creates a 2/2 green Bird creature token (the token's own granted landfall pump ability is not modeled)",
+      "raw": {
+        "result": "creates a 2/2 green Bird creature token (the token's own granted landfall pump ability is not modeled)",
+        "trigger": "chapterI"
+      }
     },
     "log": [
       {
@@ -25,7 +29,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"chapterII\" trigger fires",
-      "result": "creatures you control (itself, already on the battlefield, and the other creature) gain trample until end of turn"
+      "result": "creatures you control (itself, already on the battlefield, and the other creature) gain trample until end of turn",
+      "raw": {
+        "result": "creatures you control (itself, already on the battlefield, and the other creature) gain trample until end of turn",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "mills 2 cards, then returns one permanent card from the graveyard to hand (the meld ability is out of scope — see definition.ts)"
+      "result": "mills 2 cards, then returns one permanent card from the graveyard to hand (the meld ability is out of scope — see definition.ts)",
+      "raw": {
+        "result": "mills 2 cards, then returns one permanent card from the graveyard to hand (the meld ability is out of scope — see definition.ts)",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -29,7 +36,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   }

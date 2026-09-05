@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onLandfall\" trigger fires",
-      "result": "creates a 2/2 green Bird creature token (its own landfall +1/+0 ability is not modeled — see definition.ts comment)"
+      "result": "creates a 2/2 green Bird creature token (its own landfall +1/+0 ability is not modeled — see definition.ts comment)",
+      "raw": {
+        "result": "creates a 2/2 green Bird creature token (its own landfall +1/+0 ability is not modeled — see definition.ts comment)",
+        "trigger": "onLandfall"
+      }
     },
     "log": [
       {

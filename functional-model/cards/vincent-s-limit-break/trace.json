@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 2)",
       "action": "cast from hand, mode 0 chosen",
-      "result": "target creature you control set to 3/2 until end of turn (2/2 -> 3/2)"
+      "result": "target creature you control set to 3/2 until end of turn (2/2 -> 3/2)",
+      "raw": {
+        "result": "target creature you control set to 3/2 until end of turn (2/2 -> 3/2)",
+        "castFrom": "hand",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 1,
+          "creaturePower": 2
+        }
+      }
     },
     "log": [
       {
@@ -48,7 +57,16 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 2)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "target creature you control set to 5/2 until end of turn (2/2 -> 5/2)"
+      "result": "target creature you control set to 5/2 until end of turn (2/2 -> 5/2)",
+      "raw": {
+        "result": "target creature you control set to 5/2 until end of turn (2/2 -> 5/2)",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 1,
+          "creaturePower": 2
+        }
+      }
     },
     "log": [
       {
@@ -93,7 +111,16 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 2)",
       "action": "cast from hand, mode 2 chosen",
-      "result": "target creature you control set to 7/2 until end of turn (2/2 -> 7/2)"
+      "result": "target creature you control set to 7/2 until end of turn (2/2 -> 7/2)",
+      "raw": {
+        "result": "target creature you control set to 7/2 until end of turn (2/2 -> 7/2)",
+        "castFrom": "hand",
+        "mode": 2,
+        "you": {
+          "creaturesCount": 1,
+          "creaturePower": 2
+        }
+      }
     },
     "log": [
       {
@@ -138,7 +165,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, mode 0 chosen",
-      "result": "no creature you control on the battlefield, nothing happens"
+      "result": "no creature you control on the battlefield, nothing happens",
+      "raw": {
+        "result": "no creature you control on the battlefield, nothing happens",
+        "castFrom": "hand",
+        "mode": 0
+      }
     },
     "log": [
       {

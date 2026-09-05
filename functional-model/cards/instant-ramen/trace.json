@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -22,7 +29,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({2}, {T}, Sacrifice this artifact)",
-      "result": "you gain 3 life"
+      "result": "you gain 3 life",
+      "raw": {
+        "result": "you gain 3 life"
+      }
     },
     "log": [
       {

@@ -3,7 +3,30 @@
     "scenario": {
       "setup": "opp0: 1 artifact(s)",
       "action": "cast from hand",
-      "result": "chapters I and II both decline their optional destroy (a legal target exists on the opponent side, but this line chooses not to spend it there or on itself), III draws two cards, IV deals damage equal to other permanents’ total mana value, then Bahamut is sacrificed"
+      "result": "chapters I and II both decline their optional destroy (a legal target exists on the opponent side, but this line chooses not to spend it there or on itself), III draws two cards, IV deals damage equal to other permanents’ total mana value, then Bahamut is sacrificed",
+      "raw": {
+        "result": "chapters I and II both decline their optional destroy (a legal target exists on the opponent side, but this line chooses not to spend it there or on itself), III draws two cards, IV deals damage equal to other permanents’ total mana value, then Bahamut is sacrificed",
+        "sequence": [
+          "chapterI",
+          "chapterII",
+          "chapterIII",
+          "chapterIV"
+        ],
+        "declineTriggers": [
+          "chapterI",
+          "chapterII"
+        ],
+        "sacrificeSelfAfter": true,
+        "triggerInput": {
+          "totalManaValue": 7
+        },
+        "opponents": [
+          {
+            "artifactsCount": 1,
+            "life": 20
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -68,7 +91,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterI\" trigger fires",
-      "result": "chapter I’s own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself on your side, so it legally (if pointlessly) destroys itself — documenting the effect actually fires, not just declines"
+      "result": "chapter I’s own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself on your side, so it legally (if pointlessly) destroys itself — documenting the effect actually fires, not just declines",
+      "raw": {
+        "result": "chapter I’s own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself on your side, so it legally (if pointlessly) destroys itself — documenting the effect actually fires, not just declines",
+        "trigger": "chapterI"
+      }
     },
     "log": [
       {
@@ -91,7 +118,8 @@
       },
       {
         "fn": "destroy",
-        "target": "Summon: Bahamut"
+        "target": "Summon: Bahamut",
+        "controller": "you"
       }
     ]
   }

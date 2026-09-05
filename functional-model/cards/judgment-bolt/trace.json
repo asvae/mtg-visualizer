@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 2 Equipment; opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "deals 5 damage to the target creature and 2 damage to its controller"
+      "result": "deals 5 damage to the target creature and 2 damage to its controller",
+      "raw": {
+        "result": "deals 5 damage to the target creature and 2 damage to its controller",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ],
+        "you": {
+          "equipmentCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -78,7 +90,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "deals 5 damage to the target creature and 0 damage to its controller (no Equipment controlled)"
+      "result": "deals 5 damage to the target creature and 0 damage to its controller (no Equipment controlled)",
+      "raw": {
+        "result": "deals 5 damage to the target creature and 0 damage to its controller (no Equipment controlled)",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

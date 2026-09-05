@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onDealsDamage\" trigger fires",
-      "result": "exiles Jecht and returns it transformed into Braska's Final Aeon"
+      "result": "exiles Jecht and returns it transformed into Braska's Final Aeon",
+      "raw": {
+        "result": "exiles Jecht and returns it transformed into Braska's Final Aeon",
+        "trigger": "onDealsDamage",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -15,12 +22,14 @@
       {
         "fn": "moveTo",
         "target": "Jecht, Reluctant Guardian",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jecht, Reluctant Guardian",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -28,7 +37,17 @@
     "scenario": {
       "setup": "opp0: 3 card(s) in hand",
       "action": "\"chapterI\" trigger fires, back face",
-      "result": "the opponent discards a card and you draw a card"
+      "result": "the opponent discards a card and you draw a card",
+      "raw": {
+        "result": "the opponent discards a card and you draw a card",
+        "face": "back",
+        "trigger": "chapterI",
+        "opponents": [
+          {
+            "handCount": 3
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -52,7 +71,17 @@
     "scenario": {
       "setup": "opp0: 3 creature(s)",
       "action": "\"chapterIII\" trigger fires, back face",
-      "result": "the opponent sacrifices two creatures"
+      "result": "the opponent sacrifices two creatures",
+      "raw": {
+        "result": "the opponent sacrifices two creatures",
+        "face": "back",
+        "trigger": "chapterIII",
+        "opponents": [
+          {
+            "creaturesCount": 3
+          }
+        ]
+      }
     },
     "log": [
       {

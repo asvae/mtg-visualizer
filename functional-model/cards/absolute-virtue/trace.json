@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield with no resolvable effect — \"can't be countered\" and protection from opponents are both continuous static rules"
+      "result": "enters the battlefield with no resolvable effect — \"can't be countered\" and protection from opponents are both continuous static rules",
+      "raw": {
+        "result": "enters the battlefield with no resolvable effect — \"can't be countered\" and protection from opponents are both continuous static rules"
+      }
     },
     "log": [
       {
@@ -25,7 +28,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield, no other effect (attack trigger not modeled — see definition.ts comment; requires \"attacking\" and \"equipped\" predicates, neither of which exist on Card)"
+      "result": "enters the battlefield, no other effect (attack trigger not modeled — see definition.ts comment; requires \"attacking\" and \"equipped\" predicates, neither of which exist on Card)",
+      "raw": {
+        "result": "enters the battlefield, no other effect (attack trigger not modeled — see definition.ts comment; requires \"attacking\" and \"equipped\" predicates, neither of which exist on Card)"
+      }
     },
     "log": [
       {

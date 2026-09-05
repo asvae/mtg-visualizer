@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 5 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "mills 5 cards; none of them are enchantments (this model has no way to seed a typed library card), nothing put into hand"
+      "result": "mills 5 cards; none of them are enchantments (this model has no way to seed a typed library card), nothing put into hand",
+      "raw": {
+        "result": "mills 5 cards; none of them are enchantments (this model has no way to seed a typed library card), nothing put into hand",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 5
+        }
+      }
     },
     "log": [
       {
@@ -51,7 +58,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{R}{G}, {T} (activate only as a sorcery))",
-      "result": "exiles Terra, then returns it to the battlefield transformed into Esper Terra"
+      "result": "exiles Terra, then returns it to the battlefield transformed into Esper Terra",
+      "raw": {
+        "result": "exiles Terra, then returns it to the battlefield transformed into Esper Terra"
+      }
     },
     "log": [
       {
@@ -63,12 +73,14 @@
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -76,7 +88,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "back face: Flying only, no resolvable chapters (see definition.ts for the real gap — copyPermanent not wired, mana production out of scope)"
+      "result": "back face: Flying only, no resolvable chapters (see definition.ts for the real gap — copyPermanent not wired, mana production out of scope)",
+      "raw": {
+        "result": "back face: Flying only, no resolvable chapters (see definition.ts for the real gap — copyPermanent not wired, mana production out of scope)",
+        "face": "back"
+      }
     },
     "log": [
       {
@@ -98,7 +114,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{R}{G}, {T} (activate only as a sorcery)), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {
@@ -110,12 +130,14 @@
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "legendRule",

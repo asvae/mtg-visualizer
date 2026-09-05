@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttacks\" trigger fires",
-      "result": "reveals cards until a land is found and puts it onto the battlefield tapped (not modeled — see definition.ts)"
+      "result": "reveals cards until a land is found and puts it onto the battlefield tapped (not modeled — see definition.ts)",
+      "raw": {
+        "result": "reveals cards until a land is found and puts it onto the battlefield tapped (not modeled — see definition.ts)",
+        "trigger": "onAttacks"
+      }
     },
     "log": [
       {
@@ -18,7 +22,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

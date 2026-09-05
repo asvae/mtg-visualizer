@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onUpkeep\" trigger fires",
-      "result": "pays 1 life, draws a card, and puts a +1/+1 counter on Seymour Flux"
+      "result": "pays 1 life, draws a card, and puts a +1/+1 counter on Seymour Flux",
+      "raw": {
+        "result": "pays 1 life, draws a card, and puts a +1/+1 counter on Seymour Flux",
+        "trigger": "onUpkeep"
+      }
     },
     "log": [
       {

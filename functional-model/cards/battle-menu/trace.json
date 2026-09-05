@@ -3,7 +3,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, mode 0 chosen",
-      "result": "creates a 2/2 white Knight creature token"
+      "result": "creates a 2/2 white Knight creature token",
+      "raw": {
+        "result": "creates a 2/2 white Knight creature token",
+        "castFrom": "hand",
+        "mode": 0
+      }
     },
     "log": [
       {
@@ -34,7 +39,15 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "target creature gets +0/+4 until end of turn"
+      "result": "target creature gets +0/+4 until end of turn",
+      "raw": {
+        "result": "target creature gets +0/+4 until end of turn",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -69,7 +82,18 @@
     "scenario": {
       "setup": "opp0: 1 creature(s) (power 4)",
       "action": "cast from hand, mode 2 chosen",
-      "result": "destroys the power-4-or-greater creature"
+      "result": "destroys the power-4-or-greater creature",
+      "raw": {
+        "result": "destroys the power-4-or-greater creature",
+        "castFrom": "hand",
+        "mode": 2,
+        "opponents": [
+          {
+            "creaturesCount": 1,
+            "creaturePower": 4
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -105,7 +129,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-creature-token-0"
+        "target": "opp0-creature-token-0",
+        "controller": "opp0"
       },
       {
         "fn": "move",
@@ -121,7 +146,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand, mode 2 chosen",
-      "result": "no legal target (power below 4), nothing destroyed"
+      "result": "no legal target (power below 4), nothing destroyed",
+      "raw": {
+        "result": "no legal target (power below 4), nothing destroyed",
+        "castFrom": "hand",
+        "mode": 2,
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -169,7 +204,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, mode 3 chosen",
-      "result": "you gain 4 life"
+      "result": "you gain 4 life",
+      "raw": {
+        "result": "you gain 4 life",
+        "castFrom": "hand",
+        "mode": 3
+      }
     },
     "log": [
       {

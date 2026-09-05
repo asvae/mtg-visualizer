@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "cast from hand",
-      "result": "target creature gets +1/+0 until end of turn (the granted death-trigger text is not modeled — see definition.ts comment)"
+      "result": "target creature gets +1/+0 until end of turn (the granted death-trigger text is not modeled — see definition.ts comment)",
+      "raw": {
+        "result": "target creature gets +1/+0 until end of turn (the granted death-trigger text is not modeled — see definition.ts comment)",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

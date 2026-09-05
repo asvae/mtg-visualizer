@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "activated (GOOOOAAAALLL! — {T}, Sacrifice this artifact (activate only if an opponent was dealt combat damage by a legendary creature this turn))",
-      "result": "draws two cards"
+      "result": "draws two cards",
+      "raw": {
+        "result": "draws two cards",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {

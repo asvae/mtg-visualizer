@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 5 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "mills 3 cards from your library into your graveyard, you gain 3 life"
+      "result": "mills 3 cards from your library into your graveyard, you gain 3 life",
+      "raw": {
+        "result": "mills 3 cards from your library into your graveyard, you gain 3 life",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 5
+        }
+      }
     },
     "log": [
       {

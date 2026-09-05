@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,17 @@
     "scenario": {
       "setup": "opp0: 7 card(s) in library",
       "action": "cast from hand, back face",
-      "result": "mills 3 cards (opponent has 7 in library, half rounded down)"
+      "result": "mills 3 cards (opponent has 7 in library, half rounded down)",
+      "raw": {
+        "result": "mills 3 cards (opponent has 7 in library, half rounded down)",
+        "face": "back",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "libraryCount": 7
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -72,7 +86,15 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "mills 0 cards (opponent has an empty library)"
+      "result": "mills 0 cards (opponent has an empty library)",
+      "raw": {
+        "result": "mills 0 cards (opponent has an empty library)",
+        "face": "back",
+        "castFrom": "hand",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {

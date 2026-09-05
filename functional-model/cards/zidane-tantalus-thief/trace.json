@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "gains control of an opposing creature, untaps it, grants it lifelink and haste"
+      "result": "gains control of an opposing creature, untaps it, grants it lifelink and haste",
+      "raw": {
+        "result": "gains control of an opposing creature, untaps it, grants it lifelink and haste",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -42,7 +51,16 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no opposing creature, no legal target"
+      "result": "no opposing creature, no legal target",
+      "raw": {
+        "result": "no opposing creature, no legal target",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 0
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -62,7 +80,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onOpponentGainsControlFromYou\" trigger fires",
-      "result": "creates a Treasure token"
+      "result": "creates a Treasure token",
+      "raw": {
+        "result": "creates a Treasure token",
+        "trigger": "onOpponentGainsControlFromYou"
+      }
     },
     "log": [
       {
@@ -84,7 +106,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

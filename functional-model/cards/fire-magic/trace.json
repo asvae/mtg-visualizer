@@ -3,7 +3,20 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "cast from hand, mode 0 chosen",
-      "result": "Fire: deals 1 damage to each creature (2 total)"
+      "result": "Fire: deals 1 damage to each creature (2 total)",
+      "raw": {
+        "result": "Fire: deals 1 damage to each creature (2 total)",
+        "castFrom": "hand",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -49,7 +62,20 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "Fira: deals 2 damage to each creature (2 total)"
+      "result": "Fira: deals 2 damage to each creature (2 total)",
+      "raw": {
+        "result": "Fira: deals 2 damage to each creature (2 total)",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -95,7 +121,20 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "cast from hand, mode 2 chosen",
-      "result": "Firaga: deals 3 damage to each creature (2 total)"
+      "result": "Firaga: deals 3 damage to each creature (2 total)",
+      "raw": {
+        "result": "Firaga: deals 3 damage to each creature (2 total)",
+        "castFrom": "hand",
+        "mode": 2,
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

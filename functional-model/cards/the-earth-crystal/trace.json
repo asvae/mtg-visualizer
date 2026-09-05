@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({4}{G}{G}, {T})",
-      "result": "puts a +1/+1 counter on each of the 2 target creatures you control"
+      "result": "puts a +1/+1 counter on each of the 2 target creatures you control",
+      "raw": {
+        "result": "puts a +1/+1 counter on each of the 2 target creatures you control",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -52,7 +58,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated ({4}{G}{G}, {T})",
-      "result": "only one creature you control: puts a +1/+1 counter on it"
+      "result": "only one creature you control: puts a +1/+1 counter on it",
+      "raw": {
+        "result": "only one creature you control: puts a +1/+1 counter on it",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -90,7 +102,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{G}{G}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

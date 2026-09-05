@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterI\" trigger fires",
-      "result": "returns your 2 non-tribal creatures to hand"
+      "result": "returns your 2 non-tribal creatures to hand",
+      "raw": {
+        "result": "returns your 2 non-tribal creatures to hand",
+        "trigger": "chapterI",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -50,7 +57,8 @@
       {
         "fn": "moveTo",
         "target": "you-creature-token-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "read:hasSubtype",
@@ -85,7 +93,8 @@
       {
         "fn": "moveTo",
         "target": "you-creature-token-1",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "read:hasSubtype",
@@ -105,7 +114,22 @@
     "scenario": {
       "setup": "you: 1 Merfolk creature(s); opp0: 1 creature(s)",
       "action": "\"chapterI\" trigger fires",
-      "result": "returns the opponent's non-tribal creature to hand; your own Merfolk stays (an exempt subtype)"
+      "result": "returns the opponent's non-tribal creature to hand; your own Merfolk stays (an exempt subtype)",
+      "raw": {
+        "result": "returns the opponent's non-tribal creature to hand; your own Merfolk stays (an exempt subtype)",
+        "trigger": "chapterI",
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Merfolk"
+          ]
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -187,7 +211,8 @@
       {
         "fn": "moveTo",
         "target": "opp0-creature-token-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "opp0"
       }
     ]
   },
@@ -195,7 +220,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)"
+      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
+      "raw": {
+        "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
+        "trigger": "chapterII"
+      }
     },
     "log": [
       {
@@ -210,7 +239,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterIII\" trigger fires",
-      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)"
+      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
+      "raw": {
+        "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
+        "trigger": "chapterIII"
+      }
     },
     "log": [
       {

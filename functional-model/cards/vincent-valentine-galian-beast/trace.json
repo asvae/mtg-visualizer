@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onOpponentCreatureDies\" trigger fires",
-      "result": "puts 3 +1/+1 counters on Vincent Valentine (the dying creature was power 3)"
+      "result": "puts 3 +1/+1 counters on Vincent Valentine (the dying creature was power 3)",
+      "raw": {
+        "result": "puts 3 +1/+1 counters on Vincent Valentine (the dying creature was power 3)",
+        "trigger": "onOpponentCreatureDies",
+        "triggerInput": {
+          "dyingCreaturePower": 3
+        }
+      }
     },
     "log": [
       {
@@ -24,7 +31,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttacks\" trigger fires",
-      "result": "transforms into Galian Beast (represented as exile-then-return)"
+      "result": "transforms into Galian Beast (represented as exile-then-return)",
+      "raw": {
+        "result": "transforms into Galian Beast (represented as exile-then-return)",
+        "trigger": "onAttacks"
+      }
     },
     "log": [
       {
@@ -36,12 +47,14 @@
       {
         "fn": "moveTo",
         "target": "Vincent Valentine",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Vincent Valentine",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -49,7 +62,12 @@
     "scenario": {
       "setup": "",
       "action": "\"onDies\" trigger fires, back face",
-      "result": "returns to the battlefield tapped, front face up"
+      "result": "returns to the battlefield tapped, front face up",
+      "raw": {
+        "result": "returns to the battlefield tapped, front face up",
+        "face": "back",
+        "trigger": "onDies"
+      }
     },
     "log": [
       {
@@ -61,7 +79,8 @@
       {
         "fn": "moveTo",
         "target": "Galian Beast",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "tap",
@@ -73,7 +92,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "result": "Lifelink: deals 3 combat damage to an opponent",
+        "face": "back",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -107,7 +133,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

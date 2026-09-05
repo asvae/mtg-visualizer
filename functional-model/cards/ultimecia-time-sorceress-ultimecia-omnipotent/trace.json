@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnterOrAttacks\" trigger fires",
-      "result": "surveils 2"
+      "result": "surveils 2",
+      "raw": {
+        "result": "surveils 2",
+        "trigger": "onEnterOrAttacks"
+      }
     },
     "log": [
       {
@@ -23,7 +27,14 @@
     "scenario": {
       "setup": "you: 8 creature card(s) in graveyard",
       "action": "\"onEndStep\" trigger fires",
-      "result": "exiles 8 cards from the graveyard, then transforms into Ultimecia, Omnipotent (extra-turn text on the back face is a documented gap — no Effect kind exists for it)"
+      "result": "exiles 8 cards from the graveyard, then transforms into Ultimecia, Omnipotent (extra-turn text on the back face is a documented gap — no Effect kind exists for it)",
+      "raw": {
+        "result": "exiles 8 cards from the graveyard, then transforms into Ultimecia, Omnipotent (extra-turn text on the back face is a documented gap — no Effect kind exists for it)",
+        "trigger": "onEndStep",
+        "you": {
+          "graveyardCreatureCount": 8
+        }
+      }
     },
     "log": [
       {
@@ -43,12 +54,14 @@
       {
         "fn": "moveTo",
         "target": "Ultimecia, Time Sorceress",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Ultimecia, Time Sorceress",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -56,7 +69,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "back face: Menace only; the Time Compression extra-turn trigger has no representable Effect kind, see definition.ts"
+      "result": "back face: Menace only; the Time Compression extra-turn trigger has no representable Effect kind, see definition.ts",
+      "raw": {
+        "result": "back face: Menace only; the Time Compression extra-turn trigger has no representable Effect kind, see definition.ts",
+        "face": "back"
+      }
     },
     "log": [
       {
@@ -78,7 +95,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "puts a +1/+1 counter on the target creature you control and it gains lifelink until end of turn"
+      "result": "puts a +1/+1 counter on the target creature you control and it gains lifelink until end of turn",
+      "raw": {
+        "result": "puts a +1/+1 counter on the target creature you control and it gains lifelink until end of turn",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -51,7 +58,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

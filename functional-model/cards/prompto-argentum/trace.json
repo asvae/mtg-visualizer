@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onNoncreatureSpellCast4Mana\" trigger fires",
-      "result": "creates a Treasure token"
+      "result": "creates a Treasure token",
+      "raw": {
+        "result": "creates a Treasure token",
+        "trigger": "onNoncreatureSpellCast4Mana"
+      }
     },
     "log": [
       {
@@ -25,7 +29,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

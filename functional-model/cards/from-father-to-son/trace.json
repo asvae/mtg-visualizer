@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in library; you: 1 artifact(s) in library",
       "action": "cast from hand",
-      "result": "finds the Vehicle (modeled as an artifact) and puts it into hand"
+      "result": "finds the Vehicle (modeled as an artifact) and puts it into hand",
+      "raw": {
+        "result": "finds the Vehicle (modeled as an artifact) and puts it into hand",
+        "you": {
+          "libraryArtifactCount": 1,
+          "libraryCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -38,7 +45,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-artifact-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -54,7 +62,15 @@
     "scenario": {
       "setup": "you: 2 card(s) in library; you: 1 artifact(s) in library",
       "action": "cast from graveyard",
-      "result": "finds the Vehicle (modeled as an artifact) and puts it directly onto the battlefield"
+      "result": "finds the Vehicle (modeled as an artifact) and puts it directly onto the battlefield",
+      "raw": {
+        "result": "finds the Vehicle (modeled as an artifact) and puts it directly onto the battlefield",
+        "castFrom": "graveyard",
+        "you": {
+          "libraryArtifactCount": 1,
+          "libraryCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -89,7 +105,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-artifact-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "move",

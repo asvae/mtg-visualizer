@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand; you: 1 card(s) in library; you: 1 subtype(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "discards a card, then searches library for a creature card and puts it into hand"
+      "result": "discards a card, then searches library for a creature card and puts it into hand",
+      "raw": {
+        "result": "discards a card, then searches library for a creature card and puts it into hand",
+        "trigger": "onEnter",
+        "you": {
+          "handCount": 1,
+          "libraryCount": 2,
+          "librarySubtypeCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -37,7 +46,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-subtype-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   },
@@ -45,7 +55,15 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand; you: 2 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "no creature card in library — discards but finds nothing"
+      "result": "no creature card in library — discards but finds nothing",
+      "raw": {
+        "result": "no creature card in library — discards but finds nothing",
+        "trigger": "onEnter",
+        "you": {
+          "handCount": 1,
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -82,7 +100,14 @@
     "scenario": {
       "setup": "you: 1 creature(s), 1 nontoken",
       "action": "activated ({1}, {T})",
-      "result": "untaps another target permanent"
+      "result": "untaps another target permanent",
+      "raw": {
+        "result": "untaps another target permanent",
+        "you": {
+          "creaturesCount": 1,
+          "nontokenCreaturesCount": 1
+        }
+      }
     },
     "log": [
       {

@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield, no other effect (Mountaincycling not modeled — see definition.ts comment)"
+      "result": "enters the battlefield, no other effect (Mountaincycling not modeled — see definition.ts comment)",
+      "raw": {
+        "result": "enters the battlefield, no other effect (Mountaincycling not modeled — see definition.ts comment)"
+      }
     },
     "log": [
       {

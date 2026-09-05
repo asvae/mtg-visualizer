@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creature enters, no other effect (Lifelink and the Equipment-count P/T bonus are both continuous, not resolvable effects)"
+      "result": "creature enters, no other effect (Lifelink and the Equipment-count P/T bonus are both continuous, not resolvable effects)",
+      "raw": {
+        "result": "creature enters, no other effect (Lifelink and the Equipment-count P/T bonus are both continuous, not resolvable effects)"
+      }
     },
     "log": [
       {
@@ -31,7 +34,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -71,7 +80,13 @@
     "scenario": {
       "setup": "you: 2 Equipment",
       "action": "cast from hand",
-      "result": "CDA: 2 Equipment on the battlefield (P/T should reflect it)"
+      "result": "CDA: 2 Equipment on the battlefield (P/T should reflect it)",
+      "raw": {
+        "label": "CDA: 2 Equipment on the battlefield (P/T should reflect it)",
+        "you": {
+          "equipmentCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -99,7 +114,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "CDA: no Equipment on the battlefield"
+      "result": "CDA: no Equipment on the battlefield",
+      "raw": {
+        "label": "CDA: no Equipment on the battlefield",
+        "you": {
+          "equipmentCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -127,7 +148,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

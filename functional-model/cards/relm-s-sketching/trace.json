@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 4)",
       "action": "cast from hand",
-      "result": "creates a token copy of the target creature (same power/toughness/name)"
+      "result": "creates a token copy of the target creature (same power/toughness/name)",
+      "raw": {
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 1,
+          "creaturePower": 4
+        },
+        "result": "creates a token copy of the target creature (same power/toughness/name)"
+      }
     },
     "log": [
       {
@@ -76,7 +84,16 @@
     "scenario": {
       "setup": "opp0: 1 artifact(s)",
       "action": "cast from hand",
-      "result": "creates a token copy of the opponent's target artifact"
+      "result": "creates a token copy of the opponent's target artifact",
+      "raw": {
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "artifactsCount": 1
+          }
+        ],
+        "result": "creates a token copy of the opponent's target artifact"
+      }
     },
     "log": [
       {
@@ -151,7 +168,14 @@
     "scenario": {
       "setup": "you: 1 land(s)",
       "action": "cast from hand",
-      "result": "creates a token copy of the target land"
+      "result": "creates a token copy of the target land",
+      "raw": {
+        "castFrom": "hand",
+        "you": {
+          "landsCount": 1
+        },
+        "result": "creates a token copy of the target land"
+      }
     },
     "log": [
       {

@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 artifact(s)",
       "action": "cast from hand",
-      "result": "creature enters, no other effect (the +2/+0 threshold bonus is continuous, not a resolvable effect)"
+      "result": "creature enters, no other effect (the +2/+0 threshold bonus is continuous, not a resolvable effect)",
+      "raw": {
+        "result": "creature enters, no other effect (the +2/+0 threshold bonus is continuous, not a resolvable effect)",
+        "you": {
+          "artifactsCount": 2
+        }
+      }
     },
     "log": [
       {

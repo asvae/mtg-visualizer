@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onLifeGained\" trigger fires",
-      "result": "puts a +1/+1 counter on itself"
+      "result": "puts a +1/+1 counter on itself",
+      "raw": {
+        "result": "puts a +1/+1 counter on itself",
+        "trigger": "onLifeGained"
+      }
     },
     "log": [
       {
@@ -24,7 +28,20 @@
     "scenario": {
       "setup": "you: 1 Legendary creature(s); self already has 2 +1/+1 counter(s)",
       "action": "\"onDies\" trigger fires",
-      "result": "puts 2 +1/+1 counters on each legendary creature it controls, including itself"
+      "result": "puts 2 +1/+1 counters on each legendary creature it controls, including itself",
+      "raw": {
+        "result": "puts 2 +1/+1 counters on each legendary creature it controls, including itself",
+        "trigger": "onDies",
+        "selfCounters": {
+          "+1/+1": 2
+        },
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Legendary"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -74,7 +91,17 @@
     "scenario": {
       "setup": "you: 1 creature(s); self already has 2 +1/+1 counter(s)",
       "action": "\"onDies\" trigger fires",
-      "result": "no other legendary creature present, but it still counts itself: puts 2 +1/+1 counters on itself"
+      "result": "no other legendary creature present, but it still counts itself: puts 2 +1/+1 counters on itself",
+      "raw": {
+        "result": "no other legendary creature present, but it still counts itself: puts 2 +1/+1 counters on itself",
+        "trigger": "onDies",
+        "selfCounters": {
+          "+1/+1": 2
+        },
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -118,7 +145,15 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onDies\" trigger fires",
-      "result": "no counters on itself, no effect"
+      "result": "no counters on itself, no effect",
+      "raw": {
+        "result": "no counters on itself, no effect",
+        "trigger": "onDies",
+        "selfCounters": {},
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -139,7 +174,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -173,7 +214,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

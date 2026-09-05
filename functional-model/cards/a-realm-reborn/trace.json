@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "the enchantment enters the battlefield; the granted mana ability is a continuous static effect, not a resolvable action in this model"
+      "result": "the enchantment enters the battlefield; the granted mana ability is a continuous static effect, not a resolvable action in this model",
+      "raw": {
+        "result": "the enchantment enters the battlefield; the granted mana ability is a continuous static effect, not a resolvable action in this model"
+      }
     },
     "log": [
       {

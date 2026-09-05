@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onAttacksAlone\" trigger fires",
-      "result": "the attacking creature gains double strike until end of turn"
+      "result": "the attacking creature gains double strike until end of turn",
+      "raw": {
+        "result": "the attacking creature gains double strike until end of turn",
+        "trigger": "onAttacksAlone",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -28,7 +35,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
-      "result": "(not mechanically enforced — see definition.ts comment)"
+      "result": "(not mechanically enforced — see definition.ts comment)",
+      "raw": {
+        "result": "(not mechanically enforced — see definition.ts comment)",
+        "trigger": "onDealsCombatDamageToPlayer"
+      }
     },
     "log": [
       {
@@ -43,7 +54,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

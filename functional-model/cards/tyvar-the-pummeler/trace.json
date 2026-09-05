@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield, no other effect (both activated abilities fire separately below)"
+      "result": "enters the battlefield, no other effect (both activated abilities fire separately below)",
+      "raw": {
+        "result": "enters the battlefield, no other effect (both activated abilities fire separately below)"
+      }
     },
     "log": [
       {
@@ -25,7 +28,11 @@
     "scenario": {
       "setup": "",
       "action": "\"indestructible\" activated",
-      "result": "gains indestructible until end of turn"
+      "result": "gains indestructible until end of turn",
+      "raw": {
+        "result": "gains indestructible until end of turn",
+        "ability": "indestructible"
+      }
     },
     "log": [
       {
@@ -46,7 +53,16 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 3), 1 nontoken",
       "action": "\"pump\" activated",
-      "result": "creatures you control get +X/+X until end of turn, where X is the greatest power among them (3)"
+      "result": "creatures you control get +X/+X until end of turn, where X is the greatest power among them (3)",
+      "raw": {
+        "result": "creatures you control get +X/+X until end of turn, where X is the greatest power among them (3)",
+        "ability": "pump",
+        "you": {
+          "creaturesCount": 1,
+          "nontokenCreaturesCount": 1,
+          "creaturePower": 3
+        }
+      }
     },
     "log": [
       {
@@ -109,7 +125,14 @@
     "scenario": {
       "setup": "",
       "action": "\"pump\" activated",
-      "result": "no other creatures — X is Tyvar's own power (3)"
+      "result": "no other creatures — X is Tyvar's own power (3)",
+      "raw": {
+        "result": "no other creatures — X is Tyvar's own power (3)",
+        "ability": "pump",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -156,7 +179,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

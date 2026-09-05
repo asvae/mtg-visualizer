@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "cast from hand",
-      "result": "enters the battlefield; power CDA sets it to 3 (2 other creatures + self), toughness fixed at 3"
+      "result": "enters the battlefield; power CDA sets it to 3 (2 other creatures + self), toughness fixed at 3",
+      "raw": {
+        "result": "enters the battlefield; power CDA sets it to 3 (2 other creatures + self), toughness fixed at 3",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -31,7 +37,13 @@
     "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "cast from hand",
-      "result": "CDA: 3 creatures on the battlefield (P/T should reflect it)"
+      "result": "CDA: 3 creatures on the battlefield (P/T should reflect it)",
+      "raw": {
+        "label": "CDA: 3 creatures on the battlefield (P/T should reflect it)",
+        "you": {
+          "creaturesCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -59,7 +71,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "CDA: no other creatures on the battlefield"
+      "result": "CDA: no other creatures on the battlefield",
+      "raw": {
+        "label": "CDA: no other creatures on the battlefield",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -87,7 +105,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

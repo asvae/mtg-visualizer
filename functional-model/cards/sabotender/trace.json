@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onLandfall\" trigger fires",
-      "result": "deals 1 damage to each opponent"
+      "result": "deals 1 damage to each opponent",
+      "raw": {
+        "result": "deals 1 damage to each opponent",
+        "trigger": "onLandfall",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {

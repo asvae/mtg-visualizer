@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"chapterI\" trigger fires",
-      "result": "Gungnir — destroys target creature an opponent controls"
+      "result": "Gungnir — destroys target creature an opponent controls",
+      "raw": {
+        "result": "Gungnir — destroys target creature an opponent controls",
+        "trigger": "chapterI",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -26,7 +35,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-creature-token-0"
+        "target": "opp0-creature-token-0",
+        "controller": "opp0"
       }
     ]
   },
@@ -34,7 +44,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "Zantetsuken — no resolvable effect in this model (grant-a-new-ability and loses-the-game are both missing Effect kinds — see this batch's final report)"
+      "result": "Zantetsuken — no resolvable effect in this model (grant-a-new-ability and loses-the-game are both missing Effect kinds — see this batch's final report)",
+      "raw": {
+        "result": "Zantetsuken — no resolvable effect in this model (grant-a-new-ability and loses-the-game are both missing Effect kinds — see this batch's final report)",
+        "trigger": "chapterII"
+      }
     },
     "log": [
       {
@@ -49,7 +63,14 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterIII\" trigger fires",
-      "result": "Hall of Sorrow — draw two cards, each player loses 2 life"
+      "result": "Hall of Sorrow — draw two cards, each player loses 2 life",
+      "raw": {
+        "result": "Hall of Sorrow — draw two cards, each player loses 2 life",
+        "trigger": "chapterIII",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {

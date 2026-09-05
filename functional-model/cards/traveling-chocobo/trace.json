@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield with no resolvable effect — all three abilities are continuous static permissions (see definition.ts)"
+      "result": "enters the battlefield with no resolvable effect — all three abilities are continuous static permissions (see definition.ts)",
+      "raw": {
+        "result": "enters the battlefield with no resolvable effect — all three abilities are continuous static permissions (see definition.ts)"
+      }
     },
     "log": [
       {

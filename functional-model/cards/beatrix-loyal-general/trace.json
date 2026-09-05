@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 1 creature(s); you: 2 Equipment",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "attaches both Equipment to the target creature you control"
+      "result": "attaches both Equipment to the target creature you control",
+      "raw": {
+        "result": "attaches both Equipment to the target creature you control",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 1,
+          "equipmentCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -72,7 +80,14 @@
     "scenario": {
       "setup": "you: 2 Equipment",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "no creature to attach to, nothing happens"
+      "result": "no creature to attach to, nothing happens",
+      "raw": {
+        "result": "no creature to attach to, nothing happens",
+        "trigger": "onBeginCombat",
+        "you": {
+          "equipmentCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -136,7 +151,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

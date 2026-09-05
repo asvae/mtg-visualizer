@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "target creature's toughness is reduced to -9999 (no SBA-destruction check modeled here)"
+      "result": "target creature's toughness is reduced to -9999 (no SBA-destruction check modeled here)",
+      "raw": {
+        "result": "target creature's toughness is reduced to -9999 (no SBA-destruction check modeled here)",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

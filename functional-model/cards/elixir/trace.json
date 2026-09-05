@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,13 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "activated ({5}, {T}, Exile this artifact)",
-      "result": "2 nonland cards shuffled from graveyard into library; gains 2 life"
+      "result": "2 nonland cards shuffled from graveyard into library; gains 2 life",
+      "raw": {
+        "result": "2 nonland cards shuffled from graveyard into library; gains 2 life",
+        "you": {
+          "graveyardCreatureCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -63,12 +73,14 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Library"
+        "zone": "Library",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
-        "zone": "Library"
+        "zone": "Library",
+        "controller": "you"
       },
       {
         "fn": "gainLife",
@@ -81,7 +93,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({5}, {T}, Exile this artifact)",
-      "result": "no cards in graveyard, nothing shuffled, no life gained"
+      "result": "no cards in graveyard, nothing shuffled, no life gained",
+      "raw": {
+        "result": "no cards in graveyard, nothing shuffled, no life gained",
+        "you": {
+          "graveyardCreatureCount": 0
+        }
+      }
     },
     "log": [
       {

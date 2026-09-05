@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
-      "result": "triggers Stagger (no replacement-effect machinery in this model — see definition.ts, flagged as a gap)"
+      "result": "triggers Stagger (no replacement-effect machinery in this model — see definition.ts, flagged as a gap)",
+      "raw": {
+        "result": "triggers Stagger (no replacement-effect machinery in this model — see definition.ts, flagged as a gap)",
+        "trigger": "onDealsCombatDamageToPlayer",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -18,7 +25,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -52,7 +65,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

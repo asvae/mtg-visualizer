@@ -3,7 +3,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, mode 0 chosen",
-      "result": "creates three 1/1 colorless Hero creature tokens"
+      "result": "creates three 1/1 colorless Hero creature tokens",
+      "raw": {
+        "result": "creates three 1/1 colorless Hero creature tokens",
+        "castFrom": "hand",
+        "mode": 0
+      }
     },
     "log": [
       {
@@ -34,7 +39,15 @@
     "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "taps all three creatures and puts a stun counter on the first one tapped"
+      "result": "taps all three creatures and puts a stun counter on the first one tapped",
+      "raw": {
+        "result": "taps all three creatures and puts a stun counter on the first one tapped",
+        "castFrom": "hand",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -81,7 +94,12 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, mode 1 chosen",
-      "result": "no creatures to tap, no effect"
+      "result": "no creatures to tap, no effect",
+      "raw": {
+        "result": "no creatures to tap, no effect",
+        "castFrom": "hand",
+        "mode": 1
+      }
     },
     "log": [
       {

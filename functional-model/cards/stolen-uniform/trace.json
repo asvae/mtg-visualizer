@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 Equipment",
       "action": "cast from hand",
-      "result": "gains control of the opponent's Equipment until end of turn and attaches it to your creature"
+      "result": "gains control of the opponent's Equipment until end of turn and attaches it to your creature",
+      "raw": {
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "equipmentCount": 1
+          }
+        ],
+        "result": "gains control of the opponent's Equipment until end of turn and attaches it to your creature"
+      }
     },
     "log": [
       {

@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creates a 2/2 green Bird token (the X-damage half of this card is not modeled — see definition.ts comment)"
+      "result": "creates a 2/2 green Bird token (the X-damage half of this card is not modeled — see definition.ts comment)",
+      "raw": {
+        "castFrom": "hand",
+        "result": "creates a 2/2 green Bird token (the X-damage half of this card is not modeled — see definition.ts comment)"
+      }
     },
     "log": [
       {

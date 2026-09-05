@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "taps the opponent's target creature and puts a stun counter on it"
+      "result": "taps the opponent's target creature and puts a stun counter on it",
+      "raw": {
+        "result": "taps the opponent's target creature and puts a stun counter on it",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -52,7 +61,16 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no legal target — the opponent controls no creatures, nothing tapped or countered"
+      "result": "no legal target — the opponent controls no creatures, nothing tapped or countered",
+      "raw": {
+        "result": "no legal target — the opponent controls no creatures, nothing tapped or countered",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 0
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -81,7 +99,19 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "with a creature on both sides, still taps only the opponent's — self's own controller isn't a legal target"
+      "result": "with a creature on both sides, still taps only the opponent's — self's own controller isn't a legal target",
+      "raw": {
+        "result": "with a creature on both sides, still taps only the opponent's — self's own controller isn't a legal target",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

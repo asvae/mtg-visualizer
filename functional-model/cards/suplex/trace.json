@@ -3,7 +3,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand, mode 0 chosen",
-      "result": "deals 3 damage to target creature (exile-instead-of-dying not modeled)"
+      "result": "deals 3 damage to target creature (exile-instead-of-dying not modeled)",
+      "raw": {
+        "result": "deals 3 damage to target creature (exile-instead-of-dying not modeled)",
+        "castFrom": "hand",
+        "mode": 0,
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -43,7 +53,17 @@
     "scenario": {
       "setup": "opp0: 1 artifact(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "exiles target artifact"
+      "result": "exiles target artifact",
+      "raw": {
+        "result": "exiles target artifact",
+        "castFrom": "hand",
+        "mode": 1,
+        "opponents": [
+          {
+            "artifactsCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -75,7 +95,8 @@
       {
         "fn": "moveTo",
         "target": "opp0-artifact-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "opp0"
       },
       {
         "fn": "move",

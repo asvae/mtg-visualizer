@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "loses 1 life, creates a Treasure token"
+      "result": "loses 1 life, creates a Treasure token",
+      "raw": {
+        "result": "loses 1 life, creates a Treasure token",
+        "trigger": "onEnter",
+        "you": {
+          "life": 20
+        }
+      }
     },
     "log": [
       {
@@ -30,7 +37,15 @@
     "scenario": {
       "setup": "you: 2 creature(s); you: 1 artifact(s)",
       "action": "\"onAttack\" trigger fires",
-      "result": "sacrifices a permanent, then surveils 2"
+      "result": "sacrifices a permanent, then surveils 2",
+      "raw": {
+        "result": "sacrifices a permanent, then surveils 2",
+        "trigger": "onAttack",
+        "you": {
+          "creaturesCount": 2,
+          "artifactsCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -78,7 +93,15 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttack\" trigger fires",
-      "result": "no fodder to sacrifice; surveils 2 anyway (sacrifice-success gate not modeled)"
+      "result": "no fodder to sacrifice; surveils 2 anyway (sacrifice-success gate not modeled)",
+      "raw": {
+        "result": "no fodder to sacrifice; surveils 2 anyway (sacrifice-success gate not modeled)",
+        "trigger": "onAttack",
+        "you": {
+          "creaturesCount": 0,
+          "artifactsCount": 0
+        }
+      }
     },
     "log": [
       {

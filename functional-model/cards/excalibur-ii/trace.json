@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onLifeGained\" trigger fires",
-      "result": "puts a charge counter on itself"
+      "result": "puts a charge counter on itself",
+      "raw": {
+        "result": "puts a charge counter on itself",
+        "trigger": "onLifeGained"
+      }
     },
     "log": [
       {
@@ -24,7 +28,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({3})",
-      "result": "attaches to the target creature you control"
+      "result": "attaches to the target creature you control",
+      "raw": {
+        "result": "attaches to the target creature you control",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -49,7 +59,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({3}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

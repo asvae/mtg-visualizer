@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onOtherCreatureEnters\" trigger fires",
-      "result": "gets +1/+1 until end of turn"
+      "result": "gets +1/+1 until end of turn",
+      "raw": {
+        "result": "gets +1/+1 until end of turn",
+        "trigger": "onOtherCreatureEnters"
+      }
     },
     "log": [
       {

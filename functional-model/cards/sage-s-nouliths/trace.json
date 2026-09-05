@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it"
+      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
+      "raw": {
+        "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -30,7 +34,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({3})",
-      "result": "attaches itself to the target creature"
+      "result": "attaches itself to the target creature",
+      "raw": {
+        "result": "attaches itself to the target creature",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -55,7 +65,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"onEquippedAttacks\" trigger fires",
-      "result": "untaps a target attacking creature"
+      "result": "untaps a target attacking creature",
+      "raw": {
+        "result": "untaps a target attacking creature",
+        "trigger": "onEquippedAttacks",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

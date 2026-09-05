@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "returns the other permanent to its owner's hand"
+      "result": "returns the other permanent to its owner's hand",
+      "raw": {
+        "result": "returns the other permanent to its owner's hand",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -22,7 +29,8 @@
       {
         "fn": "moveTo",
         "target": "you-creature-token-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   },
@@ -30,7 +38,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no other permanent to bounce, no effect"
+      "result": "no other permanent to bounce, no effect",
+      "raw": {
+        "result": "no other permanent to bounce, no effect",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -52,7 +67,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onLandfall\" trigger fires",
-      "result": "gets +1/+0 until end of turn"
+      "result": "gets +1/+0 until end of turn",
+      "raw": {
+        "result": "gets +1/+0 until end of turn",
+        "trigger": "onLandfall"
+      }
     },
     "log": [
       {
@@ -73,7 +92,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 3 card(s) in library",
       "action": "activated ({2}{W})",
-      "result": "no second copy found in library, no-op"
+      "result": "no second copy found in library, no-op",
+      "raw": {
+        "result": "no second copy found in library, no-op",
+        "you": {
+          "libraryCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -25,7 +31,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({2}{W})",
-      "result": "empty library, no-op"
+      "result": "empty library, no-op",
+      "raw": {
+        "result": "empty library, no-op",
+        "you": {
+          "libraryCount": 0
+        }
+      }
     },
     "log": [
       {

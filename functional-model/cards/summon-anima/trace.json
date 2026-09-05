@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterI\" trigger fires",
-      "result": "Pain — you draw a card and lose 1 life"
+      "result": "Pain — you draw a card and lose 1 life",
+      "raw": {
+        "result": "Pain — you draw a card and lose 1 life",
+        "trigger": "chapterI"
+      }
     },
     "log": [
       {
@@ -27,7 +31,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "Pain — you draw a card and lose 1 life"
+      "result": "Pain — you draw a card and lose 1 life",
+      "raw": {
+        "result": "Pain — you draw a card and lose 1 life",
+        "trigger": "chapterII"
+      }
     },
     "log": [
       {
@@ -51,7 +59,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterIII\" trigger fires",
-      "result": "Pain — you draw a card and lose 1 life"
+      "result": "Pain — you draw a card and lose 1 life",
+      "raw": {
+        "result": "Pain — you draw a card and lose 1 life",
+        "trigger": "chapterIII"
+      }
     },
     "log": [
       {
@@ -75,7 +87,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"chapterIV\" trigger fires",
-      "result": "Oblivion — each opponent sacrifices a creature of their choice and loses 3 life"
+      "result": "Oblivion — each opponent sacrifices a creature of their choice and loses 3 life",
+      "raw": {
+        "result": "Oblivion — each opponent sacrifices a creature of their choice and loses 3 life",
+        "trigger": "chapterIV",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

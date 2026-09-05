@@ -1,9 +1,43 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s); opp0: 1 land(s); opp0: 1 artifact(s)",
+      "setup": "you: a Hero; opp0: a Treasure; opp0: a Forest",
       "action": "\"onEnter\" trigger fires",
-      "result": "Jill enters, ETB returns the opponent's artifact (not their land — real text is nonland only) to hand; {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I grants your creature unblockable; chapter II grants it again; chapter III taps all the opponent's lands, then exiles Shiva and returns it front-face-up"
+      "result": "Jill enters, ETB returns the opponent's artifact (not their land — real text is nonland only) to hand; {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I grants your creature unblockable; chapter II grants it again; chapter III taps all the opponent's lands, then exiles Shiva and returns it front-face-up",
+      "raw": {
+        "result": "Jill enters, ETB returns the opponent's artifact (not their land — real text is nonland only) to hand; {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I grants your creature unblockable; chapter II grants it again; chapter III taps all the opponent's lands, then exiles Shiva and returns it front-face-up",
+        "trigger": "onEnter",
+        "you": {
+          "tokens": [
+            "c_1_1_hero"
+          ]
+        },
+        "opponents": [
+          {
+            "tokens": [
+              "c_a_treasure_sac"
+            ],
+            "basicLands": [
+              "Forest"
+            ]
+          }
+        ],
+        "sequence": [
+          {
+            "activate": true
+          },
+          {
+            "trigger": "chapterI",
+            "face": "back"
+          },
+          {
+            "trigger": "chapterII"
+          },
+          {
+            "trigger": "chapterIII"
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -21,18 +55,19 @@
       },
       {
         "fn": "read:isLand",
-        "target": "opp0-artifact-0",
+        "target": "Treasure",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "opp0-land-0",
+        "target": "Forest",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "opp0-artifact-0",
-        "zone": "Hand"
+        "target": "Treasure",
+        "zone": "Hand",
+        "controller": "opp0"
       },
       {
         "fn": "activate",
@@ -43,12 +78,14 @@
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "trigger",
@@ -68,7 +105,7 @@
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Hero",
         "keyword": "Unblockable"
       },
       {
@@ -89,7 +126,7 @@
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Hero",
         "keyword": "Unblockable"
       },
       {
@@ -105,17 +142,19 @@
       },
       {
         "fn": "tap",
-        "target": "opp0-land-0"
+        "target": "Forest"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   }

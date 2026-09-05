@@ -3,7 +3,17 @@
     "scenario": {
       "setup": "opp0: 1 land(s); opp0: 3 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "destroys the opponent's target land; its controller finds a basic land in their library, puts it onto the battlefield tapped"
+      "result": "destroys the opponent's target land; its controller finds a basic land in their library, puts it onto the battlefield tapped",
+      "raw": {
+        "result": "destroys the opponent's target land; its controller finds a basic land in their library, puts it onto the battlefield tapped",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "landsCount": 1,
+            "libraryCount": 3
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -38,7 +48,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-land-0"
+        "target": "opp0-land-0",
+        "controller": "opp0"
       }
     ]
   },
@@ -46,7 +57,16 @@
     "scenario": {
       "setup": "opp0: 1 land(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "no basic land in the library to find; the destroyed land is simply gone"
+      "result": "no basic land in the library to find; the destroyed land is simply gone",
+      "raw": {
+        "result": "no basic land in the library to find; the destroyed land is simply gone",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "landsCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -81,7 +101,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-land-0"
+        "target": "opp0-land-0",
+        "controller": "opp0"
       }
     ]
   }

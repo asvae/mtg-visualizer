@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onOtherPermanentsDie\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onOtherPermanentsDie"
+      }
     },
     "log": [
       {

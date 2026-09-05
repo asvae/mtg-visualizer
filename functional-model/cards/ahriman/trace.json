@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated ({3}, Sacrifice another creature or artifact)",
-      "result": "sacrifices another creature and draws a card"
+      "result": "sacrifices another creature and draws a card",
+      "raw": {
+        "result": "sacrifices another creature and draws a card",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -35,7 +41,13 @@
     "scenario": {
       "setup": "you: 1 artifact(s)",
       "action": "activated ({3}, Sacrifice another creature or artifact)",
-      "result": "sacrifices an artifact (no other creature present) and draws a card"
+      "result": "sacrifices an artifact (no other creature present) and draws a card",
+      "raw": {
+        "result": "sacrifices an artifact (no other creature present) and draws a card",
+        "you": {
+          "artifactsCount": 1
+        }
+      }
     },
     "log": [
       {

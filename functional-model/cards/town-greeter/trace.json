@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 4 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "mills 4 cards; no land among them, so nothing moves to hand and no life is gained"
+      "result": "mills 4 cards; no land among them, so nothing moves to hand and no life is gained",
+      "raw": {
+        "result": "mills 4 cards; no land among them, so nothing moves to hand and no life is gained",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 4
+        }
+      }
     },
     "log": [
       {

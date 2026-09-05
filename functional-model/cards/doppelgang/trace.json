@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 2 creature(s), 2 nontoken",
       "action": "cast from hand, X=2",
-      "result": "for each of 2 target permanents, creates 2 token copies of that permanent (4 total)"
+      "result": "for each of 2 target permanents, creates 2 token copies of that permanent (4 total)",
+      "raw": {
+        "result": "for each of 2 target permanents, creates 2 token copies of that permanent (4 total)",
+        "xPaid": 2,
+        "you": {
+          "creaturesCount": 2,
+          "nontokenCreaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -54,7 +62,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, X=0",
-      "result": "X is 0 — no targets, no copies"
+      "result": "X is 0 — no targets, no copies",
+      "raw": {
+        "result": "X is 0 — no targets, no copies",
+        "xPaid": 0
+      }
     },
     "log": [
       {

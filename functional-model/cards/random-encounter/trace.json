@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 6 card(s) in library",
       "action": "cast from hand",
-      "result": "mills 4 generic (noncreature) library cards to the graveyard; none qualify to enter the battlefield under this harness (see reported gap: no way to seed library creature cards)"
+      "result": "mills 4 generic (noncreature) library cards to the graveyard; none qualify to enter the battlefield under this harness (see reported gap: no way to seed library creature cards)",
+      "raw": {
+        "result": "mills 4 generic (noncreature) library cards to the graveyard; none qualify to enter the battlefield under this harness (see reported gap: no way to seed library creature cards)",
+        "castFrom": "hand",
+        "you": {
+          "libraryCount": 6
+        }
+      }
     },
     "log": [
       {
@@ -55,7 +62,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"atNextEndStep\" trigger fires",
-      "result": "at the next end step, creature cards you control return to hand"
+      "result": "at the next end step, creature cards you control return to hand",
+      "raw": {
+        "result": "at the next end step, creature cards you control return to hand",
+        "trigger": "atNextEndStep",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onAttacksAlone\" trigger fires",
-      "result": "grants double strike until end of turn to a creature you control"
+      "result": "grants double strike until end of turn to a creature you control",
+      "raw": {
+        "result": "grants double strike until end of turn to a creature you control",
+        "trigger": "onAttacksAlone",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -28,7 +35,14 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
-      "result": "returns a mana-value-3-or-less permanent card from the graveyard to the battlefield"
+      "result": "returns a mana-value-3-or-less permanent card from the graveyard to the battlefield",
+      "raw": {
+        "result": "returns a mana-value-3-or-less permanent card from the graveyard to the battlefield",
+        "trigger": "onDealsCombatDamageToPlayer",
+        "you": {
+          "graveyardCreatureCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -57,7 +71,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -65,7 +80,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onDealsCombatDamageToPlayer\" trigger fires",
-      "result": "empty graveyard, no legal target, nothing returned"
+      "result": "empty graveyard, no legal target, nothing returned",
+      "raw": {
+        "result": "empty graveyard, no legal target, nothing returned",
+        "trigger": "onDealsCombatDamageToPlayer",
+        "you": {
+          "graveyardCreatureCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -87,7 +109,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "no instant/sorcery card in graveyard, nothing to return"
+      "result": "no instant/sorcery card in graveyard, nothing to return",
+      "raw": {
+        "result": "no instant/sorcery card in graveyard, nothing to return",
+        "castFrom": "hand"
+      }
     },
     "log": [
       {

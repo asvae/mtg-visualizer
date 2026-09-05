@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEndStep\" trigger fires",
-      "result": "exiles itself (the first pool candidate) and returns it to the battlefield"
+      "result": "exiles itself (the first pool candidate) and returns it to the battlefield",
+      "raw": {
+        "result": "exiles itself (the first pool candidate) and returns it to the battlefield",
+        "trigger": "onEndStep"
+      }
     },
     "log": [
       {
@@ -20,12 +24,14 @@
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -33,7 +39,15 @@
     "scenario": {
       "setup": "you: 1 creature(s), 1 nontoken",
       "action": "\"onEndStep\" trigger fires",
-      "result": "exiles the other (nontoken) creature it controls and returns it to the battlefield"
+      "result": "exiles the other (nontoken) creature it controls and returns it to the battlefield",
+      "raw": {
+        "result": "exiles the other (nontoken) creature it controls and returns it to the battlefield",
+        "trigger": "onEndStep",
+        "you": {
+          "creaturesCount": 1,
+          "nontokenCreaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -50,12 +64,14 @@
       {
         "fn": "moveTo",
         "target": "you-creature-nontoken-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-creature-nontoken-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -63,7 +79,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEndStep\" trigger fires",
-      "result": "exiles the other (token) creature it controls; it ceases to exist and does not return"
+      "result": "exiles the other (token) creature it controls; it ceases to exist and does not return",
+      "raw": {
+        "result": "exiles the other (token) creature it controls; it ceases to exist and does not return",
+        "trigger": "onEndStep",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -80,7 +103,8 @@
       {
         "fn": "moveTo",
         "target": "you-creature-token-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       }
     ]
   },
@@ -88,7 +112,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

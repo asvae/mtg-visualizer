@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "surveils 2"
+      "result": "surveils 2",
+      "raw": {
+        "result": "surveils 2",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {

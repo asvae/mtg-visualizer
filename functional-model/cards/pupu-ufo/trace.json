@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand",
       "action": "\"landDrop\" activated",
-      "result": "no land-typed hand filler exists in this model to actually match (see definition.ts), so nothing is put onto the battlefield"
+      "result": "no land-typed hand filler exists in this model to actually match (see definition.ts), so nothing is put onto the battlefield",
+      "raw": {
+        "result": "no land-typed hand filler exists in this model to actually match (see definition.ts), so nothing is put onto the battlefield",
+        "ability": "landDrop",
+        "you": {
+          "handCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -32,7 +39,11 @@
     "scenario": {
       "setup": "",
       "action": "\"becomePowerOfTowns\" activated",
-      "result": "this creature's base power becomes equal to the number of Towns you control, until end of turn (not modeled — see definition.ts)"
+      "result": "this creature's base power becomes equal to the number of Towns you control, until end of turn (not modeled — see definition.ts)",
+      "raw": {
+        "result": "this creature's base power becomes equal to the number of Towns you control, until end of turn (not modeled — see definition.ts)",
+        "ability": "becomePowerOfTowns"
+      }
     },
     "log": [
       {

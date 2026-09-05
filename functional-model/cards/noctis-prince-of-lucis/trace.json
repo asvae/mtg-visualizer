@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creature enters, no other effect (Lifelink and the graveyard-casting permission are both continuous, not resolvable effects)"
+      "result": "creature enters, no other effect (Lifelink and the graveyard-casting permission are both continuous, not resolvable effects)",
+      "raw": {
+        "result": "creature enters, no other effect (Lifelink and the graveyard-casting permission are both continuous, not resolvable effects)"
+      }
     },
     "log": [
       {
@@ -25,7 +28,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -59,7 +68,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

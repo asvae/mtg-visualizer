@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttack\" trigger fires",
-      "result": "creates a 0/1 black Wizard creature token"
+      "result": "creates a 0/1 black Wizard creature token",
+      "raw": {
+        "result": "creates a 0/1 black Wizard creature token",
+        "trigger": "onAttack"
+      }
     },
     "log": [
       {
@@ -25,7 +29,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

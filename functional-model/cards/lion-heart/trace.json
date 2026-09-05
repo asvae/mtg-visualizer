@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "deals 2 damage to a creature (preferred over a player, same deterministic any-target convention every dealDamageAnyTarget card uses)"
+      "result": "deals 2 damage to a creature (preferred over a player, same deterministic any-target convention every dealDamageAnyTarget card uses)",
+      "raw": {
+        "result": "deals 2 damage to a creature (preferred over a player, same deterministic any-target convention every dealDamageAnyTarget card uses)",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -34,7 +43,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "deals 2 damage to a player (no creature on the battlefield to prefer)"
+      "result": "deals 2 damage to a player (no creature on the battlefield to prefer)",
+      "raw": {
+        "result": "deals 2 damage to a player (no creature on the battlefield to prefer)",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -60,7 +73,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated ({2})",
-      "result": "attaches to the target creature you control"
+      "result": "attaches to the target creature you control",
+      "raw": {
+        "result": "attaches to the target creature you control",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

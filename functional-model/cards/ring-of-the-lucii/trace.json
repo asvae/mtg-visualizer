@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 1 artifact(s); opp0: 1 artifact(s)",
       "action": "\"tapNonland\" activated",
-      "result": "you pay 1 life, then tap the target nonland permanent (your own artifact — deterministic first candidate, ahead of the opponent's)"
+      "result": "you pay 1 life, then tap the target nonland permanent (your own artifact — deterministic first candidate, ahead of the opponent's)",
+      "raw": {
+        "result": "you pay 1 life, then tap the target nonland permanent (your own artifact — deterministic first candidate, ahead of the opponent's)",
+        "ability": "tapNonland",
+        "you": {
+          "artifactsCount": 1
+        },
+        "opponents": [
+          {
+            "artifactsCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -72,7 +84,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

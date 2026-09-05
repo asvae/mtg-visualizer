@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield, no other effect (both mana abilities are documentary text — see definition.ts comment)"
+      "result": "enters the battlefield, no other effect (both mana abilities are documentary text — see definition.ts comment)",
+      "raw": {
+        "result": "enters the battlefield, no other effect (both mana abilities are documentary text — see definition.ts comment)"
+      }
     },
     "log": [
       {

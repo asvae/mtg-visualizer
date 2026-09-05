@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "taps the enchanted creature"
+      "result": "taps the enchanted creature",
+      "raw": {
+        "result": "taps the enchanted creature",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -39,7 +46,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnchantedDealtDamage\" trigger fires",
-      "result": "sacrifices this Aura"
+      "result": "sacrifices this Aura",
+      "raw": {
+        "result": "sacrifices this Aura",
+        "trigger": "onEnchantedDealtDamage"
+      }
     },
     "log": [
       {

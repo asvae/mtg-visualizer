@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 3 creature card(s) in graveyard",
       "action": "activated ({8})",
-      "result": "gets +3/+3 until end of turn (3 permanent cards in your graveyard)"
+      "result": "gets +3/+3 until end of turn (3 permanent cards in your graveyard)",
+      "raw": {
+        "result": "gets +3/+3 until end of turn (3 permanent cards in your graveyard)",
+        "you": {
+          "graveyardCreatureCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -68,7 +74,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({8})",
-      "result": "gets +0/+0 (no permanent cards in your graveyard)"
+      "result": "gets +0/+0 (no permanent cards in your graveyard)",
+      "raw": {
+        "result": "gets +0/+0 (no permanent cards in your graveyard)",
+        "you": {
+          "graveyardCreatureCount": 0
+        }
+      }
     },
     "log": [
       {

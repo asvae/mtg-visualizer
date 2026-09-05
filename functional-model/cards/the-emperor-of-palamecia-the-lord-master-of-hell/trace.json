@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onNoncreatureSpellCast\" trigger fires",
-      "result": "less than four mana spent: no effect"
+      "result": "less than four mana spent: no effect",
+      "raw": {
+        "result": "less than four mana spent: no effect",
+        "trigger": "onNoncreatureSpellCast",
+        "triggerInput": {
+          "manaSpent": 2
+        }
+      }
     },
     "log": [
       {
@@ -18,7 +25,17 @@
     "scenario": {
       "setup": "self already has 2 +1/+1 counter(s)",
       "action": "\"onNoncreatureSpellCast\" trigger fires",
-      "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 3, so it transforms into The Lord Master of Hell)"
+      "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 3, so it transforms into The Lord Master of Hell)",
+      "raw": {
+        "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 3, so it transforms into The Lord Master of Hell)",
+        "trigger": "onNoncreatureSpellCast",
+        "triggerInput": {
+          "manaSpent": 4
+        },
+        "selfCounters": {
+          "+1/+1": 2
+        }
+      }
     },
     "log": [
       {
@@ -42,12 +59,14 @@
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -55,7 +74,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onNoncreatureSpellCast\" trigger fires",
-      "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 1, not enough to transform)"
+      "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 1, not enough to transform)",
+      "raw": {
+        "result": "four or more mana spent: puts a +1/+1 counter on itself (now at 1, not enough to transform)",
+        "trigger": "onNoncreatureSpellCast",
+        "triggerInput": {
+          "manaSpent": 4
+        }
+      }
     },
     "log": [
       {
@@ -82,7 +108,15 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttacks\" trigger fires, back face",
-      "result": "no noncreature, nonland cards in the graveyard: deals 0 damage to each opponent"
+      "result": "no noncreature, nonland cards in the graveyard: deals 0 damage to each opponent",
+      "raw": {
+        "result": "no noncreature, nonland cards in the graveyard: deals 0 damage to each opponent",
+        "face": "back",
+        "trigger": "onAttacks",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -110,7 +144,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

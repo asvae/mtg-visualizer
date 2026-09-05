@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creature enters, no other effect (the land-count P/T bonus is continuous, not a resolvable effect)"
+      "result": "creature enters, no other effect (the land-count P/T bonus is continuous, not a resolvable effect)",
+      "raw": {
+        "result": "creature enters, no other effect (the land-count P/T bonus is continuous, not a resolvable effect)"
+      }
     },
     "log": [
       {

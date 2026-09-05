@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onCastNoncreatureSpell\" trigger fires",
-      "result": "puts a +1/+1 counter on Vivi and it deals 1 damage to each opponent"
+      "result": "puts a +1/+1 counter on Vivi and it deals 1 damage to each opponent",
+      "raw": {
+        "result": "puts a +1/+1 counter on Vivi and it deals 1 damage to each opponent",
+        "trigger": "onCastNoncreatureSpell",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -30,7 +37,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

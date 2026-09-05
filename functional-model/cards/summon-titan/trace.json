@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 8 card(s) in library",
       "action": "\"chapterI\" trigger fires",
-      "result": "mills 5 cards from your library to your graveyard"
+      "result": "mills 5 cards from your library to your graveyard",
+      "raw": {
+        "result": "mills 5 cards from your library to your graveyard",
+        "trigger": "chapterI",
+        "you": {
+          "libraryCount": 8
+        }
+      }
     },
     "log": [
       {
@@ -25,7 +32,14 @@
     "scenario": {
       "setup": "you: 3 creature card(s) in graveyard",
       "action": "\"chapterII\" trigger fires",
-      "result": "no land cards in graveyard (this harness has no way to seed a land-typed graveyard card — see definition.ts), nothing returned"
+      "result": "no land cards in graveyard (this harness has no way to seed a land-typed graveyard card — see definition.ts), nothing returned",
+      "raw": {
+        "result": "no land cards in graveyard (this harness has no way to seed a land-typed graveyard card — see definition.ts), nothing returned",
+        "trigger": "chapterII",
+        "you": {
+          "graveyardCreatureCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -85,7 +99,15 @@
     "scenario": {
       "setup": "you: 2 land(s); you: 1 creature(s)",
       "action": "\"chapterIII\" trigger fires",
-      "result": "another target creature you control gets +2/+2 and gains trample until end of turn (X = 2 lands you control)"
+      "result": "another target creature you control gets +2/+2 and gains trample until end of turn (X = 2 lands you control)",
+      "raw": {
+        "result": "another target creature you control gets +2/+2 and gains trample until end of turn (X = 2 lands you control)",
+        "trigger": "chapterIII",
+        "you": {
+          "creaturesCount": 1,
+          "landsCount": 2
+        }
+      }
     },
     "log": [
       {

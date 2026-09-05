@@ -3,6 +3,7 @@ import { resolveCard } from './card';
 import type { Card, Player, ZoneType } from './interfaces';
 import { GameState, wrapPlayer, wrapCard, effectiveTypes, effectivePT, type RealCard, type RealPlayer } from './state';
 import { PHASES, currentPhase, advancePhase, type Phase } from './turn';
+import { TOKENS } from './tokens';
 
 /**
  * One card's own test scenario — plain data describing a board state to run
@@ -183,6 +184,27 @@ export interface PlayerState {
   librarySubtype?: string;
   /** Equipment cards on the battlefield specifically, INCLUDED in `artifactsCount` (same convention) — Adelbert Steiner's own live-recalculated `ptFormula` (state.ts's own real layer-7a CDA) needs real Equipment permanents on the controller's battlefield to count. */
   equipmentCount?: number;
+  /**
+   * Real, named tokens (`functional-model/tokens.ts`'s own Scryfall-backed
+   * registry — an actual Food/Treasure/Hero/Rabbit/Sword/etc, not a bare
+   * placeholder count) seeded onto this player's Battlefield, ONE each, IN
+   * ADDITION to whatever `creaturesCount`/`artifactsCount`/etc above also
+   * specify — independent, not a replacement for them. User: "why not just
+   * add actual permanents to the scenario? I don't like the idea of
+   * remembering all these mocks... AI would figure — this food/treasure/
+   * hero was there from the start" — a scenario's own replay (app/lib/
+   * scenarioReplay.ts) can show a REAL card image for one of these, unlike
+   * a `-creature-token-0`-style filler which has no Scryfall identity to
+   * look an image up by. Same key vocabulary `createToken`'s own `token`
+   * field uses elsewhere (`TokenInfo`), reused here for setup instead of a
+   * resolved effect. Prefer this over `creaturesCount`/`artifactsCount`
+   * going forward for a NEW scenario needing filler permanents — the count
+   * fields stay for scenarios that don't care what's actually there (a pool
+   * size, not a specific identity) or predate this field.
+   */
+  tokens?: (keyof typeof TOKENS)[];
+  /** A real basic land name seeded onto this player's Battlefield, same "real name, real image" reasoning as `tokens` above — independent of, and in addition to, `landsCount`. */
+  basicLands?: Array<'Plains' | 'Island' | 'Swamp' | 'Mountain' | 'Forest'>;
 }
 
 /** One logged call — the raw material a synergy matcher reads. Persisted verbatim to functional-model/cards/<slug>/trace.json. */
@@ -249,6 +271,8 @@ function describePlayerState(ps: PlayerState | undefined, whose: string): string
   if (ps.libraryArtifactCount) parts.push(`${whose} ${ps.libraryArtifactCount} artifact(s) in library`);
   if (ps.libraryLandCount) parts.push(`${whose} ${ps.libraryLandCount} land(s) in library`);
   if (ps.librarySubtypeCount) parts.push(`${whose} ${ps.librarySubtypeCount} ${ps.librarySubtype ?? 'subtype'}(s) in library`);
+  if (ps.tokens?.length) parts.push(`${whose} a ${ps.tokens.map((k) => TOKENS[k]!.name).join(', ')}`);
+  if (ps.basicLands?.length) parts.push(`${whose} a ${ps.basicLands.join(', ')}`);
   return parts;
 }
 
@@ -322,6 +346,13 @@ function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState = {}): 
       basePower: ps.creaturePower,
       baseToughness: ps.creaturePower,
     });
+  }
+  // Real named tokens/basic lands (see `PlayerState.tokens`'s own doc
+  // comment) — `createToken` is the SAME real path a card's own token-
+  // creating effect uses (state.ts), not a parallel conversion.
+  for (const key of ps.tokens ?? []) state.createToken(real, TOKENS[key], 1);
+  for (const landName of ps.basicLands ?? []) {
+    state.addCard(real, 'Battlefield', { name: landName, isTokenCard: false, types: ['Land'], subtypes: [landName] });
   }
   const equipment = ps.equipmentCount ?? 0;
   for (let i = 0; i < equipment; i++) {
@@ -561,8 +592,14 @@ function loggingActions(state: GameState, log: LogEntry[], selfId: number): Acti
       log.push({ fn: 'pump', target: name, power, toughness });
     },
     moveTo: (target, zone) => {
-      state.move(cardOf(target), zone);
-      log.push({ fn: 'moveTo', target: target.getName(), zone });
+      const real = cardOf(target);
+      state.move(real, zone);
+      // Real controller, not a name-string guess — needed now that a target
+      // can be a real, unprefixed card/token name (see `PlayerState.tokens`'s
+      // own doc comment): verify-synergy.mjs's own `sideOfName` heuristic
+      // only works when a filler's name carries its owner as a string
+      // prefix, which a real Scryfall identity never does.
+      log.push({ fn: 'moveTo', target: target.getName(), zone, controller: state.players.get(real.controllerId)!.name });
     },
     // Quiet, same reasoning as mockCreature's predicate methods used to be:
     // WHICH specific object got picked is pure targeting mechanics, not a
@@ -665,9 +702,12 @@ function loggingActions(state: GameState, log: LogEntry[], selfId: number): Acti
       log.push({ fn: 'counter', what });
     },
     destroy: (target) => {
-      const destroyed = state.destroy(cardOf(target));
+      const real = cardOf(target);
+      const controller = state.players.get(real.controllerId)!.name;
+      const destroyed = state.destroy(real);
       if (!destroyed) log.push({ fn: 'destroyPrevented', target: target.getName(), cause: 'Indestructible' });
-      else log.push({ fn: 'destroy', target: target.getName() });
+      // Real controller, same reasoning as `moveTo` above.
+      else log.push({ fn: 'destroy', target: target.getName(), controller });
     },
     dealDamage: (source, target, amount) => {
       const sourceReal = cardOf(source);

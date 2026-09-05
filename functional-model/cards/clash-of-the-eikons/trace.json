@@ -3,7 +3,21 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 3); opp0: 1 creature(s) (power 2)",
       "action": "cast from hand, mode 0 chosen",
-      "result": "your creature (power 3) and the opponent creature (power 2) fight, each dealing damage equal to its power to the other"
+      "result": "your creature (power 3) and the opponent creature (power 2) fight, each dealing damage equal to its power to the other",
+      "raw": {
+        "result": "your creature (power 3) and the opponent creature (power 2) fight, each dealing damage equal to its power to the other",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 1,
+          "creaturePower": 3
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1,
+            "creaturePower": 2
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -59,7 +73,14 @@
     "scenario": {
       "setup": "you: 1 enchantment(s)",
       "action": "cast from hand, mode 1 chosen",
-      "result": "removes a lore counter from the target Saga you control (this model has no way to seed a pre-existing counter on a chosen, non-self permanent, so the count goes to -1)"
+      "result": "removes a lore counter from the target Saga you control (this model has no way to seed a pre-existing counter on a chosen, non-self permanent, so the count goes to -1)",
+      "raw": {
+        "result": "removes a lore counter from the target Saga you control (this model has no way to seed a pre-existing counter on a chosen, non-self permanent, so the count goes to -1)",
+        "mode": 1,
+        "you": {
+          "enchantmentsCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -96,7 +117,14 @@
     "scenario": {
       "setup": "you: 1 enchantment(s)",
       "action": "cast from hand, mode 2 chosen",
-      "result": "puts a lore counter on the target Saga you control"
+      "result": "puts a lore counter on the target Saga you control",
+      "raw": {
+        "result": "puts a lore counter on the target Saga you control",
+        "mode": 2,
+        "you": {
+          "enchantmentsCount": 1
+        }
+      }
     },
     "log": [
       {

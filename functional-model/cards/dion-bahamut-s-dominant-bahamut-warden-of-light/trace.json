@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 2/2 white Knight creature token"
+      "result": "creates a 2/2 white Knight creature token",
+      "raw": {
+        "result": "creates a 2/2 white Knight creature token",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -25,7 +29,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{W}{W}, {T})",
-      "result": "exiles Dion and returns it transformed into Bahamut, Warden of Light"
+      "result": "exiles Dion and returns it transformed into Bahamut, Warden of Light",
+      "raw": {
+        "result": "exiles Dion and returns it transformed into Bahamut, Warden of Light"
+      }
     },
     "log": [
       {
@@ -37,12 +44,14 @@
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -50,7 +59,15 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterI\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on each of the other two creatures it controls"
+      "result": "puts a +1/+1 counter on each of the other two creatures it controls",
+      "raw": {
+        "result": "puts a +1/+1 counter on each of the other two creatures it controls",
+        "face": "back",
+        "trigger": "chapterI",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -82,7 +99,15 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterII\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on each of the other two creatures it controls"
+      "result": "puts a +1/+1 counter on each of the other two creatures it controls",
+      "raw": {
+        "result": "puts a +1/+1 counter on each of the other two creatures it controls",
+        "face": "back",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -114,7 +139,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"chapterIII\" trigger fires, back face",
-      "result": "destroys itself (the only permanent set up for its own controller, and so still the first candidate the destroy pool offers, even with an opponent's creature also on the battlefield), then exiles and returns transformed back into Dion, Bahamut's Dominant"
+      "result": "destroys itself (the only permanent set up for its own controller, and so still the first candidate the destroy pool offers, even with an opponent's creature also on the battlefield), then exiles and returns transformed back into Dion, Bahamut's Dominant",
+      "raw": {
+        "result": "destroys itself (the only permanent set up for its own controller, and so still the first candidate the destroy pool offers, even with an opponent's creature also on the battlefield), then exiles and returns transformed back into Dion, Bahamut's Dominant",
+        "face": "back",
+        "trigger": "chapterIII",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -139,17 +174,20 @@
       },
       {
         "fn": "destroy",
-        "target": "Bahamut, Warden of Light"
+        "target": "Bahamut, Warden of Light",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Bahamut, Warden of Light",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Bahamut, Warden of Light",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   }

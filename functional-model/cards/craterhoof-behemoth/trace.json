@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield (its own ETB trigger fires separately below)"
+      "result": "enters the battlefield (its own ETB trigger fires separately below)",
+      "raw": {
+        "result": "enters the battlefield (its own ETB trigger fires separately below)"
+      }
     },
     "log": [
       {
@@ -25,7 +28,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control (3, including Craterhoof itself)"
+      "result": "creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control (3, including Craterhoof itself)",
+      "raw": {
+        "result": "creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control (3, including Craterhoof itself)",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -93,7 +103,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no other creatures — X is 1 (Craterhoof itself)"
+      "result": "no other creatures — X is 1 (Craterhoof itself)",
+      "raw": {
+        "result": "no other creatures — X is 1 (Craterhoof itself)",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {

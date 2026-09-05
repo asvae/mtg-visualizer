@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield (additional cost/leaves-trigger not modeled — see definition.ts comment)"
+      "result": "enters the battlefield (additional cost/leaves-trigger not modeled — see definition.ts comment)",
+      "raw": {
+        "result": "enters the battlefield (additional cost/leaves-trigger not modeled — see definition.ts comment)"
+      }
     },
     "log": [
       {
@@ -25,7 +28,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onCastCreatureSpell\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onCastCreatureSpell"
+      }
     },
     "log": [
       {

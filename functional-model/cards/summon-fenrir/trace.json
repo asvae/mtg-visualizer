@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 3 card(s) in library",
       "action": "\"chapterI\" trigger fires",
-      "result": "no basic land found in library (this harness has no way to seed a land-typed library card — see definition.ts), nothing put onto the battlefield"
+      "result": "no basic land found in library (this harness has no way to seed a land-typed library card — see definition.ts), nothing put onto the battlefield",
+      "raw": {
+        "result": "no basic land found in library (this harness has no way to seed a land-typed library card — see definition.ts), nothing put onto the battlefield",
+        "trigger": "chapterI",
+        "you": {
+          "libraryCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -40,7 +47,11 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (real text: the next creature spell cast this turn would enter with an extra +1/+1 counter)"
+      "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (real text: the next creature spell cast this turn would enter with an extra +1/+1 counter)",
+      "raw": {
+        "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (real text: the next creature spell cast this turn would enter with an extra +1/+1 counter)",
+        "trigger": "chapterII"
+      }
     },
     "log": [
       {
@@ -55,7 +66,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s) (power 2)",
       "action": "\"chapterIII\" trigger fires",
-      "result": "your greatest power (self, 3) beats the greatest opposing power (2): draws a card"
+      "result": "your greatest power (self, 3) beats the greatest opposing power (2): draws a card",
+      "raw": {
+        "result": "your greatest power (self, 3) beats the greatest opposing power (2): draws a card",
+        "trigger": "chapterIII",
+        "opponents": [
+          {
+            "creaturesCount": 1,
+            "creaturePower": 2
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -94,7 +115,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s) (power 3)",
       "action": "\"chapterIII\" trigger fires",
-      "result": "tied for greatest power (self, 3, vs. 3): draws a card"
+      "result": "tied for greatest power (self, 3, vs. 3): draws a card",
+      "raw": {
+        "result": "tied for greatest power (self, 3, vs. 3): draws a card",
+        "trigger": "chapterIII",
+        "opponents": [
+          {
+            "creaturesCount": 1,
+            "creaturePower": 3
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -133,7 +164,17 @@
     "scenario": {
       "setup": "opp0: 1 creature(s) (power 5)",
       "action": "\"chapterIII\" trigger fires",
-      "result": "your greatest power (self, 3) is less than the opposing greatest power (5): no draw"
+      "result": "your greatest power (self, 3) is less than the opposing greatest power (5): no draw",
+      "raw": {
+        "result": "your greatest power (self, 3) is less than the opposing greatest power (5): no draw",
+        "trigger": "chapterIII",
+        "opponents": [
+          {
+            "creaturesCount": 1,
+            "creaturePower": 5
+          }
+        ]
+      }
     },
     "log": [
       {

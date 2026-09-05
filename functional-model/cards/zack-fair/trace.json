@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters with a +1/+1 counter on itself"
+      "result": "enters with a +1/+1 counter on itself",
+      "raw": {
+        "result": "enters with a +1/+1 counter on itself",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -24,7 +28,16 @@
     "scenario": {
       "setup": "you: 1 creature(s); self already has 2 +1/+1 counter(s)",
       "action": "activated ({1}, Sacrifice Zack Fair)",
-      "result": "puts Zack Fair's 2 +1/+1 counters onto the target creature you control (indestructible grant and Equipment-transfer not mechanically enforced — see definition.ts's own comments)"
+      "result": "puts Zack Fair's 2 +1/+1 counters onto the target creature you control (indestructible grant and Equipment-transfer not mechanically enforced — see definition.ts's own comments)",
+      "raw": {
+        "result": "puts Zack Fair's 2 +1/+1 counters onto the target creature you control (indestructible grant and Equipment-transfer not mechanically enforced — see definition.ts's own comments)",
+        "selfCounters": {
+          "+1/+1": 2
+        },
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -56,7 +69,16 @@
     "scenario": {
       "setup": "self already has 2 +1/+1 counter(s)",
       "action": "activated ({1}, Sacrifice Zack Fair)",
-      "result": "no other creature you control to target, no counters moved"
+      "result": "no other creature you control to target, no counters moved",
+      "raw": {
+        "result": "no other creature you control to target, no counters moved",
+        "selfCounters": {
+          "+1/+1": 2
+        },
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -76,7 +98,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({1}, Sacrifice Zack Fair), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

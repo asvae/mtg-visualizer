@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onCastLegendarySpell\" trigger fires",
-      "result": "draws a card"
+      "result": "draws a card",
+      "raw": {
+        "result": "draws a card",
+        "trigger": "onCastLegendarySpell"
+      }
     },
     "log": [
       {
@@ -22,7 +26,15 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "activated ({7}, {T})",
-      "result": "exiles the target nonland permanent, then exiles and returns Venat transformed into Hydaelyn, the Mothercrystal"
+      "result": "exiles the target nonland permanent, then exiles and returns Venat transformed into Hydaelyn, the Mothercrystal",
+      "raw": {
+        "result": "exiles the target nonland permanent, then exiles and returns Venat transformed into Hydaelyn, the Mothercrystal",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -58,17 +70,20 @@
       {
         "fn": "moveTo",
         "target": "opp0-creature-token-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -76,7 +91,15 @@
     "scenario": {
       "setup": "opp0: 2 land(s)",
       "action": "activated ({7}, {T})",
-      "result": "no nonland permanent to exile, still exiles and returns Venat transformed"
+      "result": "no nonland permanent to exile, still exiles and returns Venat transformed",
+      "raw": {
+        "result": "no nonland permanent to exile, still exiles and returns Venat transformed",
+        "opponents": [
+          {
+            "landsCount": 2
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -117,12 +140,14 @@
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -130,7 +155,18 @@
     "scenario": {
       "setup": "you: 1 Legendary creature(s)",
       "action": "\"onBeginCombat\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on the other legendary creature you control and draws a card"
+      "result": "puts a +1/+1 counter on the other legendary creature you control and draws a card",
+      "raw": {
+        "result": "puts a +1/+1 counter on the other legendary creature you control and draws a card",
+        "face": "back",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Legendary"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -166,7 +202,15 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onBeginCombat\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on the other (non-legendary) creature you control, no card drawn"
+      "result": "puts a +1/+1 counter on the other (non-legendary) creature you control, no card drawn",
+      "raw": {
+        "result": "puts a +1/+1 counter on the other (non-legendary) creature you control, no card drawn",
+        "face": "back",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -198,7 +242,15 @@
     "scenario": {
       "setup": "",
       "action": "\"onBeginCombat\" trigger fires, back face",
-      "result": "no other creature you control, no-op"
+      "result": "no other creature you control, no-op",
+      "raw": {
+        "result": "no other creature you control, no-op",
+        "face": "back",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -218,7 +270,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({7}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {
@@ -242,12 +298,14 @@
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "legendRule",

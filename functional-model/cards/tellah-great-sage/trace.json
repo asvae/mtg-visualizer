@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onCastNoncreatureSpell\" trigger fires",
-      "result": "creates a 1/1 Hero token; below 4 mana spent, no draw, no sacrifice"
+      "result": "creates a 1/1 Hero token; below 4 mana spent, no draw, no sacrifice",
+      "raw": {
+        "result": "creates a 1/1 Hero token; below 4 mana spent, no draw, no sacrifice",
+        "trigger": "onCastNoncreatureSpell",
+        "triggerInput": {
+          "manaSpent": 2
+        }
+      }
     },
     "log": [
       {
@@ -25,7 +32,17 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "\"onCastNoncreatureSpell\" trigger fires",
-      "result": "creates a 1/1 Hero token and draws 2 cards; below 8 mana spent, no sacrifice"
+      "result": "creates a 1/1 Hero token and draws 2 cards; below 8 mana spent, no sacrifice",
+      "raw": {
+        "result": "creates a 1/1 Hero token and draws 2 cards; below 8 mana spent, no sacrifice",
+        "trigger": "onCastNoncreatureSpell",
+        "triggerInput": {
+          "manaSpent": 4
+        },
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -55,7 +72,20 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "\"onCastNoncreatureSpell\" trigger fires",
-      "result": "creates a 1/1 Hero token, draws 2 cards, then sacrifices Tellah and it deals 8 damage to each opponent"
+      "result": "creates a 1/1 Hero token, draws 2 cards, then sacrifices Tellah and it deals 8 damage to each opponent",
+      "raw": {
+        "result": "creates a 1/1 Hero token, draws 2 cards, then sacrifices Tellah and it deals 8 damage to each opponent",
+        "trigger": "onCastNoncreatureSpell",
+        "triggerInput": {
+          "manaSpent": 8
+        },
+        "you": {
+          "libraryCount": 2
+        },
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -82,7 +112,8 @@
       {
         "fn": "moveTo",
         "target": "Tellah, Great Sage",
-        "zone": "Graveyard"
+        "zone": "Graveyard",
+        "controller": "you"
       },
       {
         "fn": "dealDamage",
@@ -96,7 +127,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

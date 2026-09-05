@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "destroys target creature, you gain 2 life"
+      "result": "destroys target creature, you gain 2 life",
+      "raw": {
+        "result": "destroys target creature, you gain 2 life",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -34,7 +43,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-creature-token-0"
+        "target": "opp0-creature-token-0",
+        "controller": "opp0"
       },
       {
         "fn": "gainLife",
@@ -55,7 +65,16 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "no legal target, nothing destroyed; you still gain 2 life"
+      "result": "no legal target, nothing destroyed; you still gain 2 life",
+      "raw": {
+        "result": "no legal target, nothing destroyed; you still gain 2 life",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 0
+          }
+        ]
+      }
     },
     "log": [
       {

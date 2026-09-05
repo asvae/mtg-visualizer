@@ -13,8 +13,8 @@ export const scenarios: Scenario[] = [
     result:
       "Jill enters, ETB returns the opponent's artifact (not their land — real text is nonland only) to hand; {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I grants your creature unblockable; chapter II grants it again; chapter III taps all the opponent's lands, then exiles Shiva and returns it front-face-up",
     trigger: 'onEnter',
-    you: { creaturesCount: 1 },
-    opponents: [{ artifactsCount: 1, landsCount: 1 }],
+    you: { tokens: ['c_1_1_hero'] },
+    opponents: [{ tokens: ['c_a_treasure_sac'], basicLands: ['Forest'] }],
     sequence: [{ activate: true }, { trigger: 'chapterI', face: 'back' }, { trigger: 'chapterII' }, { trigger: 'chapterIII' }],
   },
 ];

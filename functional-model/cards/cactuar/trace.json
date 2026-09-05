@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEndStep\" trigger fires",
-      "result": "returns itself to its owner's hand"
+      "result": "returns itself to its owner's hand",
+      "raw": {
+        "result": "returns itself to its owner's hand",
+        "trigger": "onEndStep"
+      }
     },
     "log": [
       {
@@ -15,7 +19,8 @@
       {
         "fn": "moveTo",
         "target": "Cactuar",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   }

@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({2})",
-      "result": "attaches to a creature you control"
+      "result": "attaches to a creature you control",
+      "raw": {
+        "result": "attaches to a creature you control",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -28,7 +34,18 @@
     "scenario": {
       "setup": "",
       "action": "\"onEquippedDealsDamage\" trigger fires",
-      "result": "draws a card, discards a card, target opponent loses 3 life"
+      "result": "draws a card, discards a card, target opponent loses 3 life",
+      "raw": {
+        "result": "draws a card, discards a card, target opponent loses 3 life",
+        "trigger": "onEquippedDealsDamage",
+        "opponents": [
+          {}
+        ],
+        "triggerInput": {
+          "damagedPlayerIndex": 0,
+          "discardedCardManaValue": 3
+        }
+      }
     },
     "log": [
       {

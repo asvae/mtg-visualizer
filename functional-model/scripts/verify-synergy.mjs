@@ -70,7 +70,7 @@ function producedZone(entry, cardName) {
     case 'move':
       return entry.to ? { zone: entry.to, side: entry.player === 'you' || entry.player === undefined ? 'you' : entry.player.startsWith('opp') ? 'opp' : 'you' } : null;
     case 'moveTo':
-      return entry.zone ? { zone: entry.zone, side: sideOfName(entry.target, cardName) } : null;
+      return entry.zone ? { zone: entry.zone, side: sideOf(entry, cardName) } : null;
     case 'createToken':
       return { zone: 'Battlefield', side: entry.controller === 'you' ? 'you' : 'opp' };
     case 'sacrifice':
@@ -78,7 +78,7 @@ function producedZone(entry, cardName) {
     case 'discard':
       return { zone: 'Graveyard', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'destroy':
-      return { zone: 'Graveyard', side: sideOfName(entry.target, cardName) };
+      return { zone: 'Graveyard', side: sideOf(entry, cardName) };
     case 'legendRule':
       return { zone: 'Graveyard', side: 'you' };
     default:
@@ -115,7 +115,7 @@ function producedEvent(entry, cardName) {
     case 'sacrifice':
       return { event: 'dies', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'destroy':
-      return { event: 'dies', side: sideOfName(entry.target, cardName) };
+      return { event: 'dies', side: sideOf(entry, cardName) };
     case 'legendRule':
       return { event: 'dies', side: 'you' };
     case 'drawCard':
@@ -132,22 +132,32 @@ function producedEvent(entry, cardName) {
       // `entersBattlefield` sink facts (loporrit-scout, woodland-weavemaster)
       // can now match against, but the case applies pool-wide to any card whose
       // effect moves something onto the battlefield.
-      return entry.zone === 'Battlefield' ? { event: 'entersBattlefield', side: sideOfName(entry.target, cardName) } : null;
+      return entry.zone === 'Battlefield' ? { event: 'entersBattlefield', side: sideOf(entry, cardName) } : null;
     default:
       return null;
   }
 }
 // Best-effort side-of-a-target-NAME heuristic (destroy/putCounter/pump/tap/
-// etc. log a bare object name, not a side field) — generated names are
-// always prefixed by their owning player's own name (harness.ts's own
-// setupPlayer), and `self` is always on the 'you' side in every scenario
-// this harness builds. A heuristic, not a proof — matches this script's own
-// "reconciliation, not proof" scope.
+// etc. log a bare object name, not a side field) — generated PLACEHOLDER
+// names are always prefixed by their owning player's own name (harness.ts's
+// own setupPlayer), and `self` is always on the 'you' side in every
+// scenario this harness builds. A heuristic, not a proof — matches this
+// script's own "reconciliation, not proof" scope. Doesn't work at all for a
+// REAL, unprefixed card/token name (`PlayerState.tokens`'s own doc comment)
+// — `sideOf` below is the real fix for those; this stays only as the
+// fallback for the fn's `sideOf` doesn't cover yet.
 function sideOfName(name, cardName) {
   if (!name) return 'you';
   if (name.startsWith('opp')) return 'opp';
   if (name.startsWith('you-') || name === cardName) return 'you';
   return 'you';
+}
+// Real controller (harness.ts's own `moveTo`/`destroy` now log one,
+// 2026-09-06) when present, falling back to the name-guessing heuristic
+// above for any entry shape that doesn't carry it yet.
+function sideOf(entry, cardName) {
+  if (entry.controller !== undefined) return entry.controller === 'you' ? 'you' : 'opp';
+  return sideOfName(entry.target, cardName);
 }
 
 // A small set of fn's this script treats as mechanical/parked — a produce

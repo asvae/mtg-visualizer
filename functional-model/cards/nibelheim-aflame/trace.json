@@ -3,7 +3,20 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 3); opp0: 2 creature(s)",
       "action": "cast from hand",
-      "result": "the chosen creature (power 3) deals 3 damage to each of the 2 other creatures; not cast from graveyard, no discard/draw"
+      "result": "the chosen creature (power 3) deals 3 damage to each of the 2 other creatures; not cast from graveyard, no discard/draw",
+      "raw": {
+        "result": "the chosen creature (power 3) deals 3 damage to each of the 2 other creatures; not cast from graveyard, no discard/draw",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 1,
+          "creaturePower": 3
+        },
+        "opponents": [
+          {
+            "creaturesCount": 2
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -64,7 +77,21 @@
     "scenario": {
       "setup": "you: 1 creature(s) (power 2); you: 3 card(s) in hand; opp0: 1 creature(s)",
       "action": "cast from graveyard",
-      "result": "cast from the graveyard via Flashback: the chosen creature still deals damage equal to its power, then discards the whole hand and draws four cards"
+      "result": "cast from the graveyard via Flashback: the chosen creature still deals damage equal to its power, then discards the whole hand and draws four cards",
+      "raw": {
+        "result": "cast from the graveyard via Flashback: the chosen creature still deals damage equal to its power, then discards the whole hand and draws four cards",
+        "castFrom": "graveyard",
+        "you": {
+          "creaturesCount": 1,
+          "creaturePower": 2,
+          "handCount": 3
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

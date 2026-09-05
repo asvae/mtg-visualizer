@@ -3,7 +3,19 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "pumps your target creature +1/+1, grants it hexproof, and untaps it"
+      "result": "pumps your target creature +1/+1, grants it hexproof, and untaps it",
+      "raw": {
+        "result": "pumps your target creature +1/+1, grants it hexproof, and untaps it",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -64,7 +76,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "no legal target — you control no creatures, nothing happens"
+      "result": "no legal target — you control no creatures, nothing happens",
+      "raw": {
+        "result": "no legal target — you control no creatures, nothing happens",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

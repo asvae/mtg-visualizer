@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({4}{W}{W}, {T})",
-      "result": "activated (no resolvable effect in this model — keyword-only grants are not mechanically enforced)"
+      "result": "activated (no resolvable effect in this model — keyword-only grants are not mechanically enforced)",
+      "raw": {
+        "result": "activated (no resolvable effect in this model — keyword-only grants are not mechanically enforced)",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -18,7 +24,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{W}{W}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

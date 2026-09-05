@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 card(s) in library",
       "action": "\"onScoutsDealCombatDamage\" trigger fires",
-      "result": "exiles the top card of the opponent's library and creates a Treasure token (casting the discovered card is not modeled)"
+      "result": "exiles the top card of the opponent's library and creates a Treasure token (casting the discovered card is not modeled)",
+      "raw": {
+        "result": "exiles the top card of the opponent's library and creates a Treasure token (casting the discovered card is not modeled)",
+        "trigger": "onScoutsDealCombatDamage",
+        "opponents": [
+          {
+            "libraryCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -33,7 +42,17 @@
     "scenario": {
       "setup": "you: 2 Scout creature(s)",
       "action": "\"onCastSpellYouDontOwn\" trigger fires",
-      "result": "puts a +1/+1 counter on Vaan and both other Scouts you control"
+      "result": "puts a +1/+1 counter on Vaan and both other Scouts you control",
+      "raw": {
+        "result": "puts a +1/+1 counter on Vaan and both other Scouts you control",
+        "trigger": "onCastSpellYouDontOwn",
+        "you": {
+          "creaturesCount": 2,
+          "creatureSubtypes": [
+            "Scout"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -89,7 +108,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"onCastSpellYouDontOwn\" trigger fires",
-      "result": "puts a +1/+1 counter on Vaan only — the other 2 creatures are not Scouts, Pirates, or Rogues"
+      "result": "puts a +1/+1 counter on Vaan only — the other 2 creatures are not Scouts, Pirates, or Rogues",
+      "raw": {
+        "result": "puts a +1/+1 counter on Vaan only — the other 2 creatures are not Scouts, Pirates, or Rogues",
+        "trigger": "onCastSpellYouDontOwn",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

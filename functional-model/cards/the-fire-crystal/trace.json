@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated ({4}{R}{R}, {T})",
-      "result": "creates a token copy of the target creature you control"
+      "result": "creates a token copy of the target creature you control",
+      "raw": {
+        "result": "creates a token copy of the target creature you control",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -40,7 +46,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{R}{R}, {T})",
-      "result": "no creature to copy, no token created"
+      "result": "no creature to copy, no token created",
+      "raw": {
+        "result": "no creature to copy, no token created",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {

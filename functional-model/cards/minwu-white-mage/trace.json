@@ -3,7 +3,17 @@
     "scenario": {
       "setup": "you: 2 Cleric creature(s)",
       "action": "\"onLifeGained\" trigger fires",
-      "result": "puts a +1/+1 counter on self and both other Clerics (3 total)"
+      "result": "puts a +1/+1 counter on self and both other Clerics (3 total)",
+      "raw": {
+        "result": "puts a +1/+1 counter on self and both other Clerics (3 total)",
+        "trigger": "onLifeGained",
+        "you": {
+          "creaturesCount": 2,
+          "creatureSubtypes": [
+            "Cleric"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -59,7 +69,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"onLifeGained\" trigger fires",
-      "result": "puts a +1/+1 counter on self only — the other 2 creatures are not Clerics"
+      "result": "puts a +1/+1 counter on self only — the other 2 creatures are not Clerics",
+      "raw": {
+        "result": "puts a +1/+1 counter on self only — the other 2 creatures are not Clerics",
+        "trigger": "onLifeGained",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -103,7 +120,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -137,7 +160,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

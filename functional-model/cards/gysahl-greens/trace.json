@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creates a 2/2 green Bird creature token"
+      "result": "creates a 2/2 green Bird creature token",
+      "raw": {
+        "result": "creates a 2/2 green Bird creature token",
+        "castFrom": "hand"
+      }
     },
     "log": [
       {
@@ -34,7 +38,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from graveyard",
-      "result": "cast via Flashback from the graveyard, creates a 2/2 green Bird creature token, then this card is exiled instead of going to the graveyard"
+      "result": "cast via Flashback from the graveyard, creates a 2/2 green Bird creature token, then this card is exiled instead of going to the graveyard",
+      "raw": {
+        "result": "cast via Flashback from the graveyard, creates a 2/2 green Bird creature token, then this card is exiled instead of going to the graveyard",
+        "castFrom": "graveyard"
+      }
     },
     "log": [
       {

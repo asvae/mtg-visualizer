@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{R}{R}, {T} (activate only as a sorcery))",
-      "result": "exiles Clive and returns it transformed into Ifrit, Warden of Inferno"
+      "result": "exiles Clive and returns it transformed into Ifrit, Warden of Inferno",
+      "raw": {
+        "result": "exiles Clive and returns it transformed into Ifrit, Warden of Inferno"
+      }
     },
     "log": [
       {
@@ -15,12 +18,14 @@
       {
         "fn": "moveTo",
         "target": "Clive, Ifrit's Dominant",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Clive, Ifrit's Dominant",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   }

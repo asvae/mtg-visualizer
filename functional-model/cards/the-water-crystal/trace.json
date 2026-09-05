@@ -3,7 +3,18 @@
     "scenario": {
       "setup": "you: 3 card(s) in hand; opp0: 5 card(s) in library",
       "action": "activated ({4}{U}{U}, {T})",
-      "result": "each opponent mills 3 cards (equal to your hand size)"
+      "result": "each opponent mills 3 cards (equal to your hand size)",
+      "raw": {
+        "result": "each opponent mills 3 cards (equal to your hand size)",
+        "you": {
+          "handCount": 3
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -32,7 +43,18 @@
     "scenario": {
       "setup": "opp0: 5 card(s) in library",
       "action": "activated ({4}{U}{U}, {T})",
-      "result": "no cards in your hand, opponent mills nothing"
+      "result": "no cards in your hand, opponent mills nothing",
+      "raw": {
+        "result": "no cards in your hand, opponent mills nothing",
+        "you": {
+          "handCount": 0
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -61,7 +83,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{U}{U}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

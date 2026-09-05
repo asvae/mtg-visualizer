@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 card(s) in library; you: 1 land(s) in library",
       "action": "activated ({T}, Pay 1 life, Sacrifice this land)",
-      "result": "loses 1 life, sacrifices itself, then searches library for a basic land and puts it onto the battlefield tapped"
+      "result": "loses 1 life, sacrifices itself, then searches library for a basic land and puts it onto the battlefield tapped",
+      "raw": {
+        "result": "loses 1 life, sacrifices itself, then searches library for a basic land and puts it onto the battlefield tapped",
+        "you": {
+          "libraryCount": 2,
+          "libraryLandCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -20,7 +27,8 @@
       {
         "fn": "moveTo",
         "target": "Elven Passage",
-        "zone": "Graveyard"
+        "zone": "Graveyard",
+        "controller": "you"
       },
       {
         "fn": "read:getCardsIn",
@@ -42,7 +50,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-land-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "tap",
@@ -54,7 +63,13 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "activated ({T}, Pay 1 life, Sacrifice this land)",
-      "result": "no land in library — loses 1 life and sacrifices itself, finds nothing"
+      "result": "no land in library — loses 1 life and sacrifices itself, finds nothing",
+      "raw": {
+        "result": "no land in library — loses 1 life and sacrifices itself, finds nothing",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -71,7 +86,8 @@
       {
         "fn": "moveTo",
         "target": "Elven Passage",
-        "zone": "Graveyard"
+        "zone": "Graveyard",
+        "controller": "you"
       },
       {
         "fn": "read:getCardsIn",

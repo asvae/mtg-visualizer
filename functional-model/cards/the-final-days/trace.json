@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creates two 2/2 Horror tokens, tapped"
+      "result": "creates two 2/2 Horror tokens, tapped",
+      "raw": {
+        "result": "creates two 2/2 Horror tokens, tapped",
+        "castFrom": "hand"
+      }
     },
     "log": [
       {
@@ -34,7 +38,14 @@
     "scenario": {
       "setup": "you: 3 creature card(s) in graveyard",
       "action": "cast from graveyard",
-      "result": "creates three 2/2 Horror tokens, tapped, then exiles itself"
+      "result": "creates three 2/2 Horror tokens, tapped, then exiles itself",
+      "raw": {
+        "result": "creates three 2/2 Horror tokens, tapped, then exiles itself",
+        "castFrom": "graveyard",
+        "you": {
+          "graveyardCreatureCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -87,7 +98,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from graveyard",
-      "result": "creates no Horror tokens (empty graveyard), then exiles itself"
+      "result": "creates no Horror tokens (empty graveyard), then exiles itself",
+      "raw": {
+        "result": "creates no Horror tokens (empty graveyard), then exiles itself",
+        "castFrom": "graveyard",
+        "you": {
+          "graveyardCreatureCount": 0
+        }
+      }
     },
     "log": [
       {

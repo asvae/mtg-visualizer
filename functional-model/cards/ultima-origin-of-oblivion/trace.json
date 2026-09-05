@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 land(s)",
       "action": "\"onAttack\" trigger fires",
-      "result": "attacks, puts a blight counter on the opponent's only land — that land then loses all land types/abilities and gains \"{T}: Add {C}\" (real static consequence, no engine machinery to verify it), doubled to 2 colorless when tapped per the second static (also unmodeled — no \"land tapped for mana\" trigger hook)"
+      "result": "attacks, puts a blight counter on the opponent's only land — that land then loses all land types/abilities and gains \"{T}: Add {C}\" (real static consequence, no engine machinery to verify it), doubled to 2 colorless when tapped per the second static (also unmodeled — no \"land tapped for mana\" trigger hook)",
+      "raw": {
+        "result": "attacks, puts a blight counter on the opponent's only land — that land then loses all land types/abilities and gains \"{T}: Add {C}\" (real static consequence, no engine machinery to verify it), doubled to 2 colorless when tapped per the second static (also unmodeled — no \"land tapped for mana\" trigger hook)",
+        "trigger": "onAttack",
+        "opponents": [
+          {
+            "landsCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

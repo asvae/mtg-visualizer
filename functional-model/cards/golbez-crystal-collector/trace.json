@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onArtifactEnters\" trigger fires",
-      "result": "surveils 1"
+      "result": "surveils 1",
+      "raw": {
+        "result": "surveils 1",
+        "trigger": "onArtifactEnters"
+      }
     },
     "log": [
       {
@@ -23,7 +27,15 @@
     "scenario": {
       "setup": "you: 2 artifact(s); you: 1 creature card(s) in graveyard",
       "action": "\"onEndStep\" trigger fires",
-      "result": "fewer than 4 artifacts: nothing happens"
+      "result": "fewer than 4 artifacts: nothing happens",
+      "raw": {
+        "result": "fewer than 4 artifacts: nothing happens",
+        "trigger": "onEndStep",
+        "you": {
+          "artifactsCount": 2,
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -60,7 +72,15 @@
     "scenario": {
       "setup": "you: 4 artifact(s); you: 1 creature card(s) in graveyard",
       "action": "\"onEndStep\" trigger fires",
-      "result": "returns the creature card from graveyard to hand (4-7 artifacts, no life loss)"
+      "result": "returns the creature card from graveyard to hand (4-7 artifacts, no life loss)",
+      "raw": {
+        "result": "returns the creature card from graveyard to hand (4-7 artifacts, no life loss)",
+        "trigger": "onEndStep",
+        "you": {
+          "artifactsCount": 4,
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -121,7 +141,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   },
@@ -129,7 +150,18 @@
     "scenario": {
       "setup": "you: 8 artifact(s); you: 1 creature card(s) in graveyard",
       "action": "\"onEndStep\" trigger fires",
-      "result": "returns the creature card to hand, then each opponent loses life equal to that card's power (1)"
+      "result": "returns the creature card to hand, then each opponent loses life equal to that card's power (1)",
+      "raw": {
+        "result": "returns the creature card to hand, then each opponent loses life equal to that card's power (1)",
+        "trigger": "onEndStep",
+        "you": {
+          "artifactsCount": 8,
+          "graveyardCreatureCount": 1
+        },
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -210,7 +242,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "loseLife",
@@ -223,7 +256,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

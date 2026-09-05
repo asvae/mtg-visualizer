@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onLandfall\" trigger fires",
-      "result": "doubles Tifa Lockhart's power until end of turn (1 -> 2)"
+      "result": "doubles Tifa Lockhart's power until end of turn (1 -> 2)",
+      "raw": {
+        "result": "doubles Tifa Lockhart's power until end of turn (1 -> 2)",
+        "trigger": "onLandfall"
+      }
     },
     "log": [
       {
@@ -29,7 +33,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

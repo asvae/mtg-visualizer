@@ -3,7 +3,17 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "\"onBirdsAttack\" trigger fires",
-      "result": "looks at 2 cards, may put one into hand (the land-to-battlefield-tapped/rest-to-graveyard half is out of scope — see definition.ts)"
+      "result": "looks at 2 cards, may put one into hand (the land-to-battlefield-tapped/rest-to-graveyard half is out of scope — see definition.ts)",
+      "raw": {
+        "result": "looks at 2 cards, may put one into hand (the land-to-battlefield-tapped/rest-to-graveyard half is out of scope — see definition.ts)",
+        "trigger": "onBirdsAttack",
+        "triggerInput": {
+          "attackingBirdsCount": 2
+        },
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -25,7 +35,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onLandfall\" trigger fires",
-      "result": "gets +1/+0 until end of turn"
+      "result": "gets +1/+0 until end of turn",
+      "raw": {
+        "result": "gets +1/+0 until end of turn",
+        "trigger": "onLandfall"
+      }
     },
     "log": [
       {
@@ -46,7 +60,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

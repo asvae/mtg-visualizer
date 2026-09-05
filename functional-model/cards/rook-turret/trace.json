@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in hand",
       "action": "\"onArtifactEnters\" trigger fires",
-      "result": "draws a card, then discards a card"
+      "result": "draws a card, then discards a card",
+      "raw": {
+        "result": "draws a card, then discards a card",
+        "trigger": "onArtifactEnters",
+        "you": {
+          "handCount": 2
+        }
+      }
     },
     "log": [
       {

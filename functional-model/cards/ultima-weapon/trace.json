@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "activated (Equip {7})",
-      "result": "enters the battlefield, unattached (no ETB effect)"
+      "result": "enters the battlefield, unattached (no ETB effect)",
+      "raw": {
+        "result": "enters the battlefield, unattached (no ETB effect)"
+      }
     },
     "log": [
       {
@@ -23,7 +26,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated (Equip {7})",
-      "result": "Equip {7} activated: attaches to the target creature"
+      "result": "Equip {7} activated: attaches to the target creature",
+      "raw": {
+        "result": "Equip {7} activated: attaches to the target creature",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -48,7 +57,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEquippedAttacks\" trigger fires",
-      "result": "destroys the target creature an opponent controls"
+      "result": "destroys the target creature an opponent controls",
+      "raw": {
+        "result": "destroys the target creature an opponent controls",
+        "trigger": "onEquippedAttacks",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -71,7 +89,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-creature-token-0"
+        "target": "opp0-creature-token-0",
+        "controller": "opp0"
       }
     ]
   }

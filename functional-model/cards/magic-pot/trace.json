@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onDies\" trigger fires",
-      "result": "creates a Treasure token"
+      "result": "creates a Treasure token",
+      "raw": {
+        "result": "creates a Treasure token",
+        "trigger": "onDies"
+      }
     },
     "log": [
       {
@@ -25,7 +29,13 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "activated ({2}, {T})",
-      "result": "exiles a target card from your own graveyard (this model approximates \"any graveyard\" as your own — see definition.ts)"
+      "result": "exiles a target card from your own graveyard (this model approximates \"any graveyard\" as your own — see definition.ts)",
+      "raw": {
+        "result": "exiles a target card from your own graveyard (this model approximates \"any graveyard\" as your own — see definition.ts)",
+        "you": {
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -44,7 +54,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       }
     ]
   }

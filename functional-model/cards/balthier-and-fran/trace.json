@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onCrewedVehicleAttacksFirstCombat\" trigger fires",
-      "result": "no mechanically-executable effect (no phase/turn-structure Effect shape exists here — see definition.ts)"
+      "result": "no mechanically-executable effect (no phase/turn-structure Effect shape exists here — see definition.ts)",
+      "raw": {
+        "result": "no mechanically-executable effect (no phase/turn-structure Effect shape exists here — see definition.ts)",
+        "trigger": "onCrewedVehicleAttacksFirstCombat"
+      }
     },
     "log": [
       {
@@ -18,7 +22,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

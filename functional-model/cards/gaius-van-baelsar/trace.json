@@ -3,7 +3,22 @@
     "scenario": {
       "setup": "you: 2 creature(s), 1 nontoken; opp0: 2 creature(s), 1 nontoken",
       "action": "\"onEnter\" trigger fires, mode 0 chosen",
-      "result": "each player sacrifices a creature token"
+      "result": "each player sacrifices a creature token",
+      "raw": {
+        "result": "each player sacrifices a creature token",
+        "trigger": "onEnter",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 2,
+          "nontokenCreaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 2,
+            "nontokenCreaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -44,7 +59,22 @@
     "scenario": {
       "setup": "you: 2 creature(s), 1 nontoken; opp0: 2 creature(s), 1 nontoken",
       "action": "\"onEnter\" trigger fires, mode 1 chosen",
-      "result": "each player sacrifices a nontoken creature"
+      "result": "each player sacrifices a nontoken creature",
+      "raw": {
+        "result": "each player sacrifices a nontoken creature",
+        "trigger": "onEnter",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 2,
+          "nontokenCreaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 2,
+            "nontokenCreaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -90,7 +120,20 @@
     "scenario": {
       "setup": "you: 1 enchantment(s); opp0: 1 enchantment(s)",
       "action": "\"onEnter\" trigger fires, mode 2 chosen",
-      "result": "each player sacrifices an enchantment"
+      "result": "each player sacrifices an enchantment",
+      "raw": {
+        "result": "each player sacrifices an enchantment",
+        "trigger": "onEnter",
+        "mode": 2,
+        "you": {
+          "enchantmentsCount": 1
+        },
+        "opponents": [
+          {
+            "enchantmentsCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

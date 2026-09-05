@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEndStep\" trigger fires",
-      "result": "creates a tapped 0/1 black Wizard creature token (fewer than 4 Wizards controlled, no transform)"
+      "result": "creates a tapped 0/1 black Wizard creature token (fewer than 4 Wizards controlled, no transform)",
+      "raw": {
+        "result": "creates a tapped 0/1 black Wizard creature token (fewer than 4 Wizards controlled, no transform)",
+        "trigger": "onEndStep",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -42,7 +49,17 @@
     "scenario": {
       "setup": "you: 3 Wizard creature(s)",
       "action": "\"onEndStep\" trigger fires",
-      "result": "creates the Wizard token, then (now controlling 4 Wizards) exiles Kuja and returns it transformed into Trance Kuja, Fate Defied"
+      "result": "creates the Wizard token, then (now controlling 4 Wizards) exiles Kuja and returns it transformed into Trance Kuja, Fate Defied",
+      "raw": {
+        "result": "creates the Wizard token, then (now controlling 4 Wizards) exiles Kuja and returns it transformed into Trance Kuja, Fate Defied",
+        "trigger": "onEndStep",
+        "you": {
+          "creaturesCount": 3,
+          "creatureSubtypes": [
+            "Wizard"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -96,12 +113,14 @@
       {
         "fn": "moveTo",
         "target": "Kuja, Genome Sorcerer",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Kuja, Genome Sorcerer",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -109,7 +128,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

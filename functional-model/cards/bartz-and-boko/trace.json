@@ -3,7 +3,23 @@
     "scenario": {
       "setup": "you: 2 Bird creature(s) (power 2); opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "each of the 2 other Birds you control (power 2 each) deals 2 damage to the target creature an opponent controls (4 total)"
+      "result": "each of the 2 other Birds you control (power 2 each) deals 2 damage to the target creature an opponent controls (4 total)",
+      "raw": {
+        "result": "each of the 2 other Birds you control (power 2 each) deals 2 damage to the target creature an opponent controls (4 total)",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 2,
+          "creatureSubtypes": [
+            "Bird"
+          ],
+          "creaturePower": 2
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -68,7 +84,19 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "no other Birds you control, no damage dealt"
+      "result": "no other Birds you control, no damage dealt",
+      "raw": {
+        "result": "no other Birds you control, no damage dealt",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 0
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -99,7 +127,22 @@
     "scenario": {
       "setup": "you: 1 Bird creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "no legal target (opponent controls no creatures), no effect"
+      "result": "no legal target (opponent controls no creatures), no effect",
+      "raw": {
+        "result": "no legal target (opponent controls no creatures), no effect",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Bird"
+          ]
+        },
+        "opponents": [
+          {
+            "creaturesCount": 0
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -119,7 +162,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

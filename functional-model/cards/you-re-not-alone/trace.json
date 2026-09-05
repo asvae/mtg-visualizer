@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "cast from hand",
-      "result": "target creature gets +2/+2 until end of turn"
+      "result": "target creature gets +2/+2 until end of turn",
+      "raw": {
+        "result": "target creature gets +2/+2 until end of turn",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -48,7 +55,14 @@
     "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "cast from hand",
-      "result": "you control 3+ creatures: target creature gets +4/+4 until end of turn instead"
+      "result": "you control 3+ creatures: target creature gets +4/+4 until end of turn instead",
+      "raw": {
+        "result": "you control 3+ creatures: target creature gets +4/+4 until end of turn instead",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 3
+        }
+      }
     },
     "log": [
       {

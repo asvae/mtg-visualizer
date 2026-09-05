@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield (its own ETB trigger fires separately below)"
+      "result": "enters the battlefield (its own ETB trigger fires separately below)",
+      "raw": {
+        "result": "enters the battlefield (its own ETB trigger fires separately below)"
+      }
     },
     "log": [
       {
@@ -25,7 +28,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "pays 2 life (modeled as always paying — see definition.ts comment; the tapped/free branch is not modeled)"
+      "result": "pays 2 life (modeled as always paying — see definition.ts comment; the tapped/free branch is not modeled)",
+      "raw": {
+        "result": "pays 2 life (modeled as always paying — see definition.ts comment; the tapped/free branch is not modeled)",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {

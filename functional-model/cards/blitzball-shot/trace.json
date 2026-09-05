@@ -3,7 +3,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "cast from hand",
-      "result": "target creature gets +3/+3 and gains trample until end of turn"
+      "result": "target creature gets +3/+3 and gains trample until end of turn",
+      "raw": {
+        "result": "target creature gets +3/+3 and gains trample until end of turn",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

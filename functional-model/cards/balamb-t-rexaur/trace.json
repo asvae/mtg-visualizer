@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "you gain 3 life"
+      "result": "you gain 3 life",
+      "raw": {
+        "result": "you gain 3 life",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {

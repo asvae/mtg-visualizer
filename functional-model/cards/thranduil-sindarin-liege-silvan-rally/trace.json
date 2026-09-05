@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onLandfall\" trigger fires",
-      "result": "creates a 1/1 green Elf creature token (its own +1/+1 anthem for other Elves is not modeled — no continuous static-buff engine here)"
+      "result": "creates a 1/1 green Elf creature token (its own +1/+1 anthem for other Elves is not modeled — no continuous static-buff engine here)",
+      "raw": {
+        "result": "creates a 1/1 green Elf creature token (its own +1/+1 anthem for other Elves is not modeled — no continuous static-buff engine here)",
+        "trigger": "onLandfall"
+      }
     },
     "log": [
       {
@@ -25,7 +29,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {
@@ -52,7 +60,15 @@
     "scenario": {
       "setup": "you: 2 card(s) in library; you: 2 land(s) in library",
       "action": "cast from hand, back face",
-      "result": "mills four cards, then puts up to two land cards from among them into hand"
+      "result": "mills four cards, then puts up to two land cards from among them into hand",
+      "raw": {
+        "result": "mills four cards, then puts up to two land cards from among them into hand",
+        "face": "back",
+        "you": {
+          "libraryCount": 4,
+          "libraryLandCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -99,12 +115,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-land-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-library-land-1",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -120,7 +138,14 @@
     "scenario": {
       "setup": "you: 4 card(s) in library",
       "action": "cast from hand, back face",
-      "result": "no lands among the four milled cards — puts nothing into hand"
+      "result": "no lands among the four milled cards — puts nothing into hand",
+      "raw": {
+        "result": "no lands among the four milled cards — puts nothing into hand",
+        "face": "back",
+        "you": {
+          "libraryCount": 4
+        }
+      }
     },
     "log": [
       {

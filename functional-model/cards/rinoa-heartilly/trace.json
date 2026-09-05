@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a legendary 1/1 green and white Dog creature token named Angelo"
+      "result": "creates a legendary 1/1 green and white Dog creature token named Angelo",
+      "raw": {
+        "result": "creates a legendary 1/1 green and white Dog creature token named Angelo",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -25,7 +29,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onAttacks\" trigger fires",
-      "result": "the other creature you control gets +2/+2 until end of turn (2 creatures you control)"
+      "result": "the other creature you control gets +2/+2 until end of turn (2 creatures you control)",
+      "raw": {
+        "result": "the other creature you control gets +2/+2 until end of turn (2 creatures you control)",
+        "trigger": "onAttacks",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -61,7 +72,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

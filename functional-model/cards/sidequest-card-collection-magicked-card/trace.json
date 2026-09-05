@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 card(s) in hand",
       "action": "\"onEnter\" trigger fires",
-      "result": "draws three cards, then discards two"
+      "result": "draws three cards, then discards two",
+      "raw": {
+        "result": "draws three cards, then discards two",
+        "trigger": "onEnter",
+        "you": {
+          "handCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -35,7 +42,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEndStep\" trigger fires",
-      "result": "no resolvable effect in this model (transform is not tracked as state)"
+      "result": "no resolvable effect in this model (transform is not tracked as state)",
+      "raw": {
+        "result": "no resolvable effect in this model (transform is not tracked as state)",
+        "trigger": "onEndStep"
+      }
     },
     "log": [
       {
@@ -50,7 +61,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "back face: Magicked Card, a 4/4 flying Vehicle, enters as itself"
+      "result": "back face: Magicked Card, a 4/4 flying Vehicle, enters as itself",
+      "raw": {
+        "result": "back face: Magicked Card, a 4/4 flying Vehicle, enters as itself",
+        "face": "back"
+      }
     },
     "log": [
       {

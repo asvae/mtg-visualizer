@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "puts 1 +1/+1 counter on the other creature (Jenova's power) and it becomes a Mutant"
+      "result": "puts 1 +1/+1 counter on the other creature (Jenova's power) and it becomes a Mutant",
+      "raw": {
+        "result": "puts 1 +1/+1 counter on the other creature (Jenova's power) and it becomes a Mutant",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -41,7 +48,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "no other creature present, nothing happens"
+      "result": "no other creature present, nothing happens",
+      "raw": {
+        "result": "no other creature present, nothing happens",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -61,7 +75,17 @@
     "scenario": {
       "setup": "you: 4 card(s) in library",
       "action": "\"onMutantDies\" trigger fires",
-      "result": "draws 4 cards (the dying Mutant was power 4)"
+      "result": "draws 4 cards (the dying Mutant was power 4)",
+      "raw": {
+        "result": "draws 4 cards (the dying Mutant was power 4)",
+        "trigger": "onMutantDies",
+        "triggerInput": {
+          "dyingCreaturePower": 4
+        },
+        "you": {
+          "libraryCount": 4
+        }
+      }
     },
     "log": [
       {
@@ -92,7 +116,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

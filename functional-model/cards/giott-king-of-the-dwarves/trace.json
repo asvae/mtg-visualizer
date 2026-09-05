@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand",
       "action": "\"onDwarfOrEquipmentEnters\" trigger fires",
-      "result": "discards a card, then draws a card"
+      "result": "discards a card, then draws a card",
+      "raw": {
+        "result": "discards a card, then draws a card",
+        "trigger": "onDwarfOrEquipmentEnters",
+        "you": {
+          "handCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -27,7 +34,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

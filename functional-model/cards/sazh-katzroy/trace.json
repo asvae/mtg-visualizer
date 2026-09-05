@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "searches the library and puts a card into hand (approximated — no Bird/basic-land subtype filter available, see definition.ts)"
+      "result": "searches the library and puts a card into hand (approximated — no Bird/basic-land subtype filter available, see definition.ts)",
+      "raw": {
+        "result": "searches the library and puts a card into hand (approximated — no Bird/basic-land subtype filter available, see definition.ts)",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -26,7 +33,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "empty library, nothing found"
+      "result": "empty library, nothing found",
+      "raw": {
+        "result": "empty library, nothing found",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -49,7 +63,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onAttack\" trigger fires",
-      "result": "puts a +1/+1 counter on the target creature (0 -> 1), then doubles it to 2"
+      "result": "puts a +1/+1 counter on the target creature (0 -> 1), then doubles it to 2",
+      "raw": {
+        "result": "puts a +1/+1 counter on the target creature (0 -> 1), then doubles it to 2",
+        "trigger": "onAttack",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -87,7 +108,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttack\" trigger fires",
-      "result": "no other creature present — Sazh Katzroy itself is the only legal target, so it targets and doubles its own counters"
+      "result": "no other creature present — Sazh Katzroy itself is the only legal target, so it targets and doubles its own counters",
+      "raw": {
+        "result": "no other creature present — Sazh Katzroy itself is the only legal target, so it targets and doubles its own counters",
+        "trigger": "onAttack"
+      }
     },
     "log": [
       {
@@ -125,7 +150,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

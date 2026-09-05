@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "you: 1 Frog creature(s)",
       "action": "activated ({2}, Sacrifice a Frog)",
-      "result": "sacrifices the Frog and puts a +1/+1 counter on Quina"
+      "result": "sacrifices the Frog and puts a +1/+1 counter on Quina",
+      "raw": {
+        "result": "sacrifices the Frog and puts a +1/+1 counter on Quina",
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Frog"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -37,7 +46,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({2}, Sacrifice a Frog), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

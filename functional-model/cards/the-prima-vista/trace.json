@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onCastNoncreatureSpell4Mana\" trigger fires",
-      "result": "becomes an artifact creature (triggered by casting a 4+-mana noncreature spell)"
+      "result": "becomes an artifact creature (triggered by casting a 4+-mana noncreature spell)",
+      "raw": {
+        "result": "becomes an artifact creature (triggered by casting a 4+-mana noncreature spell)",
+        "trigger": "onCastNoncreatureSpell4Mana"
+      }
     },
     "log": [
       {
@@ -26,7 +30,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated (Crew 2 (tap creatures with total power 2 or more))",
-      "result": "becomes an artifact creature (crewed)"
+      "result": "becomes an artifact creature (crewed)",
+      "raw": {
+        "result": "becomes an artifact creature (crewed)",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -49,7 +59,11 @@
     "scenario": {
       "setup": "",
       "action": "activated (Crew 2 (tap creatures with total power 2 or more)), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

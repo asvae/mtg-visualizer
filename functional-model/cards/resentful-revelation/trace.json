@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 5 card(s) in library",
       "action": "cast from hand",
-      "result": "looks at the top 3 library cards: 1 to hand, 2 to graveyard"
+      "result": "looks at the top 3 library cards: 1 to hand, 2 to graveyard",
+      "raw": {
+        "result": "looks at the top 3 library cards: 1 to hand, 2 to graveyard",
+        "castFrom": "hand",
+        "you": {
+          "libraryCount": 5
+        }
+      }
     },
     "log": [
       {
@@ -23,7 +30,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -46,7 +54,14 @@
     "scenario": {
       "setup": "you: 5 card(s) in library",
       "action": "cast from graveyard",
-      "result": "cast via Flashback from the graveyard, then exiled instead of returning to the graveyard afterward"
+      "result": "cast via Flashback from the graveyard, then exiled instead of returning to the graveyard afterward",
+      "raw": {
+        "result": "cast via Flashback from the graveyard, then exiled instead of returning to the graveyard afterward",
+        "castFrom": "graveyard",
+        "you": {
+          "libraryCount": 5
+        }
+      }
     },
     "log": [
       {
@@ -66,7 +81,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",

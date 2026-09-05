@@ -3,7 +3,20 @@
     "scenario": {
       "setup": "you: 1 creature(s); opp0: 1 creature(s)",
       "action": "cast from hand, mode 0 chosen",
-      "result": "every creature on the battlefield, yours and the opponent's alike, gets -1/-1"
+      "result": "every creature on the battlefield, yours and the opponent's alike, gets -1/-1",
+      "raw": {
+        "result": "every creature on the battlefield, yours and the opponent's alike, gets -1/-1",
+        "castFrom": "hand",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 1
+        },
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -49,7 +62,17 @@
     "scenario": {
       "setup": "opp0: 1 card(s) in hand",
       "action": "cast from hand, mode 1 chosen",
-      "result": "the opponent discards a card (front of hand — no real player choice of which)"
+      "result": "the opponent discards a card (front of hand — no real player choice of which)",
+      "raw": {
+        "result": "the opponent discards a card (front of hand — no real player choice of which)",
+        "castFrom": "hand",
+        "mode": 1,
+        "opponents": [
+          {
+            "handCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {

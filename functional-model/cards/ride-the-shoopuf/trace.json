@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onLandfall\" trigger fires",
-      "result": "puts a +1/+1 counter on the target creature you control"
+      "result": "puts a +1/+1 counter on the target creature you control",
+      "raw": {
+        "result": "puts a +1/+1 counter on the target creature you control",
+        "trigger": "onLandfall",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -41,7 +48,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onLandfall\" trigger fires",
-      "result": "no legal creature target you control, no counter placed"
+      "result": "no legal creature target you control, no counter placed",
+      "raw": {
+        "result": "no legal creature target you control, no counter placed",
+        "trigger": "onLandfall",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -68,7 +82,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({5}{G}{G})",
-      "result": "becomes a 7/7 Beast creature in addition to its other types (types animated; power/toughness set from a default 1/1 base to 7/7 via a computed pump delta)"
+      "result": "becomes a 7/7 Beast creature in addition to its other types (types animated; power/toughness set from a default 1/1 base to 7/7 via a computed pump delta)",
+      "raw": {
+        "result": "becomes a 7/7 Beast creature in addition to its other types (types animated; power/toughness set from a default 1/1 base to 7/7 via a computed pump delta)"
+      }
     },
     "log": [
       {

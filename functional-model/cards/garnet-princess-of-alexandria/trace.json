@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onAttacks\" trigger fires",
-      "result": "no Sagas you control, so no +1/+1 counters are put on Garnet"
+      "result": "no Sagas you control, so no +1/+1 counters are put on Garnet",
+      "raw": {
+        "result": "no Sagas you control, so no +1/+1 counters are put on Garnet",
+        "trigger": "onAttacks"
+      }
     },
     "log": [
       {
@@ -31,7 +35,13 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -65,7 +75,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "cast from hand",
-      "result": "returns a creature card from your graveyard to the battlefield with two +1/+1 counters on it"
+      "result": "returns a creature card from your graveyard to the battlefield with two +1/+1 counters on it",
+      "raw": {
+        "result": "returns a creature card from your graveyard to the battlefield with two +1/+1 counters on it",
+        "castFrom": "hand",
+        "you": {
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -28,7 +35,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "putCounter",
@@ -50,7 +58,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "no legal target — your graveyard has no creature card, nothing returned"
+      "result": "no legal target — your graveyard has no creature card, nothing returned",
+      "raw": {
+        "result": "no legal target — your graveyard has no creature card, nothing returned",
+        "castFrom": "hand",
+        "you": {
+          "graveyardCreatureCount": 0
+        }
+      }
     },
     "log": [
       {

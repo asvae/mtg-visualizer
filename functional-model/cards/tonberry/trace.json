@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped with a stun counter on it"
+      "result": "enters tapped with a stun counter on it",
+      "raw": {
+        "result": "enters tapped with a stun counter on it",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {

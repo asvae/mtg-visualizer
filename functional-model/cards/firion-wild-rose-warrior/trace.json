@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEquipmentEnters\" trigger fires",
-      "result": "creates a token copy of the entering Coral Sword"
+      "result": "creates a token copy of the entering Coral Sword",
+      "raw": {
+        "result": "creates a token copy of the entering Coral Sword",
+        "trigger": "onEquipmentEnters",
+        "triggerInput": {
+          "equipmentName": "Coral Sword"
+        }
+      }
     },
     "log": [
       {
@@ -25,7 +32,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

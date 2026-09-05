@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "destroys up to one target creature"
+      "result": "destroys up to one target creature",
+      "raw": {
+        "result": "destroys up to one target creature",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -38,7 +47,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-creature-token-0"
+        "target": "opp0-creature-token-0",
+        "controller": "opp0"
       }
     ]
   },
@@ -46,7 +56,16 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no legal target, nothing destroyed"
+      "result": "no legal target, nothing destroyed",
+      "raw": {
+        "result": "no legal target, nothing destroyed",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 0
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -80,7 +99,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEndStep\" trigger fires",
-      "result": "creates a Treasure token; below three Treasures controlled (only the one just created), no transform"
+      "result": "creates a Treasure token; below three Treasures controlled (only the one just created), no transform",
+      "raw": {
+        "result": "creates a Treasure token; below three Treasures controlled (only the one just created), no transform",
+        "trigger": "onEndStep"
+      }
     },
     "log": [
       {
@@ -121,7 +144,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated ({1}{B}, Sacrifice another creature or artifact), back face",
-      "result": "sacrifices another creature or artifact, Yiazmat gains indestructible until end of turn, then taps itself"
+      "result": "sacrifices another creature or artifact, Yiazmat gains indestructible until end of turn, then taps itself",
+      "raw": {
+        "result": "sacrifices another creature or artifact, Yiazmat gains indestructible until end of turn, then taps itself",
+        "face": "back",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -170,7 +200,12 @@
     "scenario": {
       "setup": "",
       "action": "activated ({1}{B}, Sacrifice another creature or artifact), back face, a duplicate legendary copy enters",
-      "result": "a second Yiazmat entering triggers the legend rule; the newer copy is put into the graveyard"
+      "result": "a second Yiazmat entering triggers the legend rule; the newer copy is put into the graveyard",
+      "raw": {
+        "result": "a second Yiazmat entering triggers the legend rule; the newer copy is put into the graveyard",
+        "face": "back",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

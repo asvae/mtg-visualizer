@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "puts a +1/+1 counter on the other creature"
+      "result": "puts a +1/+1 counter on the other creature",
+      "raw": {
+        "result": "puts a +1/+1 counter on the other creature",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -41,7 +48,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "no other creature present, so it puts the +1/+1 counter on itself"
+      "result": "no other creature present, so it puts the +1/+1 counter on itself",
+      "raw": {
+        "result": "no other creature present, so it puts the +1/+1 counter on itself",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {

@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "you: 1 artifact(s)",
       "action": "activated ({2}, {T})",
-      "result": "gives the opponent control of the artifact, draws a card"
+      "result": "gives the opponent control of the artifact, draws a card",
+      "raw": {
+        "result": "gives the opponent control of the artifact, draws a card",
+        "you": {
+          "artifactsCount": 1
+        },
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -34,7 +43,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({2}, {T})",
-      "result": "no other permanent to give away, no-op"
+      "result": "no other permanent to give away, no-op",
+      "raw": {
+        "result": "no other permanent to give away, no-op",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -56,7 +71,13 @@
     "scenario": {
       "setup": "",
       "action": "activated ({2}, {T}), deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent"
+      "result": "Lifelink: deals 3 combat damage to an opponent",
+      "raw": {
+        "label": "Lifelink: deals 3 combat damage to an opponent",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
     },
     "log": [
       {
@@ -90,7 +111,11 @@
     "scenario": {
       "setup": "",
       "action": "activated ({2}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

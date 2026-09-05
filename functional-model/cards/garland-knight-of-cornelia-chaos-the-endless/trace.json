@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onNoncreatureSpellCast\" trigger fires",
-      "result": "surveils 1"
+      "result": "surveils 1",
+      "raw": {
+        "result": "surveils 1",
+        "trigger": "onNoncreatureSpellCast"
+      }
     },
     "log": [
       {
@@ -23,7 +27,11 @@
     "scenario": {
       "setup": "",
       "action": "\"returnTransformed\" activated",
-      "result": "no mechanically-executable effect (see definition.ts)"
+      "result": "no mechanically-executable effect (see definition.ts)",
+      "raw": {
+        "result": "no mechanically-executable effect (see definition.ts)",
+        "ability": "returnTransformed"
+      }
     },
     "log": [
       {
@@ -39,7 +47,12 @@
     "scenario": {
       "setup": "",
       "action": "\"onDies\" trigger fires, back face",
-      "result": "put on the bottom of its owner's library"
+      "result": "put on the bottom of its owner's library",
+      "raw": {
+        "result": "put on the bottom of its owner's library",
+        "face": "back",
+        "trigger": "onDies"
+      }
     },
     "log": [
       {
@@ -51,7 +64,8 @@
       {
         "fn": "moveTo",
         "target": "Chaos, the Endless",
-        "zone": "Library"
+        "zone": "Library",
+        "controller": "you"
       }
     ]
   },
@@ -59,7 +73,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

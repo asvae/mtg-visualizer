@@ -3,7 +3,15 @@
     "scenario": {
       "setup": "you: 9 card(s) in library; you: 1 artifact(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "finds the artifact and puts it into hand"
+      "result": "finds the artifact and puts it into hand",
+      "raw": {
+        "result": "finds the artifact and puts it into hand",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 10,
+          "libraryArtifactCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -76,7 +84,14 @@
     "scenario": {
       "setup": "you: 10 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "no artifact in library, nothing found"
+      "result": "no artifact in library, nothing found",
+      "raw": {
+        "result": "no artifact in library, nothing found",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 10
+        }
+      }
     },
     "log": [
       {

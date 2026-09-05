@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 2/2 green Bird creature token"
+      "result": "creates a 2/2 green Bird creature token",
+      "raw": {
+        "result": "creates a 2/2 green Bird creature token",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -25,7 +29,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onMainPhase\" trigger fires",
-      "result": "the transform condition/consequence is text-only in this model — no board state is checked or mutated"
+      "result": "the transform condition/consequence is text-only in this model — no board state is checked or mutated",
+      "raw": {
+        "result": "the transform condition/consequence is text-only in this model — no board state is checked or mutated",
+        "trigger": "onMainPhase"
+      }
     },
     "log": [
       {
@@ -40,7 +48,15 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "\"onTransform\" trigger fires, back face",
-      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap)"
+      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap)",
+      "raw": {
+        "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap)",
+        "face": "back",
+        "trigger": "onTransform",
+        "you": {
+          "libraryCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -68,7 +84,18 @@
     "scenario": {
       "setup": "you: 2 Bird creature(s)",
       "action": "\"onLandfall\" trigger fires, back face",
-      "result": "itself plus the 2 other Birds you control (3 total) get +1/+0 until end of turn"
+      "result": "itself plus the 2 other Birds you control (3 total) get +1/+0 until end of turn",
+      "raw": {
+        "result": "itself plus the 2 other Birds you control (3 total) get +1/+0 until end of turn",
+        "face": "back",
+        "trigger": "onLandfall",
+        "you": {
+          "creaturesCount": 2,
+          "creatureSubtypes": [
+            "Bird"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -124,7 +151,15 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"onLandfall\" trigger fires, back face",
-      "result": "the 2 other creatures are not Birds, so only itself (a Bird) gets +1/+0 until end of turn"
+      "result": "the 2 other creatures are not Birds, so only itself (a Bird) gets +1/+0 until end of turn",
+      "raw": {
+        "result": "the 2 other creatures are not Birds, so only itself (a Bird) gets +1/+0 until end of turn",
+        "face": "back",
+        "trigger": "onLandfall",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

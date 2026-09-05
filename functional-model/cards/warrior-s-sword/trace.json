@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token, then attaches to it"
+      "result": "creates a 1/1 colorless Hero creature token, then attaches to it",
+      "raw": {
+        "result": "creates a 1/1 colorless Hero creature token, then attaches to it",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -30,7 +34,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated ({5})",
-      "result": "attaches to target creature you control"
+      "result": "attaches to target creature you control",
+      "raw": {
+        "result": "attaches to target creature you control",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

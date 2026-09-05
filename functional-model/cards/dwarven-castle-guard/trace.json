@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onDies\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token"
+      "result": "creates a 1/1 colorless Hero creature token",
+      "raw": {
+        "result": "creates a 1/1 colorless Hero creature token",
+        "trigger": "onDies"
+      }
     },
     "log": [
       {

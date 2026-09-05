@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "\"onEndStep\" trigger fires",
-      "result": "no enchantment card in the graveyard (this model has no way to seed a typed graveyard card), no legal target, nothing returned"
+      "result": "no enchantment card in the graveyard (this model has no way to seed a typed graveyard card), no legal target, nothing returned",
+      "raw": {
+        "result": "no enchantment card in the graveyard (this model has no way to seed a typed graveyard card), no legal target, nothing returned",
+        "trigger": "onEndStep",
+        "you": {
+          "graveyardCreatureCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -30,7 +37,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

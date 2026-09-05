@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "\"onEnterOrAttacks\" trigger fires",
-      "result": "exiles the creature card from the graveyard and creates a tapped token copy of it"
+      "result": "exiles the creature card from the graveyard and creates a tapped token copy of it",
+      "raw": {
+        "trigger": "onEnterOrAttacks",
+        "you": {
+          "graveyardCreatureCount": 1
+        },
+        "result": "exiles the creature card from the graveyard and creates a tapped token copy of it"
+      }
     },
     "log": [
       {
@@ -27,7 +34,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "copyPermanent",
@@ -49,7 +57,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnterOrAttacks\" trigger fires",
-      "result": "empty graveyard, nothing to exile"
+      "result": "empty graveyard, nothing to exile",
+      "raw": {
+        "trigger": "onEnterOrAttacks",
+        "you": {
+          "graveyardCreatureCount": 0
+        },
+        "result": "empty graveyard, nothing to exile"
+      }
     },
     "log": [
       {

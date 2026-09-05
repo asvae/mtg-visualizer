@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"chapterI\" trigger fires",
-      "result": "deals 4 damage to the tapped creature the opponent controls"
+      "result": "deals 4 damage to the tapped creature the opponent controls",
+      "raw": {
+        "result": "deals 4 damage to the tapped creature the opponent controls",
+        "trigger": "chapterI",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -29,7 +38,14 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterI\" trigger fires",
-      "result": "no creature for the opponent to lose, nothing damaged"
+      "result": "no creature for the opponent to lose, nothing damaged",
+      "raw": {
+        "result": "no creature for the opponent to lose, nothing damaged",
+        "trigger": "chapterI",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -49,7 +65,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterII\" trigger fires",
-      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)"
+      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
+      "raw": {
+        "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -75,7 +98,14 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "no other creature you control, no-op"
+      "result": "no other creature you control, no-op",
+      "raw": {
+        "result": "no other creature you control, no-op",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -95,7 +125,14 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterIII\" trigger fires",
-      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)"
+      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
+      "raw": {
+        "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
+        "trigger": "chapterIII",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {

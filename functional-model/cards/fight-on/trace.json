@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "cast from hand",
-      "result": "2 creature cards moved from graveyard to hand"
+      "result": "2 creature cards moved from graveyard to hand",
+      "raw": {
+        "castFrom": "hand",
+        "you": {
+          "graveyardCreatureCount": 2
+        },
+        "result": "2 creature cards moved from graveyard to hand"
+      }
     },
     "log": [
       {
@@ -33,12 +40,14 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -54,7 +63,14 @@
     "scenario": {
       "setup": "you: 1 creature card(s) in graveyard",
       "action": "cast from hand",
-      "result": "1 creature card moved from graveyard to hand"
+      "result": "1 creature card moved from graveyard to hand",
+      "raw": {
+        "castFrom": "hand",
+        "you": {
+          "graveyardCreatureCount": 1
+        },
+        "result": "1 creature card moved from graveyard to hand"
+      }
     },
     "log": [
       {
@@ -79,7 +95,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -95,7 +112,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "nothing to return, no legal targets"
+      "result": "nothing to return, no legal targets",
+      "raw": {
+        "castFrom": "hand",
+        "you": {
+          "graveyardCreatureCount": 0
+        },
+        "result": "nothing to return, no legal targets"
+      }
     },
     "log": [
       {

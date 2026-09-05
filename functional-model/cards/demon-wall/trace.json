@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({5}{B})",
-      "result": "puts two +1/+1 counters on itself"
+      "result": "puts two +1/+1 counters on itself",
+      "raw": {
+        "result": "puts two +1/+1 counters on itself"
+      }
     },
     "log": [
       {

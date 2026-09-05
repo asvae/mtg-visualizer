@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "cast from hand",
-      "result": "the opponent sacrifices a creature; you create a 0/1 black Wizard token"
+      "result": "the opponent sacrifices a creature; you create a 0/1 black Wizard token",
+      "raw": {
+        "result": "the opponent sacrifices a creature; you create a 0/1 black Wizard token",
+        "castFrom": "hand",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -47,7 +56,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "no legal creature for the opponent to sacrifice; you still create the token"
+      "result": "no legal creature for the opponent to sacrifice; you still create the token",
+      "raw": {
+        "result": "no legal creature for the opponent to sacrifice; you still create the token",
+        "castFrom": "hand",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {

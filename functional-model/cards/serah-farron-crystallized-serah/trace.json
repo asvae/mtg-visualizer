@@ -3,7 +3,17 @@
     "scenario": {
       "setup": "you: 2 Legendary creature(s)",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "you control two other legendary creatures: Serah Farron transforms (exiled and returned, standing in for the in-place flip)"
+      "result": "you control two other legendary creatures: Serah Farron transforms (exiled and returned, standing in for the in-place flip)",
+      "raw": {
+        "result": "you control two other legendary creatures: Serah Farron transforms (exiled and returned, standing in for the in-place flip)",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 2,
+          "creatureSubtypes": [
+            "Legendary"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -38,12 +48,14 @@
       {
         "fn": "moveTo",
         "target": "Serah Farron",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Serah Farron",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -51,7 +63,17 @@
     "scenario": {
       "setup": "you: 1 Legendary creature(s)",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "only one other legendary creature — condition not met, no transform"
+      "result": "only one other legendary creature — condition not met, no transform",
+      "raw": {
+        "result": "only one other legendary creature — condition not met, no transform",
+        "trigger": "onBeginCombat",
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Legendary"
+          ]
+        }
+      }
     },
     "log": [
       {
@@ -83,7 +105,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "back face: static-only permanent, no resolvable effects (cost reduction and the +2/+2 anthem are both continuous text)"
+      "result": "back face: static-only permanent, no resolvable effects (cost reduction and the +2/+2 anthem are both continuous text)",
+      "raw": {
+        "result": "back face: static-only permanent, no resolvable effects (cost reduction and the +2/+2 anthem are both continuous text)",
+        "face": "back"
+      }
     },
     "log": [
       {
@@ -105,7 +131,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

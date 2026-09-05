@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 Hero token"
+      "result": "creates a 1/1 Hero token",
+      "raw": {
+        "result": "creates a 1/1 Hero token",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -25,7 +29,13 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "activated (Crew 1 (tap creatures with total power 1 or more))",
-      "result": "becomes an artifact creature"
+      "result": "becomes an artifact creature",
+      "raw": {
+        "result": "becomes an artifact creature",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {

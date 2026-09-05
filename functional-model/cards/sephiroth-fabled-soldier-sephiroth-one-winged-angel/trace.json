@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEnterOrAttacks\" trigger fires",
-      "result": "sacrifices another creature, draws a card"
+      "result": "sacrifices another creature, draws a card",
+      "raw": {
+        "result": "sacrifices another creature, draws a card",
+        "trigger": "onEnterOrAttacks",
+        "you": {
+          "creaturesCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -35,7 +42,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnterOrAttacks\" trigger fires",
-      "result": "no fodder to sacrifice; draws a card anyway (sacrifice-success gate not modeled)"
+      "result": "no fodder to sacrifice; draws a card anyway (sacrifice-success gate not modeled)",
+      "raw": {
+        "result": "no fodder to sacrifice; draws a card anyway (sacrifice-success gate not modeled)",
+        "trigger": "onEnterOrAttacks",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -62,7 +76,17 @@
     "scenario": {
       "setup": "",
       "action": "\"onCreatureDies\" trigger fires",
-      "result": "target opponent loses 1 life, you gain 1 life; not the fourth resolution this turn, no transform"
+      "result": "target opponent loses 1 life, you gain 1 life; not the fourth resolution this turn, no transform",
+      "raw": {
+        "result": "target opponent loses 1 life, you gain 1 life; not the fourth resolution this turn, no transform",
+        "trigger": "onCreatureDies",
+        "opponents": [
+          {}
+        ],
+        "triggerInput": {
+          "resolvedCount": 1
+        }
+      }
     },
     "log": [
       {
@@ -87,7 +111,17 @@
     "scenario": {
       "setup": "",
       "action": "\"onCreatureDies\" trigger fires",
-      "result": "target opponent loses 1 life, you gain 1 life, and this is the fourth resolution this turn: Sephiroth transforms"
+      "result": "target opponent loses 1 life, you gain 1 life, and this is the fourth resolution this turn: Sephiroth transforms",
+      "raw": {
+        "result": "target opponent loses 1 life, you gain 1 life, and this is the fourth resolution this turn: Sephiroth transforms",
+        "trigger": "onCreatureDies",
+        "opponents": [
+          {}
+        ],
+        "triggerInput": {
+          "resolvedCount": 4
+        }
+      }
     },
     "log": [
       {
@@ -109,12 +143,14 @@
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -122,7 +158,15 @@
     "scenario": {
       "setup": "",
       "action": "\"onAnyCreatureDies\" trigger fires, back face",
-      "result": "target opponent loses 1 life, you gain 1 life (the emblem/granted ability, back face)"
+      "result": "target opponent loses 1 life, you gain 1 life (the emblem/granted ability, back face)",
+      "raw": {
+        "result": "target opponent loses 1 life, you gain 1 life (the emblem/granted ability, back face)",
+        "face": "back",
+        "trigger": "onAnyCreatureDies",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -147,7 +191,18 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"onAttack\" trigger fires, back face",
-      "result": "sacrifices 2 other creatures, draws 2 cards"
+      "result": "sacrifices 2 other creatures, draws 2 cards",
+      "raw": {
+        "result": "sacrifices 2 other creatures, draws 2 cards",
+        "face": "back",
+        "trigger": "onAttack",
+        "you": {
+          "creaturesCount": 2
+        },
+        "triggerInput": {
+          "sacCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -188,7 +243,18 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"onAttack\" trigger fires, back face",
-      "result": "sacrifices no creatures (chosen X = 0), draws no cards"
+      "result": "sacrifices no creatures (chosen X = 0), draws no cards",
+      "raw": {
+        "result": "sacrifices no creatures (chosen X = 0), draws no cards",
+        "face": "back",
+        "trigger": "onAttack",
+        "you": {
+          "creaturesCount": 2
+        },
+        "triggerInput": {
+          "sacCount": 0
+        }
+      }
     },
     "log": [
       {
@@ -221,7 +287,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

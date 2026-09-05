@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature card(s) in graveyard",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "exiles the opponent graveyard creature and creates a 5/5 black Demon token copy of it"
+      "result": "exiles the opponent graveyard creature and creates a 5/5 black Demon token copy of it",
+      "raw": {
+        "result": "exiles the opponent graveyard creature and creates a 5/5 black Demon token copy of it",
+        "trigger": "onBeginCombat",
+        "opponents": [
+          {
+            "graveyardCreatureCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -34,7 +43,8 @@
       {
         "fn": "moveTo",
         "target": "opp0-gy-creature-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "opp0"
       },
       {
         "fn": "createToken",
@@ -49,7 +59,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onBeginCombat\" trigger fires",
-      "result": "no creature card in any graveyard, nothing exiled or created"
+      "result": "no creature card in any graveyard, nothing exiled or created",
+      "raw": {
+        "result": "no creature card in any graveyard, nothing exiled or created",
+        "trigger": "onBeginCombat",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {
@@ -78,7 +95,11 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters"
+      "result": "Legend rule: a second copy enters",
+      "raw": {
+        "label": "Legend rule: a second copy enters",
+        "duplicateLegendaryEnters": true
+      }
     },
     "log": [
       {

@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 0/1 black Wizard creature token"
+      "result": "creates a 0/1 black Wizard creature token",
+      "raw": {
+        "result": "creates a 0/1 black Wizard creature token",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {

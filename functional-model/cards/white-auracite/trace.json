@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "exiles a nonland permanent the opponent controls"
+      "result": "exiles a nonland permanent the opponent controls",
+      "raw": {
+        "result": "exiles a nonland permanent the opponent controls",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "creaturesCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -27,7 +36,8 @@
       {
         "fn": "moveTo",
         "target": "opp0-creature-token-0",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "opp0"
       }
     ]
   },
@@ -35,7 +45,16 @@
     "scenario": {
       "setup": "opp0: 2 land(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "no nonland permanent for the opponent to lose, nothing exiled"
+      "result": "no nonland permanent for the opponent to lose, nothing exiled",
+      "raw": {
+        "result": "no nonland permanent for the opponent to lose, nothing exiled",
+        "trigger": "onEnter",
+        "opponents": [
+          {
+            "landsCount": 2
+          }
+        ]
+      }
     },
     "log": [
       {

@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onNoncreatureSpellCast\" trigger fires",
-      "result": "returns from the graveyard to hand (the {B} payment is not a resolvable state here)"
+      "result": "returns from the graveyard to hand (the {B} payment is not a resolvable state here)",
+      "raw": {
+        "result": "returns from the graveyard to hand (the {B} payment is not a resolvable state here)",
+        "trigger": "onNoncreatureSpellCast"
+      }
     },
     "log": [
       {
@@ -46,7 +54,8 @@
       {
         "fn": "moveTo",
         "target": "Shambling Cie'th",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   }

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "",
       "action": "\"onDies\" trigger fires",
-      "result": "target opponent loses 1 life, you gain 1 life"
+      "result": "target opponent loses 1 life, you gain 1 life",
+      "raw": {
+        "result": "target opponent loses 1 life, you gain 1 life",
+        "trigger": "onDies",
+        "opponents": [
+          {}
+        ]
+      }
     },
     "log": [
       {

@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 2 creature card(s) in graveyard; you: 2 card(s) in library",
       "action": "activated ({5}, {T})",
-      "result": "mills 2 cards, then sacrifices Eden itself, then returns another permanent card from the graveyard to hand"
+      "result": "mills 2 cards, then sacrifices Eden itself, then returns another permanent card from the graveyard to hand",
+      "raw": {
+        "result": "mills 2 cards, then sacrifices Eden itself, then returns another permanent card from the graveyard to hand",
+        "you": {
+          "graveyardCreatureCount": 2,
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -22,7 +29,8 @@
       {
         "fn": "moveTo",
         "target": "Eden, Seat of the Sanctum",
-        "zone": "Graveyard"
+        "zone": "Graveyard",
+        "controller": "you"
       },
       {
         "fn": "read:getCardsIn",
@@ -34,7 +42,8 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   },
@@ -42,7 +51,13 @@
     "scenario": {
       "setup": "you: 2 card(s) in library",
       "action": "activated ({5}, {T})",
-      "result": "mills 2 cards (library exhausted after), then sacrifices Eden itself; no OTHER permanent card in the graveyard to return"
+      "result": "mills 2 cards (library exhausted after), then sacrifices Eden itself; no OTHER permanent card in the graveyard to return",
+      "raw": {
+        "result": "mills 2 cards (library exhausted after), then sacrifices Eden itself; no OTHER permanent card in the graveyard to return",
+        "you": {
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -61,7 +76,8 @@
       {
         "fn": "moveTo",
         "target": "Eden, Seat of the Sanctum",
-        "zone": "Graveyard"
+        "zone": "Graveyard",
+        "controller": "you"
       },
       {
         "fn": "read:getCardsIn",
@@ -73,7 +89,8 @@
       {
         "fn": "moveTo",
         "target": "you-library-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   }

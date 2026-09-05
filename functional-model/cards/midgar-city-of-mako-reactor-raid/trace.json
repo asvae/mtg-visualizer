@@ -3,7 +3,11 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped"
+      "result": "enters tapped",
+      "raw": {
+        "result": "enters tapped",
+        "trigger": "onEnter"
+      }
     },
     "log": [
       {
@@ -34,7 +38,16 @@
     "scenario": {
       "setup": "you: 1 creature(s); you: 2 card(s) in library",
       "action": "cast from hand, back face",
-      "result": "sacrifices a creature, then draws 2 cards"
+      "result": "sacrifices a creature, then draws 2 cards",
+      "raw": {
+        "result": "sacrifices a creature, then draws 2 cards",
+        "face": "back",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 1,
+          "libraryCount": 2
+        }
+      }
     },
     "log": [
       {

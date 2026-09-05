@@ -3,7 +3,14 @@
     "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "cast from hand",
-      "result": "creates 3 Moogle tokens (indestructible grant not mechanically enforced)"
+      "result": "creates 3 Moogle tokens (indestructible grant not mechanically enforced)",
+      "raw": {
+        "result": "creates 3 Moogle tokens (indestructible grant not mechanically enforced)",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 3
+        }
+      }
     },
     "log": [
       {
@@ -39,7 +46,14 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creates no tokens — no creatures to count"
+      "result": "creates no tokens — no creatures to count",
+      "raw": {
+        "result": "creates no tokens — no creatures to count",
+        "castFrom": "hand",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
     },
     "log": [
       {

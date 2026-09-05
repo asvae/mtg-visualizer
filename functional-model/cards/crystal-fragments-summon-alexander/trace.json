@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "activated ({5}{W}{W})",
-      "result": "exiles itself and returns transformed into Summon: Alexander"
+      "result": "exiles itself and returns transformed into Summon: Alexander",
+      "raw": {
+        "result": "exiles itself and returns transformed into Summon: Alexander"
+      }
     },
     "log": [
       {
@@ -15,12 +18,14 @@
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "zone": "Exile"
+        "zone": "Exile",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },
@@ -28,7 +33,15 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterI\" trigger fires, back face",
-      "result": "no resolvable effect in this model (damage prevention is not tracked here)"
+      "result": "no resolvable effect in this model (damage prevention is not tracked here)",
+      "raw": {
+        "result": "no resolvable effect in this model (damage prevention is not tracked here)",
+        "face": "back",
+        "trigger": "chapterI",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -43,7 +56,15 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "\"chapterII\" trigger fires, back face",
-      "result": "no resolvable effect in this model (damage prevention is not tracked here)"
+      "result": "no resolvable effect in this model (damage prevention is not tracked here)",
+      "raw": {
+        "result": "no resolvable effect in this model (damage prevention is not tracked here)",
+        "face": "back",
+        "trigger": "chapterII",
+        "you": {
+          "creaturesCount": 2
+        }
+      }
     },
     "log": [
       {
@@ -58,7 +79,17 @@
     "scenario": {
       "setup": "opp0: 2 creature(s)",
       "action": "\"chapterIII\" trigger fires, back face",
-      "result": "taps both of the opponent's creatures"
+      "result": "taps both of the opponent's creatures",
+      "raw": {
+        "result": "taps both of the opponent's creatures",
+        "face": "back",
+        "trigger": "chapterIII",
+        "opponents": [
+          {
+            "creaturesCount": 2
+          }
+        ]
+      }
     },
     "log": [
       {

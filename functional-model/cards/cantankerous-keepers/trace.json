@@ -3,7 +3,10 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield (its own ETB trigger fires separately below)"
+      "result": "enters the battlefield (its own ETB trigger fires separately below)",
+      "raw": {
+        "result": "enters the battlefield (its own ETB trigger fires separately below)"
+      }
     },
     "log": [
       {
@@ -25,7 +28,16 @@
     "scenario": {
       "setup": "you: 2 card(s) in library; you: 2 Elf(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "mills four cards, then puts all Elf cards from among them into hand"
+      "result": "mills four cards, then puts all Elf cards from among them into hand",
+      "raw": {
+        "result": "mills four cards, then puts all Elf cards from among them into hand",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 4,
+          "librarySubtypeCount": 2,
+          "librarySubtype": "Elf"
+        }
+      }
     },
     "log": [
       {
@@ -75,12 +87,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-Elf-0",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-library-Elf-1",
-        "zone": "Hand"
+        "zone": "Hand",
+        "controller": "you"
       }
     ]
   },
@@ -88,7 +102,14 @@
     "scenario": {
       "setup": "you: 4 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "no Elf cards among the four milled cards — puts nothing into hand"
+      "result": "no Elf cards among the four milled cards — puts nothing into hand",
+      "raw": {
+        "result": "no Elf cards among the four milled cards — puts nothing into hand",
+        "trigger": "onEnter",
+        "you": {
+          "libraryCount": 4
+        }
+      }
     },
     "log": [
       {

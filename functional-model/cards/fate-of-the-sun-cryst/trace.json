@@ -3,7 +3,16 @@
     "scenario": {
       "setup": "opp0: 1 creature(s); opp0: 1 artifact(s)",
       "action": "cast from hand",
-      "result": "destroys the opponent's creature"
+      "result": "destroys the opponent's creature",
+      "raw": {
+        "result": "destroys the opponent's creature",
+        "opponents": [
+          {
+            "creaturesCount": 1,
+            "artifactsCount": 1
+          }
+        ]
+      }
     },
     "log": [
       {
@@ -39,7 +48,8 @@
       },
       {
         "fn": "destroy",
-        "target": "opp0-creature-token-0"
+        "target": "opp0-creature-token-0",
+        "controller": "opp0"
       },
       {
         "fn": "move",
