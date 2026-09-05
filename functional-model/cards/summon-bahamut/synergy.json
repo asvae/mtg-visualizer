@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "dies",
       "target": {
@@ -9,23 +9,22 @@
           ]
         }
       },
-      "ease": 4,
-      "strength": 4,
+      "value": 4,
       "sourceText": "I, II — Destroy up to one target nonland permanent."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 1,
-      "sourceText": "Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent."
+      "sourceText": "Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "value": 1
     },
     {
       "zone": "Battlefield",
       "controller": "opp",
-      "ease": 5,
-      "sourceText": "Mega Flare — ...deals damage equal to the total mana value of other permanents you control to each opponent."
+      "sourceText": "Mega Flare — ...deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "value": 1
     }
   ]
 }

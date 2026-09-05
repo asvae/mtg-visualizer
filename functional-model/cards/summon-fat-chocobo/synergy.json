@@ -1,23 +1,21 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "g_2_2_bird_landfall"
       },
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "grantKeyword",
       "keyword": "Trample",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -26,7 +24,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     }
   ]
 }

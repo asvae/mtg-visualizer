@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -16,7 +15,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     }
   ]
 }

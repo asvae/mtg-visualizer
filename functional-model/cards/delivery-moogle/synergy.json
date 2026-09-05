@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Hand",
       "controller": "you",
@@ -8,12 +8,11 @@
           "Artifact"
         ]
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less... put it into your hand"
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Library",
       "controller": "you",
@@ -22,8 +21,8 @@
           "Artifact"
         ]
       },
-      "ease": 5,
-      "sourceText": "search your library ... for an artifact card with mana value 2 or less"
+      "sourceText": "search your library ... for an artifact card with mana value 2 or less",
+      "value": 1
     },
     {
       "zone": "Graveyard",
@@ -33,8 +32,8 @@
           "Artifact"
         ]
       },
-      "ease": 3,
-      "sourceText": "search ... your ... graveyard for an artifact card with mana value 2 or less"
+      "sourceText": "search ... your ... graveyard for an artifact card with mana value 2 or less",
+      "value": 1
     }
   ]
 }

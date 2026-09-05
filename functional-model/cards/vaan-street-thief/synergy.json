@@ -1,10 +1,9 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Exile",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -12,8 +11,7 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "ease": 2,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "putCounter",
@@ -28,11 +26,10 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -43,7 +40,7 @@
           "Rogue"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

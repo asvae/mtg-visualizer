@@ -1,34 +1,30 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 5,
-      "strength": 4
+      "value": 4
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "grantKeyword",
       "keyword": "Trample",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -37,7 +33,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     }
   ]
 }

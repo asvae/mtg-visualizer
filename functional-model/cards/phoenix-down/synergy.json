@@ -1,20 +1,18 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 4,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped."
     },
     {
       "zone": "Exile",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Exile target Skeleton, Spirit, or Zombie."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Graveyard",
       "controller": "you",
@@ -23,8 +21,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped."
+      "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.",
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -35,8 +33,8 @@
           "Zombie"
         ]
       },
-      "ease": 5,
-      "sourceText": "Exile target Skeleton, Spirit, or Zombie."
+      "sourceText": "Exile target Skeleton, Spirit, or Zombie.",
+      "value": 1
     }
   ]
 }

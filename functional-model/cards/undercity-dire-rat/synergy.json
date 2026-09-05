@@ -1,20 +1,19 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "ease": 2,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "dies",
       "target": "self",
-      "ease": 3
+      "value": 1
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
-  "produces": [],
-  "wants": [
+  "source": [],
+  "sink": [
     {
       "event": "entersBattlefield",
       "controller": "you",
@@ -9,7 +9,7 @@
           "Creature"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

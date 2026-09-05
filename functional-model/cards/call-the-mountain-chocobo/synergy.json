@@ -1,30 +1,27 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "g_2_2_bird_landfall"
       },
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Library",
       "controller": "you",
@@ -34,7 +31,7 @@
           "Mountain"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

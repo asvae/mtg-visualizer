@@ -1,0 +1,18 @@
+{
+  "source": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(baseline — Breeding Pool is itself a permanent on your battlefield)",
+      "value": 1
+    },
+    {
+      "event": "lifeloss",
+      "controller": "you",
+      "sourceText": "As this land enters, you may pay 2 life. (Modeled as always paying — see definition.ts comment.)",
+      "value": 4
+    }
+  ],
+  "sink": []
+}

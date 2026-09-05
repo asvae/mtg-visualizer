@@ -1,0 +1,41 @@
+{
+  "source": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(baseline — Cantankerous Keepers is itself a permanent on your battlefield, no special ability text)",
+      "value": 1
+    },
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Elf"
+        ]
+      },
+      "sourceText": "When this creature enters, mill four cards, then put all Elf cards from among them into your hand.",
+      "value": 1
+    }
+  ],
+  "sink": [
+    {
+      "zone": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Elf"
+        ]
+      },
+      "sourceText": "Mill four cards, then put all Elf cards from among them into your hand (needs Elf cards in library to find).",
+      "value": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "sourceText": "Reads the just-milled cards (now in your graveyard) to find the Elves among them.",
+      "value": 1
+    }
+  ]
+}

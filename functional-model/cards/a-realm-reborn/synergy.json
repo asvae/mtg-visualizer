@@ -1,12 +1,11 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": []
+  "sink": []
 }

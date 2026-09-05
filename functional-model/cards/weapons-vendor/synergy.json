@@ -1,6 +1,6 @@
 {
-  "produces": [],
-  "wants": [
+  "source": [],
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -9,8 +9,8 @@
           "Equipment"
         ]
       },
-      "ease": 5,
-      "sourceText": "At the beginning of combat on your turn, if you control an Equipment, you may pay {1}."
+      "sourceText": "At the beginning of combat on your turn, if you control an Equipment, you may pay {1}.",
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -20,8 +20,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "When you do, attach target Equipment you control to target creature you control."
+      "sourceText": "When you do, attach target Equipment you control to target creature you control.",
+      "value": 1
     }
   ]
 }

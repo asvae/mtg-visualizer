@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Exile",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Graveyard",
       "controller": "you",
@@ -19,7 +18,7 @@
           "Land"
         ]
       },
-      "ease": 2
+      "value": 1
     }
   ]
 }

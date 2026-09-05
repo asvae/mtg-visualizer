@@ -1,0 +1,54 @@
+{
+  "source": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(baseline — Tyvar is itself a permanent on your battlefield)",
+      "value": 1
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(baseline — Tyvar can die and go to your graveyard like any creature)",
+      "value": 1
+    },
+    {
+      "event": "dies",
+      "target": "self",
+      "sourceText": "(baseline — Tyvar dying, no special ability text)",
+      "value": 1
+    },
+    {
+      "event": "grantKeyword",
+      "controller": "you",
+      "sourceText": "Tap another untapped creature you control: Tyvar gains indestructible until end of turn.",
+      "value": 1
+    }
+  ],
+  "sink": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "sourceText": "Tap another untapped creature you control (needs another creature to tap as the cost).",
+      "value": 1
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "sourceText": "{3}{G}{G}: Creatures you control get +X/+X until end of turn, where X is the greatest power among creatures you control (needs creatures to affect and to size X).",
+      "value": 1
+    }
+  ]
+}

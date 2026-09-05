@@ -1,24 +1,21 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "ease": 1,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 2,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "putCounter",
@@ -32,17 +29,15 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 4
+      "value": 4
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 5,
-      "strength": 4
+      "value": 4
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "opp",
@@ -52,12 +47,12 @@
           "Artifact"
         ]
       },
-      "ease": 5
+      "value": 1
     },
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 1
+      "value": 1
     }
   ]
 }

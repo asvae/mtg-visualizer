@@ -1,19 +1,17 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Hand",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Hand",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -22,7 +20,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -32,7 +30,7 @@
           "Creature"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

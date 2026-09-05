@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "dies",
       "target": {
@@ -9,8 +9,7 @@
           ]
         }
       },
-      "ease": 4,
-      "strength": 4
+      "value": 4
     },
     {
       "zone": "Battlefield",
@@ -18,30 +17,26 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "ease": 2,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
       "controller": "you",
-      "ease": 4,
-      "strength": 4
+      "value": 4
     },
     {
       "event": "grantKeyword",
       "keyword": "Indestructible",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -49,7 +44,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -59,7 +54,7 @@
           "Treasure"
         ]
       },
-      "ease": 5
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -70,7 +65,7 @@
           "Artifact"
         ]
       },
-      "ease": 1
+      "value": 1
     }
   ]
 }

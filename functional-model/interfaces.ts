@@ -25,6 +25,11 @@
 // method, in their own doc comment — never presented as something copied
 // verbatim when it wasn't.
 
+// Type-only — turn.ts imports FROM this file too (also type-only, see its
+// own header), so this is a type-level-only cycle: TS erases both sides
+// before anything runs, no runtime circular dependency.
+import type { Phase } from './turn';
+
 /**
  * Mirrors forge-game/src/main/java/forge/game/GameEntity.java (~line 51 for
  * the class itself; `getId`/`getName` ~line 63-68). The common base every
@@ -251,6 +256,18 @@ export declare function move(player: Player, from: ZoneType, to: ZoneType, qty: 
 
 /** Convenience wrapper over `Card.setController(...)`/a control-change effect. */
 export declare function gainControl(controller: Player, target: Card): void;
+
+/**
+ * Real 603.4/603.7 delayed trigger — "return those cards to the battlefield
+ * ... at the beginning of the next end step" (Elrond, Moon-Reader, e.g.):
+ * `run` is fixed NOW (at resolution) but doesn't execute until the game
+ * later reaches `phase` (`functional-model/turn.ts`'s own phase sequence).
+ * Forge's own real mechanism is `ApiType.DelayedTrigger`
+ * (`DelayTriggerEffect.java`) — cited by name only, not a verified line
+ * number (no local Forge checkout in this sandbox to check against, unlike
+ * this file's other members).
+ */
+export declare function delayUntil(phase: Phase, run: () => void): void;
 
 /**
  * Convenience wrapper over `Card.attachToEntity(GameEntity, SpellAbility)`

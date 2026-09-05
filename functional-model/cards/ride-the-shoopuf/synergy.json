@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "putCounter",
       "counterType": "+1/+1",
@@ -11,15 +11,14 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "landfall",
       "controller": "you",
-      "ease": 5
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -29,7 +28,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "putCounter",
       "counterType": "+1/+1",
@@ -10,12 +10,11 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "When this creature enters, put a +1/+1 counter on target creature."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -23,8 +22,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "put a +1/+1 counter on target creature (needs a creature on the battlefield to target)"
+      "sourceText": "put a +1/+1 counter on target creature (needs a creature on the battlefield to target)",
+      "value": 1
     }
   ]
 }

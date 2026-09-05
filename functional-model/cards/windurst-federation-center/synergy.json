@@ -1,6 +1,6 @@
 {
-  "produces": [],
-  "wants": [
+  "source": [],
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -9,7 +9,7 @@
           "Land"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

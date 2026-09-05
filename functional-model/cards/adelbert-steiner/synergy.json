@@ -1,37 +1,33 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "ease": 1,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(baseline — Adelbert Steiner is itself a permanent on your battlefield, no special ability text)"
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 5,
-      "strength": 5,
+      "value": 5,
       "sourceText": "Lifelink"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(baseline — Adelbert Steiner can die and go to your graveyard like any creature, no special ability text)"
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(baseline — Adelbert Steiner dying, no special ability text)"
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -40,8 +36,8 @@
           "Equipment"
         ]
       },
-      "ease": 5,
-      "sourceText": "Adelbert Steiner gets +1/+1 for each Equipment you control."
+      "sourceText": "Adelbert Steiner gets +1/+1 for each Equipment you control.",
+      "value": 1
     }
   ]
 }

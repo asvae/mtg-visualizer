@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -8,14 +8,12 @@
           "Land"
         ]
       },
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Exile",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -23,28 +21,25 @@
       "subject": {
         "token": "c_a_food_sac"
       },
-      "ease": 2,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Graveyard",
       "controller": "you",
-      "ease": 1
+      "value": 1
     }
   ]
 }

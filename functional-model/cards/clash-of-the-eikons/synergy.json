@@ -1,27 +1,24 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "damage",
       "controller": "you",
-      "ease": 5,
-      "strength": 5
+      "value": 5
     },
     {
       "event": "putCounter",
       "counterType": "LORE",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -30,7 +27,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -40,12 +37,12 @@
           "Creature"
         ]
       },
-      "ease": 5
+      "value": 1
     },
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 1
+      "value": 1
     }
   ]
 }

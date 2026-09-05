@@ -1,25 +1,22 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "damage",
       "controller": "you",
-      "ease": 5,
-      "strength": 5
+      "value": 5
     },
     {
       "zone": "Exile",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -27,7 +24,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -36,7 +33,7 @@
           "Artifact"
         ]
       },
-      "ease": 3
+      "value": 1
     }
   ]
 }

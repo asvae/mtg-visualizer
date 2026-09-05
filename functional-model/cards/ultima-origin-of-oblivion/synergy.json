@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "putCounter",
       "counterType": "blight",
@@ -10,12 +10,11 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Whenever Ultima attacks, put a blight counter on target land."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -23,8 +22,8 @@
           "Land"
         ]
       },
-      "ease": 5,
-      "sourceText": "Whenever Ultima attacks, put a blight counter on target land."
+      "sourceText": "Whenever Ultima attacks, put a blight counter on target land.",
+      "value": 1
     }
   ]
 }

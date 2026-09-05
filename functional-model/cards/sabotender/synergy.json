@@ -1,17 +1,16 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "damage",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "landfall",
       "controller": "you",
-      "ease": 5
+      "value": 1
     }
   ]
 }

@@ -39,7 +39,7 @@ export interface NameConstraint {
   eq: string;
 }
 
-/** The fixed, small constraint vocabulary — appears on wants, and on a produce only where the effect itself is filtered (what it targets). */
+/** The fixed, small constraint vocabulary — appears on a sink fact, and on a source fact only where the effect itself is filtered (what it targets). */
 export interface Constraints {
   types?: TypeConstraint;
   cmc?: NumConstraint;
@@ -49,10 +49,10 @@ export interface Constraints {
   name?: NameConstraint;
 }
 
-/** 1-5, computed mechanically (not authored by hand) — two independent dimensions of a fact's real significance, meant to be multiplied together (1-25) for a connection's total strength (see `factTotal`):
- *  - `ease` (produces AND wants): how many REAL givers this fact has — `matchCountForFact`'s raw match count against the pool, bucketed and INVERTED (more givers = lower score). 1 = nearly every card in the pool can satisfy it ("permanents on your battlefield" — true of almost anything), 5 = rare, only a handful of cards give it. Deliberately punishes broad-but-weak facts (you'll get those regardless of what you build around) in favor of rare, specific ones.
- *  - `strength` (produces ONLY — a want has no magnitude of its own, it inherits the matched produce's `strength` as `theirTotal`... no, `factTotal`, see below): real game-mechanical magnitude of the effect, steeply bucketed from the actual number in `trace.json` (tokens/counters/damage/life/cards — whatever the produce's own action carries), NOT linear: a 1-for-1 effect and a 2-for-1 effect are not "close" in power, so the bucketing jumps hard past 1 (e.g. magnitude 1 → 1, magnitude 2 → 4-5, magnitude 3+ → 5) rather than spreading evenly.
- * Both are a crude stand-in for real weighting (see SYNERGY_DESIGN.md's parked rarity-weighting note) — recompute if the pool changes meaningfully rather than trusting these to stay accurate. */
+/** 1-5, computed mechanically (not authored by hand) — real game-mechanical magnitude of a fact, steeply bucketed from the actual number involved (NOT linear: a 1-for-1 effect and a 2-for-1 effect are not "close" in power, so the bucketing jumps hard past 1 — magnitude 1 → 1, magnitude 2 → 4-5, magnitude 3+ → 5 — rather than spreading evenly):
+ *  - on a `source` fact: the real number from `trace.json` (tokens/counters/damage/life/cards — whatever the source's own action carries).
+ *  - on a `sink` fact: the fact's own declared `amount` constraint (e.g. "wants 3+ creatures" → 3) — no trace involved, it's a static requirement, not an action. A sink with no numeric constraint (most bare event hooks — "wants lifegain," no minimum) has no magnitude concept and stays unset (`factTotal` treats missing as neutral 1, same as a source with no measurable magnitude).
+ * Previously paired with a second `ease` (rarity) dimension; dropped in favor of `value` alone on both sides — see git history for the retired rationale. A crude stand-in for real weighting (see SYNERGY_DESIGN.md's parked rarity-weighting note) — recompute if the pool changes meaningfully rather than trusting these to stay accurate. Renamed from `strength` (2026-09-05) — collided with d3-force's own unrelated `.strength()` API/graphRenderer.ts's physics terminology; `power` was tried next but collides with `Constraints.power` (a creature's real power stat), so this landed on `value` instead. */
 export type Weight = 1 | 2 | 3 | 4 | 5;
 
 /** `'self'` = the card this synergy.json belongs to; `{token}` = a token, resolved from token-cards/<slug>/definition.ts's own definition the same way. */
@@ -60,20 +60,25 @@ export type Subject = 'self' | { token: string };
 
 /** A persistent object in a zone. */
 export interface ZoneFact extends Constraints {
-  role: 'produces' | 'wants';
+  role: 'source' | 'sink';
+  /** Stable per-card identity — unique among THIS card's own facts only (not pool-wide), author-chosen (e.g. `"exile"`, `"return-enters"`). Required going forward; older cards authored before this field existed won't actually have it on disk despite the type (a plain JSON cast, not runtime-validated) — a caller keying off `id` should still tolerate `undefined` in practice. Lets a caller (the card page's Functional model table, `annotateCardText`'s own hover wiring) key off something stable instead of re-deriving an identity from `role`/`sourceText`/`description`, which breaks the moment two facts share all three. */
+  id: string;
   zone: string;
   controller?: Side;
-  /** Only meaningful on a `produces` fact — "the thing appearing in that zone is THIS." A `wants` fact instead uses the `Constraints` fields above directly to describe what it's looking for. */
+  /** Only meaningful on a `source` fact — "the thing appearing in that zone is THIS." A `sink` fact instead uses the `Constraints` fields above directly to describe what it's looking for. */
   subject?: Subject;
-  ease?: Weight;
-  strength?: Weight;
+  value?: Weight;
   /** A short verbatim (or near-verbatim) snippet of the card's own oracle text this fact was derived from — purely documentary, read by nobody but a human looking at the Functional model table wondering "why does this card want that?" (FIN #16's "wants permanents on your battlefield" was the case that prompted this: unreadable without the source line). Not authored for every card — see progress.json's own textCoverageAudited flag for which cards have it. */
   sourceText?: string;
+  /** The exact substring of `sourceText` that names THIS fact specifically, for `annotateCardText`'s inline card-text view — AI-authored per fact, same as `sourceText` itself, NOT derived by a generic per-event-kind regex (a regex like "draws? a card" can't tell which of several "draw a card" clauses on one card is this fact's own, especially once conditions/exceptions are in play; the author reading the real card text can). Must be a literal substring of `sourceText` — `annotateCardText` verifies this and silently skips the fact (no inline link, still visible in the plain facts table) if it isn't. */
+  highlight?: string;
 }
 
 /** An occurrence. */
 export interface EventFact extends Constraints {
-  role: 'produces' | 'wants';
+  role: 'source' | 'sink';
+  /** See `ZoneFact.id`. */
+  id: string;
   event: string;
   controller?: Side;
   subject?: Subject;
@@ -81,10 +86,13 @@ export interface EventFact extends Constraints {
   target?: 'self' | Constraints;
   /** Free-form event-specific fields a real card's own effect carries (Aerith's own `counterType: '+1/+1'`, e.g.) — not part of the fixed constraint vocabulary, matched by plain equality when both sides declare it. */
   counterType?: string;
-  ease?: Weight;
-  strength?: Weight;
+  /** Documentary only — this event's own trigger/activation is capped to once per turn on the real card (e.g. Elrond's draw-per-activation), but nothing in state.ts/turn.ts enforces that cap yet (see progress.json's knownGaps). Not matched against anything. */
+  oncePerTurn?: boolean;
+  value?: Weight;
   /** See `ZoneFact.sourceText`. */
   sourceText?: string;
+  /** See `ZoneFact.highlight`. */
+  highlight?: string;
 }
 
 /** A fact has either `zone` (a persistent object) or `event` (an occurrence) — never both. The matcher branches on which is present; do not unify them. */
@@ -99,8 +107,8 @@ export function isEventFact(fact: Fact): fact is EventFact {
 
 /** On-disk shape of cards/<slug>/synergy.json — role is implied by which array a fact sits in, so it's omitted from the stored data and reattached on load (see `loadCardFacts` in scripts/find-synergies.mjs and scripts/verify-synergy.mjs). AI-authored, tracked in git, never derived by script — see this file's own header. */
 export interface SynergyFile {
-  produces: Omit<Fact, 'role'>[];
-  wants: Omit<Fact, 'role'>[];
+  source: Omit<Fact, 'role'>[];
+  sink: Omit<Fact, 'role'>[];
 }
 
 // ---------------------------------------------------------------------------
@@ -249,29 +257,28 @@ function hasAnyConstraint(c: Constraints): boolean {
 export interface PoolCard {
   name: string;
   card: CardDefinition;
-  produces: Fact[];
-  wants: Fact[];
+  source: Fact[];
+  sink: Fact[];
 }
 
 export type SelfInteractionKind = 'same-instance' | 'second-copy' | 'second-copy-legendary';
 
-/** `fact.ease * (fact.strength ?? 1)` (1-25) — total connection strength for one side of a match (see `Weight`'s own doc comment). `strength` is neutral (1) on a `wants` fact by design (a want has no magnitude of its own — only `ease`, "how rare is this requirement," carries meaning there); on a `produces` fact missing `strength` it's still treated as 1, not `null` — a real, computed absence would mean the effect has no measurable magnitude at all. `null` only if `ease` itself is missing (a fact predating these fields). */
+/** `fact.value` (1-5) — `compute-weights.mjs` writes an explicit value on EVERY fact it processes, source and sink alike, `1` (neutral) when the fact has no measurable magnitude (a bare event hook, an unquantified want) rather than leaving it unset. So `undefined` here only means "this fact predates the weight fields entirely" (never run through `compute-weights.mjs`) — genuinely unknown, not neutral — and stays `null` rather than being coerced to 1. A caller wanting a match's full two-sided value combines both sides' `factTotal` (see `server/api/graph-links.ts`'s `combinedWeight` — plain product, per-side range 1-5, combined range 1-25). */
 export function factTotal(fact: Fact): number | null {
-  if (!fact.ease) return null;
-  return fact.ease * (fact.strength ?? 1);
+  return fact.value ?? null;
 }
 
 export interface InteractionMatch {
   card: string;
   /** Present only when `card` names THIS SAME card — the pair (A, A), computed and kept like any other match, never dropped (SYNERGY_DESIGN.md "Self-interactions"). */
   selfInteraction?: SelfInteractionKind;
-  /** `factTotal` of the OTHER side's specific fact that satisfied this match (the group's own `fact` is `mine`'s side — see `InteractionGroup`) — a caller wanting this match's full two-sided strength combines both (e.g. `Math.sqrt(mine * theirs)`), not just `mine` alone. `null` if that fact predates the weight fields. */
+  /** `factTotal` of the OTHER side's specific fact that satisfied this match (the group's own `fact` is `mine`'s side — see `InteractionGroup`) — a caller wanting this match's full two-sided value combines both (e.g. `Math.sqrt(mine * theirs)`), not just `mine` alone. `null` if that fact predates the weight fields. */
   theirTotal: number | null;
 }
 
 export interface InteractionGroup {
-  /** Which side of this fact `cardName` is on — `'produces'` means this card provides the thing, `'wants'` means it benefits from it. */
-  direction: 'produces' | 'wants';
+  /** Which side of this fact `cardName` is on — `'source'` means this card provides the thing, `'sink'` means it benefits from it. */
+  direction: 'source' | 'sink';
   fact: Fact;
   /** The set of attributes this fact actually constrains (SYNERGY_DESIGN.md: "Derivable from the fact; no labels in the data layer") — `['zone','controller','types']` for a type-gated zone want, `['event']` for a bare "lifegain" hook, etc. */
   theme: string[];
@@ -300,6 +307,15 @@ function describeSide(side: Side | undefined): string {
   return side === 'you' ? 'your' : side === 'opp' ? "an opponent's" : 'a';
 }
 
+/** Constraint words off any `Constraints`-shaped object — factored out so both a fact's own fields AND an event fact's `target` (a separate constraint holder, not the fact's own filter) can share it. */
+function constraintBits(c: Constraints): string[] {
+  const bits: string[] = [];
+  if (c.types?.has) bits.push(c.types.has.join(' '));
+  if (c.types?.hasAny) bits.push(`(${c.types.hasAny.join('/')})`);
+  if (c.cmc) bits.push(`mana value ${c.cmc.min ?? ''}${c.cmc.max !== undefined ? `-${c.cmc.max}` : ''}${c.cmc.eq !== undefined ? `=${c.cmc.eq}` : ''}`.trim());
+  return bits;
+}
+
 /** Zone-appropriate noun for an unconstrained zone fact — "permanents on your battlefield," not "things on your battlefield." */
 const ZONE_NOUN: Record<string, string> = {
   Battlefield: 'permanents',
@@ -310,23 +326,137 @@ const ZONE_NOUN: Record<string, string> = {
   Stack: 'spells',
 };
 
-/** Human-readable text for a fact — the Interactions panel's own `description` field, parsed straight off the same structured fields the matcher itself reads (no separate hand-written label table to keep in sync). */
+/** Override for the bare "<zone> presence" phrase on an unqualified zone fact — Exile's own default reads as "exile presence" otherwise, which says nothing about where the thing came from; in this pool an Exile fact is always something leaving the battlefield, so name that instead. */
+const ZONE_PRESENCE_PHRASE: Record<string, string> = {
+  Exile: 'exile from battlefield',
+};
+
+/**
+ * Human-readable text for a fact — the Interactions panel's own `description`
+ * field, parsed straight off the same structured fields the matcher itself
+ * reads (no separate hand-written label table to keep in sync).
+ *
+ * Deliberately terse: an unconstrained zone fact reads as plain "<zone>
+ * presence" ("battlefield presence," not "permanents on your battlefield" or
+ * "permanents you control") — 'you' is the default and stays unstated,
+ * 'opp' gets an explicit "opponent's" prefix since that's the notable case.
+ * A `target` constraint (activateAbility's own "target Creature," e.g.) is
+ * deliberately NOT rendered into the text either, even though the data still
+ * carries it — that nuance now lives in `value`'s own hand-authored score
+ * (a conditional want scores lower) rather than cluttering the label.
+ */
 export function describeFact(fact: Fact): string {
-  const constraintBits: string[] = [];
-  if (fact.types?.has) constraintBits.push(fact.types.has.join(' '));
-  if (fact.types?.hasAny) constraintBits.push(`(${fact.types.hasAny.join('/')})`);
-  if (fact.cmc) constraintBits.push(`mana value ${fact.cmc.min ?? ''}${fact.cmc.max !== undefined ? `-${fact.cmc.max}` : ''}${fact.cmc.eq !== undefined ? `=${fact.cmc.eq}` : ''}`.trim());
-  const qualifier = constraintBits.length ? `${constraintBits.join(' ')} ` : '';
+  const bits = constraintBits(fact);
+  const qualifier = bits.length ? `${bits.join(' ')} ` : '';
   if (isZoneFact(fact)) {
+    if (!qualifier) {
+      const presence = ZONE_PRESENCE_PHRASE[fact.zone] ?? `${fact.zone.toLowerCase()} presence`;
+      return fact.controller === 'opp' ? `opponent's ${presence}` : presence;
+    }
     const noun = ZONE_NOUN[fact.zone] ?? 'things';
-    const prep = fact.zone === 'Battlefield' ? 'on' : 'in';
-    return `${qualifier}${qualifier ? '' : `${noun} `}${prep} ${describeSide(fact.controller)} ${fact.zone.toLowerCase()}`;
+    return `${qualifier}${noun} in ${describeSide(fact.controller)} ${fact.zone.toLowerCase()}`;
   }
   const event = fact.event;
   if (event === 'lifegain') return `${describeSide(fact.controller)} life gain`;
   if (event === 'dies') return fact.target === 'self' ? 'dying' : `${describeSide(fact.controller)} creature dying`;
   if (event === 'putCounter') return `${fact.counterType ?? ''} counters${fact.target === 'self' ? ' on itself' : ''}`.trim();
+  if (event === 'drawCard' || event === 'drawCards') return 'card draw';
+  if (event === 'entersBattlefield') return 'enters the battlefield';
+  if (event === 'activateAbility') return 'activate ability';
   return `${qualifier}${event}`;
+}
+
+/** Everything a hover needs about one fact behind a linked phrase — see `AnnotatedText`. */
+export interface AnnotatedFactRef {
+  /** See `ZoneFact.id` — required by the type, but a fact predating per-fact ids won't actually carry one at runtime; a caller matching against this should still tolerate `undefined` and fall back to `role`/`sourceText`/`description`. */
+  id: string;
+  role: 'source' | 'sink';
+  value?: Weight;
+  description: string;
+  sourceText: string;
+}
+
+/**
+ * Wire format for a card's annotated FULL card text — title, mana cost, type
+ * line, then oracle text, same order a real printed card reads (see
+ * `annotateCardText`'s own `cardText` param for how that string gets built)
+ * — with fact-linked phrases marked inline, markdown-link style —
+ * `[phrase](N)` where N indexes into `facts` (`facts[N]`, itself an array
+ * since rare cases put more than one fact behind the same phrase). One
+ * string plus one small array is the whole payload; the client only has to
+ * split on that one marker pattern to render — it never re-derives WHICH
+ * phrase belongs to which fact, that's decided here. Safe against real
+ * oracle text's own parentheses (reminder text, e.g. "(Whenever this
+ * creature...)") because the marker requires an immediately preceding `]`,
+ * which plain prose parens never have.
+ */
+export interface AnnotatedText {
+  text: string;
+  facts: AnnotatedFactRef[][];
+}
+
+/**
+ * Computed once server-side (see server/api/card/[set]/[number].ts, which
+ * builds `cardText` as `"${name}\t${manaCost}\n${typeLine}\n${oracleText}"`)
+ * so the client never re-derives which substring belongs to which fact. Only
+ * ever anchors within the oracle-text portion in practice — a fact's
+ * `sourceText`/`highlight` are quoted from real rules text, never the
+ * title/mana/type lines — but nothing here assumes that; it's a plain
+ * substring search over whatever string it's given.
+ *
+ * Deliberately conservative: a fact only gets a linked phrase when it
+ * declares its own `highlight` (AI-authored, same as `sourceText`) AND that
+ * `highlight` is actually a substring of the fact's own `sourceText` AND
+ * `sourceText` itself appears verbatim in `cardText` — three independent
+ * honesty checks against three independently-fallible things (a typo in
+ * `highlight`; `sourceText` predating a wording fix). Deliberately NOT a
+ * generic per-event-kind regex ("draws? a card," e.g.) — a card can use the
+ * same words for more than one ability under different conditions, and only
+ * the author reading the real card text (not a pattern matched against every
+ * card in the pool) can say which occurrence is THIS fact's own. A fact that
+ * fails any of these just isn't clickable inline — it's still visible in the
+ * plain facts table below, this is additive, not a replacement.
+ */
+export function annotateCardText(cardText: string, facts: Fact[]): AnnotatedText {
+  interface Range {
+    start: number;
+    end: number;
+    facts: Fact[];
+  }
+  const ranges: Range[] = [];
+  for (const f of facts) {
+    if (!f.sourceText || !f.highlight) continue;
+    const sourceIdx = cardText.indexOf(f.sourceText);
+    if (sourceIdx === -1) continue;
+    const highlightIdx = f.sourceText.indexOf(f.highlight);
+    if (highlightIdx === -1) continue;
+    ranges.push({ start: sourceIdx + highlightIdx, end: sourceIdx + highlightIdx + f.highlight.length, facts: [f] });
+  }
+  ranges.sort((a, b) => a.start - b.start || a.end - b.end);
+
+  const accepted: Range[] = [];
+  for (const r of ranges) {
+    const last = accepted[accepted.length - 1];
+    if (last && r.start === last.start && r.end === last.end) {
+      last.facts.push(...r.facts);
+      continue;
+    }
+    if (last && r.start < last.end) continue; // overlapping, ambiguous — keep whichever sorted first
+    accepted.push(r);
+  }
+
+  let text = '';
+  let cursor = 0;
+  const factGroups: AnnotatedFactRef[][] = [];
+  for (const r of accepted) {
+    text += cardText.slice(cursor, r.start);
+    const idx = factGroups.length;
+    factGroups.push(r.facts.map((f) => ({ id: f.id, role: f.role, value: f.value, description: describeFact(f), sourceText: f.sourceText! })));
+    text += `[${cardText.slice(r.start, r.end)}](${idx})`;
+    cursor = r.end;
+  }
+  text += cardText.slice(cursor);
+  return { text, facts: factGroups };
 }
 
 function selfInteractionKind(fact: Fact, card: PoolCard): SelfInteractionKind {
@@ -335,11 +465,11 @@ function selfInteractionKind(fact: Fact, card: PoolCard): SelfInteractionKind {
 }
 
 /** Does producer fact `p` (belonging to `pCard`) satisfy wanter fact `w` (belonging to `wCard`)? Symmetric to how it's invoked — `mine`/`mineRole` decide which side `p`/`w` actually is. Module-level (not nested in `findInteractionsForCard`) so `matchCountForFact` below can reuse the exact same real matching logic rather than a re-derived approximation. */
-function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'produces' | 'wants', theirs: Fact, theirCard: PoolCard, tokens: Record<string, TokenLike>): boolean {
-  const p = mineRole === 'produces' ? mine : theirs;
-  const pCard = mineRole === 'produces' ? mineCard : theirCard;
-  const w = mineRole === 'produces' ? theirs : mine;
-  const wCard = mineRole === 'produces' ? theirCard : mineCard;
+function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sink', theirs: Fact, theirCard: PoolCard, tokens: Record<string, TokenLike>): boolean {
+  const p = mineRole === 'source' ? mine : theirs;
+  const pCard = mineRole === 'source' ? mineCard : theirCard;
+  const w = mineRole === 'source' ? theirs : mine;
+  const wCard = mineRole === 'source' ? theirCard : mineCard;
   if (isZoneFact(p) !== isZoneFact(w)) return false;
   if (!sidesCompatible(effectiveController(p), effectiveController(w))) return false;
 
@@ -373,18 +503,6 @@ function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'produces' | 'w
   return true;
 }
 
-/** Real match count for ONE fact against `pool` — how many (other-card, other-fact) pairs actually satisfy it via the real matcher (`factsInteract`), self-interactions included, UNFILTERED (unlike `findInteractionsForCard`, a fact with zero matches still returns 0 rather than being dropped). This is what `ease` (see `Weight`'s doc comment) is computed from — "how many givers does this fact have," not a string-key shape heuristic. */
-export function matchCountForFact(fact: Fact, factCard: PoolCard, role: 'produces' | 'wants', pool: PoolCard[], tokens: Record<string, TokenLike> = {}): number {
-  let count = 0;
-  for (const other of pool) {
-    const otherFacts = role === 'produces' ? other.wants : other.produces;
-    for (const theirs of otherFacts) {
-      if (factsInteract(fact, factCard, role, theirs, other, tokens)) count++;
-    }
-  }
-  return count;
-}
-
 /** Every interaction `cardName` participates in, across `pool` (every card's own facts, itself included — self-interactions are a real, kept output, not filtered out). `tokens` resolves `{token}` subjects; omit for a card set with no token-producing effects yet. */
 export function findInteractionsForCard(cardName: string, pool: PoolCard[], tokens: Record<string, TokenLike> = {}): InteractionGroup[] {
   const self = pool.find((p) => p.name === cardName);
@@ -392,10 +510,10 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
 
   const groups: InteractionGroup[] = [];
 
-  function matchOne(mine: Fact, mineCard: PoolCard, mineRole: 'produces' | 'wants'): InteractionGroup | null {
+  function matchOne(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sink'): InteractionGroup | null {
     const matches: InteractionMatch[] = [];
     for (const other of pool) {
-      const otherFacts = mineRole === 'produces' ? other.wants : other.produces;
+      const otherFacts = mineRole === 'source' ? other.sink : other.source;
       for (const theirs of otherFacts) {
         if (factsInteract(mine, mineCard, mineRole, theirs, other, tokens)) {
           const isSelf = other.name === mineCard.name;
@@ -407,12 +525,12 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
     return { direction: mineRole, fact: mine, theme: themeOf(mine), description: describeFact(mine), matches };
   }
 
-  for (const fact of self.produces) {
-    const group = matchOne(fact, self, 'produces');
+  for (const fact of self.source) {
+    const group = matchOne(fact, self, 'source');
     if (group) groups.push(group);
   }
-  for (const fact of self.wants) {
-    const group = matchOne(fact, self, 'wants');
+  for (const fact of self.sink) {
+    const group = matchOne(fact, self, 'sink');
     if (group) groups.push(group);
   }
   return groups;

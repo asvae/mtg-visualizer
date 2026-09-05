@@ -1,6 +1,6 @@
 // Whole-pool synergy report — loads every card's own AI-authored, verified
 // cards/<slug>/synergy.json (v2 attribute-bag facts, see SYNERGY_DESIGN.md)
-// and joins produces against wants via synergy.ts's own
+// and joins source facts against sink facts via synergy.ts's own
 // `findInteractionsForCard` (the same matcher a live server route would
 // call for one card at a time — this script just calls it for every card
 // and prints the producer side of each match once, so the whole pool's
@@ -23,7 +23,7 @@ const cardsDir = new URL('../cards/', import.meta.url);
 const slugs = (await readdir(cardsDir, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
 
 function isV2Shaped(synergy) {
-  const all = [...(synergy.produces ?? []), ...(synergy.wants ?? [])];
+  const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
   if (all.length === 0) return false;
   return all.every((f) => 'zone' in f || 'event' in f);
 }
@@ -53,8 +53,8 @@ for (const slug of slugs) {
   pool.push({
     name: card.name,
     card,
-    produces: (synergy.produces ?? []).map((f) => ({ ...f, role: 'produces' })),
-    wants: (synergy.wants ?? []).map((f) => ({ ...f, role: 'wants' })),
+    source: (synergy.source ?? []).map((f) => ({ ...f, role: 'source' })),
+    sink: (synergy.sink ?? []).map((f) => ({ ...f, role: 'sink' })),
   });
 }
 
@@ -73,7 +73,7 @@ let found = 0;
 for (const { name } of pool) {
   const groups = findInteractionsForCard(name, pool, tokens);
   for (const group of groups) {
-    if (group.direction !== 'produces') continue;
+    if (group.direction !== 'source') continue;
     for (const match of group.matches) {
       if (match.card === name && !match.selfInteraction) continue;
       const label = match.card === name ? `${name} (self-interaction: ${match.selfInteraction})` : `${name} --[${group.description}]--> ${match.card}`;

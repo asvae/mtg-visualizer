@@ -1,20 +1,19 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "g_2_2_bird_landfall"
       },
-      "ease": 4,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "landfall",
       "controller": "you",
-      "ease": 5
+      "value": 1
     }
   ]
 }

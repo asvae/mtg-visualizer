@@ -1,32 +1,28 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "ease": 1,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(baseline — front face's own text is \"Whenever you cast a legendary spell, draw a card\" plus Hero's Sundering, both of which only matter while Venat is on the battlefield)"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)"
     },
     {
       "zone": "Exile",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery."
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(baseline — no printed removal/death text on either face; a generic possibility every creature has)"
     },
     {
@@ -40,12 +36,11 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -53,8 +48,8 @@
           "Land"
         ]
       },
-      "ease": 1,
-      "sourceText": "Hero's Sundering — Exile target nonland permanent. (no controller restriction — either side's permanent)"
+      "sourceText": "Hero's Sundering — Exile target nonland permanent. (no controller restriction — either side's permanent)",
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -64,8 +59,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "Blessing of Light — ...another target creature you control..."
+      "sourceText": "Blessing of Light — ...another target creature you control...",
+      "value": 1
     }
   ]
 }

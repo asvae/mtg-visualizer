@@ -1,16 +1,14 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
       "controller": "opp",
-      "ease": 4,
-      "strength": 4
+      "value": 4
     },
     {
       "zone": "Battlefield",
@@ -18,16 +16,14 @@
       "subject": {
         "token": "b_0_1_wizard_snipe"
       },
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": []
+  "sink": []
 }

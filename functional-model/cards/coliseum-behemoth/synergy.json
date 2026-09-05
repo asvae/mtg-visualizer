@@ -1,5 +1,5 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "dies",
       "target": {
@@ -10,11 +10,10 @@
           ]
         }
       },
-      "ease": 4,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -24,7 +23,7 @@
           "Enchantment"
         ]
       },
-      "ease": 3
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -35,7 +34,7 @@
           "Enchantment"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

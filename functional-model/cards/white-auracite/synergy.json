@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Exile",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "When this artifact enters, exile target nonland permanent an opponent controls until this artifact leaves the battlefield."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "opp",
@@ -16,8 +15,8 @@
           "Land"
         ]
       },
-      "ease": 5,
-      "sourceText": "exile target nonland permanent an opponent controls — needs a legal nonland permanent on an opponent's battlefield to target."
+      "sourceText": "exile target nonland permanent an opponent controls — needs a legal nonland permanent on an opponent's battlefield to target.",
+      "value": 1
     }
   ]
 }

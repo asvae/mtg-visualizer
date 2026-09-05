@@ -1,20 +1,18 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(implicit — not a printed clause on this card: any nonland permanent that's destroyed or sacrificed goes to its owner's graveyard, a generic MTG rule this artifact is no exception to.)"
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(implicit — same generic 'any permanent can die' fact as the Graveyard produce above; The Wind Crystal's own printed text has no sacrifice/dies clause at all.)"
     }
   ],
-  "wants": []
+  "sink": []
 }

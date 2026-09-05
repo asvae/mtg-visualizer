@@ -1,25 +1,24 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
-      "ease": 1,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 1
+      "value": 1
     },
     {
       "zone": "Battlefield",
       "controller": "opp",
-      "ease": 5
+      "value": 1
     }
   ]
 }

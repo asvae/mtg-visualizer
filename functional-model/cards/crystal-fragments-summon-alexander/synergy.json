@@ -1,6 +1,6 @@
 {
-  "produces": [],
-  "wants": [
+  "source": [],
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "opp",
@@ -9,8 +9,8 @@
           "Creature"
         ]
       },
-      "ease": 5,
-      "sourceText": "Summon: Alexander III — Tap all creatures your opponents control."
+      "sourceText": "Summon: Alexander III — Tap all creatures your opponents control.",
+      "value": 1
     }
   ]
 }

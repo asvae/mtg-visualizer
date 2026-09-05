@@ -1,18 +1,16 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "ease": 1,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Legendary Creature — Human Cleric. Whenever you gain life, put a +1/+1 counter on each Cleric you control (Minwu is itself a Cleric)."
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 5,
-      "strength": 5,
+      "value": 5,
       "sourceText": "Vigilance, lifelink"
     },
     {
@@ -27,32 +25,29 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control."
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Legendary Creature — Human Cleric (generic creature-dies-to-graveyard fact; no additional death text on this card)."
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Legendary Creature — Human Cleric (generic creature-dies fact; no additional death text on this card)."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 2,
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control."
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -63,8 +58,8 @@
           "Cleric"
         ]
       },
-      "ease": 4,
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control (needs other Clerics to benefit from)."
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control (needs other Clerics to benefit from).",
+      "value": 1
     }
   ]
 }

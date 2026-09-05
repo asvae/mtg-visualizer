@@ -1,19 +1,17 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Flashback {4}{W}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
     },
     {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "You may cast this card from your graveyard for its flashback cost. Then exile it."
     },
     {
@@ -24,8 +22,7 @@
           "Artifact"
         ]
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand."
     },
     {
@@ -36,12 +33,11 @@
           "Artifact"
         ]
       },
-      "ease": 4,
-      "strength": 1,
+      "value": 1,
       "sourceText": "If this spell was cast from a graveyard, put that card onto the battlefield instead."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Library",
       "controller": "you",
@@ -50,8 +46,8 @@
           "Artifact"
         ]
       },
-      "ease": 5,
-      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand."
+      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand.",
+      "value": 1
     }
   ]
 }

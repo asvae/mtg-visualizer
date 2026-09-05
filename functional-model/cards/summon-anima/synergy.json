@@ -1,31 +1,27 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
       "controller": "opp",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "lifeloss",
       "controller": "you",
-      "ease": 5,
-      "strength": 5
+      "value": 5
     },
     {
       "event": "lifeloss",
       "controller": "opp",
-      "ease": 5,
-      "strength": 5
+      "value": 5
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "opp",
@@ -34,7 +30,7 @@
           "Creature"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

@@ -1,17 +1,16 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Hand",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "opp",
-      "ease": 5
+      "value": 1
     }
   ]
 }

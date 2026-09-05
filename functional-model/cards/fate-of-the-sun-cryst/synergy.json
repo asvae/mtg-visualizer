@@ -1,18 +1,16 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1,
+      "value": 1,
       "sourceText": "a sorcery — goes to its owner's graveyard after resolving (rule 608.2m)"
     },
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Destroy target nonland permanent — the destroyed permanent lands in its owner's graveyard, here an opponent's."
     },
     {
@@ -25,12 +23,11 @@
           ]
         }
       },
-      "ease": 4,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Destroy target nonland permanent — fires that permanent's own dies trigger, here an opponent's."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -39,8 +36,8 @@
           "Land"
         ]
       },
-      "ease": 1,
-      "sourceText": "Destroy target nonland permanent, no controller restriction — can target one of YOUR OWN permanents."
+      "sourceText": "Destroy target nonland permanent, no controller restriction — can target one of YOUR OWN permanents.",
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -50,8 +47,8 @@
           "Land"
         ]
       },
-      "ease": 5,
-      "sourceText": "Destroy target nonland permanent, no controller restriction — can equally target an OPPONENT'S permanent."
+      "sourceText": "Destroy target nonland permanent, no controller restriction — can equally target an OPPONENT'S permanent.",
+      "value": 1
     }
   ]
 }

@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 5,
-      "strength": 4
+      "value": 4
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -16,7 +15,7 @@
           "Artifact"
         ]
       },
-      "ease": 3
+      "value": 1
     },
     {
       "zone": "Graveyard",
@@ -26,7 +25,7 @@
           "Land"
         ]
       },
-      "ease": 1
+      "value": 1
     }
   ]
 }

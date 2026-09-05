@@ -35,19 +35,19 @@ Both dissolve when the theme and the constraint are separate attributes.
 
 ## The fact model
 
-A fact is a bag of attributes. `role` is `produces` or `wants`. Everything
+A fact is a bag of attributes. `role` is `source` or `sink`. Everything
 else describes *where/what* and *who*, plus optional constraints.
 
 ```jsonc
 // object in a zone
-{ "role": "produces", "zone": "Battlefield", "controller": "you", "subject": "self" }
-{ "role": "wants",    "zone": "Battlefield", "controller": "you",
+{ "role": "source", "zone": "Battlefield", "controller": "you", "subject": "self" }
+{ "role": "sink",    "zone": "Battlefield", "controller": "you",
   "types": { "has": ["Creature", "Legendary"] } }
 
 // event
-{ "role": "produces", "event": "lifegain",   "controller": "you" }
-{ "role": "wants",    "event": "dies",       "target": "self" }
-{ "role": "produces", "event": "putCounter", "counterType": "+1/+1", "controller": "you",
+{ "role": "source", "event": "lifegain",   "controller": "you" }
+{ "role": "sink",    "event": "dies",       "target": "self" }
+{ "role": "source", "event": "putCounter", "counterType": "+1/+1", "controller": "you",
   "target": { "types": { "has": ["Creature", "Legendary"] } } }
 ```
 
@@ -62,7 +62,7 @@ Rules:
 - **Tokens** point at a definition too: `"subject": { "token": "w_1_1_soldier" }`.
   The matcher resolves types/P/T from `tokens/<slug>/definition.ts` (see
   "Tokens" below).
-- **Constraints** appear on wants, and on produces only where the effect
+- **Constraints** appear on sink facts, and on source facts only where the effect
   is filtered (what it *targets*). Vocabulary is fixed and small:
   - lists (`types`): `has` (all of), `hasAny` (any of), `not`
   - numbers (`cmc`, `power`, `toughness`, `amount`): `min`, `max`, `eq`
@@ -77,7 +77,7 @@ Rules:
 ### Aerith's complete fact set
 
 ```jsonc
-// produces
+// source
 { "zone": "Battlefield", "controller": "you", "subject": "self" }        // enters
 { "zone": "Graveyard",   "controller": "you", "subject": "self" }        // dies
 { "event": "lifegain",   "controller": "you" }                           // lifelink
@@ -85,7 +85,7 @@ Rules:
 { "event": "putCounter", "counterType": "+1/+1", "controller": "you",
   "target": { "types": { "has": ["Creature", "Legendary"] } } }          // dies payoff
 
-// wants
+// sink
 { "event": "lifegain",   "controller": "you" }                           // onLifeGained trigger
 { "event": "dies",       "target": "self" }                              // onDies trigger
 { "event": "putCounter", "counterType": "+1/+1", "target": "self" }      // X = counters on self
@@ -189,8 +189,8 @@ hasSubtype(s: string) {
 
 Cover: `hasType`, `hasSubtype`, `getCounters`, `getCMC`, `isTapped`,
 `getAttachedTo`, `getEquippedBy`, name comparison, and whatever
-`getCardsIn` filters by. Without this, step 5 can only verify produces and
-wants go unchecked. This is the one piece of real work the whole design
+`getCardsIn` filters by. Without this, step 5 can only verify source facts;
+sink facts go unchecked. This is the one piece of real work the whole design
 depends on.
 
 Convention for definition authors: filter via mock methods, not raw string
@@ -213,29 +213,29 @@ putCounter Aerith  +1/+1 2      putCounter Aerith  +1/+1 2
 
 - **Index** on `zone|event` + `controller` (nearly every fact has both).
   Evaluate remaining constraints within the bucket. Keeps it O(bucket)
-  rather than O(produces × wants) at 30k cards.
+  rather than O(source × sink) at 30k cards.
 - **Evaluate constraints** against the *producer card's `CardDefinition`*
   for static attributes (`types`, `cmc`, `name`, `power`, `toughness`) and
-  against the produce fact's own fields for dynamic ones (`counterType`,
+  against the source fact's own fields for dynamic ones (`counterType`,
   `target` filter). A `subject: { token }` resolves static attributes from
   the token's definition the same way `subject: "self"` does from the
   card's.
-- **A want with `target: "self"`** on the consumer side matches a produce
-  whose `target` filter the consumer card satisfies.
+- **A sink fact with `target: "self"`** on the consumer side matches a source
+  fact whose `target` filter the consumer card satisfies.
 - **Self-interactions** are computed as the pair (A, A) like any other,
   then tagged (see below). Never dropped.
-- **Theme** = the set of attributes a want constrains
+- **Theme** = the set of attributes a sink fact constrains
   (`{zone, controller, types}` = type-matters, `{zone, controller, cmc}` =
   mana-value-matters, `{event: lifegain}` = lifegain). Derivable from the
   fact; no labels in the data layer.
 
 ## Weighting (ease / strength) — implemented 2026-09-04
 
-The "rarity weighting" parked below is done. Every `Fact` (produces AND
-wants) carries two mechanically-computed `1|2|3|4|5` fields (`Weight` type,
+The "rarity weighting" parked below is done. Every `Fact` (source AND
+sink) carries two mechanically-computed `1|2|3|4|5` fields (`Weight` type,
 `functional-model/synergy.ts`):
 
-- **`ease`** (produces AND wants) — how many REAL givers/wanters this exact
+- **`ease`** (source AND sink) — how many REAL givers/wanters this exact
   fact has, not a string-key shape guess. `matchCountForFact` (exported from
   synergy.ts, reuses the same `factsInteract` predicate `findInteractionsForCard`
   runs at match time, hoisted to module scope so both can share it) counts
@@ -246,26 +246,35 @@ wants) carries two mechanically-computed `1|2|3|4|5` fields (`Weight` type,
   axis that tells "Creature on your battlefield" (specific) apart from
   "permanents on your battlefield" (broad) even though both are the same
   `zone:Battlefield` shape.
-- **`strength`** (produces only — a want has no magnitude of its own) — real
+- **`strength`** (source only — a sink fact has no magnitude of its own) — real
   game-mechanical magnitude of the effect, read off `trace.json`'s own log
   entries (`createToken.qty`, `putCounter.amount`, `dealDamage.amount`,
   `gainLife`/`loseLife.amount`, simultaneous `destroy`/`sacrifice` count for
-  a `dies` produce) and bucketed STEEPLY, not linearly: magnitude 1 → 1,
+  a `dies` source) and bucketed STEEPLY, not linearly: magnitude 1 → 1,
   magnitude 2 → 4, magnitude 3+ → 5. A 2-for-1 effect and a 1-for-1 effect
   are not "close" in power level and the scale says so.
 - **`factTotal(fact) = ease * (strength ?? 1)`**, range 1-25 (exported
   helper, also used by `InteractionMatch.theirTotal`). `strength` defaults
   to neutral (1) rather than penalizing a fact that genuinely has no
-  magnitude concept (a want, or a produce like `grantKeyword`).
+  magnitude concept (a sink fact, or a source like `grantKeyword`).
 - Recomputed for the whole pool via `functional-model/scripts/compute-weights.mjs`
   (`npx vite-node functional-model/scripts/compute-weights.mjs`) — rerun
   this if the pool changes meaningfully rather than trusting stale numbers.
 - A separate, purely documentary `sourceText?: string` field also lives on
   every fact — a short quote from the card's own printed oracle text
-  explaining what real ability the fact came from (a produce/want pair with
+  explaining what real ability the fact came from (a source/sink pair with
   no visible connection to the card text, like Dion/Bahamut's "wants
   permanents on your battlefield," is otherwise unreadable on the card
   page). Backfilled for FIN #1-50 so far, not the whole set.
+- An optional `highlight?: string` field can also live on a fact — the exact
+  substring of that fact's own `sourceText` that names it, AI-authored (not
+  derived by a generic regex: the same words, "draw a card," e.g., can appear
+  more than once on one card under different conditions, so only the author
+  reading the real text can say which occurrence is this fact's own).
+  `functional-model/synergy.ts`'s `annotateCardText` uses it to turn the
+  card page's real oracle text into an inline-linked view (see
+  `app/components/FunctionalModelText.vue`) — a fact with no `highlight` just
+  isn't clickable there, still visible in the plain facts table.
 - **Known gap, not fixed here:** both live call sites
   (`server/api/graph-links.ts`, `server/api/card/[set]/[number].ts`) call
   `findInteractionsForCard(name, pool)` with no `tokens` argument, so a
@@ -306,12 +315,12 @@ export const treasure: TokenDefinition = {
   normalizes those to the matching slug, creating the token definition if
   it does not exist yet. The `tokens/` folder grows on demand; do not
   bulk-import Forge's token list.
-- A card's `createToken` effect names the slug; its produce fact is
+- A card's `createToken` effect names the slug; its source fact is
   `{ "zone": "Battlefield", "controller": "you", "subject": { "token": "<slug>" } }`.
 - **No inheritance rule.** A card that makes Treasures does NOT
-  automatically acquire the Treasure's mana produce. If the card's
+  automatically acquire the Treasure's mana source fact. If the card's
   scenario taps/sacrifices the token, the trace shows the mana and the AI
-  declares that produce on the card like any other; otherwise the card's
+  declares that source fact on the card like any other; otherwise the card's
   facts say only that it produces a Treasure, and the Treasure's own facts
   live in `tokens/c_a_treasure_sac/synergy.json`. Card → token → token's
   effect is the multi-hop case (parked); token `synergy.json` files are
@@ -322,12 +331,12 @@ export const treasure: TokenDefinition = {
 The pair (A, A) is computed like any other and kept in the output, tagged
 with which of three cases it is. The visualizer distinguishes them.
 
-1. **Same instance.** A `target: "self"` want met by the card's own
-   `target: "self"` produce. Aerith's lifelink feeds her own lifegain
+1. **Same instance.** A `target: "self"` sink fact met by the card's own
+   `target: "self"` source fact. Aerith's lifelink feeds her own lifegain
    trigger; that trigger puts the counters her dies trigger reads. A
    self-contained engine.
-2. **Second copy on the battlefield.** A `zone` want met by the card's own
-   `subject: "self"` produce. Straightforward for non-legendaries (two
+2. **Second copy on the battlefield.** A `zone` sink fact met by the card's own
+   `subject: "self"` source fact. Straightforward for non-legendaries (two
    copies of a tribal lord).
 3. **Second copy, legendary.** The legend rule puts one copy in the
    graveyard — which *is* dying. Second Aerith → legend rule → the copy
@@ -336,8 +345,8 @@ with which of three cases it is. The visualizer distinguishes them.
 
 Tagging rule: `target: self ↔ target: self` = same instance; anything else
 = second copy; if the card is Legendary, a second-copy match also carries
-the legend-rule note, and the legend rule itself counts as a produce for a
-`{ event: "dies", target: "self" }` want.
+the legend-rule note, and the legend rule itself counts as a source for a
+`{ event: "dies", target: "self" }` sink.
 
 ## Deliberately parked (all sit on top of this, none change it)
 
@@ -345,7 +354,7 @@ the legend-rule note, and the legend rule itself counts as a produce for a
   `repeatable`, `amount` remain unimplemented. Key-rarity (IDF-style)
   weighting is DONE — see "Weighting (ease / strength)" above.
 - **Multi-hop chains.** Still single-hop. Depends on weighting first.
-- **`drawCard` facts.** Likely produce-only; useful only once weighted.
+- ~~`drawCard` facts.~~ DONE (2026-09-05, Elrond, Moon-Reader) — `event: 'drawCard'` is a real, verified source fact now (verify-synergy.mjs's `producedEvent`), same as lifegain/lifeloss.
 - **Set-level output / archetypes.** Enabler/payoff/engine classification
   by degree; community detection on the card projection → archetypes
   emerge as clusters, labelled by hand afterwards. Fits the no-judgment
@@ -363,7 +372,7 @@ the legend-rule note, and the legend rule itself counts as a produce for a
 - `synergy-manual.ts` / `computedWants` / `check()` — no card needs it
   under the attribute model. Escape hatch remains possible (`check.ts` per
   card) but is not part of the design.
-- `staticFactsFor(card)` — its job (disproving trace-derived false wants)
+- `staticFactsFor(card)` — its job (disproving trace-derived false sink facts)
   is subsumed by AI-authored facts plus verification.
 - Additive typed keys (`zone:Graveyard:Creature:you` alongside
   `zone:Graveyard:you`) — types are now attributes resolved from the
@@ -438,7 +447,7 @@ history / PR this file ships with for the concrete diff.
   doesn't recognize yet.
 
 - **294 of 298 cards in the pool remain on the OLD string-key
-  `synergy.json` shape** (or an empty `{produces:[],wants:[]}` a since-
+  `synergy.json` shape** (or an empty `{source:[],sink:[]}` a since-
   deleted `derive-synergy.mjs` run left behind) — the 16 above are a
   working proof of the pipeline, not a completed migration. Both
   `verify-synergy.mjs` and `find-synergies.mjs` detect the old shape (or an

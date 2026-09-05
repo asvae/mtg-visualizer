@@ -1,18 +1,16 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -20,9 +18,8 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "ease": 2,
-      "strength": 5
+      "value": 5
     }
   ],
-  "wants": []
+  "sink": []
 }

@@ -2,6 +2,7 @@ import type { CardDefinition, EffectContext, Actions } from './card';
 import { resolveCard } from './card';
 import type { Card, Player, ZoneType } from './interfaces';
 import { GameState, wrapPlayer, wrapCard, effectiveTypes, effectivePT, type RealCard, type RealPlayer } from './state';
+import { PHASES, currentPhase, advancePhase, type Phase } from './turn';
 
 /**
  * One card's own test scenario — plain data describing a board state to run
@@ -74,6 +75,19 @@ export interface Scenario {
    * a no-op otherwise.
    */
   duplicateLegendaryEnters?: boolean;
+  /**
+   * Advances `turn.ts`'s real phase sequence, starting from Main1 (this
+   * harness's own implicit baseline phase — see `setupNote`'s doc comment),
+   * forward through each phase up to and including this one, AFTER the main
+   * effect above has resolved — draining any `actions.delayUntil` entries it
+   * scheduled along the way (Elrond, Moon-Reader's own "return ... at the
+   * beginning of the next end step," e.g.), so a delayed effect's real
+   * timing is genuinely demonstrated in the trace rather than assumed. Omit
+   * for a scenario with no delayed trigger to prove out (the common case) —
+   * advancing needlessly would spuriously log intervening phase entries for
+   * nothing.
+   */
+  advanceToPhase?: Phase;
   you?: PlayerState;
   opponents?: PlayerState[];
 }
@@ -94,6 +108,11 @@ export interface PlayerState {
   creaturePower?: number;
   /** Artifact library cards specifically, INCLUDED in `libraryCount` (same "included, not additional" convention `nontokenCreaturesCount` already uses against `creaturesCount`) — Ashe's own `dig(validType:'artifact')` and Cloud, Midgar Mercenary's own artifact search need a real typed candidate to find. */
   libraryArtifactCount?: number;
+  /** Land library cards specifically, INCLUDED in `libraryCount` (same convention as `libraryArtifactCount` above) — Silvan Rally's own "put up to two LAND cards from among them into hand" and Elven Passage's own basic-land search need a real land candidate to find. */
+  libraryLandCount?: number;
+  /** Creature library cards of one specific subtype, INCLUDED in `libraryCount` (same convention as `libraryArtifactCount`/`libraryLandCount` above) — Cantankerous Keepers' own "put all Elf cards from among them into hand" needs a real Elf-typed candidate among milled cards. Paired fields (not a bare count) since, unlike Artifact/Land, the subtype varies per card. */
+  librarySubtypeCount?: number;
+  librarySubtype?: string;
   /** Equipment cards on the battlefield specifically, INCLUDED in `artifactsCount` (same convention) — Adelbert Steiner's own live-recalculated `ptFormula` (state.ts's own real layer-7a CDA) needs real Equipment permanents on the controller's battlefield to count. */
   equipmentCount?: number;
 }
@@ -144,9 +163,11 @@ function describePlayerState(ps: PlayerState | undefined, whose: string): string
   if (ps.enchantmentsCount) parts.push(`${whose} ${ps.enchantmentsCount} enchantment(s)`);
   if (ps.handCount) parts.push(`${whose} ${ps.handCount} card(s) in hand`);
   if (ps.graveyardCreatureCount) parts.push(`${whose} ${ps.graveyardCreatureCount} creature card(s) in graveyard`);
-  const plainLibrary = (ps.libraryCount ?? 0) - (ps.libraryArtifactCount ?? 0);
+  const plainLibrary = (ps.libraryCount ?? 0) - (ps.libraryArtifactCount ?? 0) - (ps.libraryLandCount ?? 0) - (ps.librarySubtypeCount ?? 0);
   if (plainLibrary > 0) parts.push(`${whose} ${plainLibrary} card(s) in library`);
   if (ps.libraryArtifactCount) parts.push(`${whose} ${ps.libraryArtifactCount} artifact(s) in library`);
+  if (ps.libraryLandCount) parts.push(`${whose} ${ps.libraryLandCount} land(s) in library`);
+  if (ps.librarySubtypeCount) parts.push(`${whose} ${ps.librarySubtypeCount} ${ps.librarySubtype ?? 'subtype'}(s) in library`);
   return parts;
 }
 
@@ -245,7 +266,19 @@ function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState = {}): 
   for (let i = 0; i < libraryArtifacts; i++) {
     state.addCard(real, 'Library', { name: `${n}-library-artifact-${i}`, types: ['Artifact'] });
   }
-  const libraryPlain = Math.max(0, (ps.libraryCount ?? 0) - libraryArtifacts);
+  const libraryLands = ps.libraryLandCount ?? 0;
+  for (let i = 0; i < libraryLands; i++) {
+    state.addCard(real, 'Library', { name: `${n}-library-land-${i}`, types: ['Land'] });
+  }
+  const librarySubtyped = ps.librarySubtypeCount ?? 0;
+  for (let i = 0; i < librarySubtyped; i++) {
+    state.addCard(real, 'Library', {
+      name: `${n}-library-${ps.librarySubtype ?? 'subtype'}-${i}`,
+      types: ['Creature'],
+      subtypes: ps.librarySubtype ? [ps.librarySubtype] : [],
+    });
+  }
+  const libraryPlain = Math.max(0, (ps.libraryCount ?? 0) - libraryArtifacts - libraryLands - librarySubtyped);
   for (let i = 0; i < libraryPlain; i++) {
     state.addCard(real, 'Library', { name: `${n}-library-${i}`, types: [] });
   }
@@ -574,6 +607,10 @@ function loggingActions(state: GameState, log: LogEntry[], selfId: number): Acti
       log.push({ fn: 'dig', player: player.getName(), qty, take, validType, found: found.length });
       return found.map((c) => loggingCard(state, c, log));
     },
+    delayUntil: (phase, run) => {
+      state.scheduleDelayedTrigger(phase, run);
+      log.push({ fn: 'delayUntil', phase });
+    },
   };
 }
 
@@ -679,6 +716,20 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
   const actions = loggingActions(state, log, selfReal.id);
   resolveCard(effectiveCard, ctx, actions, scenario.trigger, scenario.ability);
   log.push(...lifecycleAfter(effectiveCard, scenario, instanceId, state, selfReal));
+  // Real phase advancement, only when a scenario actually needs to prove a
+  // delayed trigger's timing (see `Scenario.advanceToPhase`'s own doc
+  // comment) — starts from Main1 (this harness's own implicit baseline
+  // phase), not turn.ts's own `startGame()` (Untap/turn 1), so advancing
+  // doesn't spuriously fire Untap/Draw's real automatic actions for a
+  // scenario that was never "at the start of a turn" to begin with.
+  if (scenario.advanceToPhase) {
+    const players = [you, ...opponents];
+    let turn = { turnNumber: 1, activePlayerIndex: 0, phaseIndex: PHASES.indexOf('Main1') };
+    while (currentPhase(turn) !== scenario.advanceToPhase) {
+      turn = advancePhase(state, turn, players);
+      log.push({ fn: 'phase', phase: currentPhase(turn) });
+    }
+  }
   // Combat damage happens while a creature is ALREADY on the battlefield —
   // long after casting/entering, which is exactly what `lifecycleAfter`
   // above just resolved — so this synthetic probe (see `Scenario

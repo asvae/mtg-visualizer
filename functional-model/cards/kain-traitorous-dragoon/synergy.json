@@ -1,10 +1,9 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "lifeloss",
       "controller": "you",
-      "ease": 5,
-      "strength": 5
+      "value": 5
     },
     {
       "zone": "Battlefield",
@@ -12,9 +11,8 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "ease": 2,
-      "strength": 5
+      "value": 5
     }
   ],
-  "wants": []
+  "sink": []
 }

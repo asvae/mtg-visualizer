@@ -1,14 +1,13 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "b_0_1_wizard_snipe"
       },
-      "ease": 4,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": []
+  "sink": []
 }

@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
-      "ease": 1,
-      "strength": 5,
+      "value": 5,
       "sourceText": "Take the Elevator — Create three 1/1 colorless Hero creature tokens."
     },
     {
@@ -20,20 +19,18 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them."
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1,
+      "value": 1,
       "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)"
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -41,8 +38,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them."
+      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them.",
+      "value": 1
     }
   ]
 }

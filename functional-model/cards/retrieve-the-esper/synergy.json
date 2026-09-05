@@ -1,32 +1,28 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "controller": "you",
-      "ease": 5,
-      "strength": 4
+      "value": 4
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": []
+  "sink": []
 }

@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "w_2_2_knight"
       },
-      "ease": 1,
-      "strength": 5,
+      "value": 5,
       "sourceText": "I, II, III, IV — Create three 2/2 white Knight creature tokens."
     },
     {
@@ -21,12 +20,11 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -35,8 +33,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn."
+      "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn.",
+      "value": 1
     }
   ]
 }

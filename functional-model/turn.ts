@@ -78,6 +78,16 @@ function runPhaseEntryAction(state: GameState, turn: TurnState, players: RealPla
   } else if (phase === 'Draw') {
     if (!shouldSkipDraw(turn, players.length)) state.drawCards(active, 1);
   }
+  // Real 603.4 delayed-trigger firing: whatever was scheduled for THIS phase
+  // (`state.scheduleDelayedTrigger`, see state.ts) fires now, once, then is
+  // gone — not a repeating hook re-armed every time this phase is reached
+  // again (a later turn's own Cleanup, e.g. runs whatever's due THEN, not
+  // this same entry again).
+  const due = state.delayedTriggers.filter((t) => t.phase === phase);
+  if (due.length) {
+    state.delayedTriggers = state.delayedTriggers.filter((t) => t.phase !== phase);
+    for (const t of due) t.run();
+  }
 }
 
 /**

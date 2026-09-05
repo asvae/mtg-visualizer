@@ -24,6 +24,10 @@
 
 import type { Card, Player, TokenInfo, ZoneType } from './interfaces';
 import { LayerSet, nextLayerTimestamp } from './layers';
+// Type-only — turn.ts itself imports GameState/RealPlayer from this file
+// (also type-only), so this is a type-level-only cycle: TS erases both sides
+// before anything runs, no runtime circular dependency.
+import type { Phase } from './turn';
 
 let nextObjectId = 1;
 
@@ -131,9 +135,21 @@ function zoneArray(player: RealPlayer, zone: ZoneType): RealCard[] | undefined {
   }
 }
 
+/** A real MTG delayed trigger (703.4) — "return those cards to the battlefield ... at the beginning of the next end step" (Elrond, Moon-Reader's own activation, e.g.): the effect is fixed at resolution time, but doesn't actually RUN until the game later reaches `phase`. `turn.ts`'s `advancePhase` drains due entries as it enters each new phase. */
+export interface DelayedTrigger {
+  phase: Phase;
+  run: () => void;
+}
+
 export class GameState {
   players = new Map<number, RealPlayer>();
   cards = new Map<number, RealCard>();
+  delayedTriggers: DelayedTrigger[] = [];
+
+  /** Schedules `run` to fire the next time the game enters `phase` (see `DelayedTrigger` above) — real 603.7 duration only, not a repeating/every-turn trigger: fires once, then this entry is gone (drained by `turn.ts`'s `advancePhase`). */
+  scheduleDelayedTrigger(phase: Phase, run: () => void): void {
+    this.delayedTriggers.push({ phase, run });
+  }
 
   addPlayer(name: string): RealPlayer {
     const player: RealPlayer = { id: nextObjectId++, name, life: 20, hand: [], library: [], graveyard: [], battlefield: [], exile: [] };

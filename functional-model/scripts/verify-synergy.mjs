@@ -13,12 +13,14 @@
 //     trace evidence at all; an AGGREGATE read (read:getCardsIn/
 //     getCreaturesInPlay/getLandsInPlay) with no matching declared want.
 //   - SOFT notes (printed, don't fail the run): a produce-relevant ACTION
-//     (surveil/animate/equip/tap/dig/gainControl/drawCard/dealDamage/...)
-//     with no matching declared produce. Several of these are explicitly
-//     PARKED by SYNERGY_DESIGN.md (drawCard, ranking-only facts) or are
-//     mechanical/non-resource actions with no fact vocabulary yet — flagging
-//     them as fatal would make every real card fail for facts the design
-//     doc itself says not to build yet. Low-level per-object predicate reads
+//     (surveil/animate/equip/tap/dig/gainControl/dealDamage/...) with no
+//     matching declared produce. `drawCard`/`drawCards` were promoted off
+//     this parked list 2026-09-05 (Elrond, Moon-Reader's own real "draw a
+//     card" trigger) — a real, checkable `event: 'drawCard'` produce now,
+//     same as gainLife/lifegain. The rest are mechanical/non-resource
+//     actions with no fact vocabulary yet — flagging them as fatal would
+//     make every real card fail for facts the design doc itself says not
+//     to build yet. Low-level per-object predicate reads
 //     (read:hasSubtype/isCreature/isLand/isArtifact/isEnchantment/isTapped/
 //     getCMC/getCounters/getNetPower/getNetToughness/getAttachedTo/
 //     getEquippedBy) are treated as SUPPORTING evidence for whichever
@@ -45,7 +47,7 @@ const requested = process.argv.slice(2);
 const slugs = requested.length ? requested : (await readdir(cardsDir, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
 
 /**
- * `{produces:[],wants:[]}` is valid under EITHER schema — most of the pool
+ * `{source:[],sink:[]}` is valid under EITHER schema — most of the pool
  * is still old-model files the now-deleted derive-synergy.mjs happened to
  * derive zero facts for, not real v2 authorship — so an all-empty file is
  * always reported as "not yet authored," never silently treated as a
@@ -53,7 +55,7 @@ const slugs = requested.length ? requested : (await readdir(cardsDir, { withFile
  * written this card's facts yet" gap into a passing check).
  */
 function isV2Shaped(synergy) {
-  const all = [...(synergy.produces ?? []), ...(synergy.wants ?? [])];
+  const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
   if (all.length === 0) return false;
   return all.every((f) => 'zone' in f || 'event' in f);
 }
@@ -87,7 +89,7 @@ function producedZone(entry, cardName) {
 // `sacrifice`/`destroy`/`legendRule` produce BOTH a zone fact (Graveyard —
 // see producedZone above) and an event fact (`dies`) — the same underlying
 // action described two ways, exactly like SYNERGY_DESIGN.md's own "legend
-// rule ... counts as a produce for a {event:'dies', target:'self'} want."
+// rule ... counts as a source for a {event:'dies', target:'self'} sink."
 function producedEvent(entry, cardName) {
   switch (entry.fn) {
     case 'gainLife':
@@ -106,6 +108,21 @@ function producedEvent(entry, cardName) {
       return { event: 'dies', side: sideOfName(entry.target, cardName) };
     case 'legendRule':
       return { event: 'dies', side: 'you' };
+    case 'drawCard':
+    case 'drawCards':
+      // Promoted off SYNERGY_DESIGN.md's own "parked" list (2026-09-05,
+      // Elrond, Moon-Reader's own real "draw a card" trigger) — a real,
+      // checkable produce now, not just a soft note.
+      return { event: 'drawCard', side: entry.player === 'you' ? 'you' : 'opp' };
+    case 'moveTo':
+      // A real MTG rule, not card-specific: landing on the battlefield always
+      // triggers "enters" replacement/triggered abilities (any other zone
+      // doesn't) — added for Elrond, Moon-Reader's own exile-then-return
+      // activation (2026-09-05), a real blink effect other cards' own
+      // `entersBattlefield` sink facts (loporrit-scout, woodland-weavemaster)
+      // can now match against, but the case applies pool-wide to any card whose
+      // effect moves something onto the battlefield.
+      return entry.zone === 'Battlefield' ? { event: 'entersBattlefield', side: sideOfName(entry.target, cardName) } : null;
     default:
       return null;
   }
@@ -128,9 +145,15 @@ function sideOfName(name, cardName) {
 // drawCard; surveil/animate/equip/tap/untap/dig/gainControl/copyPermanent/
 // destroyPrevented have no fact vocabulary defined by the design at all) —
 // unexplained occurrences of these are noted, never a hard failure.
-const PARKED_ACTION_FNS = new Set(['drawCard', 'drawCards', 'surveil', 'animate', 'equip', 'tap', 'untap', 'dig', 'gainControl', 'copyPermanent', 'destroyPrevented', 'pump']);
+const PARKED_ACTION_FNS = new Set(['surveil', 'animate', 'equip', 'tap', 'untap', 'dig', 'gainControl', 'copyPermanent', 'destroyPrevented', 'pump']);
 // fn's that are pure lifecycle/mechanics, never produce-relevant at all.
-const IGNORED_FNS = new Set(['cast', 'trigger', 'activate']);
+// `phase`/`delayUntil` added for turn.ts's real phase-advancement/delayed-
+// trigger scheduling (2026-09-05, Elrond, Moon-Reader's own "return at the
+// beginning of the next end step") — the actual EFFECT a delayed trigger
+// runs (Elrond's own `moveTo`, e.g.) still logs and still needs a produce,
+// same as any other action; only the scheduling/phase bookkeeping itself is
+// ignored here.
+const IGNORED_FNS = new Set(['cast', 'trigger', 'activate', 'phase', 'delayUntil']);
 
 // Per-object predicate reads — corroborating evidence for a TYPE/CMC/etc.
 // constraint on some want/produce's target, never independently gated (see
@@ -180,6 +203,18 @@ const TRIGGER_EVENT_MAP = {
   // event name 1:1 (`onGraveyardCardsLeave` vs. `graveyardLeaves`) — this
   // map's job is exactly that translation, not a naming convention.
   onGraveyardCardsLeave: 'graveyardLeaves',
+  // Elrond, Moon-Reader's own real "Whenever you activate an ability of a
+  // creature, draw a card" — new event name, first card that needs it.
+  onActivateCreatureAbility: 'activateAbility',
+  // Woodland Weavemaster's own real "Whenever ANOTHER ELF you control
+  // enters" — same underlying event as onOtherCreatureEnters, just
+  // subtype-filtered (the filter lives on the fact's own `types`, not the
+  // trigger name).
+  onOtherElfEnters: 'entersBattlefield',
+  // Champions of the Perfect's own real "Whenever you cast a creature
+  // spell, draw a card" — same naming convention onCastNoncreatureSpell
+  // (shantotto-tactician-magician) already establishes for a cast trigger.
+  onCastCreatureSpell: 'castCreatureSpell',
 };
 // Triggers whose very existence already implies the card left the
 // battlefield — the harness deliberately does NOT log a real zone-change
@@ -211,14 +246,14 @@ async function verifyCard(slug) {
   const allEntries = traces.flatMap((t) => t.log);
   const triggerNames = new Set(allEntries.filter((e) => e.fn === 'trigger').map((e) => e.name));
 
-  const produces = synergy.produces ?? [];
-  const wants = synergy.wants ?? [];
+  const source = synergy.source ?? [];
+  const sink = synergy.sink ?? [];
 
   const failures = [];
   const notes = [];
 
   // --- Forward: every declared PRODUCE needs supporting trace evidence ---
-  for (const p of produces) {
+  for (const p of source) {
     if ('zone' in p) {
       if (p.zone === 'Graveyard' && p.subject === 'self' && [...triggerNames].some((n) => DEATH_TRIGGER_NAMES.has(n))) continue; // see DEATH_TRIGGER_NAMES
       const evidence = allEntries.some((e) => {
@@ -236,7 +271,7 @@ async function verifyCard(slug) {
   }
 
   // --- Forward: every declared WANT needs supporting trace evidence ---
-  for (const w of wants) {
+  for (const w of sink) {
     if ('zone' in w) {
       const hasAggregateRead = allEntries.some((e) => aggregateReadZone(e) === w.zone);
       const hasTypedRead = allEntries.some((e) => LOW_LEVEL_READ_FNS.has(e.fn));
@@ -259,11 +294,11 @@ async function verifyCard(slug) {
   for (const e of allEntries) {
     const zone = aggregateReadZone(e);
     if (!zone) continue;
-    if (!wants.some((w) => 'zone' in w && wantMatchesZoneRead(w, zone))) failures.push(`trace has ${e.fn} on zone ${zone} with no matching declared want`);
+    if (!sink.some((w) => 'zone' in w && wantMatchesZoneRead(w, zone))) failures.push(`trace has ${e.fn} on zone ${zone} with no matching declared want`);
   }
 
   // --- Reverse: every produce-relevant ACTION must be explained (soft) ---
-  const explainableFns = new Set(['enters', 'move', 'moveTo', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword']);
+  const explainableFns = new Set(['enters', 'move', 'moveTo', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards']);
   for (const e of allEntries) {
     if (IGNORED_FNS.has(e.fn) || e.fn.startsWith('read:')) continue;
     if (!explainableFns.has(e.fn)) {
@@ -272,8 +307,8 @@ async function verifyCard(slug) {
     }
     const z = producedZone(e, cardName);
     const ev = producedEvent(e, cardName);
-    const zoneOk = z && produces.some((p) => 'zone' in p && p.zone === z.zone && (!p.controller || p.controller === z.side));
-    const eventOk = ev && produces.some((p) => 'event' in p && p.event === ev.event);
+    const zoneOk = z && source.some((p) => 'zone' in p && p.zone === z.zone && (!p.controller || p.controller === z.side));
+    const eventOk = ev && source.some((p) => 'event' in p && p.event === ev.event);
     if (!zoneOk && !eventOk) notes.push(`trace has ${e.fn} (${JSON.stringify(e)}) with no matching declared produce`);
   }
 

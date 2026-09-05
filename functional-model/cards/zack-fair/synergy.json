@@ -1,11 +1,10 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "ease": 5,
-      "strength": 4,
+      "value": 4,
       "sourceText": "Zack Fair enters with a +1/+1 counter on it."
     },
     {
@@ -19,20 +18,18 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 4,
+      "value": 4,
       "sourceText": "Put Zack Fair's counters on that creature."
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1,
+      "value": 1,
       "sourceText": "{1}, Sacrifice Zack Fair: ..."
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -41,15 +38,15 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "Target creature you control gains indestructible until end of turn."
+      "sourceText": "Target creature you control gains indestructible until end of turn.",
+      "value": 1
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "ease": 3,
-      "sourceText": "Put Zack Fair's counters on that creature — depends on Zack Fair already carrying +1/+1 counters from its own 'enters with a +1/+1 counter' ETB."
+      "sourceText": "Put Zack Fair's counters on that creature — depends on Zack Fair already carrying +1/+1 counters from its own 'enters with a +1/+1 counter' ETB.",
+      "value": 1
     }
   ]
 }

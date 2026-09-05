@@ -1,17 +1,15 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
-      "ease": 4,
-      "strength": 4
+      "value": 4
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -20,7 +18,7 @@
           "Enchantment"
         ]
       },
-      "ease": 3
+      "value": 1
     }
   ]
 }

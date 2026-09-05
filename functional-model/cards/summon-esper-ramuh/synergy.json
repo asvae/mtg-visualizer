@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "damage",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Graveyard",
       "controller": "you",
@@ -17,12 +16,12 @@
           "Land"
         ]
       },
-      "ease": 2
+      "value": 1
     },
     {
       "zone": "Battlefield",
       "controller": "opp",
-      "ease": 5
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -33,7 +32,7 @@
           "Wizard"
         ]
       },
-      "ease": 3
+      "value": 1
     }
   ]
 }

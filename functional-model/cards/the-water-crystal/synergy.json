@@ -1,24 +1,22 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Hand",
       "controller": "you",
-      "ease": 3
+      "value": 1
     }
   ]
 }

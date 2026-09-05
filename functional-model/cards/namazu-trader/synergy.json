@@ -1,10 +1,9 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "lifeloss",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -12,17 +11,15 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "ease": 2,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -32,7 +29,7 @@
           "Artifact"
         ]
       },
-      "ease": 1
+      "value": 1
     }
   ]
 }

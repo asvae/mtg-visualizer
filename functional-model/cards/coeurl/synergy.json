@@ -1,6 +1,6 @@
 {
-  "produces": [],
-  "wants": [
+  "source": [],
+  "sink": [
     {
       "zone": "Battlefield",
       "types": {
@@ -8,8 +8,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature."
+      "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature.",
+      "value": 1
     }
   ]
 }

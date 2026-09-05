@@ -1,31 +1,28 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "putCounter",
       "counterType": "CHARGE",
       "target": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 2
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -35,7 +32,7 @@
           "Creature"
         ]
       },
-      "ease": 2
+      "value": 1
     }
   ]
 }

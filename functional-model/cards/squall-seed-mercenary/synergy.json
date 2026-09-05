@@ -1,44 +1,39 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "ease": 1,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "grantKeyword",
       "keyword": "DoubleStrike",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 4,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "dies",
       "target": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
-      "ease": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
@@ -46,7 +41,7 @@
       "cmc": {
         "max": 3
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

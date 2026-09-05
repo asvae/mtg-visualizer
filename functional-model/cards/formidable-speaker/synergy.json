@@ -1,0 +1,40 @@
+{
+  "source": [
+    {
+      "zone": "Hand",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "sourceText": "When this creature enters, you may discard a card. If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.",
+      "value": 1
+    }
+  ],
+  "sink": [
+    {
+      "zone": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "sourceText": "Search your library for a creature card (needs a creature card in library to find).",
+      "value": 1
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "sourceText": "{1}, {T}: Untap another target permanent (unrestricted — can target your own other permanents).",
+      "value": 1
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "opp",
+      "sourceText": "{1}, {T}: Untap another target permanent (unrestricted — can equally target an opponent's permanent).",
+      "value": 1
+    }
+  ]
+}

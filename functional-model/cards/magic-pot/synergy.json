@@ -1,11 +1,10 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 2,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -13,26 +12,24 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "ease": 2,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Exile",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "dies",
       "target": "self",
-      "ease": 3
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "ease": 1
+      "value": 1
     }
   ]
 }

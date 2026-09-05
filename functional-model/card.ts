@@ -76,6 +76,7 @@ import {
   dig as realDig,
   grantKeyword as realGrantKeyword,
   copyPermanent as realCopyPermanent,
+  delayUntil as realDelayUntil,
 } from './interfaces';
 
 /**
@@ -108,6 +109,7 @@ export interface Actions {
   dig: typeof realDig;
   grantKeyword: typeof realGrantKeyword;
   copyPermanent: typeof realCopyPermanent;
+  delayUntil: typeof realDelayUntil;
 }
 const defaultActions: Actions = {
   createToken: realCreateToken,
@@ -129,6 +131,7 @@ const defaultActions: Actions = {
   dig: realDig,
   grantKeyword: realGrantKeyword,
   copyPermanent: realCopyPermanent,
+  delayUntil: realDelayUntil,
 };
 
 /** Everything an effect needs to read at resolution time — the one argument every effect/Computed function receives. */
@@ -361,6 +364,8 @@ export type Effect =
       kind: 'untapTarget';
       validType: 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any';
       owner?: EffectOwner;
+      /** "untap ANOTHER target permanent" (Formidable Speaker) — excludes `ctx.self` from the pool, same reasoning as `pumpTarget`/`sacrifice`/`move`'s own `notSelf`. */
+      notSelf?: boolean;
     }
   | {
       /** `DigEffect` — look at the top `qty` library cards, take up to `take` matching `validType` to hand, rest to bottom (Ashe's own attack trigger). */
@@ -446,7 +451,8 @@ export type Keyword =
   | 'Hexproof'
   | 'Indestructible'
   | 'Ward'
-  | 'Flash';
+  | 'Flash'
+  | 'Convoke';
 
 /**
  * Every card definition is a plain object of this shape — a data RECORD,
@@ -804,7 +810,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       return;
     }
     case 'untapTarget': {
-      const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType);
+      const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType).filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
       const target = actions.chooseTarget(pool);
       if (target) actions.untap(target);
       return;

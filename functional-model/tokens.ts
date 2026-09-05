@@ -61,4 +61,8 @@ export const TOKENS: Record<string, TokenInfo> = {
   // (c_1_1_hero) and Battle Menu's "Attack" mode (w_2_2_knight).
   c_1_1_hero: { name: 'Hero', manaCost: '0', types: ['Creature', 'Hero'], basePower: 1, baseToughness: 1 },
   w_2_2_knight: { name: 'Knight', manaCost: '0', types: ['Creature', 'Knight'], basePower: 2, baseToughness: 2 },
+  // Not FIN/BLB — added ad hoc for Thranduil, Sindarin Liege's own real
+  // landfall token (a green 1/1 Elf, Forge's real `g_1_1_elf`), same
+  // ad-hoc-addition precedent as b_2_2_horror/c_1_1_hero above.
+  g_1_1_elf: { name: 'Elf', manaCost: '0', types: ['Creature', 'Elf'], basePower: 1, baseToughness: 1 },
 };

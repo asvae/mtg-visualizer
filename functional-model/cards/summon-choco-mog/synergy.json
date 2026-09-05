@@ -1,6 +1,6 @@
 {
-  "produces": [],
-  "wants": [
+  "source": [],
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -9,8 +9,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn."
+      "sourceText": "I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn.",
+      "value": 1
     }
   ]
 }

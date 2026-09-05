@@ -1,27 +1,24 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "ease": 1,
-      "strength": 1
+      "value": 1
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 3,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "damage",
       "controller": "you",
-      "ease": 5,
-      "strength": 4
+      "value": 4
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "opp",
@@ -30,7 +27,7 @@
           "Creature"
         ]
       },
-      "ease": 5
+      "value": 1
     },
     {
       "zone": "Battlefield",
@@ -41,7 +38,7 @@
           "Bird"
         ]
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

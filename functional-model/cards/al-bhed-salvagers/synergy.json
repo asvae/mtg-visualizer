@@ -1,19 +1,17 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "lifeloss",
       "controller": "opp",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": [
+  "sink": [
     {
       "event": "dies",
       "controller": "you",
@@ -25,7 +23,7 @@
           ]
         }
       },
-      "ease": 5
+      "value": 1
     }
   ]
 }

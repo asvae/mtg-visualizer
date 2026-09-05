@@ -1,12 +1,11 @@
 {
-  "produces": [
+  "source": [
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "ease": 5,
-      "strength": 1
+      "value": 1
     }
   ],
-  "wants": []
+  "sink": []
 }

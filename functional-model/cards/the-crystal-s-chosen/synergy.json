@@ -1,13 +1,12 @@
 {
-  "produces": [
+  "source": [
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
-      "ease": 1,
-      "strength": 5,
+      "value": 5,
       "sourceText": "Create four 1/1 colorless Hero creature tokens."
     },
     {
@@ -21,20 +20,18 @@
           ]
         }
       },
-      "ease": 5,
-      "strength": 1,
+      "value": 1,
       "sourceText": "Then put a +1/+1 counter on each creature you control."
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "ease": 4,
-      "strength": 1,
+      "value": 1,
       "sourceText": "a sorcery — goes to its owner's graveyard after resolving (rule 608.2m)"
     }
   ],
-  "wants": [
+  "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
@@ -43,8 +40,8 @@
           "Creature"
         ]
       },
-      "ease": 2,
-      "sourceText": "put a +1/+1 counter on EACH creature you control — needs a creature already on the battlefield beyond the tokens it just made"
+      "sourceText": "put a +1/+1 counter on EACH creature you control — needs a creature already on the battlefield beyond the tokens it just made",
+      "value": 1
     }
   ]
 }
