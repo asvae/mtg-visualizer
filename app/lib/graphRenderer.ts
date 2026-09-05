@@ -1,76 +1,72 @@
 import * as d3 from 'd3';
-import type { CardData, GraphFile, Role, ThemeData } from '../types';
-import { ROLES } from '../types';
-import { COLOR_MAP, COLORLESS, RARITY_COLOR } from './constants';
-import { passesAttrFilters, computeWeakThemeIds, type AttrFilters } from './filters';
+import type { CardData, GraphFile, GraphReason } from '../types';
+import { COLOR_MAP, COLORLESS } from './constants';
+import { passesAttrFilters, type AttrFilters } from './filters';
 
-type CardNode = CardData & { kind: 'card'; isWeakOnly: boolean } & d3.SimulationNodeDatum;
-type ThemeNode = ThemeData & { kind: 'theme'; roleCounts: Record<Role, number>; isWeak: boolean } & d3.SimulationNodeDatum;
-// Two invisible, fixed points every theme is bound to (via anchorLinkForce) depending
-// on whether it's weak or strong — see the comment above anchorLinkForce.
-type AnchorNode = { kind: 'anchor'; id: string } & d3.SimulationNodeDatum;
-type SimNode = CardNode | ThemeNode | AnchorNode;
-type SimLink = d3.SimulationLinkDatum<SimNode> & { role: Role; weight: number };
+// linkCount is recomputed every render() call (the active link set changes
+// with filters) and read by cardChargeFor/linkStrengthFor below — see their
+// own comments for why a hub's degree has to feed back into both forces.
+type CardNode = CardData & { kind: 'card'; linkCount?: number } & d3.SimulationNodeDatum;
+// `a`/`b` are the original (pre-simulation) ids, kept alongside `source`/
+// `target` — d3.forceLink mutates source/target from plain id strings into
+// resolved CardNode object refs once the simulation starts, but VisualEdge
+// below still needs a stable string identity per side (for its own key
+// function and to resolve each reason's `from` into an actual direction).
+type SimLink = d3.SimulationLinkDatum<CardNode> & { reasons: GraphReason[]; a: string; b: string };
 
-const DASH_PATTERN = '5 5';
-
-function emptyRoleCounts(): Record<Role, number> {
-  return Object.fromEntries(ROLES.map((r) => [r, 0])) as Record<Role, number>;
+// One rendered arrow per relation (not per pair) — VisualEdge is the fan-out
+// of a SimLink's `reasons` array, purely for drawing; `parent` is shared by
+// reference so a tick's position update reads the SAME source/target object
+// d3.forceLink resolved for the underlying pair, without this layer
+// duplicating any physics-relevant state of its own (see this file's own
+// design note on GraphReason.from: arrows are visual only).
+interface VisualEdge {
+  parent: SimLink;
+  fromA: boolean;
+  laneIndex: number;
+  laneCount: number;
+  description: string;
+  weight: number | null;
 }
 
-function roleCountsTotal(rc: Record<Role, number>): number {
-  return ROLES.reduce((sum, r) => sum + rc[r], 0);
-}
-
-export interface GraphFilters extends AttrFilters {
-  selectedThemes: ReadonlySet<string>;
+// Average combined weight (see GraphReason's own doc comment — 1-25, or null
+// for a reason predating the weight fields) across a pair's distinct reasons.
+// Missing weights count as 1 (the real floor, "verified minimum-strength
+// match") rather than being skipped — an unweighted reason is real, verified
+// output, not a gap to ignore.
+function linkQuality(d: SimLink): number {
+  const total = d.reasons.reduce((sum, r) => sum + (r.weight ?? 1), 0);
+  return total / d.reasons.length;
 }
 
 export interface ForceConfig {
-  themeCharge: number; // repulsion strength for theme hubs (negative = repel)
   cardCharge: number; // repulsion strength for card nodes
   gravity: number; // pull toward center (forceX/forceY strength)
   linkStrength: number; // how tightly a link pulls its two ends together
-  linkDistanceScale: number; // multiplies the weight-based link distance (1 = default)
+  linkDistanceScale: number; // multiplies the link distance (1 = default)
   collidePadding: number; // multiplies the extra spacing enforced around each node
   alphaDecay: number; // how fast the simulation "cools" — lower keeps it moving longer
   velocityDecay: number; // friction — lower means more momentum/bounce
-  anchorLinkStrength: number; // how firmly a theme gets pulled back once outside anchorFreeRadius
-  anchorFreeRadius: number; // radius around its anchor where a theme feels ~0 pull, free to roam
-  anchorSpread: number; // multiplies how far apart the two anchor points are (1 = baseline)
 }
 
 export const DEFAULT_FORCES: ForceConfig = {
-  themeCharge: -2200,
   cardCharge: -220,
-  gravity: 0.008,
-  linkStrength: 0.05,
-  // linkDistanceScale/collidePadding/velocityDecay are no longer user-tunable
-  // (sliders removed) — fixed here. alphaDecay (settle speed) briefly got the same
-  // treatment fixed at 0.75, but that cools the simulation almost before it has any
-  // ticks to actually spread nodes out from their random start positions — first
-  // load stayed clumped. Kept tunable.
+  gravity: 0.02,
+  linkStrength: 0.3,
   linkDistanceScale: 1,
   collidePadding: 1,
+  // alphaDecay briefly got fixed at 0.75, but that cools the simulation almost
+  // before it has any ticks to actually spread nodes out from their random start
+  // positions — first load stayed clumped. Kept tunable.
   alphaDecay: 0.02,
   velocityDecay: 0.4,
-  // A theme within anchorFreeRadius of its anchor feels ~0 pull from it — free to
-  // be positioned entirely by its own cards/links, same as any other theme. Only
-  // once it strays past that radius does the anchor pull it back, growing with how
-  // far outside the radius it's gotten. anchorSpread: 2 means the two anchors sit
-  // twice as far apart as the original baseline placement.
-  anchorLinkStrength: 0.15,
-  anchorFreeRadius: 1000,
-  anchorSpread: 2,
 };
 
 export interface GraphHandlers {
-  onCardHover(card: CardData, themeEdges: { themeId: string; role: Role; weight: number }[], event: MouseEvent): void;
-  onThemeHover(theme: ThemeData & { roleCounts: Record<Role, number> }, event: MouseEvent): void;
+  onCardHover(card: CardData, links: { card: CardData; reasons: GraphReason[] }[], event: MouseEvent): void;
   onHoverMove(event: MouseEvent): void;
   onHoverEnd(): void;
   onCardClick(card: CardData, event: MouseEvent): void;
-  onThemeClick(theme: ThemeData, event: MouseEvent): void;
   onBackgroundClick(): void;
 }
 
@@ -80,72 +76,193 @@ function cardFill(c: CardData): string {
   return COLOR_MAP[ci[0]!] ?? COLORLESS;
 }
 
-// Mana value is meaningless for lands (always 0), so they'd render as the smallest
-// possible node next to 0-cost spells — give them a fixed, legible size instead.
-function makeCardRadius(cmcScale: d3.ScaleContinuousNumeric<number, number>) {
-  return (c: CardData) => (c.typeLine.includes('Land') ? 10 : cmcScale(c.cmc ?? 0));
+// Every card node is the same fixed size — no mana-value scaling, no
+// land-specific case (there's nothing left to special-case once size isn't
+// derived from cmc at all). Rectangular, not circular — no clip-path needed,
+// the image already IS the shape once sized to this box. RECT_HEIGHT keeps
+// the same overall footprint the old circle diameter had; RECT_WIDTH scales
+// it by Scryfall's typical (not universal — real art_crop dimensions vary
+// per card, some are portrait) art_crop aspect ratio, ~626x457.
+const RECT_HEIGHT = 40;
+const ART_ASPECT = 626 / 457;
+const RECT_WIDTH = RECT_HEIGHT * ART_ASPECT;
+const CORNER_RADIUS = 4;
+
+// How far apart parallel arrows fan out when the same pair has more than one
+// relation — purely a drawing offset, never fed into the simulation.
+const EDGE_LANE_SPACING = 7;
+// Trims an arrow's arrival point this far short of the target node's edge
+// (in addition to its radius) so the arrowhead marker renders just outside
+// the node instead of underneath its opaque fill.
+const EDGE_ARROW_GAP = 3;
+
+// Collision/repulsion still reason in terms of a single "radius" — half the
+// WIDER dimension, so neighboring rectangles get enough breathing room along
+// their widest axis instead of just their height.
+function cardRadius(): number {
+  return RECT_WIDTH / 2;
 }
 
-// Multicolor cards render as pie sectors (one wedge per color in their identity)
-// instead of a blended gold — gold reads as "a color" when it's actually "many colors".
-function renderCardShape(sel: d3.Selection<SVGGElement, CardNode, any, any>, cardRadius: (c: CardData) => number) {
+// Scryfall's art_crop (just the illustration, no card frame/text) for the
+// front face, sized to a fixed rectangle (cropped to fill it via
+// preserveAspectRatio="...slice", same as the old circle version) — falls
+// back to the old flat color-identity fill for the rare card with no
+// resolved art_crop (cardArtCrop() in buildGraph.ts returned null for it)
+// rather than leaving an empty node. A thin dark outline rect is drawn on
+// top either way, for definition against the dark canvas background.
+function renderCardArt(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
   sel.each(function (d) {
     const g = d3.select(this);
-    const rad = cardRadius(d);
-    const ci = d.colorIdentity;
-    if (ci.length <= 1) {
-      g.append('circle').attr('class', 'card-shape').attr('r', rad).attr('fill', cardFill(d));
-    } else {
-      const arcs = d3.pie<string>().value(() => 1).sort(null)(ci);
-      const arcGen = d3.arc<d3.PieArcDatum<string>>().innerRadius(0).outerRadius(rad);
-      g.selectAll('path')
-        .data(arcs)
-        .join('path')
+    const art = d.artCrop;
+    const x = -RECT_WIDTH / 2;
+    const y = -RECT_HEIGHT / 2;
+    // Blurred glow drawn UNDER the art/fill — the opaque node covers its
+    // inward half, so only the outward-blurred edge shows, like a soft glow
+    // rather than a blur across the art itself. Four separate inset edge
+    // segments (not a single rect outline) — a joined rect's corners get two
+    // strokes overlapping at the 90° turn, and blurring that double coverage
+    // reads as a bright hot spot; stopping each edge short of the corner
+    // avoids the overlap, so the glow concentrates on the flat top/sides and
+    // fades out approaching each corner instead.
+    const glowGroup = g.append('g').attr('class', 'card-glow').attr('filter', 'url(#card-outline-glow)');
+    const inset = 8;
+    const edges: [number, number, number, number][] = [
+      [x + inset, y, x + RECT_WIDTH - inset, y], // top
+      [x + inset, y + RECT_HEIGHT, x + RECT_WIDTH - inset, y + RECT_HEIGHT], // bottom
+      [x, y + inset, x, y + RECT_HEIGHT - inset], // left
+      [x + RECT_WIDTH, y + inset, x + RECT_WIDTH, y + RECT_HEIGHT - inset], // right
+    ];
+    for (const [x1, y1, x2, y2] of edges) {
+      glowGroup
+        .append('line')
+        .attr('x1', x1)
+        .attr('y1', y1)
+        .attr('x2', x2)
+        .attr('y2', y2)
+        .attr('stroke', '#000')
+        .attr('stroke-width', 1.5)
+        .attr('stroke-opacity', 0.5)
+        .attr('stroke-linecap', 'round');
+    }
+    if (!art) {
+      g.append('rect')
         .attr('class', 'card-shape')
-        .attr('d', arcGen)
-        .attr('fill', (a) => COLOR_MAP[a.data] ?? COLORLESS);
+        .attr('x', x)
+        .attr('y', y)
+        .attr('width', RECT_WIDTH)
+        .attr('height', RECT_HEIGHT)
+        .attr('rx', CORNER_RADIUS)
+        .attr('fill', cardFill(d));
+    } else {
+      g.append('image')
+        .attr('class', 'card-shape')
+        .attr('href', art)
+        .attr('x', x)
+        .attr('y', y)
+        .attr('width', RECT_WIDTH)
+        .attr('height', RECT_HEIGHT)
+        .attr('preserveAspectRatio', 'xMidYMid slice')
+        // `rx`/`ry` on <image> itself is inconsistently supported across
+        // browsers — a clipPath (defined once in defs, reused by every node
+        // via the same local coordinate space each node's own <g> transform
+        // already provides) is the reliable way to round an image's corners.
+        .attr('clip-path', 'url(#card-clip)');
+    }
+    g.append('rect')
+      .attr('class', 'card-outline')
+      .attr('rx', CORNER_RADIUS)
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', RECT_WIDTH)
+      .attr('height', RECT_HEIGHT)
+      .attr('fill', 'none')
+      .attr('stroke', '#fff')
+      .attr('stroke-opacity', 0.5)
+      .attr('stroke-width', 0.3);
+
+    // Scryfall shortcut — hidden until the node is hovered (see the
+    // `.scryfall-link` CSS rule in GraphCanvas.vue), so it doesn't compete
+    // with the art at rest. Its own click handler stops propagation so it
+    // opens Scryfall instead of falling through to the node's own click
+    // handler (which opens this card's OWN page — see onCardClick in
+    // GraphCanvas.vue). Icon is lucide's own `external-link` glyph (same
+    // one Nuxt Icon would render as `i-lucide-external-link`), inlined as a
+    // raw path rather than going through the Icon component — this whole
+    // node is a plain D3-appended <g>, not Vue template output.
+    const scryfallBoxSize = 11;
+    const scryfallX = x + RECT_WIDTH - scryfallBoxSize - 2;
+    const scryfallY = y + 2;
+    const scryfallCx = scryfallX + scryfallBoxSize / 2;
+    const scryfallCy = scryfallY + scryfallBoxSize / 2;
+    const scryfallIconSize = 7;
+    const scryfallIconScale = scryfallIconSize / 24;
+    g.append('g')
+      .attr('class', 'scryfall-link')
+      .style('cursor', 'pointer')
+      .on('click', (event: MouseEvent) => {
+        event.stopPropagation();
+        window.open(d.scryfallUri, '_blank', 'noopener');
+      })
+      .call((link) => {
+        link
+          .append('rect')
+          .attr('x', scryfallX)
+          .attr('y', scryfallY)
+          .attr('width', scryfallBoxSize)
+          .attr('height', scryfallBoxSize)
+          .attr('rx', 2)
+          .attr('fill', '#000')
+          .attr('fill-opacity', 0.45);
+        link
+          .append('path')
+          .attr('d', 'M15 3h6v6m-11 5L21 3m-3 10v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6')
+          .attr('fill', 'none')
+          .attr('stroke', '#fff')
+          .attr('stroke-width', 3)
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-linejoin', 'round')
+          .attr('transform', `translate(${scryfallCx},${scryfallCy}) scale(${scryfallIconScale}) translate(-12,-12)`);
+      });
+
+    // Deck-import qty badge — shown whenever this card is in the active deck
+    // (qty is undefined outside deck mode, so nothing shows there).
+    if (d.qty) {
+      const badgeText = `×${d.qty}`;
+      const bw = 8 + badgeText.length * 5.5;
+      const bh = 12;
+      const bx = x + RECT_WIDTH - bw + 3;
+      const by = y + RECT_HEIGHT - bh + 3;
+      const badge = g.append('g').attr('class', 'card-qty-badge');
+      badge.append('rect').attr('x', bx).attr('y', by).attr('width', bw).attr('height', bh).attr('rx', 3).attr('fill', '#000').attr('fill-opacity', 0.78);
+      badge
+        .append('text')
+        .attr('x', bx + bw / 2)
+        .attr('y', by + bh / 2 + 3)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', 9)
+        .attr('font-weight', 700)
+        .attr('fill', '#fff')
+        .text(badgeText);
     }
   });
 }
 
-// Rarity indicator: a colored letter (C/U/R/M) centered on the card, with a dark
-// outline so it reads against any color-identity fill. Commons stay unmarked.
-const RARITY_LABEL_FONT_SIZE = 9;
-
-function renderRarityLabel(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
-  sel.each(function (d) {
-    if (d.rarity === 'common') return;
-    const color = RARITY_COLOR[d.rarity] ?? RARITY_COLOR.common!;
-    d3.select(this)
-      .append('text')
-      .attr('class', 'rarity-label')
-      .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'central')
-      // Fixed regardless of the card's own radius (which scales with mana value) —
-      // a rarity letter that shrinks along with a cheap card's small node becomes
-      // illegible; readability matters more here than staying inside the circle.
-      .attr('font-size', RARITY_LABEL_FONT_SIZE)
-      .attr('fill', color)
-      .text(d.rarity.charAt(0).toUpperCase());
-  });
-}
-
-function drag(simulation: d3.Simulation<SimNode, SimLink>) {
-  function dragstarted(event: any, d: SimNode) {
+function drag(simulation: d3.Simulation<CardNode, SimLink>) {
+  function dragstarted(event: any, d: CardNode) {
     if (!event.active) simulation.alphaTarget(0.2).restart();
     d.fx = d.x;
     d.fy = d.y;
   }
-  function dragged(event: any, d: SimNode) {
+  function dragged(event: any, d: CardNode) {
     d.fx = event.x;
     d.fy = event.y;
   }
-  function dragended(event: any, d: SimNode) {
+  function dragended(event: any, d: CardNode) {
     if (!event.active) simulation.alphaTarget(0);
     d.fx = null;
     d.fy = null;
   }
-  return d3.drag<any, SimNode>().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+  return d3.drag<any, CardNode>().on('start', dragstarted).on('drag', dragged).on('end', dragended);
 }
 
 // Owns the entire force-directed graph imperatively: node/edge state, the D3
@@ -153,77 +270,76 @@ function drag(simulation: d3.Simulation<SimNode, SimLink>) {
 // its subtree again — render()/applySearch() mutate the same persistent node
 // objects (keyed by id) across calls, so positions/zoom/drag state survive every
 // filter or search change instead of getting reset by a template re-render.
+//
+// Cards-only, direct card<->card links (functional-model's real, verified synergy
+// matches — see server/api/graph-links.ts) — no theme hub nodes. That's a
+// deliberate simplification from the old bipartite card/theme-hub layout this
+// replaced: themes may come back later purely as a visual highlighter (recolor
+// matching cards), but NOT as a node the simulation itself reasons about — see
+// this session's design discussion. Not scaffolded here ahead of that.
 export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, handlers: GraphHandlers) {
   const width = svgEl.clientWidth || window.innerWidth;
   const height = svgEl.clientHeight || window.innerHeight - 60;
 
-  const themeEdgesByCard = new Map<string, { themeId: string; role: Role; weight: number }[]>();
-  const cardIdsByTheme = new Map<string, Set<string>>();
-  for (const e of graph.edges) {
-    if (!themeEdgesByCard.has(e.card)) themeEdgesByCard.set(e.card, []);
-    themeEdgesByCard.get(e.card)!.push({ themeId: e.theme, role: e.role, weight: e.weight });
-    if (!cardIdsByTheme.has(e.theme)) cardIdsByTheme.set(e.theme, new Set());
-    cardIdsByTheme.get(e.theme)!.add(e.card);
+  const linksByCard = new Map<string, { card: string; reasons: GraphReason[] }[]>();
+  for (const l of graph.links) {
+    if (!linksByCard.has(l.a)) linksByCard.set(l.a, []);
+    linksByCard.get(l.a)!.push({ card: l.b, reasons: l.reasons });
+    if (!linksByCard.has(l.b)) linksByCard.set(l.b, []);
+    linksByCard.get(l.b)!.push({ card: l.a, reasons: l.reasons });
   }
 
-  // weakThemeIds starts empty and is recomputed inside render() (see there) from
-  // whichever cards CURRENTLY pass the color/rarity/type filters — the visualizer
-  // has no business classifying a theme weak/strong using cards the user has
-  // filtered out, so this is never computed from the full unfiltered graph.
-  // isWeak/isWeakOnly on the persistent node objects below get corrected by the
-  // first render() call (called synchronously right after construction), so the
-  // brief all-false initial state here is never actually visible.
-  let weakThemeIds = new Set<string>();
-  const themeNodeById = new Map<string, ThemeNode>();
-  for (const t of graph.themes) {
-    themeNodeById.set(t.id, { ...t, kind: 'theme', roleCounts: emptyRoleCounts(), isWeak: false });
-  }
-  // A card whose EVERY tie is to a weak theme has no strong-theme link pulling it
-  // toward center — it needs zero gravity too (see gravityFor below), or its own
-  // individual center-gravity fights its link to a theme that's now off near the
-  // weak anchor, leaving it stranded somewhere between the two instead of
-  // clustering with its theme the same way any other card clusters with its hub.
   const cardNodeById = new Map<string, CardNode>();
-  for (const c of graph.cards) cardNodeById.set(c.id, { ...c, kind: 'card', isWeakOnly: false });
+  for (const c of graph.cards) cardNodeById.set(c.id, { ...c, kind: 'card' });
 
   const forces: ForceConfig = { ...DEFAULT_FORCES };
 
-  // Two fixed, invisible points every theme is bound to depending on category —
-  // see anchorLinkForce below. Replaces several earlier, more elaborate attempts
-  // (a hard pin per isolated theme, a forceRadial "ring" with mutual repulsion to
-  // spread themes around it, live-measuring the main clump's extent every tick) —
-  // all of which worked but accumulated a lot of interacting special cases. Two
-  // fixed points or two links is far less to reason about, at the cost of the
-  // separation no longer adapting to the clump's actual live size/shape.
-  // ANCHOR_BASE_HALF_GAP * forces.anchorSpread is each anchor's offset from center
-  // — spread 1 is the original baseline placement, 2 (the default) doubles it.
-  const ANCHOR_BASE_HALF_GAP = width * 0.225;
-  const strongAnchor: AnchorNode = { kind: 'anchor', id: '__strong-anchor__', fy: height / 2 };
-  const weakAnchor: AnchorNode = { kind: 'anchor', id: '__weak-anchor__', fy: height / 2 };
-  const anchorNodes: AnchorNode[] = [strongAnchor, weakAnchor];
-  function applyAnchorSpread() {
-    const halfGap = ANCHOR_BASE_HALF_GAP * forces.anchorSpread;
-    strongAnchor.fx = width / 2 - halfGap;
-    weakAnchor.fx = width / 2 + halfGap;
-  }
-  applyAnchorSpread();
-
-  const cmcExtent = d3.extent(graph.cards, (c) => c.cmc) as [number, number];
-  const radiusScale = d3.scaleSqrt().domain([0, cmcExtent[1] || 1]).range([4, 15]);
-  const cardRadius = makeCardRadius(radiusScale);
-
-  const edgeStrokeWidth = d3.scaleLinear().domain([1, 3]).range([1, 3.4]).clamp(true);
-
-  // Domain recalibrated live inside render() (see there) from the same
-  // currently-filtered roleCounts snapshot — never from the full unfiltered graph.
-  // Placeholder [0, 1] here is corrected before the first paint.
-  const themeRadius = d3.scaleSqrt().domain([0, 1]).range([20, 65]);
-  function themeNodeRadius(t: ThemeNode): number {
-    return themeRadius(roleCountsTotal(t.roleCounts));
-  }
-
   const svg = d3.select(svgEl);
   svg.selectAll('*').remove();
+
+  // Shared by every node's glow rect below — one filter def, reused via
+  // url(#card-outline-glow) rather than one <filter> per node.
+  const defs = svg.append('defs');
+  defs
+    .append('filter')
+    .attr('id', 'card-outline-glow')
+    .attr('x', '-40%')
+    .attr('y', '-40%')
+    .attr('width', '180%')
+    .attr('height', '180%')
+    .append('feGaussianBlur')
+    .attr('stdDeviation', 1.2);
+
+  // Rounds the art image's corners — clipPathUnits defaults to
+  // userSpaceOnUse, so this rect's coordinates are read in whichever node
+  // <g>'s local space is referencing it at render time, meaning one shared
+  // clipPath (not one per node) works for every node.
+  defs
+    .append('clipPath')
+    .attr('id', 'card-clip')
+    .append('rect')
+    .attr('x', -RECT_WIDTH / 2)
+    .attr('y', -RECT_HEIGHT / 2)
+    .attr('width', RECT_WIDTH)
+    .attr('height', RECT_HEIGHT)
+    .attr('rx', CORNER_RADIUS);
+
+  // Directional arrowhead for every link — `fill="context-stroke"` (a real
+  // SVG2 keyword Chrome/Firefox both honor) picks up whatever `stroke` color
+  // the referencing <path> has via CSS, so the arrowhead automatically
+  // matches `.link`'s own color instead of needing its own copy of it.
+  defs
+    .append('marker')
+    .attr('id', 'link-arrow')
+    .attr('viewBox', '0 0 10 10')
+    .attr('refX', 8.5)
+    .attr('refY', 5)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto-start-reverse')
+    .append('path')
+    .attr('d', 'M0,0 L10,5 L0,10 z')
+    .attr('fill', 'context-stroke');
 
   const root = svg.append('g');
   const zoomBehavior = d3
@@ -231,139 +347,77 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     .scaleExtent([0.15, 6])
     .on('zoom', (event) => root.attr('transform', event.transform));
   svg.call(zoomBehavior);
-  // Starts zoomed out instead of at 100% — the force layout spreads cards/themes
-  // well beyond one screenful, so a fresh load previously showed just whatever
-  // happened to be near the top-left corner at identity transform. A fixed
-  // initial scale (rather than fitting to the simulation's current bounds) is
-  // deliberate: node positions are still actively moving/settling this early
-  // (alpha just started), so "fit to bounds right now" would itself be an
-  // arbitrary, jumpy target — scaled around the viewport's own center, which is
-  // where the anchor points (and so the bulk of the graph) actually sit.
+  // Starts zoomed out instead of at 100% — the force layout spreads cards well
+  // beyond one screenful, so a fresh load previously showed just whatever
+  // happened to be near the top-left corner at identity transform.
   const INITIAL_ZOOM = 0.35;
   svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(INITIAL_ZOOM).translate(-width / 2, -height / 2));
-  // Clicking anywhere that isn't a card/theme node clears the theme selection —
-  // including edge lines and empty space alike. The graph is dense enough that a
-  // literal empty-pixel hit (checking event.target === svgEl) would rarely land;
-  // checking for a card/theme ancestor instead makes "click background" reliable.
   svg.on('click', (event) => {
     const target = event.target as Element;
-    if (!target.closest('.node-card, .theme')) handlers.onBackgroundClick();
+    if (!target.closest('.node-card')) handlers.onBackgroundClick();
   });
 
   const linkLayer = root.append('g');
-  const themeLayer = root.append('g');
   const cardLayer = root.append('g');
 
-  // Cards and themes both push hard against everything by default — that's what
-  // actually spreads a dense multi-hub bipartite graph out instead of link pull
-  // collapsing shared cards into the middle of their hubs. Exposed live via
-  // setForces() so the values can be tuned interactively instead of only in code.
-  // Weak vs. strong themes mostly differ in just one thing: which of the two
-  // anchors (strongAnchor/weakAnchor above) they're bound to via anchorForce. Cards
-  // aren't bound to anchors directly — they just follow whichever theme(s) they're
-  // actually tied to via the normal card-theme links below, so a card naturally
-  // ends up near whichever cluster its theme is in.
-  // One remaining special case: a weak theme's own repulsion charge is zeroed (a
-  // weak-only card's boosted tether, below, is what should determine spacing
-  // around it — its own -1400 self-charge would otherwise shove its cards away
-  // faster than that tether pulls them back in).
-  const isWeakThemeNode = (d: SimNode) => d.kind === 'theme' && (d as ThemeNode).isWeak;
-  const cardChargeFor = (d: SimNode) => (d.kind === 'card' ? forces.cardCharge : 0);
-  const cardChargeForce = d3.forceManyBody<SimNode>().strength(cardChargeFor).distanceMax(900);
-  const themeChargeFor = (d: SimNode) => (d.kind === 'theme' && !isWeakThemeNode(d) ? forces.themeCharge : 0);
-  const themeChargeForce = d3.forceManyBody<SimNode>().strength(themeChargeFor).distanceMax(900);
-  // Weak themes still need to repel EACH OTHER for breathing room (otherwise
-  // collideForce alone is all that keeps them apart, and they end up the tightest-
-  // packed cluster in the graph) — but not their own cards, which is exactly why
-  // themeChargeFor above zeroes them out of the shared force entirely. A separate
-  // force, node list restricted in render() (see weakMutualChargeForce.initialize)
-  // to weak themes only on BOTH ends, gets the spacing without the side effect.
-  const weakMutualChargeFor = (d: SimNode) => (isWeakThemeNode(d) ? forces.themeCharge : 0);
-  const weakMutualChargeForce = d3.forceManyBody<SimNode>().strength(weakMutualChargeFor).distanceMax(900);
-  // Every ACTIVE theme (matching whatever render() currently shows — see
-  // themeAnchorMap below, rebuilt each render()) is bound to its category's
-  // anchor — but NOT as a normal spring. A regular forceLink pulls even when
-  // already sitting right on top of its target, competing with the theme's own
-  // cards for control of its exact position. This is a threshold/leash instead:
-  // zero pull inside anchorFreeRadius (the theme's own links are the "biggest
-  // priority" there, fully free to arrange it), growing pull only once it strays
-  // past that radius — the anchor's whole job is just keeping each category
-  // roughly in its own area, not dictating exact placement within it.
-  // A custom d3 force (a plain function + .initialize(nodes)) rather than
-  // forceLink, since forceLink's strength/distance are fixed per-link at
-  // initialize time — this needs to react to live per-tick distance instead.
-  let anchorForceNodes: SimNode[] = [];
-  const themeAnchorMap = new Map<string, AnchorNode>();
-  function anchorForce(alpha: number) {
-    for (const n of anchorForceNodes) {
-      if (n.kind !== 'theme' || n.x == null || n.y == null) continue;
-      const anchor = themeAnchorMap.get(n.id);
-      if (!anchor || anchor.x == null || anchor.y == null) continue;
-      const dx = anchor.x - n.x;
-      const dy = anchor.y - n.y;
-      const dist = Math.hypot(dx, dy) || 1e-6;
-      const over = dist - forces.anchorFreeRadius;
-      if (over <= 0) continue;
-      const k = (forces.anchorLinkStrength * over * alpha) / dist;
-      n.vx = (n.vx ?? 0) + dx * k;
-      n.vy = (n.vy ?? 0) + dy * k;
-    }
-  }
-  anchorForce.initialize = (nodes: SimNode[]) => {
-    anchorForceNodes = nodes;
-  };
-  // Edge weight (1-3, how central a card is to that theme) scales both how close it
-  // sits and how firmly it's held there: a weight-3 edge (e.g. Baron, Airship
-  // Kingdom's self-defining tie to Towns Matter) pulls the card in tight against its
-  // theme hub, while a weight-1 edge keeps the loose default spacing. linkDistanceScale
-  // multiplies the whole thing so the base spacing itself stays tunable too.
-  // A weak-only card's edge is boosted and short instead of normal — its theme has
-  // zero self-charge (see themeChargeFor above) specifically so it doesn't shove its
-  // OWN weak-only cards away, but a normal-strength link alone still wasn't enough
-  // to overcome mutual repulsion AMONG a weak theme's own (often 20+) cards in the
-  // comparatively empty space out past the main clump — nothing else constrains
-  // them the way the dense clump constrains a strong theme's halo, so they'd spread
-  // out much further before finding equilibrium. Boosting just their own tether
-  // fixes that without touching how any other edge behaves.
-  const WEAK_ONLY_LINK_STRENGTH_BOOST = 3;
-  const WEAK_ONLY_LINK_DISTANCE_FACTOR = 0.4;
-  const isWeakOnlyEdge = (d: SimLink) => (d.source as CardNode).isWeakOnly === true;
+  // A hub's total inward pull is the SUM of every one of its links' strength —
+  // with ~12k links across ~290 cards (some cards matching on broad,
+  // unconstrained facts have dozens of neighbors), a flat per-link strength
+  // let that sum overwhelm a flat repulsion budget and crushed everything
+  // toward the center regardless of cardCharge/gravity slider values. Charge
+  // below scales with each node's own current-render linkCount (set on the
+  // node in render(), before the simulation restarts): more negative (more
+  // repulsive) with degree, so a high-degree hub pushes back harder — a
+  // sparse 1-2-link card is unaffected either way (sqrt(1) ≈ 1).
+  const cardChargeFor = (d: CardNode) => forces.cardCharge * (1 + 0.2 * Math.sqrt(d.linkCount ?? 0));
+  const cardChargeForce = d3.forceManyBody<CardNode>().strength(cardChargeFor).distanceMax(900);
+
+  // Distance/strength are driven by real match quality now (functional-model's
+  // value field on both source and sink facts — see
+  // functional-model/synergy.ts's factTotal and GraphReason.weight in
+  // server/api/graph-links.ts — combined into linkQuality above), not a proxy
+  // count of how many reasons happen to connect a pair. Goal (per this
+  // session's design discussion): strongly-specific matches clump tight,
+  // broad/generic ones spread out, distinct archetypes read as separated
+  // where the data supports it. Exact constants below are a first pass,
+  // expected to need retuning against how the real weighted pool actually
+  // looks once rendered — not a principled derivation.
+  //
+  // quality's theoretical range is 1-25 (factTotal's own produce-strength ×
+  // want-strength), but the real pool (checked live against the whole
+  // graph-links.ts output)
+  // only ever reaches ~10 — no pair currently maxes out both sides at once.
+  // Divisors below are tuned against that REAL ~1-10 range, not the
+  // theoretical ceiling (an earlier pass here divided by 6/3, tuned for a
+  // stale ~1-21 estimate under the old 3-field weight scheme — that made the
+  // strong end barely distinguishable from the weak end once the field
+  // redesign shrank the real range further). sqrt still compresses the tail;
+  // the "no boost, no penalty" crossover sits around quality ~2.5 now.
   const linkDistanceFor = (d: SimLink) => {
-    const base = (200 - ((d.weight - 1) / 2) * 140) * forces.linkDistanceScale;
-    return isWeakOnlyEdge(d) ? base * WEAK_ONLY_LINK_DISTANCE_FACTOR : base;
+    const tighten = Math.min(1, Math.sqrt(linkQuality(d)) / 3.2);
+    return (200 - tighten * 130) * forces.linkDistanceScale;
   };
   const linkStrengthFor = (d: SimLink) => {
-    const base = forces.linkStrength * (0.6 + 0.4 * (d.weight / 3));
-    return isWeakOnlyEdge(d) ? Math.min(1, base * WEAK_ONLY_LINK_STRENGTH_BOOST) : base;
+    const s = d.source as CardNode;
+    const t = d.target as CardNode;
+    const avgDegree = Math.max(1, ((s.linkCount ?? 1) + (t.linkCount ?? 1)) / 2);
+    const qualityBoost = Math.min(2, Math.sqrt(linkQuality(d)) / 1.6);
+    return Math.min(1, (forces.linkStrength * qualityBoost) / Math.sqrt(avgDegree));
   };
-  const linkForce = d3.forceLink<SimNode, SimLink>().id((d) => d.id).distance(linkDistanceFor).strength(linkStrengthFor);
+  const linkForce = d3.forceLink<CardNode, SimLink>().id((d) => d.id).distance(linkDistanceFor).strength(linkStrengthFor);
+
   // "Gravity" toward center instead of forceCenter's hard recentering — keeps the
-  // graph roughly on-screen without crushing everything together. Themes get none
-  // of it — anchorLinkForce is what determines a theme's general area, generic
-  // center-gravity on top of that would just fight it (especially for weak themes,
-  // pulling them back toward center against weakAnchor being off to the side).
-  // Weak-only cards get none either, for the same reason — their only link is to a
-  // theme that's off near the weak anchor, not centered, so their own individual
-  // gravity would just pull them away from it instead of letting them cluster.
-  const gravityFor = (d: SimNode) => (d.kind === 'card' && !(d as CardNode).isWeakOnly ? forces.gravity : 0);
-  const xForce = d3.forceX<SimNode>(width / 2).strength(gravityFor);
-  const yForce = d3.forceY<SimNode>(height / 2).strength(gravityFor);
-  // collidePadding scales only the EXTRA spacing enforced around each node, not its
-  // visual radius — 1 matches the original fixed +10 (theme) / +4 (card) padding.
-  // Anchors aren't rendered and have no size, so they don't need collision at all.
-  const collideRadiusFor = (d: SimNode) => {
-    if (d.kind === 'anchor') return 0;
-    return d.kind === 'theme' ? themeNodeRadius(d as ThemeNode) + 10 * forces.collidePadding : cardRadius(d as CardData) + 4 * forces.collidePadding;
-  };
-  const collideForce = d3.forceCollide<SimNode>(collideRadiusFor);
+  // graph roughly on-screen without crushing everything together.
+  const gravityFor = () => forces.gravity;
+  const xForce = d3.forceX<CardNode>(width / 2).strength(gravityFor);
+  const yForce = d3.forceY<CardNode>(height / 2).strength(gravityFor);
+  const collideRadiusFor = () => cardRadius() + 4 * forces.collidePadding;
+  const collideForce = d3.forceCollide<CardNode>(collideRadiusFor);
 
   const simulation = d3
-    .forceSimulation<SimNode>()
+    .forceSimulation<CardNode>()
     .force('link', linkForce)
-    .force('anchor', anchorForce)
-    .force('cardCharge', cardChargeForce)
-    .force('themeCharge', themeChargeForce)
-    .force('weakMutualCharge', weakMutualChargeForce)
+    .force('charge', cardChargeForce)
     .force('x', xForce)
     .force('y', yForce)
     .force('collide', collideForce)
@@ -375,13 +429,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     // Re-invoking each setter forces d3 to recompute its cached per-node/per-link
     // strength arrays — mutating `forces` alone wouldn't take effect until then.
     cardChargeForce.strength(cardChargeFor);
-    themeChargeForce.strength(themeChargeFor);
-    weakMutualChargeForce.strength(weakMutualChargeFor);
     linkForce.distance(linkDistanceFor).strength(linkStrengthFor);
-    // anchorForce reads forces.anchorLinkStrength/anchorFreeRadius live every tick
-    // (see its closure over `forces`) — no explicit resync needed here.
-    applyAnchorSpread();
-    anchorVisual.selectAll<SVGCircleElement, AnchorNode>('circle').attr('cx', (d) => d.fx!).attr('cy', (d) => d.fy!);
     xForce.strength(gravityFor);
     yForce.strength(gravityFor);
     collideForce.radius(collideRadiusFor);
@@ -393,116 +441,49 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     return { ...forces };
   }
 
-  let link = linkLayer.selectAll<SVGGElement, SimLink>('g.link');
-  let themeG = themeLayer.selectAll<SVGGElement, ThemeNode>('g.theme');
+  let link = linkLayer.selectAll<SVGPathElement, VisualEdge>('path.link');
   let cardG = cardLayer.selectAll<SVGGElement, CardNode>('g.node-card');
 
   let searchQuery = '';
-  let themeSelection = new Set<string>();
   let cardSelection = new Set<string>();
 
-  function render(filters: GraphFilters) {
-    const activeEdges = graph.edges.filter((e) => filters.selectedThemes.has(e.theme));
-    const connectedCardIds = new Set(activeEdges.map((e) => e.card));
-
-    // Every card has at least one edge now (untagged cards get a synthetic "No
-    // Theme" edge from the tagger), so theme-filter visibility is just: is this
-    // card connected to a currently-selected theme?
-    const activeCardNodes = graph.cards
-      .filter((c) => connectedCardIds.has(c.id) && passesAttrFilters(c, filters))
-      .map((c) => cardNodeById.get(c.id)!);
-
+  function render(filters: AttrFilters) {
+    const activeCardNodes = graph.cards.filter((c) => passesAttrFilters(c, filters)).map((c) => cardNodeById.get(c.id)!);
     const activeCardIdSet = new Set(activeCardNodes.map((c) => c.id));
-    const visibleEdges = activeEdges.filter((e) => activeCardIdSet.has(e.card));
-    const activeLinks: SimLink[] = visibleEdges.map((e) => ({ source: e.card, target: e.theme, role: e.role, weight: e.weight }));
 
-    // How many edges tie this exact card to this exact theme (e.g. a card that both
-    // produces AND consumes the same theme) — more than one is itself worth flagging
-    // visually, regardless of what either individual role's own dash rule says.
-    const pairEdgeCount = new Map<string, number>();
-    for (const e of visibleEdges) {
-      const key = `${e.card}->${e.theme}`;
-      pairEdgeCount.set(key, (pairEdgeCount.get(key) ?? 0) + 1);
+    const activeLinks: SimLink[] = graph.links
+      .filter((l) => activeCardIdSet.has(l.a) && activeCardIdSet.has(l.b))
+      .map((l) => ({ source: l.a, target: l.b, reasons: l.reasons, a: l.a, b: l.b }));
+
+    // One VisualEdge per reason (not per pair) — this is the only place a
+    // pair's relations fan out into separate arrows; `activeLinks` above
+    // stays exactly one entry per pair, so the simulation below never sees
+    // (and can't be affected by) how many relations a pair actually has.
+    const activeEdges: VisualEdge[] = activeLinks.flatMap((l) =>
+      l.reasons.map((r, i) => ({
+        parent: l,
+        fromA: r.from === 'a',
+        laneIndex: i,
+        laneCount: l.reasons.length,
+        description: r.description,
+        weight: r.weight,
+      }))
+    );
+
+    // Recomputed every render (filters change which links are active) and read
+    // by cardChargeFor/linkStrengthFor above — must be set on the actual node
+    // objects before simulation.nodes()/links() below, since d3 resolves link
+    // source/target ids to node objects and computes the strength arrays
+    // synchronously inside that same links() call.
+    for (const node of activeCardNodes) node.linkCount = 0;
+    for (const l of activeLinks) {
+      cardNodeById.get(l.source as string)!.linkCount!++;
+      cardNodeById.get(l.target as string)!.linkCount!++;
     }
-
-    // A theme left with zero visible cards after color/rarity/type filters is pure
-    // noise — drop its node entirely even if its checkbox is still checked, rather
-    // than showing an empty hub with nothing attached to it.
-    const themeIdsWithVisibleCards = new Set(visibleEdges.map((e) => e.theme));
-    const activeThemeNodes = graph.themes
-      .filter((t) => filters.selectedThemes.has(t.id) && themeIdsWithVisibleCards.has(t.id))
-      .map((t) => themeNodeById.get(t.id)!);
-
-    // Filters shrink the actual collection fed to the graph — theme size and the
-    // hover breakdown must reflect that same filtered collection, not the full
-    // unfiltered set. Mutating the persistent ThemeNode objects in place means the
-    // hover handler (which reads the same object) picks this up automatically.
-    for (const t of graph.themes) {
-      themeNodeById.get(t.id)!.roleCounts = emptyRoleCounts();
-    }
-    for (const e of visibleEdges) {
-      themeNodeById.get(e.theme)!.roleCounts[e.role]++;
-    }
-    // Bubble size stays calibrated against whatever's currently visible, not a
-    // fixed reference from the full unfiltered graph — otherwise sizes would look
-    // arbitrary/uncalibrated relative to a heavily filtered-down set.
-    const maxRoleTotal = Math.max(1, ...graph.themes.map((t) => roleCountsTotal(themeNodeById.get(t.id)!.roleCounts)));
-    themeRadius.domain([0, maxRoleTotal]);
-
-    // Weak/strong is recomputed from whatever the color/rarity/type filters
-    // CURRENTLY show (see computeWeakThemeIds) — deliberately a separate pass from
-    // the roleCounts above, which also folds in the theme-selection filter; weak
-    // classification intentionally ignores that axis, same as the filter panel.
-    weakThemeIds = computeWeakThemeIds(graph, filters);
-    for (const t of graph.themes) themeNodeById.get(t.id)!.isWeak = weakThemeIds.has(t.id);
-    for (const c of graph.cards) {
-      const edges = themeEdgesByCard.get(c.id) ?? [];
-      cardNodeById.get(c.id)!.isWeakOnly = edges.length > 0 && edges.every((e) => weakThemeIds.has(e.themeId));
-    }
-
-    // anchorNodes are always included, regardless of the current filter — they're
-    // not rendered and every theme (even a currently-hidden one) still needs them
-    // resolvable for anchorLinkForce.
-    const activeNodes: SimNode[] = [...activeThemeNodes, ...activeCardNodes, ...anchorNodes];
 
     link = link
-      .data(activeLinks, (d: any) => `${typeof d.source === 'object' ? d.source.id : d.source}->${typeof d.target === 'object' ? d.target.id : d.target}`)
-      .join((enter) => {
-        const g = enter.append('g').attr('class', 'link');
-        g.append('line').attr('class', (d) => `link-base link-${d.role}`);
-        g.each(function (d) {
-          const width = edgeStrokeWidth(d.weight);
-          // Solid = a core resource flow (produce/consume); dashed = every other
-          // relation type (atypical, and the former "modifiers" — grant/
-          // magnifier — now that each is its own full-fledged role). Also dashed,
-          // regardless of role, whenever this card ties to this theme via more
-          // than one edge (e.g. both produce AND consume the same theme) — that's
-          // its own signal worth flagging visually.
-          const multiEdge = (pairEdgeCount.get(`${d.source}->${d.target}`) ?? 1) > 1;
-          const needsDash = multiEdge || (d.role !== 'produce' && d.role !== 'consume');
-          d3.select(this)
-            .select('line.link-base')
-            .attr('stroke-width', width)
-            .attr('opacity', 0.55)
-            .attr('stroke-dasharray', needsDash ? DASH_PATTERN : null);
-        });
-        return g;
-      });
-
-    themeG = themeG
-      .data(activeThemeNodes, (d) => d.id)
-      .join((enter) => {
-        const g = enter.append('g').attr('class', 'theme').call(drag(simulation) as any);
-        g.append('circle')
-          .attr('class', (d) => `node-theme${d.isWeak ? ' node-theme-weak' : ''}`)
-          .attr('r', (d) => themeNodeRadius(d));
-        g.append('text').attr('class', 'theme-label').attr('text-anchor', 'middle').attr('dy', 4).text((d) => d.label);
-        g.on('mouseenter', (event, d) => handlers.onThemeHover(d, event))
-          .on('mousemove', (event) => handlers.onHoverMove(event))
-          .on('mouseleave', () => handlers.onHoverEnd())
-          .on('click', (event, d) => handlers.onThemeClick(d, event));
-        return g;
-      });
+      .data(activeEdges, (d) => `${d.parent.a}-${d.parent.b}-${d.description}`)
+      .join((enter) => enter.append('path').attr('class', 'link').attr('fill', 'none').attr('marker-end', 'url(#link-arrow)').attr('opacity', 0.4));
 
     cardG = cardG
       .data(activeCardNodes, (d) => d.id)
@@ -511,100 +492,65 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
           .append('g')
           .attr('class', 'node-card')
           .call(drag(simulation) as any)
-          .on('mouseenter', (event, d) => handlers.onCardHover(d, themeEdgesByCard.get(d.id) ?? [], event))
+          .on('mouseenter', (event, d) => {
+            const neighbors = (linksByCard.get(d.id) ?? [])
+              .filter((n) => activeCardIdSet.has(n.card))
+              .map((n) => ({ card: cardNodeById.get(n.card)!, reasons: n.reasons }));
+            handlers.onCardHover(d, neighbors, event);
+          })
           .on('mousemove', (event) => handlers.onHoverMove(event))
           .on('mouseleave', () => handlers.onHoverEnd())
           .on('click', (event, d) => handlers.onCardClick(d, event));
-        renderCardShape(g, cardRadius);
-        renderRarityLabel(g);
+        renderCardArt(g);
         return g;
       });
 
-    simulation.nodes(activeNodes);
-    // simulation.nodes() just re-initialized weakMutualChargeForce against the full
-    // activeNodes list — restrict it back to weak themes only, on both ends.
-    weakMutualChargeForce.initialize(
-      activeNodes.filter((n) => n.kind === 'theme' && (n as ThemeNode).isWeak),
-      Math.random
-    );
-    (simulation.force('link') as d3.ForceLink<SimNode, SimLink>).links(activeLinks);
-    themeAnchorMap.clear();
-    for (const t of activeThemeNodes) themeAnchorMap.set(t.id, weakThemeIds.has(t.id) ? weakAnchor : strongAnchor);
+    simulation.nodes(activeCardNodes);
+    (simulation.force('link') as d3.ForceLink<CardNode, SimLink>).links(activeLinks);
     simulation.alpha(0.6).restart();
 
     refreshHighlight();
   }
 
-  // Search text, clicked-theme selection, and a single pinned "lookup" card (the
-  // card-lookup dropdown) all feed the SAME highlight pass — they compound rather
-  // than fight each other: matches from any source (and their direct neighbors)
-  // glow, everything else dims. Dimming instead of hiding keeps context while
-  // pointing at relevance.
+  // Search text and a single pinned "lookup" card (the card-lookup dropdown) feed
+  // the same highlight pass — they compound rather than fight each other: matches
+  // from any source (and their direct neighbors) glow, everything else dims.
   let lookupCardId: string | null = null;
   function refreshHighlight() {
     const q = searchQuery.trim().toLowerCase();
     const hasSearch = q.length > 0;
-    const hasSelection = themeSelection.size > 0;
     const hasLookup = lookupCardId != null;
     const hasCardSelection = cardSelection.size > 0;
 
-    if (!hasSearch && !hasSelection && !hasLookup && !hasCardSelection) {
+    if (!hasSearch && !hasLookup && !hasCardSelection) {
       cardG.classed('search-match', false).classed('search-dim', false);
-      themeG.classed('search-match', false).classed('search-dim', false);
       link.classed('search-dim', false);
       return;
     }
 
-    // Clicked cards behave exactly like a search/lookup match — see the comment
-    // below on cardIdsFromCardMatch: full connectivity shown, not just the
-    // theme(s) that happen to also be selected.
     const matchedCardIds = new Set<string>(cardSelection);
-    const matchedThemeIds = new Set<string>(themeSelection);
     if (hasSearch) {
       for (const c of graph.cards) if (c.name.toLowerCase().includes(q)) matchedCardIds.add(c.id);
-      for (const t of graph.themes) if (t.label.toLowerCase().includes(q)) matchedThemeIds.add(t.id);
     }
     if (lookupCardId) matchedCardIds.add(lookupCardId);
 
-    // A card can become relevant two different ways, and links behave differently
-    // depending on which one applies:
-    //  - directly matched (by name search, or the card-lookup pin) — show ALL of
-    //    its links, including to non-matched themes; the point of matching a card
-    //    is seeing everything it connects to.
-    //  - only reachable via a matched THEME (a click, or a theme-name search hit)
-    //    — show just the link(s) back to that matched theme, not the card's other
-    //    edges to unrelated themes. Otherwise clicking one theme lights up every
-    //    edge of every card it touches, including edges that have nothing to do
-    //    with the theme that was actually clicked.
-    const cardIdsFromCardMatch = new Set(matchedCardIds);
-    const cardIdsFromThemeMatch = new Set<string>();
-    const relevantThemeIds = new Set(matchedThemeIds);
+    // A matched card shows all of its links, including to non-matched neighbors —
+    // the point of matching a card is seeing everything it connects to.
+    const relevantCardIds = new Set(matchedCardIds);
     for (const cardId of matchedCardIds) {
-      for (const { themeId } of themeEdgesByCard.get(cardId) ?? []) relevantThemeIds.add(themeId);
+      for (const { card } of linksByCard.get(cardId) ?? []) relevantCardIds.add(card);
     }
-    for (const themeId of matchedThemeIds) {
-      for (const cardId of cardIdsByTheme.get(themeId) ?? []) cardIdsFromThemeMatch.add(cardId);
-    }
-    const relevantCardIds = new Set([...cardIdsFromCardMatch, ...cardIdsFromThemeMatch]);
 
     cardG.classed('search-match', (d) => matchedCardIds.has(d.id)).classed('search-dim', (d) => !relevantCardIds.has(d.id));
-    themeG.classed('search-match', (d) => matchedThemeIds.has(d.id)).classed('search-dim', (d) => !relevantThemeIds.has(d.id));
     link.classed('search-dim', (d) => {
-      const cardId = (d.source as SimNode).id;
-      const themeId = (d.target as SimNode).id;
-      if (cardIdsFromCardMatch.has(cardId)) return false;
-      if (cardIdsFromThemeMatch.has(cardId) && matchedThemeIds.has(themeId)) return false;
-      return true;
+      const sourceId = (d.parent.source as CardNode).id;
+      const targetId = (d.parent.target as CardNode).id;
+      return !matchedCardIds.has(sourceId) && !matchedCardIds.has(targetId);
     });
   }
 
   function applySearch(query: string) {
     searchQuery = query;
-    refreshHighlight();
-  }
-
-  function setThemeSelection(ids: ReadonlySet<string>) {
-    themeSelection = new Set(ids);
     refreshHighlight();
   }
 
@@ -618,39 +564,46 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     refreshHighlight();
   }
 
-  // Visual debug aid: marks the two fixed anchor points so it's visible (not just
-  // inferred from where themes end up) where each category is actually being
-  // pulled toward. They're fixed (fx/fy), so unlike the old ring-radius indicator
-  // this never needs updating after being drawn once.
-  const anchorVisual = root.insert('g', ':first-child').attr('class', 'anchor-visual');
-  anchorVisual
-    .selectAll('circle')
-    .data(anchorNodes)
-    .join('circle')
-    .attr('class', (d) => `anchor-point anchor-point-${d.id === strongAnchor.id ? 'strong' : 'weak'}`)
-    .attr('cx', (d) => d.fx!)
-    .attr('cy', (d) => d.fy!)
-    .attr('r', 10);
+  // Straight line for a pair's only relation; a quadratic curve, offset
+  // sideways by lane index, when more than one relation shares the same
+  // pair — so each gets its own visible arrow instead of stacking into one
+  // indistinguishable line. The arrival point is trimmed back by the
+  // target's own radius (+ a small gap) so the arrowhead marker lands just
+  // outside the node instead of underneath its opaque fill.
+  function edgePath(d: VisualEdge): string {
+    const s = (d.fromA ? d.parent.source : d.parent.target) as CardNode;
+    const t = (d.fromA ? d.parent.target : d.parent.source) as CardNode;
+    const sx = s.x!;
+    const sy = s.y!;
+    let tx = t.x!;
+    let ty = t.y!;
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const gap = cardRadius() + EDGE_ARROW_GAP;
+    tx -= (dx / dist) * gap;
+    ty -= (dy / dist) * gap;
+
+    if (d.laneCount <= 1) return `M${sx},${sy}L${tx},${ty}`;
+    const nx = -dy / dist;
+    const ny = dx / dist;
+    const offset = (d.laneIndex - (d.laneCount - 1) / 2) * EDGE_LANE_SPACING;
+    const mx = (sx + tx) / 2 + nx * offset;
+    const my = (sy + ty) / 2 + ny * offset;
+    return `M${sx},${sy}Q${mx},${my} ${tx},${ty}`;
+  }
 
   simulation.on('tick', () => {
-    link
-      .selectAll<SVGLineElement, SimLink>('line')
-      .attr('x1', (d) => (d.source as SimNode).x!)
-      .attr('y1', (d) => (d.source as SimNode).y!)
-      .attr('x2', (d) => (d.target as SimNode).x!)
-      .attr('y2', (d) => (d.target as SimNode).y!);
-    themeG.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    link.attr('d', edgePath);
     cardG.attr('transform', (d) => `translate(${d.x},${d.y})`);
   });
 
   // "Rerender from the ground up" — clears every node's position (and any pinned
   // drag position) so the simulation starts over from d3's default random scatter
   // instead of wherever it previously settled, for when a layout got stuck clumped
-  // up and no amount of force-slider tweaking un-sticks it. Clears ALL nodes (not
-  // just the currently-active/filtered ones) so a theme hidden by the current
-  // filter doesn't reappear still pinned to its old spot.
-  function resetLayout(filters: GraphFilters) {
-    for (const node of [...themeNodeById.values(), ...cardNodeById.values()]) {
+  // up and no amount of force-slider tweaking un-sticks it.
+  function resetLayout(filters: AttrFilters) {
+    for (const node of cardNodeById.values()) {
       delete node.x;
       delete node.y;
       delete node.vx;
@@ -667,5 +620,6 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     svg.selectAll('*').remove();
   }
 
-  return { render, applySearch, setThemeSelection, setCardSelection, setLookupHighlight, setForces, getForces, resetLayout, destroy };
+  return { render, applySearch, setCardSelection, setLookupHighlight, setForces, getForces, resetLayout, destroy };
 }
+

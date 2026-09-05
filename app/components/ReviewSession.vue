@@ -29,9 +29,24 @@ interface HistoryEntry {
   text?: string;
 }
 
-// `theme` doesn't have to already exist in store.graph — themeLabelById below
-// falls back to the raw id, so proposing a brand-new theme (not yet in THEMES)
-// works the same as suggesting an edge on an existing one.
+// `theme` doesn't have to already exist in data/global_themes.json —
+// themeLabelById below falls back to the raw id, so proposing a brand-new
+// theme (not yet in THEMES) works the same as suggesting an edge on an
+// existing one.
+
+interface RelationsEntry {
+  name: string;
+  themes: Partial<Record<Role, Record<string, number>>>;
+}
+
+// This panel's own "current relations" display used to piggyback on
+// store.graph's theme/edge data — but the main graph now sources direct
+// card<->card links from functional-model instead (see this session's
+// visualizer redesign), which carries no theme/edge shape at all. The
+// hand-tagged theme corpus this panel actually needs is untouched on disk
+// (data/global_themes.json, data/fin/fin_relations.json — the review
+// workflow's own output, still live via public/fin's symlink) — fetched
+// directly here instead, independent of the main graph.
 
 // Talks to scripts/review-server.mjs (long-poll control plane) — the agent pushes
 // a card + its assessment via POST /show, this panel polls GET /state to pick it
@@ -50,6 +65,17 @@ const history = ref<HistoryEntry[]>([]);
 const historyEl = ref<HTMLElement | null>(null);
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
+const themes = ref<{ id: string; label: string }[]>([]);
+const relations = ref<RelationsEntry[]>([]);
+async function loadRelationsData() {
+  const [t, r] = await Promise.all([
+    fetch('/global_themes.json').then((res) => res.json()),
+    fetch('/fin/fin_relations.json').then((res) => res.json()),
+  ]);
+  themes.value = t;
+  relations.value = r;
+}
+
 async function poll(): Promise<boolean> {
   try {
     const res = await fetch(`${SERVER}/state`);
@@ -59,7 +85,7 @@ async function poll(): Promise<boolean> {
     if (s.id && s.id !== lastId.value) {
       lastId.value = s.id;
       started.value = true;
-      await store.load(); // pick up any re-tag the agent ran since the last card
+      await loadRelationsData(); // pick up any re-tag the agent ran since the last card
       cardName.value = s.card;
       feedbackText.value = '';
     }
@@ -71,6 +97,7 @@ async function poll(): Promise<boolean> {
 }
 
 onMounted(async () => {
+  await loadRelationsData();
   // Only keep polling once the server's actually there — otherwise this panel
   // (mounted on every load whenever NUXT_PUBLIC_ENABLE_REVIEW is set, review
   // session or not) would spam connection-refused requests to localhost:8787
@@ -83,18 +110,11 @@ onBeforeUnmount(() => {
 
 const themeLabelById = computed(() => {
   const map = new Map<string, string>();
-  store.graph.value?.themes.forEach((t) => map.set(t.id, t.label));
+  themes.value.forEach((t) => map.set(t.id, t.label));
   return map;
 });
 
-const edgesByCard = computed(() => {
-  const map = new Map<string, { themeId: string; role: Role; weight: number }[]>();
-  for (const e of store.graph.value?.edges ?? []) {
-    if (!map.has(e.card)) map.set(e.card, []);
-    map.get(e.card)!.push({ themeId: e.theme, role: e.role, weight: e.weight });
-  }
-  return map;
-});
+const relationsByName = computed(() => new Map(relations.value.map((r) => [r.name, r])));
 
 const currentCard = computed(() => {
   if (!cardName.value || !store.graph.value) return null;
@@ -102,9 +122,12 @@ const currentCard = computed(() => {
 });
 
 const currentColumns = computed(() => {
-  if (!currentCard.value) return [];
-  const edges = edgesByCard.value.get(currentCard.value.id) ?? [];
-  const chips = edges.flatMap((te) => describeRelation(themeLabelById.value.get(te.themeId) ?? te.themeId, te.role, te.weight));
+  if (!cardName.value) return [];
+  const entry = relationsByName.value.get(cardName.value);
+  if (!entry) return [];
+  const chips = Object.entries(entry.themes ?? {}).flatMap(([role, byTheme]) =>
+    Object.entries(byTheme ?? {}).flatMap(([theme, weight]) => describeRelation(themeLabelById.value.get(theme) ?? theme, role as Role, weight))
+  );
   return groupChipsByVerb(chips);
 });
 

@@ -1,5 +1,4 @@
-import type { CardData, EdgeData, GraphFile, Role } from '../types';
-import { ROLES } from '../types';
+import type { CardData, GraphFile } from '../types';
 import { CORE_TYPES } from './constants';
 
 export function cardColors(c: CardData): string[] {
@@ -34,23 +33,6 @@ export function passesAttrFilters(c: CardData, f: AttrFilters): boolean {
   return true;
 }
 
-// Theme checklist counts reflect the color/rarity/type filters only — not the theme
-// checkboxes themselves (unchecking a theme shouldn't zero out its own count), and
-// not search — search highlights within the filtered collection, it doesn't shrink it.
-export function computeThemeCounts(graph: GraphFile, f: AttrFilters): Record<string, number> {
-  const filteredCardIds = new Set(graph.cards.filter((c) => passesAttrFilters(c, f)).map((c) => c.id));
-  const counts: Record<string, number> = {};
-  for (const t of graph.themes) counts[t.id] = 0;
-  for (const e of graph.edges) {
-    if (filteredCardIds.has(e.card)) counts[e.theme] = (counts[e.theme] ?? 0) + 1;
-  }
-  return counts;
-}
-
-export interface FullFilters extends AttrFilters {
-  selectedThemes: ReadonlySet<string>;
-}
-
 export interface FacetCounts {
   colors: Record<string, number>;
   rarities: Record<string, number>;
@@ -60,19 +42,13 @@ export interface FacetCounts {
 // Faceted counts, matching what a filter-UI user expects: each option's number is
 // "how many cards would match if every OTHER filter axis kept its current selection
 // and this axis were ignored." So a color's count never moves when you toggle other
-// colors, only when you change rarity/type/theme selections — and vice versa.
-// Themes isn't included here: its own count (computeThemeCounts above) already
-// follows this exact rule by construction (it only ever looks at color/rarity/type).
-export function computeFacetCounts(graph: GraphFile, f: FullFilters): FacetCounts {
-  const connectedCardIds = new Set<string>();
-  for (const e of graph.edges) if (f.selectedThemes.has(e.theme)) connectedCardIds.add(e.card);
-
+// colors, only when you change rarity/type selections — and vice versa.
+export function computeFacetCounts(graph: GraphFile, f: AttrFilters): FacetCounts {
   const colors: Record<string, number> = {};
   const rarities: Record<string, number> = {};
   const types: Record<string, number> = {};
 
   for (const c of graph.cards) {
-    if (!connectedCardIds.has(c.id)) continue;
     const cColors = cardColors(c);
     const cTypes = cardTypes(c);
     const matchesType = cTypes.some((t) => f.selectedTypes.has(t));
@@ -85,76 +61,4 @@ export function computeFacetCounts(graph: GraphFile, f: FullFilters): FacetCount
   }
 
   return { colors, rarities, types };
-}
-
-// Optional `f`: when given, only counts edges whose card currently passes the
-// color/rarity/type filters — see computeWeakThemeIds below for why this matters.
-export function computeRoleCountsByTheme(graph: GraphFile, f?: AttrFilters): Map<string, Record<Role, number>> {
-  const map = new Map<string, Record<Role, number>>();
-  for (const t of graph.themes) map.set(t.id, Object.fromEntries(ROLES.map((r) => [r, 0])) as Record<Role, number>);
-  const passingCardIds = f ? new Set(graph.cards.filter((c) => passesAttrFilters(c, f)).map((c) => c.id)) : null;
-  for (const e of graph.edges) {
-    if (passingCardIds && !passingCardIds.has(e.card)) continue;
-    const rc = map.get(e.theme);
-    if (rc) rc[e.role]++;
-  }
-  return map;
-}
-
-// A theme is "weak" only when it's STRICTLY one-sided — every edge is produce (Job
-// Select: 23 edges, 100% produce, nothing pays off "how many Job Select creatures
-// you control") or every edge is consume, with zero of anything else. Any atypical
-// edge, or a genuine mix of produce AND consume, signals real two-sided structure —
-// not weak. Single source of truth shared by the graph renderer (which banishes weak
-// themes to an outer orbit) and the filter panel (bolds strong themes, offers "Strong").
-//
-// grant/magnifier count as producer-side (an Equipment's self-granted bonus, or
-// amplifying a resource, is generating supply the same way a plain produce edge
-// is — matches how these used to be tagged before grant/magnifier became their
-// own roles: role: 'produce', modifiers: ['granter']).
-export function isPureOneSided(rc: Record<Role, number>): boolean {
-  const producers = rc.produce + rc.grant + rc.magnifier;
-  const consumers = rc.consume;
-  const breaksPurity = rc.atypical > 0;
-  const isPureProduce = producers > 0 && consumers === 0 && !breaksPurity;
-  const isPureConsume = consumers > 0 && producers === 0 && !breaksPurity;
-  return isPureProduce || isPureConsume;
-}
-
-// Weak/strong is computed from whatever the color/rarity/type filters CURRENTLY
-// show, not the full unfiltered set — the visualizer shouldn't classify a theme
-// based on data the user has explicitly filtered out. Deliberately ignores the
-// theme-selection filter (which themes' checkboxes are ticked), same as
-// computeThemeCounts above — only attribute filters shrink the pool being judged.
-export function computeWeakThemeIds(graph: GraphFile, f: AttrFilters): Set<string> {
-  const roleCounts = computeRoleCountsByTheme(graph, f);
-  const weak = new Set<string>();
-  for (const t of graph.themes) {
-    if (isPureOneSided(roleCounts.get(t.id)!)) weak.add(t.id);
-  }
-  // "Not Processed" is the synthetic catch-all for cards with no review entry yet —
-  // every edge into it is a manufactured 'atypical' placeholder (see
-  // src/lib/buildGraph.ts), so the strict one-sided test above never fires for
-  // it even though it's the clearest case of "no real signal yet" there is.
-  // Always weak, regardless of role mix.
-  if (graph.themes.some((t) => t.id === 'not-processed')) weak.add('not-processed');
-  return weak;
-}
-
-export function groupEdgesByCard(edges: EdgeData[]): Map<string, { themeId: string; role: Role }[]> {
-  const map = new Map<string, { themeId: string; role: Role }[]>();
-  for (const e of edges) {
-    if (!map.has(e.card)) map.set(e.card, []);
-    map.get(e.card)!.push({ themeId: e.theme, role: e.role });
-  }
-  return map;
-}
-
-export function groupCardsByTheme(edges: EdgeData[]): Map<string, Set<string>> {
-  const map = new Map<string, Set<string>>();
-  for (const e of edges) {
-    if (!map.has(e.theme)) map.set(e.theme, new Set());
-    map.get(e.theme)!.add(e.card);
-  }
-  return map;
 }

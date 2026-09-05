@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch, inject } from 'vue';
-import { createGraphRenderer, type GraphFilters } from '../lib/graphRenderer';
+import { createGraphRenderer } from '../lib/graphRenderer';
+import type { AttrFilters } from '../lib/filters';
 import { StoreKey } from '../composables/useGraphStore';
 import type { GraphFile } from '../types';
 
@@ -9,9 +10,8 @@ const store = inject(StoreKey)!;
 const svgEl = ref<SVGSVGElement | null>(null);
 let renderer: ReturnType<typeof createGraphRenderer> | null = null;
 
-function currentFilters(): GraphFilters {
+function currentFilters(): AttrFilters {
   return {
-    selectedThemes: store.selectedThemes,
     selectedColors: store.selectedColors,
     selectedRarities: store.selectedRarities,
     selectedTypes: store.selectedTypes,
@@ -23,13 +23,8 @@ onMounted(() => {
   // persistent node objects — Vue never re-mounts this <svg>, so node positions,
   // zoom, and drag state all survive every filter/search change untouched.
   renderer = createGraphRenderer(svgEl.value!, props.graph, {
-    onCardHover(card, themeEdges, event) {
-      store.hovered.value = { kind: 'card', card, themeEdges };
-      store.mouseX.value = event.clientX;
-      store.mouseY.value = event.clientY;
-    },
-    onThemeHover(theme, event) {
-      store.hovered.value = { kind: 'theme', theme };
+    onCardHover(card, links, event) {
+      store.hovered.value = { kind: 'card', card, links };
       store.mouseX.value = event.clientX;
       store.mouseY.value = event.clientY;
     },
@@ -41,46 +36,37 @@ onMounted(() => {
       store.hovered.value = null;
     },
     onCardClick(card, event) {
-      // Ctrl/Cmd-click opens Scryfall (a "look this up externally" gesture) —
-      // everything else navigates to that card's own page instead of
-      // selecting it on the graph (click-to-select is off for now; see
-      // store.cardSelection/toggleCardSelection, left in place but unused
-      // here — not removed, just not wired to this click anymore).
-      if (event.ctrlKey || event.metaKey) {
-        window.open(card.scryfallUri, '_blank');
-        return;
-      }
-      navigateTo(`/app/card/${card.set}/${card.collectorNumber}`);
-    },
-    onThemeClick(theme, event) {
-      store.toggleThemeSelection(theme.id, event.shiftKey);
+      // Opens this card's own page in a new tab — the graph itself stays put
+      // rather than navigating away from it (unlike the old same-tab
+      // navigateTo this replaced). No more Ctrl/Cmd-click-to-Scryfall
+      // shortcut — the hover-only Scryfall icon (graphRenderer.ts's
+      // `.scryfall-link`) is the one discoverable way there now, and stops
+      // its own click from ever reaching here (click-to-select is off for
+      // now; see store.cardSelection/toggleCardSelection, left in place but
+      // unused here).
+      void event;
+      window.open(`/app/card/${card.set}/${card.collectorNumber}`, '_blank', 'noopener');
     },
     onBackgroundClick() {
-      store.themeSelection.clear();
       store.cardSelection.clear();
     },
   });
   renderer.render(currentFilters());
 
   // Spreading each reactive Set inside the getter makes Vue track their iteration,
-  // so add/delete on any filter re-triggers this — one watcher for all four.
+  // so add/delete on any filter re-triggers this — one watcher for all three.
   watch(
-    () => [...store.selectedThemes, ...store.selectedColors, ...store.selectedRarities, ...store.selectedTypes],
+    () => [...store.selectedColors, ...store.selectedRarities, ...store.selectedTypes],
     () => renderer!.render(currentFilters())
   );
   watch(
     () => store.searchQuery.value,
     (q) => renderer!.applySearch(q)
   );
-  // immediate: true on both — the URL can already have `focus`/`card` populated
-  // by the time this component mounts (store.load() resolves those synchronously
-  // before Vue even flushes the v-if that mounts this component), so without it
-  // a shared link's highlight silently wouldn't show until the user interacted.
-  watch(
-    () => [...store.themeSelection],
-    (ids) => renderer!.setThemeSelection(new Set(ids)),
-    { immediate: true }
-  );
+  // immediate: true — the URL can already have `card` populated by the time this
+  // component mounts (store.load() resolves it synchronously before Vue even
+  // flushes the v-if that mounts this component), so without it a shared link's
+  // highlight silently wouldn't show until the user interacted.
   watch(
     () => [...store.cardSelection],
     (ids) => renderer!.setCardSelection(new Set(ids)),
@@ -91,45 +77,9 @@ onMounted(() => {
     (id) => renderer!.setLookupHighlight(id)
   );
   watch(
-    () => [
-      store.themeCharge.value,
-      store.cardCharge.value,
-      store.gravity.value,
-      store.linkStrength.value,
-      store.linkDistanceScale.value,
-      store.collidePadding.value,
-      store.alphaDecay.value,
-      store.velocityDecay.value,
-      store.anchorLinkStrength.value,
-      store.anchorFreeRadius.value,
-      store.anchorSpread.value,
-    ],
-    ([
-      themeCharge,
-      cardCharge,
-      gravity,
-      linkStrength,
-      linkDistanceScale,
-      collidePadding,
-      alphaDecay,
-      velocityDecay,
-      anchorLinkStrength,
-      anchorFreeRadius,
-      anchorSpread,
-    ]) =>
-      renderer!.setForces({
-        themeCharge,
-        cardCharge,
-        gravity,
-        linkStrength,
-        linkDistanceScale,
-        collidePadding,
-        alphaDecay,
-        velocityDecay,
-        anchorLinkStrength,
-        anchorFreeRadius,
-        anchorSpread,
-      }),
+    () => [store.cardCharge.value, store.gravity.value, store.linkStrength.value, store.linkDistanceScale.value, store.collidePadding.value, store.alphaDecay.value, store.velocityDecay.value],
+    ([cardCharge, gravity, linkStrength, linkDistanceScale, collidePadding, alphaDecay, velocityDecay]) =>
+      renderer!.setForces({ cardCharge, gravity, linkStrength, linkDistanceScale, collidePadding, alphaDecay, velocityDecay }),
     // Without this, the renderer starts on DEFAULT_FORCES and only picks up the
     // real (possibly localStorage-restored) slider values once something actually
     // changes them — immediate applies whatever's currently loaded right away.
@@ -169,20 +119,12 @@ svg#graph {
   cursor: grab;
 }
 
-.link-produce { stroke: var(--color-produce); }
-.link-consume { stroke: var(--color-consume); }
-.link-atypical { stroke: var(--color-atypical); }
-/* stroke-dasharray for atypical / modifier edges is set per-edge in JS (data-driven),
-   not here — see graphRenderer.ts. */
+.link {
+  stroke: var(--color-produce);
+}
 
 .search-dim {
   opacity: 0.08;
-}
-
-/* Theme nodes stay clickable targets even while dimmed (to select/deselect them
-   or click a different one) — 0.08 made them nearly impossible to find and hit. */
-.theme.search-dim {
-  opacity: 0.45;
 }
 
 .search-match {
@@ -193,57 +135,12 @@ svg#graph {
   cursor: pointer;
 }
 
-.node-card .card-shape {
-  stroke: #000;
-  stroke-width: 0.5;
+.scryfall-link {
+  opacity: 0;
+  transition: opacity 100ms;
 }
 
-.rarity-label {
-  font-weight: 700;
-  paint-order: stroke;
-  stroke: #000;
-  stroke-width: 2.5px;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
-
-.node-theme {
-  fill: var(--color-surface);
-  stroke: var(--color-focus);
-  stroke-width: 1.5;
-  cursor: pointer;
-}
-
-/* Weak theme: strictly one-sided (all produce, or all consume), zero of anything
-   else (e.g. Job Select — 100% produce, nothing in the set reads it back). Dashed +
-   muted fill/stroke, and it's invisibly bound to the weak anchor point in the
-   simulation (see graphRenderer.ts) — visually and physically, it doesn't act like
-   a "real" hub. */
-.node-theme-weak {
-  fill: #2c2e38;
-  stroke: #4a4d5c;
-  stroke-dasharray: 6 4;
-  opacity: 0.75;
-}
-
-/* Debug/explainer markers: the two fixed points every theme is invisibly linked to
-   depending on category (see strongAnchor/weakAnchor in graphRenderer.ts) — not
-   interactive, not part of the actual graph data. */
-.anchor-point {
-  fill: none;
-  stroke-width: 2;
-  stroke-dasharray: 2 4;
-  opacity: 0.5;
-  pointer-events: none;
-}
-.anchor-point-strong { stroke: var(--color-produce); }
-.anchor-point-weak { stroke: var(--color-atypical); }
-
-.theme-label {
-  fill: var(--color-text);
-  font-size: 12px;
-  font-weight: 600;
-  pointer-events: none;
-  text-shadow: 0 0 4px var(--color-bg), 0 0 4px var(--color-bg);
+.node-card:hover .scryfall-link {
+  opacity: 1;
 }
 </style>

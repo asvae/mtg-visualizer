@@ -12,6 +12,11 @@ export interface CardData {
   typeLine: string;
   rarity: string;
   images: string[];
+  // Front face's Scryfall art_crop (illustration only, no frame/text) — the
+  // main graph's own card node uses this (app/lib/graphRenderer.ts); the
+  // hover tooltip's CardMedia still uses `images` (the whole card) above.
+  // `null` for the rare card with no resolved art_crop.
+  artCrop: string | null;
   tokens: { name: string; image: string }[];
   scryfallUri: string;
   keywords: string[];
@@ -20,6 +25,10 @@ export interface CardData {
   // scryfall.com/card/<set>/<number>, so prev/next is a plain ±1.
   set: string;
   collectorNumber: string;
+  // How many copies are in the active deck-import filter — only ever set in
+  // `deck` mode (see useGraphStore.ts); `undefined` in every other mode
+  // (plain set browsing, an `sf=` Scryfall query), never a meaningless 1.
+  qty?: number;
 }
 
 export interface ThemeData {
@@ -34,11 +43,40 @@ export interface EdgeData {
   weight: number;
 }
 
+// One matched fact behind a CardLink — `description` is the human-readable
+// text (functional-model/synergy.ts's `describeFact`), `weight` is the
+// match's combined two-sided strength (`Math.sqrt(mineTotal * theirTotal)`,
+// each a `factTotal` — see functional-model/synergy.ts's own doc comments on
+// `Weight`/`factTotal`), 1-25, or `null` if either side's fact predates the
+// weight fields (treat as "unweighted," never as 1 — a real 1 means
+// "verified minimum-strength match," not "unknown").
+export interface GraphReason {
+  description: string;
+  weight: number | null;
+  // Which of the parent CardLink's `a`/`b` is the source (arrow tail) for
+  // this specific reason — 'a' means a is the source and b the sink, 'b' the
+  // reverse. Two reasons on the same pair can point opposite ways (each
+  // card independently is a source the other is a sink for); direction is
+  // per-reason, not per-pair, which is why it lives here and not on
+  // CardLink itself.
+  from: 'a' | 'b';
+}
+
+// Direct card<->card synergy edge for the main graph visualizer — sourced
+// from functional-model's real, verified matching (server/api/graph-links.ts),
+// not the hand-curated theme-hub edges above (which stay alive for the card
+// detail page's own "Synergy model" column and the review tooling, see
+// EdgeData/ThemeData). `a`/`b` are card ids (unordered pair, `a < b`).
+export interface CardLink {
+  a: string;
+  b: string;
+  reasons: GraphReason[];
+}
+
 export interface GraphFile {
   set: string;
   cards: CardData[];
-  themes: ThemeData[];
-  edges: EdgeData[];
+  links: CardLink[];
 }
 
 export const ROLES: Role[] = ['produce', 'consume', 'atypical', 'grant', 'magnifier'];

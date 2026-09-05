@@ -5,18 +5,7 @@ import { StoreKey, type Store } from '../composables/useGraphStore';
 const store = inject(StoreKey)!;
 
 interface SliderDef {
-  key: keyof Pick<
-    Store,
-    | 'themeCharge'
-    | 'cardCharge'
-    | 'gravity'
-    | 'linkStrength'
-    | 'alphaDecay'
-    | 'velocityDecay'
-    | 'anchorLinkStrength'
-    | 'anchorFreeRadius'
-    | 'anchorSpread'
-  >;
+  key: keyof Pick<Store, 'cardCharge' | 'gravity' | 'linkStrength' | 'alphaDecay' | 'velocityDecay'>;
   label: string;
   help: string;
   min: number;
@@ -27,18 +16,9 @@ interface SliderDef {
 
 const SLIDERS: SliderDef[] = [
   {
-    key: 'themeCharge',
-    label: 'Theme repulsion',
-    help: 'How strongly theme hub nodes push everything else away. More negative spreads hubs further apart from each other and from cards.',
-    min: -6000,
-    max: -50,
-    step: 25,
-    format: (v) => `${v}`,
-  },
-  {
     key: 'cardCharge',
     label: 'Card repulsion',
-    help: 'How strongly card nodes push away from each other and from hubs. More negative makes the whole graph looser and more spread out.',
+    help: 'How strongly card nodes push away from each other. More negative makes the whole graph looser and more spread out.',
     min: -2000,
     max: -5,
     step: 5,
@@ -56,7 +36,7 @@ const SLIDERS: SliderDef[] = [
   {
     key: 'linkStrength',
     label: 'Link strength',
-    help: 'How firmly a card is pulled toward its connected theme(s) along each link. Higher makes clusters snap together tighter.',
+    help: 'How firmly a card is pulled toward its directly-connected cards along each link. Higher makes clusters snap together tighter.',
     min: 0,
     max: 1.5,
     step: 0.01,
@@ -79,33 +59,6 @@ const SLIDERS: SliderDef[] = [
     max: 0.9,
     step: 0.01,
     format: (v) => v.toFixed(2),
-  },
-  {
-    key: 'anchorLinkStrength',
-    label: 'Anchor pull',
-    help: 'How firmly a theme gets pulled back toward its weak/strong anchor once it strays past the free radius. 0 = anchors have no effect at all.',
-    min: 0,
-    max: 1,
-    step: 0.01,
-    format: (v) => v.toFixed(2),
-  },
-  {
-    key: 'anchorFreeRadius',
-    label: 'Anchor free radius',
-    help: 'Distance from its anchor where a theme feels zero pull — free to be positioned entirely by its own cards. Pull only kicks in past this.',
-    min: 0,
-    max: 2500,
-    step: 10,
-    format: (v) => `${v}`,
-  },
-  {
-    key: 'anchorSpread',
-    label: 'Anchor spread',
-    help: 'Multiplies how far apart the weak-theme and strong-theme anchor points are. 1 = baseline, 2 = twice as far apart.',
-    min: 0.5,
-    max: 4,
-    step: 0.1,
-    format: (v) => `${v.toFixed(2)}×`,
   },
 ];
 </script>

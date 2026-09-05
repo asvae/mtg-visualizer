@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
-import { parseManaSegments } from '../../../../lib/manaSegments';
 import { describeFact } from '../../../../../functional-model/synergy';
-import type { Fact } from '../../../../../functional-model/synergy';
+import type { Fact, AnnotatedText } from '../../../../../functional-model/synergy';
 import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
-import type { CardData, EdgeData, SynergyFlow, SynergyFlowStep, SynergyNode, ThemeData } from '../../../../types';
+import type { CardData, EdgeData, ThemeData } from '../../../../types';
+import { getKnownDeckCards, getActiveFilterMode } from '../../../../composables/useGraphStore';
 
 definePageMeta({ layout: 'graph' });
 
@@ -15,24 +15,128 @@ interface CardResponse {
   card: CardData;
   edges: EdgeData[];
   themes: ThemeData[];
-  synergyNodes: Record<string, SynergyNode> | null;
-  synergyFlow: SynergyFlow | null;
-  synergyReview: 'ai' | 'human' | null;
   functionalModel: {
     source: string;
-    synergy: { produces: Fact[]; wants: Fact[] } | null;
+    synergy: { source: Fact[]; sink: Fact[] } | null;
     traces: { scenario: { setup: string; action: string; result: string }; log: Record<string, unknown>[] }[];
+    annotatedText: AnnotatedText | null;
+    review: 'ai' | 'human' | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
 }
 
-// Prev/next is pure client-side ±1 on the URL's :number — no server
-// round-trip to validate a neighbor exists, so clicking Next/Previous (or
-// pressing the arrow keys) doesn't wait on anything. A number past either
-// edge of the set just 404s into this page's own "Card not found" state.
+// Plain client-side ±1 on the URL's :number when no global filter (deck
+// import / Scryfall query) is active — no server round-trip to validate a
+// neighbor exists, so clicking Next/Previous (or pressing the arrow keys)
+// doesn't wait on anything. A number past either edge of the set just 404s
+// into this page's own "Card not found" state.
 const currentNumber = computed(() => parseInt(String(route.params.number), 10));
-const prevNumber = computed(() => (Number.isFinite(currentNumber.value) && currentNumber.value > 1 ? currentNumber.value - 1 : null));
-const nextNumber = computed(() => (Number.isFinite(currentNumber.value) ? currentNumber.value + 1 : null));
+
+interface FilterCardEntry {
+  name: string;
+  set: string;
+  collectorNumber: string;
+}
+// Whichever global filter (deck import / Scryfall query) is active right
+// now, resolved to a real, ordered {set, collectorNumber} list — fetched
+// once on mount, same "standalone route" reasoning as the main useFetch
+// above (this page doesn't share the main graph store's already-loaded
+// card list, see this file's own header comment). `null` while unresolved
+// OR when no filter is active at all — either way Previous/Next below fall
+// back to plain ±1 in the SAME real set the current card is in.
+const filterOrder = ref<FilterCardEntry[] | null>(null);
+
+async function loadFilterOrder() {
+  const filter = getActiveFilterMode();
+  if (!filter) return;
+  try {
+    let raw: { name: string; set?: string; collector_number?: string; card_faces?: { name?: string }[] }[];
+    if (filter.mode === 'deck') {
+      const res = await fetch('/api/cards/by-names', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ names: [...new Set(filter.cards.map((c) => c.name))] }),
+      });
+      const body = await res.json();
+      if (!res.ok) return;
+      raw = body.cards;
+    } else {
+      const res = await fetch('/api/cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: filter.query }),
+      });
+      const body = await res.json();
+      if (!res.ok) return;
+      raw = body.cards;
+    }
+    // Keyed by every name a decklist/query might reference a card by — its
+    // own top-level name (a DFC's is both faces joined by " // ") AND each
+    // individual face's name, same front-face fallback deckQty above uses.
+    const byName = new Map<string, FilterCardEntry>();
+    for (const c of raw) {
+      if (!c.set || !c.collector_number) continue;
+      const entry: FilterCardEntry = { name: c.name, set: c.set, collectorNumber: c.collector_number };
+      byName.set(c.name, entry);
+      for (const f of c.card_faces ?? []) if (f.name) byName.set(f.name, entry);
+    }
+    const seen = new Set<string>();
+    const dedupe = (e: FilterCardEntry) => {
+      const key = `${e.set}/${e.collectorNumber}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    };
+    if (filter.mode === 'deck') {
+      // Preserve the deck's own paste order — the whole point of scoping to
+      // a deck is browsing it as a deck, not by incidental collector number.
+      filterOrder.value = filter.cards.map((c) => byName.get(c.name)).filter((e): e is FilterCardEntry => !!e && dedupe(e));
+    } else {
+      // No "paste order" to preserve here — collector number within each
+      // real set is the closest thing to a stable, sensible reading order.
+      filterOrder.value = [...byName.values()]
+        .filter(dedupe)
+        .sort((a, b) => (a.set === b.set ? Number(a.collectorNumber) - Number(b.collectorNumber) : a.set.localeCompare(b.set)));
+    }
+  } catch {
+    // network hiccup — Previous/Next just fall back to plain ±1 below
+  }
+}
+
+// Current card's position in the active filter's own ordered list, if any —
+// -1 (not just "no filter") also covers the current card genuinely not
+// being IN that list (e.g. a stale filter flag, or a direct visit to some
+// other card while a deck/query filter happens to be active elsewhere);
+// either way that's exactly when falling back to plain ±1 is right, same as
+// no filter at all.
+const filterIndex = computed(() => {
+  if (!filterOrder.value || !card.value) return -1;
+  return filterOrder.value.findIndex((e) => e.set === card.value!.set && e.collectorNumber === card.value!.collectorNumber);
+});
+
+interface NeighborTarget {
+  set: string;
+  collectorNumber: string;
+}
+const prevTarget = computed<NeighborTarget | null>(() => {
+  if (filterIndex.value >= 0) return filterIndex.value > 0 ? filterOrder.value![filterIndex.value - 1]! : null;
+  return Number.isFinite(currentNumber.value) && currentNumber.value > 1
+    ? { set: String(route.params.set), collectorNumber: String(currentNumber.value - 1) }
+    : null;
+});
+const nextTarget = computed<NeighborTarget | null>(() => {
+  if (filterIndex.value >= 0) return filterIndex.value < filterOrder.value!.length - 1 ? filterOrder.value![filterIndex.value + 1]! : null;
+  return Number.isFinite(currentNumber.value) ? { set: String(route.params.set), collectorNumber: String(currentNumber.value + 1) } : null;
+});
+
+// Same names filterOrder above already resolved (deck paste order or query
+// match — either way `filterOrder` entries carry their own `name`), reused
+// here as the main fetch's own POST body so the Interactions panel
+// (server/api/card/[set]/[number].ts's `filterNames` scoping) respects the
+// same active global filter Previous/Next does — `null` until filterOrder
+// itself settles (or forever, if no filter is active), same "unscoped
+// until proven otherwise" fallback.
+const filterNames = computed<string[] | null>(() => (filterOrder.value ? filterOrder.value.map((e) => e.name) : null));
 
 // Standalone request — this page owns its data, independent of the big
 // client-side graph store (app/composables/useGraphStore.ts). A direct visit
@@ -47,36 +151,98 @@ const nextNumber = computed(() => (Number.isFinite(currentNumber.value) ? curren
 // meaning `pending` is already false by the time anything renders, so the
 // spinner below never shows on a fresh visit (only on a later Previous/Next
 // reactive refetch, once the component's already mounted).
-const { data, pending, error } = useFetch<CardResponse>(() => `/api/card/${route.params.set}/${route.params.number}`);
+// POST (not GET) so `filterNames` can ride along in the body — a reactive
+// getter, same as the URL above, so this automatically refetches once
+// filterOrder (and therefore filterNames) settles after mount, picking up
+// the Interactions panel's filter scoping without a second request.
+const { data, pending, error } = useFetch<CardResponse>(() => `/api/card/${route.params.set}/${route.params.number}`, {
+  method: 'POST',
+  body: computed(() => (filterNames.value ? { filterNames: filterNames.value } : undefined)),
+});
 
 const card = computed(() => data.value?.card ?? null);
 
-// Raw payload behind the "Raw JSON" spoiler — the exact nodes/flow the
-// outline table below walks, for a direct look at what synergy-model
-// actually stores versus forge-model's own raw script spoiler.
-const synergyJson = computed(() => {
-  if (!data.value?.synergyNodes || !data.value?.synergyFlow) return null;
-  return JSON.stringify({ nodes: data.value.synergyNodes, flow: data.value.synergyFlow }, null, 2);
+// Known-deck qty for the card currently on screen — shows regardless of
+// whether that deck is also the active global filter (see
+// getKnownDeckCards's own comment in useGraphStore.ts and the "Global
+// filter by deck" checkbox in AppHeader.vue), same as the main graph's own
+// node badge. Reads straight from localStorage (not the server response —
+// the card route doesn't carry qty, the client already has the parsed deck
+// in hand), so this stays in sync with whatever deck the user last pasted
+// without a round-trip.
+const deckQty = computed(() => {
+  if (!card.value) return null;
+  const deck = getKnownDeckCards();
+  if (!deck) return null;
+  // Scryfall's own top-level `name` on a DFC is both faces joined by " // "
+  // (that's exactly what card.value.name is here — this route hands back
+  // the raw Scryfall field, no card_faces breakdown) but a decklist almost
+  // always names just the front face. Same fallback useGraphStore.ts's own
+  // deck-mode merge uses against card_faces[].name, just matched the other
+  // direction here since this route has no faces array to check — a front
+  // face name is a real prefix of the combined name, followed by " // ".
+  const exact = deck.find((c) => c.name === card.value!.name);
+  if (exact) return exact.qty;
+  const frontFace = deck.find((c) => card.value!.name.startsWith(`${c.name} // `));
+  return frontFace?.qty ?? null;
 });
 
 // functional-model's own outline data — the card's v2 (SYNERGY_DESIGN.md)
 // AI-authored, execution-verified attribute-bag facts
-// (functional-model/cards/<slug>/synergy.json), not hand-authored nodes the
-// way synergyNodes above are. Same "Raw JSON" spoiler pattern as the
-// Synergy model column, just fed by execution-verified facts instead of
-// annotation. `null` for a card not yet migrated to v2 (see synergy.value).
+// (functional-model/cards/<slug>/synergy.json). `null` for a card not yet
+// migrated to v2 (see synergy.value).
 const synergy = computed(() => data.value?.functionalModel?.synergy ?? null);
-const functionalModelJson = computed(() => (synergy.value ? JSON.stringify(synergy.value, null, 2) : null));
+// Flattened for display — the underlying synergy.json/Fact[] split into
+// `source`/`sink` arrays is a real structural distinction for the matcher
+// (functional-model/synergy.ts), but each Fact already carries its own
+// `role` field, so showing that split as two top-level JSON keys here is
+// redundant, not informative — one array, same order the Facts tab's own
+// table already uses (sink then source), is the more honest "what does one
+// fact actually look like" view.
+const functionalModelJson = computed(() =>
+  synergy.value ? JSON.stringify([...synergy.value.sink, ...synergy.value.source], null, 2) : null
+);
 
-// ease × strength — a crude total connection strength (1-25). '—' if `ease`
-// itself is missing (a fact predating these fields). `strength` defaults to
-// neutral (1) when absent — real on a `wants` fact (a want has no magnitude
-// of its own, only rarity) and a genuine "no measurable magnitude" on a
-// `produces` fact (grantKeyword, e.g.), not a penalty either way.
-function factTotal(fact: Fact): number | null {
-  if (!fact.ease) return null;
-  return fact.ease * (fact.strength ?? 1);
+// Raw constraint fields off a fact, verbatim — describeFact()'s own label
+// deliberately omits these now (a `target` constraint, e.g. activateAbility's
+// "target Creature") in favor of a terser label, with the nuance folded into
+// `value` instead; this column is where that omitted detail still shows,
+// exactly as authored, no relabeling.
+const CONDITION_KEYS = ['types', 'cmc', 'power', 'toughness', 'amount', 'name', 'target', 'oncePerTurn'] as const;
+function factConditions(fact: Fact): string {
+  const obj: Record<string, unknown> = {};
+  for (const key of CONDITION_KEYS) {
+    const value = (fact as unknown as Record<string, unknown>)[key];
+    if (value !== undefined) obj[key] = value;
+  }
+  return Object.keys(obj).length ? JSON.stringify(obj) : '—';
 }
+
+// Same shape as FunctionalModelText.vue's own `factKey` — matches a table
+// row's raw `Fact` to the `AnnotatedFactRef`(s) behind a linked phrase there,
+// so hovering a row can highlight its own phrase in the annotated text.
+// Prefers the fact's own author-assigned `id` (stable, unambiguous); falls
+// back to role+sourceText+description for a fact that predates `id` (two
+// such facts sharing all three would also render identically in the table,
+// so nothing is lost by treating them as the same key).
+function factKey(fact: Fact): string {
+  return fact.id ?? `${fact.role}::${fact.sourceText}::${describeFact(fact)}`;
+}
+const hoveredFactKey = ref<string | null>(null);
+
+// Functional model's own four views, tabbed instead of stacked
+// <details>/<summary> spoilers — Facts is the default (the primary,
+// AI-authored+verified representation this page leads with), the other
+// three are progressively rawer looks at the same card (its trace.json
+// scenario log, the synergy facts as literal JSON, then the hand-authored
+// CardDefinition source itself).
+const functionalModelTab = ref<'facts' | 'scenarios' | 'json' | 'definition'>('facts');
+const functionalModelTabs = [
+  { label: 'Facts', value: 'facts' as const },
+  { label: 'Scenarios', value: 'scenarios' as const },
+  { label: 'Json', value: 'json' as const },
+  { label: 'Card Definition', value: 'definition' as const },
+];
 
 const themeLabelById = computed(() => {
   const map = new Map<string, string>();
@@ -95,153 +261,18 @@ const relationChips = computed(() => {
 });
 const chipColumns = computed(() => groupChipsByVerb(relationChips.value));
 
-// Subtle role tints for the synergy outline — desaturated, close to the
-// page's default near-white text color rather than the saturated
-// produce/consume/etc. palette main.css uses for theme relations. Roles not
-// listed (becomes, amplify, suppress, sensor, scaler, modifier, tagger) fall
-// through to the default text color. `enters` (bare arrival onto the
-// battlefield) keeps green; `trigger` (the ability itself becoming a stack
-// object per rule 603.3b — replaces the old listen/on-enter/deals-damage
-// roles) gets a distinct cyan so the "went on the stack" roles read as
-// their own group.
-const SYNERGY_ROLE_COLORS: Partial<Record<SynergyNode['role'], string>> = {
-  enters: '#9ecfa0',
-  trigger: '#9dcacf',
-  emit: '#d8ab88',
-  move: '#cfc69d',
-  source: '#a3c7a8',
-};
-function synergyRoleColor(role: SynergyNode['role']): string | undefined {
-  return SYNERGY_ROLE_COLORS[role];
-}
-function synergyRoleLabel(node: SynergyNode): string {
-  return node.role === 'trigger' && node['trigger-type'] ? `trigger(${node['trigger-type']})` : node.role;
-}
-
-// Storage is flat (nodes + a separate flow graph, see app/types.ts) — this
-// walks `flow` from each root at render time to reconstruct the outline the
-// old flat step-numbered table used to show directly. A node reached from
-// more than one parent (a shared tail after a branch group) is walked once
-// per reaching path and appears once per occurrence — that's the honest
-// picture (the same fact really does follow from either branch), not a
-// dedup bug.
-interface OutlineNodeRow {
-  kind: 'node';
-  key: string;
-  id: string;
-  node: SynergyNode;
-  depth: number;
-  isRoot: boolean;
-  // A child id that has its OWN canonical home in `flow.roots` (e.g.
-  // `enters` — it can happen without a cast, reanimation etc.) never gets
-  // its own row when reached as someone else's step: there's nothing to
-  // expand there anyway (its full definition lives at its root slot), so
-  // it's folded into THIS row as a small link instead of a whole separate
-  // line that would just say "see elsewhere". Doesn't apply to an id with
-  // no root of its own reached from two different `combine` branches
-  // (Namazu's `surveil`) — neither occurrence there is "the real one," so
-  // both still get their own full row.
-  links: { id: string; node: SynergyNode }[];
-}
-interface OutlineGroupRow {
-  kind: 'group';
-  key: string;
-  combine: 'any' | number;
-  depth: number;
-  isRoot: boolean;
-}
-type OutlineRow = OutlineNodeRow | OutlineGroupRow;
-
-function walkFlowStep(
-  step: SynergyFlowStep,
-  depth: number,
-  isRoot: boolean,
-  keyPrefix: string,
-  nodes: Record<string, SynergyNode>,
-  flow: SynergyFlow,
-  rows: OutlineRow[],
-  // Root-owned ids AND non-root self-arrivals (a returning-transformed
-  // re-arrival caused by exile-then-return, e.g.) — anything with its own
-  // full top-level walk elsewhere (see `outlineRows`), so a reference to it
-  // here is a link, never a re-expansion.
-  linkableIds: Set<string>,
-  ancestors: Set<string>
-) {
-  if (typeof step === 'string') {
-    const node = nodes[step];
-    if (!node) return;
-    const key = `${keyPrefix}${step}`;
-    const nextAncestors = new Set(ancestors).add(step);
-    // Cycle guard for malformed data only — a real repeat (linkable id
-    // reached as a non-linkable child) is handled by the caller below,
-    // before a row for it is ever created; this branch should never fire
-    // on well-formed card data.
-    if (ancestors.has(step)) {
-      rows.push({ kind: 'node', key, id: step, node, depth, isRoot, links: [] });
-      return;
-    }
-    const children = flow.steps[step] ?? [];
-    const links: { id: string; node: SynergyNode }[] = [];
-    const expand: SynergyFlowStep[] = [];
-    for (const child of children) {
-      const childNode = typeof child === 'string' ? nodes[child] : undefined;
-      if (typeof child === 'string' && childNode && linkableIds.has(child)) links.push({ id: child, node: childNode });
-      else expand.push(child);
-    }
-    rows.push({ kind: 'node', key, id: step, node, depth, isRoot, links });
-    // Nothing left in `expand` is ever a root-owned id or a self-arrival —
-    // both are filtered into `links` above — so every remaining child is a
-    // genuine, always-fully-expanded nested fact (Namazu's `surveil`-style
-    // repeats included).
-    expand.forEach((child, i) => walkFlowStep(child, depth + 1, false, `${key}.${i}:`, nodes, flow, rows, linkableIds, nextAncestors));
-  } else {
-    const key = `${keyPrefix}group`;
-    rows.push({ kind: 'group', key, combine: step.combine, depth, isRoot });
-    step.of.forEach((id, i) => walkFlowStep(id, depth + 1, false, `${key}.${i}:`, nodes, flow, rows, linkableIds, ancestors));
-  }
-}
-
-const outlineRows = computed<OutlineRow[]>(() => {
-  const nodes = data.value?.synergyNodes;
-  const flow = data.value?.synergyFlow;
-  if (!nodes || !flow) return [];
-  const rows: OutlineRow[] = [];
-  const rootIds = new Set(flow.roots.filter((r): r is string => typeof r === 'string'));
-  // A self-arrival id that isn't a true root (e.g. a returning-transformed
-  // re-arrival, caused by exile-then-return) still needs its own full
-  // top-level walk somewhere — every reference to it elsewhere collapses to
-  // a link (see `linkableIds`/walkFlowStep), so without this second pass
-  // its whole subtree would never render at all.
-  const selfArrivalIds = Object.entries(nodes)
-    .filter(([id, n]) => !rootIds.has(id) && n.role === 'enters' && n.thing.startsWith('self'))
-    .map(([id]) => id);
-  const linkableIds = new Set([...rootIds, ...selfArrivalIds]);
-  flow.roots.forEach((root, i) => walkFlowStep(root, 0, true, `root${i}:`, nodes, flow, rows, linkableIds, new Set()));
-  selfArrivalIds.forEach((id, i) => walkFlowStep(id, 0, true, `self-arrival${i}:`, nodes, flow, rows, linkableIds, new Set()));
-  return rows;
-});
-
-// Indentation guide for the role/label cell: roots get a plain marker, a
-// child gets a └─ prefix repeated at its own depth so nesting reads at a
-// glance without a second indentation mechanism (padding alone loses the
-// "this branches off that" relationship a tree diagram needs).
-function outlinePrefix(row: OutlineRow): string {
-  if (row.isRoot) return '▸ ';
-  return `${'   '.repeat(row.depth - 1)}└─ `;
-}
-function groupLabel(row: OutlineGroupRow): string {
-  return row.combine === 'any' ? '◇ any of:' : `◇ choose ${row.combine} of:`;
-}
-
 useHead(() => ({ title: card.value ? card.value.name : 'Card' }));
 
-// Left/right arrow keys walk the set the same way the Previous/Next links
+// Left/right arrow keys walk the same Previous/Next target the links below
 // do — this page has no text inputs, so no need to guard against typing.
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'ArrowLeft' && prevNumber.value != null) navigateTo(`/app/card/${route.params.set}/${prevNumber.value}`);
-  else if (e.key === 'ArrowRight' && nextNumber.value != null) navigateTo(`/app/card/${route.params.set}/${nextNumber.value}`);
+  if (e.key === 'ArrowLeft' && prevTarget.value) navigateTo(`/app/card/${prevTarget.value.set}/${prevTarget.value.collectorNumber}`);
+  else if (e.key === 'ArrowRight' && nextTarget.value) navigateTo(`/app/card/${nextTarget.value.set}/${nextTarget.value.collectorNumber}`);
 }
-onMounted(() => window.addEventListener('keydown', onKeydown));
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown);
+  loadFilterOrder();
+});
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
@@ -258,17 +289,28 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
       <div class="mb-4 flex items-center justify-between gap-4">
         <NuxtLink to="/app" class="inline-block text-sm text-muted hover:text-text">&larr; Back to graph</NuxtLink>
         <div class="flex items-center gap-3 text-sm">
-          <NuxtLink v-if="prevNumber != null" :to="`/app/card/${route.params.set}/${prevNumber}`" class="text-muted hover:text-text">
+          <NuxtLink v-if="prevTarget" :to="`/app/card/${prevTarget.set}/${prevTarget.collectorNumber}`" class="text-muted hover:text-text">
             &larr; Previous
           </NuxtLink>
           <span v-else class="text-muted/40">&larr; Previous</span>
           <span class="text-muted">#{{ currentNumber }}</span>
-          <NuxtLink v-if="nextNumber != null" :to="`/app/card/${route.params.set}/${nextNumber}`" class="text-muted hover:text-text">
+          <NuxtLink v-if="nextTarget" :to="`/app/card/${nextTarget.set}/${nextTarget.collectorNumber}`" class="text-muted hover:text-text">
             Next &rarr;
           </NuxtLink>
         </div>
       </div>
-      <h1 class="mb-3 text-lg font-semibold">{{ card.name }}</h1>
+      <h1 class="mb-2 flex items-center gap-2 text-lg font-semibold">
+        {{ card.name }}
+        <span v-if="deckQty" class="rounded-full bg-bg px-2 py-0.5 text-xs font-bold text-muted" title="Copies in your imported deck">
+          ×{{ deckQty }}
+        </span>
+        <span
+          v-if="data?.functionalModel && data.functionalModel.review !== 'human'"
+          class="-translate-y-px rounded bg-warn/20 px-1.5 py-px text-[10px] font-bold tracking-wide text-warn uppercase"
+          title="AI-authored, not yet human-reviewed against the real card"
+          >draft</span
+        >
+      </h1>
       <CardMedia :images="card.images" :tokens="card.tokens" />
 
       <!-- functional-model/ — a declarative CardDefinition
@@ -277,128 +319,72 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            position right under the card now (not a comparison column
            anymore) — synergy-model/forge-model are deprecated (see their
            own README/SCHEMA.md banners), this is the current direction. -->
-      <div v-if="data?.functionalModel" class="mt-3">
-        <div class="mb-1 text-[10px] font-semibold tracking-wide text-muted uppercase">Functional model</div>
-        <div v-if="synergy" class="overflow-x-auto border-l-2 border-orange-500 pl-2.5" title="v2 synergy facts, AI-authored and verified against trace.json">
-          <table class="border-collapse font-mono text-xs whitespace-nowrap">
-            <thead>
-              <tr class="text-[10px] tracking-wide text-muted/70 uppercase">
-                <th class="pr-3 pb-1 text-left font-normal">role</th>
-                <th class="pr-3 pb-1 text-left font-normal" title="1-5 — how many real givers/wanters this fact has across the whole pool (real matcher, not a shape guess), INVERTED: 1 = nearly any card satisfies it ('permanents on your battlefield'), 5 = rare.">ease</th>
-                <th class="pr-3 pb-1 text-left font-normal" title="1-5 — real game-mechanical magnitude of a produce effect (tokens/counters/damage/life/cards), steeply scaled from trace.json: 1 card/counter/point stays 1, 2+ jumps to 4-5. Not meaningful on a want (shown '—').">strength</th>
-                <th class="pr-3 pb-1 text-left font-normal" title="ease × strength — a crude total connection strength, low when either dimension is weak">total</th>
-                <th class="pr-3 pb-1 text-left font-normal">fact</th>
-                <th class="pb-1 text-left font-normal" title="the card's own oracle text this fact was derived from — not authored for every card yet">card text</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(fact, fi) in [...synergy.produces, ...synergy.wants]" :key="fi" class="align-top">
-                <td class="pr-3 text-text">{{ fact.role }}</td>
-                <td class="pr-3 text-muted/60">{{ fact.ease ?? '—' }}</td>
-                <td class="pr-3 text-muted/60">{{ fact.strength ?? '—' }}</td>
-                <td class="pr-3 text-muted/60">{{ factTotal(fact) ?? '—' }}</td>
-                <td class="pr-3 whitespace-pre-wrap text-muted">{{ describeFact(fact) }}</td>
-                <td class="max-w-xs whitespace-pre-wrap text-muted/60 italic">{{ fact.sourceText ?? '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
+      <div v-if="data?.functionalModel" class="mt-2">
+        <!-- Real oracle text, pre-split server-side (functional-model/synergy.ts's
+             annotateCardText, see server/api/card/[set]/[number].ts) into plain
+             runs and fact-linked runs — hover a dotted-underline phrase to see
+             the same role/value info the Facts tab's own table shows per row,
+             anchored to the exact words that fact came from. Sits above the
+             tabs (not inside the Facts one) since it's a separate thing — the
+             card's own annotated text, not one of the four data views below. -->
+        <div v-if="data.functionalModel.annotatedText" class="mb-2">
+          <FunctionalModelText
+            :text="data.functionalModel.annotatedText.text"
+            :facts="data.functionalModel.annotatedText.facts"
+            :highlight-key="hoveredFactKey"
+          />
         </div>
-        <div v-else class="border-l-2 border-orange-500/50 pl-2.5 text-xs text-muted italic">Not yet migrated to v2 synergy.json.</div>
-        <!-- trace.json's own raw per-scenario log. Its own nested <details>
-             per scenario, so it stays collapsed-by-default like every other
-             spoiler on this page rather than dumping every scenario's full
-             log at once. -->
-        <details v-if="data.functionalModel.traces?.length" class="mt-2 text-[11px]">
-          <summary class="cursor-pointer text-muted hover:text-text">Scenarios ({{ data.functionalModel.traces.length }})</summary>
-          <div class="mt-1">
-            <TraceViewer :traces="data.functionalModel.traces" />
+
+        <!-- Same "strip only, content switched separately" split AppHeader.vue's
+             own filter-mode UTabs already uses — nothing here depends on
+             UTabs rendering slotted content itself. -->
+        <UTabs v-model="functionalModelTab" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
+
+        <template v-if="functionalModelTab === 'facts'">
+          <div v-if="synergy" class="overflow-x-auto">
+            <table class="border-collapse text-xs whitespace-nowrap">
+              <tbody>
+                <tr
+                  v-for="(fact, fi) in [...synergy.sink, ...synergy.source]"
+                  :key="fi"
+                  class="align-middle hover:bg-surface/25"
+                  @mouseenter="hoveredFactKey = factKey(fact)"
+                  @mouseleave="hoveredFactKey = null"
+                >
+                  <td class="py-1 px-2"><ValueBar :value="fact.value" /></td>
+                  <td class="py-1 px-2">
+                    <Icon
+                      :name="fact.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
+                      :class="fact.role === 'source' ? 'text-blue-400' : 'text-emerald-500'"
+                      class="h-3.5 w-3.5"
+                      :title="fact.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
+                    />
+                  </td>
+                  <td class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted first-letter:uppercase">{{ describeFact(fact) }}</td>
+                  <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">{{ factConditions(fact) }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        </details>
-        <details class="mt-2 text-[11px]">
-          <summary class="cursor-pointer text-muted hover:text-text">Raw JSON</summary>
-          <pre class="mt-1 max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
+          <div v-else class="text-xs text-muted italic">Not yet migrated to v2 synergy.json.</div>
+        </template>
+
+        <template v-else-if="functionalModelTab === 'scenarios'">
+          <TraceViewer v-if="data.functionalModel.traces?.length" :traces="data.functionalModel.traces" />
+          <div v-else class="text-xs text-muted italic">No scenarios recorded.</div>
+        </template>
+
+        <template v-else-if="functionalModelTab === 'json'">
+          <pre class="max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
             functionalModelJson
           }}</pre>
-        </details>
-        <details class="mt-2 text-[11px]">
-          <summary class="cursor-pointer text-muted hover:text-text">Raw source</summary>
-          <div class="mt-1">
-            <FunctionalModelScript :code="data.functionalModel.source" />
-          </div>
-        </details>
+        </template>
+
+        <template v-else>
+          <FunctionalModelScript :code="data.functionalModel.source" />
+        </template>
       </div>
 
-      <!-- synergy-model/ — deprecated (see synergy-model/SCHEMA.md's own
-           banner), kept around and still readable but folded under a
-           collapse by default rather than shown expanded, since it's no
-           longer the primary representation this page leads with. -->
-      <details v-if="outlineRows.length" class="mt-3 text-xs">
-        <summary class="mb-1 cursor-pointer text-[10px] font-semibold tracking-wide text-muted uppercase hover:text-text"
-          >Synergy model (deprecated)</summary
-        >
-        <div
-          class="mt-2 overflow-x-auto border-l-2 pl-2.5"
-          :class="data?.synergyReview === 'human' ? 'border-transparent' : 'border-orange-500'"
-          :title="data?.synergyReview === 'human' ? undefined : 'Synergy nodes not yet human-reviewed'"
-        >
-          <table class="border-collapse font-mono text-xs whitespace-nowrap">
-            <thead>
-              <tr class="text-[10px] tracking-wide text-muted/70 uppercase">
-                <th class="pr-2 pb-1 text-left font-normal">id</th>
-                <th class="pr-3 pb-1 text-left font-normal">role</th>
-                <th class="pr-3 pb-1 text-left font-normal">owner</th>
-                <th class="pr-3 pb-1 text-left font-normal">from</th>
-                <th class="pr-3 pb-1 text-left font-normal">to</th>
-                <th class="pr-3 pb-1 text-left font-normal">thing</th>
-                <th class="pb-1 text-left font-normal">flags</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in outlineRows" :key="row.key" class="align-top">
-                <template v-if="row.kind === 'group'">
-                  <td colspan="7" class="pt-1 pb-0.5 text-muted italic">
-                    <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span>{{ groupLabel(row) }}
-                  </td>
-                </template>
-                <template v-else>
-                  <td class="pr-2 text-muted/60">{{ row.id }}</td>
-                  <td class="pr-3">
-                    <span class="whitespace-pre text-muted/50">{{ outlinePrefix(row) }}</span
-                    ><span :style="{ color: synergyRoleColor(row.node.role) }">{{ synergyRoleLabel(row.node) }}</span
-                    ><span
-                      v-if="row.node.to === 'stack'"
-                      class="ml-1 cursor-help"
-                      title="Put on the stack — can be responded to before it resolves (e.g. countered/Stifled)."
-                      >⚡</span
-                    ><template v-for="link in row.links" :key="link.id"
-                      ><span
-                        class="ml-1 cursor-help text-muted/60"
-                        :title="`Resolves into its own root entry (${link.node.role}) below, rather than a nested copy.`"
-                        >↓</span
-                      ></template
-                    >
-                  </td>
-                  <td class="pr-3 text-muted">{{ row.node.owner }}</td>
-                  <td class="pr-3 text-muted">{{ row.node.from }}</td>
-                  <td class="pr-3 text-muted">{{ row.node.to }}</td>
-                  <td class="pr-3">{{ row.node.thing }}</td>
-                  <td class="text-muted"
-                    ><template v-for="(seg, si) in parseManaSegments(row.node.flags ?? '')" :key="si"
-                      ><ManaSymbol v-if="'mana' in seg" :code="seg.mana" /><template v-else>{{ seg.text }}</template></template
-                    ></td
-                  >
-                </template>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <details class="mt-2 text-[11px]">
-          <summary class="cursor-pointer text-muted hover:text-text">Raw JSON</summary>
-          <pre class="mt-1 max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
-            synergyJson
-          }}</pre>
-        </details>
-      </details>
       <!-- app/lib/synergyInteractions.ts's cross-card join, grouped by this
            card's own node (or, for a rule this card only bears, the rule
            owner's node — see groupInteractionsForCard) — one row per
@@ -417,13 +403,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
           >
             <details>
               <summary class="flex cursor-pointer items-center gap-1.5">
-                <span class="rounded px-1.5 py-px text-[10px] font-bold uppercase bg-[#9dcacf]/20 text-[#6fa8ae]">{{ group.theme.join(' ') }}</span
-                ><span
-                  class="rounded px-1.5 py-px text-[10px] font-bold"
-                  :class="group.direction === 'produces' ? 'bg-produce/20 text-produce' : 'bg-consume/20 text-consume'"
-                  :title="group.direction === 'produces' ? 'This card is the source — other cards benefit from it' : 'This card is the beneficiary — other cards are the source'"
-                  >{{ group.direction === 'produces' ? '→ provides' : '← wants' }}</span
-                >{{ group.description }}<span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted"
+                <Icon
+                  :name="group.direction === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
+                  :class="group.direction === 'source' ? 'text-blue-400' : 'text-emerald-500'"
+                  class="h-3.5 w-3.5 shrink-0"
+                  :title="group.direction === 'source' ? 'This card is the source — other cards benefit from it' : 'This card is the beneficiary — other cards are the source'"
+                />
+                {{ group.description }}<span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted"
                   >{{ group.matches.length }} card{{ group.matches.length === 1 ? '' : 's' }}</span
                 >
               </summary>
