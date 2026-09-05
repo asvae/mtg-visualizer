@@ -94,6 +94,11 @@ function producedEvent(entry, cardName) {
   switch (entry.fn) {
     case 'gainLife':
       return { event: 'lifegain', side: entry.player === 'you' ? 'you' : 'opp' };
+    case 'addMana':
+      // Promoted the same way drawCard was (2026-09-05) — see card.ts's
+      // own `Effect` doc comment on `addMana` for why this exists as a
+      // deliberately inert observation point (no real mana pool).
+      return { event: 'addMana', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'loseLife':
       return { event: 'lifeloss', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'putCounter':
@@ -102,6 +107,11 @@ function producedEvent(entry, cardName) {
       return { event: 'damage', side: 'you' };
     case 'grantKeyword':
       return { event: 'grantKeyword', keyword: entry.keyword, side: undefined };
+    case 'counter':
+      // Log-only (see interfaces.ts's own `counter` doc comment — no real
+      // stack/object model exists), but still a real, checkable produce —
+      // same "promoted off the parked list" treatment addMana/drawCard got.
+      return { event: 'counter', side: undefined };
     case 'sacrifice':
       return { event: 'dies', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'destroy':
@@ -298,7 +308,7 @@ async function verifyCard(slug) {
   }
 
   // --- Reverse: every produce-relevant ACTION must be explained (soft) ---
-  const explainableFns = new Set(['enters', 'move', 'moveTo', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards']);
+  const explainableFns = new Set(['enters', 'move', 'moveTo', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter']);
   for (const e of allEntries) {
     if (IGNORED_FNS.has(e.fn) || e.fn.startsWith('read:')) continue;
     if (!explainableFns.has(e.fn)) {

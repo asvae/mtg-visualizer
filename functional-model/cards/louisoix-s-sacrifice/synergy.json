@@ -1,0 +1,38 @@
+{
+  "source": [
+    {
+      "id": "self-graveyard",
+      "zone": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "sourceText": "(baseline — Louisoix's Sacrifice is an instant, so it goes to your graveyard after it resolves, no special ability text)."
+    },
+    {
+      "id": "sac-legendary-cost",
+      "event": "dies",
+      "controller": "you",
+      "value": 1,
+      "sourceText": "As an additional cost to cast this spell, sacrifice a legendary creature or pay {2}.",
+      "highlight": "sacrifice a legendary creature or pay {2}"
+    },
+    {
+      "id": "counter",
+      "event": "counter",
+      "value": 3,
+      "sourceText": "Counter target activated ability, triggered ability, or noncreature spell.",
+      "highlight": "Counter target activated ability, triggered ability, or noncreature spell"
+    }
+  ],
+  "sink": [
+    {
+      "id": "sac-fodder",
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": { "has": ["Creature"] },
+      "value": 1,
+      "sourceText": "sacrifice a legendary creature or pay {2}",
+      "highlight": "sacrifice a legendary creature or pay {2}"
+    }
+  ]
+}

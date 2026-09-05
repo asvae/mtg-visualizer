@@ -144,6 +144,20 @@ export interface Player extends GameEntity {
   getLandsInPlay(): Card[];
   /** Player.java's own `getCardsIn(ZoneType)` overload family. */
   getCardsIn(zone: ZoneType): Card[];
+  /**
+   * `Player.getManaPool().addMana(Mana...)` (Player.java ~line 1741 /
+   * ManaPool.java ~line 67) — real Forge collapses "produce mana" through
+   * an actual `ManaPool` a later cost payment drains; this model has no
+   * mana-pool/spending concept anywhere (every mana ability hits the same
+   * "no mana engine" gap — cavern-of-souls/ultima-origin-of-oblivion's own
+   * definition.ts comments), so this call is a pure, deliberately inert
+   * observation point: it exists ONLY so a mana-producing ability leaves a
+   * real, checkable trace line (`fn:'addMana'`, see harness.ts's own
+   * `loggingPlayer`) instead of being invisible to
+   * scripts/verify-synergy.mjs the way an ability with no Effect at all
+   * would be. Nothing reads this mana back; a later effect can't spend it.
+   */
+  addMana(color: string, amount: number): void;
 }
 
 /**
@@ -229,6 +243,19 @@ export declare function scry(player: Player, qty: number): void;
 
 /** Convenience wrapper over Forge's own Surveil effect (look at the top `qty`, put any number into the graveyard). */
 export declare function surveil(player: Player, qty: number): void;
+
+/**
+ * `CounterEffect` (forge-game/.../ability/effects/CounterEffect.java) —
+ * countering a spell/ability, activated ability, or triggered ability
+ * (Louisoix's Sacrifice's own "Counter target activated ability, triggered
+ * ability, or noncreature spell"). Same log-only shape as `surveil` above:
+ * this model has no real stack/object representation for a spell or ability
+ * awaiting resolution (no card here is ever "on the stack" as a targetable
+ * object with its own type), so there's nothing to remove — `what` is a
+ * free-text description of what got countered, not a real target reference.
+ * A genuine, distinct logged action either way, not a `custom` no-op.
+ */
+export declare function counter(what: string): void;
 
 // dig's declaration lives further down (Forge's own DigEffect).
 

@@ -1,0 +1,87 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 Legendary creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "sacrifices a legendary creature (additional cost) as this counters a target ability or noncreature spell",
+      "raw": {
+        "result": "sacrifices a legendary creature (additional cost) as this counters a target ability or noncreature spell",
+        "castFrom": "hand",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 1,
+          "creatureSubtypes": [
+            "Legendary"
+          ]
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Louisoix's Sacrifice",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{U}"
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-creature-token-0",
+        "result": true
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "qty": 1,
+        "validType": "creature",
+        "notSelf": false,
+        "tokenFilter": null
+      },
+      {
+        "fn": "counter",
+        "what": "Counter target activated ability, triggered ability, or noncreature spell."
+      },
+      {
+        "fn": "move",
+        "card": "Louisoix's Sacrifice",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "pays {2} instead of sacrificing, then counters a target ability or noncreature spell",
+      "raw": {
+        "result": "pays {2} instead of sacrificing, then counters a target ability or noncreature spell",
+        "castFrom": "hand",
+        "mode": 1
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Louisoix's Sacrifice",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{U}"
+      },
+      {
+        "fn": "counter",
+        "what": "Counter target activated ability, triggered ability, or noncreature spell."
+      },
+      {
+        "fn": "move",
+        "card": "Louisoix's Sacrifice",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

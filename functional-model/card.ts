@@ -69,6 +69,7 @@ import {
   animate as realAnimate,
   gainControl as realGainControl,
   surveil as realSurveil,
+  counter as realCounter,
   destroy as realDestroy,
   dealDamage as realDealDamage,
   tap as realTap,
@@ -102,6 +103,7 @@ export interface Actions {
   animate: typeof realAnimate;
   gainControl: typeof realGainControl;
   surveil: typeof realSurveil;
+  counter: typeof realCounter;
   destroy: typeof realDestroy;
   dealDamage: typeof realDealDamage;
   tap: typeof realTap;
@@ -124,6 +126,7 @@ const defaultActions: Actions = {
   animate: realAnimate,
   gainControl: realGainControl,
   surveil: realSurveil,
+  counter: realCounter,
   destroy: realDestroy,
   dealDamage: realDealDamage,
   tap: realTap,
@@ -299,6 +302,11 @@ export type Effect =
       subtype?: string;
     }
   | { kind: 'surveil'; qty: Computed<number> }
+  | {
+      /** `CounterEffect` (see interfaces.ts's own `counter` doc comment for why this is log-only, same as `surveil` — no stack/object model exists to actually remove a target from). `describe` records WHAT was countered (Louisoix's Sacrifice's own real three-way "target activated ability, triggered ability, or noncreature spell"), since there's no real target reference to read it off. */
+      kind: 'counter';
+      describe: string;
+    }
   | {
       /** Real rule 701.6/`DestroyEffect` — as opposed to `sacrifice` (701.16, a cost/effect a player CHOOSES to pay) or a generic `move`, destroy is its OWN action a spell/ability directly causes. `qty` alone covers "up to N" (Summon: Bahamut's own chapters I/II, TargetMin$0) via pool-exhaustion — no separate `optional` field here (nothing else on this effect distinguishes "must" from "may" when a legal target exists; see `move`/`sacrifice`'s own `optional` fields for that same documentary-only distinction). */
       kind: 'destroy';
@@ -826,6 +834,9 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     case 'surveil':
       actions.surveil(ctx.you, resolve(effect.qty, ctx));
       return;
+    case 'counter':
+      actions.counter(effect.describe);
+      return;
     case 'pumpTarget': {
       const pool = playersFor(effect.owner ?? 'each', ctx)
         .flatMap((p) => p.getCreaturesInPlay())
@@ -960,6 +971,9 @@ export function synergyTags(card: CardDefinition): string[] {
         break;
       case 'surveil':
         tags.push('surveil');
+        break;
+      case 'counter':
+        tags.push('counter');
         break;
       case 'pumpTarget':
         tags.push('removal-or-pump:target-creature');

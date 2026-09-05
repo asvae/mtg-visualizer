@@ -1,0 +1,12 @@
+{
+  "enrichment": "ai",
+  "review": "human",
+  "verifySynergy": "pass",
+  "lastVerified": "2026-09-06",
+  "notes": "New card — had no folder at all (not a deliberate skip, user asked to build it after noticing the gap on fin/59). Required a new `counter` Effect kind/Actions primitive (interfaces.ts/card.ts/harness.ts/verify-synergy.mjs) — this model has no real stack/object representation for a spell or ability awaiting resolution, so `counter` is log-only, same accepted shape `surveil` already has (a genuine logged action, not a fabricated mutation, and not a `custom` no-op either). The mandatory 'sacrifice a legendary creature OR pay {2}' additional cost reuses the existing `modal`/`ctx.mode` shape fire-magic's Tiered and vayne-s-treachery's Kicker already established for a fixed one-of-N branch choice.",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "`sacrifice`'s own `validType` vocabulary has no 'legendary' subtype filter (only creature/artifact/enchantment/token-or-not) — approximated as `validType: 'creature'`, same nearest-available-vocabulary trade-off `destroy`'s own `nonLand` (not a general subtype filter either) already accepts elsewhere.",
+    "`counter` has no real target to remove (no stack/ability/spell object model exists in this engine at all) — it's a real logged event, not a fabricated state mutation. Any future card needing a REAL countered-object reference (e.g. a delayed 'if that spell was countered this way...') would need actual engine work beyond this."
+  ]
+}

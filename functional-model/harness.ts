@@ -199,7 +199,20 @@ export interface TraceResult {
    * is `scenario.result` when set, else `scenario.label` (legacy), else a
    * placeholder for a not-yet-migrated scenario.
    */
-  scenario: { setup: string; action: string; result: string };
+  scenario: {
+    setup: string;
+    action: string;
+    result: string;
+    /**
+     * The scenario's own structured input, verbatim — `setup` above is just
+     * its rendered prose (`describeSetup`), which a client can read but not
+     * parse back into real counts/life. Frontend replay UI (scenario tab's
+     * board reconstruction) needs the real `you`/`opponents`/`life` fields
+     * to seed initial zones the way `setupPlayer` (above) built them —
+     * those never otherwise reach anything downstream of `runScenario`.
+     */
+    raw: Scenario;
+  };
   log: LogEntry[];
 }
 
@@ -645,6 +658,12 @@ function loggingActions(state: GameState, log: LogEntry[], selfId: number): Acti
     surveil: (player, qty) => {
       log.push({ fn: 'surveil', player: player.getName(), qty });
     },
+    // Same log-only shape as surveil above — no real stack/object model to
+    // remove a countered spell/ability from (see interfaces.ts's own
+    // `counter` doc comment).
+    counter: (what) => {
+      log.push({ fn: 'counter', what });
+    },
     destroy: (target) => {
       const destroyed = state.destroy(cardOf(target));
       if (!destroyed) log.push({ fn: 'destroyPrevented', target: target.getName(), cause: 'Indestructible' });
@@ -881,7 +900,7 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
     log.push({ fn: 'read:getNetPower', card: effectiveCard.name, power, toughness });
   }
   return {
-    scenario: { setup: describeSetup(scenario), action: describeAction(effectiveCard, scenario), result: scenario.result ?? scenario.label ?? '(not yet described)' },
+    scenario: { setup: describeSetup(scenario), action: describeAction(effectiveCard, scenario), result: scenario.result ?? scenario.label ?? '(not yet described)', raw: scenario },
     log,
   };
 }
