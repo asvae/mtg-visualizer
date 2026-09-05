@@ -22,6 +22,7 @@ import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/l
 import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
 import { findInteractionsForCard, annotateCardText } from '../../../../functional-model/synergy';
 import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
+import type { Scenario } from '../../../../functional-model/harness';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
@@ -62,7 +63,7 @@ function loadJsonFresh<T>(relativePath: string, bundled: T): T {
 // app/lib/functionalTranslate.ts) — that design is retired; this route no
 // longer reads from it.
 interface FunctionalModelTraceResult {
-  scenario: { setup: string; action: string; result: string };
+  scenario: { setup: string; action: string; result: string; raw: Scenario };
   log: Record<string, unknown>[];
 }
 // loadCardSynergy (v2 SYNERGY_DESIGN.md attribute-bag facts) and

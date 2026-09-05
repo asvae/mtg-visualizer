@@ -5,6 +5,7 @@ import { describeFact } from '../../../../../functional-model/synergy';
 import type { Fact, AnnotatedText } from '../../../../../functional-model/synergy';
 import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
 import type { CardData, EdgeData, ThemeData } from '../../../../types';
+import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
 import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
 
 definePageMeta({ layout: 'graph' });
@@ -19,7 +20,7 @@ interface CardResponse {
   functionalModel: {
     source: string;
     synergy: { source: Fact[]; sink: Fact[] } | null;
-    traces: { scenario: { setup: string; action: string; result: string }; log: Record<string, unknown>[] }[];
+    traces: { scenario: { setup: string; action: string; result: string; raw: Scenario }; log: LogEntry[] }[];
     annotatedText: AnnotatedText | null;
     review: 'ai' | 'human' | null;
   } | null;
@@ -395,7 +396,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         </template>
 
         <template v-else-if="store.functionalModelTab.value === 'scenarios'">
-          <TraceViewer v-if="data.functionalModel.traces?.length" :traces="data.functionalModel.traces" />
+          <ScenarioReplay
+            v-if="data.functionalModel.traces?.length"
+            :traces="data.functionalModel.traces"
+            :card-images="card.images"
+            :card-keywords="card.keywords"
+          />
           <div v-else class="text-xs text-muted italic">No scenarios recorded.</div>
         </template>
 
