@@ -1,0 +1,140 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield (its own ETB trigger fires separately below)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cantankerous Keepers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{5}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cantankerous Keepers",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library; you: 2 Elf(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "mills four cards, then puts all Elf cards from among them into hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cantankerous Keepers",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 4
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 4,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-Elf-0",
+        "subtype": "Elf",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-Elf-1",
+        "subtype": "Elf",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-0",
+        "subtype": "Elf",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-1",
+        "subtype": "Elf",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-Elf-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-Elf-1",
+        "zone": "Hand"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 4 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no Elf cards among the four milled cards — puts nothing into hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Cantankerous Keepers",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 4
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 4,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-0",
+        "subtype": "Elf",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-1",
+        "subtype": "Elf",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-2",
+        "subtype": "Elf",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-library-3",
+        "subtype": "Elf",
+        "result": false
+      }
+    ]
+  }
+]

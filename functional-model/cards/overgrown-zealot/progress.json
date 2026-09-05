@@ -1,0 +1,12 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Non-Legendary vanilla mana dork with two mana abilities, both documentary (no engine support). Graveyard/dies baseline facts omitted (no death mechanism to trace).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "Both mana abilities have no engine support — this model has no mana-pool/addMana concept anywhere.",
+    "The morph-cost restriction on the second ability is moot — no face-down/morph mechanic is modeled anywhere either."
+  ]
+}

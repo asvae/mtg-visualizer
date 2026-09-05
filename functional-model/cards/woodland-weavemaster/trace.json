@@ -1,0 +1,45 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield (its own ETB-adjacent trigger fires separately below)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Woodland Weavemaster",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Woodland Weavemaster",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onOtherElfEnters\" trigger fires",
+      "result": "gets +1/+1 until end of turn"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Woodland Weavemaster",
+        "instanceId": 1,
+        "name": "onOtherElfEnters"
+      },
+      {
+        "fn": "pump",
+        "target": "Woodland Weavemaster",
+        "power": 1,
+        "toughness": 1
+      }
+    ]
+  }
+]

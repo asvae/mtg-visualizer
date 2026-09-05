@@ -1,0 +1,107 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library; you: 1 subtype(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "discards a card, then searches library for a creature card and puts it into hand"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Formidable Speaker",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-subtype-0",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-subtype-0",
+        "zone": "Hand"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in hand; you: 2 card(s) in library",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no creature card in library — discards but finds nothing"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Formidable Speaker",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "you-library-1",
+        "result": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s), 1 nontoken",
+      "action": "activated ({1}, {T})",
+      "result": "untaps another target permanent"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Formidable Speaker",
+        "instanceId": 1,
+        "cost": "{1}, {T}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "untap",
+        "target": "you-creature-nontoken-0"
+      }
+    ]
+  }
+]

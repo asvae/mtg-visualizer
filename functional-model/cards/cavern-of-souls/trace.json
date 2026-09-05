@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, no other effect (creature-type choice and both mana abilities are documentary text — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cavern of Souls",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Cavern of Souls",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

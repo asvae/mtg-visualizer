@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Non-Legendary vanilla mana dork — only real ability is a plain mana ability, no engine support at all (no mana-pool/addMana concept anywhere in this model). Graveyard/dies baseline facts omitted (no death mechanism to trace).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "'{T}: Add {G}' has no engine support — this model has no mana-pool/addMana concept anywhere."
+  ]
+}

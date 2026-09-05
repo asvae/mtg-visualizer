@@ -1,0 +1,177 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onLandfall\" trigger fires",
+      "result": "creates a 1/1 green Elf creature token (its own +1/+1 anthem for other Elves is not modeled — no continuous static-buff engine here)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Thranduil, Sindarin Liege",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Elf",
+        "qty": 1,
+        "tapped": false
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Thranduil, Sindarin Liege",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{G/U}{G/U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Thranduil, Sindarin Liege",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Thranduil, Sindarin Liege",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library; you: 2 land(s) in library",
+      "action": "cast from hand, back face",
+      "result": "mills four cards, then puts up to two land cards from among them into hand"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Silvan Rally",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G/U}{G/U}"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 4
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 4,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-land-1",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-land-0",
+        "zone": "Hand"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-land-1",
+        "zone": "Hand"
+      },
+      {
+        "fn": "move",
+        "card": "Silvan Rally",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 4 card(s) in library",
+      "action": "cast from hand, back face",
+      "result": "no lands among the four milled cards — puts nothing into hand"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Silvan Rally",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G/U}{G/U}"
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Graveyard",
+        "qty": 4
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 4,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-2",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-3",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "card": "Silvan Rally",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]

@@ -1,0 +1,138 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield (its own ETB trigger fires separately below)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Craterhoof Behemoth",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{5}{G}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Craterhoof Behemoth",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s)",
+      "action": "\"onEnter\" trigger fires",
+      "result": "creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control (3, including Craterhoof itself)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Craterhoof Behemoth",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-0",
+        "keyword": "Trample"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "you-creature-token-1",
+        "keyword": "Trample"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Craterhoof Behemoth",
+        "keyword": "Trample"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-0",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-token-1",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "pump",
+        "target": "Craterhoof Behemoth",
+        "power": 3,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "no other creatures — X is 1 (Craterhoof itself)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Craterhoof Behemoth",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Craterhoof Behemoth",
+        "keyword": "Trample"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "Craterhoof Behemoth",
+        "power": 1,
+        "toughness": 1
+      }
+    ]
+  }
+]

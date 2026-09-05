@@ -1,0 +1,12 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Non-Legendary creature with no printed death trigger and no engine way to trace it dying (no legend-rule probe available, unlike most FIN creatures which happen to be Legendary) — graveyard-self/dies baseline facts intentionally omitted rather than declared with no possible evidence. Both real abilities (anthem, mana) are staticAbilities text only — no engine support for either (see definition.ts comment).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "'Other Elf creatures you control get +1/+1' (continuous anthem) has no engine support — no ptFormula shape for a subtype-filtered flat P/T bonus.",
+    "'{T}: Add {G} for each Elf you control' (mana ability) has no engine support at all — this model has no mana-pool/addMana concept anywhere."
+  ]
+}

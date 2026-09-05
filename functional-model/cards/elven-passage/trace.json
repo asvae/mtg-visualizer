@@ -1,0 +1,95 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 1 card(s) in library; you: 1 land(s) in library",
+      "action": "activated ({T}, Pay 1 life, Sacrifice this land)",
+      "result": "loses 1 life, sacrifices itself, then searches library for a basic land and puts it onto the battlefield tapped"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elven Passage",
+        "instanceId": 1,
+        "cost": "{T}, Pay 1 life, Sacrifice this land"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Elven Passage",
+        "zone": "Graveyard"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-land-0",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-library-land-0",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "tap",
+        "target": "you-library-land-0"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 card(s) in library",
+      "action": "activated ({T}, Pay 1 life, Sacrifice this land)",
+      "result": "no land in library — loses 1 life and sacrifices itself, finds nothing"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elven Passage",
+        "instanceId": 1,
+        "cost": "{T}, Pay 1 life, Sacrifice this land"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Elven Passage",
+        "zone": "Graveyard"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-library-1",
+        "result": false
+      }
+    ]
+  }
+]

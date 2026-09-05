@@ -1,0 +1,13 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Battlefield-self baseline fact intentionally OMITTED — real harness.ts limitation found while authoring this card: lifecycleBefore() unconditionally dispatches to the activated-ability path whenever card.activationCost is set, with NO scenario shape that gets a plain 'enters the battlefield' trace line for such a card (confirmed: the-gold-saucer, an existing card with the same shape, has the same gap and an all-empty synergy.json as a result). Not fixed here (a harness dispatch change, out of scope for card-authoring). 'Behold an Elf' (untap choice) not modeled — no player-choice engine exists; 'basic' land isn't distinguished from any land (only isLand() exists, no supertype check).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "No Battlefield-self baseline fact — harness.ts's lifecycleBefore() has no scenario shape that produces a bare 'enters' trace line for a card whose ONLY behavior is activationCost+effects (same gap the-gold-saucer already has).",
+    "'You may behold an Elf. If you do, untap that land.' is not modeled — no player-choice engine exists anywhere in this model.",
+    "Fetches ANY land, not specifically a basic one (no supertype/hasSupertype check exists, only isLand())."
+  ]
+}

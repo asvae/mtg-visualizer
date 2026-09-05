@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Flash/Convoke recorded as real keywords (Convoke added to functional-model/card.ts's Keyword union this session). ETB type-choice grant left documentary — no per-permanent chosen-type state anywhere in this model, and no honest way to pick a target pool without one. Graveyard/dies baseline facts omitted (non-Legendary, no death trigger).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "ETB 'choose a creature type, other permanents of that type gain hexproof and indestructible' has no engine support — no per-permanent chosen-type state anywhere in this model."
+  ]
+}

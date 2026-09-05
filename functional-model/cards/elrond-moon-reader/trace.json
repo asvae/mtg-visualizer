@@ -1,0 +1,141 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onActivateCreatureAbility\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Elrond, Moon-Reader",
+        "instanceId": 1,
+        "name": "onActivateCreatureAbility"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s), 2 nontoken",
+      "action": "activated ({5}{U}{U})",
+      "result": "exiles up to two other nonland permanents you control now, then returns them to the battlefield only once the game reaches the end step (not immediately)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elrond, Moon-Reader",
+        "instanceId": 1,
+        "cost": "{5}{U}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-nontoken-0",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "you-creature-nontoken-1",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Elrond, Moon-Reader",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-nontoken-0",
+        "zone": "Exile"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-nontoken-1",
+        "zone": "Exile"
+      },
+      {
+        "fn": "delayUntil",
+        "phase": "EndOfTurn"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatBegin"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDamage"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatEnd"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main2"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-nontoken-0",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-creature-nontoken-1",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "EndOfTurn"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}{U}{U})",
+      "result": "no other nonland permanents you control — exiles/returns nothing"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elrond, Moon-Reader",
+        "instanceId": 1,
+        "cost": "{5}{U}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Elrond, Moon-Reader",
+        "result": false
+      },
+      {
+        "fn": "delayUntil",
+        "phase": "EndOfTurn"
+      }
+    ]
+  }
+]

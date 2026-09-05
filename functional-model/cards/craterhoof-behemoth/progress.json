@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Non-Legendary creature, no death mechanism to trace — graveyard-self/dies baseline facts intentionally omitted (same reasoning as elvish-archdruid). ETB pump+keyword-grant fit the existing declarative pumpAll/grantKeywordAll effect kinds cleanly, X computed live off getCreaturesInPlay().length.",
+  "textCoverageAudited": true,
+  "knownGaps": []
+}

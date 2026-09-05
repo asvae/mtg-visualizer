@@ -1,0 +1,12 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Battlefield-self baseline fact omitted — same harness.ts activationCost dispatch limitation elven-passage documents (a card with BOTH triggers and activationCost can never get a bare 'enters' scenario either, since lifecycleBefore's activationCost check fires whenever scenario.trigger is unset). 'You may discard' modeled as always discarding. Full-library creature search via custom (no declarative full-library search shape exists, only dig's top-N).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "No Battlefield-self baseline fact — same harness.ts limitation as elven-passage (activationCost unconditionally overrides a bare scenario's normal enters lifecycle).",
+    "'You may discard a card' is modeled as always discarding — no player-decision engine exists."
+  ]
+}

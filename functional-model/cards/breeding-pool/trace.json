@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield (its own ETB trigger fires separately below)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Breeding Pool",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Breeding Pool",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEnter\" trigger fires",
+      "result": "pays 2 life (modeled as always paying — see definition.ts comment; the tapped/free branch is not modeled)"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Breeding Pool",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "loseLife",
+        "player": "you",
+        "amount": 2
+      }
+    ]
+  }
+]

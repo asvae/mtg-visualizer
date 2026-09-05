@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Non-Legendary vanilla mana dork, same shape as llanowar-elves. Graveyard/dies baseline facts omitted (no death mechanism to trace).",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "'{T}: Add {G}' has no engine support — this model has no mana-pool/addMana concept anywhere."
+  ]
+}

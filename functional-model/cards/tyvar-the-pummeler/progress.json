@@ -1,0 +1,9 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Two independent activated abilities via the `abilities` array (not activationCost), which avoids the harness.ts baseline-scenario gap elven-passage/formidable-speaker hit — a bare scenario still resolves normally. 'Tap another untapped creature you control' as a cost is documentary text only (the tap-as-cost itself isn't tracked, only the resulting indestructible grant is).",
+  "textCoverageAudited": true,
+  "knownGaps": []
+}

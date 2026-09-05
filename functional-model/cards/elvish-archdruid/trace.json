@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, no other effect (both abilities are documentary text — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Elvish Archdruid",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Elvish Archdruid",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

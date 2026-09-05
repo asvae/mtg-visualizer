@@ -1,0 +1,182 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, no other effect (both activated abilities fire separately below)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tyvar, the Pummeler",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Tyvar, the Pummeler",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"indestructible\" activated",
+      "result": "gains indestructible until end of turn"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Tyvar, the Pummeler",
+        "instanceId": 1,
+        "cost": "Tap another untapped creature you control",
+        "ability": "indestructible"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Tyvar, the Pummeler",
+        "keyword": "Indestructible"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s) (power 3), 1 nontoken",
+      "action": "\"pump\" activated",
+      "result": "creatures you control get +X/+X until end of turn, where X is the greatest power among them (3)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Tyvar, the Pummeler",
+        "instanceId": 1,
+        "cost": "{3}{G}{G}",
+        "ability": "pump"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-nontoken-0",
+        "result": 3
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Tyvar, the Pummeler",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "you-creature-nontoken-0",
+        "result": 3
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Tyvar, the Pummeler",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "you-creature-nontoken-0",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "pump",
+        "target": "Tyvar, the Pummeler",
+        "power": 3,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"pump\" activated",
+      "result": "no other creatures — X is Tyvar's own power (3)"
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Tyvar, the Pummeler",
+        "instanceId": 1,
+        "cost": "{3}{G}{G}",
+        "ability": "pump"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Tyvar, the Pummeler",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Tyvar, the Pummeler",
+        "result": 3
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "Tyvar, the Pummeler",
+        "power": 3,
+        "toughness": 3
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, a duplicate legendary copy enters",
+      "result": "Legend rule: a second copy enters"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Tyvar, the Pummeler",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{G}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Tyvar, the Pummeler",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "legendRule",
+        "card": "Tyvar, the Pummeler",
+        "player": "you"
+      }
+    ]
+  }
+]

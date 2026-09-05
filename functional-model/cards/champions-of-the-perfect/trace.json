@@ -1,0 +1,43 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield (additional cost/leaves-trigger not modeled — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Champions of the Perfect",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Champions of the Perfect",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onCastCreatureSpell\" trigger fires",
+      "result": "draws a card"
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Champions of the Perfect",
+        "instanceId": 1,
+        "name": "onCastCreatureSpell"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ]
+  }
+]

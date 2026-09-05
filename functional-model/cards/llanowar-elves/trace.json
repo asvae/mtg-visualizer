@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "enters the battlefield, no other effect (mana ability is documentary text — see definition.ts comment)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Llanowar Elves",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{G}"
+      },
+      {
+        "fn": "enters",
+        "card": "Llanowar Elves",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ]
+  }
+]

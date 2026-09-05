@@ -1,0 +1,11 @@
+{
+  "enrichment": "ai",
+  "review": "ai",
+  "verifySynergy": "pending",
+  "lastVerified": "2026-09-05",
+  "notes": "Adventure card modeled via backFace, reusing the transforming-DFC mechanism (real cast-order/exile-timing differs from a transform DFC, not tracked — see definition.ts comment). 'Other Elves you control get +1/+1' anthem has no ptFormula shape for 'other TYPE gets a flat bonus' (only addPerEquipmentControlled/setToCreaturesControlled exist) — left as staticAbilities text, no want fact declared for it (nothing would read/verify it). Added functional-model/harness.ts's libraryLandCount (new Scenario field, same pattern as libraryArtifactCount) to test Silvan Rally's land-retrieve branch.",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "'Other Elves you control get +1/+1' (continuous anthem) has no engine support — no ptFormula shape for 'other creatures of a subtype get a flat P/T bonus.' Left as staticAbilities text only, no synergy fact."
+  ]
+}

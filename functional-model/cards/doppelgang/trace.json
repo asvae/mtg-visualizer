@@ -1,0 +1,84 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 creature(s), 2 nontoken",
+      "action": "cast from hand, X=2",
+      "result": "for each of 2 target permanents, creates 2 token copies of that permanent (4 total)"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Doppelgang",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{X}{X}{X}{G}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "copyPermanent",
+        "source": "you-creature-nontoken-0",
+        "controller": "you"
+      },
+      {
+        "fn": "copyPermanent",
+        "source": "you-creature-nontoken-0",
+        "controller": "you"
+      },
+      {
+        "fn": "copyPermanent",
+        "source": "you-creature-nontoken-1",
+        "controller": "you"
+      },
+      {
+        "fn": "copyPermanent",
+        "source": "you-creature-nontoken-1",
+        "controller": "you"
+      },
+      {
+        "fn": "move",
+        "card": "Doppelgang",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, X=0",
+      "result": "X is 0 — no targets, no copies"
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Doppelgang",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{X}{X}{X}{G}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "move",
+        "card": "Doppelgang",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Sorcery"
+      }
+    ]
+  }
+]
