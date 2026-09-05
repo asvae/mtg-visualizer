@@ -1,6 +1,5 @@
 import type { Preview } from '@storybook/vue3-vite';
 import { themes } from 'storybook/theming';
-import 'mana-font/css/mana.min.css';
 import '../app/assets/css/main.css';
 
 // App is dark-only (no light/dark toggle), so the preview canvas just

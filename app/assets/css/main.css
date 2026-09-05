@@ -32,3 +32,27 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
 }
+
+/* Nuxt UI's own generated `primary` palette (app.config.ts's `ui.colors.
+   primary`) is always a stock Tailwind hue at normal web-app lightness/
+   chroma — even a "calm" name like teal still pops hard against this app's
+   near-black background (#14151a), since it was never tuned for a
+   dark-only, always-on-screen data viz tool. Overridden here with a custom,
+   deliberately low-chroma/low-lightness scale instead of trusting any named
+   Tailwind color to read as muted at this contrast — every shade primary/
+   secondary/etc. components reach for (buttons' bg-primary, active tab
+   indicators, focus rings) is covered, not just the 500 they mostly use. */
+:root {
+  --ui-color-primary-50: #eef4f4;
+  --ui-color-primary-100: #dce9e9;
+  --ui-color-primary-200: #b9d3d3;
+  --ui-color-primary-300: #96b8b8;
+  --ui-color-primary-400: #7a9f9f;
+  --ui-color-primary-500: #5f8a8a;
+  --ui-color-primary-600: #4c6b6b;
+  --ui-color-primary-700: #3d5757;
+  --ui-color-primary-800: #2f4444;
+  --ui-color-primary-900: #223333;
+  --ui-color-primary-950: #172424;
+  --ui-primary: var(--ui-color-primary-500);
+}

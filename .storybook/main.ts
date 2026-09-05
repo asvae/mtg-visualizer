@@ -28,11 +28,6 @@ const config: StorybookConfig = {
   async viteFinal(viteConfig) {
     viteConfig.plugins ??= [];
     viteConfig.plugins.push(vue(), tailwindcss());
-    // Repo lives on /mnt/c (WSL's DrvFs mount) — inotify doesn't reliably
-    // fire there, so Vite's default watcher misses saves. See nuxt.config.ts
-    // for the same fix on the main app's dev server.
-    viteConfig.server ??= {};
-    viteConfig.server.watch = { usePolling: true, interval: 300 };
     return viteConfig;
   },
 };
