@@ -70,17 +70,26 @@ function openDb() {
       collector_number TEXT NOT NULL,
       lang TEXT NOT NULL,
       released_at TEXT NOT NULL,
+      -- 1 = normal art (not full-art, not borderless, has a nonfoil finish) —
+      -- see isNormalArt() below. A name can have hundreds of printings
+      -- (Island: 749) including full-art lands, borderless showcases,
+      -- foil-only promos, etc. — picking "most recent" alone can and does
+      -- land on one of those (verified: a same-day full-art Island printing
+      -- was winning the tie over the normal one). This is its own column,
+      -- not derived at query time, so "prefer normal art" is a plain sort
+      -- key, not a per-row JSON check.
+      is_normal INTEGER NOT NULL,
       raw_json TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
     CREATE INDEX IF NOT EXISTS idx_cards_set_number ON cards(set_code, collector_number);
     -- Multiple printings share a name (109k rows, far fewer distinct names) —
-    -- a by-name lookup wants ONE representative row, most-recent printing
-    -- (freshest wording/art), same intent Scryfall's own /cards/collection
-    -- endpoint serves by default. released_at as its own indexed column
-    -- (not a json_extract on raw_json) since node:sqlite's JSON1 support
-    -- isn't guaranteed — this keeps the "pick latest" query a plain sort.
-    CREATE INDEX IF NOT EXISTS idx_cards_name_released ON cards(name, released_at DESC);
+    -- a by-name lookup wants ONE representative row: normal art first
+    -- (is_normal DESC), most-recent printing among those (released_at DESC).
+    -- released_at as its own indexed column (not a json_extract on
+    -- raw_json) since node:sqlite's JSON1 support isn't guaranteed — this
+    -- keeps the "pick one" query a plain sort, no per-row JSON parsing.
+    CREATE INDEX IF NOT EXISTS idx_cards_name_pick ON cards(name, is_normal DESC, released_at DESC);
 
     -- Schema only for now (per the parent session's own "eventually" framing
     -- — populating this from functional-model/cards/*/synergy.json is a
@@ -109,6 +118,15 @@ function shouldKeep(card) {
   return card.lang === 'en' && card.set_type !== 'memorabilia';
 }
 
+// "Normal art" = not full-art, not borderless, has a plain nonfoil finish
+// available — exactly the three things the user named as exclusions. A
+// showcase/extended-art/etc. printing isn't explicitly excluded by name,
+// but in practice almost always fails one of these three anyway (showcase
+// treatments are nearly always also full-art or borderless).
+function isNormalArt(card) {
+  return !card.full_art && card.border_color !== 'borderless' && (card.finishes ?? []).includes('nonfoil');
+}
+
 // Streamed line-by-line (gunzip -> readline), never loaded as one JSON.parse
 // over the whole decompressed file — a few hundred MB of JSONL text as a
 // single in-memory string is wasteful when each line is already a complete,
@@ -120,7 +138,7 @@ async function syncStreamed(db) {
 
   db.exec('DELETE FROM cards');
   const insert = db.prepare(
-    'INSERT INTO cards (name, scryfall_id, set_code, collector_number, lang, released_at, raw_json) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO cards (name, scryfall_id, set_code, collector_number, lang, released_at, is_normal, raw_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   );
   let total = 0;
   let kept = 0;
@@ -132,7 +150,7 @@ async function syncStreamed(db) {
       const c = JSON.parse(trimmed.replace(/,$/, ''));
       total++;
       if (!shouldKeep(c)) continue;
-      insert.run(c.name, c.id, c.set, c.collector_number, c.lang, c.released_at ?? '', JSON.stringify(c));
+      insert.run(c.name, c.id, c.set, c.collector_number, c.lang, c.released_at ?? '', isNormalArt(c) ? 1 : 0, JSON.stringify(c));
       kept++;
       if (kept % 50000 === 0) console.log(`  ...${kept} rows inserted (${total} lines read)`);
     }

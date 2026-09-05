@@ -32,11 +32,13 @@ import { minimalCard, relationsAndThemes, type ScryfallCard } from '../_cardShap
 // (not from within a request), so there's no concurrent-writer case to guard
 // against here.
 const db = new DatabaseSync(join(process.cwd(), 'data', 'cards.db'), { readOnly: true });
-// Multiple printings share a name — ORDER BY released_at DESC picks the most
-// recent one (freshest wording/art), same intent Scryfall's own
-// /cards/collection default-picks by. See sync-card-db.mjs's own schema
-// comment for why released_at is its own column, not a json_extract.
-const exactStmt = db.prepare('SELECT raw_json FROM cards WHERE name = ? ORDER BY released_at DESC LIMIT 1');
+// Multiple printings share a name — is_normal DESC first (normal art: not
+// full-art, not borderless, has a nonfoil finish — see sync-card-db.mjs's
+// own isNormalArt()), then released_at DESC picks the most recent among
+// those. Without the is_normal preference, "most recent" alone can and did
+// land on a full-art/borderless variant instead (verified against a
+// same-day full-art Island printing outranking the normal one).
+const exactStmt = db.prepare('SELECT raw_json FROM cards WHERE name = ? ORDER BY is_normal DESC, released_at DESC LIMIT 1');
 // A DFC's own top-level `name` is "Front // Back" — a decklist naming just
 // the front face needs this fallback (same front-face pattern
 // useGraphStore.ts/buildGraph.ts already apply client-side for the same
@@ -44,7 +46,7 @@ const exactStmt = db.prepare('SELECT raw_json FROM cards WHERE name = ? ORDER BY
 // (rare, but real — e.g. "Borrowing 100,000 Arrows") doesn't get misread as
 // a wildcard.
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
-const dfcStmt = db.prepare("SELECT raw_json FROM cards WHERE name LIKE ? ESCAPE '\\' ORDER BY released_at DESC LIMIT 1");
+const dfcStmt = db.prepare("SELECT raw_json FROM cards WHERE name LIKE ? ESCAPE '\\' ORDER BY is_normal DESC, released_at DESC LIMIT 1");
 
 function lookupByName(name: string): ScryfallCard | null {
   const exact = exactStmt.get(name) as { raw_json: string } | undefined;
