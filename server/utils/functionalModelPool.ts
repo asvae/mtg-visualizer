@@ -14,18 +14,18 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Fact, PoolCard } from '../../functional-model/synergy';
 
-function isV2Shaped(synergy: { produces?: unknown[]; wants?: unknown[] }): boolean {
-  const all = [...(synergy.produces ?? []), ...(synergy.wants ?? [])];
+function isV2Shaped(synergy: { source?: unknown[]; sink?: unknown[] }): boolean {
+  const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
   return all.length > 0 && all.every((f) => typeof f === 'object' && f !== null && ('zone' in f || 'event' in f));
 }
 
-export function loadCardSynergy(slug: string): { produces: Fact[]; wants: Fact[] } | null {
+export function loadCardSynergy(slug: string): { source: Fact[]; sink: Fact[] } | null {
   try {
     const raw = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/synergy.json`), 'utf8'));
     if (!isV2Shaped(raw)) return null;
     return {
-      produces: (raw.produces ?? []).map((f: Omit<Fact, 'role'>) => ({ ...f, role: 'produces' }) as Fact),
-      wants: (raw.wants ?? []).map((f: Omit<Fact, 'role'>) => ({ ...f, role: 'wants' }) as Fact),
+      source: (raw.source ?? []).map((f: Omit<Fact, 'role'>) => ({ ...f, role: 'source' }) as Fact),
+      sink: (raw.sink ?? []).map((f: Omit<Fact, 'role'>) => ({ ...f, role: 'sink' }) as Fact),
     };
   } catch {
     return null;
@@ -69,7 +69,7 @@ export async function loadFunctionalModelPool(): Promise<PoolCard[]> {
       const cardModule = (await import(definitionUrl)) as Record<string, unknown>;
       const card = Object.values(cardModule)[0] as PoolCard['card'];
       if (!card?.name) continue;
-      pool.push({ name: card.name, card, produces: synergy.produces, wants: synergy.wants });
+      pool.push({ name: card.name, card, source: synergy.source, sink: synergy.sink });
     } catch {
       // definition.ts failed to import — skip rather than error the whole
       // route. Currently hits every card whose definition.ts does `import ... from

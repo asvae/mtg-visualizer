@@ -5,24 +5,26 @@
 // this route reuses buildGraph.ts's per-card mapping helpers so a single
 // card renders identically without needing the rest of the corpus loaded.
 //
-// GET /api/card/:set/:number  — same identity Scryfall's own card URLs use
-// (scryfall.com/card/<set>/<number>), so prev/next is a plain ±1 on :number.
+// GET or POST /api/card/:set/:number — same identity Scryfall's own card URLs
+// use (scryfall.com/card/<set>/<number>), so prev/next is a plain ±1 on
+// :number. A POST body may carry `{ filterNames?: string[] }` — the active
+// global filter's resolved card names (deck import OR Scryfall query, see
+// useGraphStore.ts's `getActiveFilterMode()`) — which scopes the
+// Interactions panel down to matches against just those cards instead of the
+// whole functional-model corpus. GET (no body) still works identically to
+// before, unscoped, same as a plain page reload with no filter active.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cardArtCrop, cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
-import type { CardData, EdgeData, Role, SynergyFlow, SynergyNode, SynergyExamResult, ThemeData } from '../../../../app/types';
-import { parseForgeScript } from '../../../../app/lib/forgeScript';
-import { translateForgeCard } from '../../../../app/lib/forgeTranslate';
-import { findInteractionsForCard } from '../../../../functional-model/synergy';
-import type { InteractionGroup, Fact } from '../../../../functional-model/synergy';
+import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
+import { findInteractionsForCard, annotateCardText } from '../../../../functional-model/synergy';
+import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
-import bundledSynergyEdges from '../../../../synergy-model/data/edges.json';
-import bundledSynergyStatus from '../../../../synergy-model/data/edges_status.json';
 
 // fin_relations.json wins over global_relations.json by name — see
 // server/api/cards.ts for why (FIN not yet chronologically merged).
@@ -31,13 +33,10 @@ const relationsByName = new Map<string, RelationsEntry>([
   ...(finRelationsData as unknown as RelationsEntry[]).map((r): [string, RelationsEntry] => [r.name, r]),
 ]);
 
-// Read fresh off disk on every request in dev (not the statically bundled
-// import) — synergy-model/data/edges.json is being hand-edited card by card
-// right now, and a static import only reflects a full dev-server restart.
-// Same trick as the old shorthand endpoint used. Falls back to the bundled
-// copy for a production build (different cwd, raw source tree not shipped) —
-// synergy-model isn't wired into any prod path yet, this is just so the
-// import doesn't break one if it ever is.
+// Read fresh off disk on every request in dev (not a statically bundled
+// import), so a hand-edited data file reflects immediately without a full
+// dev-server restart. Falls back to `bundled` for a production build
+// (different cwd, raw source tree not shipped).
 function loadJsonFresh<T>(relativePath: string, bundled: T): T {
   if (process.env.NODE_ENV === 'production') return bundled;
   try {
@@ -46,55 +45,12 @@ function loadJsonFresh<T>(relativePath: string, bundled: T): T {
     return bundled;
   }
 }
-interface SynergyEntry {
-  name: string;
-  nodes: Record<string, SynergyNode>;
-  flow: SynergyFlow;
-}
-interface SynergyStatus {
-  decomposition: 'ai' | 'human';
-  review: 'ai' | 'human';
-}
-function loadSynergyEntries(): Record<string, { nodes: Record<string, SynergyNode>; flow: SynergyFlow }> {
-  const entries = loadJsonFresh('synergy-model/data/edges.json', bundledSynergyEdges as unknown as SynergyEntry[]);
-  return Object.fromEntries(entries.map((e) => [e.name, { nodes: e.nodes, flow: e.flow }]));
-}
-function loadSynergyStatus(): Record<string, SynergyStatus> {
-  return loadJsonFresh('synergy-model/data/edges_status.json', bundledSynergyStatus as Record<string, SynergyStatus>);
-}
-
-// synergy-model/EXAM_PROCESS.md's round-trip results: one sparse JSON file
-// per decomposed-and-tested card, filename = slugify(name), no bundled
-// fallback (exam results are a dev-time artifact of synergy-model, never
-// shipped to a production build).
-function loadSynergyExamResult(name: string): SynergyExamResult | null {
-  try {
-    return JSON.parse(readFileSync(join(process.cwd(), `synergy-model/exams/${slugify(name)}.result.json`), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
-// forge-model/data/<slug>.txt — a real Card-Forge cardsfolder script, copied
-// verbatim (see forge-model/README.md) for whichever cards synergy-model
-// also covers. Read raw, unparsed (app/lib/forgeScript.ts parses it
-// client-side, same split as synergyNodes/synergyFlow vs the page's own
-// walkFlowStep). No bundled fallback — like the exam results above, this is
-// a dev-time comparison artifact, not shipped to a production build.
-function loadForgeScript(name: string): string | null {
-  try {
-    return readFileSync(join(process.cwd(), `forge-model/data/${slugify(name)}.txt`), 'utf8');
-  } catch {
-    return null;
-  }
-}
-
 // functional-model/cards/<slug>/ — a hand-authored, declarative
 // CardDefinition (see functional-model/card.ts) run through
 // functional-model/harness.ts's real, mutable game state
-// (functional-model/state.ts) across its own scenarios.ts. Same "no bundled
-// fallback, dev-time comparison artifact" treatment as loadForgeScript above
-// — a miss here is the common case (only a hand-built subset of cards exist
+// (functional-model/state.ts) across its own scenarios.ts. No bundled
+// fallback, dev-time comparison artifact — a miss here is the common case
+// (only a hand-built subset of cards exist
 // in this design so far, see functional-model/cards/), and regenerating
 // trace.json after editing a card needs
 // `npx vite-node functional-model/scripts/run-scenarios.mjs`.
@@ -112,78 +68,54 @@ interface FunctionalModelTraceResult {
 // server/utils/functionalModelPool.ts.
 interface FunctionalModelData {
   source: string;
-  synergy: { produces: Fact[]; wants: Fact[] } | null;
+  synergy: { source: Fact[]; sink: Fact[] } | null;
   // Raw per-scenario output (functional-model/harness.ts's own
   // TraceResult[]) — kept as each scenario's own ordered log, for seeing
   // exactly what one specific scenario actually did.
   traces: FunctionalModelTraceResult[];
+  // The card's own full text — title, mana cost, type line, then oracle text,
+  // same order a real printed card reads — pre-split into plain/fact-linked
+  // runs (functional-model/synergy.ts's annotateCardText) — computed here, in
+  // the card data extraction flow, rather than client-side, so the card page
+  // just renders segments and never re-parses card text itself. `null` when
+  // there's no card text to annotate (a synergy-less card, or a DFC whose
+  // oracle text this route doesn't carry — see `cardText` below).
+  annotatedText: AnnotatedText | null;
+  // cards/<slug>/progress.json's own `review` field — 'ai' (the common case,
+  // never human-checked against the real card) vs 'human' (someone actually
+  // played/verified it — see this session's own review process). `null` when
+  // progress.json is missing/malformed rather than assumed either way — the
+  // card page treats null the same as 'ai' (show the draft badge) since an
+  // untracked card is certainly not confirmed human-reviewed.
+  review: 'ai' | 'human' | null;
 }
-function loadFunctionalModel(name: string): FunctionalModelData | null {
+function loadFunctionalModel(name: string, cardText: string): FunctionalModelData | null {
   const slug = slugify(name);
   try {
     const source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
     const traces = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/trace.json`), 'utf8'));
-    return { source, synergy: loadCardSynergy(slug), traces };
+    const synergy = loadCardSynergy(slug);
+    const annotatedText = synergy && cardText ? annotateCardText(cardText, [...synergy.source, ...synergy.sink]) : null;
+    let review: 'ai' | 'human' | null = null;
+    try {
+      const progress = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/progress.json`), 'utf8'));
+      review = progress.review === 'human' ? 'human' : 'ai';
+    } catch {
+      // progress.json is optional — a card can exist without one
+    }
+    return { source, synergy, traces, annotatedText, review };
   } catch {
     return null;
   }
 }
 
-// Parsing + translating a Forge script is pure (same input text -> same
-// output) but not free — an interactions pool this size (274 cards for BLB)
-// re-running it for every pool member on every single request would add up
-// fast, so cache by name for the life of the server process. Same tradeoff
-// as poolImageCache below: a dev-server restart is what picks up an edited
-// forge-model/data/*.txt file, same as it already does for the pool JSON.
-const translateCache = new Map<string, { nodes: Record<string, SynergyNode>; flow: SynergyFlow }>();
-function translateForgeScriptCached(name: string, raw: string) {
-  const cached = translateCache.get(name);
-  if (cached !== undefined) return cached;
-  const translated = translateForgeCard(parseForgeScript(raw));
-  const result = { nodes: translated.nodes, flow: translated.flow };
-  translateCache.set(name, result);
-  return result;
-}
-
-// No hand-authored edges.json entry -> translate the Forge script on the fly
-// (app/lib/forgeTranslate.ts) instead of showing nothing. Same "not yet
-// human-reviewed" treatment the card page already gives an AI decomposition
-// — see forge-model/README.md's "Cards outside FIN" note.
-function resolveSynergy(name: string): { nodes: Record<string, SynergyNode>; flow: SynergyFlow; review: 'ai' | 'human' | null } | null {
-  const hand = loadSynergyEntries()[name];
-  if (hand) return { nodes: hand.nodes, flow: hand.flow, review: loadSynergyStatus()[name]?.review ?? null };
-  const forge = loadForgeScript(name);
-  if (!forge) return null;
-  const translated = translateForgeScriptCached(name, forge);
-  return { nodes: translated.nodes, flow: translated.flow, review: 'ai' };
-}
-
-// forge-model/pools/*.json — kept ONLY for BLB card metadata resolution now
-// (name -> real set/collectorNumber/image), not for computing interactions
-// anymore (functional-model/synergy.ts does that, see loadInteractionGroups
-// below). Warren Elder is the one functional-model card that's BLB, not
-// FIN — this is how its own real print gets resolved for a match thumbnail.
-interface PoolEntry {
-  name: string;
-  typeLine: string;
-  set: string;
-  collectorNumber: string;
-  image?: string | null;
-}
-const POOL_FILES = ['fdn-cats.json', 'blb.json'];
-function loadPool(file: string): PoolEntry[] {
-  return loadJsonFresh(`forge-model/pools/${file}`, [] as PoolEntry[]);
-}
-function allPoolEntriesByName(): Map<string, PoolEntry> {
-  const map = new Map<string, PoolEntry>();
-  for (const file of POOL_FILES) for (const e of loadPool(file)) map.set(e.name, e);
-  return map;
-}
-
-// data/fin/fin_scryfall.json — real Scryfall data for every FIN card, used
-// the same way allPoolEntriesByName() is used for BLB above: resolving a
-// functional-model card's own real set/collectorNumber/image for a match
-// thumbnail. A DFC (Jecht, Reluctant Guardian // Braska's Final Aeon) has no
+// data/fin/fin_scryfall.json — real, current Scryfall data for every FIN
+// card (also the exact file the main graph visualizer's default browsing
+// mode fetches client-side, public/fin -> data/fin symlink — this is NOT a
+// stale snapshot, just the free/local fast path for the FIN cards that make
+// up most of the functional-model corpus). Resolves a functional-model
+// card's own real set/collectorNumber/image for a match thumbnail. A DFC
+// (Jecht, Reluctant Guardian // Braska's Final Aeon) has no
 // top-level `name` match against its own FRONT face's name (Scryfall's own
 // top-level `name` is the full "A // B" string) — falls back to checking
 // each `card_faces[].name` for exactly this reason.
@@ -204,16 +136,34 @@ function resolveFinCardMeta(name: string): { set: string; collectorNumber: strin
   return null;
 }
 
+// Live fallback for a functional-model card neither legacy pool below covers
+// — the historical-sets tagging project has grown functional-model's own
+// corpus (317 cards and counting) well past the ~12 cards BLB/FIN's static
+// files were snapshotted for, across many real sets neither file ever
+// claimed to cover. Goes through the same paced scryfallFetch every other
+// live Scryfall call in this route uses, so a match list with several
+// misses degrades to a few extra seconds rather than bursting past the rate
+// limit. `exact` (not fuzzy) — a functional-model card's own `name` is
+// already Scryfall's real name, no typo-tolerance needed.
+async function resolveLiveCardMeta(name: string): Promise<{ set: string; collectorNumber: string; image: string | null } | null> {
+  try {
+    const res = await scryfallFetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`);
+    if (!res.ok) return null;
+    const c: FinScryfallCard = await res.json();
+    return { set: c.set, collectorNumber: c.collector_number, image: c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null };
+  } catch {
+    return null;
+  }
+}
+
 // Real set/collectorNumber/image for a functional-model card's own name —
-// tries the BLB pool first, then FIN's real Scryfall data. A card genuinely
-// missing from both (none currently, all 12 existing functional-model cards
-// are covered) would need a live Scryfall lookup added here — deliberately
-// NOT built speculatively ahead of a real card actually needing it, same
-// "don't build ahead of need" discipline the rest of functional-model/ uses.
-function resolveFunctionalModelCardMeta(name: string): { set: string; collectorNumber: string; image: string | null } | null {
-  const blb = allPoolEntriesByName().get(name);
-  if (blb) return { set: blb.set, collectorNumber: blb.collectorNumber, image: blb.image ?? null };
-  return resolveFinCardMeta(name);
+// tries FIN's real Scryfall data first (free, local, current), then a live
+// Scryfall lookup (see resolveLiveCardMeta above) for whatever card isn't
+// in the FIN set at all (the historical-sets tagging project's own cards).
+async function resolveFunctionalModelCardMeta(name: string): Promise<{ set: string; collectorNumber: string; image: string | null } | null> {
+  const fin = resolveFinCardMeta(name);
+  if (fin) return fin;
+  return resolveLiveCardMeta(name);
 }
 
 // InteractionGroup/InteractionMatch (functional-model/synergy.ts v2) carry
@@ -231,17 +181,36 @@ export interface EnrichedInteractionMatch {
 export interface EnrichedInteractionGroup extends Omit<InteractionGroup, 'matches'> {
   matches: EnrichedInteractionMatch[];
 }
-async function loadInteractionGroups(cardName: string): Promise<EnrichedInteractionGroup[]> {
+// `filterNames`, when given (the active global filter — deck import OR
+// Scryfall query, see useGraphStore.ts's `getActiveFilterMode()`), scopes
+// matches down to just those cards instead of the whole functional-model
+// corpus — the deckbuilding question is "what does this card actually
+// synergize with IN MY DECK/POOL," not against every card this app happens
+// to have modeled. `cardName` itself is always resolved against the FULL
+// pool first (its own source/sink facts don't depend on whether it's in the
+// filter — you're often checking a candidate card you don't own yet against
+// a deck you do), and a self-interaction match (the same card against
+// itself) always passes through regardless — a name list alone doesn't
+// track quantities, so there's no way to know if a second copy is actually
+// in the 60/100, and dropping self-interactions outright would just be
+// wrong for cards that ARE genuinely in the deck.
+async function loadInteractionGroups(cardName: string, filterNames?: Set<string>): Promise<EnrichedInteractionGroup[]> {
   const pool = await loadFunctionalModelPool();
   if (!pool.some((c) => c.name === cardName)) return [];
   const groups = findInteractionsForCard(cardName, pool);
-  return groups.map((group) => ({
-    ...group,
-    matches: group.matches.map((m): EnrichedInteractionMatch => {
-      const ref = resolveFunctionalModelCardMeta(m.card);
-      return { card: m.card, selfInteraction: m.selfInteraction, set: ref?.set, collectorNumber: ref?.collectorNumber, image: ref?.image ?? null };
+  const enriched = await Promise.all(
+    groups.map(async (group) => {
+      const filtered = group.matches.filter((m) => !filterNames || m.selfInteraction || filterNames.has(m.card));
+      const matches = await Promise.all(
+        filtered.map(async (m): Promise<EnrichedInteractionMatch> => {
+          const ref = await resolveFunctionalModelCardMeta(m.card);
+          return { card: m.card, selfInteraction: m.selfInteraction, set: ref?.set, collectorNumber: ref?.collectorNumber, image: ref?.image ?? null };
+        }),
+      );
+      return { ...group, matches };
     }),
-  }));
+  );
+  return enriched.filter((group) => group.matches.length > 0);
 }
 
 const curatedThemes = themesData as ThemeData[];
@@ -279,6 +248,13 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 400);
     return { error: 'missing set or number' };
   }
+
+  // Optional POST body — see this file's own header comment. A GET request
+  // (no filter active) has no body to read; readBody rejects on that,
+  // caught the same defensive way loadJsonFresh's own reads are above.
+  const body = await readBody(event).catch(() => null);
+  const rawFilterNames = body?.filterNames;
+  const filterNames = Array.isArray(rawFilterNames) && rawFilterNames.length > 0 ? new Set<string>(rawFilterNames) : undefined;
 
   const res = await fetchBySetNumber(set, number);
   if (res.status === 404) {
@@ -357,17 +333,23 @@ export default defineEventHandler(async (event) => {
     ...(usedThemeIds.has('not-processed') ? [{ id: 'not-processed', label: 'Not Processed' }] : []),
   ];
 
-  const synergyEntry = resolveSynergy(card.name);
+  // Scryfall's own oracle text/mana cost — a DFC has neither at the top
+  // level, only per face (card_faces[].oracle_text/mana_cost), joined the
+  // same "front // back" order the rest of this route already treats a DFC's
+  // combined name as (see deckQty's own comment on the card detail page).
+  const oracleText = card.oracle_text || (card.card_faces ? card.card_faces.map((f) => f.oracle_text || '').join('\n') : '');
+  const manaCost = card.mana_cost || (card.card_faces ? card.card_faces.map((f) => f.mana_cost || '').join(' // ') : '');
+  // Full card text, same order a real printed card reads — title, mana cost,
+  // type line, then rules text — so annotateCardText's inline-linked view
+  // (app/components/FunctionalModelText.vue) reads like the whole card, not
+  // just its bottom rules-text box.
+  const cardText = `${card.name}\t${manaCost}\n\n${card.type_line || ''}\n\n${oracleText}`;
+
   return {
     card: cardData,
     edges,
     themes,
-    synergyNodes: synergyEntry?.nodes ?? null,
-    synergyFlow: synergyEntry?.flow ?? null,
-    synergyReview: synergyEntry?.review ?? null,
-    synergyExam: loadSynergyExamResult(card.name),
-    forgeScript: loadForgeScript(card.name),
-    functionalModel: loadFunctionalModel(card.name),
-    interactions: await loadInteractionGroups(card.name),
+    functionalModel: loadFunctionalModel(card.name, cardText),
+    interactions: await loadInteractionGroups(card.name, filterNames),
   };
 });
