@@ -130,6 +130,13 @@ replaceable, or broadly enabling a card or theme is by analyzing the relation
 graph. Define each score in understandable terms, expose the evidence behind
 it, and avoid presenting graph heuristics as objective card quality.
 
+### Card uniqueness analysis
+
+Determine and show how unique a card is: whether it mostly duplicates effects
+other cards already do (in general, not within a specific selection), or
+whether it fills a tight niche worth exploring. Precompute this analysis in
+advance and cache it server-side rather than computing it on demand.
+
 ### No-weights mode
 
 A mode that drops relation/theme weighting (produce/consume strength, node
