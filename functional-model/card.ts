@@ -465,20 +465,34 @@ export interface Trigger {
   name: string;
   effects: Effect[];
   /**
-   * Marks this as the real "enters the battlefield" trigger (603.6b-ish),
-   * so `engine.ts`'s own `resolveTop` can auto-fire it the moment a
-   * permanent resolves onto the battlefield — real MTG doesn't require a
-   * player to separately "choose" to trigger an ETB, it just happens.
+   * Marks this as a real auto-fired trigger event `engine.ts` fires
+   * without a player/scenario having to name it explicitly — real MTG
+   * doesn't require choosing to trigger an ETB or an upkeep ability, it
+   * just happens:
+   *  - `'enter'` (603.6b-ish): the real "enters the battlefield" trigger —
+   *    `resolveTop` fires it the moment a permanent resolves onto the
+   *    battlefield.
+   *  - `'upkeep'`/`'endStep'` (603.6b, "at the beginning of your
+   *    upkeep/end step"): fired by `engine.ts`'s own
+   *    `fireOnPhaseEnterTriggers`, called after every phase advance, for
+   *    the ACTIVE player's own permanents only — the common "your
+   *    upkeep/end step" case, not the rarer "each player's"/"each
+   *    opponent's" variant (a real, deferred gap — see ENGINE_GAPS.md).
+   *    Only fires for a permanent that was CAST through this engine's own
+   *    `castSpell` (`resolveTop` registers its ctx/actions at that moment,
+   *    `engine.ts`'s own `resolvedPermanents` map) — a permanent seeded
+   *    directly onto the battlefield (scenario setup, e.g.) has no
+   *    registered ctx/actions and its upkeep/end-step triggers won't fire
+   *    through this path, same "no entry = gap, not a silent success"
+   *    convention `enteredThisTurn` already uses.
    * Optional and additive: none of the 312 existing FIN cards' own
-   * triggers set this (a real ETB trigger is instead picked manually per
-   * scenario via `harness.ts`'s own `Scenario.trigger` field, unaffected
-   * by this) — retrofitting them is a separate, deferred task (see
-   * ENGINE_GAPS.md), not something this field does automatically. No
-   * other event type is modeled this way yet (attacks/dies/etc. still have
-   * no structural marker at all) — extend this union only once a real
-   * caller needs a second auto-fired event kind.
+   * triggers set any of these yet (picked manually per scenario via
+   * `harness.ts`'s own `Scenario.trigger`/`sequence` fields instead,
+   * unaffected by this) — retrofitting them is a separate, deferred task
+   * (ENGINE_GAPS.md). Real FIN cards that WOULD use `'endStep'` today (Yuna,
+   * Hope of Spira; Ultimecia, Time Sorceress) are cited there.
    */
-  on?: 'enter';
+  on?: 'enter' | 'upkeep' | 'endStep';
 }
 
 /**

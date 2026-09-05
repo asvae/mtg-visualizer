@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { GameState, wrapPlayer, wrapCard } from './state';
 import type { RealCard } from './state';
-import { createEngine, canCastSpell, castSpell, canActivateAbility, activateAbility, resolveTop, stepPriority, canAttack, declareAttackers, canBlock, declareBlockers, resolveCombatDamage, advance } from './engine';
+import { createEngine, canCastSpell, castSpell, canActivateAbility, activateAbility, resolveTop, stepPriority, canAttack, declareAttackers, canBlock, declareBlockers, resolveCombatDamage, queueExtraTurn, advance } from './engine';
 import { PHASES } from './turn';
 
 // Same `{} as Actions` stub stack.test.ts/priority.test.ts already use —
@@ -545,5 +545,77 @@ describe('resolveCard dispatch collision (a permanent with BOTH an on:"enter" tr
     activateAbility(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
     resolveTop(engine);
     expect(order).toEqual(['ability']);
+  });
+});
+
+describe('fireOnPhaseEnterTriggers — real "at the beginning of your upkeep/end step" auto-fire (603.6b)', () => {
+  function stepCardWithTrigger(order: string[], on: 'upkeep' | 'endStep'): CardDefinition {
+    return {
+      name: 'Test Ticker',
+      manaCost: '{1}{G}',
+      typeLine: 'Creature — Test',
+      triggers: [{ name: 'onStep', on, effects: [{ kind: 'custom', describe: 'tick', run: () => order.push('tick') }] }],
+    };
+  }
+  function toPhase(engine: ReturnType<typeof setupGame>['engine'], phase: (typeof PHASES)[number]) {
+    while (PHASES[engine.turn.phaseIndex] !== phase) advance(engine);
+  }
+
+  it('auto-fires an onEndStep trigger for a permanent cast through this engine, during its own controller’s end step', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = stepCardWithTrigger(order, 'endStep');
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    toPhase(engine, 'EndOfTurn');
+    expect(order).toEqual(['tick']);
+  });
+
+  it('auto-fires an onUpkeep trigger during a LATER upkeep that is genuinely its controller’s own (this turn’s own upkeep already passed, and turn 2 belongs to the other player)', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = stepCardWithTrigger(order, 'upkeep');
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    toPhase(engine, 'Upkeep'); // turn 2's Upkeep — but turn 2 is the OTHER player's turn, so this shouldn't fire yet
+    expect(order).toEqual([]);
+    while (engine.turn.turnNumber < 3) advance(engine);
+    toPhase(engine, 'Upkeep'); // turn 3 — `you` is active again
+    expect(order).toEqual(['tick']);
+  });
+
+  it('does NOT fire for a permanent seeded directly onto the battlefield (never cast through this engine)', () => {
+    const { state, you, engine } = setupGame();
+    const order: string[] = [];
+    stepCardWithTrigger(order, 'endStep'); // a CardDefinition exists, but is never wired up via castSpell+resolveTop
+    state.addCard(you, 'Battlefield', { name: 'Test Ticker', types: ['Creature'] }); // seeded directly — no resolvedPermanents entry
+    toPhase(engine, 'EndOfTurn');
+    expect(order).toEqual([]);
+  });
+
+  it('does NOT fire for the non-active player’s permanent during the active player’s own end step', () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = stepCardWithTrigger(order, 'endStep');
+    const real = state.addCard(opp, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, opp, real, card, ctxFor(state, self, oppPlayer, [youPlayer]), noopActions);
+    resolveTop(engine);
+    toPhase(engine, 'EndOfTurn'); // still turn 1, `you` is active — this is `opp`'s permanent
+    expect(order).toEqual([]);
+  });
+});
+
+describe('queueExtraTurn (500.7)', () => {
+  it('the queued player takes the next turn ahead of the normal rotation', () => {
+    const { you, opp, engine } = setupGame();
+    queueExtraTurn(engine, you);
+    while (engine.turn.turnNumber === 1) advance(engine);
+    expect(engine.players[engine.turn.activePlayerIndex]).toBe(you);
+    expect(you).not.toBe(opp); // sanity: distinct players
   });
 });

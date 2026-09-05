@@ -47,7 +47,17 @@ checkStateBasedActions(engine.state, engine.players);
 // Activated abilities (602.1) — same read-only-check + mutating-action pair:
 canActivateAbility(engine, you, permanentReal, cardDef, abilityName?);
 activateAbility(engine, you, permanentReal, cardDef, ctx, actions, abilityName?);
+
+// Extra turns (500.7) — Ultimecia, Time Sorceress's own "take an extra
+// turn after this one" is the real FIN card that needs this:
+queueExtraTurn(engine, you);
 ```
+
+`advance`/`stepPriority` also auto-fire any real `on: 'upkeep'`/`'endStep'`
+trigger for the active player's own permanents the moment their phase is
+entered (`fireOnPhaseEnterTriggers`, see below), and Cleanup now runs its
+own real 514.1/514.2 automatic actions (`turn.ts`) — see "Turn-structure
+completeness" below for both.
 
 Every action that can be illegal returns `ActionResult` (`{ok:true}` or
 `{ok:false, reason}`) instead of throwing or silently no-op'ing — a caller (or
@@ -152,12 +162,46 @@ consume it, `dealDamage` genuinely marks `card.damageMarked`/
 **Explicitly NOT in scope** (real, plainly-flagged gaps): 704.5a (0-or-less
 life loses the game — no "game over" concept exists anywhere in this
 codebase); 704.5i (planeswalker loyalty 0 — no FIN card needs it, checked);
-damage CLEARING at cleanup (514.2 — a separate rule from the SBA check
-itself; `turn.ts`'s Cleanup phase still does nothing automatic, so
-`damageMarked` only ever grows within one pilot session — see
-`ENGINE_GAPS.md`'s turn-structure-completeness gap); aura/equipment
-illegal-attachment SBAs (no attachment-legality tracking exists to check
-against).
+aura/equipment illegal-attachment SBAs (no attachment-legality tracking
+exists to check against). Damage clearing at cleanup (514.2 — a separate
+rule from the SBA check itself) is now real — see "Turn-structure
+completeness" below.
+
+### Turn-structure completeness (2-player only)
+
+Three real pieces, closing `ENGINE_GAPS.md`'s former gap #3:
+
+- **Cleanup's own real automatic actions** (`turn.ts`'s `runPhaseEntryAction`,
+  same place Untap/Draw's actions already lived): 514.1 discards the active
+  player down to the default maximum hand size (7 — no FIN card modifies
+  max hand size, checked), and 514.2 clears `damageMarked`/
+  `deathtouchDamaged` game-wide via the new `state.clearAllDamage()` — NOT
+  the "until end of turn effects end" half of 514.2, since `layers.ts`'s own
+  duration-not-tracked simplification is unchanged/accepted.
+- **`on: 'upkeep'`/`'endStep'` trigger auto-fire** (`engine.ts`'s
+  `fireOnPhaseEnterTriggers`, called from `advance`/`stepPriority` right
+  after a phase transition): fires for the ACTIVE player's own permanents
+  only (the common "your upkeep/end step" case; "each player's" is a
+  deferred gap). Needs a `CardDefinition`+`EffectContext`+`Actions` to call
+  `resolveCard` with, long after the spell that cast the permanent already
+  left the stack — solved by a new `GameEngine.resolvedPermanents` map,
+  populated by `resolveTop` the moment a permanent enters the battlefield
+  (the same triple a `StackObject` already carries). A permanent seeded
+  directly onto the battlefield (scenario setup, never cast through this
+  engine) has no entry and its triggers simply don't auto-fire — a real,
+  documented gap, not a silent success, same convention `enteredThisTurn`
+  already established. Two real FIN cards would use `'endStep'` today (a
+  deferred retrofit, same as `'enter'`): Yuna, Hope of Spira; Ultimecia,
+  Time Sorceress. No FIN card needs `'upkeep'` today (checked).
+- **Extra turns (500.7)** — `turn.ts`'s `TurnState.extraTurns`, a FIFO
+  queue of player indices `advancePhase`'s own turn-wrap branch consumes
+  instead of blindly rotating, plus `engine.ts`'s `queueExtraTurn(engine,
+  player)` wrapper. Ultimecia, Time Sorceress's own "take an extra turn
+  after this one" is the real FIN card that needs this.
+
+**Still explicitly deferred** (real, no FIN card in this pool needs them
+today — checked): "each player's"/"each opponent's" upkeep/end-step
+triggers (as opposed to "your own"); "skip your next X step/phase" effects.
 
 ## In scope for this first slice
 
@@ -192,6 +236,11 @@ against).
   damage (704.5g), any Deathtouch damage (704.5h), and the legend rule
   (704.5j) — see "State-based actions" above for the full scope and what's
   deliberately NOT covered.
+- **Turn-structure completeness (2-player only)**: Cleanup's real
+  discard-to-hand-size (514.1) and damage-clearing (514.2), real
+  `on: 'upkeep'`/`'endStep'` trigger auto-fire for the active player's own
+  permanents, and extra turns (500.7) — see "Turn-structure completeness"
+  above for the full scope and what's still deferred.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -203,10 +252,11 @@ against).
 - **A player losing the game (704.5a) / planeswalker loyalty 0 (704.5i).**
   No "game over" concept exists anywhere in this codebase yet, and no FIN
   card needs the loyalty case today — see `sba.ts`'s own header.
-- **Damage clearing at cleanup (514.2).** A real, separate rule from the SBA
-  check itself — `turn.ts`'s Cleanup phase still has no automatic action, so
-  `card.damageMarked`/`deathtouchDamaged` only ever grow within one pilot
-  session. See `ENGINE_GAPS.md`'s turn-structure-completeness gap.
+- **"Each player's"/"each opponent's" upkeep or end-step triggers, and
+  "skip your next X step/phase" effects.** `fireOnPhaseEnterTriggers` only
+  fires a permanent's `'upkeep'`/`'endStep'` trigger during ITS OWN
+  controller's phase; no FIN card in this pool needs either the
+  "each"-variant or a phase-skip today (checked).
 - **Priority-holder tracking between calls.** Real 117.1a also requires the
   caster hold priority at the moment of casting; `priority.ts`'s own header
   already documents why this simplified model has no persistent "who
@@ -227,10 +277,14 @@ against).
 and illegal cases), `engine.test.ts` (sorcery-speed timing, affordability,
 attacker/blocker legality, combat damage — unblocked/blocked/Trample/
 Deathtouch/First-and-Double-Strike, all-or-nothing declaration — activated-
-ability legality/resolution, and the `resolveCard`-dispatch-collision fix —
-again both legal and illegal cases throughout), and `sba.test.ts` (704.5f/g/
+ability legality/resolution, the `resolveCard`-dispatch-collision fix, real
+upkeep/end-step trigger auto-fire — including the "not registered"/"wrong
+player" non-firing cases — and `queueExtraTurn`), `sba.test.ts` (704.5f/g/
 h/j — including Indestructible correctly blocking 704.5g but NOT 704.5f,
-and a combined multi-issue sweep proving the 704.3 loop-until-stable shape).
+and a combined multi-issue sweep proving the 704.3 loop-until-stable
+shape), and `turn.test.ts` (Cleanup's own 514.1/514.2 actions, and extra
+turns taking priority over the normal rotation, including FIFO ordering
+for multiple queued turns).
 
 ## Gap analysis vs. real Forge
 

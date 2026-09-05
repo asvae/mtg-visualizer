@@ -83,29 +83,40 @@ so a future pass doesn't mistake them for missing work:
    life loses the game — no "game over"/game-loss concept exists anywhere
    in this codebase yet, a separate primitive); 704.5i (planeswalker
    loyalty 0 — no FIN card in this pool has a Planeswalker typeLine today,
-   checked); damage CLEARING at cleanup (514.2 — a separate rule from the
-   SBA check itself, folds into gap #3's turn-structure-completeness work,
-   since `turn.ts`'s own Cleanup phase still does nothing automatic);
-   aura/equipment illegal-attachment SBAs (no attachment-legality tracking
-   exists anywhere in this codebase to check against).
-3. **Turn-structure completeness (2-player only — see Accepted
-   simplifications above for the >2-player exclusion).** Two real gaps,
-   both raised to High priority: (a) **upkeep/end-step triggers, cleanup's
-   real actions** — `turn.ts`'s header: upkeep/end-step triggers and
-   cleanup's discard-to-hand-size + until-end-of-turn cleanup are
-   unimplemented; those phases exist and are reachable in sequence with no
-   automatic action. A card whose own ability triggers "at the beginning of
-   your upkeep" has no engine hook to fire it automatically today (a caller
-   would have to notice and call `resolveCard` manually) — this could get
-   better with `Trigger.on` (already extended with `'enter'` this pass)
-   growing `'upkeep'`/`'endStep'` variants, mirroring how `on: 'enter'` now
-   lets `resolveTop` auto-fire an ETB. (b) **extra turns and skipped
-   phases** — the other half of the old "multiplayer" gap, split out per
-   the user's own scope call: this is NOT a >2-player concept (an extra
-   combat, an extra turn, a skipped draw step all happen in normal 2-player
-   games too) and stays real, high-priority work; `turn.ts`'s own
-   `TurnState`/`advancePhase` have no hook for "insert an extra
-   turn/phase" or "skip the next one" at all today.
+   checked); aura/equipment illegal-attachment SBAs (no attachment-legality
+   tracking exists anywhere in this codebase to check against). Damage
+   CLEARING at cleanup (514.2 — a separate rule from the SBA check itself)
+   is now done too — see gap #3 below.
+3. ~~**Turn-structure completeness (2-player only — see Accepted
+   simplifications above for the >2-player exclusion).**~~ **CLOSED for
+   real, checked-against-the-pool needs**: (a) **Cleanup's own automatic
+   actions** — 514.1 discard-to-maximum-hand-size (default 7 — no FIN card
+   modifies max hand size, checked) and 514.2 damage-clearing
+   (`state.clearAllDamage()`, NOT the "until end of turn effects end" half
+   — `layers.ts`'s duration-not-tracked simplification stays accepted,
+   unchanged) — both wired into `turn.ts`'s existing `runPhaseEntryAction`,
+   same place Untap/Draw's own actions already lived. (b) **`on:
+   'upkeep'`/`'endStep'` trigger auto-fire** — `Trigger.on` (card.ts,
+   already extended with `'enter'` in an earlier pass) now also accepts
+   `'upkeep'`/`'endStep'`; `engine.ts`'s new `fireOnPhaseEnterTriggers`
+   (called from `advance`/`stepPriority` after every phase transition)
+   fires them for the ACTIVE player's own permanents, via a new
+   `GameEngine.resolvedPermanents` map (populated by `resolveTop`,
+   mirroring how a `StackObject` already carries the
+   card/ctx/actions triple a trigger needs to resolve, long after the
+   original cast). Two real FIN cards would use `'endStep'` (Yuna, Hope of
+   Spira; Ultimecia, Time Sorceress) — retrofitting their own
+   `definition.ts` is deferred, same as `'enter'`. (c) **Extra turns
+   (500.7)** — `TurnState.extraTurns`, a FIFO queue `advancePhase`'s
+   turn-wrap branch consumes instead of blindly rotating, plus
+   `engine.ts`'s `queueExtraTurn(engine, player)` wrapper. Ultimecia, Time
+   Sorceress's own "take an extra turn after this one" is the real FIN
+   card that needs this (its own `definition.ts` already flagged this as a
+   known gap before this pass — confirmed, not guessed).
+   **Still explicitly deferred** (real, but no FIN card in this pool needs
+   either today — checked): "each player's"/"each opponent's" upkeep/
+   end-step triggers (as opposed to "your own"); "skip your next X
+   step/phase" effects.
 4. **Target-legality checking at cast/declare time, and re-validation at
    resolution (608.2b, "fizzle").** `card.ts`'s effect system resolves/picks
    targets lazily, inside `resolveCard`, at resolution time — there is no
@@ -185,5 +196,10 @@ so a future pass doesn't mistake them for missing work:
   including Trample/Deathtouch/First-and-Double-Strike ordering (510).
 - State-based actions: a narrow, real 704.5f/704.5g/704.5h/704.5j subset
   (`sba.ts`) — see gap #2's own "CLOSED for a narrow, real subset" note
-  above for exactly what's covered vs. still deferred (life-loss,
-  loyalty, cleanup-timed damage clearing, aura/equipment attachment).
+  above for exactly what's covered vs. still deferred (life-loss, loyalty,
+  aura/equipment attachment).
+- Turn-structure completeness (2-player only): Cleanup's real 514.1/514.2
+  actions, `on: 'upkeep'`/`'endStep'` trigger auto-fire for the active
+  player's own permanents, and extra turns (500.7) — see gap #3's own
+  "CLOSED for real, checked-against-the-pool needs" note above for exactly
+  what's covered vs. still deferred ("each player's" variants, phase-skip).

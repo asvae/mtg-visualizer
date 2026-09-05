@@ -2,7 +2,7 @@ import type { CardDefinition, EffectContext, Actions } from './card';
 import { resolveCard } from './card';
 import type { Card, Player, ZoneType } from './interfaces';
 import { GameState, wrapPlayer, wrapCard, effectiveTypes, effectivePT, type RealCard, type RealPlayer } from './state';
-import { PHASES, currentPhase, advancePhase, type Phase } from './turn';
+import { PHASES, currentPhase, advancePhase, type Phase, type TurnState } from './turn';
 import { TOKENS } from './tokens';
 import type { BasicLandName } from './mana';
 
@@ -901,7 +901,7 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
   // scenario that was never "at the start of a turn" to begin with.
   if (scenario.advanceToPhase) {
     const players = [you, ...opponents];
-    let turn = { turnNumber: 1, activePlayerIndex: 0, phaseIndex: PHASES.indexOf('Main1') };
+    let turn: TurnState = { turnNumber: 1, activePlayerIndex: 0, phaseIndex: PHASES.indexOf('Main1'), extraTurns: [] };
     while (currentPhase(turn) !== scenario.advanceToPhase) {
       turn = advancePhase(state, turn, players);
       log.push({ fn: 'phase', phase: currentPhase(turn) });

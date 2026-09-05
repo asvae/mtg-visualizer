@@ -385,6 +385,22 @@ export class GameState {
     return removed;
   }
 
+  /**
+   * Real 514.2's damage-clearing half ONLY — "all damage marked on
+   * permanents is removed" (`GameAction.java`'s own cleanup-step handling,
+   * near the state-based-effects pass this file already cites). Game-wide
+   * (every real card, not just the active player's), matching the real
+   * rule's own scope. Deliberately does NOT also end "until end of turn"
+   * continuous effects — `layers.ts`'s own duration-not-tracked
+   * simplification already covers that half, unchanged by this method.
+   */
+  clearAllDamage(): void {
+    for (const card of this.cards.values()) {
+      card.damageMarked = 0;
+      card.deathtouchDamaged = false;
+    }
+  }
+
   /** `Card.tap(...)` (forge-game/.../card/Card.java ~line 4662) — real, persistent tapped state. */
   tap(card: RealCard): void {
     card.tapped = true;

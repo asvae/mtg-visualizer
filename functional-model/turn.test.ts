@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GameState } from './state';
-import { startGame, currentPhase, activePlayer, advancePhase, PHASES } from './turn';
+import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn, PHASES } from './turn';
 
 describe('turn/phase structure', () => {
   it('starts at Untap, turn 1, player 0', () => {
@@ -105,5 +105,67 @@ describe('turn/phase structure', () => {
     expect(currentPhase(turn)).toBe('CombatDamage');
     turn = advancePhase(state, turn, [p1]);
     expect(currentPhase(turn)).toBe('CombatEnd');
+  });
+
+  it('Cleanup discards the active player down to the default maximum hand size (514.1)', () => {
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    for (let i = 0; i < 9; i++) state.addCard(p1, 'Hand', { name: `Card ${i}` });
+    let turn = startGame();
+    for (let i = 0; i < PHASES.length - 1; i++) turn = advancePhase(state, turn, [p1, p2]); // -> Cleanup
+    expect(currentPhase(turn)).toBe('Cleanup');
+    expect(p1.hand).toHaveLength(7);
+  });
+
+  it('does not discard a hand already at or under the maximum', () => {
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    for (let i = 0; i < 3; i++) state.addCard(p1, 'Hand', { name: `Card ${i}` });
+    let turn = startGame();
+    for (let i = 0; i < PHASES.length - 1; i++) turn = advancePhase(state, turn, [p1, p2]); // -> Cleanup
+    expect(p1.hand).toHaveLength(3);
+  });
+
+  it('Cleanup clears damage marked on every real card, game-wide (514.2)', () => {
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    const mine = state.addCard(p1, 'Battlefield', { name: 'Mine', types: ['Creature'] });
+    const theirs = state.addCard(p2, 'Battlefield', { name: 'Theirs', types: ['Creature'] });
+    state.dealDamage(mine, 1);
+    state.dealDamage(theirs, 1);
+    let turn = startGame();
+    for (let i = 0; i < PHASES.length - 1; i++) turn = advancePhase(state, turn, [p1, p2]); // -> Cleanup
+    expect(mine.damageMarked).toBe(0);
+    expect(theirs.damageMarked).toBe(0);
+  });
+
+  it('an extra turn queued for a player takes priority over the normal round-robin rotation (500.7)', () => {
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    let turn = startGame();
+    queueExtraTurn(turn, 0); // p1 takes an extra turn, even though p2 would normally go next
+    for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 2
+    expect(turn.turnNumber).toBe(2);
+    expect(activePlayer(turn, [p1, p2])).toBe(p1);
+    expect(turn.extraTurns).toEqual([]); // consumed
+  });
+
+  it('multiple queued extra turns are consumed FIFO, one per turn-wrap', () => {
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    let turn = startGame();
+    queueExtraTurn(turn, 1); // p2 extra turn first
+    queueExtraTurn(turn, 0); // then p1's extra turn
+    for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 2 (queued: p2)
+    expect(activePlayer(turn, [p1, p2])).toBe(p2);
+    for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 3 (queued: p1)
+    expect(activePlayer(turn, [p1, p2])).toBe(p1);
+    for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 4 (queue empty, normal rotation from p1 -> p2)
+    expect(activePlayer(turn, [p1, p2])).toBe(p2);
   });
 });

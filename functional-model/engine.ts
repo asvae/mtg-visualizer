@@ -124,7 +124,7 @@ import type { GameState, RealCard, RealPlayer } from './state';
 import { effectivePT, effectiveTypes, isLethallyDamaged } from './state';
 import { Stack, type StackObject } from './stack';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
-import { startGame, currentPhase, activePlayer, advancePhase, type TurnState } from './turn';
+import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn as turnQueueExtraTurn, type TurnState } from './turn';
 import { parseManaCost, canAfford, payMana, untappedManaSources } from './mana';
 
 export type ActionResult = { ok: true } | { ok: false; reason: string };
@@ -160,10 +160,35 @@ export interface GameEngine {
    * `declareBlockers` on success.
    */
   blockers: Map<number, RealCard[]>;
+  /**
+   * Real card id -> the `CardDefinition`/`EffectContext`/`Actions` it
+   * resolved with when it last entered the battlefield via THIS engine's
+   * own `castSpell`+`resolveTop` — the same triple a `StackObject` already
+   * carries, captured here so `fireOnPhaseEnterTriggers` (below) has
+   * something to call `resolveCard` with for an `on: 'upkeep'`/`'endStep'`
+   * trigger LONG after the spell that put the permanent there already
+   * resolved and left the stack. A permanent seeded directly onto the
+   * battlefield (scenario setup, never cast through this engine) has no
+   * entry here — its upkeep/end-step triggers simply won't auto-fire, a
+   * real, documented gap (ENGINE_GAPS.md), not a silent success. Never
+   * pruned when a permanent leaves the battlefield (harmless: nothing
+   * looks up a card id that's no longer in `battlefield`), same "grows,
+   * never explicitly cleaned up" convention `enteredThisTurn` already uses.
+   */
+  resolvedPermanents: Map<number, { card: CardDefinition; ctx: EffectContext; actions: Actions }>;
 }
 
 export function createEngine(state: GameState, players: RealPlayer[]): GameEngine {
-  return { state, players, turn: startGame(), stack: new Stack(), enteredThisTurn: new Map(), attackers: [], blockers: new Map() };
+  return {
+    state,
+    players,
+    turn: startGame(),
+    stack: new Stack(),
+    enteredThisTurn: new Map(),
+    attackers: [],
+    blockers: new Map(),
+    resolvedPermanents: new Map(),
+  };
 }
 
 function isInstantSpeed(card: CardDefinition): boolean {
@@ -346,6 +371,7 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
     if (isPermanentTypeLine(resolved.card.typeLine)) {
       engine.state.move(real, 'Battlefield');
       engine.enteredThisTurn.set(real.id, engine.turn.turnNumber);
+      engine.resolvedPermanents.set(real.id, { card: resolved.card, ctx: resolved.ctx, actions: resolved.actions });
       const enterTrigger = resolved.card.triggers?.find((t) => t.on === 'enter');
       if (enterTrigger) resolveCard(resolved.card, resolved.ctx, resolved.actions, enterTrigger.name);
     } else {
@@ -356,26 +382,60 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
 }
 
 /**
+ * Real 603.6b "at the beginning of your upkeep/end step" auto-fire —
+ * called right after `engine.turn` advances into Upkeep or EndOfTurn (see
+ * `doAdvance` below), for the ACTIVE player's own permanents only (the
+ * common "your upkeep/end step" case — an "each player's"/"each
+ * opponent's" variant is a real, deferred gap, ENGINE_GAPS.md). Looks up
+ * each permanent's registered `resolvedPermanents` entry (see
+ * `GameEngine`'s own doc comment on that field for why a directly-seeded
+ * permanent has none and is silently skipped, not silently faked).
+ */
+function fireOnPhaseEnterTriggers(engine: GameEngine): void {
+  const phase = currentPhase(engine.turn);
+  const on = phase === 'Upkeep' ? 'upkeep' : phase === 'EndOfTurn' ? 'endStep' : undefined;
+  if (!on) return;
+  const active = activePlayer(engine.turn, engine.players);
+  for (const real of active.battlefield) {
+    const registered = engine.resolvedPermanents.get(real.id);
+    if (!registered) continue;
+    const trigger = registered.card.triggers?.find((t) => t.on === on);
+    if (trigger) resolveCard(registered.card, registered.ctx, registered.actions, trigger.name);
+  }
+}
+
+function doAdvance(engine: GameEngine): void {
+  engine.turn = advancePhase(engine.state, engine.turn, engine.players);
+  fireOnPhaseEnterTriggers(engine);
+}
+
+/**
  * One APNAP round (`priority.ts`'s own `runPriorityRound`), then performs
  * whatever it decided: resolves the stack's top object, or advances to the
- * next phase (running that phase's own automatic action — untap/draw —
- * via `turn.ts`'s `advancePhase`), or does nothing further if someone
- * pushed (that push already happened as a real `castSpell`/activated-
- * ability call before this round; a `{push:...}` choice here is for a
- * caller scripting priority.ts directly rather than going through
- * `castSpell` — same "scripted, not simulated" contract priority.ts's own
- * header already states).
+ * next phase (running that phase's own automatic action — untap/draw/
+ * cleanup — via `turn.ts`'s `advancePhase`, then firing any real
+ * upkeep/end-step triggers — see `fireOnPhaseEnterTriggers`), or does
+ * nothing further if someone pushed (that push already happened as a real
+ * `castSpell`/activated-ability call before this round; a `{push:...}`
+ * choice here is for a caller scripting priority.ts directly rather than
+ * going through `castSpell` — same "scripted, not simulated" contract
+ * priority.ts's own header already states).
  */
 export function stepPriority(engine: GameEngine, choices: PriorityChoice[]): PriorityOutcome {
   const outcome = runPriorityRound(engine.stack, choices);
   if (outcome === 'resolve-stack') resolveTop(engine);
-  else if (outcome === 'advance-phase') engine.turn = advancePhase(engine.state, engine.turn, engine.players);
+  else if (outcome === 'advance-phase') doAdvance(engine);
   return outcome;
 }
 
 /** Direct phase advance, bypassing priority entirely — for a caller that isn't scripting responses this round and just wants to move on (real games still pass priority around an empty stack first; this is the same shortcut `harness.ts`'s own `advanceToPhase` already takes for the same reason: only the phase transition itself is being demonstrated). */
 export function advance(engine: GameEngine): void {
-  engine.turn = advancePhase(engine.state, engine.turn, engine.players);
+  doAdvance(engine);
+}
+
+/** Queues `player` to take the next turn once the current one's Cleanup ends (500.7's own extra-turn priority over the normal rotation) — a thin `engine.players`-indexing wrapper over `turn.ts`'s own `queueExtraTurn(TurnState, playerIndex)`. Ultimecia, Time Sorceress's own "take an extra turn after this one" is the real FIN card that needs this. */
+export function queueExtraTurn(engine: GameEngine, player: RealPlayer): void {
+  turnQueueExtraTurn(engine.turn, engine.players.indexOf(player));
 }
 
 /** Real 302.6 (summoning sickness) + 508.1a (a tapped creature can't attack) + 302.6's own Defender clause (302.6's "can't attack" companion rule, 302.6a). Read-only — same "check separately from the mutating action" shape as `canCastSpell`. */
