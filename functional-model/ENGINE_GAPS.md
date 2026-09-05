@@ -30,6 +30,11 @@ so a future pass doesn't mistake them for missing work:
   Forge's full 1-7 + P/T sublayers, `StaticAbilityLayer.java` lines 5-34); no
   613.8 dependency-based reordering (timestamp order only); no duration
   tracking (an applied effect never expires). Documented, accepted as-is.
+- **Multiplayer (more than 2 players).** `turn.ts`'s header already notes
+  only simple 2-player round-robin is modeled — explicitly out of scope, not
+  worth spending effort on. Extra turns and skipped phases are NOT part of
+  this exclusion (those stay real gaps — see High priority #3 below);
+  strictly the >2-player turn-order case is excluded.
 
 ## Real gaps — prioritized
 
@@ -55,15 +60,24 @@ so a future pass doesn't mistake them for missing work:
    folded into `GameAction`'s own method. Without this, a creature reduced
    to 0 toughness or dealt lethal damage simply... doesn't die, unless some
    effect explicitly calls `destroy`.
-3. **Upkeep/end-step triggers, cleanup's real actions.** `turn.ts`'s header:
-   Upkeep/end-step triggers and cleanup's discard-to-hand-size +
-   until-end-of-turn cleanup are unimplemented; those phases exist and are
-   reachable in sequence with no automatic action. A card whose own ability
-   triggers "at the beginning of your upkeep" has no engine hook to fire it
-   automatically today (a caller would have to notice and call `resolveCard`
-   manually) — this could get better with `Trigger.on` (already extended
-   with `'enter'` this pass) growing `'upkeep'`/`'endStep'` variants, mirroring
-   how `on: 'enter'` now lets `resolveTop` auto-fire an ETB.
+3. **Turn-structure completeness (2-player only — see Accepted
+   simplifications above for the >2-player exclusion).** Two real gaps,
+   both raised to High priority: (a) **upkeep/end-step triggers, cleanup's
+   real actions** — `turn.ts`'s header: upkeep/end-step triggers and
+   cleanup's discard-to-hand-size + until-end-of-turn cleanup are
+   unimplemented; those phases exist and are reachable in sequence with no
+   automatic action. A card whose own ability triggers "at the beginning of
+   your upkeep" has no engine hook to fire it automatically today (a caller
+   would have to notice and call `resolveCard` manually) — this could get
+   better with `Trigger.on` (already extended with `'enter'` this pass)
+   growing `'upkeep'`/`'endStep'` variants, mirroring how `on: 'enter'` now
+   lets `resolveTop` auto-fire an ETB. (b) **extra turns and skipped
+   phases** — the other half of the old "multiplayer" gap, split out per
+   the user's own scope call: this is NOT a >2-player concept (an extra
+   combat, an extra turn, a skipped draw step all happen in normal 2-player
+   games too) and stays real, high-priority work; `turn.ts`'s own
+   `TurnState`/`advancePhase` have no hook for "insert an extra
+   turn/phase" or "skip the next one" at all today.
 4. **Target-legality checking at cast/declare time, and re-validation at
    resolution (608.2b, "fizzle").** `card.ts`'s effect system resolves/picks
    targets lazily, inside `resolveCard`, at resolution time — there is no
@@ -92,26 +106,34 @@ so a future pass doesn't mistake them for missing work:
    pre-existing modal-effect support (used by Louisoix's Sacrifice, e.g.) is
    a resolution-time concept, unrelated to a cast-time alternate-cost
    legality check.
-8. **Replacement effects (614).** Real Forge:
-   `ReplacementEffect.java`/`ReplacementHandler.java`/`ReplacementLayer.java`
-   (forge-game/.../replacement/). Nothing in this codebase intercepts an
-   event and replaces it ("if a creature would die, exile it instead", e.g.)
-   — `card.ts`'s effect system only ever applies effects forward, never
-   rewrites another effect's outcome.
-9. **Multiplayer turn order / extra turns / skipped phases.** `turn.ts`'s
-   header: not modeled — only simple 2-player round-robin.
+8. **Damage-prevention shields — a narrow `dealDamage` hook, NOT full 614.**
+   Checked the real pool: only 2 of 312 FIN cards need a replacement effect
+   at all — Crystal Fragments/Summon: Alexander ("Prevent all damage that
+   would be dealt to creatures you control this turn") and Diamond Weapon
+   ("Prevent all combat damage that would be dealt to Diamond Weapon"). Both
+   are the same narrow 614.2 damage-prevention-shield pattern. Full general
+   replacement-effect machinery (`ReplacementEffect.java`/
+   `ReplacementHandler.java`/`ReplacementLayer.java`,
+   forge-game/.../replacement/ — arbitrary event interception, dynamic 616
+   ordering, any event type) would mean gating every mutation call site
+   (`dealDamage`/`move`/`drawCard`/`destroy`/...) — assessed as too
+   invasive/risky for what's actually needed and explicitly rejected in
+   favor of the narrow version: a short list of active "prevent damage to X
+   (optionally: only combat damage)" shields, checked inside `dealDamage`
+   only, before applying damage. Still real, still worth doing — just not
+   what "614" as a whole implies.
 
 ### Lower priority (narrow, or already partially mitigated)
 
-10. **First/double strike combat sub-step** — folded into gap #1 above but
-    called out separately since it's a distinct real phase
-    (`PhaseType.COMBAT_FIRST_STRIKE_DAMAGE`) this engine's `PHASES` list
-    doesn't even include, not just an unimplemented step within an existing
-    one.
-11. **Legend rule / other SBA-adjacent state cleanup** — subsumed by gap #2;
+9. **First/double strike combat sub-step** — folded into gap #1 above but
+   called out separately since it's a distinct real phase
+   (`PhaseType.COMBAT_FIRST_STRIKE_DAMAGE`) this engine's `PHASES` list
+   doesn't even include, not just an unimplemented step within an existing
+   one.
+10. **Legend rule / other SBA-adjacent state cleanup** — subsumed by gap #2;
     called out because it's a commonly-hit case (Jill's own card is
     Legendary) worth testing first once SBAs exist.
-12. **Activated-ability cost components beyond `{T}` + mana.** Just closed
+11. **Activated-ability cost components beyond `{T}` + mana.** Just closed
     partially this pass: `canActivateAbility` now explicitly REJECTS (rather
     than silently mispaying) costs like `Sacrifice another artifact or
     creature`, `Crew N`, `{X}`, `Pay N life` — all real, common cost shapes
