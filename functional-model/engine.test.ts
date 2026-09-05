@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { GameState, wrapPlayer, wrapCard } from './state';
-import { createEngine, canCastSpell, castSpell, stepPriority, canAttack, declareAttackers, advance } from './engine';
+import { createEngine, canCastSpell, castSpell, canActivateAbility, activateAbility, resolveTop, stepPriority, canAttack, declareAttackers, advance } from './engine';
 import { PHASES } from './turn';
 
 // Same `{} as Actions` stub stack.test.ts/priority.test.ts already use —
@@ -196,5 +196,114 @@ describe('declareAttackers — summoning sickness (302.6) / tapped (508.1a) / Vi
     toCombat(engine);
     expect(declareAttackers(engine, [legal, sick]).ok).toBe(false);
     expect(legal.tapped).toBe(false);
+  });
+});
+
+describe('canActivateAbility / activateAbility (602.1)', () => {
+  const TAP_ABILITY: CardDefinition = {
+    name: 'Test Tapper',
+    manaCost: '{1}{G}',
+    typeLine: 'Creature — Test',
+    activationCost: '{T}',
+    effects: [],
+  };
+
+  it('allows activating a {T}-cost ability on an untapped permanent you control', () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Battlefield', { name: TAP_ABILITY.name, types: ['Creature'] });
+    const self = wrapCard(state, permanent);
+    const youPlayer = wrapPlayer(state, you);
+    expect(canActivateAbility(engine, you, permanent, TAP_ABILITY).ok).toBe(true);
+    const result = activateAbility(engine, you, permanent, TAP_ABILITY, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, noopActions);
+    expect(result.ok).toBe(true);
+    expect(permanent.tapped).toBe(true);
+    expect(engine.stack.size).toBe(1);
+  });
+
+  it('rejects activating an already-tapped {T}-cost ability, mutating nothing', () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Battlefield', { name: TAP_ABILITY.name, types: ['Creature'] });
+    state.tap(permanent);
+    expect(canActivateAbility(engine, you, permanent, TAP_ABILITY)).toEqual({ ok: false, reason: expect.stringMatching(/already tapped/) });
+    expect(engine.stack.size).toBe(0);
+  });
+
+  it("rejects activating a permanent you don't control", () => {
+    const { state, you, opp, engine } = setupGame();
+    const permanent = state.addCard(opp, 'Battlefield', { name: TAP_ABILITY.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, permanent, TAP_ABILITY)).toEqual({ ok: false, reason: expect.stringMatching(/do not control/) });
+  });
+
+  it('rejects a sorcery-speed-restricted ability outside a main phase with an empty stack', () => {
+    const { state, you, engine } = setupGame();
+    const sorceryOnly: CardDefinition = { ...TAP_ABILITY, activationCost: '{T} (activate only as a sorcery)' };
+    const permanent = state.addCard(you, 'Battlefield', { name: sorceryOnly.name, types: ['Creature'] });
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatBegin') advance(engine);
+    expect(canActivateAbility(engine, you, permanent, sorceryOnly)).toEqual({ ok: false, reason: expect.stringMatching(/sorcery-speed timing/) });
+  });
+
+  it('rejects a cost component this engine cannot pay (Sacrifice/Crew/Equip/etc), not silently mispaying', () => {
+    const { state, you, engine } = setupGame();
+    const sacCost: CardDefinition = { ...TAP_ABILITY, activationCost: '{1}, Sacrifice another creature' };
+    const permanent = state.addCard(you, 'Battlefield', { name: sacCost.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, permanent, sacCost)).toEqual({ ok: false, reason: expect.stringMatching(/unsupported component/) });
+  });
+
+  it('rejects an unaffordable mana cost, mutating nothing', () => {
+    const { state, you, engine } = setupGame();
+    const expensive: CardDefinition = { ...TAP_ABILITY, activationCost: '{5}{G}{G}, {T}' };
+    const permanent = state.addCard(you, 'Battlefield', { name: expensive.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, permanent, expensive)).toEqual({ ok: false, reason: expect.stringMatching(/cannot afford/) });
+    expect(permanent.tapped).toBe(false);
+    expect(you.battlefield.every((c) => !c.tapped)).toBe(true);
+  });
+
+  it("an activated ability's own resolution does not relocate its source permanent (602.1 has no such rule)", () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Battlefield', { name: TAP_ABILITY.name, types: ['Creature'] });
+    const self = wrapCard(state, permanent);
+    const youPlayer = wrapPlayer(state, you);
+    activateAbility(engine, you, permanent, TAP_ABILITY, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, noopActions);
+    resolveTop(engine);
+    expect(permanent.zone).toBe('Battlefield');
+  });
+});
+
+describe('resolveCard dispatch collision (a permanent with BOTH an on:"enter" trigger AND activationCost+effects)', () => {
+  function dualCard(order: string[]): CardDefinition {
+    return {
+      name: 'Test Dominant',
+      manaCost: '{1}{G}',
+      typeLine: 'Creature — Test',
+      triggers: [{ name: 'onEnter', on: 'enter', effects: [{ kind: 'custom', describe: 'enter', run: () => order.push('enter') }] }],
+      activationCost: '{T}',
+      effects: [{ kind: 'custom', describe: 'ability', run: () => order.push('ability') }],
+    };
+  }
+
+  it("casting and resolving the permanent auto-fires its ETB trigger, NOT the ability's own effects", () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = dualCard(order);
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    expect(order).toEqual(['enter']);
+    expect(real.zone).toBe('Battlefield');
+  });
+
+  it("later activating the SAME permanent's own ability runs the ability's effects, not the ETB again", () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = dualCard(order);
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    order.length = 0;
+    activateAbility(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    expect(order).toEqual(['ability']);
   });
 });

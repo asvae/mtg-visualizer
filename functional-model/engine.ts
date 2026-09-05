@@ -27,10 +27,33 @@
 //   createEngine(state, players) -> GameEngine
 //   canCastSpell(engine, caster, cardDef) -> ActionResult   // read-only check
 //   castSpell(engine, caster, cardReal, cardDef, ctx, actions) -> ActionResult
+//   canActivateAbility(engine, controller, permanentReal, cardDef, abilityName?) -> ActionResult
+//   activateAbility(engine, controller, permanentReal, cardDef, ctx, actions, abilityName?) -> ActionResult
 //   stepPriority(engine, choices) -> PriorityOutcome        // one APNAP round
 //   canAttack(engine, creature) -> ActionResult
 //   declareAttackers(engine, attackers) -> ActionResult
 //   advance(engine) -> void                                 // pass to next phase directly
+//
+// ── The resolveCard dispatch collision (fixed here) ──────────────────────
+// A permanent with BOTH a named ETB trigger AND a later activated ability
+// declared the common way (`activationCost`+`effects` — Jill, Shiva's
+// Dominant's own shape, also Coeurl/Elvish Archdruid/many real FIN cards)
+// creates a real ambiguity: `card.effects` is reserved for the ability
+// (card.ts's own doc comment: "an Instant/Sorcery's cast effect, OR an
+// activated ability's effect"), never "what happens on cast" for a
+// permanent — but `resolveCard(card, ctx, actions)` with NEITHER a
+// triggerName NOR abilityName (exactly what resolving a plain CAST does)
+// defaults to running `card.effects` regardless. `harness.ts` never hits
+// this: its own `lifecycleBefore` treats ANY `activationCost`-bearing
+// card's scenario as an ACTIVATION, never a plain cast, so `card.effects`
+// there always legitimately means the ability. This engine's own
+// `castSpell` genuinely models a plain cast, so it needs its own fix:
+// pushes a shallow `{...card, effects: undefined}` view when casting a
+// PERMANENT that also has `activationCost` — `triggers` stay intact on
+// that same view. A real ETB (`Trigger.on === 'enter'`, card.ts) then
+// auto-fires from `resolveTop` once the permanent lands on the
+// battlefield — real MTG doesn't require choosing to trigger an ETB, it
+// just happens. See ENGINE_GAPS.md for the fuller writeup.
 //
 // Every action that CAN be illegal returns `ActionResult` (`{ok:true}` or
 // `{ok:false, reason}`) rather than throwing or silently doing nothing —
@@ -49,6 +72,12 @@
 //  - Mana-cost affordability (601.2g/602.2c) against real untapped basic
 //    lands (see mana.ts's own scope note — nonbasic lands/mana rocks/mana
 //    abilities are NOT recognized sources).
+//  - Activated-ability legality (602.1) — same sorcery-speed-timing/
+//    affordability shape as casting, plus real `{T}`-cost tapping. Only a
+//    {T} + mana-only cost is payable; a real Sacrifice/Crew/Equip/Pay-life/
+//    {X} cost component (common among the 312 FIN cards — see
+//    `unsupportedCostComponent`'s own doc comment) is REJECTED (a real,
+//    explicit answer), not silently mispaid.
 //  - Summoning sickness (302.6) and Defender/tapped-creature attack
 //    restrictions (508.1a).
 // OUT (real, plainly-flagged gaps, not silently assumed away):
@@ -68,6 +97,7 @@
 //    are supplied by the caller, never simulated here.
 
 import type { CardDefinition, EffectContext, Actions } from './card';
+import { resolveCard } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
 import { Stack, type StackObject } from './stack';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
@@ -134,7 +164,26 @@ export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: Real
   const cost = parseManaCost(card.manaCost);
   payMana(engine.state, untappedManaSources(caster), cost);
   engine.state.move(cardReal, 'Stack');
-  engine.stack.push({ card, ctx, actions, triggerName });
+  // A permanent with its OWN `activationCost` reserves `card.effects` for
+  // that LATER activation (602.1) — real Magic has no "cast effects" for a
+  // permanent at all beyond entering the battlefield (that's `triggers`,
+  // not `effects`; see card.ts's own `CardDefinition.effects` doc comment:
+  // "an Instant/Sorcery's cast effect, OR an activated ability's effect").
+  // `resolveCard(card, ctx, actions)` with no trigger/ability name defaults
+  // to running `card.effects` — exactly wrong for a plain cast of one of
+  // these cards (Jill, Shiva's Dominant's own `{3}{U}{U}, {T}: exile,
+  // return transformed` would otherwise fire the instant Jill resolves as
+  // a creature, which is not what casting her does). `harness.ts` never
+  // hits this because its own `lifecycleBefore` treats ANY
+  // `activationCost`-bearing card's scenario as an ACTIVATION, never a
+  // plain cast — this engine's own `castSpell` genuinely models a plain
+  // cast, so it needs its own fix: push a shallow view with `effects`
+  // stripped, so the default branch finds nothing to run. `triggers`
+  // (an ETB, e.g.) stay intact on this same view — see `resolveTop`'s own
+  // auto-fire of a `Trigger.on === 'enter'` entry below. See
+  // ENGINE_GAPS.md for the fuller writeup of why this collision exists.
+  const pushedCard = isPermanentTypeLine(card.typeLine) && card.activationCost ? { ...card, effects: undefined } : card;
+  engine.stack.push({ card: pushedCard, ctx, actions, triggerName });
   return { ok: true };
 }
 
@@ -142,21 +191,124 @@ function isPermanentTypeLine(typeLine: string): boolean {
   return !/\b(Instant|Sorcery)\b/.test(typeLine);
 }
 
+/** Whether `cost`'s own free text requires tapping the permanent itself ({T}) as part of paying (602.1). `CardDefinition.activationCost` is a plain string — no structured cost grammar exists — so this, like the helpers below, is real but narrow text-pattern detection, not a parser. */
+function costRequiresTap(cost: string): boolean {
+  return /\{T\}/.test(cost);
+}
+
+/** The pure mana-symbol portion of an activationCost string, with `{T}` (handled separately by `costRequiresTap`) and any parenthetical restriction text ("(activate only as a sorcery)") stripped first — `parseManaCost` would otherwise throw trying to parse `{T}` as a color/generic symbol. */
+function manaPortionOf(cost: string): string {
+  return cost.replace(/\{T\}/g, '').replace(/\([^)]*\)/g, '');
+}
+
+/**
+ * A real activationCost pool-wide sweep (`grep -ohP "activationCost: '[^']*'"` across every `functional-model/cards/<slug>/definition.ts`)
+ * shows this is genuinely common — "Sacrifice another artifact or creature",
+ * "{1}, Sacrifice Zack Fair", "Crew 1 (...)", "Equip {1}", "{X}, {T} (...)",
+ * "Pay 1 life" all exist among the real 312 cards — so this can't be
+ * quietly ignored. Returns the first comma-separated cost component that
+ * is NOT pure {T}/mana symbols (after stripping both, see above), or
+ * `undefined` if the whole cost is payable through this engine's own
+ * mana+tap-only model. `canActivateAbility` rejects (doesn't throw) on a
+ * hit — a real, common shape, not a programming error.
+ */
+function unsupportedCostComponent(cost: string): string | undefined {
+  const stripped = cost.replace(/\{T\}/g, '').replace(/\([^)]*\)/g, '');
+  for (const part of stripped.split(',').map((p) => p.trim()).filter(Boolean)) {
+    if (!/^(\{[^}]+\})+$/.test(part)) return part;
+  }
+  return undefined;
+}
+
+/** The activationCost/`Ability.cost` string for one of `card`'s activated abilities — the single default one (`card.activationCost`) when `abilityName` is omitted, matching `resolveCard`'s own default-branch convention, or a named entry from `card.abilities` (Qiqirn Merchant's own pair, e.g.) when given. `undefined` if no such ability exists at all. */
+function activationCostFor(card: CardDefinition, abilityName?: string): string | undefined {
+  if (abilityName) return card.abilities?.find((a) => a.name === abilityName)?.cost;
+  return card.activationCost;
+}
+
+/**
+ * Real 602.1 activated-ability legality: controls the permanent, real
+ * "activate only as a sorcery" timing (a free-text restriction — no
+ * structured timing field exists on `CardDefinition.activationCost`, so
+ * this is a real but narrow text-pattern check, not a parsed grammar; a
+ * cost with NO such text is treated as instant-speed, matching real MTG's
+ * own default), and cost affordability (`{T}` + mana only —
+ * `unsupportedCostComponent`'s own doc comment lists what a real card's
+ * cost can contain that this engine can't pay yet: Sacrifice/Crew/Equip/
+ * Pay-life/{X}). Read-only, same shape as `canCastSpell`.
+ */
+export function canActivateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, abilityName?: string): ActionResult {
+  const cost = activationCostFor(card, abilityName);
+  if (!cost) return { ok: false, reason: `"${card.name}" has no such activated ability${abilityName ? ` named "${abilityName}"` : ''}` };
+  if (permanent.controllerId !== controller.id) return { ok: false, reason: 'you do not control this permanent (602.1)' };
+  if (/activate only as a sorcery/i.test(cost) && !sorcerySpeedTimingOk(engine, controller)) {
+    return { ok: false, reason: `"${cost}" restricts this to sorcery-speed timing: only during your own main phase with an empty stack` };
+  }
+  if (costRequiresTap(cost) && permanent.tapped) {
+    return { ok: false, reason: `"${card.name}"'s cost requires tapping it, but it's already tapped` };
+  }
+  const unsupported = unsupportedCostComponent(cost);
+  if (unsupported) {
+    return { ok: false, reason: `activation cost includes an unsupported component ("${unsupported}") — this engine only pays {T} + mana costs so far` };
+  }
+  const manaPortion = manaPortionOf(cost);
+  if (/\{[^}]+\}/.test(manaPortion)) {
+    let parsedMana;
+    try {
+      parsedMana = parseManaCost(manaPortion);
+    } catch (e) {
+      return { ok: false, reason: (e as Error).message };
+    }
+    if (!canAfford(untappedManaSources(controller), parsedMana)) {
+      return { ok: false, reason: `cannot afford "${card.name}"'s cost ${cost} — not enough untapped mana sources` };
+    }
+  }
+  return { ok: true };
+}
+
+/**
+ * Legality-checks, then (if legal) pays the real cost (taps `permanent` if
+ * the cost says `{T}`, taps mana sources for the mana portion) and pushes
+ * the ability onto the real stack (602.2 — an activated ability uses the
+ * stack exactly like a spell). Unlike `castSpell`, the permanent itself
+ * does NOT move zones here — see `resolveTop`'s own `isAbility` branch:
+ * an activated ability resolving doesn't relocate its own source, only
+ * its OWN effects (if any) do that (Jill's own transform ability moves
+ * itself via its own `custom` effect's `actions.moveTo` calls, e.g.).
+ */
+export function activateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, abilityName?: string): ActionResult {
+  const check = canActivateAbility(engine, controller, permanent, card, abilityName);
+  if (!check.ok) return check;
+  const cost = activationCostFor(card, abilityName)!;
+  const manaPortion = manaPortionOf(cost);
+  if (/\{[^}]+\}/.test(manaPortion)) payMana(engine.state, untappedManaSources(controller), parseManaCost(manaPortion));
+  if (costRequiresTap(cost)) engine.state.tap(permanent);
+  engine.stack.push({ card, ctx, actions, abilityName, isAbility: true });
+  return { ok: true };
+}
+
 /**
  * Resolves the top of the real stack (`Stack.resolveTop`, which runs
- * `resolveCard` for you) and moves the resolved card to its real
+ * `resolveCard` for you). A SPELL (not `isAbility`) then moves to its real
  * post-resolution zone — Battlefield (stamping `enteredThisTurn` for
- * summoning-sickness purposes) for a permanent, Graveyard for an instant/
- * sorcery. A no-op, safely, on an empty stack.
+ * summoning-sickness purposes, then auto-firing a real ETB — see
+ * `Trigger.on === 'enter'`, card.ts) for a permanent, Graveyard for an
+ * instant/sorcery. An ACTIVATED ABILITY (`isAbility`) does neither: 602.1
+ * has no "the source moves zones after its ability resolves" rule at all
+ * — the permanent just stays wherever it already was, unless its own
+ * effects say otherwise. A no-op, safely, on an empty stack.
  */
 export function resolveTop(engine: GameEngine): StackObject | undefined {
   const resolved = engine.stack.resolveTop();
   if (!resolved) return undefined;
+  if (resolved.isAbility) return resolved;
   const real = engine.state.cards.get(resolved.ctx.self.getId());
   if (real) {
     if (isPermanentTypeLine(resolved.card.typeLine)) {
       engine.state.move(real, 'Battlefield');
       engine.enteredThisTurn.set(real.id, engine.turn.turnNumber);
+      const enterTrigger = resolved.card.triggers?.find((t) => t.on === 'enter');
+      if (enterTrigger) resolveCard(resolved.card, resolved.ctx, resolved.actions, enterTrigger.name);
     } else {
       engine.state.move(real, 'Graveyard');
     }

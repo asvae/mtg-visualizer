@@ -464,6 +464,21 @@ export interface Trigger {
   /** Short label — 'onEnter'/'onAttack'/'onDealsDamage'/etc. Matches a scenario's own `trigger` field. */
   name: string;
   effects: Effect[];
+  /**
+   * Marks this as the real "enters the battlefield" trigger (603.6b-ish),
+   * so `engine.ts`'s own `resolveTop` can auto-fire it the moment a
+   * permanent resolves onto the battlefield — real MTG doesn't require a
+   * player to separately "choose" to trigger an ETB, it just happens.
+   * Optional and additive: none of the 312 existing FIN cards' own
+   * triggers set this (a real ETB trigger is instead picked manually per
+   * scenario via `harness.ts`'s own `Scenario.trigger` field, unaffected
+   * by this) — retrofitting them is a separate, deferred task (see
+   * ENGINE_GAPS.md), not something this field does automatically. No
+   * other event type is modeled this way yet (attacks/dies/etc. still have
+   * no structural marker at all) — extend this union only once a real
+   * caller needs a second auto-fired event kind.
+   */
+  on?: 'enter';
 }
 
 /**

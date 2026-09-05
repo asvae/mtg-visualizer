@@ -4,6 +4,7 @@ import type { Card, Player, ZoneType } from './interfaces';
 import { GameState, wrapPlayer, wrapCard, effectiveTypes, effectivePT, type RealCard, type RealPlayer } from './state';
 import { PHASES, currentPhase, advancePhase, type Phase } from './turn';
 import { TOKENS } from './tokens';
+import type { BasicLandName } from './mana';
 
 /**
  * One card's own test scenario — plain data describing a board state to run
@@ -204,7 +205,7 @@ export interface PlayerState {
    */
   tokens?: (keyof typeof TOKENS)[];
   /** A real basic land name seeded onto this player's Battlefield, same "real name, real image" reasoning as `tokens` above — independent of, and in addition to, `landsCount`. */
-  basicLands?: Array<'Plains' | 'Island' | 'Swamp' | 'Mountain' | 'Forest'>;
+  basicLands?: BasicLandName[];
 }
 
 /** One logged call — the raw material a synergy matcher reads. Persisted verbatim to functional-model/cards/<slug>/trace.json. */

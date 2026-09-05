@@ -24,6 +24,9 @@ import type { GameState, RealCard, RealPlayer } from './state';
 
 export type ManaColor = 'W' | 'U' | 'B' | 'R' | 'G';
 
+/** The five basic land names — shared here so callers (harness.ts's `PlayerState.basicLands`, e.g.) don't duplicate this union inline. */
+export type BasicLandName = 'Plains' | 'Island' | 'Swamp' | 'Mountain' | 'Forest';
+
 export interface ParsedManaCost {
   generic: number;
   colors: Partial<Record<ManaColor, number>>;
@@ -38,6 +41,14 @@ const BASIC_LAND_COLOR: Record<string, ManaColor> = {
 };
 
 const COLORS: ManaColor[] = ['W', 'U', 'B', 'R', 'G'];
+
+const LAND_FOR_COLOR: Record<ManaColor, BasicLandName> = {
+  W: 'Plains',
+  U: 'Island',
+  B: 'Swamp',
+  R: 'Mountain',
+  G: 'Forest',
+};
 
 /** Parses a real printed mana-cost string (`{2}{U}{U}`) into generic + colored-pip counts. Throws on any symbol outside this file's own declared scope (see header) — a clear signal, not a silently wrong count. */
 export function parseManaCost(cost: string): ParsedManaCost {
@@ -57,6 +68,33 @@ export function parseManaCost(cost: string): ParsedManaCost {
     throw new Error(`parseManaCost: unsupported mana symbol {${inner}} in "${cost}" (hybrid/Phyrexian/X/generic-colorless not modeled — see this file's own header)`);
   }
   return parsed;
+}
+
+/**
+ * Scenario-setup convenience (harness.ts's `PlayerState.basicLands` /
+ * `engine.ts` test helpers): one basic land per colored pip in `cost`,
+ * generic pips filled by round-robining whichever colors the cost already
+ * needs (so `{2}{G}` yields `[Forest, Forest, Forest]`, not `[Forest,
+ * Mountain]`-by-arbitrary-default) — falls back to an all-Forest count
+ * (`generic` + 1) when the cost has zero colored pips, since some real land
+ * has to be picked and Forest is this file's own arbitrary-but-consistent
+ * default elsewhere (`manaColorOf`'s subtype table order, e.g.). Does not
+ * itself validate `cost` — reuses `parseManaCost`, so the same throw
+ * applies to an unsupported symbol.
+ */
+export function basicLandsFor(cost: string): BasicLandName[] {
+  const parsed = parseManaCost(cost);
+  const neededColors = COLORS.filter((c) => (parsed.colors[c] ?? 0) > 0);
+  const lands: BasicLandName[] = [];
+  for (const color of neededColors) {
+    for (let i = 0; i < (parsed.colors[color] ?? 0); i++) lands.push(LAND_FOR_COLOR[color]);
+  }
+  if (neededColors.length === 0) {
+    for (let i = 0; i < parsed.generic + 1; i++) lands.push('Forest');
+  } else {
+    for (let i = 0; i < parsed.generic; i++) lands.push(LAND_FOR_COLOR[neededColors[i % neededColors.length]!]);
+  }
+  return lands;
 }
 
 /** The color this real card produces as a mana source, or `undefined` if it isn't one of the basic lands this file recognizes (see header). */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GameState } from './state';
-import { parseManaCost, canAfford, payMana, untappedManaSources } from './mana';
+import { parseManaCost, canAfford, payMana, untappedManaSources, basicLandsFor } from './mana';
 
 describe('parseManaCost', () => {
   it('sums generic and counts colored pips separately', () => {
@@ -60,5 +60,26 @@ describe('canAfford / payMana', () => {
     const { state, you } = setup();
     expect(() => payMana(state, untappedManaSources(you), parseManaCost('{U}{U}{U}'))).toThrow(/cannot afford/);
     expect(you.battlefield.every((c) => !c.tapped)).toBe(true);
+  });
+});
+
+describe('basicLandsFor', () => {
+  it('yields one matching basic land per colored pip', () => {
+    expect(basicLandsFor('{2}{U}{U}')).toEqual(expect.arrayContaining(['Island', 'Island']));
+    expect(basicLandsFor('{2}{U}{U}')).toHaveLength(4);
+  });
+
+  it('fills generic pips by round-robining the colors the cost already needs', () => {
+    expect(basicLandsFor('{2}{G}')).toEqual(['Forest', 'Forest', 'Forest']);
+    expect(basicLandsFor('{2}{W}{U}')).toEqual(['Plains', 'Island', 'Plains', 'Island']);
+  });
+
+  it('falls back to Forest when the cost has zero colored pips', () => {
+    expect(basicLandsFor('{3}')).toEqual(['Forest', 'Forest', 'Forest', 'Forest']);
+    expect(basicLandsFor('{0}')).toEqual(['Forest']);
+  });
+
+  it('throws on an unsupported mana symbol, same as parseManaCost', () => {
+    expect(() => basicLandsFor('{X}')).toThrow(/unsupported mana symbol/);
   });
 });

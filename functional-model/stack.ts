@@ -28,6 +28,10 @@ export interface StackObject {
   actions: Actions;
   /** Which named `card.triggers` entry this stack object resolves — omit to run `card.effects` instead (a cast/activated-ability resolution). */
   triggerName?: string;
+  /** Which named `card.abilities` entry this stack object resolves (a permanent with MORE THAN ONE independent activated ability) — omit for the common single-ability case (`card.activationCost`+`card.effects`) or a plain spell cast, same as `resolveCard`'s own `abilityName` param. */
+  abilityName?: string;
+  /** True when this object came from `engine.ts`'s `activateAbility` (602.1) rather than a spell cast — `engine.ts`'s own `resolveTop` uses this to skip the spell-only "move to Battlefield/Graveyard after resolving" step (602.1 activated abilities don't move their source permanent; only their OWN effects, if any, do that). */
+  isAbility?: boolean;
 }
 
 export class Stack {
@@ -60,7 +64,7 @@ export class Stack {
   resolveTop(): StackObject | undefined {
     const obj = this.items.pop();
     if (!obj) return undefined;
-    resolveCard(obj.card, obj.ctx, obj.actions, obj.triggerName);
+    resolveCard(obj.card, obj.ctx, obj.actions, obj.triggerName, obj.abilityName);
     return obj;
   }
 }

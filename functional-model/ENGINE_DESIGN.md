@@ -35,6 +35,10 @@ advance(engine);
 // Combat:
 canAttack(engine, creature);
 declareAttackers(engine, [creature1, creature2]);
+
+// Activated abilities (602.1) — same read-only-check + mutating-action pair:
+canActivateAbility(engine, you, permanentReal, cardDef, abilityName?);
+activateAbility(engine, you, permanentReal, cardDef, ctx, actions, abilityName?);
 ```
 
 Every action that can be illegal returns `ActionResult` (`{ok:true}` or
@@ -56,6 +60,32 @@ for you — then moves the resolved card to its real post-resolution zone.
 `state.ts`'s `GameState`/`RealCard`/`RealPlayer` are reused as-is as the
 mutable game-object model; nothing here duplicates that.
 
+### The `resolveCard` dispatch collision (fixed here)
+
+`resolveCard(card, ctx, actions, triggerName?, abilityName?)` with **neither**
+name given defaults to running `card.effects` — correct for a plain spell, but
+wrong for a permanent that has BOTH a named ETB trigger and its own
+`activationCost`+`effects` (Jill, Coeurl, Elvish Archdruid, and many other real
+cards' actual shape: `effects` is reserved for the ability's LATER activation,
+not "what happens on cast"). `harness.ts` never hits this, since its own
+`lifecycleBefore` treats any `activationCost`-bearing card's scenario as an
+activation, never a plain cast.
+
+Fixed in `castSpell`: a permanent with `activationCost` gets a shallow
+`{...card, effects: undefined}` view pushed onto the stack instead of the real
+`card`, leaving `triggers` (and thus a same-name-lookup for the ETB) intact.
+The real ETB firing itself is `resolveTop`'s job — it auto-fires whichever
+`card.triggers` entry has the new, additive `on: 'enter'` field (`card.ts`).
+None of the 312 existing FIN cards set `on: 'enter'` yet (a deferred
+retrofit — see `ENGINE_GAPS.md`); this only fires for a test-authored
+`CardDefinition` or a future retrofit today.
+
+Later activating that SAME permanent's own ability goes through
+`canActivateAbility`/`activateAbility` instead, which push the REAL `card`
+(with `effects` intact) and set `isAbility: true` — `resolveTop` skips the
+spell-only "move to Battlefield/Graveyard" step for those, since 602.1
+activated abilities don't relocate their source permanent.
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -64,6 +94,19 @@ mutable game-object model; nothing here duplicates that.
   untapped **basic lands only**.
 - **Summoning sickness** (302.6), **tapped-creature** (508.1a), **Defender**
   (302.6), and **Vigilance** (508.1f) for attacker declaration.
+- **Activated-ability legality** (602.1): control check, sorcery-speed
+  restriction (detected from free-text `activate only as a sorcery` in the
+  cost string — `card.ts`'s `activationCost` has no structured timing field),
+  `{T}`-cost-requires-untapped, mana affordability, and explicit rejection
+  (not silent mispayment) of any cost component this engine can't pay —
+  `Sacrifice ...`, `Crew N`, `{X}`, `Pay N life`, etc. are all real, common
+  activation-cost shapes among the 312 FIN cards (verified by grepping every
+  `activationCost:` string in `functional-model/cards/<slug>/definition.ts`),
+  not a hypothetical edge case.
+- **`mana.ts`'s `basicLandsFor(cost)`** — one matching basic land per colored
+  pip, generic pips round-robining the colors the cost already needs (Forest
+  fallback if the cost has none) — scenario/test-setup convenience, not new
+  affordability logic.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -91,7 +134,16 @@ mutable game-object model; nothing here duplicates that.
 
 ## Tests
 
-`mana.test.ts` (cost parsing, affordability, payment — legal and illegal
-cases) and `engine.test.ts` (sorcery-speed timing, affordability, combat
-legality — again both legal and illegal cases, plus the all-or-nothing
-"one illegal attacker rejects the whole declaration" behavior).
+`mana.test.ts` (cost parsing, affordability, payment, `basicLandsFor` — legal
+and illegal cases) and `engine.test.ts` (sorcery-speed timing, affordability,
+combat legality, activated-ability legality/resolution, and the
+`resolveCard`-dispatch-collision fix — again both legal and illegal cases,
+plus the all-or-nothing "one illegal attacker rejects the whole declaration"
+behavior).
+
+## Gap analysis vs. real Forge
+
+See `ENGINE_GAPS.md` for the full, prioritized "what's still missing to reach
+parity with Forge" writeup (turn/phase completeness, combat, alternate costs,
+replacement effects, state-based actions, and what's an intentional,
+accepted simplification vs. a real gap still worth closing).
