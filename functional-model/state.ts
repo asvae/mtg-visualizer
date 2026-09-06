@@ -229,6 +229,19 @@ export class GameState {
    * it's deleted from `this.cards` and every zone array instead.
    */
   move(card: RealCard, to: ZoneType): void {
+    // Real 122.1d-shaped replacement, `FINALITY` counter (Card.java
+    // ~line 7067-7076: `Event$ Moved | Origin$ Battlefield |
+    // Destination$ Graveyard | ... "If CARDNAME would die, exile it
+    // instead"` — a static per-object replacement keyed off the
+    // counter's presence, same as `STUN`'s own untap-replacement
+    // below). Checked the real pool: only Relentless X-ATM092 puts one
+    // on itself (its own graveyard-recursion ability), preventing it
+    // from ever dying a second time instead of exiling. No counter
+    // removal needed on the redirect — moving to Exile already wipes
+    // `card.counters` via 400.7 below, same as every other zone change.
+    if (card.zone === 'Battlefield' && to === 'Graveyard' && (card.counters['finality'] ?? 0) > 0) {
+      to = 'Exile';
+    }
     if (card.zone === 'Battlefield' && to !== 'Battlefield' && card.isTokenCard) {
       const owner = this.players.get(card.ownerId);
       const arr = owner && zoneArray(owner, 'Battlefield');
@@ -406,8 +419,29 @@ export class GameState {
     card.tapped = true;
   }
 
-  /** `Card.untap()` (forge-game/.../card/Card.java ~line 4711) — real, persistent tapped state. */
+  /**
+   * `Card.untap()` (forge-game/.../card/Card.java ~line 4711) — real,
+   * persistent tapped state, now with the real `STUN` counter
+   * replacement (CR 122.1d; `Card.java` ~line 7056-7066: "If this
+   * permanent would become untapped, instead remove a stun counter
+   * from it" — a static per-object replacement on the `Untap` event,
+   * NOT a special case inside `untap()` itself in real Forge, but this
+   * engine has no general 614/616 replacement dispatcher — see gap #8
+   * in ENGINE_GAPS.md — so this single real chokepoint is where it's
+   * modeled, same "narrow hook at the one real mutation site" shape as
+   * `dealDamage`'s own Deathtouch/lethal-damage tracking). Checked the
+   * real pool: Tonberry and Ice Flan both write lowercase `'stun'`;
+   * Omega, Heartless Evolution writes uppercase `'Stun'` — an
+   * inconsistency in the cards themselves (`cards/*` out of scope to
+   * edit), so both keys are checked here rather than picking one and
+   * silently breaking the other two real cards.
+   */
   untap(card: RealCard): void {
+    const stunKey = (card.counters['stun'] ?? 0) > 0 ? 'stun' : (card.counters['Stun'] ?? 0) > 0 ? 'Stun' : undefined;
+    if (stunKey) {
+      this.putCounter(card, stunKey, -1);
+      return;
+    }
     card.tapped = false;
   }
 

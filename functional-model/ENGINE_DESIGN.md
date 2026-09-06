@@ -261,6 +261,44 @@ Retrofitting the 3 real transforming cards' own effects to somehow trigger
 this automatically is out of scope here (there's no hook for them to call
 even if retrofitted).
 
+### Stun and finality counters — narrow per-object replacements, `state.ts`
+
+Verified against the real pool first: `counterType:` values used across
+`functional-model/cards/<slug>/definition.ts` are overwhelmingly `+1/+1`
+(27), plus `stun` (Ice Flan, Tonberry), `Stun` (Omega, Heartless Evolution
+— a real casing inconsistency between the cards themselves; `cards/*` is
+out of scope to fix, so `untap()` checks both keys), and `finality`
+(Relentless X-ATM092).
+
+Real Forge models both as genuine per-object `ReplacementEffect`s
+(`Card.java` ~7056-7076), registered dynamically whenever the counter is
+present:
+- `STUN` replaces the `Untap` event: "If this permanent would become
+  untapped, instead remove a stun counter from it" (CR 122.1d).
+- `FINALITY` replaces a Battlefield→Graveyard `Moved` event with
+  Battlefield→Exile: "If CARDNAME would die, exile it instead."
+
+This engine has no general 614/616 replacement dispatcher (gap #8 in
+ENGINE_GAPS.md proposes one, narrowly, for damage prevention only) — but
+both of these counters only ever intercept exactly ONE real mutation
+method each, so they're modeled as a direct check at that one chokepoint
+instead of a dispatcher:
+
+```ts
+// GameState.untap
+const stunKey = (card.counters['stun'] ?? 0) > 0 ? 'stun' : (card.counters['Stun'] ?? 0) > 0 ? 'Stun' : undefined;
+if (stunKey) { this.putCounter(card, stunKey, -1); return; }
+card.tapped = false;
+
+// GameState.move
+if (card.zone === 'Battlefield' && to === 'Graveyard' && (card.counters['finality'] ?? 0) > 0) to = 'Exile';
+```
+
+No explicit counter removal is needed on the finality redirect — moving to
+Exile already wipes `card.counters` via the existing 400.7 reset (the same
+mechanic Saga automation above reuses), so there's nothing left to remove
+by the time the permanent could ever be checked again.
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -305,6 +343,10 @@ even if retrofitted).
   transforms the Saga back instead) — see "Saga lore-counter automation"
   above for the full scope and its one deliberately deferred gap
   (per-card auto-detection of a transform).
+- **Stun and finality counters** — `GameState.untap`/`GameState.move`: real
+  CR 122.1d untap-replacement and a real die→exile replacement, each
+  modeled as a narrow check at the one real mutation method it intercepts
+  — see "Stun and finality counters" above.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -353,6 +395,10 @@ Saga's own ETB-through-final-sacrifice arc across several real turns,
 controller-scoping, a transform-back Saga surviving instead of being
 sacrificed, `transformPermanent`'s own "transforms into a Saga" vs.
 "transforms into a non-Saga" cases, and `advanceSaga`'s defensive no-ops).
+`state.test.ts` also covers the stun-counter untap-replacement (both real
+casings, multi-counter decrement, and the no-counter negative path) and
+the finality-counter die→exile replacement (including a non-Graveyard
+destination correctly NOT being redirected).
 
 ## Gap analysis vs. real Forge
 

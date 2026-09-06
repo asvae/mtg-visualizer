@@ -57,6 +57,32 @@ it's worth building at all) should cite a real card, not a hypothetical one.
   "Skip a lore counter"/"add an extra lore counter" effects: no FIN card
   needs either (checked).
 
+- **Stun and finality counters — real per-object replacement effects at
+  their one real chokepoint.** Checked the real pool for every
+  `counterType:` value used (`putCounter`/`putCounterTarget` across
+  `functional-model/cards/<slug>/definition.ts`): `stun` (Ice Flan, Tonberry
+  — lowercase) / `Stun` (Omega, Heartless Evolution — uppercase, a real
+  inconsistency between the cards themselves, `cards/*` out of scope to
+  fix) and `finality` (Relentless X-ATM092). Real Forge models both as
+  genuine `ReplacementEffect`s registered per-object whenever the counter is
+  present (`Card.java` ~7056-7076: `STUN` replaces the `Untap` event by
+  removing a counter instead; `FINALITY` replaces a Battlefield→Graveyard
+  `Moved` event with Battlefield→Exile) — general 614/616 machinery this
+  engine deliberately doesn't have (gap #8 below). Since each of these two
+  only ever intercepts exactly ONE real mutation method here
+  (`GameState.untap`/`GameState.move`), modeled as a narrow check at that
+  one chokepoint instead — same "narrow hook at the one real call site,
+  not a general dispatcher" shape gap #8 itself proposes for damage
+  prevention. `untap()` checks BOTH the lowercase and uppercase counter key
+  so all 3 real stun cards work despite the cards' own inconsistent
+  casing. `move()`'s finality check needs no counter removal on redirect —
+  moving to Exile already wipes `card.counters` via the existing 400.7
+  reset, so the counter can't cause a second (incorrect) redirect later.
+  Tests: `state.test.ts`'s `GameState.tap / untap` and `GameState.move —
+  FINALITY counter` describe blocks (7 new tests: both counter cases,
+  multi-counter decrement, the "no counter → untaps/dies normally"
+  negative paths, and "a non-Graveyard destination isn't redirected").
+
 ## Accepted simplifications — NOT gaps to close
 
 These came up in conversation explicitly ("we don't need AI yet, and we

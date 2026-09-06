@@ -74,6 +74,86 @@ describe('GameState.tap / untap', () => {
     state.untap(card);
     expect(card.tapped).toBe(false);
   });
+
+  it('CR 122.1d: a stun counter is removed instead of untapping (lowercase key — Tonberry/Ice Flan)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'stunned-creature' });
+    state.tap(card);
+    state.putCounter(card, 'stun', 1);
+    state.untap(card);
+    expect(card.tapped).toBe(true); // NOT untapped — the stun counter absorbed it
+    expect(card.counters['stun']).toBe(0);
+  });
+
+  it('CR 122.1d: also checked under the uppercase key (Omega, Heartless Evolution)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'stunned-creature' });
+    state.tap(card);
+    state.putCounter(card, 'Stun', 1);
+    state.untap(card);
+    expect(card.tapped).toBe(true);
+    expect(card.counters['Stun']).toBe(0);
+  });
+
+  it('CR 122.1d: a SECOND stun counter absorbs a second untap attempt; the third genuinely untaps', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'stunned-creature' });
+    state.tap(card);
+    state.putCounter(card, 'stun', 2);
+    state.untap(card);
+    expect(card.tapped).toBe(true);
+    expect(card.counters['stun']).toBe(1);
+    state.untap(card);
+    expect(card.tapped).toBe(true);
+    expect(card.counters['stun']).toBe(0);
+    state.untap(card);
+    expect(card.tapped).toBe(false);
+  });
+
+  it('a card with no stun counter untaps normally (illegal-path: guard does not fire on an absent/zero counter)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'creature' });
+    state.tap(card);
+    state.putCounter(card, 'stun', 0);
+    state.untap(card);
+    expect(card.tapped).toBe(false);
+  });
+});
+
+describe('GameState.move — FINALITY counter (real replacement: dying exiles instead, CR-equivalent to Card.java ~7067-7076)', () => {
+  it('Relentless X-ATM092-shaped case: a permanent with a finality counter goes to Exile, not Graveyard, when it would die', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'relentless-x-atm092' });
+    state.putCounter(card, 'finality', 1);
+    state.move(card, 'Graveyard');
+    expect(card.zone).toBe('Exile');
+    expect(you.exile).toContain(card);
+    expect(you.graveyard).not.toContain(card);
+  });
+
+  it('a permanent with NO finality counter dies normally into the graveyard (illegal-path: guard does not fire unconditionally)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'plain-permanent' });
+    state.move(card, 'Graveyard');
+    expect(card.zone).toBe('Graveyard');
+    expect(you.graveyard).toContain(card);
+  });
+
+  it('a finality counter does not redirect a move to a zone OTHER than the graveyard (e.g. bounced to hand)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'relentless-x-atm092' });
+    state.putCounter(card, 'finality', 1);
+    state.move(card, 'Hand');
+    expect(card.zone).toBe('Hand');
+    expect(you.hand).toContain(card);
+  });
 });
 
 describe('GameState.createToken', () => {
