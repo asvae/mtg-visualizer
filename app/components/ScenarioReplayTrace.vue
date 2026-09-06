@@ -216,7 +216,7 @@ watch(stepIndex, (i) => {
       <span><span class="text-muted/60">action:</span> {{ trace.scenario.action }}</span>
       <span class="text-text"><span class="text-muted/60">result:</span> {{ trace.scenario.result }}</span>
     </div>
-    <div v-if="scenarioRows.length" class="mt-1.5 max-h-24 overflow-y-auto rounded border border-border bg-panel p-2">
+    <div v-if="scenarioRows.length" class="mt-1.5 max-h-24 overflow-x-auto overflow-y-auto rounded border border-border bg-panel p-2">
       <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
         <thead>
           <tr class="text-muted/70 uppercase">
@@ -367,7 +367,7 @@ watch(stepIndex, (i) => {
         <!-- Actions: the primary clickable list driving the slider, when
              this trace has them (an engine-piloted trace — see harness.ts's
              own `TraceResult.actions` doc comment). -->
-        <div v-if="hasActions" class="max-h-36 overflow-y-auto rounded border border-border bg-panel p-2">
+        <div v-if="hasActions" class="max-h-36 overflow-x-auto overflow-y-auto rounded border border-border bg-panel p-2">
           <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
             <thead>
               <tr class="bg-panel text-muted/70 uppercase sticky top-0">
@@ -396,7 +396,7 @@ watch(stepIndex, (i) => {
              to just the current action's own entries otherwise — not
              something this replay needs to make especially readable, just
              not thrown away (still useful for debugging). -->
-        <div class="max-h-36 overflow-y-auto rounded border border-border bg-panel p-2" :class="{ 'max-h-24': hasActions }">
+        <div class="max-h-36 overflow-x-auto overflow-y-auto rounded border border-border bg-panel p-2" :class="{ 'max-h-24': hasActions }">
           <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
             <thead>
               <tr class="bg-panel text-muted/70 uppercase sticky top-0">
