@@ -16,15 +16,15 @@
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
 import { cardArtCrop, cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
 import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
 import { findInteractionsForCard, annotateCardText } from '../../../../functional-model/synergy';
 import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
-import { runScenarios } from '../../../../functional-model/harness';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
-import type { CardDefinition } from '../../../../functional-model/card';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
@@ -120,6 +120,26 @@ function functionalModelSignature(slug: string): string {
     }
   }).join('|');
 }
+// Computing traces live means actually EXECUTING the card's own
+// engine-scenario.ts/scenarios.ts — tried as a plain in-process dynamic
+// import() first, but Nitro's dev bundler handles that unreliably (a
+// relative specifier resolves against wherever Nitro's dev bundle output
+// happens to land, not this source file's own location, and an absolute
+// one bypasses Nitro's transform entirely, landing on Node's raw loader,
+// which can't resolve these files' own extensionless internal imports
+// either way). Spawning vite-node as a child process sidesteps all of that
+// — the exact same execution model functional-model/scripts/run-scenarios.mjs
+// already uses successfully for the whole corpus, just for one card at a
+// time (functional-model/scripts/run-one-card.mjs).
+const execFileAsync = promisify(execFile);
+async function computeTracesLive(slug: string): Promise<TraceResult[]> {
+  const { stdout } = await execFileAsync(join(process.cwd(), 'node_modules/.bin/vite-node'), [
+    join(process.cwd(), 'functional-model/scripts/run-one-card.mjs'),
+    slug,
+  ]);
+  return JSON.parse(stdout);
+}
+
 const functionalModelCache = new Map<string, { signature: string; cardText: string; data: FunctionalModelData | null }>();
 async function loadFunctionalModel(name: string, cardText: string): Promise<FunctionalModelData | null> {
   const slug = slugify(name);
@@ -132,30 +152,18 @@ async function loadFunctionalModel(name: string, cardText: string): Promise<Func
     let source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
     // A card that's opted into a real engine-piloted trace (see
     // engine-trace.ts's own header — `cards/<slug>/engine-scenario.ts`,
-    // picked up INSTEAD of scenarios.ts for that one card) has its own
-    // pilot script, which is what actually produces `traces` below — worth
-    // showing right alongside the definition rather than leaving it
-    // invisible on disk. Appended, not a separate field, to keep the Card
-    // Definition tab's existing single-`source` shape (FunctionalModelScript)
-    // unchanged.
-    //
-    // Same dispatch functional-model/scripts/run-scenarios.mjs itself
-    // uses — `.catch(() => null)` on the dynamic import is how it (and
-    // this route) tells "no engine-scenario.ts for this card" (the common
-    // case) apart from a real error inside one that exists.
-    const engineScenarioModule = await import(`../../../../functional-model/cards/${slug}/engine-scenario.ts`).catch(() => null);
-    let traces: TraceResult[];
-    if (engineScenarioModule) {
-      const pilotSource = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/engine-scenario.ts`), 'utf8');
+    // picked up INSTEAD of scenarios.ts for that one card, same dispatch
+    // run-one-card.mjs uses to compute `traces` below) has its own pilot
+    // script, worth showing right alongside the definition rather than
+    // leaving it invisible on disk. Appended, not a separate field, to keep
+    // the Card Definition tab's existing single-`source` shape
+    // (FunctionalModelScript) unchanged.
+    const engineScenarioPath = join(process.cwd(), `functional-model/cards/${slug}/engine-scenario.ts`);
+    if (existsSync(engineScenarioPath)) {
+      const pilotSource = readFileSync(engineScenarioPath, 'utf8');
       source += `\n\n// ============================================================\n// engine-scenario.ts — this card's own real engine-piloted trace\n// (runs INSTEAD OF scenarios.ts for this card)\n// ============================================================\n\n${pilotSource}`;
-      traces = engineScenarioModule.runEngineScenarios();
-    } else {
-      const cardModule = await import(`../../../../functional-model/cards/${slug}/definition.ts`);
-      const scenariosModule = await import(`../../../../functional-model/cards/${slug}/scenarios.ts`).catch(() => null);
-      if (!scenariosModule) throw new Error(`no scenarios.ts for ${slug}`);
-      const card = Object.values(cardModule)[0] as CardDefinition;
-      traces = runScenarios(card, scenariosModule.scenarios);
     }
+    const traces = await computeTracesLive(slug);
     const synergy = loadCardSynergy(slug);
     const annotatedText = synergy && cardText ? annotateCardText(cardText, [...synergy.source, ...synergy.sink]) : null;
     let review: 'ai' | 'human' | null = null;
