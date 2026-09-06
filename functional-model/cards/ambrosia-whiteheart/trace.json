@@ -25,6 +25,11 @@
     },
     "log": [
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-0"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 2,
@@ -73,6 +78,19 @@
         "controller": "you"
       },
       {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-0"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 3,
@@ -119,27 +137,27 @@
       },
       {
         "label": "Cast Ambrosia Whiteheart ({1}{W})",
-        "from": 1
+        "from": 2
       },
       {
         "label": "Resolve",
-        "from": 4
+        "from": 5
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 8
+        "from": 11
       },
       {
         "label": "A real land entering",
-        "from": 9
+        "from": 13
       },
       {
         "label": "Fire onLandfall",
-        "from": 10
+        "from": 14
       },
       {
         "label": "Real 704.5j legend rule — second copy enters, one is removed",
-        "from": 12
+        "from": 16
       }
     ]
   }

@@ -562,12 +562,12 @@ export function loggingPlayer(state: GameState, real: RealPlayer, log: LogEntry[
     },
     drawCard: () => {
       const result = base.drawCard();
-      log.push({ fn: 'drawCard', player: name });
+      log.push({ fn: 'drawCard', player: name, card: result[0]?.getName() });
       return result.map(toLogging);
     },
     drawCards: (n: number) => {
       const result = base.drawCards(n);
-      log.push({ fn: 'drawCards', player: name, n });
+      log.push({ fn: 'drawCards', player: name, n, cards: result.map((c) => c.getName()) });
       return result.map(toLogging);
     },
     getCreaturesInPlay: () => {
@@ -692,8 +692,8 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       return chosen.map((c) => loggingCard(state, c, log));
     },
     discard: (player, qty) => {
-      state.discard(playerOf(player), qty);
-      log.push({ fn: 'discard', player: player.getName(), qty });
+      const discarded = state.discard(playerOf(player), qty);
+      log.push({ fn: 'discard', player: player.getName(), qty, cards: discarded.map((c) => c.name) });
     },
     putCounter: (target, counterType, amount) => {
       state.putCounter(cardOf(target), counterType, amount);

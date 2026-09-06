@@ -61,7 +61,8 @@
       {
         "fn": "discard",
         "player": "you",
-        "qty": 0
+        "qty": 0,
+        "cards": []
       },
       {
         "fn": "move",
@@ -137,7 +138,12 @@
       {
         "fn": "discard",
         "player": "you",
-        "qty": 3
+        "qty": 3,
+        "cards": [
+          "you-hand-0",
+          "you-hand-1",
+          "you-hand-2"
+        ]
       },
       {
         "fn": "drawCard",

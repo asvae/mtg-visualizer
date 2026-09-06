@@ -6,7 +6,6 @@
 import { ultimaOriginOfOblivion } from './definition';
 import { basicLandsFor } from '../../mana';
 import type { TraceResult } from '../../harness';
-import { declareAttackers } from '../../engine';
 import {
   setupEnginePilot,
   pilotActions,
@@ -14,6 +13,7 @@ import {
   pilotResolveTop,
   advanceToPlayersNextMain1,
   advanceToDeclareAttackersStep,
+  pilotDeclareAttackers,
   pilotFireTrigger,
   finishEnginePilotTrace,
   type EnginePilotSetup,
@@ -45,10 +45,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real attack declaration (508.1)
   advanceToDeclareAttackersStep(pilot);
-  pilot.beginStep('Declare Ultima as attacker');
-  const attack = declareAttackers(pilot.engine, [ultimaReal]);
-  if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
-  pilot.log.push({ fn: 'attack', card: ultimaReal.name });
+  pilotDeclareAttackers(pilot, [ultimaReal], 'Declare Ultima as attacker');
 
   // onAttack fired manually — puts a real blight counter on the opponent's only land
   pilotFireTrigger(pilot, ultimaOriginOfOblivion, ctx, actions, 'onAttack');

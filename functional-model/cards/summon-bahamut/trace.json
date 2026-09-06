@@ -103,6 +103,52 @@
         "name": "chapterI"
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-0"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-0"
+      },
+      {
         "fn": "putCounter",
         "target": "Summon: Bahamut",
         "counterType": "LORE",
@@ -121,6 +167,16 @@
         "player": "you"
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-1"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-1"
+      },
+      {
         "fn": "putCounter",
         "target": "Summon: Bahamut",
         "counterType": "LORE",
@@ -134,17 +190,29 @@
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "you-library-2"
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "you-library-3"
       },
       {
         "fn": "phase",
         "phase": "Main1",
         "turn": 5,
         "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-2"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-4"
       },
       {
         "fn": "putCounter",
@@ -195,27 +263,27 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 13
+        "from": 23
       },
       {
         "label": "Pass turn (you)",
-        "from": 16
+        "from": 27
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 16
+        "from": 28
       },
       {
         "label": "Pass turn (you)",
-        "from": 21
+        "from": 34
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 21
+        "from": 35
       },
       {
         "label": "Real 714.4 sacrifice — lore counters were never reset",
-        "from": 25
+        "from": 40
       }
     ]
   },

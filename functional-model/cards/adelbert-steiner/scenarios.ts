@@ -8,7 +8,7 @@ import { basicLandsFor } from '../../mana';
 import { effectivePT } from '../../state';
 import { checkStateBasedActions } from '../../sba';
 import type { TraceResult } from '../../harness';
-import { declareAttackers, declareBlockers, resolveCombatDamage } from '../../engine';
+import { resolveCombatDamage } from '../../engine';
 import {
   setupEnginePilot,
   pilotActions,
@@ -17,6 +17,8 @@ import {
   advanceToPlayersNextMain1,
   advanceToDeclareAttackersStep,
   advanceOneStep,
+  pilotDeclareAttackers,
+  pilotDeclareBlockers,
   finishEnginePilotTrace,
   type EnginePilotSetup,
 } from '../../engine-trace';
@@ -60,13 +62,10 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real, unblocked combat (508/509/510)
   advanceToDeclareAttackersStep(pilot);
-  pilot.beginStep('Declare Steiner as attacker');
-  const attack = declareAttackers(pilot.engine, [steinerReal]);
-  if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
-  pilot.log.push({ fn: 'attack', card: steinerReal.name });
+  pilotDeclareAttackers(pilot, [steinerReal], 'Declare Steiner as attacker');
   advanceOneStep(pilot);
+  pilotDeclareBlockers(pilot, []);
   pilot.beginStep('Resolve combat damage — real Lifelink');
-  declareBlockers(pilot.engine, []);
   const opp = pilot.opponents[0]!;
   const beforeOppLife = opp.life;
   const beforeYouLife = pilot.you.life;

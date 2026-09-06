@@ -34,7 +34,11 @@
       {
         "fn": "discard",
         "player": "you",
-        "qty": 2
+        "qty": 2,
+        "cards": [
+          "you-hand-0",
+          "you-hand-1"
+        ]
       }
     ]
   },

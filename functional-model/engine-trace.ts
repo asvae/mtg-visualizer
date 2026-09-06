@@ -48,6 +48,8 @@ import {
   activateAbility,
   resolveTop,
   advance,
+  declareAttackers,
+  declareBlockers,
   type GameEngine,
 } from './engine';
 import { transformPermanent } from './saga';
@@ -180,15 +182,67 @@ export function pilotActions(pilot: EnginePilot, selfId: number): Actions {
  * next chapter to give at its CURRENT (pre-tick) lore count? If so, the
  * bracket is spliced in right before that step's own newly logged entries
  * (the chapter's real effects, already appended by the auto-fire's own
- * `resolveCard` call) — nothing else logs during a bare Main1-entering
- * `advance()` step in this pilot's own scenarios (draws aren't logged here
- * — a real, narrow, accepted gap: `turn.ts`'s own `runPhaseEntryAction`
- * calls `state.drawCards` directly against the raw `RealPlayer`, never
- * through a logging wrapper), so the newly-appended segment's start IS the
- * correct causal position. Scoped to ONE watched permanent (this pilot's
+ * `resolveCard` call) — a Main1-entering `advance()` step never has its
+ * OWN automatic action to splice (`logAutomaticPhaseEntry` only ever fires
+ * for Untap/Draw/Cleanup, a different iteration than the one landing on
+ * Main1), so the newly-appended segment's start IS the correct causal
+ * position. Scoped to ONE watched permanent (this pilot's
  * own real need) — a scenario with more than one live Saga would need
  * extending this to a real per-permanent scan, not supported yet.
  */
+interface PreAdvanceSnapshot {
+  /** Every battlefield card, across all players, that was tapped right before this `advance()` call — diffed against the active player's own battlefield afterward to find exactly which ones a real Untap-phase entry (`turn.ts`'s own `runPhaseEntryAction`) untapped. */
+  tappedIds: Set<number>;
+  /** Each player's own hand, as real card OBJECTS (not just ids) — a real Draw needs the newly-ADDED ones (diffed by id against `after`), a real Cleanup discard needs the ones that DISAPPEARED (only readable from a BEFORE list, since a discarded card is gone from `.hand` by the time `advance()` returns). */
+  hands: Map<number, RealCard[]>;
+}
+
+function snapshotBeforeAdvance(pilot: EnginePilot): PreAdvanceSnapshot {
+  const tappedIds = new Set<number>();
+  const hands = new Map<number, RealCard[]>();
+  for (const p of pilot.engine.players) {
+    for (const c of p.battlefield) if (c.tapped) tappedIds.add(c.id);
+    hands.set(p.id, [...p.hand]);
+  }
+  return { tappedIds, hands };
+}
+
+/**
+ * Splices synthetic log entries (at `atIndex`, same real-causal-order
+ * reasoning `advanceToPlayersNextMain1`'s own Saga-tick splice already
+ * uses) for whichever of Untap/Draw/Cleanup's real automatic actions
+ * (`turn.ts`'s own `runPhaseEntryAction`) THIS SPECIFIC `advance()` call
+ * just ran. Those mutate real state directly via a raw `RealPlayer`/
+ * `RealCard`, bypassing every logging wrapper this file/harness.ts
+ * otherwise route everything through — confirmed the hard way: lands
+ * never showed as untapped in replay despite genuinely being untapped in
+ * real state, same root cause the "no one draws" gap already had. Diffs
+ * real before/after state rather than re-deriving the rule itself, so
+ * this can't drift from whatever `runPhaseEntryAction` actually does —
+ * only Untap/Draw/Cleanup ever produce a diff; every other phase is a
+ * silent no-op here (nothing automatic happens entering them).
+ */
+function logAutomaticPhaseEntry(pilot: EnginePilot, before: PreAdvanceSnapshot, atIndex: number): void {
+  const phase = PHASES[pilot.engine.turn.phaseIndex];
+  const active = pilot.engine.players[pilot.engine.turn.activePlayerIndex]!;
+  const entries: LogEntry[] = [];
+  if (phase === 'Untap') {
+    for (const c of active.battlefield) {
+      if (before.tappedIds.has(c.id) && !c.tapped) entries.push({ fn: 'untap', target: c.name });
+    }
+  } else if (phase === 'Draw') {
+    const beforeIds = new Set((before.hands.get(active.id) ?? []).map((c) => c.id));
+    const drawn = active.hand.filter((c) => !beforeIds.has(c.id));
+    if (drawn.length === 1) entries.push({ fn: 'drawCard', player: active.name, card: drawn[0]!.name });
+    else if (drawn.length > 1) entries.push({ fn: 'drawCards', player: active.name, n: drawn.length, cards: drawn.map((c) => c.name) });
+  } else if (phase === 'Cleanup') {
+    const afterIds = new Set(active.hand.map((c) => c.id));
+    const discarded = (before.hands.get(active.id) ?? []).filter((c) => !afterIds.has(c.id));
+    if (discarded.length) entries.push({ fn: 'discard', player: active.name, qty: discarded.length, cards: discarded.map((c) => c.name) });
+  }
+  if (entries.length) pilot.log.splice(atIndex, 0, ...entries);
+}
+
 export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer, watchForSaga?: RealCard): void {
   const startTurn = pilot.engine.turn.turnNumber;
   do {
@@ -197,7 +251,9 @@ export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer
     const endingPlayer = activePlayer(pilot.engine.turn, pilot.engine.players);
     const registeredBefore = watchForSaga ? pilot.engine.resolvedPermanents.get(watchForSaga.id) : undefined;
     const beforeLore = watchForSaga ? (watchForSaga.counters['LORE'] ?? 0) : 0;
+    const beforeAdvance = snapshotBeforeAdvance(pilot);
     advance(pilot.engine);
+    logAutomaticPhaseEntry(pilot, beforeAdvance, beforeLen);
     if (watchForSaga && registeredBefore && PHASES[pilot.engine.turn.phaseIndex] === 'Main1' && pilot.engine.players[pilot.engine.turn.activePlayerIndex]!.id === watchForSaga.controllerId) {
       const chapterName = nextChapterFor(registeredBefore.card, beforeLore);
       if (chapterName) {
@@ -251,15 +307,53 @@ export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer
 /** Advances exactly one phase (`advance`), logging the same real `phase` bracket entry `advanceToPlayersNextMain1` logs once for its own whole wait — this one call IS the whole meaningful step, so it always gets its own entry, no spam concern (unlike a multi-iteration loop). The thin single-step version for a pilot script that just needs to cross one specific boundary (Combat Declare Attackers -> Declare Blockers, e.g.) rather than loop until a whole condition is met. */
 export function advanceOneStep(pilot: EnginePilot, label?: string): void {
   pilot.beginStep(label ?? 'Advance one step');
+  const beforeLen = pilot.log.length;
+  const beforeAdvance = snapshotBeforeAdvance(pilot);
   advance(pilot.engine);
+  logAutomaticPhaseEntry(pilot, beforeAdvance, beforeLen);
   pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
 }
 
 /** Real turn-structure advancement (`advance`), from wherever `pilot.engine.turn` currently is, forward to the Declare Attackers step of THIS SAME turn — logging exactly ONE real `phase` bracket entry for the whole wait (same "one per call, not one per internal step" fix `advanceToPlayersNextMain1` needed), not one per phase crossed getting there. A pilot script normally calls `advanceToPlayersNextMain1` first if the attacker just entered this turn (302.6), then this, to reach a legal Declare Attackers step. */
 export function advanceToDeclareAttackersStep(pilot: EnginePilot, label?: string): void {
   pilot.beginStep(label ?? 'Advance to Declare Attackers');
-  while (currentPhase(pilot.engine.turn) !== 'CombatDeclareAttackers') advance(pilot.engine);
+  while (currentPhase(pilot.engine.turn) !== 'CombatDeclareAttackers') {
+    const beforeLen = pilot.log.length;
+    const beforeAdvance = snapshotBeforeAdvance(pilot);
+    advance(pilot.engine);
+    logAutomaticPhaseEntry(pilot, beforeAdvance, beforeLen);
+  }
   pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
+}
+
+/**
+ * Real 508.1a-legal attacker declaration (`engine.ts`'s own
+ * `declareAttackers`) — logs the real 508.1f tap it performs on each
+ * non-Vigilance attacker as an actual `tap` entry (previously bypassed
+ * logging entirely — `engine.ts` is as log-agnostic as `turn.ts`, same
+ * root cause `logAutomaticPhaseEntry` above exists for; confirmed the hard
+ * way: a real scenario's own attacker never showed as tapped in replay
+ * despite genuinely being tapped in real state), plus one `attack` marker
+ * per real attacker declared. Throws on an illegal batch, same
+ * "don't half-apply, don't silently continue" contract every other
+ * pilot* helper here already has.
+ */
+export function pilotDeclareAttackers(pilot: EnginePilot, attackers: RealCard[], label?: string): void {
+  pilot.beginStep(label ?? `Declare ${attackers.map((c) => c.name).join(', ')} as attacker${attackers.length > 1 ? 's' : ''}`);
+  const result = declareAttackers(pilot.engine, attackers);
+  if (!result.ok) throw new Error(`pilotDeclareAttackers: illegal — ${result.reason}`);
+  for (const a of attackers) {
+    if (!a.keywords.includes('Vigilance')) pilot.log.push({ fn: 'tap', target: a.name });
+    pilot.log.push({ fn: 'attack', card: a.name });
+  }
+}
+
+/** Real 509.1-legal blocker declaration (`engine.ts`'s own `declareBlockers`) — logs one `block` marker per real (blocker, attacker) pair. An empty `assignments` (no blocks declared) is a real, legal choice — logs nothing (no player-visible board change from declining to block). */
+export function pilotDeclareBlockers(pilot: EnginePilot, assignments: Array<{ blocker: RealCard; attacker: RealCard }>, label?: string): void {
+  pilot.beginStep(label ?? (assignments.length ? `Declare ${assignments.map((a) => a.blocker.name).join(', ')} as blocker${assignments.length > 1 ? 's' : ''}` : 'Declare no blockers'));
+  const result = declareBlockers(pilot.engine, assignments);
+  if (!result.ok) throw new Error(`pilotDeclareBlockers: illegal — ${result.reason}`);
+  for (const { blocker, attacker } of assignments) pilot.log.push({ fn: 'block', blocker: blocker.name, attacker: attacker.name });
 }
 
 /** Logs one real `tapForMana` entry per real source `mana.ts`'s own `payMana` actually tapped (its return value — see that function's own doc comment) — a DIFFERENT fn than plain `tap` (same reasoning this used to log a single summary `payMana` entry instead: a mana-source tap must not be misread as a card EFFECT tapping something by `verify-synergy.mjs`), but now naming exactly which real land/source paid, not just that some real cost was paid (a user's own real question this answers: "which specific lands got tapped for mana?"). A no-op for an empty/undefined list (a `{T}`-only ability's activation cost, e.g. — nothing needed tapping for mana). */

@@ -7,7 +7,6 @@
 import { ashePrincessOfDalmasca } from './definition';
 import { basicLandsFor } from '../../mana';
 import type { TraceResult } from '../../harness';
-import { declareAttackers } from '../../engine';
 import {
   setupEnginePilot,
   pilotActions,
@@ -15,6 +14,7 @@ import {
   pilotResolveTop,
   advanceToPlayersNextMain1,
   advanceToDeclareAttackersStep,
+  pilotDeclareAttackers,
   pilotFireTrigger,
   finishEnginePilotTrace,
   type EnginePilotSetup,
@@ -44,10 +44,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real attack declaration (508.1)
   advanceToDeclareAttackersStep(pilot);
-  pilot.beginStep('Declare Ashe as attacker');
-  const attack = declareAttackers(pilot.engine, [asheReal]);
-  if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
-  pilot.log.push({ fn: 'attack', card: asheReal.name });
+  pilotDeclareAttackers(pilot, [asheReal], 'Declare Ashe as attacker');
 
   // onAttack fired manually — digs 5 real library cards, takes the one real artifact found
   pilotFireTrigger(pilot, ashePrincessOfDalmasca, ctx, actions, 'onAttack');

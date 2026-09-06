@@ -51,6 +51,28 @@
         "zone": "Battlefield"
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-0"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-0"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 3,
@@ -61,6 +83,10 @@
         "phase": "CombatDeclareAttackers",
         "turn": 3,
         "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Aerith Gainsborough"
       },
       {
         "fn": "attack",
@@ -91,6 +117,20 @@
         "amount": 1
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-1"
+      },
+      {
+        "fn": "untap",
+        "target": "Aerith Gainsborough"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-1"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 5,
@@ -101,6 +141,10 @@
         "phase": "CombatDeclareAttackers",
         "turn": 5,
         "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Aerith Gainsborough"
       },
       {
         "fn": "attack",
@@ -176,55 +220,63 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 5
-      },
-      {
-        "label": "Advance to Declare Attackers",
-        "from": 6
-      },
-      {
-        "label": "Declare Aerith as attacker",
-        "from": 7
-      },
-      {
-        "label": "Advance one step",
-        "from": 8
-      },
-      {
-        "label": "Resolve unblocked combat damage — real Lifelink",
         "from": 9
       },
       {
-        "label": "Fire onLifeGained",
-        "from": 10
-      },
-      {
-        "label": "Pass turn (you)",
-        "from": 12
-      },
-      {
-        "label": "Pass turn (opp0)",
-        "from": 12
-      },
-      {
         "label": "Advance to Declare Attackers",
-        "from": 13
+        "from": 11
       },
       {
-        "label": "Declare Aerith as attacker (blocked this time)",
-        "from": 14
+        "label": "Declare Aerith as attacker",
+        "from": 12
       },
       {
         "label": "Advance one step",
+        "from": 14
+      },
+      {
+        "label": "Declare no blockers",
         "from": 15
       },
       {
-        "label": "Resolve lethal combat damage (704.5g SBA)",
+        "label": "Resolve unblocked combat damage — real Lifelink",
+        "from": 15
+      },
+      {
+        "label": "Fire onLifeGained",
         "from": 16
       },
       {
+        "label": "Pass turn (you)",
+        "from": 18
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 20
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 22
+      },
+      {
+        "label": "Declare Aerith as attacker (blocked this time)",
+        "from": 23
+      },
+      {
+        "label": "Advance one step",
+        "from": 25
+      },
+      {
+        "label": "Declare Lethal Blocker as blocker",
+        "from": 26
+      },
+      {
+        "label": "Resolve lethal combat damage (704.5g SBA)",
+        "from": 27
+      },
+      {
         "label": "Fire onDies",
-        "from": 19
+        "from": 29
       }
     ]
   }

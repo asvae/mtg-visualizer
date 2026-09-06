@@ -21,7 +21,8 @@
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "you-library-0"
       }
     ]
   },

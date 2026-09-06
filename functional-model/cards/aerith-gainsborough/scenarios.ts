@@ -6,7 +6,7 @@ import { aerithGainsborough } from './definition';
 import { basicLandsFor } from '../../mana';
 import { checkStateBasedActions } from '../../sba';
 import type { TraceResult } from '../../harness';
-import { declareAttackers, declareBlockers, resolveCombatDamage } from '../../engine';
+import { resolveCombatDamage } from '../../engine';
 import {
   setupEnginePilot,
   pilotActions,
@@ -15,6 +15,8 @@ import {
   advanceToPlayersNextMain1,
   advanceToDeclareAttackersStep,
   advanceOneStep,
+  pilotDeclareAttackers,
+  pilotDeclareBlockers,
   pilotFireTrigger,
   finishEnginePilotTrace,
   type EnginePilotSetup,
@@ -62,13 +64,10 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real unblocked combat — real Lifelink life gain, then onLifeGained fired manually
   advanceToDeclareAttackersStep(pilot);
-  pilot.beginStep('Declare Aerith as attacker');
-  let attack = declareAttackers(pilot.engine, [aerithReal]);
-  if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
-  pilot.log.push({ fn: 'attack', card: aerithReal.name });
+  pilotDeclareAttackers(pilot, [aerithReal], 'Declare Aerith as attacker');
   advanceOneStep(pilot);
+  pilotDeclareBlockers(pilot, []);
   pilot.beginStep('Resolve unblocked combat damage — real Lifelink');
-  declareBlockers(pilot.engine, []);
   const beforeYouLife = pilot.you.life;
   resolveCombatDamage(pilot.engine);
   const lifeGained = pilot.you.life - beforeYouLife;
@@ -78,14 +77,10 @@ export function runEngineScenarios(): TraceResult[] {
   // Real turn passage, then real combat again — this time blocked and lethal (704.5g SBA)
   advanceToPlayersNextMain1(pilot, pilot.you);
   advanceToDeclareAttackersStep(pilot);
-  pilot.beginStep('Declare Aerith as attacker (blocked this time)');
-  attack = declareAttackers(pilot.engine, [aerithReal]);
-  if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
-  pilot.log.push({ fn: 'attack', card: aerithReal.name });
+  pilotDeclareAttackers(pilot, [aerithReal], 'Declare Aerith as attacker (blocked this time)');
   advanceOneStep(pilot);
+  pilotDeclareBlockers(pilot, [{ blocker: bigBlocker, attacker: aerithReal }]);
   pilot.beginStep('Resolve lethal combat damage (704.5g SBA)');
-  declareBlockers(pilot.engine, [{ blocker: bigBlocker, attacker: aerithReal }]);
-  pilot.log.push({ fn: 'block', blocker: bigBlocker.name, attacker: aerithReal.name });
   resolveCombatDamage(pilot.engine);
   // Real 400.7 wipes counters on zone change — capture this before SBA
   // moves her to the graveyard, so onDies's own "X = counters on this" read

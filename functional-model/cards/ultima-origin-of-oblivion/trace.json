@@ -67,6 +67,36 @@
         "zone": "Battlefield"
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-0"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-0"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 3,
@@ -77,6 +107,10 @@
         "phase": "CombatDeclareAttackers",
         "turn": 3,
         "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Ultima, Origin of Oblivion"
       },
       {
         "fn": "attack",
@@ -168,19 +202,19 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 7
+        "from": 13
       },
       {
         "label": "Advance to Declare Attackers",
-        "from": 8
+        "from": 15
       },
       {
         "label": "Declare Ultima as attacker",
-        "from": 9
+        "from": 16
       },
       {
         "label": "Fire onAttack",
-        "from": 10
+        "from": 18
       }
     ]
   }

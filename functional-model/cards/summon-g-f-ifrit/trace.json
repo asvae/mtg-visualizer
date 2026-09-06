@@ -23,11 +23,15 @@
       {
         "fn": "discard",
         "player": "you",
-        "qty": 1
+        "qty": 1,
+        "cards": [
+          "you-hand-0"
+        ]
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "you-library-0"
       }
     ]
   },
@@ -55,11 +59,15 @@
       {
         "fn": "discard",
         "player": "you",
-        "qty": 1
+        "qty": 1,
+        "cards": [
+          "you-hand-0"
+        ]
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "you-library-0"
       }
     ]
   },

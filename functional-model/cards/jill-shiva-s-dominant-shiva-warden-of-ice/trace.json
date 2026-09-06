@@ -128,6 +128,28 @@
         "controller": "opp0"
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-0"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-0"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 3,
@@ -209,6 +231,36 @@
         "keyword": "Unblockable"
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-1"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-1"
+      },
+      {
         "fn": "putCounter",
         "target": "Jill, Shiva's Dominant",
         "counterType": "LORE",
@@ -240,6 +292,16 @@
         "phase": "Main1",
         "turn": 5,
         "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-2"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-2"
       },
       {
         "fn": "putCounter",
@@ -305,31 +367,31 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 17
+        "from": 21
       },
       {
         "label": "Activate Jill, Shiva's Dominant",
-        "from": 18
+        "from": 23
       },
       {
         "label": "Resolve",
-        "from": 24
+        "from": 29
       },
       {
         "label": "Pass turn (you)",
-        "from": 32
+        "from": 37
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 32
+        "from": 43
       },
       {
         "label": "Pass turn (you)",
-        "from": 38
+        "from": 50
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 38
+        "from": 51
       }
     ]
   }

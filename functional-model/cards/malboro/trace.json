@@ -26,7 +26,10 @@
       {
         "fn": "discard",
         "player": "opp0",
-        "qty": 1
+        "qty": 1,
+        "cards": [
+          "opp0-hand-0"
+        ]
       },
       {
         "fn": "loseLife",
@@ -74,12 +77,18 @@
       {
         "fn": "discard",
         "player": "opp0",
-        "qty": 1
+        "qty": 1,
+        "cards": [
+          "opp0-hand-0"
+        ]
       },
       {
         "fn": "discard",
         "player": "opp1",
-        "qty": 1
+        "qty": 1,
+        "cards": [
+          "opp1-hand-0"
+        ]
       },
       {
         "fn": "loseLife",

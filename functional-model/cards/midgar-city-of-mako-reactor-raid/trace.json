@@ -72,11 +72,13 @@
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "you-library-0"
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "you-library-1"
       },
       {
         "fn": "move",

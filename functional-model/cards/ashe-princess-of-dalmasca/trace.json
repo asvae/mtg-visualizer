@@ -55,6 +55,28 @@
         "zone": "Battlefield"
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-0"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-artifact-0"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 3,
@@ -65,6 +87,10 @@
         "phase": "CombatDeclareAttackers",
         "turn": 3,
         "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Ashe, Princess of Dalmasca"
       },
       {
         "fn": "attack",
@@ -104,19 +130,19 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 5
+        "from": 9
       },
       {
         "label": "Advance to Declare Attackers",
-        "from": 6
+        "from": 11
       },
       {
         "label": "Declare Ashe as attacker",
-        "from": 7
+        "from": 12
       },
       {
         "label": "Fire onAttack",
-        "from": 8
+        "from": 14
       }
     ]
   }

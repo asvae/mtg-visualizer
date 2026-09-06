@@ -59,6 +59,24 @@
         "toughness": 2
       },
       {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "opp0-library-0"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "you-library-0"
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 3,
@@ -69,6 +87,10 @@
         "phase": "CombatDeclareAttackers",
         "turn": 3,
         "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Adelbert Steiner"
       },
       {
         "fn": "attack",
@@ -131,27 +153,31 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 6
-      },
-      {
-        "label": "Advance to Declare Attackers",
-        "from": 7
-      },
-      {
-        "label": "Declare Steiner as attacker",
-        "from": 8
-      },
-      {
-        "label": "Advance one step",
         "from": 9
       },
       {
+        "label": "Advance to Declare Attackers",
+        "from": 11
+      },
+      {
+        "label": "Declare Steiner as attacker",
+        "from": 12
+      },
+      {
+        "label": "Advance one step",
+        "from": 14
+      },
+      {
+        "label": "Declare no blockers",
+        "from": 15
+      },
+      {
         "label": "Resolve combat damage — real Lifelink",
-        "from": 10
+        "from": 15
       },
       {
         "label": "Real 704.5j legend rule — second copy enters, one is removed",
-        "from": 12
+        "from": 17
       }
     ]
   }

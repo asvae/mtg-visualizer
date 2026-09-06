@@ -61,7 +61,8 @@
       {
         "fn": "discard",
         "player": "you",
-        "qty": 1
+        "qty": 1,
+        "cards": []
       },
       {
         "fn": "loseLife",
