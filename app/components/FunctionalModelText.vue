@@ -97,7 +97,7 @@ function hide() {
          of dashes in the text. A single-faced card has just one face, no
          divider at all. -->
     <hr v-if="fi > 0" class="my-3 max-w-2xl border-border-subtle" />
-    <div class="mb-1 flex max-w-2xl items-baseline justify-between gap-3 font-sans text-sm font-semibold text-text">
+    <div class="mb-1 flex max-w-2xl items-baseline gap-2 font-sans text-sm font-semibold text-text">
       <span>{{ face.name }}</span>
       <span v-if="face.manaCost" class="flex shrink-0 items-center gap-0.5 text-text/80">
         <template v-for="(ms, mi) in parseManaSegments(face.manaCost)" :key="mi">
@@ -148,7 +148,7 @@ function hide() {
         >
       </template>
     </p>
-    <div v-if="face.power !== undefined && face.toughness !== undefined" class="mt-2 max-w-2xl text-right font-sans text-sm font-semibold text-text/90">
+    <div v-if="face.power !== undefined && face.toughness !== undefined" class="mt-2 font-sans text-sm font-semibold text-text/90">
       {{ face.power }}/{{ face.toughness }}
     </div>
   </template>
