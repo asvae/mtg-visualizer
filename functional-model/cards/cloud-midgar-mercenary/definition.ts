@@ -20,6 +20,7 @@ export const cloudMidgarMercenary: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       // Real search targets Equipment specifically; this model's `move`
       // validType union only distinguishes creature/artifact/any (no
       // Equipment subtype tracking on generic library cards — see

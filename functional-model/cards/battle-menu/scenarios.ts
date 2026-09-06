@@ -1,9 +1,62 @@
-import type { Scenario } from '../../harness';
+// Real engine-piloted trace (see engine-trace.ts's own header) — a plain
+// modal instant, one real scenario per mode (same multi-TraceResult
+// convention Aerith Rescue Mission already established for a modal card).
 
-export const scenarios: Scenario[] = [
-  { result: 'creates a 2/2 white Knight creature token', castFrom: 'hand', mode: 0 },
-  { result: 'target creature gets +0/+4 until end of turn', castFrom: 'hand', mode: 1, you: { creaturesCount: 1 } },
-  { result: 'destroys the power-4-or-greater creature', castFrom: 'hand', mode: 2, opponents: [{ creaturesCount: 1, creaturePower: 4 }] },
-  { result: 'no legal target (power below 4), nothing destroyed', castFrom: 'hand', mode: 2, opponents: [{ creaturesCount: 1 }] },
-  { result: 'you gain 4 life', castFrom: 'hand', mode: 3 },
-];
+import { battleMenu } from './definition';
+import { basicLandsFor } from '../../mana';
+import type { TraceResult } from '../../harness';
+import { setupEnginePilot, pilotActions, pilotCast, pilotResolveTop, finishEnginePilotTrace, type EnginePilotSetup } from '../../engine-trace';
+
+function attackMode(): TraceResult {
+  const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{1}{W}') } };
+  const pilot = setupEnginePilot(setup);
+  const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: battleMenu.name, types: [] });
+  const actions = pilotActions(pilot, cardReal.id);
+  const ctx = pilot.ctxFor(cardReal, { mode: 0 });
+  pilotCast(pilot, cardReal, battleMenu, ctx, actions);
+  pilotResolveTop(pilot);
+  const result = 'Attack — creates a real 2/2 white Knight creature token.';
+  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 0 (Attack)', result);
+}
+
+function abilityMode(): TraceResult {
+  const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{1}{W}') }, opponents: [{ tokens: ['w_1_1_cat'] }] };
+  const pilot = setupEnginePilot(setup);
+  const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: battleMenu.name, types: [] });
+  const actions = pilotActions(pilot, cardReal.id);
+  const ctx = pilot.ctxFor(cardReal, { mode: 1 });
+  pilotCast(pilot, cardReal, battleMenu, ctx, actions);
+  pilotResolveTop(pilot);
+  const result = 'Ability — a real target creature gets +0/+4 until end of turn.';
+  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 1 (Ability)', result);
+}
+
+function magicMode(): TraceResult {
+  const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{1}{W}') }, opponents: [{}] };
+  const pilot = setupEnginePilot(setup);
+  const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: battleMenu.name, types: [] });
+  // A real power>=4 target — no `tokens`/count field produces one, so it's added directly
+  const bigCreature = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Behemoth', types: ['Creature'], basePower: 4, baseToughness: 4 });
+  const actions = pilotActions(pilot, cardReal.id);
+  const ctx = pilot.ctxFor(cardReal, { mode: 2 });
+  pilotCast(pilot, cardReal, battleMenu, ctx, actions);
+  pilotResolveTop(pilot);
+  const result = `Magic — destroys ${bigCreature.name}, a real creature with power 4 or greater.`;
+  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 2 (Magic)', result);
+}
+
+function itemMode(): TraceResult {
+  const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{1}{W}') } };
+  const pilot = setupEnginePilot(setup);
+  const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: battleMenu.name, types: [] });
+  const actions = pilotActions(pilot, cardReal.id);
+  const ctx = pilot.ctxFor(cardReal, { mode: 3 });
+  pilotCast(pilot, cardReal, battleMenu, ctx, actions);
+  pilotResolveTop(pilot);
+  const result = 'Item — you gain 4 real life.';
+  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 3 (Item)', result);
+}
+
+export function runEngineScenarios(): TraceResult[] {
+  return [attackMode(), abilityMode(), magicMode(), itemMode()];
+}

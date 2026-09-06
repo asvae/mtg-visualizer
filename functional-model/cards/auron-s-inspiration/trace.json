@@ -1,12 +1,18 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
+      "setup": "you: 3 Plains(s)",
+      "action": "real engine playthrough: cast -> resolve (no-op combat effect)",
+      "result": "Auron's Inspiration is cast and resolves for real ({2}{W} paid); its own +2/+0-to-attackers effect is an intentional no-op in this model (no attacking-creature state tracked). Flashback ({2}{W}{W} from the graveyard) isn't demonstrated — this engine has no alternate-cost/cast-from-graveyard legality path at all yet (ENGINE_GAPS.md gap #7).",
       "raw": {
-        "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
-        "castFrom": "hand"
+        "result": "Auron's Inspiration is cast and resolves for real ({2}{W} paid); its own +2/+0-to-attackers effect is an intentional no-op in this model (no attacking-creature state tracked). Flashback ({2}{W}{W} from the graveyard) isn't demonstrated — this engine has no alternate-cost/cast-from-graveyard legality path at all yet (ENGINE_GAPS.md gap #7).",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains"
+          ]
+        }
       }
     },
     "log": [
@@ -18,40 +24,26 @@
         "cost": "{2}{W}"
       },
       {
-        "fn": "move",
-        "card": "Auron's Inspiration",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from graveyard",
-      "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
-      "raw": {
-        "result": "no resolvable effect in this model (attacking-creature pump is not tracked here)",
-        "castFrom": "graveyard"
-      }
-    },
-    "log": [
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Auron's Inspiration"
+      },
       {
-        "fn": "cast",
-        "card": "Auron's Inspiration",
-        "instanceId": 1,
-        "from": "graveyard",
-        "cost": "{2}{W}{W}"
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Auron's Inspiration"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Auron's Inspiration"
       },
       {
         "fn": "move",
         "card": "Auron's Inspiration",
         "instanceId": 1,
         "from": "stack",
-        "to": "Exile",
-        "cardType": "Instant"
+        "to": "Graveyard"
       }
     ]
   }

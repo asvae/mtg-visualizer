@@ -1,99 +1,45 @@
 [
   {
     "scenario": {
-      "setup": "you: 9 card(s) in library; you: 1 artifact(s) in library",
-      "action": "\"onEnter\" trigger fires",
-      "result": "finds the artifact and puts it into hand",
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> real ETB library search",
+      "result": "Cloud enters; real ETB (603.6b) searches your real library for an artifact card, puts it into hand. The equip-triggered ability-doubling static is printed text only — no trigger-multiplying machinery exists in this engine.",
       "raw": {
-        "result": "finds the artifact and puts it into hand",
-        "trigger": "onEnter",
+        "result": "Cloud enters; real ETB (603.6b) searches your real library for an artifact card, puts it into hand. The equip-triggered ability-doubling static is printed text only — no trigger-multiplying machinery exists in this engine.",
         "you": {
-          "libraryCount": 10,
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 8,
           "libraryArtifactCount": 1
         }
       }
     },
     "log": [
       {
-        "fn": "trigger",
+        "fn": "cast",
         "card": "Cloud, Midgar Mercenary",
         "instanceId": 1,
-        "name": "onEnter"
+        "from": "hand",
+        "cost": "{W}{W}"
       },
       {
-        "fn": "read:isArtifact",
-        "target": "you-library-artifact-0",
-        "result": true
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cloud, Midgar Mercenary"
       },
       {
-        "fn": "read:isArtifact",
-        "target": "you-library-0",
-        "result": false
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cloud, Midgar Mercenary"
       },
       {
-        "fn": "read:isArtifact",
-        "target": "you-library-1",
-        "result": false
+        "fn": "enters",
+        "card": "Cloud, Midgar Mercenary",
+        "instanceId": 1,
+        "zone": "Battlefield"
       },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-2",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-3",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-4",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-5",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-6",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-7",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-8",
-        "result": false
-      },
-      {
-        "fn": "move",
-        "player": "you",
-        "from": "Library",
-        "to": "Hand",
-        "qty": 1,
-        "validType": "artifact"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 10 card(s) in library",
-      "action": "\"onEnter\" trigger fires",
-      "result": "no artifact in library, nothing found",
-      "raw": {
-        "result": "no artifact in library, nothing found",
-        "trigger": "onEnter",
-        "you": {
-          "libraryCount": 10
-        }
-      }
-    },
-    "log": [
       {
         "fn": "trigger",
         "card": "Cloud, Midgar Mercenary",
@@ -133,21 +79,6 @@
       {
         "fn": "read:isArtifact",
         "target": "you-library-6",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-7",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-8",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-library-9",
         "result": false
       },
       {

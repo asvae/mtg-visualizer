@@ -1,79 +1,75 @@
 [
   {
     "scenario": {
-      "setup": "you: 7 card(s) in library; you: 1 artifact(s) in library",
-      "action": "\"onAttack\" trigger fires",
-      "result": "finds the artifact among the top 5 cards and puts it into hand",
+      "setup": "you: 3 Plains(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> turn passage -> real attack -> onAttack (real dig)",
+      "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them to hand.",
       "raw": {
-        "result": "finds the artifact among the top 5 cards and puts it into hand",
-        "trigger": "onAttack",
+        "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them to hand.",
         "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
           "libraryCount": 8,
           "libraryArtifactCount": 1
-        }
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
       {
-        "fn": "trigger",
+        "fn": "cast",
         "card": "Ashe, Princess of Dalmasca",
         "instanceId": 1,
-        "name": "onAttack"
+        "from": "hand",
+        "cost": "{2}{W}"
       },
       {
-        "fn": "dig",
-        "player": "you",
-        "qty": 5,
-        "take": 1,
-        "validType": "artifact",
-        "found": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 8 card(s) in library",
-      "action": "\"onAttack\" trigger fires",
-      "result": "no artifact among the top 5 cards, nothing taken",
-      "raw": {
-        "result": "no artifact among the top 5 cards, nothing taken",
-        "trigger": "onAttack",
-        "you": {
-          "libraryCount": 8
-        }
-      }
-    },
-    "log": [
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ashe, Princess of Dalmasca"
+      },
       {
-        "fn": "trigger",
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ashe, Princess of Dalmasca"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ashe, Princess of Dalmasca"
+      },
+      {
+        "fn": "enters",
         "card": "Ashe, Princess of Dalmasca",
         "instanceId": 1,
-        "name": "onAttack"
+        "zone": "Battlefield"
       },
       {
-        "fn": "dig",
-        "player": "you",
-        "qty": 5,
-        "take": 1,
-        "validType": "artifact",
-        "found": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onAttack\" trigger fires",
-      "result": "library empty, nothing to look at",
-      "raw": {
-        "result": "library empty, nothing to look at",
-        "trigger": "onAttack",
-        "you": {
-          "libraryCount": 0
-        }
-      }
-    },
-    "log": [
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "attack",
+        "card": "Ashe, Princess of Dalmasca"
+      },
       {
         "fn": "trigger",
         "card": "Ashe, Princess of Dalmasca",

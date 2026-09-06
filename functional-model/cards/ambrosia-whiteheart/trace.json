@@ -1,18 +1,58 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "\"onEnter\" trigger fires",
-      "result": "returns the other permanent to its owner's hand",
+      "setup": "you: a c_a_treasure_sac; you: 2 Plains(s)",
+      "action": "real engine playthrough: Flash cast on opponent's turn -> real ETB bounce -> real Landfall pump",
+      "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
       "raw": {
-        "result": "returns the other permanent to its owner's hand",
-        "trigger": "onEnter",
+        "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
         "you": {
-          "creaturesCount": 1
-        }
+          "tokens": [
+            "c_a_treasure_sac"
+          ],
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "enters",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Ambrosia Whiteheart",
@@ -23,57 +63,27 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 2,
-        "creatureCount": 2
+        "count": 4,
+        "creatureCount": 1
       },
       {
         "fn": "moveTo",
-        "target": "you-creature-token-0",
+        "target": "Treasure",
         "zone": "Hand",
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "no other permanent to bounce, no effect",
-      "raw": {
-        "result": "no other permanent to bounce, no effect",
-        "trigger": "onEnter",
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Ambrosia Whiteheart",
-        "instanceId": 1,
-        "name": "onEnter"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onLandfall\" trigger fires",
-      "result": "gets +1/+0 until end of turn",
-      "raw": {
-        "result": "gets +1/+0 until end of turn",
-        "trigger": "onLandfall"
-      }
-    },
-    "log": [
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Forest",
+        "instanceId": 2,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Ambrosia Whiteheart",
@@ -85,31 +95,11 @@
         "target": "Ambrosia Whiteheart",
         "power": 1,
         "toughness": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Ambrosia Whiteheart",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
       },
       {
         "fn": "enters",
         "card": "Ambrosia Whiteheart",
-        "instanceId": 1,
+        "instanceId": 2,
         "zone": "Battlefield"
       },
       {

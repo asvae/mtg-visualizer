@@ -1,13 +1,17 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand, mode 0 chosen",
-      "result": "creates a 2/2 white Knight creature token",
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> mode 0 (Attack)",
+      "result": "Attack — creates a real 2/2 white Knight creature token.",
       "raw": {
-        "result": "creates a 2/2 white Knight creature token",
-        "castFrom": "hand",
-        "mode": 0
+        "result": "Attack — creates a real 2/2 white Knight creature token.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ]
+        }
       }
     },
     "log": [
@@ -17,6 +21,16 @@
         "instanceId": 1,
         "from": "hand",
         "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
       },
       {
         "fn": "createToken",
@@ -30,22 +44,171 @@
         "card": "Battle Menu",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
+        "to": "Graveyard"
       }
     ]
   },
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "cast from hand, mode 1 chosen",
-      "result": "target creature gets +0/+4 until end of turn",
+      "setup": "you: 2 Plains(s); opp0: a w_1_1_cat",
+      "action": "real engine playthrough: cast -> mode 1 (Ability)",
+      "result": "Ability — a real target creature gets +0/+4 until end of turn.",
       "raw": {
-        "result": "target creature gets +0/+4 until end of turn",
-        "castFrom": "hand",
-        "mode": 1,
+        "result": "Ability — a real target creature gets +0/+4 until end of turn.",
         "you": {
-          "creaturesCount": 1
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ]
+        },
+        "opponents": [
+          {
+            "tokens": [
+              "w_1_1_cat"
+            ]
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
+      },
+      {
+        "fn": "pump",
+        "target": "Cat",
+        "power": 0,
+        "toughness": 4
+      },
+      {
+        "fn": "move",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> mode 2 (Magic)",
+      "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
+      "raw": {
+        "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ]
+        },
+        "opponents": [
+          {}
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Plains",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Plains",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Behemoth",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Behemoth",
+        "result": 4
+      },
+      {
+        "fn": "destroy",
+        "target": "Behemoth",
+        "controller": "opp0"
+      },
+      {
+        "fn": "move",
+        "card": "Battle Menu",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> mode 3 (Item)",
+      "result": "Item — you gain 4 real life.",
+      "raw": {
+        "result": "Item — you gain 4 real life.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ]
         }
       }
     },
@@ -58,166 +221,14 @@
         "cost": "{1}{W}"
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
       },
       {
-        "fn": "pump",
-        "target": "you-creature-token-0",
-        "power": 0,
-        "toughness": 4
-      },
-      {
-        "fn": "move",
-        "card": "Battle Menu",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 1 creature(s) (power 4)",
-      "action": "cast from hand, mode 2 chosen",
-      "result": "destroys the power-4-or-greater creature",
-      "raw": {
-        "result": "destroys the power-4-or-greater creature",
-        "castFrom": "hand",
-        "mode": 2,
-        "opponents": [
-          {
-            "creaturesCount": 1,
-            "creaturePower": 4
-          }
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Battle Menu",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
-      },
-      {
-        "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
-        "result": true
-      },
-      {
-        "fn": "read:getNetPower",
-        "target": "opp0-creature-token-0",
-        "result": 4
-      },
-      {
-        "fn": "destroy",
-        "target": "opp0-creature-token-0",
-        "controller": "opp0"
-      },
-      {
-        "fn": "move",
-        "card": "Battle Menu",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "cast from hand, mode 2 chosen",
-      "result": "no legal target (power below 4), nothing destroyed",
-      "raw": {
-        "result": "no legal target (power below 4), nothing destroyed",
-        "castFrom": "hand",
-        "mode": 2,
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Battle Menu",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
-      },
-      {
-        "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
-        "result": true
-      },
-      {
-        "fn": "read:getNetPower",
-        "target": "opp0-creature-token-0",
-        "result": 1
-      },
-      {
-        "fn": "move",
-        "card": "Battle Menu",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, mode 3 chosen",
-      "result": "you gain 4 life",
-      "raw": {
-        "result": "you gain 4 life",
-        "castFrom": "hand",
-        "mode": 3
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Battle Menu",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Battle Menu"
       },
       {
         "fn": "gainLife",
@@ -229,8 +240,7 @@
         "card": "Battle Menu",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
+        "to": "Graveyard"
       }
     ]
   }

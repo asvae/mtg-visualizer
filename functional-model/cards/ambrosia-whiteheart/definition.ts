@@ -16,6 +16,7 @@ export const ambrosiaWhiteheart: CardDefinition = {
       // is documentary only, like `sacrifice`'s own field — this model has
       // no player-decision engine, so a legal target still gets returned.
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'move', owner: 'you', from: 'Battlefield', to: 'Hand', qty: 1, target: true, notSelf: true, optional: true } satisfies Effect],
     },
     {
