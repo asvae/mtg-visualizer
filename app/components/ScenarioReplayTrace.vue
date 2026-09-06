@@ -372,37 +372,48 @@ const currentActionRawEntries = computed(() => {
                     >
                       {{ placeholderLabel(card) }}
                     </div>
-                    <span
-                      v-if="Object.keys(card.counters).length"
-                      class="absolute -right-1 -bottom-1 rounded bg-warn px-0.5 text-[8px] leading-tight text-bg"
-                    >
-                      <template v-for="(amount, type) in card.counters" :key="type">{{ amount }}{{ type }}</template>
-                    </span>
-                    <span
-                      v-if="card.powerMod || card.toughnessMod"
-                      class="absolute -left-1 -bottom-1 rounded bg-accent px-0.5 text-[8px] leading-tight text-bg"
-                    >
-                      {{ (card.powerMod ?? 0) >= 0 ? '+' : '' }}{{ card.powerMod ?? 0 }}/{{ (card.toughnessMod ?? 0) >= 0 ? '+' : '' }}{{ card.toughnessMod ?? 0 }}
-                    </span>
-                    <span
-                      v-if="card.qty > 1"
-                      class="absolute -top-1 -right-1 rounded bg-surface px-0.5 text-[8px] leading-tight text-text"
-                    >
-                      ×{{ card.qty }}
-                    </span>
-                    <div
-                      v-if="iconKeywords(card).length"
-                      class="absolute top-0 left-0 flex gap-0.5 rounded-br-[3px] bg-bg/80 px-0.5 py-0.5"
-                    >
-                      <AbilityIcon v-for="kw in iconKeywords(card)" :key="kw" :keyword="kw" :size="10" class="text-text/90" />
-                    </div>
-                    <div
-                      v-if="card.animatedTypes?.length"
-                      :title="card.animatedTypes.join(' ')"
-                      class="absolute right-0 bottom-4 rounded-l-[3px] bg-bg/80 px-0.5 text-[8px] leading-tight text-text/80"
-                    >
-                      {{ card.animatedTypes.join(' ') }}
-                    </div>
+                  </div>
+                  <!-- Badges live OUTSIDE the rotating div on purpose — they
+                       used to be children of it, so a tapped card's
+                       `rotate-90` rotated THEM too, moving e.g. the ×N qty
+                       badge to a different visual corner (confirmed the hard
+                       way: a tapped fungible pile's own ×N label went
+                       missing, just rotated somewhere else/overlapping
+                       another badge). This outer div is unrotated and
+                       auto-sized to the card's own unrotated 90x126 box
+                       (a CSS transform never changes layout size), so every
+                       badge below anchors to a stable corner regardless of
+                       tapped state. -->
+                  <span
+                    v-if="Object.keys(card.counters).length"
+                    class="absolute -right-1 -bottom-1 rounded bg-warn px-0.5 text-[8px] leading-tight text-bg"
+                  >
+                    <template v-for="(amount, type) in card.counters" :key="type">{{ amount }}{{ type }}</template>
+                  </span>
+                  <span
+                    v-if="card.powerMod || card.toughnessMod"
+                    class="absolute -left-1 -bottom-1 rounded bg-accent px-0.5 text-[8px] leading-tight text-bg"
+                  >
+                    {{ (card.powerMod ?? 0) >= 0 ? '+' : '' }}{{ card.powerMod ?? 0 }}/{{ (card.toughnessMod ?? 0) >= 0 ? '+' : '' }}{{ card.toughnessMod ?? 0 }}
+                  </span>
+                  <span
+                    v-if="card.qty > 1"
+                    class="absolute -top-1 -right-1 rounded bg-surface px-0.5 text-[8px] leading-tight text-text"
+                  >
+                    ×{{ card.qty }}
+                  </span>
+                  <div
+                    v-if="iconKeywords(card).length"
+                    class="absolute top-0 left-0 flex gap-0.5 rounded-br-[3px] bg-bg/80 px-0.5 py-0.5"
+                  >
+                    <AbilityIcon v-for="kw in iconKeywords(card)" :key="kw" :keyword="kw" :size="10" class="text-text/90" />
+                  </div>
+                  <div
+                    v-if="card.animatedTypes?.length"
+                    :title="card.animatedTypes.join(' ')"
+                    class="absolute right-0 bottom-4 rounded-l-[3px] bg-bg/80 px-0.5 text-[8px] leading-tight text-text/80"
+                  >
+                    {{ card.animatedTypes.join(' ') }}
                   </div>
                 </div>
               </Transition>
