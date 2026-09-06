@@ -28,6 +28,10 @@ import { LayerSet, nextLayerTimestamp } from './layers';
 // (also type-only), so this is a type-level-only cycle: TS erases both sides
 // before anything runs, no runtime circular dependency.
 import type { Phase } from './turn';
+// Type-only, same erased-cycle reasoning as the `turn.ts` import above —
+// `mana.ts` itself imports `GameState`/`RealCard`/`RealPlayer` from this
+// file (also type-only).
+import type { ManaColor } from './mana';
 
 let nextObjectId = 1;
 
@@ -72,6 +76,19 @@ export interface RealCard {
   damageMarked?: number;
   /** Whether ANY of this card's marked damage came from a source with Deathtouch (702.2b/704.5h) — any nonzero amount from such a source is lethal regardless of accumulated total, so this is tracked as a flag rather than trying to recover "was source X deathtouch" from the summed `damageMarked` number alone. Same clearing caveat as `damageMarked`. */
   deathtouchDamaged?: boolean;
+  /**
+   * A real, structural "{T}: Add {X}." mana ability (narrow slice of
+   * ENGINE_GAPS.md gap #5 — a single, unrestricted, fixed color; see
+   * `mana.ts`'s own `manaAbilityColorFromStaticText`), derived from the
+   * resolving `CardDefinition.staticAbilities` text at the moment this
+   * permanent enters the battlefield (`resolveTop`, `engine.ts`) — NOT
+   * live-derived from a stored `CardDefinition` reference (`RealCard` has
+   * none), so this is the one place that fact is captured. A card seeded
+   * directly onto the battlefield (never cast through the engine) has no
+   * value here, same documented convention `enteredThisTurn`/
+   * `resolvedPermanents` already established for ETB-derived bookkeeping.
+   */
+  manaAbility?: ManaColor;
 }
 
 /** Layer 4 (TYPE) applied — the card's CURRENT type list, not just its printed one. Use this instead of raw `card.types` anywhere "is this a creature/artifact/etc. right now" matters (an `animate`d permanent really does count). */
@@ -206,6 +223,7 @@ export class GameState {
       keywords: opts.keywords ?? [],
       ptFormula: opts.ptFormula,
       cmc: opts.cmc,
+      manaAbility: opts.manaAbility,
     };
     this.cards.set(card.id, card);
     const arr = zoneArray(owner, zone);

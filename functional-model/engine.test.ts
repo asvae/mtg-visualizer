@@ -656,6 +656,87 @@ describe('Crew (702.121b/c) — canActivateAbility/activateAbility', () => {
   });
 });
 
+describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real ETB derivation + 302.6', () => {
+  const MANA_ROCK: CardDefinition = {
+    name: 'Test Mana Rock',
+    manaCost: '{1}',
+    typeLine: 'Artifact',
+    staticAbilities: ['{T}: Add {W}.'],
+  };
+
+  const MANA_DORK: CardDefinition = {
+    name: 'Test Mana Dork',
+    manaCost: '{G}',
+    typeLine: 'Creature — Elf Druid',
+    pt: [1, 1],
+    staticAbilities: ['{T}: Add {G}.'],
+  };
+
+  const DUAL_ROCK: CardDefinition = {
+    name: 'Test Dual Rock',
+    manaCost: '{1}',
+    typeLine: 'Artifact',
+    staticAbilities: ['{T}: Add {G} or {U}.'],
+  };
+
+  it('a resolved non-Land mana-ability permanent (an artifact) really becomes a payable mana source', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const rockReal = state.addCard(you, 'Hand', { name: MANA_ROCK.name, types: ['Artifact'] });
+    const rockSelf = wrapCard(state, rockReal);
+    castSpell(engine, you, rockReal, MANA_ROCK, ctxFor(state, rockSelf, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    expect(rockReal.manaAbility).toBe('W');
+
+    const whiteSpell: CardDefinition = { name: 'Test White Spell', manaCost: '{W}', typeLine: 'Sorcery', effects: [] };
+    expect(canCastSpell(engine, you, whiteSpell).ok).toBe(true);
+    const spellReal = state.addCard(you, 'Hand', { name: whiteSpell.name });
+    const spellSelf = wrapCard(state, spellReal);
+    castSpell(engine, you, spellReal, whiteSpell, ctxFor(state, spellSelf, youPlayer, [oppPlayer]), noopActions);
+    expect(rockReal.tapped).toBe(true);
+  });
+
+  it('a freshly-resolved mana-dork CREATURE cannot pay with its own mana ability the turn it enters (302.6)', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    // setupGame's own board has 2 Forests + 1 Mountain; casting the dork's
+    // own {G} cost taps ONE of those Forests, leaving exactly 1 untapped
+    // real {G} source (the other Forest) once the dork resolves — so
+    // {G}{G} is affordable ONLY if the (still summoning-sick) dork's own
+    // ability incorrectly counts as a second source.
+    const dorkReal = state.addCard(you, 'Hand', { name: MANA_DORK.name, types: ['Creature'] });
+    const dorkSelf = wrapCard(state, dorkReal);
+    castSpell(engine, you, dorkReal, MANA_DORK, ctxFor(state, dorkSelf, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    expect(dorkReal.manaAbility).toBe('G');
+
+    const greenSpell: CardDefinition = { name: 'Test Green Spell', manaCost: '{G}{G}', typeLine: 'Sorcery', effects: [] };
+    expect(canCastSpell(engine, you, greenSpell)).toEqual({ ok: false, reason: expect.stringMatching(/cannot afford/) });
+  });
+
+  it('a mana-dork creature CAN pay with its own mana ability on a later turn (no longer summoning-sick)', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const dorkReal = state.addCard(you, 'Hand', { name: MANA_DORK.name, types: ['Creature'] });
+    const dorkSelf = wrapCard(state, dorkReal);
+    castSpell(engine, you, dorkReal, MANA_DORK, ctxFor(state, dorkSelf, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    const startTurn = engine.turn.turnNumber;
+    do {
+      advance(engine);
+    } while (!(PHASES[engine.turn.phaseIndex] === 'Main1' && engine.turn.turnNumber !== startTurn && engine.turn.activePlayerIndex === 0));
+
+    const tooGreenSpell: CardDefinition = { name: 'Test Too Green Spell', manaCost: '{G}{G}{G}', typeLine: 'Sorcery', effects: [] };
+    expect(canCastSpell(engine, you, tooGreenSpell).ok).toBe(true);
+  });
+
+  it('a dual-color "{T}: Add {G} or {U}." ability is NOT recognized (not modeled — see mana.ts\'s own scope note)', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const rockReal = state.addCard(you, 'Hand', { name: DUAL_ROCK.name, types: ['Artifact'] });
+    const rockSelf = wrapCard(state, rockReal);
+    castSpell(engine, you, rockReal, DUAL_ROCK, ctxFor(state, rockSelf, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    expect(rockReal.manaAbility).toBeUndefined();
+  });
+});
+
 describe('resolveCard dispatch collision (a permanent with BOTH an on:"enter" trigger AND activationCost+effects)', () => {
   function dualCard(order: string[]): CardDefinition {
     return {

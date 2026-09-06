@@ -382,6 +382,44 @@ crewed Vehicle becomes a creature PERMANENTLY rather than "until end of
 turn" — the same simplification the 3 real cards' own `effects:
 [animate]` already committed to before this pass touched anything.
 
+### Non-basic mana sources — a narrow real slice, `mana.ts`/`state.ts`/`engine.ts`
+
+`mana.ts` only ever recognized basic lands (subtype-inferred color).
+Checked every real `{T}: Add ...` static-ability string across the pool
+(35 cards use one shape or another) and found 10 that fit a genuinely
+narrow, correct slice: an EXACT, single-color, unrestricted
+`"{T}: Add {X}."` string (`manaAbilityColorFromStaticText`). A dual/
+choice-of-color ability, a restricted one, a colorless one, or a variable
+one are all explicitly still NOT recognized (see this file's own doc
+comment for exactly why each is a bigger, separate lift).
+
+The hard part isn't the text match — it's that `RealCard` carries no
+live `CardDefinition` reference to re-derive "does this thing make mana"
+from later. So the color is derived ONCE, for real, at the exact moment
+a permanent resolves onto the battlefield (`resolveTop`, same hook Saga
+automation and `enteredThisTurn` already use), and stored on a new
+`RealCard.manaAbility` field:
+
+```ts
+real.manaAbility = manaAbilityColorFromStaticText(resolved.card.staticAbilities);
+```
+
+`mana.ts`'s own `manaColorOf` then checks a basic-land subtype first,
+falling back to `card.manaAbility` — so `untappedManaSources`/
+`canAfford`/`payMana` all pick up a real non-Land mana source for free,
+no changes needed to their own logic.
+
+The one real wrinkle: 3 of the 10 qualifying cards (Druid of the Cowl,
+Goobbue Gardener, Llanowar Elves) are CREATURES, and 302.6's own
+summoning-sickness restriction genuinely applies to a `{T}` mana ability
+exactly like any other `{T}` ability — a basic land is never sick, so
+this was never an issue before. A new `payableManaSources(engine, player)`
+wraps `untappedManaSources`, additionally excluding a still-sick creature
+mana source (Haste exempts it, same check `canActivateAbility` already
+does) — `engine.ts`'s 4 call sites (`canCastSpell`/`castSpell`/
+`canActivateAbility`/`activateAbility`) all use this wrapper now instead
+of calling `untappedManaSources` directly.
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -438,6 +476,11 @@ turn" — the same simplification the 3 real cards' own `effects:
   `crewedBy` creature list) bypassing the free-text cost checks entirely,
   reusing the existing `animate` Effect/stack pipeline for resolution —
   see "Crew (702.121b/c)" above.
+- **Non-basic mana sources — narrow slice** — a real single-color,
+  unrestricted `{T}: Add {X}.` static ability derived at ETB onto a new
+  `RealCard.manaAbility` field, with real 302.6 summoning-sickness
+  enforcement for a creature mana source — see "Non-basic mana sources"
+  above.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -460,10 +503,12 @@ turn" — the same simplification the 3 real cards' own `effects:
   currently holds priority" state between calls (it's scripted per round, not
   simulated) — a caller keeps this honest by only calling `castSpell` between
   `stepPriority` rounds, not by the engine enforcing it directly.
-- **Non-basic mana sources.** Dual/nonbasic lands, mana rocks, and real
-  activated mana abilities (Elvish Archdruid's own `{T}: Add {G} for each Elf
-  you control`, e.g.) are not recognized mana sources — see `mana.ts`'s own
-  header.
+- **Non-basic mana sources — the remainder.** A dual/choice-of-color
+  ability, a restricted one, a colorless one, or a variable one (Elvish
+  Archdruid's own `{T}: Add {G} for each Elf you control`, e.g.) are still
+  not recognized mana sources — only a narrow single-color, unrestricted
+  slice is (see "Non-basic mana sources" above and `mana.ts`'s own
+  header).
 - Alternate costs, X spells, modal/split costs, casting from anywhere but hand.
 - A real AI/player decision process — unchanged from `priority.ts`'s own
   existing scope note: every round's choices are supplied by the caller.
@@ -502,6 +547,15 @@ power, insufficient total power, no creatures specified, an opponent's
 creature, an already-tapped creature, a non-creature permanent, legality
 outside a main phase/with a non-empty stack (no sorcery-speed
 restriction), and a summoning-sick creature still being allowed to crew.
+`mana.test.ts` covers `manaAbilityColorFromStaticText` (recognized/
+skipped shapes: restricted, dual, colorless, variable, none) and
+`untappedManaSources` picking up a real `manaAbility`-bearing non-Land
+source. `engine.test.ts`'s own `Non-basic mana sources` describe block
+covers a resolved artifact mana rock genuinely becoming payable (and
+really getting tapped), a freshly-resolved mana-dork CREATURE correctly
+NOT counting toward affordability the turn it enters (302.6), the same
+dork correctly counting on a later turn, and a dual-color ability
+correctly not being recognized at all.
 
 ## Gap analysis vs. real Forge
 

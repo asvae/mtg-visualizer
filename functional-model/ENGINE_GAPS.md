@@ -201,12 +201,29 @@ so a future pass doesn't mistake them for missing work:
 
 ### Medium priority (common, but narrower blast radius)
 
-5. **Non-basic mana sources.** `mana.ts`'s own header: only basic lands
-   (subtype-inferred color) are recognized mana sources. Real, common
-   activated mana abilities like Elvish Archdruid's own
-   `{T}: Add {G} for each Elf you control` (a genuine card in this
-   project's pool) aren't modeled as mana sources at all — a player who
-   only has dorks/rocks/duals can't be given legal affordability today.
+5. **Non-basic mana sources.** ~~A narrow real slice~~ **CLOSED for
+   single-color, unrestricted "{T}: Add {X}." sources** — checked every
+   real `{T}: Add ...` static-ability string across the pool (35 cards
+   total): 10 qualify for this narrow slice (Druid of the Cowl, Goobbue
+   Gardener, Llanowar Elves — creatures, so 302.6 summoning-sickness
+   genuinely applies via a new `payableManaSources` wrapper; Midgar,
+   Ishgard, Jidoor, Lindblum, Zanarkand — Adventure lands; White Auracite,
+   an artifact; Willowrush Verge, a plain land with a second, correctly
+   still-ignored restricted ability). `mana.ts`'s new
+   `manaAbilityColorFromStaticText` derives the color at the exact moment
+   a permanent resolves (`resolveTop`), stored on a new `RealCard.manaAbility`
+   field — `RealCard` carries no live `CardDefinition` reference to
+   re-derive it from later, same reasoning `enteredThisTurn`/
+   `resolvedPermanents` already established.
+   **Still real, explicitly NOT modeled** (the harder remainder of this
+   gap): a dual/choice-of-color ability (`{T}: Add {G} or {U}.` — ~10
+   cards; correctly affording this needs a real bipartite-matching
+   assignment, not just a bigger lookup table), a restricted one
+   ("Activate only if...", "Spend this mana only to..."), a colorless one
+   (`{C}` — `parseManaCost` itself doesn't parse `{C}`, gap #6), and a
+   variable one (Elvish Archdruid's own `{T}: Add {G} for each Elf you
+   control` — not a fixed single symbol). A player who only has ONE of
+   those source shapes still can't be given legal affordability.
 6. **Hybrid/Phyrexian/`{X}`/generic-colorless (`{C}`) mana symbols.**
    `parseManaCost` throws on any of these rather than mis-costing them
    (deliberate fail-loud choice) — but that means a cost like `{X}{R}` or

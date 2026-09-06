@@ -80,8 +80,11 @@
 //    so that half isn't separately checked; scripting a `castSpell` call
 //    only between `stepPriority` rounds is how a caller keeps this honest.)
 //  - Mana-cost affordability (601.2g/602.2c) against real untapped basic
-//    lands (see mana.ts's own scope note — nonbasic lands/mana rocks/mana
-//    abilities are NOT recognized sources).
+//    lands, PLUS a narrow real slice of non-basic mana sources (a
+//    single-color, unrestricted "{T}: Add {X}." static ability — see
+//    mana.ts's own scope note for exactly which real cards qualify and
+//    which don't yet), with real 302.6 summoning-sickness enforcement
+//    for a creature mana source (`payableManaSources`).
 //  - Activated-ability legality (602.1) — same sorcery-speed-timing/
 //    affordability shape as casting, plus real `{T}`-cost tapping, plus a
 //    real Equip {N} mana-only cost (301.5c's own sorcery-speed timing,
@@ -129,7 +132,7 @@ import { effectivePT, effectiveTypes, isLethallyDamaged } from './state';
 import { Stack, type StackObject } from './stack';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
 import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn as turnQueueExtraTurn, type TurnState } from './turn';
-import { parseManaCost, canAfford, payMana, untappedManaSources } from './mana';
+import { parseManaCost, canAfford, payMana, untappedManaSources, manaAbilityColorFromStaticText } from './mana';
 import { advanceSaga, advanceSagasAfterDrawStep } from './saga';
 
 export type ActionResult = { ok: true } | { ok: false; reason: string };
@@ -207,13 +210,34 @@ function sorcerySpeedTimingOk(engine: GameEngine, caster: RealPlayer): boolean {
   return active.id === caster.id && (phase === 'Main1' || phase === 'Main2') && engine.stack.isEmpty();
 }
 
+/**
+ * `untappedManaSources`, further excluding a CREATURE mana source that's
+ * still summoning-sick (302.6 — this rule applies to any activated
+ * ability with `{T}`/`{Q}` in its own cost, not just attacking/tapping
+ * for combat; Haste exempts it, same as `canActivateAbility`'s own
+ * identical check). A basic land or non-creature mana-ability source
+ * (mana.ts's own narrow slice — Midgar/White Auracite/etc.) is never
+ * summoning-sick in the first place (302.6 only ever restricts
+ * CREATURES), so this only ever removes real creature-dork sources
+ * (Druid of the Cowl/Goobbue Gardener/Llanowar Elves) that entered this
+ * same turn.
+ */
+function payableManaSources(engine: GameEngine, player: RealPlayer): RealCard[] {
+  return untappedManaSources(player).filter((c) => {
+    if (!effectiveTypes(c).includes('Creature')) return true;
+    const enteredTurn = engine.enteredThisTurn.get(c.id);
+    const sick = enteredTurn === engine.turn.turnNumber && !c.keywords.includes('Haste');
+    return !sick;
+  });
+}
+
 /** Read-only legality check — same checks `castSpell` performs before it mutates anything, exposed separately so a caller (or a test asserting "this SHOULD be illegal") doesn't have to attempt-and-undo. */
 export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardDefinition): ActionResult {
   if (!isInstantSpeed(card) && !sorcerySpeedTimingOk(engine, caster)) {
     return { ok: false, reason: `sorcery-speed timing violated (307.1a/117.1a): "${card.name}" can only be cast during your own main phase with an empty stack` };
   }
   const cost = parseManaCost(card.manaCost);
-  if (!canAfford(untappedManaSources(caster), cost)) {
+  if (!canAfford(payableManaSources(engine, caster), cost)) {
     return { ok: false, reason: `cannot afford "${card.name}"'s cost ${card.manaCost} (601.2g/602.2c) — not enough untapped mana sources` };
   }
   return { ok: true };
@@ -231,7 +255,7 @@ export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: Real
   const check = canCastSpell(engine, caster, card);
   if (!check.ok) return check;
   const cost = parseManaCost(card.manaCost);
-  payMana(engine.state, untappedManaSources(caster), cost);
+  payMana(engine.state, payableManaSources(engine, caster), cost);
   engine.state.move(cardReal, 'Stack');
   // A permanent with its OWN `activationCost` reserves `card.effects` for
   // that LATER activation (602.1) — real Magic has no "cast effects" for a
@@ -385,7 +409,7 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
     } catch (e) {
       return { ok: false, reason: (e as Error).message };
     }
-    if (!canAfford(untappedManaSources(controller), parsedMana)) {
+    if (!canAfford(payableManaSources(engine, controller), parsedMana)) {
       return { ok: false, reason: `cannot afford "${card.name}"'s cost ${cost} — not enough untapped mana sources` };
     }
   }
@@ -419,7 +443,7 @@ export function activateAbility(engine: GameEngine, controller: RealPlayer, perm
   }
   const cost = activationCostFor(card, abilityName)!;
   const manaPortion = manaPortionOf(cost);
-  if (/\{[^}]+\}/.test(manaPortion)) payMana(engine.state, untappedManaSources(controller), parseManaCost(manaPortion));
+  if (/\{[^}]+\}/.test(manaPortion)) payMana(engine.state, payableManaSources(engine, controller), parseManaCost(manaPortion));
   if (costRequiresTap(cost)) engine.state.tap(permanent);
   engine.stack.push({ card, ctx, actions, abilityName, isAbility: true });
   return { ok: true };
@@ -446,6 +470,11 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       engine.state.move(real, 'Battlefield');
       engine.enteredThisTurn.set(real.id, engine.turn.turnNumber);
       engine.resolvedPermanents.set(real.id, { card: resolved.card, ctx: resolved.ctx, actions: resolved.actions });
+      // Real narrow-slice mana ability (mana.ts's own
+      // `manaAbilityColorFromStaticText`) — derived here, once, from the
+      // resolving CardDefinition's own text, since `RealCard` keeps no
+      // live CardDefinition reference to re-derive it from later.
+      real.manaAbility = manaAbilityColorFromStaticText(resolved.card.staticAbilities);
       // Real 714.2b: a Saga enters with no lore counters, then immediately
       // gets its first (see saga.ts's own header for the full 714 writeup).
       advanceSaga(engine, real, engine.resolvedPermanents.get(real.id)!);

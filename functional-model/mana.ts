@@ -13,12 +13,25 @@
 //    ({W/U}), Phyrexian ({U/P}), colorless-specific ({C}), and X in a cost
 //    are NOT parsed — `parseManaCost` throws on one rather than silently
 //    mis-costing it.
-//  - Only BASIC lands are recognized as mana sources (real subtype = color:
-//    Plains=W, Island=U, Swamp=B, Mountain=R, Forest=G). A dual/nonbasic
-//    land, a mana rock, or a real "{T}: Add mana" activated ability
-//    (Elvish Archdruid's own real one, e.g.) is NOT a mana source here —
-//    real, plainly-flagged gap, same "start narrow" scope this prototype
-//    already uses everywhere else.
+//  - Basic lands (real subtype = color: Plains=W, Island=U, Swamp=B,
+//    Mountain=R, Forest=G), PLUS a narrow real slice of non-basic mana
+//    sources: any permanent whose `CardDefinition.staticAbilities`
+//    contains an EXACT, single-color, unrestricted "{T}: Add {X}." string
+//    (`manaAbilityColorFromStaticText` below) is recognized too — checked
+//    against the real pool: 10 real cards qualify (Druid of the Cowl,
+//    Goobbue Gardener, Llanowar Elves — all creatures, so 302.6
+//    summoning-sickness applies, handled in `engine.ts`; Midgar, Ishgard,
+//    Jidoor, Lindblum, Zanarkand — Adventure lands; White Auracite, an
+//    artifact; Willowrush Verge, a plain land). Still explicitly NOT
+//    recognized: a dual/choice-of-color ability ("{T}: Add {G} or {U}." —
+//    correctly affording a payable cost through this would mean a real
+//    bipartite-matching assignment problem, not just a bigger lookup
+//    table), a restricted one ("Activate only if...", "Spend this mana
+//    only to..."), a colorless one ({C} — `parseManaCost` itself doesn't
+//    parse {C} at all, see gap #6), or a variable one (Elvish Archdruid's
+//    own "Add {G} for each Elf you control" — not a fixed single symbol).
+//    A mana rock with one of THOSE shapes remains a real, separately
+//    tracked gap.
 
 import type { GameState, RealCard, RealPlayer } from './state';
 
@@ -97,14 +110,34 @@ export function basicLandsFor(cost: string): BasicLandName[] {
   return lands;
 }
 
-/** The color this real card produces as a mana source, or `undefined` if it isn't one of the basic lands this file recognizes (see header). */
-function manaColorOf(card: RealCard): ManaColor | undefined {
-  if (!card.types.includes('Land')) return undefined;
-  for (const subtype of card.subtypes) {
-    const color = BASIC_LAND_COLOR[subtype];
-    if (color) return color;
+/**
+ * Recognizes a real, narrow slice of non-basic "{T}: Add mana" static
+ * abilities (see this file's own header) — the string must be EXACTLY
+ * `{T}: Add {X}.` (X a single real color), with no restriction/"spend
+ * only"/multi-symbol text attached, or it's correctly ignored (still a
+ * real static ability text-wise — `staticAbilities` is unaffected either
+ * way — just not modeled as a payable source). Returns the FIRST such
+ * match across `staticAbilities` (Willowrush Verge has a second,
+ * restricted `{T}: Add {G}` entry that's correctly skipped, while its
+ * first, unrestricted `{T}: Add {U}` still qualifies).
+ */
+export function manaAbilityColorFromStaticText(staticAbilities?: string[]): ManaColor | undefined {
+  for (const text of staticAbilities ?? []) {
+    const match = /^\{T\}: Add \{([WUBRG])\}\.$/.exec(text);
+    if (match) return match[1] as ManaColor;
   }
   return undefined;
+}
+
+/** The color this real card produces as a mana source — a basic land subtype, or a real `manaAbility` derived at ETB (see `RealCard`'s own doc comment) — or `undefined` if it's neither. */
+function manaColorOf(card: RealCard): ManaColor | undefined {
+  if (card.types.includes('Land')) {
+    for (const subtype of card.subtypes) {
+      const color = BASIC_LAND_COLOR[subtype];
+      if (color) return color;
+    }
+  }
+  return card.manaAbility;
 }
 
 /** Every untapped real mana source (see `manaColorOf`) this player currently controls. */
