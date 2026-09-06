@@ -621,7 +621,16 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
   return {
     createToken: (controller, token, qty = 1, opts) => {
       const made = state.createToken(playerOf(controller), token, qty, opts);
-      log.push({ fn: 'createToken', controller: controller.getName(), token: token.name, qty, tapped: !!opts?.tapped });
+      const isCreatureToken = token.types.includes('Creature');
+      log.push({
+        fn: 'createToken',
+        controller: controller.getName(),
+        token: token.name,
+        qty,
+        tapped: !!opts?.tapped,
+        power: isCreatureToken ? token.basePower : undefined,
+        toughness: isCreatureToken ? token.baseToughness : undefined,
+      });
       return made.map((c) => loggingCard(state, c, log));
     },
     pump: (target, power, toughness) => {

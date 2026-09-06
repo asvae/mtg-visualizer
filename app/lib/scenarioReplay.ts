@@ -44,6 +44,9 @@ export interface ReplayCard {
   /** Cumulative `pump` deltas (harness.ts's `actions.pump`) — additive across every `pump` entry this card has seen, same "real state just keeps mutating" shape state.ts's own `pump` uses (no duration/layer tracking, matching this project's accepted layers.ts simplification). Undefined (not 0) until the first `pump` entry, so a chip with no buffs renders no badge at all. */
   powerMod?: number;
   toughnessMod?: number;
+  /** Base (printed/token-definition) power/toughness — undefined for anything that isn't currently a creature (a land, an artifact, ...), which is also how the UI decides whether to show a P/T badge at all. Set for filler creatures (`ps.creaturePower`), real named creature tokens (`TOKENS[key]`'s own basePower/baseToughness), and `createToken`/`copyPermanent` entries; the ONE exception is the `isSelf` card, whose real printed P/T comes from Scryfall (a Vue prop, not trace data — see ScenarioReplayTrace.vue's own `ptFor`), same reasoning `cardImages`/`cardKeywords` already use it for. */
+  power?: number;
+  toughness?: number;
   /** The real type list an `animate` entry (harness.ts's `actions.animate`) most recently applied (e.g. a land becoming `['Creature']` too) — REPLACES, not merges, same as `state.animate` itself does; not tracked as a diff against printed types since this file has no real printed-types source for a generic filler chip anyway. */
   animatedTypes?: string[];
   /** True from an `attack`/`block` entry until the next real `phase` entry (combat's own step boundary) clears it — an engine-piloted trace only (a flat harness.ts scenario never crosses a real phase, so these two would never clear); a purely visual "currently in combat" marker, not itself a source of any other state. */
@@ -69,24 +72,33 @@ const DEFAULT_LIFE = 20;
 /** Mirrors functional-model/harness.ts's own `setupPlayer` — same names, same zones, same order — so a log entry referencing one of these later (e.g. `read:hasSubtype target="opp0-creature-token-1"`) lines up with the exact chip this seeded. */
 function seedPlayerCards(owner: string, ps: PlayerState | undefined): ReplayCard[] {
   const cards: ReplayCard[] = [];
-  const push = (name: string, zone: ZoneType) => cards.push({ name, zone, owner, tapped: false, counters: {}, keywords: new Set() });
+  const push = (name: string, zone: ZoneType, pt?: [number, number]) =>
+    cards.push({ name, zone, owner, tapped: false, counters: {}, keywords: new Set(), power: pt?.[0], toughness: pt?.[1] });
   const n = owner;
+  // Real `state.ts` default (`addCard`'s own `basePower/baseToughness ?? 1`)
+  // whenever a scenario didn't bother specifying one — same value for
+  // power and toughness, matching `setupPlayer`'s own `creaturePower` use
+  // for BOTH fields (harness.ts).
+  const creaturePT: [number, number] = [ps?.creaturePower ?? 1, ps?.creaturePower ?? 1];
   const nontoken = ps?.nontokenCreaturesCount ?? 0;
-  for (let i = 0; i < nontoken; i++) push(`${n}-creature-nontoken-${i}`, 'Battlefield');
+  for (let i = 0; i < nontoken; i++) push(`${n}-creature-nontoken-${i}`, 'Battlefield', creaturePT);
   const tokenCreatures = Math.max(0, (ps?.creaturesCount ?? 0) - nontoken);
-  for (let i = 0; i < tokenCreatures; i++) push(`${n}-creature-token-${i}`, 'Battlefield');
+  for (let i = 0; i < tokenCreatures; i++) push(`${n}-creature-token-${i}`, 'Battlefield', creaturePT);
   // Real named tokens/basic lands (harness.ts's `PlayerState.tokens`/
   // `basicLands`) — pushed under their OWN real name, unprefixed, same as
   // `state.createToken`/`addCard` do there (no `${owner}-` prefix these
   // get) — so a log entry naming "Treasure"/"Forest" lines up directly.
-  for (const key of ps?.tokens ?? []) push(TOKENS[key].name, 'Battlefield');
+  for (const key of ps?.tokens ?? []) {
+    const token = TOKENS[key];
+    push(token.name, 'Battlefield', token.types.includes('Creature') ? [token.basePower, token.baseToughness] : undefined);
+  }
   for (const landName of ps?.basicLands ?? []) push(landName, 'Battlefield');
   const equipment = ps?.equipmentCount ?? 0;
   for (let i = 0; i < equipment; i++) push(`${n}-equipment-${i}`, 'Battlefield');
   const plainArtifacts = Math.max(0, (ps?.artifactsCount ?? 0) - equipment);
   for (let i = 0; i < plainArtifacts; i++) push(`${n}-artifact-${i}`, 'Battlefield');
   for (let i = 0; i < (ps?.enchantmentsCount ?? 0); i++) push(`${n}-enchantment-${i}`, 'Battlefield');
-  for (let i = 0; i < (ps?.graveyardCreatureCount ?? 0); i++) push(`${n}-gy-creature-${i}`, 'Graveyard');
+  for (let i = 0; i < (ps?.graveyardCreatureCount ?? 0); i++) push(`${n}-gy-creature-${i}`, 'Graveyard', creaturePT);
   for (let i = 0; i < (ps?.landsCount ?? 0); i++) push(`${n}-land-${i}`, 'Battlefield');
   // Real basic land (harness.ts's `GENERIC_FILLER_LAND`) — not the old
   // synthetic `${n}-hand-${i}`/`${n}-library-${i}` placeholder, so a
@@ -514,9 +526,15 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         const controllerName = str(entry.controller);
         const qty = num(entry.qty) ?? 1;
         const tapped = !!entry.tapped;
+        // `power`/`toughness` only present for a creature token (harness.ts's
+        // own `createToken` — see that field's own doc comment) — a
+        // non-creature token (Treasure, Food, ...) leaves both undefined,
+        // same as any other non-creature chip, so no P/T badge renders for it.
+        const power = num(entry.power);
+        const toughness = num(entry.toughness);
         if (name) {
           for (let i = 0; i < qty; i++) {
-            const card: ReplayCard = { name, zone: 'Battlefield', owner: controllerName ?? guessOwner(name, roles), tapped, counters: {}, keywords: new Set() };
+            const card: ReplayCard = { name, zone: 'Battlefield', owner: controllerName ?? guessOwner(name, roles), tapped, counters: {}, keywords: new Set(), power, toughness };
             cards.push(card);
             if (!byName.has(name)) byName.set(name, card);
           }
@@ -529,7 +547,24 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         const sourceName = str(entry.source);
         const controllerName = str(entry.controller);
         if (sourceName) {
-          const card: ReplayCard = { name: sourceName, zone: 'Battlefield', owner: controllerName ?? guessOwner(sourceName, roles), tapped: false, counters: {}, keywords: new Set() };
+          // Copiable values only (707.2) — the source's BASE power/toughness,
+          // never its current `powerMod`/`toughnessMod` (a temporary pump
+          // effect on the original isn't a copiable value, so the copy
+          // starts fresh with no mod of its own). Falls back to undefined
+          // when the source is the one `isSelf` card (its base P/T lives in
+          // a Vue prop, not on this object — a real gap, but copying the
+          // tested card itself is not a scenario this pool has yet).
+          const source = byName.get(sourceName);
+          const card: ReplayCard = {
+            name: sourceName,
+            zone: 'Battlefield',
+            owner: controllerName ?? guessOwner(sourceName, roles),
+            tapped: false,
+            counters: {},
+            keywords: new Set(),
+            power: source?.power,
+            toughness: source?.toughness,
+          };
           cards.push(card);
           if (!byName.has(sourceName)) byName.set(sourceName, card);
         }

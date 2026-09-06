@@ -405,6 +405,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             :traces="data.functionalModel.traces"
             :card-images="card.images"
             :card-keywords="card.keywords"
+            :card-power="card.power"
+            :card-toughness="card.toughness"
+            :card-back-power="card.backPower"
+            :card-back-toughness="card.backToughness"
           />
           <div v-else class="text-xs text-muted italic">No scenarios recorded.</div>
         </template>

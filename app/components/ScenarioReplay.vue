@@ -17,6 +17,11 @@ const props = defineProps<{
   cardImages?: string[];
   /** The real card's own printed keywords (Scryfall's `card.keywords`) — shown on the "self" chip alongside any mid-scenario `grantKeyword` log entries. */
   cardKeywords?: string[];
+  /** The real card's own printed power/toughness (front, then back for a transforming DFC whose back face is also a creature) — app/pages/app/card/[set]/[number].vue's own `card.power`/`toughness`/`backPower`/`backToughness`. Raw Scryfall strings ("3", "*", ...); undefined for a non-creature. */
+  cardPower?: string;
+  cardToughness?: string;
+  cardBackPower?: string;
+  cardBackToughness?: string;
 }>();
 
 // Two kinds of scenario filler are real named cards, not the synthetic
@@ -85,6 +90,10 @@ watch(
       :trace="trace"
       :card-images="cardImages"
       :card-keywords="cardKeywords"
+      :card-power="cardPower"
+      :card-toughness="cardToughness"
+      :card-back-power="cardBackPower"
+      :card-back-toughness="cardBackToughness"
       :filler-images="fillerImages"
       :class="{ 'border-t border-border-subtle pt-3': ti > 0 }"
     />

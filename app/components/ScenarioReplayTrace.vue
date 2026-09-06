@@ -48,6 +48,11 @@ const props = defineProps<{
   fillerImages?: Record<string, string>;
   /** The real card's own printed keywords (Scryfall's `card.keywords`) — shown on the "self" chip alongside whatever `card.keywords` (mid-scenario `grantKeyword` entries) already tracks. Every OTHER chip only ever gets keywords via `grantKeyword` (a filler creature has no real printed keywords of its own). */
   cardKeywords?: string[];
+  /** The tested card's own real printed power/toughness (front, then back for a transforming DFC whose back face is also a creature) — app/pages/app/card/[set]/[number].vue's own `card.power`/`toughness`/`backPower`/`backToughness`. Raw Scryfall strings ("3", "*", ...), same reasoning `cardImages`/`cardKeywords` already use real external data for the one `isSelf` chip instead of tracking it in the trace itself. */
+  cardPower?: string;
+  cardToughness?: string;
+  cardBackPower?: string;
+  cardBackToughness?: string;
 }>();
 
 /** One or two image URLs to show for this card (front, then back for a flipping self) — undefined when this card has no real art to show (an old-style synthetic filler, `placeholderLabel` covers it instead) OR when it's real hidden information (a card sitting in Library — real MTG rules, a library is secret; the `card-back` branch below covers that instead, even for a real-identity filler like GENERIC_FILLER_LAND that this file otherwise happily shows real art for everywhere else). */
@@ -62,6 +67,26 @@ function imagesFor(card: GroupedReplayCard): string[] | undefined {
 function iconKeywords(card: GroupedReplayCard): string[] {
   const all = card.isSelf ? new Set([...(props.cardKeywords ?? []), ...card.keywords]) : card.keywords;
   return [...all].filter((k) => ABILITY_ICON_NAMES.has(k));
+}
+
+/** This card's CURRENT power/toughness (base + cumulative `pump`), or undefined when it isn't a creature right now. Self's own base comes from the real Scryfall props (`cardPower`/`cardToughness`, back-face variants once `faceName` shows a transform has flipped it) — a "*" or otherwise non-numeric base (variable P/T, e.g. Tarmogoyf) can't be added to, so those render no badge rather than a wrong number. Every other chip's base is `card.power`/`toughness` (seeded from `ps.creaturePower`, a real named token's own basePower/baseToughness, or a `createToken`/`copyPermanent` entry — see scenarioReplay.ts) — undefined for anything that isn't a creature, same "no field set = no badge" rule. */
+function ptFor(card: GroupedReplayCard): [number, number] | undefined {
+  let base: [number, number] | undefined;
+  if (card.isSelf) {
+    const flipped = !!card.faceName;
+    const p = Number(flipped ? props.cardBackPower : props.cardPower);
+    const t = Number(flipped ? props.cardBackToughness : props.cardToughness);
+    if (Number.isFinite(p) && Number.isFinite(t)) base = [p, t];
+  } else if (card.power !== undefined && card.toughness !== undefined) {
+    base = [card.power, card.toughness];
+  }
+  if (!base) return undefined;
+  return [base[0] + (card.powerMod ?? 0), base[1] + (card.toughnessMod ?? 0)];
+}
+
+/** True when `ptFor`'s current value differs from this card's own base (a `pump` effect is live right now) — the P/T badge renders in a different color for this, same convention paper Magic UIs use for a buffed/debuffed creature (just one color here, not split by direction — see this file's own header for why "real, not curated" keeps this simple). */
+function ptModified(card: GroupedReplayCard): boolean {
+  return !!(card.powerMod || card.toughnessMod);
 }
 
 // Pure reads (`read:hasSubtype`, `read:getCreaturesInPlay`, ...) never
@@ -402,6 +427,13 @@ const currentActionRawEntries = computed(() => {
                        (a CSS transform never changes layout size), so every
                        badge below anchors to a stable corner regardless of
                        tapped state. -->
+                  <span
+                    v-if="ptFor(card)"
+                    class="absolute -top-1 -left-1 rounded bg-surface px-0.5 text-[8px] leading-tight"
+                    :class="ptModified(card) ? 'text-blue-400' : 'text-text'"
+                  >
+                    {{ ptFor(card)![0] }}/{{ ptFor(card)![1] }}
+                  </span>
                   <span
                     v-if="Object.keys(card.counters).length"
                     class="absolute -right-1 -bottom-1 rounded bg-warn px-0.5 text-[8px] leading-tight text-bg"

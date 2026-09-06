@@ -519,6 +519,10 @@ export default defineEventHandler(async (event) => {
     keywords: cardKeywords(card).filter((k) => BADGE_KEYWORDS.has(k)),
     set: card.set || set,
     collectorNumber: card.collector_number || number,
+    power: card.power ?? card.card_faces?.[0]?.power,
+    toughness: card.toughness ?? card.card_faces?.[0]?.toughness,
+    backPower: card.card_faces?.[1]?.power,
+    backToughness: card.card_faces?.[1]?.toughness,
   };
 
   // Auto-generated creature-type themes (Human, Goblin, ...) — same rule as

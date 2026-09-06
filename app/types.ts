@@ -51,6 +51,15 @@ export interface CardData {
   // `deck` mode (see useGraphStore.ts); `undefined` in every other mode
   // (plain set browsing, an `sf=` Scryfall query), never a meaningless 1.
   qty?: number;
+  // Raw Scryfall power/toughness strings (e.g. "3", "*") — undefined for a
+  // non-creature. `back*` is the second `card_faces` entry, for a
+  // transforming DFC whose back face is also a creature (Jill, Shiva's
+  // Dominant // Shiva, Warden of Ice) — the Scenarios tab's replay board
+  // uses these to show the tested card's own current P/T.
+  power?: string;
+  toughness?: string;
+  backPower?: string;
+  backToughness?: string;
 }
 
 export interface ThemeData {

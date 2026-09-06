@@ -293,6 +293,17 @@ export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer
     // convention `pilotTransform`'s own comment establishes.
     if (pilot.engine.turn.turnNumber !== beforeTurn) {
       pilot.beginStep(`Pass turn (${endingPlayer.name})`);
+      // Same turn/phase/player triple the final "arrived" entry below logs,
+      // just ALSO at every intermediate turn boundary this loop crosses —
+      // without it, a multi-turn wait's own opponent-turn span had no phase
+      // entry of its own at all, so the replay widget kept showing whatever
+      // player/phase was active before the wait started (confirmed the hard
+      // way: "Turn 3, Your turn, Main1" stayed on screen the entire time an
+      // opponent's whole turn was passing in between). Not spam the same way
+      // logging every Upkeep/Draw/Combat step would be — this only fires once
+      // per real turn boundary, and that boundary already gets its own
+      // `beginStep` above, so this just completes that same moment's data.
+      pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
     }
   } while (!(PHASES[pilot.engine.turn.phaseIndex] === 'Main1' && pilot.engine.turn.turnNumber !== startTurn && pilot.engine.players[pilot.engine.turn.activePlayerIndex]!.id === player.id));
   // ONE real "we arrived" marker for the WHOLE multi-turn wait — not one
