@@ -2,6 +2,8 @@
 import { ref, computed, nextTick } from 'vue';
 import { computePosition, offset, flip, shift, size } from '@floating-ui/dom';
 import { parseManaSegments } from '../lib/manaSegments';
+import { DFC_FACE_BREAK, COLOR_INDICATOR_MARKER } from '../lib/cardTextMarkers';
+import { COLOR_MAP, COLORLESS, COLOR_LABEL } from '../lib/constants';
 import type { AnnotatedFactRef } from '../../functional-model/synergy';
 
 // `highlightKey` — set by the parent card page while a Functional model
@@ -21,6 +23,8 @@ const emit = defineEmits<{ hover: [key: string | null] }>();
 interface RenderSegment {
   text: string;
   facts?: AnnotatedFactRef[];
+  /** Real Scryfall "Color Indicator" — a real color-letter list (colorIndicatorMarker's own output, cardTextMarkers.ts), rendered as circular swatches instead of text. Empty array = a genuinely colorless indicator. */
+  colorIndicator?: string[];
 }
 
 // Prefers the fact's own author-assigned `id` (stable, unambiguous) — falls
@@ -37,17 +41,37 @@ function isRowHighlighted(seg: RenderSegment): boolean {
 // below; WHICH phrase belongs to which fact was already decided server-side,
 // this just reads the answer back out.
 const MARKER = /\[([^[\]]*)\]\((\d+)\)/g;
-const segments = computed<RenderSegment[]>(() => {
-  const result: RenderSegment[] = [];
+function factSegmentsOf(text: string, result: RenderSegment[]): void {
   let cursor = 0;
-  for (const m of props.text.matchAll(MARKER)) {
-    if (m.index > cursor) result.push({ text: props.text.slice(cursor, m.index) });
+  for (const m of text.matchAll(MARKER)) {
+    if (m.index > cursor) result.push({ text: text.slice(cursor, m.index) });
     result.push({ text: m[1]!, facts: props.facts[Number(m[2])] });
     cursor = m.index + m[0].length;
   }
-  if (cursor < props.text.length) result.push({ text: props.text.slice(cursor) });
+  if (cursor < text.length) result.push({ text: text.slice(cursor) });
+}
+// A color-indicator marker is structural (never carries a fact), so it's
+// split out first — whatever's left between/around it still goes through
+// the normal fact-marker pass above.
+function segmentsOf(block: string): RenderSegment[] {
+  const result: RenderSegment[] = [];
+  let cursor = 0;
+  for (const m of block.matchAll(COLOR_INDICATOR_MARKER)) {
+    if (m.index > cursor) factSegmentsOf(block.slice(cursor, m.index), result);
+    result.push({ text: '', colorIndicator: m[1] ? m[1].split(',') : [] });
+    cursor = m.index + m[0].length;
+  }
+  if (cursor < block.length) factSegmentsOf(block.slice(cursor), result);
   return result;
-});
+}
+
+// A DFC's `cardText` (server/api/card/[set]/[number].ts) carries one real
+// divider between its two per-face blocks (see cardTextMarkers.ts's own
+// doc comment) — split on it so each face renders in its own paragraph with
+// a REAL divider element between them, rather than a literal "------" run
+// of dashes sitting inline in the text. A single-faced card's `text` has no
+// marker at all, so this is just one block, same as before.
+const blocks = computed<RenderSegment[][]>(() => props.text.split(DFC_FACE_BREAK).map((block) => segmentsOf(block.replace(/^\n+|\n+$/g, ''))));
 
 // Blue underline when the phrase is a source, green when it's a sink —
 // a segment carrying both (rare: two facts sharing one anchor phrase) reads
@@ -111,25 +135,42 @@ function hide() {
 </script>
 
 <template>
-  <p class="max-w-2xl font-sans text-sm leading-relaxed whitespace-pre-wrap text-text/90">
-    <template v-for="(seg, i) in segments" :key="i">
-      <span
-        v-if="seg.facts?.length"
-        class="cursor-help rounded underline decoration-dashed decoration-1 underline-offset-4 transition-colors"
-        :class="[segColor(seg), isRowHighlighted(seg) ? 'bg-surface/60' : '']"
-        @mouseenter="show(seg, $event)"
-        @mouseleave="hide"
-        ><template v-for="(ms, mi) in parseManaSegments(seg.text)" :key="mi"
-          ><span v-if="'mana' in ms" class="text-[1em]"><ManaSymbol :code="ms.mana" /></span><template v-else>{{ ms.text }}</template></template
-        ></span
-      >
-      <template v-else
-        ><template v-for="(ms, mi) in parseManaSegments(seg.text)" :key="mi"
-          ><span v-if="'mana' in ms" class="text-[1em]"><ManaSymbol :code="ms.mana" /></span><template v-else>{{ ms.text }}</template></template
-        ></template
-      >
-    </template>
-  </p>
+  <template v-for="(block, bi) in blocks" :key="bi">
+    <!-- A DFC's own real divider between faces (see cardTextMarkers.ts) — a
+         genuine element, not a literal "------" run of dashes in the text. -->
+    <hr v-if="bi > 0" class="my-3 max-w-2xl border-border-subtle" />
+    <p class="max-w-2xl font-sans text-sm leading-relaxed whitespace-pre-wrap text-text/90">
+      <template v-for="(seg, i) in block" :key="i">
+        <span
+          v-if="seg.colorIndicator"
+          class="mr-1 inline-flex translate-y-0.5 gap-0.5 align-middle"
+          :title="`Color Indicator: ${seg.colorIndicator.length ? seg.colorIndicator.map((c) => COLOR_LABEL[c] ?? c).join(', ') : 'Colorless'}`"
+        >
+          <span
+            v-for="(c, ci) in seg.colorIndicator.length ? seg.colorIndicator : ['C']"
+            :key="ci"
+            class="inline-block cursor-help rounded-full border border-black/40"
+            :style="{ width: '13px', height: '13px', background: c === 'C' ? COLORLESS : COLOR_MAP[c], boxShadow: '0 0 0 1.5px rgba(0,0,0,0.25)' }"
+          />
+        </span>
+        <span
+          v-else-if="seg.facts?.length"
+          class="cursor-help rounded underline decoration-dashed decoration-1 underline-offset-4 transition-colors"
+          :class="[segColor(seg), isRowHighlighted(seg) ? 'bg-surface/60' : '']"
+          @mouseenter="show(seg, $event)"
+          @mouseleave="hide"
+          ><template v-for="(ms, mi) in parseManaSegments(seg.text)" :key="mi"
+            ><span v-if="'mana' in ms" class="text-[1em]"><ManaSymbol :code="ms.mana" /></span><template v-else>{{ ms.text }}</template></template
+          ></span
+        >
+        <template v-else
+          ><template v-for="(ms, mi) in parseManaSegments(seg.text)" :key="mi"
+            ><span v-if="'mana' in ms" class="text-[1em]"><ManaSymbol :code="ms.mana" /></span><template v-else>{{ ms.text }}</template></template
+          ></template
+        >
+      </template>
+    </p>
+  </template>
   <Teleport to="body">
     <div
       ref="tooltipEl"

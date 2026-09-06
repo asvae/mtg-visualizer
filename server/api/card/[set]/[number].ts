@@ -26,7 +26,7 @@ import { findInteractionsForCard, annotateCardText } from '../../../../functiona
 import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
-import { COLOR_LABEL } from '../../../../app/lib/constants';
+import { DFC_FACE_BREAK, colorIndicatorMarker } from '../../../../app/lib/cardTextMarkers';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
@@ -520,13 +520,13 @@ export default defineEventHandler(async (event) => {
   // only ever substring-searches a fact's own `sourceText`/`highlight`
   // within this blob — it doesn't parse structure — so this reshaping is
   // free to add real content without touching that matching logic at all.
-  function faceText(face: { name?: string; mana_cost?: string; type_line?: string; oracle_text?: string; power?: string; toughness?: string; flavor_text?: string; color_indicator?: string[] }): string {
+  function faceText(face: { name?: string; mana_cost?: string; type_line?: string; oracle_text?: string; power?: string; toughness?: string; color_indicator?: string[] }): string {
     const header = face.mana_cost ? `${face.name}\t${face.mana_cost}` : (face.name ?? '');
-    const colorIndicator = !face.mana_cost && face.color_indicator?.length ? `Color Indicator: ${face.color_indicator.map((c) => COLOR_LABEL[c] ?? c).join(', ')}\n` : '';
+    const colorIndicator = !face.mana_cost && face.color_indicator?.length ? `${colorIndicatorMarker(face.color_indicator)}\n` : '';
     const pt = face.power !== undefined && face.toughness !== undefined ? `${face.power}/${face.toughness}` : '';
-    return [header, '', `${colorIndicator}${face.type_line ?? ''}`, '', face.oracle_text ?? '', face.flavor_text ?? '', pt].filter((s) => s !== '').join('\n\n');
+    return [header, '', `${colorIndicator}${face.type_line ?? ''}`, '', face.oracle_text ?? '', pt].filter((s) => s !== '').join('\n\n');
   }
-  const cardText = card.card_faces?.length ? card.card_faces.map((f) => faceText(f)).join('\n\n------\n\n') : faceText(card);
+  const cardText = card.card_faces?.length ? card.card_faces.map((f) => faceText(f)).join(`\n\n${DFC_FACE_BREAK}\n\n`) : faceText(card);
 
   return {
     card: cardData,
