@@ -399,7 +399,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <!-- Same "strip only, content switched separately" split AppHeader.vue's
              own filter-mode UTabs already uses — nothing here depends on
              UTabs rendering slotted content itself. -->
-        <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
+        <!-- Keyed on `scenariosReview` — UTabs doesn't pick up a label-only
+             change to an already-mounted item (confirmed by `ui`: the
+             Interactions header, a plain reactive template expression,
+             updates immediately on the SAME data mutation that leaves this
+             tab's own "[Draft]" suffix stuck until a full reload). Forcing a
+             remount on the one thing that changes this label is simpler and
+             more robust than chasing UTabs' own internal item-reactivity
+             model. -->
+        <UTabs
+          :key="data.functionalModel.scenariosReview"
+          v-model="store.functionalModelTab.value"
+          :items="functionalModelTabs"
+          variant="link"
+          size="xs"
+          class="mb-2"
+        />
 
         <template v-if="store.functionalModelTab.value === 'facts'">
           <div v-if="synergy" class="overflow-x-auto">
