@@ -53,7 +53,8 @@
         "fn": "putCounter",
         "target": "opp0-creature-token-0",
         "counterType": "stun",
-        "amount": 1
+        "amount": 1,
+        "controller": "opp0"
       }
     ]
   },
@@ -152,7 +153,8 @@
         "fn": "putCounter",
         "target": "opp0-creature-token-0",
         "counterType": "stun",
-        "amount": 1
+        "amount": 1,
+        "controller": "opp0"
       }
     ]
   }

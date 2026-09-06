@@ -166,7 +166,8 @@
         "fn": "putCounter",
         "target": "Zodiark, Umbral God",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },

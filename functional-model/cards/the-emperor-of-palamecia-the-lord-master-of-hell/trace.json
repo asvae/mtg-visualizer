@@ -48,7 +48,8 @@
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "read:getCounters",
@@ -94,7 +95,8 @@
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "read:getCounters",

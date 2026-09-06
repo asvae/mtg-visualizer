@@ -61,7 +61,8 @@
         "fn": "putCounter",
         "target": "Sephiroth, Planet's Heir",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },

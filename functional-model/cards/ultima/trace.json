@@ -108,8 +108,9 @@
         "result": false
       },
       {
-        "fn": "destroy",
+        "fn": "ceasesToExist",
         "target": "you-creature-token-0",
+        "zone": "Graveyard",
         "controller": "you"
       },
       {
@@ -118,8 +119,9 @@
         "controller": "you"
       },
       {
-        "fn": "destroy",
+        "fn": "ceasesToExist",
         "target": "opp0-creature-token-0",
+        "zone": "Graveyard",
         "controller": "opp0"
       },
       {

@@ -51,7 +51,8 @@
         "fn": "putCounter",
         "target": "Astrologian's Planisphere",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },
@@ -76,7 +77,8 @@
         "fn": "putCounter",
         "target": "Astrologian's Planisphere",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },

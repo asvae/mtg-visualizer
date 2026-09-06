@@ -20,7 +20,8 @@
         "fn": "putCounter",
         "target": "Judge Magister Gabranth",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },

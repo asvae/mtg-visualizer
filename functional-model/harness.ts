@@ -739,8 +739,13 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       log.push({ fn: 'discard', player: player.getName(), qty, cards: discarded.map((c) => c.name) });
     },
     putCounter: (target, counterType, amount) => {
-      state.putCounter(cardOf(target), counterType, amount);
-      log.push({ fn: 'putCounter', target: target.getName(), counterType, amount });
+      const real = cardOf(target);
+      state.putCounter(real, counterType, amount);
+      // Real controller, same reasoning as `moveTo`/`destroy` above — needed
+      // now that GENERIC_FILLER_LAND (33bfbaa) gives BOTH players' fungible
+      // filler/basic lands the same bare name, so a replay can't otherwise
+      // tell which player's same-named permanent this counter landed on.
+      log.push({ fn: 'putCounter', target: target.getName(), counterType, amount, controller: state.players.get(real.controllerId)!.name });
     },
     equip: (equipment, target) => {
       state.equip(cardOf(equipment), cardOf(target));
@@ -769,8 +774,20 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
     destroy: (target) => {
       const real = cardOf(target);
       const controller = state.players.get(real.controllerId)!.name;
+      // Real 111.7/704.5d, same reasoning as `moveTo` below — captured
+      // BEFORE `state.destroy` (which routes through `state.move` and
+      // deletes a token from state entirely) rather than after. A
+      // destroyed TOKEN really does briefly hit the graveyard (700.4 — it's
+      // a genuine `dies` event) before immediately ceasing to exist as an
+      // SBA, so this logs `ceasesToExist` (zone kept as 'Graveyard', real
+      // evidence for both a `{zone:'Graveyard'}` produce claim AND a
+      // `dies` event claim — see verify-synergy.mjs's own two cases for
+      // this fn) instead of a plain `destroy` a replay would otherwise
+      // show sitting in the graveyard forever.
+      const ceasesToExist = real.zone === 'Battlefield' && real.isTokenCard;
       const destroyed = state.destroy(real);
       if (!destroyed) log.push({ fn: 'destroyPrevented', target: target.getName(), cause: 'Indestructible' });
+      else if (ceasesToExist) log.push({ fn: 'ceasesToExist', target: target.getName(), zone: 'Graveyard', controller });
       // Real controller, same reasoning as `moveTo` above.
       else log.push({ fn: 'destroy', target: target.getName(), controller });
     },

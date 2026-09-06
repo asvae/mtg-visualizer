@@ -19,7 +19,8 @@
         "fn": "putCounter",
         "target": "Demon Wall",
         "counterType": "+1/+1",
-        "amount": 2
+        "amount": 2,
+        "controller": "you"
       }
     ]
   }

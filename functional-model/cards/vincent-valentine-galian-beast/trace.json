@@ -23,7 +23,8 @@
         "fn": "putCounter",
         "target": "Vincent Valentine",
         "counterType": "+1/+1",
-        "amount": 3
+        "amount": 3,
+        "controller": "you"
       }
     ]
   },

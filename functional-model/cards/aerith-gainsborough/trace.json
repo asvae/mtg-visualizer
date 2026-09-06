@@ -114,7 +114,8 @@
         "fn": "putCounter",
         "target": "Aerith Gainsborough",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "drawCard",
@@ -198,7 +199,8 @@
         "fn": "putCounter",
         "target": "Bystander Legend",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ],
     "actions": [

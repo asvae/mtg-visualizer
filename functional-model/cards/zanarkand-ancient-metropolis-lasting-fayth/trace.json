@@ -72,7 +72,8 @@
         "fn": "putCounter",
         "target": "Hero",
         "counterType": "+1/+1",
-        "amount": 3
+        "amount": 3,
+        "controller": "you"
       },
       {
         "fn": "move",

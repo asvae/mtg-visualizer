@@ -44,13 +44,15 @@
         "fn": "putCounter",
         "target": "you-creature-token-0",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "you-creature-token-1",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },
@@ -94,7 +96,8 @@
         "fn": "putCounter",
         "target": "you-creature-token-0",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },

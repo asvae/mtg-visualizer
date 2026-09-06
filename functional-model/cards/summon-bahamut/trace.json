@@ -182,8 +182,9 @@
         "result": false
       },
       {
-        "fn": "destroy",
+        "fn": "ceasesToExist",
         "target": "Treasure",
+        "zone": "Graveyard",
         "controller": "opp0"
       },
       {

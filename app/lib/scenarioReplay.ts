@@ -413,7 +413,18 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'putCounter': {
-        const c = ensure(target, 'Battlefield');
+        // `ensureForZone`, not plain `ensure` — GENERIC_FILLER_LAND
+        // (harness.ts, 33bfbaa) gives BOTH players' fungible filler/basic
+        // lands the same bare name, and `ensure`'s single-alias-by-name
+        // lookup would land this counter on whichever same-named card
+        // happened to be registered last (confirmed the hard way: a real
+        // Battlefield land's own counter showed up on an unrelated Library
+        // filler sharing its name instead). `controller` — harness.ts's own
+        // `putCounter` now logs it, same reasoning `moveTo`/`destroy`
+        // already did — scopes the match to the RIGHT player's own card too
+        // (both players seed the same fungible land name).
+        const controllerName = str(entry.controller);
+        const c = ensureForZone(target, 'Battlefield', controllerName);
         const counterType = str(entry.counterType) ?? '+1/+1';
         const amount = num(entry.amount) ?? 0;
         if (c) c.counters[counterType] = (c.counters[counterType] ?? 0) + amount;

@@ -33,7 +33,14 @@ export function runEngineScenarios(): TraceResult[] {
     keywords: ultimaOriginOfOblivion.keywords,
   });
   const actions = pilotActions(pilot, ultimaReal.id);
-  const ctx = pilot.ctxFor(ultimaReal);
+  // "Target land" has no owner restriction at all (real oracle text) — the
+  // real chooseTarget default (pool[0] of an unrestricted combined pool,
+  // `you` always first) would otherwise blight YOUR OWN land instead of the
+  // opponent's, contradicting this scenario's own story (a genuine, if
+  // legal, choice this pilot script makes on purpose, same reasoning
+  // Bahamut's own preferTarget uses).
+  const opp = pilot.opponents[0]!;
+  const ctx = pilot.ctxFor(ultimaReal, { preferTarget: (c) => c.getController().getId() === opp.id });
 
   // Cast Ultima ({5}), real mana payment
   pilotCast(pilot, ultimaReal, ultimaOriginOfOblivion, ctx, actions);

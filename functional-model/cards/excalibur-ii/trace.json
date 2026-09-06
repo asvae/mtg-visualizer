@@ -20,7 +20,8 @@
         "fn": "putCounter",
         "target": "Excalibur II",
         "counterType": "CHARGE",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },

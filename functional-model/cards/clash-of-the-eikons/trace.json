@@ -101,7 +101,8 @@
         "fn": "putCounter",
         "target": "you-enchantment-0",
         "counterType": "LORE",
-        "amount": -1
+        "amount": -1,
+        "controller": "you"
       },
       {
         "fn": "move",
@@ -145,7 +146,8 @@
         "fn": "putCounter",
         "target": "you-enchantment-0",
         "counterType": "LORE",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "move",

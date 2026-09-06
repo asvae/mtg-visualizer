@@ -36,7 +36,8 @@
         "fn": "putCounter",
         "target": "Tonberry",
         "counterType": "stun",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   }

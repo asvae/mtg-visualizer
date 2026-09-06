@@ -21,7 +21,8 @@
         "fn": "putCounter",
         "target": "Relentless X-ATM092",
         "counterType": "finality",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "tap",

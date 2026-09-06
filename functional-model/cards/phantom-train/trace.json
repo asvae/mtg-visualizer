@@ -46,7 +46,8 @@
         "fn": "putCounter",
         "target": "Phantom Train",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "animate",

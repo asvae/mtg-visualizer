@@ -20,7 +20,8 @@
         "fn": "putCounter",
         "target": "Zack Fair",
         "counterType": "+1/+1",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },
@@ -61,7 +62,8 @@
         "fn": "putCounter",
         "target": "you-creature-token-0",
         "counterType": "+1/+1",
-        "amount": 2
+        "amount": 2,
+        "controller": "you"
       }
     ]
   },

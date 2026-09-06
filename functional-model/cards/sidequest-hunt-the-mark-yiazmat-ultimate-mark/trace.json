@@ -46,8 +46,9 @@
         "result": true
       },
       {
-        "fn": "destroy",
+        "fn": "ceasesToExist",
         "target": "opp0-creature-token-0",
+        "zone": "Graveyard",
         "controller": "opp0"
       }
     ]

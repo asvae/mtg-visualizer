@@ -124,6 +124,13 @@ function producedEvent(entry, cardName) {
       return { event: 'dies', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'destroy':
       return { event: 'dies', side: sideOf(entry, cardName) };
+    // A destroyed TOKEN logs `ceasesToExist` instead of `destroy` (harness.ts's
+    // own `destroy` — real 700.4/704.5d, it genuinely dies on the way to
+    // ceasing to exist) — only when `zone` is 'Graveyard' (a destroy), not
+    // when it's some other zone (a BOUNCED token, e.g. Jill's own ETB —
+    // that's not a death, 700.4 requires battlefield -> graveyard).
+    case 'ceasesToExist':
+      return entry.zone === 'Graveyard' ? { event: 'dies', side: sideOf(entry, cardName) } : null;
     case 'legendRule':
       return { event: 'dies', side: 'you' };
     case 'drawCard':

@@ -87,7 +87,8 @@
         "fn": "putCounter",
         "target": "Esper Origins",
         "counterType": "finality",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "move",

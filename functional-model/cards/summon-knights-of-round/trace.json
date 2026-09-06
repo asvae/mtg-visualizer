@@ -155,19 +155,22 @@
         "fn": "putCounter",
         "target": "you-creature-token-0",
         "counterType": "Indestructible",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "you-creature-token-1",
         "counterType": "Indestructible",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "you-creature-token-2",
         "counterType": "Indestructible",
-        "amount": 1
+        "amount": 1,
+        "controller": "you"
       }
     ]
   },

@@ -180,7 +180,8 @@
         "fn": "putCounter",
         "target": "Forest",
         "counterType": "blight",
-        "amount": 1
+        "amount": 1,
+        "controller": "opp0"
       }
     ],
     "actions": [
