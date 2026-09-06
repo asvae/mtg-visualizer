@@ -55,7 +55,7 @@
         "result": false
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "you-creature-token-0",
         "zone": "Hand",
         "controller": "you"
@@ -91,7 +91,7 @@
         "result": false
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "you-creature-token-1",
         "zone": "Hand",
         "controller": "you"
@@ -209,7 +209,7 @@
         "result": false
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "opp0-creature-token-0",
         "zone": "Hand",
         "controller": "opp0"

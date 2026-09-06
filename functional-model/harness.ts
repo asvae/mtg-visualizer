@@ -610,13 +610,35 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
     },
     moveTo: (target, zone) => {
       const real = cardOf(target);
+      // Real 111.7/704.5d: a TOKEN leaving the battlefield ceases to exist
+      // entirely rather than actually reaching `zone` (`state.move`'s own
+      // doc comment) — captured BEFORE the move call, since `state.move`
+      // deletes the token from `state.cards` (its own fields stay readable
+      // on this still-referenced object afterward, but its `.zone` no
+      // longer gets updated to `zone` the way a real move's would). Logging
+      // a plain `moveTo` here regardless would claim it really reached
+      // `zone` (a bounced Treasure TOKEN "returned to hand" and just sat
+      // there) when it actually vanished — confirmed the hard way against
+      // Jill's own real ETB bounce.
+      const ceasesToExist = real.zone === 'Battlefield' && zone !== 'Battlefield' && real.isTokenCard;
+      const controller = state.players.get(real.controllerId)!.name;
       state.move(real, zone);
+      if (ceasesToExist) {
+        // `zone` — the destination the effect actually TARGETED, kept even
+        // though the token never reached it — verify-synergy.mjs still
+        // needs it to match a card's own declared "returns to hand"-shaped
+        // produce fact (the effect really did try to move it there; 111.7
+        // ceasing to exist is a downstream consequence of THIS target being
+        // a token, not evidence the effect didn't attempt the move).
+        log.push({ fn: 'ceasesToExist', target: target.getName(), zone, controller });
+        return;
+      }
       // Real controller, not a name-string guess — needed now that a target
       // can be a real, unprefixed card/token name (see `PlayerState.tokens`'s
       // own doc comment): verify-synergy.mjs's own `sideOfName` heuristic
       // only works when a filler's name carries its owner as a string
       // prefix, which a real Scryfall identity never does.
-      log.push({ fn: 'moveTo', target: target.getName(), zone, controller: state.players.get(real.controllerId)!.name });
+      log.push({ fn: 'moveTo', target: target.getName(), zone, controller });
     },
     // Quiet, same reasoning as mockCreature's predicate methods used to be:
     // WHICH specific object got picked is pure targeting mechanics, not a

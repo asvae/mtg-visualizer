@@ -12,6 +12,19 @@ function lastCards(log: LogEntry[]) {
 }
 
 describe('replayTrace', () => {
+  it('ceasesToExist removes the token from the board (real 111.7), not just moves it to the requested zone', () => {
+    // Regression for a real bug: a bounced Treasure TOKEN was showing up
+    // sitting in Hand — harness.ts's moveTo now logs ceasesToExist instead
+    // of moveTo for a token leaving the battlefield, and this file needs to
+    // stop rendering it entirely rather than "moving" it to the zone field
+    // it carries (which is the zone the effect ATTEMPTED, not reached).
+    const cards = lastCards([
+      { fn: 'enters', card: 'Treasure', instanceId: 1, zone: 'Battlefield' },
+      { fn: 'ceasesToExist', target: 'Treasure', zone: 'Hand', controller: 'opp0' },
+    ]);
+    expect(cards.find((c) => c.name === 'Treasure')?.zone).toBe('Unknown');
+  });
+
   it('createToken adds one NEW chip per qty, not aliased onto an existing same-named card', () => {
     const cards = lastCards([
       { fn: 'createToken', controller: 'you', token: 'Treasure', qty: 1, tapped: false },

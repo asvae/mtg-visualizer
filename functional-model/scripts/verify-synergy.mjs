@@ -71,6 +71,14 @@ function producedZone(entry, cardName) {
       return entry.to ? { zone: entry.to, side: entry.player === 'you' || entry.player === undefined ? 'you' : entry.player.startsWith('opp') ? 'opp' : 'you' } : null;
     case 'moveTo':
       return entry.zone ? { zone: entry.zone, side: sideOf(entry, cardName) } : null;
+    // Real 111.7: a TOKEN target the effect moved off the battlefield never
+    // actually reaches `zone` (harness.ts's own `moveTo` logs this instead
+    // in that case) — still real evidence the effect DID try to move it
+    // there (a card's own declared "returns to hand"-shaped produce fact is
+    // about the effect's target zone, not this instantiation's specific
+    // token-target consequence), so this counts the same as `moveTo` would.
+    case 'ceasesToExist':
+      return entry.zone ? { zone: entry.zone, side: sideOf(entry, cardName) } : null;
     case 'createToken':
       return { zone: 'Battlefield', side: entry.controller === 'you' ? 'you' : 'opp' };
     case 'sacrifice':
@@ -280,7 +288,7 @@ async function verifyCard(slug) {
         const z = producedZone(e, cardName);
         return z && z.zone === p.zone && (!p.controller || z.side === p.controller);
       });
-      if (!evidence) failures.push(`produce {zone:${p.zone}${p.controller ? `,controller:${p.controller}` : ''}} has no supporting trace line (enters/move/moveTo/createToken/sacrifice/discard/destroy/legendRule)`);
+      if (!evidence) failures.push(`produce {zone:${p.zone}${p.controller ? `,controller:${p.controller}` : ''}} has no supporting trace line (enters/move/moveTo/ceasesToExist/createToken/sacrifice/discard/destroy/legendRule)`);
     } else {
       const evidence = allEntries.some((e) => {
         const ev = producedEvent(e, cardName);
@@ -330,7 +338,7 @@ async function verifyCard(slug) {
   }
 
   // --- Reverse: every produce-relevant ACTION must be explained (soft) ---
-  const explainableFns = new Set(['enters', 'move', 'moveTo', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter']);
+  const explainableFns = new Set(['enters', 'move', 'moveTo', 'ceasesToExist', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter']);
   for (const e of allEntries) {
     if (IGNORED_FNS.has(e.fn) || e.fn.startsWith('read:')) continue;
     if (!explainableFns.has(e.fn)) {

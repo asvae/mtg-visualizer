@@ -43,7 +43,7 @@
         "result": true
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "opp0-creature-token-0",
         "zone": "Hand",
         "controller": "opp0"
@@ -102,7 +102,7 @@
         "result": true
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "opp0-creature-token-0",
         "zone": "Library",
         "controller": "opp0"
@@ -161,7 +161,7 @@
         "result": true
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "opp0-creature-token-0",
         "zone": "Library",
         "controller": "opp0"

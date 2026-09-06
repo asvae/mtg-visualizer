@@ -290,6 +290,17 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         if (c) c.zone = (str(entry.zone) as ZoneType | undefined) ?? c.zone;
         break;
       }
+      case 'ceasesToExist': {
+        // Real 111.7/704.5d — harness.ts's own `moveTo` logs this instead of
+        // a plain `moveTo` when the target was a TOKEN leaving the
+        // battlefield (a bounced Treasure TOKEN doesn't sit in hand, it just
+        // stops existing). `'Unknown'` is the SAME "don't render this" zone
+        // every other never-seeded reference already falls back to — no new
+        // sentinel needed, this file's own render filter already skips it.
+        const c = ensure(target);
+        if (c) c.zone = 'Unknown';
+        break;
+      }
       case 'move': {
         // Two unrelated shapes share this fn name — see this file's own
         // header comment: `card` present means the self-spell resolution

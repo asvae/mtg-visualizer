@@ -101,7 +101,7 @@
         "count": 2
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "you-creature-token-0",
         "zone": "Exile",
         "controller": "you"

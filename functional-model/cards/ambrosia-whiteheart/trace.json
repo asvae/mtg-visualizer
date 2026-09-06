@@ -72,7 +72,7 @@
         "creatureCount": 1
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "Treasure",
         "zone": "Hand",
         "controller": "you"

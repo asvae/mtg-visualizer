@@ -122,7 +122,7 @@
         "result": true
       },
       {
-        "fn": "moveTo",
+        "fn": "ceasesToExist",
         "target": "Treasure",
         "zone": "Hand",
         "controller": "opp0"
