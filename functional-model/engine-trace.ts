@@ -355,8 +355,15 @@ function logSagaTickThenRun(pilot: EnginePilot, real: RealCard, card: CardDefini
 }
 
 /** Registers `real` as now being represented by `newFace` (a transform), logging `transform` plus — when `newFace` is a Saga (the modern "enters OR transforms into a Saga" errata `saga.ts`'s own `transformPermanent` implements) — its real immediate first lore-counter tick (714.2b/c). Thin wrapper around `saga.ts`'s own `transformPermanent`, not a reimplementation. */
-export function pilotTransform(pilot: EnginePilot, real: RealCard, newFace: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
-  pilot.beginStep(label ?? `Transform into ${newFace.name}`);
+export function pilotTransform(pilot: EnginePilot, real: RealCard, newFace: CardDefinition, ctx: EffectContext, actions: Actions): void {
+  // Deliberately no `beginStep` here — a transform is engine bookkeeping
+  // (which CardDefinition a permanent is now registered as), not a distinct
+  // player action of its own (see this file's own header + ENGINE_GAPS.md's
+  // "no Actions.transform()" gap). The REAL event a transform represents is
+  // always already covered by whichever action is currently open when this
+  // gets called (the activation that caused it resolving, or the turn-pass
+  // that triggered an automatic Saga tick) — these entries just tail onto
+  // that, same as `tapForMana`'s own detail-not-a-beat treatment.
   pilot.log.push({ fn: 'transform', card: real.name, into: newFace.name });
   logSagaTickThenRun(pilot, real, newFace, () => transformPermanent(pilot.engine, real, newFace, ctx, actions));
 }
