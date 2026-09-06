@@ -21,13 +21,17 @@ export const jillShivasDominant: CardDefinition = {
       on: 'enter',
       effects: [
         // Real ValidTgts$ Permanent.nonLand+Other, TargetMax$1 — up to one
-        // OTHER nonland permanent, any player's. Same cross-player-pool
-        // gap Eject's own `move` effect hits (see that card's comment):
-        // `owner: 'opponents'` stands in for the representative case.
-        // `nonLand: true` — real printed text excludes lands (found while
-        // rebuilding this card's scenarios: the old `validType: 'any'`
-        // alone let a land through, which the real card never allows).
-        { kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'any', nonLand: true, target: true, optional: true } satisfies Effect,
+        // OTHER nonland permanent, any player's — `owner` omitted (fixed
+        // 2026-09-06, see card.ts's own `move` case) means the real
+        // combined, unrestricted pool; `notSelf: true` for the real "Other"
+        // (self is already resolved onto the battlefield by the time this
+        // ETB fires, so without this it's now a legal, wrong, candidate —
+        // previously masked by the pool being opponents-only, which
+        // excluded self by accident, not by this field). `nonLand: true` —
+        // real printed text excludes lands (found while rebuilding this
+        // card's scenarios: the old `validType: 'any'` alone let a land
+        // through, which the real card never allows).
+        { kind: 'move', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'any', nonLand: true, notSelf: true, target: true, optional: true } satisfies Effect,
       ],
     },
   ],

@@ -20,10 +20,10 @@ export const iceMagic: CardDefinition = {
         {
           describe: "Blizzard — {0} — Return target creature to its owner's hand.",
           // Real ValidTgts$ Creature has no owner restriction (any
-          // player's creature) — same cross-player-pool gap Eject's own
-          // `move` effect hit (see that card's comment): `owner:
-          // 'opponents'` stands in for the representative case.
-          effects: [{ kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'creature', target: true } satisfies Effect],
+          // player's creature) — `owner` omitted (fixed 2026-09-06, see
+          // card.ts's own `move` case) means the real combined,
+          // unrestricted pool.
+          effects: [{ kind: 'move', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'creature', target: true } satisfies Effect],
         },
         {
           describe: "Blizzara — {2} — Target creature's owner puts it on their choice of the top or bottom of their library.",
@@ -32,7 +32,7 @@ export const iceMagic: CardDefinition = {
           // player-decision engine anywhere and `move`'s own Library
           // destination carries no top/bottom position field, so only the
           // real zone change (to Library) is tracked, not the choice.
-          effects: [{ kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Library', qty: 1, validType: 'creature', target: true } satisfies Effect],
+          effects: [{ kind: 'move', from: 'Battlefield', to: 'Library', qty: 1, validType: 'creature', target: true } satisfies Effect],
         },
         {
           describe: "Blizzaga — {5}{U} — Target creature's owner shuffles it into their library.",
@@ -40,7 +40,7 @@ export const iceMagic: CardDefinition = {
           // reads in this model (no library-order tracking beyond
           // top/bottom-of-array) — same "not modeled, no consequence"
           // treatment from-father-to-son's own comment already documents.
-          effects: [{ kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Library', qty: 1, validType: 'creature', target: true } satisfies Effect],
+          effects: [{ kind: 'move', from: 'Battlefield', to: 'Library', qty: 1, validType: 'creature', target: true } satisfies Effect],
         },
       ],
     } satisfies Effect,

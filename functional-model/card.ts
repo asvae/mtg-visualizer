@@ -258,7 +258,8 @@ export type Effect =
        * shapes, not an arbitrary split.
        */
       kind: 'move';
-      owner: EffectOwner;
+      /** Restricts the candidate pool to one side — omit for the default, every player's matching cards (Jill/Eject/Ice Magic's own real "target [nonland permanent/creature]," no controller clause at all). Same owner-restriction convention `destroy`/`pumpTarget`/`putCounterTarget`/etc. already use — this field used to be required, forcing every `move` effect to hardcode one side even when the real card has no such restriction (confirmed bug, fixed 2026-09-06 — see those three cards' own former comments). */
+      owner?: EffectOwner;
       from: ZoneType;
       to: ZoneType;
       qty: Computed<number>;
@@ -728,34 +729,43 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'move': {
       const qty = resolve(effect.qty, ctx);
-      for (const player of playersFor(effect.owner, ctx)) {
-        if (effect.target) {
-          // Real MTG rule (601.2c): ALL targets are chosen together, once,
-          // when the spell is cast — BEFORE it resolves. The effect is then
-          // applied to each of them at resolution. Two separate loops on
-          // purpose, not one choose-then-act-immediately loop: excluding an
-          // already-CHOSEN target from the next pick is a targeting
-          // restriction ("can't target the same object twice"), not a
-          // side effect of it having already been moved — those are
-          // different reasons that happen to look identical for this card
-          // (nothing here can invalidate a target between casting and
-          // resolving), but would diverge for a card where something else
-          // could remove a target in between.
-          const pool = player
-            .getCardsIn(effect.from)
-            .filter((c) => matchesValidType(c, effect.validType))
-            .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId())
-            .filter((c) => !effect.nonLand || !c.isLand());
-          const targets: Card[] = [];
-          for (let i = 0; i < qty; i++) {
-            const remaining = pool.filter((c) => !targets.includes(c));
-            if (remaining.length === 0) break;
-            targets.push(actions.chooseTarget(remaining));
-          }
-          for (const target of targets) actions.moveTo(target, effect.to);
-        } else {
-          actions.move(player, effect.from, effect.to, qty, effect.validType);
+      const players = playersFor(effect.owner ?? 'each', ctx);
+      if (effect.target) {
+        // Real MTG rule (601.2c): ALL targets are chosen together, once,
+        // when the spell is cast — BEFORE it resolves. The effect is then
+        // applied to each of them at resolution. Two separate loops on
+        // purpose, not one choose-then-act-immediately loop: excluding an
+        // already-CHOSEN target from the next pick is a targeting
+        // restriction ("can't target the same object twice"), not a
+        // side effect of it having already been moved — those are
+        // different reasons that happen to look identical for this card
+        // (nothing here can invalidate a target between casting and
+        // resolving), but would diverge for a card where something else
+        // could remove a target in between.
+        //
+        // ONE combined pool across every returned player (same shape
+        // `destroy`/`putCounterTarget`'s own `battlefieldPool` already
+        // uses), not a per-player loop — `qty` is a total across whichever
+        // players `owner` resolves to (Jill's own "up to ONE nonland
+        // permanent," any player's, means ONE total, not one per side).
+        const pool = players
+          .flatMap((player) => player.getCardsIn(effect.from))
+          .filter((c) => matchesValidType(c, effect.validType))
+          .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId())
+          .filter((c) => !effect.nonLand || !c.isLand());
+        const targets: Card[] = [];
+        for (let i = 0; i < qty; i++) {
+          const remaining = pool.filter((c) => !targets.includes(c));
+          if (remaining.length === 0) break;
+          targets.push(actions.chooseTarget(remaining));
         }
+        for (const target of targets) actions.moveTo(target, effect.to);
+      } else {
+        // Untargeted batch search stays per-player — `actions.move` is
+        // scoped to one Player at a time (Suplex/Triple Triad's own
+        // `owner:'each'` batch effects genuinely apply independently per
+        // player, not as one shared cross-player pool).
+        for (const player of players) actions.move(player, effect.from, effect.to, qty, effect.validType);
       }
       return;
     }

@@ -14,16 +14,12 @@ export const eject: CardDefinition = {
 
   effects: [
     // Real ValidTgts$ Permanent.nonLand — ANY player's nonland permanent,
-    // no owner restriction. This model's `move` effect (target:true
-    // branch) only pools ONE player's own zone per `playersFor` iteration
-    // — no combined cross-player pool the way `destroy`'s own
-    // battlefield-wide pool already is — so there's no way to express
-    // "target any player's permanent" exactly. `owner: 'opponents'` stands
-    // in for the representative/common case (bouncing an opponent's
-    // permanent); flagged as a general batch gap (a targeted `move` with a
-    // combined pool, mirroring `destroy`, would remove this
-    // approximation).
-    { kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'any', target: true } satisfies Effect,
+    // no owner restriction. `owner` omitted (fixed 2026-09-06, see card.ts's
+    // own `move` case) means the real combined, unrestricted pool.
+    // `nonLand: true` — real printed text excludes lands; previously
+    // missing (a real, separate bug — `validType: 'any'` alone let a land
+    // through), fixed alongside the owner gap since it's the same effect.
+    { kind: 'move', from: 'Battlefield', to: 'Hand', qty: 1, validType: 'any', nonLand: true, target: true } satisfies Effect,
     { kind: 'drawCard' } satisfies Effect,
   ],
 };

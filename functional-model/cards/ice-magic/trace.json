@@ -25,6 +25,13 @@
       },
       {
         "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
         "player": "opp0",
         "zone": "Battlefield",
         "count": 1,
@@ -77,6 +84,13 @@
       },
       {
         "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
         "player": "opp0",
         "zone": "Battlefield",
         "count": 1,
@@ -126,6 +140,13 @@
         "instanceId": 1,
         "from": "hand",
         "cost": "{1}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
       },
       {
         "fn": "read:getCardsIn",

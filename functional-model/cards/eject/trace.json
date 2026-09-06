@@ -24,10 +24,22 @@
       },
       {
         "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
         "player": "opp0",
         "zone": "Battlefield",
         "count": 1,
         "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-creature-token-0",
+        "result": false
       },
       {
         "fn": "moveTo",
@@ -74,10 +86,22 @@
       },
       {
         "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:getCardsIn",
         "player": "opp0",
         "zone": "Battlefield",
         "count": 1,
         "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "opp0-artifact-0",
+        "result": false
       },
       {
         "fn": "moveTo",
@@ -119,6 +143,13 @@
         "instanceId": 1,
         "from": "hand",
         "cost": "{3}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
       },
       {
         "fn": "read:getCardsIn",

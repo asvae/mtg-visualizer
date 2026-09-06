@@ -106,12 +106,15 @@ function setupGame() {
   for (const landName of basicLandsFor('{3}{U}{U}')) {
     state.addCard(you, 'Battlefield', { name: landName, types: ['Land'], subtypes: [landName] });
   }
-  // "1 creature on our side" (the user's own scenario setup) — a real
-  // Unblockable-grant target for Shiva's chapter I/II.
-  const hero = state.addCard(you, 'Battlefield', { name: 'Test Hero', types: ['Creature'], subtypes: ['Human'], basePower: 1, baseToughness: 1 });
   // "1 opp artifact and land" — the artifact is Jill's own ETB bounce
   // target, the land is chapter III's "tap all lands your opponents
-  // control" target.
+  // control" target. NOTE: the "1 creature on our side" (Shiva's own
+  // chapter I/II Unblockable-grant target) is added LATER, after Jill's ETB
+  // resolves — see the test body: since `move`'s real ANY-player pool fix
+  // (card.ts, 2026-09-06) makes an ally creature a legal ETB bounce
+  // candidate too, adding it before the ETB would make `chooseTarget`'s
+  // deterministic first-candidate pick ambiguous between it and the
+  // opponent's artifact (`playersFor` puts `you` first).
   const oppArtifact = state.addCard(opp, 'Battlefield', { name: 'Test Artifact', types: ['Artifact'], subtypes: [] });
   const oppLand = state.addCard(opp, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   const jill = state.addCard(you, 'Hand', { name: jillShivasDominant.name, types: ['Creature'], subtypes: ['Human', 'Noble', 'Warrior'], basePower: 2, baseToughness: 2 });
@@ -131,7 +134,7 @@ function setupGame() {
 
   const youPlayer = wrapPlayer(state, you);
   const oppPlayer = wrapPlayer(state, opp);
-  return { state, you, opp, engine, youPlayer, oppPlayer, hero, oppArtifact, oppLand, jill };
+  return { state, you, opp, engine, youPlayer, oppPlayer, oppArtifact, oppLand, jill };
 }
 
 function ctxFor(self: ReturnType<typeof wrapCard>, you: ReturnType<typeof wrapPlayer>, opponents: ReturnType<typeof wrapPlayer>[]): EffectContext {
@@ -148,7 +151,7 @@ function toYourNextMain1(engine: ReturnType<typeof createEngine>) {
 
 describe("Jill, Shiva's Dominant — full engine playthrough (cast -> ETB -> transform -> Saga chapters)", () => {
   it('walks the whole card through the real engine, one legal action at a time', () => {
-    const { state, engine, you, opp, youPlayer, oppPlayer, hero, oppArtifact, oppLand, jill } = setupGame();
+    const { state, engine, you, opp, youPlayer, oppPlayer, oppArtifact, oppLand, jill } = setupGame();
     const actions = realActions(state);
     const self = wrapCard(state, jill);
     const ctx = ctxFor(self, youPlayer, [oppPlayer]);
@@ -168,6 +171,12 @@ describe("Jill, Shiva's Dominant — full engine playthrough (cast -> ETB -> tra
     resolveTop(engine);
     expect(jill.zone).toBe('Battlefield');
     expect(oppArtifact.zone).toBe('Hand');
+
+    // "1 creature on our side" (the user's own scenario setup) — a real
+    // Unblockable-grant target for Shiva's chapter I/II, added only NOW
+    // (after the ETB bounce already resolved) so it was never an ambiguous
+    // extra candidate for that bounce (see `setupGame`'s own note).
+    const hero = state.addCard(you, 'Battlefield', { name: 'Test Hero', types: ['Creature'], subtypes: ['Human'], basePower: 1, baseToughness: 1 });
 
     // --- Illegal: transform ability requires sorcery-speed timing AND is
     // blocked by summoning sickness the turn Jill entered (302.6 — a
