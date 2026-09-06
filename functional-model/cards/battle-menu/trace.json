@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> mode 0 (Attack)",
-      "result": "Attack — creates a real 2/2 white Knight creature token.",
+      "result": "Attack \u2014 creates a real 2/2 white Knight creature token.",
       "raw": {
-        "result": "Attack — creates a real 2/2 white Knight creature token.",
+        "result": "Attack \u2014 creates a real 2/2 white Knight creature token.",
         "you": {
           "basicLands": [
             "Plains",
@@ -37,7 +37,9 @@
         "controller": "you",
         "token": "Knight",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
       },
       {
         "fn": "move",
@@ -66,9 +68,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s); opp0: a w_1_1_cat",
       "action": "real engine playthrough: cast -> mode 1 (Ability)",
-      "result": "Ability — a real target creature gets +0/+4 until end of turn.",
+      "result": "Ability \u2014 a real target creature gets +0/+4 until end of turn.",
       "raw": {
-        "result": "Ability — a real target creature gets +0/+4 until end of turn.",
+        "result": "Ability \u2014 a real target creature gets +0/+4 until end of turn.",
         "you": {
           "basicLands": [
             "Plains",
@@ -145,9 +147,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> mode 2 (Magic)",
-      "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
+      "result": "Magic \u2014 destroys Behemoth, a real creature with power 4 or greater.",
       "raw": {
-        "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
+        "result": "Magic \u2014 destroys Behemoth, a real creature with power 4 or greater.",
         "you": {
           "basicLands": [
             "Plains",
@@ -160,6 +162,14 @@
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Behemoth",
+        "zone": "Battlefield",
+        "power": 4,
+        "toughness": 4,
+        "controller": "opp0"
+      },
       {
         "fn": "cast",
         "card": "Battle Menu",
@@ -231,11 +241,11 @@
       },
       {
         "label": "Cast Battle Menu ({1}{W})",
-        "from": 0
+        "from": 1
       },
       {
         "label": "Resolve",
-        "from": 3
+        "from": 4
       }
     ]
   },
@@ -243,9 +253,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> mode 3 (Item)",
-      "result": "Item — you gain 4 real life.",
+      "result": "Item \u2014 you gain 4 real life.",
       "raw": {
-        "result": "Item — you gain 4 real life.",
+        "result": "Item \u2014 you gain 4 real life.",
         "you": {
           "basicLands": [
             "Plains",

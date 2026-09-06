@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 3 Plains(s)",
       "action": "real engine playthrough: cast -> real Lifelink -> onLifeGained -> real lethal combat (SBA) -> onDies",
-      "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life — onLifeGained fires manually, putting a real +1/+1 counter on herself; another real turn later she attacks again, blocked by a creature that deals real lethal damage back (a genuine 704.5g SBA destruction) — onDies then fires manually, spreading X real +1/+1 counters onto the other legendary creature on the battlefield.",
+      "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life \u2014 onLifeGained fires manually, putting a real +1/+1 counter on herself; another real turn later she attacks again, blocked by a creature that deals real lethal damage back (a genuine 704.5g SBA destruction) \u2014 onDies then fires manually, spreading X real +1/+1 counters onto the other legendary creature on the battlefield.",
       "raw": {
-        "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life — onLifeGained fires manually, putting a real +1/+1 counter on herself; another real turn later she attacks again, blocked by a creature that deals real lethal damage back (a genuine 704.5g SBA destruction) — onDies then fires manually, spreading X real +1/+1 counters onto the other legendary creature on the battlefield.",
+        "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life \u2014 onLifeGained fires manually, putting a real +1/+1 counter on herself; another real turn later she attacks again, blocked by a creature that deals real lethal damage back (a genuine 704.5g SBA destruction) \u2014 onDies then fires manually, spreading X real +1/+1 counters onto the other legendary creature on the battlefield.",
         "you": {
           "basicLands": [
             "Plains",
@@ -22,6 +22,21 @@
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Bystander Legend",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 1
+      },
+      {
+        "fn": "enters",
+        "card": "Lethal Blocker",
+        "zone": "Battlefield",
+        "power": 4,
+        "toughness": 1,
+        "controller": "opp0"
+      },
       {
         "fn": "cast",
         "card": "Aerith Gainsborough",
@@ -51,6 +66,12 @@
         "zone": "Battlefield"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -66,6 +87,12 @@
       {
         "fn": "untap",
         "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -99,6 +126,12 @@
         "player": "you"
       },
       {
+        "fn": "dealDamage",
+        "source": "Aerith Gainsborough",
+        "target": "opp0",
+        "amount": 1
+      },
+      {
         "fn": "gainLife",
         "player": "you",
         "amount": 1,
@@ -118,6 +151,12 @@
         "controller": "you"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -125,6 +164,12 @@
       {
         "fn": "untap",
         "target": "Aerith Gainsborough"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -163,6 +208,18 @@
         "attacker": "Aerith Gainsborough"
       },
       {
+        "fn": "dealDamage",
+        "source": "Aerith Gainsborough",
+        "target": "Lethal Blocker",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Lethal Blocker",
+        "target": "Aerith Gainsborough",
+        "amount": 4
+      },
+      {
         "fn": "destroy",
         "target": "Aerith Gainsborough",
         "controller": "you"
@@ -170,7 +227,7 @@
       {
         "fn": "destroy",
         "target": "Lethal Blocker",
-        "controller": "you"
+        "controller": "opp0"
       },
       {
         "fn": "trigger",
@@ -210,75 +267,75 @@
       },
       {
         "label": "Cast Aerith Gainsborough ({2}{W})",
-        "from": 0
+        "from": 2
       },
       {
         "label": "Resolve",
-        "from": 4
+        "from": 6
       },
       {
         "label": "Pass turn (you)",
-        "from": 5
+        "from": 7
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 9
-      },
-      {
-        "label": "Advance to Declare Attackers",
-        "from": 11
-      },
-      {
-        "label": "Declare Aerith as attacker",
         "from": 12
       },
       {
-        "label": "Advance one step",
-        "from": 14
-      },
-      {
-        "label": "Declare no blockers",
+        "label": "Advance to Declare Attackers",
         "from": 15
       },
       {
-        "label": "Resolve unblocked combat damage — real Lifelink",
-        "from": 15
-      },
-      {
-        "label": "Fire onLifeGained",
+        "label": "Declare Aerith as attacker",
         "from": 16
       },
       {
-        "label": "Pass turn (you)",
+        "label": "Advance one step",
         "from": 18
       },
       {
-        "label": "Pass turn (opp0)",
-        "from": 20
+        "label": "Declare no blockers",
+        "from": 19
       },
       {
-        "label": "Advance to Declare Attackers",
-        "from": 22
+        "label": "Resolve unblocked combat damage \u2014 real Lifelink",
+        "from": 19
       },
       {
-        "label": "Declare Aerith as attacker (blocked this time)",
+        "label": "Fire onLifeGained",
+        "from": 21
+      },
+      {
+        "label": "Pass turn (you)",
         "from": 23
       },
       {
-        "label": "Advance one step",
-        "from": 25
-      },
-      {
-        "label": "Declare Lethal Blocker as blocker",
+        "label": "Pass turn (opp0)",
         "from": 26
       },
       {
+        "label": "Advance to Declare Attackers",
+        "from": 29
+      },
+      {
+        "label": "Declare Aerith as attacker (blocked this time)",
+        "from": 30
+      },
+      {
+        "label": "Advance one step",
+        "from": 32
+      },
+      {
+        "label": "Declare Lethal Blocker as blocker",
+        "from": 33
+      },
+      {
         "label": "Resolve lethal combat damage (704.5g SBA)",
-        "from": 27
+        "from": 34
       },
       {
         "label": "Fire onDies",
-        "from": 29
+        "from": 38
       }
     ]
   }

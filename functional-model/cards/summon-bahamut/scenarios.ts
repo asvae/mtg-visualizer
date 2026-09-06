@@ -25,7 +25,12 @@ function scenarioA(): TraceResult {
   // A real, nonzero-mana-value permanent under your own control — without
   // one, chapter IV's real "total mana value of other permanents" sum would
   // be a true but unillustrative 0 (your 9 lands are all mana value 0).
-  pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Ally Legend', types: ['Creature'], basePower: 2, baseToughness: 2, cmc: 3 });
+  const allyLegend = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Ally Legend', types: ['Creature'], basePower: 2, baseToughness: 2, cmc: 3 });
+  // A real `enters` entry — without one, it never shows up on the replay
+  // board at all (it's never itself a log `target`/`card` later — chapter
+  // IV's damage is computed off it, not targeted at it), even though it's
+  // really there on the battlefield from the start.
+  pilot.log.push({ fn: 'enters', card: allyLegend.name, zone: 'Battlefield', power: allyLegend.basePower, toughness: allyLegend.baseToughness });
 
   const bahamutReal = pilot.state.addCard(pilot.you, 'Hand', {
     name: summonBahamut.name,

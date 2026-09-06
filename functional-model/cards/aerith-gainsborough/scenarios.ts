@@ -5,6 +5,7 @@
 import { aerithGainsborough } from './definition';
 import { basicLandsFor } from '../../mana';
 import { checkStateBasedActions } from '../../sba';
+import { effectivePT } from '../../state';
 import type { TraceResult } from '../../harness';
 import { resolveCombatDamage } from '../../engine';
 import {
@@ -44,6 +45,11 @@ export function runEngineScenarios(): TraceResult[] {
     basePower: 1,
     baseToughness: 1,
   });
+  // A real `enters` entry for each bystander — without one, it never shows
+  // up on the replay board at all until (if ever) some LATER effect happens
+  // to reference it by name, appearing out of nowhere at that point instead
+  // of having been visibly present since setup.
+  pilot.log.push({ fn: 'enters', card: otherLegend.name, zone: 'Battlefield', power: otherLegend.basePower, toughness: otherLegend.baseToughness });
   const bigBlocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', {
     name: 'Lethal Blocker',
     types: ['Creature'],
@@ -51,6 +57,14 @@ export function runEngineScenarios(): TraceResult[] {
     // onLifeGained put a real +1/+1 counter on her), so 3 wouldn't be real lethal.
     basePower: 4,
     baseToughness: 1,
+  });
+  pilot.log.push({
+    fn: 'enters',
+    card: bigBlocker.name,
+    zone: 'Battlefield',
+    power: bigBlocker.basePower,
+    toughness: bigBlocker.baseToughness,
+    controller: pilot.opponents[0]!.name,
   });
   const actions = pilotActions(pilot, aerithReal.id);
   const ctx = pilot.ctxFor(aerithReal);
@@ -68,8 +82,16 @@ export function runEngineScenarios(): TraceResult[] {
   advanceOneStep(pilot);
   pilotDeclareBlockers(pilot, []);
   pilot.beginStep('Resolve unblocked combat damage — real Lifelink');
+  const opp = pilot.opponents[0]!;
+  const beforeOppLife = opp.life;
   const beforeYouLife = pilot.you.life;
   resolveCombatDamage(pilot.engine);
+  // The real combat damage itself (509/510) — not just its Lifelink side
+  // effect. Without this, the replay only ever showed the life GAIN with no
+  // visible cause on the opponent's side (confirmed the hard way: looked
+  // like Aerith "did nothing" even though she just hit face for 2).
+  const damageDealt = beforeOppLife - opp.life;
+  if (damageDealt > 0) pilot.log.push({ fn: 'dealDamage', source: aerithReal.name, target: opp.name, amount: damageDealt });
   const lifeGained = pilot.you.life - beforeYouLife;
   if (lifeGained > 0) pilot.log.push({ fn: 'gainLife', player: pilot.you.name, amount: lifeGained, cause: 'Lifelink' });
   pilotFireTrigger(pilot, aerithGainsborough, ctx, actions, 'onLifeGained');
@@ -81,13 +103,28 @@ export function runEngineScenarios(): TraceResult[] {
   advanceOneStep(pilot);
   pilotDeclareBlockers(pilot, [{ blocker: bigBlocker, attacker: aerithReal }]);
   pilot.beginStep('Resolve lethal combat damage (704.5g SBA)');
+  // Real 510.1c — both combatants deal damage simultaneously. Read power
+  // BEFORE it resolves (damage itself never changes power, but reading
+  // after would be one step removed from what actually caused it).
+  const aerithPower = effectivePT(pilot.state, aerithReal)[0];
+  const blockerPower = effectivePT(pilot.state, bigBlocker)[0];
   resolveCombatDamage(pilot.engine);
+  if (aerithPower > 0) pilot.log.push({ fn: 'dealDamage', source: aerithReal.name, target: bigBlocker.name, amount: aerithPower });
+  if (blockerPower > 0) pilot.log.push({ fn: 'dealDamage', source: bigBlocker.name, target: aerithReal.name, amount: blockerPower });
   // Real 400.7 wipes counters on zone change — capture this before SBA
   // moves her to the graveyard, so onDies's own "X = counters on this" read
   // has real 603.10 last-known-information to restore, not an already-zeroed count.
   const lastKnownCounters = aerithReal.counters['+1/+1'] ?? 0;
   const sbaResult = checkStateBasedActions(pilot.state, pilot.engine.players);
-  for (const destroyed of sbaResult.destroyed) pilot.log.push({ fn: 'destroy', target: destroyed.name, controller: pilot.you.name });
+  // `destroyed`'s own real controller (704.5g can kill EITHER combatant) —
+  // hardcoding `pilot.you.name` here was wrong for Lethal Blocker (opp0's
+  // own creature), and verify-synergy.mjs's own `sideOf` trusts a present
+  // `controller` field over any name-based guessing, so a wrong one here
+  // would misattribute which SIDE this destroy fact supports.
+  for (const destroyed of sbaResult.destroyed) {
+    const controllerName = pilot.state.players.get(destroyed.controllerId)!.name;
+    pilot.log.push({ fn: 'destroy', target: destroyed.name, controller: controllerName });
+  }
 
   if (aerithReal.zone === 'Graveyard') {
     aerithReal.counters['+1/+1'] = lastKnownCounters;

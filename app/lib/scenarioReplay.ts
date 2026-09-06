@@ -343,8 +343,35 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         ensureSelf(entry, 'Battlefield');
         break;
       case 'enters': {
-        const c = ensureSelf(entry, 'Battlefield');
+        // Only the SELF-identity lifecycle (cast/activate/trigger, plus a
+        // genuine duplicate copy sharing the tested card's own name) ever
+        // carries `instanceId` on an `enters` entry — a BYSTANDER real
+        // permanent entering (a scenario's own `pilot.state.addCard` +
+        // manual `enters` push, e.g. a Landfall land or an Ally creature)
+        // has no reason to run through `ensureSelf`'s dedup machinery at
+        // all, and doing so wrongly stamped `isSelf` on it — `imagesFor`
+        // then showed the TESTED card's own real art on it instead of a
+        // real (or placeholder) one of its own. Confirmed the hard way
+        // (ambrosia-whiteheart's own bystander Forest, once it shared its
+        // `instanceId` with a later real second copy — see that scenario's
+        // own fix note — silently turned into an "Ambrosia Whiteheart" chip).
+        const c = num(entry.instanceId) !== undefined ? ensureSelf(entry, 'Battlefield') : ensure(cardName, 'Battlefield');
         if (c) c.zone = (str(entry.zone) as ZoneType | undefined) ?? 'Battlefield';
+        // A bystander's real owner, when the entry carries one — its name
+        // (unlike setupPlayer's own `${owner}-`-prefixed synthetic fillers)
+        // has no owner prefix to guess from at all, so an opponent's own
+        // bystander creature would otherwise default to "you" (`guessOwner`'s
+        // own fallback) the instant it's first seen.
+        if (c && str(entry.controller)) c.owner = str(entry.controller)!;
+        // A bystander creature's own real base P/T, when the entry carries
+        // one (a scenario's own manual `enters` push for a creature it
+        // fabricated to demonstrate an effect against — see e.g.
+        // aerith-gainsborough/scenarios.ts's own bystanders) — same
+        // "undefined base = no P/T badge" rule every other card follows.
+        if (c && num(entry.power) !== undefined && num(entry.toughness) !== undefined) {
+          c.power = num(entry.power);
+          c.toughness = num(entry.toughness);
+        }
         break;
       }
       case 'transform': {

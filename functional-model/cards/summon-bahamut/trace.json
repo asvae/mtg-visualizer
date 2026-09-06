@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 10 Forest(s); opp0: a c_a_treasure_sac",
       "action": "real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice",
-      "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself — the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
+      "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself \u2014 the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 \u2014 your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
       "raw": {
-        "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself — the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
+        "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself \u2014 the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 \u2014 your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
         "you": {
           "libraryCount": 15,
           "basicLands": [
@@ -32,6 +32,13 @@
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Ally Legend",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2
+      },
       {
         "fn": "cast",
         "card": "Summon: Bahamut",
@@ -188,6 +195,12 @@
         "controller": "opp0"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -227,6 +240,12 @@
       {
         "fn": "untap",
         "target": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -252,9 +271,21 @@
         "player": "you"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -290,9 +321,21 @@
         "player": "you"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 6,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 7,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -398,39 +441,39 @@
       },
       {
         "label": "Cast Summon: Bahamut ({9})",
-        "from": 0
+        "from": 1
       },
       {
         "label": "Resolve",
-        "from": 10
+        "from": 11
       },
       {
         "label": "Pass turn (you)",
-        "from": 29
+        "from": 30
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 39
+        "from": 41
       },
       {
         "label": "Pass turn (you)",
-        "from": 43
+        "from": 46
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 44
+        "from": 48
       },
       {
         "label": "Pass turn (you)",
-        "from": 50
+        "from": 55
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 51
+        "from": 57
       },
       {
-        "label": "Real 714.4 sacrifice — lore counters were never reset",
-        "from": 68
+        "label": "Real 714.4 sacrifice \u2014 lore counters were never reset",
+        "from": 75
       }
     ]
   },
@@ -438,9 +481,9 @@
     "scenario": {
       "setup": "you: 10 Forest(s)",
       "action": "real engine playthrough: cast -> ETB Saga tick fires chapter I with no other target",
-      "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real — documenting the effect actually fires (the sane real line is scenario A above).",
+      "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real \u2014 documenting the effect actually fires (the sane real line is scenario A above).",
       "raw": {
-        "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real — documenting the effect actually fires (the sane real line is scenario A above).",
+        "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real \u2014 documenting the effect actually fires (the sane real line is scenario A above).",
         "you": {
           "basicLands": [
             "Forest",

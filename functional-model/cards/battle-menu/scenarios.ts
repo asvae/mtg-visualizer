@@ -37,6 +37,17 @@ function magicMode(): TraceResult {
   const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: battleMenu.name, types: [] });
   // A real power>=4 target — no `tokens`/count field produces one, so it's added directly
   const bigCreature = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Behemoth', types: ['Creature'], basePower: 4, baseToughness: 4 });
+  // A real `enters` entry — without one, it only ever appears in the replay
+  // the instant `destroy` (below) first names it, straight in the
+  // Graveyard, as if it had never actually been on the battlefield at all.
+  pilot.log.push({
+    fn: 'enters',
+    card: bigCreature.name,
+    zone: 'Battlefield',
+    power: bigCreature.basePower,
+    toughness: bigCreature.baseToughness,
+    controller: pilot.opponents[0]!.name,
+  });
   const actions = pilotActions(pilot, cardReal.id);
   const ctx = pilot.ctxFor(cardReal, { mode: 2 });
   pilotCast(pilot, cardReal, battleMenu, ctx, actions);

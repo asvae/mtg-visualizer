@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: a c_a_treasure_sac; you: 2 Plains(s)",
       "action": "real engine playthrough: Flash cast on opponent's turn -> real ETB bounce -> real Landfall pump",
-      "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
+      "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) \u2014 legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
       "raw": {
-        "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
+        "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) \u2014 legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
         "you": {
           "tokens": [
             "c_a_treasure_sac"
@@ -24,6 +24,12 @@
       }
     },
     "log": [
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
       {
         "fn": "drawCard",
         "player": "opp0",
@@ -86,6 +92,12 @@
         "target": "Plains"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
         "fn": "drawCard",
         "player": "you",
         "card": "Forest"
@@ -99,8 +111,8 @@
       {
         "fn": "enters",
         "card": "Forest",
-        "instanceId": 2,
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "trigger",
@@ -137,27 +149,27 @@
       },
       {
         "label": "Cast Ambrosia Whiteheart ({1}{W})",
-        "from": 2
+        "from": 3
       },
       {
         "label": "Resolve",
-        "from": 5
+        "from": 6
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 11
+        "from": 12
       },
       {
         "label": "A real land entering",
-        "from": 13
+        "from": 15
       },
       {
         "label": "Fire onLandfall",
-        "from": 14
+        "from": 16
       },
       {
-        "label": "Real 704.5j legend rule — second copy enters, one is removed",
-        "from": 16
+        "label": "Real 704.5j legend rule \u2014 second copy enters, one is removed",
+        "from": 18
       }
     ]
   }

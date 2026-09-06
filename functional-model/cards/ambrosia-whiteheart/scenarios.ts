@@ -54,7 +54,16 @@ export function runEngineScenarios(): TraceResult[] {
   // straight to the battlefield, the only real way to model one entering)
   pilot.beginStep('A real land entering');
   const forest = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
-  pilot.log.push({ fn: 'enters', card: forest.name, instanceId: 2, zone: 'Battlefield' });
+  // No `instanceId` — that's the self-identity tracking convention
+  // (SELF_INSTANCE_ID/duplicate-copy dedup, scenarioReplay.ts's own
+  // `ensureSelf`), reserved for Ambrosia herself and her later second copy
+  // below. This land is a bystander; giving it `instanceId: 2` (the second
+  // copy's own real value, just below) collided the two in the replay —
+  // the second copy's own `enters` entry aliased onto this land's object
+  // instead of creating a new one (`ensureSelf` keys purely by instanceId),
+  // so the land silently turned into a face-swapped "Ambrosia Whiteheart"
+  // chip showing her own art instead of a real land.
+  pilot.log.push({ fn: 'enters', card: forest.name, zone: 'Battlefield', controller: pilot.you.name });
   // Landfall fired manually — no "another permanent entered" auto-detection in this engine
   pilotFireTrigger(pilot, ambrosiaWhiteheart, ctx, actions, 'onLandfall');
 
