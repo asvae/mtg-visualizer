@@ -1,0 +1,26 @@
+<style>
+  /* Paints the manager shell (sidebar/toolbar chrome) dark before the React
+     app boots and applies manager.ts's themes.dark — without this the
+     outer window's default white background shows for one frame on every
+     load, separately from the preview iframe's own flash (see
+     preview-head.html). Storybook dark theme's own background color. */
+  html, body {
+    background: #1a1a1c;
+  }
+
+  /* The <iframe id="storybook-preview-iframe"> manager.js mounts for the
+     Canvas view (node_modules/storybook/dist/manager/components/preview/
+     Iframe.tsx's StyledIframe) sets backgroundColor: theme.background.preview
+     — a theme key ("appPreviewBg") that defaults to color.lightest (white)
+     unless a theme preset overrides it, and themes.dark doesn't. That white
+     shows through for a frame both while the iframe element has no document
+     loaded yet, AND underneath the eventual dark document during its own
+     load — preview-head.html can't reach either moment since it lives
+     inside a document that hasn't loaded/painted yet. !important guards
+     against emotion's runtime-injected <style> (backgroundColor via a
+     single class selector) landing with equal-or-higher effective priority
+     however Storybook's internal CSS layering resolves it. */
+  #storybook-preview-iframe {
+    background: #14151a !important;
+  }
+</style>

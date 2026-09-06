@@ -1,0 +1,23 @@
+<style>
+  /* Paints the preview iframe dark before main.css loads and before Vue
+     mounts — without this, the iframe's default white background shows for
+     one frame on every (re)load, on top of the manager shell's own flash
+     (see manager-head.html). Color matches app/assets/css/main.css's
+     --color-bg; duplicated as a literal since this loads before any CSS
+     custom properties exist. */
+  html, body {
+    background: #14151a;
+  }
+
+  /* Storybook's own "preparing story" full-viewport loading overlay
+     (.sb-preparing-story/.sb-preparing-docs, injected by @storybook/core
+     into iframe.html) hardcodes background-color: white — that's the
+     bright flash-with-spinner between the dark html/body above painting
+     and the actual story mounting. This rule loads after core's <style>
+     block (this file is appended at the very end of <head>), so it wins on
+     equal specificity without needing !important. */
+  .sb-preparing-story,
+  .sb-preparing-docs {
+    background-color: #14151a;
+  }
+</style>
