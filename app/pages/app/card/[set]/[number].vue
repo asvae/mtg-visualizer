@@ -282,11 +282,13 @@ const hoveredFactKey = ref<string | null>(null);
 // synced from the server response whenever a NEW card loads, and written
 // directly (not routed back through `data.value`) whenever the user toggles
 // one — no computed/nested-mutation trap either way.
+const factsReviewStatus = ref<'ai' | 'human'>('ai');
 const scenariosReviewStatus = ref<'draft' | 'reviewed'>('draft');
 const interactionsReviewStatus = ref<'draft' | 'reviewed'>('draft');
 watch(
   () => data.value?.functionalModel,
   (fm) => {
+    factsReviewStatus.value = fm?.review === 'human' ? 'human' : 'ai';
     scenariosReviewStatus.value = fm?.scenariosReview ?? 'draft';
     interactionsReviewStatus.value = fm?.interactionsReview ?? 'draft';
   },
@@ -301,23 +303,28 @@ watch(
 // trigger) rather than baked into the label text.
 const DRAFT_BADGE = { label: 'Draft', class: 'rounded bg-warn/20 px-1.5 py-px text-[10px] font-bold tracking-wide text-warn uppercase' };
 const functionalModelTabs = computed(() => [
-  { label: 'Facts', value: 'facts' as const, badge: data.value?.functionalModel?.review !== 'human' ? DRAFT_BADGE : undefined },
+  { label: 'Facts', value: 'facts' as const, badge: factsReviewStatus.value === 'human' ? undefined : DRAFT_BADGE },
   { label: 'Scenarios', value: 'scenarios' as const, badge: scenariosReviewStatus.value === 'reviewed' ? undefined : DRAFT_BADGE },
   { label: 'Json', value: 'json' as const },
   { label: 'Card Definition', value: 'definition' as const },
 ]);
 
-// POSTs cards/<slug>/progress.json's own `scenariosReview`/`interactionsReview`
-// field (see server/api/card/review-status.ts) and updates the matching
-// local ref above directly — no need to refetch the whole card just for
-// this one field, and refetching would also re-run every trace live
-// (computeTracesLive) for no reason.
-const reviewStatusSaving = ref<'scenariosReview' | 'interactionsReview' | null>(null);
-const reviewStatusRefs = { scenariosReview: scenariosReviewStatus, interactionsReview: interactionsReviewStatus };
-async function toggleReviewStatus(field: 'scenariosReview' | 'interactionsReview') {
+// Dev-only — see server/api/card/review-status.ts's own header for why
+// (writes into the repo's functional-model/ source tree; refused outright
+// server-side outside dev too, this just keeps a doomed-to-403 button from
+// showing at all on a real deployment).
+const isDev = import.meta.dev;
+
+// POSTs cards/<slug>/progress.json's own `review`/`scenariosReview`/
+// `interactionsReview` field (see server/api/card/review-status.ts) and
+// updates the matching local ref above directly — no need to refetch the
+// whole card just for this one field, and refetching would also re-run
+// every trace live (computeTracesLive) for no reason.
+const reviewStatusSaving = ref<'review' | 'scenariosReview' | 'interactionsReview' | null>(null);
+async function toggleReviewStatus(field: 'review' | 'scenariosReview' | 'interactionsReview') {
   if (!data.value?.functionalModel || reviewStatusSaving.value) return;
-  const statusRef = reviewStatusRefs[field];
-  const reviewed = statusRef.value !== 'reviewed';
+  const reviewed =
+    field === 'review' ? factsReviewStatus.value !== 'human' : field === 'scenariosReview' ? scenariosReviewStatus.value !== 'reviewed' : interactionsReviewStatus.value !== 'reviewed';
   reviewStatusSaving.value = field;
   try {
     const res = await fetch('/api/card/review-status', {
@@ -327,7 +334,9 @@ async function toggleReviewStatus(field: 'scenariosReview' | 'interactionsReview
     });
     if (res.ok) {
       const body = await res.json();
-      statusRef.value = body[field];
+      if (field === 'review') factsReviewStatus.value = body.review;
+      else if (field === 'scenariosReview') scenariosReviewStatus.value = body.scenariosReview;
+      else interactionsReviewStatus.value = body.interactionsReview;
       if (data.value?.functionalModel) data.value.functionalModel[field] = body[field];
     }
   } finally {
@@ -427,6 +436,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
 
         <template v-if="store.functionalModelTab.value === 'facts'">
+          <div v-if="isDev" class="mb-2 flex items-center gap-2">
+            <button
+              class="rounded border border-border px-1.5 py-0.5 text-xs hover:bg-surface disabled:opacity-50"
+              :disabled="reviewStatusSaving === 'review'"
+              @click="toggleReviewStatus('review')"
+            >
+              {{ factsReviewStatus === 'human' ? 'Mark as draft' : 'Mark as reviewed' }}
+            </button>
+            <span v-if="factsReviewStatus === 'human'" class="text-xs text-muted">
+              Reviewed — these facts have been checked against the real card.
+            </span>
+          </div>
           <div v-if="synergy" class="overflow-x-auto">
             <table class="border-collapse text-xs whitespace-nowrap">
               <tbody>
@@ -457,7 +478,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         </template>
 
         <template v-else-if="store.functionalModelTab.value === 'scenarios'">
-          <div class="mb-2 flex items-center gap-2">
+          <div v-if="isDev" class="mb-2 flex items-center gap-2">
             <button
               class="rounded border border-border px-1.5 py-0.5 text-xs hover:bg-surface disabled:opacity-50"
               :disabled="reviewStatusSaving === 'scenariosReview'"
@@ -508,7 +529,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             Draft
           </span>
           <button
-            v-if="data.functionalModel"
+            v-if="isDev && data.functionalModel"
             class="rounded border border-border px-1 py-px text-[10px] hover:bg-surface disabled:opacity-50"
             :disabled="reviewStatusSaving === 'interactionsReview'"
             @click="toggleReviewStatus('interactionsReview')"
