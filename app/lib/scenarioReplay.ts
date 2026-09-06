@@ -342,13 +342,18 @@ export interface GroupedReplayCard extends ReplayCard {
   key: string;
 }
 
+/** Strips `setupPlayer`'s own trailing per-index suffix (`you-library-3` -> `you-library`, functional-model/harness.ts's own naming) for GROUPING purposes only — `c.name` itself is untouched everywhere else (log entries still address one specific filler by its full, unique name, e.g. a dig/search `moveTo`-ing exactly one out of many). A real card's own name (Island, Treasure, Jill, Shiva's Dominant, ...) never ends in a bare `-<digits>` — Scryfall names don't shape up that way — so this is a no-op for anything but synthetic filler. Safe against wrongly re-merging a filler that's become individually distinguishable: the moment exactly one of a same-shaped batch actually gets moved/tapped/countered, it lands in a different zone/tapped/counters bucket than its untouched siblings, and `groupKey` below already keys on all of those separately regardless of what this strips from the name. */
+function groupNameOf(c: ReplayCard): string {
+  return c.name.replace(/-\d+$/, '');
+}
+
 /** Everything that makes two cards fungible right now — same owner/zone/name/face/tapped-state/counters/keywords, nothing on screen would tell them apart. The real tested card (`isSelf`) always gets its own unique key (folding in `name`, which is unique to it) since it must never merge with anything even if some filler happened to match all these fields. */
 function groupKey(c: ReplayCard): string {
   return [
     c.isSelf ? 'self' : 'fungible',
     c.owner,
     c.zone,
-    c.name,
+    groupNameOf(c),
     c.faceName ?? '',
     c.tapped,
     JSON.stringify(Object.entries(c.counters).sort()),
