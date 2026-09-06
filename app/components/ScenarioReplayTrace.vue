@@ -92,8 +92,10 @@ const stepIndex = ref(0);
 const maxStep = computed(() => (hasActions.value ? props.trace.actions!.length - 1 : filteredSnapshots.value.length - 1));
 
 const activeSnapshots = computed(() => (hasActions.value ? rawSnapshots.value : filteredSnapshots.value));
-/** Which index into `activeSnapshots` the CURRENT `stepIndex` resolves to — the end of the current action, or `stepIndex` itself in the no-actions fallback (today's exact meaning). */
-const activeIndex = computed(() => (hasActions.value ? (actionEnds.value[stepIndex.value] ?? 0) : stepIndex.value));
+/** A manual override into `rawSnapshots` — set by clicking a specific raw-log row within the current action's span (`jumpToRaw`), cleared whenever `stepIndex` itself changes (see the `watch` below). Lets a bundled multi-entry action (a transform plus everything else on the way to the next labeled action, e.g.) be split apart and watched one real event at a time, without demoting any of those events into a fake action of their own. */
+const rawOverride = ref<number | undefined>(undefined);
+/** Which index into `activeSnapshots` the CURRENT `stepIndex` resolves to — `rawOverride` when set, else the end of the current action, or `stepIndex` itself in the no-actions fallback (today's exact meaning). */
+const activeIndex = computed(() => (hasActions.value ? (rawOverride.value ?? actionEnds.value[stepIndex.value] ?? 0) : stepIndex.value));
 /** Same resolution, one step back — the end of the PREVIOUS action (not just "one raw entry earlier," which could still be inside the current action) when this trace has them. */
 const prevIndex = computed(() => {
   if (stepIndex.value <= 0) return undefined;
@@ -178,6 +180,11 @@ function jumpTo(i: number) {
   pause();
   stepIndex.value = Math.min(maxStep.value, Math.max(0, i));
 }
+/** Jump the board to one specific raw-log index within the CURRENT action's own span, without changing `stepIndex`/the action selection — see `rawOverride`'s own doc comment. `i` is a `rawSnapshots` index (log entries processed so far), same convention `jumpTo` uses for the no-actions fallback. */
+function jumpToRaw(i: number) {
+  pause();
+  rawOverride.value = i;
+}
 onUnmounted(pause);
 
 function fieldsOf(entry: LogEntry): string {
@@ -203,8 +210,20 @@ const scenarioRows = computed(() => {
 // serves both — whichever list is on screen is the one populating it.
 const stepRows = ref<(HTMLElement | null)[]>([]);
 watch(stepIndex, (i) => {
+  rawOverride.value = undefined;
   const rowIndex = hasActions.value ? i : i - 1;
   stepRows.value[rowIndex]?.scrollIntoView({ block: 'nearest' });
+});
+
+/** The current action's own raw entries, each tagged with its ABSOLUTE index into `trace.log` (not its position within this filtered/sliced sub-array) — `jumpToRaw` needs that absolute index (same convention `rawSnapshots` itself indexes by), which a plain `.slice().filter()` in the template would have thrown away. Only computed when there's an action to scope to. */
+const currentActionRawEntries = computed(() => {
+  if (!hasActions.value) return [];
+  const from = props.trace.actions![stepIndex.value]!.from;
+  const end = actionEnds.value[stepIndex.value]!;
+  return props.trace.log
+    .map((entry, idx) => ({ entry, idx }))
+    .slice(from, end)
+    .filter((row) => !row.entry.fn.startsWith('read:'));
 });
 </script>
 
@@ -312,7 +331,10 @@ watch(stepIndex, (i) => {
                   :style="cardStyle(card)"
                   :title="displayName(card) + (card.tapped ? ' (tapped)' : '')"
                 >
-                  <div class="relative transition-transform duration-300" :class="card.tapped ? 'rotate-90' : ''">
+                  <div
+                    class="relative rounded-[3px] transition-transform duration-300"
+                    :class="[card.tapped ? 'rotate-90' : '', card.attacking ? 'ring-2 ring-red-500' : card.blocking ? 'ring-2 ring-blue-500' : '']"
+                  >
                     <div v-if="imagesFor(card)" class="flip-outer h-[126px] w-[90px]">
                       <div class="flip-inner h-full w-full" :class="{ flipped: !!card.faceName }">
                         <img
@@ -351,6 +373,12 @@ watch(stepIndex, (i) => {
                       <template v-for="(amount, type) in card.counters" :key="type">{{ amount }}{{ type }}</template>
                     </span>
                     <span
+                      v-if="card.powerMod || card.toughnessMod"
+                      class="absolute -left-1 -bottom-1 rounded bg-accent px-0.5 text-[8px] leading-tight text-bg"
+                    >
+                      {{ (card.powerMod ?? 0) >= 0 ? '+' : '' }}{{ card.powerMod ?? 0 }}/{{ (card.toughnessMod ?? 0) >= 0 ? '+' : '' }}{{ card.toughnessMod ?? 0 }}
+                    </span>
+                    <span
                       v-if="card.qty > 1"
                       class="absolute -top-1 -right-1 rounded bg-surface px-0.5 text-[8px] leading-tight text-text"
                     >
@@ -361,6 +389,13 @@ watch(stepIndex, (i) => {
                       class="absolute top-0 left-0 flex gap-0.5 rounded-br-[3px] bg-bg/80 px-0.5 py-0.5"
                     >
                       <AbilityIcon v-for="kw in iconKeywords(card)" :key="kw" :keyword="kw" :size="10" class="text-text/90" />
+                    </div>
+                    <div
+                      v-if="card.animatedTypes?.length"
+                      :title="card.animatedTypes.join(' ')"
+                      class="absolute right-0 bottom-4 rounded-l-[3px] bg-bg/80 px-0.5 text-[8px] leading-tight text-text/80"
+                    >
+                      {{ card.animatedTypes.join(' ') }}
                     </div>
                   </div>
                 </div>
@@ -400,9 +435,15 @@ watch(stepIndex, (i) => {
 
         <!-- Raw log: the primary (and only) list for a harness.ts flat
              scenario (no actions); a smaller, secondary detail panel scoped
-             to just the current action's own entries otherwise — not
-             something this replay needs to make especially readable, just
-             not thrown away (still useful for debugging). -->
+             to just the current action's own entries otherwise. Clickable
+             either way — an action can bundle several real events (a
+             transform plus everything else that happened along the way to
+             the next labeled action, e.g.), and jumping to one specific raw
+             entry (`jumpToRaw`) is the only way to see the board split apart
+             mid-action instead of only before/after the whole thing (lost
+             the ability to watch a bundled transform's own flip animate
+             alone once actions[] grouping landed — this restores it without
+             demoting the event back into a fake action). -->
         <div class="max-h-36 overflow-x-auto overflow-y-auto rounded border border-border bg-panel p-2" :class="{ 'max-h-24': hasActions }">
           <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
             <thead>
@@ -414,18 +455,16 @@ watch(stepIndex, (i) => {
             </thead>
             <tbody>
               <tr
-                v-for="(entry, ei) in hasActions
-                  ? trace.log.slice(trace.actions![stepIndex]!.from, actionEnds[stepIndex]!).filter((e) => !e.fn.startsWith('read:'))
-                  : log"
-                :key="ei"
-                :ref="(el) => { if (!hasActions) stepRows[ei] = el as HTMLElement | null; }"
-                class="align-top"
-                :class="[hasActions ? '' : 'cursor-pointer', !hasActions && stepIndex === ei + 1 ? 'bg-surface' : 'hover:bg-surface/50']"
-                @click="hasActions ? undefined : jumpTo(ei + 1)"
+                v-for="row in hasActions ? currentActionRawEntries : log.map((entry, ei) => ({ entry, idx: ei }))"
+                :key="row.idx"
+                :ref="(el) => { if (!hasActions) stepRows[row.idx] = el as HTMLElement | null; }"
+                class="cursor-pointer align-top"
+                :class="hasActions ? (rawOverride === row.idx + 1 ? 'bg-surface' : 'hover:bg-surface/50') : stepIndex === row.idx + 1 ? 'bg-surface' : 'hover:bg-surface/50'"
+                @click="hasActions ? jumpToRaw(row.idx + 1) : jumpTo(row.idx + 1)"
               >
-                <td class="py-0.5 pr-2 text-muted/50">{{ ei + 1 }}</td>
-                <td class="py-0.5 pr-2 text-text">{{ entry.fn }}</td>
-                <td class="py-0.5 whitespace-pre-wrap text-muted">{{ fieldsOf(entry) }}</td>
+                <td class="py-0.5 pr-2 text-muted/50">{{ row.idx + 1 }}</td>
+                <td class="py-0.5 pr-2 text-text">{{ row.entry.fn }}</td>
+                <td class="py-0.5 whitespace-pre-wrap text-muted">{{ fieldsOf(row.entry) }}</td>
               </tr>
             </tbody>
           </table>

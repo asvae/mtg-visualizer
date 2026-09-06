@@ -37,6 +37,14 @@ export interface ReplayCard {
   counters: Record<string, number>;
   /** Keywords granted mid-scenario (harness.ts's `grantKeyword` log entries) — a card's own PRINTED keywords (Flying on a creature that just has Flying) aren't logged at all (see harness.ts's own "quiet" per-object reads), so those come from elsewhere (the real Scryfall `card.keywords`, passed in separately for the one `isSelf` card) rather than being tracked here. */
   keywords: Set<string>;
+  /** Cumulative `pump` deltas (harness.ts's `actions.pump`) — additive across every `pump` entry this card has seen, same "real state just keeps mutating" shape state.ts's own `pump` uses (no duration/layer tracking, matching this project's accepted layers.ts simplification). Undefined (not 0) until the first `pump` entry, so a chip with no buffs renders no badge at all. */
+  powerMod?: number;
+  toughnessMod?: number;
+  /** The real type list an `animate` entry (harness.ts's `actions.animate`) most recently applied (e.g. a land becoming `['Creature']` too) — REPLACES, not merges, same as `state.animate` itself does; not tracked as a diff against printed types since this file has no real printed-types source for a generic filler chip anyway. */
+  animatedTypes?: string[];
+  /** True from an `attack`/`block` entry until the next real `phase` entry (combat's own step boundary) clears it — an engine-piloted trace only (a flat harness.ts scenario never crosses a real phase, so these two would never clear); a purely visual "currently in combat" marker, not itself a source of any other state. */
+  attacking?: boolean;
+  blocking?: boolean;
 }
 
 export interface ReplaySnapshot {
@@ -366,15 +374,140 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         if (t !== undefined) turn = t;
         const p = str(entry.player);
         if (p !== undefined) activePlayer = p;
+        // A real phase crossing means combat's own step just moved on (or
+        // ended) — whatever was attacking/blocking a moment ago no longer
+        // is, real or not (this engine has no "combat is definitely still
+        // happening" flag of its own to check against, but every attack/
+        // block this file ever sees came from an engine-piloted trace,
+        // which never logs a bare `phase` mid-combat without one of these
+        // two having already been true beforehand if they were going to be).
+        for (const c of cards) {
+          c.attacking = undefined;
+          c.blocking = undefined;
+        }
+        break;
+      }
+      case 'createToken': {
+        // Real name always matches `TOKENS[key].name` (harness.ts's own
+        // `PlayerState.tokens` convention) — `ensure()` would ALIAS onto an
+        // already-seeded same-named token/filler (a setup-seeded "Hero", say)
+        // instead of adding a NEW instance, same class of bug `tapForMana`
+        // had for fungible lands. Pushed directly instead, same pattern
+        // `copyPermanent` below needs for the same reason. `groupKey`'s own
+        // fungible-merge (same name/zone/tapped/counters) still collapses a
+        // multi-qty batch into one "xN" chip for display, same as any other
+        // same-named group.
+        const name = str(entry.token);
+        const controllerName = str(entry.controller);
+        const qty = num(entry.qty) ?? 1;
+        const tapped = !!entry.tapped;
+        if (name) {
+          for (let i = 0; i < qty; i++) {
+            const card: ReplayCard = { name, zone: 'Battlefield', owner: controllerName ?? guessOwner(name, roles), tapped, counters: {}, keywords: new Set() };
+            cards.push(card);
+            if (!byName.has(name)) byName.set(name, card);
+          }
+        }
+        break;
+      }
+      case 'copyPermanent': {
+        // `state.copyPermanent` gives the copy the SAME name as its source
+        // (real 707.2) — same alias risk `createToken` above has, same fix.
+        const sourceName = str(entry.source);
+        const controllerName = str(entry.controller);
+        if (sourceName) {
+          const card: ReplayCard = { name: sourceName, zone: 'Battlefield', owner: controllerName ?? guessOwner(sourceName, roles), tapped: false, counters: {}, keywords: new Set() };
+          cards.push(card);
+          if (!byName.has(sourceName)) byName.set(sourceName, card);
+        }
+        break;
+      }
+      case 'legendRule': {
+        // Real 704.5j — `card` names the SPECIFIC real copy 704.5j removed
+        // (sba.ts's own `legendRuleRemoved`/engine-trace.ts's own pilot
+        // scripts both name the actual removed object, not a guess). Known
+        // limitation, not a new one: a duplicate legendary that entered
+        // during SETUP (this file's own header comment on
+        // `duplicateLegendaryEnters`) is already collapsed onto one chip by
+        // the time this fires — moving that one chip to the graveyard then
+        // incorrectly hides the SURVIVOR too. Rare (setup-time duplicate
+        // legendaries aren't used by any current scenario) and already
+        // documented as accepted; a real per-instance identity split would
+        // need `ensure`'s own name-keying reworked, out of scope here.
+        const c = ensure(cardName);
+        if (c) c.zone = 'Graveyard';
+        break;
+      }
+      case 'pump': {
+        const c = ensure(target, 'Battlefield');
+        if (c) {
+          c.powerMod = (c.powerMod ?? 0) + (num(entry.power) ?? 0);
+          c.toughnessMod = (c.toughnessMod ?? 0) + (num(entry.toughness) ?? 0);
+        }
+        break;
+      }
+      case 'animate': {
+        const c = ensure(target, 'Battlefield');
+        const types = Array.isArray(entry.types) ? entry.types.filter((t): t is string => typeof t === 'string') : undefined;
+        if (c && types) c.animatedTypes = types;
+        break;
+      }
+      case 'discard': {
+        // `cards` (plural — this file's own field, not harness.ts's) names
+        // the real discarded card(s) when the logger knows them (post-fix,
+        // both harness.ts's `loggingActions.discard` and engine-trace.ts's
+        // own synthetic Cleanup discard now carry this — see those files'
+        // own doc comments); falls back to a no-op for an older/unpatched
+        // trace.json that only has `qty` (regenerate it to get real
+        // identity — same "additive field" migration `tapForMana` went
+        // through when it was promoted off a summary-only entry).
+        const names = Array.isArray(entry.cards) ? entry.cards.filter((n): n is string => typeof n === 'string') : [];
+        for (const n of names) {
+          const c = ensure(n);
+          if (c) c.zone = 'Graveyard';
+        }
+        break;
+      }
+      case 'drawCard': {
+        const c = cardName ? ensure(cardName) : undefined;
+        if (c) c.zone = 'Hand';
+        break;
+      }
+      case 'drawCards': {
+        const names = Array.isArray(entry.cards) ? entry.cards.filter((n): n is string => typeof n === 'string') : [];
+        for (const n of names) {
+          const c = ensure(n);
+          if (c) c.zone = 'Hand';
+        }
+        break;
+      }
+      case 'attack': {
+        // engine-trace.ts's own real attacker marker — the real 508.1f tap
+        // is its OWN separate `tap` entry now (`pilotDeclareAttackers`),
+        // already handled by the `tap` case above; this just adds the
+        // purely-visual "currently attacking" flag (cleared at the next real
+        // `phase` entry, see that case's own comment).
+        const c = cardName ? ensure(cardName, 'Battlefield') : undefined;
+        if (c) c.attacking = true;
+        break;
+      }
+      case 'block': {
+        const blocker = str(entry.blocker);
+        const attacker = str(entry.attacker);
+        const b = blocker ? ensure(blocker, 'Battlefield') : undefined;
+        if (b) b.blocking = true;
+        const a = attacker ? ensure(attacker, 'Battlefield') : undefined;
+        if (a) a.attacking = true;
         break;
       }
       default: {
-        // read:* entries (and any other event-only fn — addMana, pump,
-        // animate, copyPermanent, dig, delayUntil, legendRule, surveil,
-        // discard, createToken, destroyPrevented) don't mutate the board,
-        // but a `target` they mention should still register as "on the
-        // board somewhere" the first time it's seen, so it isn't invisible
-        // until some later fn happens to move it.
+        // read:* entries (and any other event-only fn — addMana, dig,
+        // delayUntil, surveil, counter, destroyPrevented) don't mutate the
+        // board (no addressable card identity to move/change — see
+        // harness.ts's own doc comments on `dig`/`surveil`/`counter`), but a
+        // `target` they mention should still register as "on the board
+        // somewhere" the first time it's seen, so it isn't invisible until
+        // some later fn happens to move it.
         if (fn.startsWith('read:')) ensure(target);
         break;
       }
@@ -407,6 +540,11 @@ function groupKey(c: ReplayCard): string {
     c.tapped,
     JSON.stringify(Object.entries(c.counters).sort()),
     [...c.keywords].sort().join(','),
+    c.powerMod ?? 0,
+    c.toughnessMod ?? 0,
+    (c.animatedTypes ?? []).slice().sort().join(','),
+    !!c.attacking,
+    !!c.blocking,
   ].join('|');
 }
 
