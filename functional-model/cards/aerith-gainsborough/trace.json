@@ -156,6 +156,64 @@
         "counterType": "+1/+1",
         "amount": 1
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Aerith Gainsborough ({2}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 5
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 6
+      },
+      {
+        "label": "Declare Aerith as attacker",
+        "from": 7
+      },
+      {
+        "label": "Advance one step",
+        "from": 8
+      },
+      {
+        "label": "Resolve unblocked combat damage — real Lifelink",
+        "from": 9
+      },
+      {
+        "label": "Fire onLifeGained",
+        "from": 10
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 12
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 13
+      },
+      {
+        "label": "Declare Aerith as attacker (blocked this time)",
+        "from": 14
+      },
+      {
+        "label": "Advance one step",
+        "from": 15
+      },
+      {
+        "label": "Resolve lethal combat damage (704.5g SBA)",
+        "from": 16
+      },
+      {
+        "label": "Fire onDies",
+        "from": 19
+      }
     ]
   }
 ]

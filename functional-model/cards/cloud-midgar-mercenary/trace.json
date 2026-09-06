@@ -89,6 +89,16 @@
         "qty": 1,
         "validType": "artifact"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Cloud, Midgar Mercenary ({W}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      }
     ]
   }
 ]

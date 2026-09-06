@@ -51,6 +51,7 @@ function scenarioA(): TraceResult {
   // Flare), then 714.4's real sacrifice (nothing reset lore counters first)
   advanceToPlayersNextMain1(pilot, pilot.you, bahamutReal);
   if (bahamutReal.zone === 'Graveyard') {
+    pilot.beginStep('Real 714.4 sacrifice — lore counters were never reset');
     pilot.log.push({ fn: 'sacrifice', player: pilot.you.name, card: summonBahamut.name });
   }
 

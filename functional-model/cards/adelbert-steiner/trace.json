@@ -103,6 +103,48 @@
         "card": "Adelbert Steiner",
         "player": "you"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Adelbert Steiner ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      },
+      {
+        "label": "Real Equipment attachment (301.5c)",
+        "from": 4
+      },
+      {
+        "label": "Real layer-7a CDA recalculation",
+        "from": 5
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 6
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 7
+      },
+      {
+        "label": "Declare Steiner as attacker",
+        "from": 8
+      },
+      {
+        "label": "Advance one step",
+        "from": 9
+      },
+      {
+        "label": "Resolve combat damage — real Lifelink",
+        "from": 10
+      },
+      {
+        "label": "Real 704.5j legend rule — second copy enters, one is removed",
+        "from": 12
+      }
     ]
   }
 ]

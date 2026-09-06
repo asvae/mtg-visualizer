@@ -79,6 +79,10 @@ export interface EnginePilot {
   you: RealPlayer;
   opponents: RealPlayer[];
   log: LogEntry[];
+  /** A coarser, human-labeled index into `log` (see `TraceResult.actions`'s own doc comment in harness.ts) — every helper below calls `beginStep` as its own first line, so a pilot script gets one for free per real action; call it directly too for a raw `pilot.log.push(...)` block a script writes itself with no helper wrapping it. */
+  actions: { label: string; from: number }[];
+  /** Marks `pilot.log.length` (right now, before whatever's about to be logged) as the start of a new named action. Doesn't know or predict how many log entries that action will produce — a reader derives each action's end itself (see harness.ts's own `TraceResult.actions` doc comment). */
+  beginStep(label: string): void;
   /** A fresh `EffectContext` for `self` — `you`/`opponents` are the SAME logging-wrapped players every call reuses (matching `runScenario`'s own one-`ctx`-per-run shape, just rebuilt per `self` since a transform changes which `CardDefinition` `self` represents, not which real object it is). */
   ctxFor(self: RealCard, opts?: EnginePilotCtxOpts): EffectContext;
 }
@@ -106,6 +110,7 @@ export function setupEnginePilot(setup: EnginePilotSetup): EnginePilot {
   advance(engine); // Draw -> Main1
 
   const log: LogEntry[] = [];
+  const actions: { label: string; from: number }[] = [];
   const youLogging = loggingPlayer(state, you, log);
   const opponentsLogging = opponents.map((o) => loggingPlayer(state, o, log));
 
@@ -115,6 +120,8 @@ export function setupEnginePilot(setup: EnginePilotSetup): EnginePilot {
     you,
     opponents,
     log,
+    actions,
+    beginStep: (label) => actions.push({ label, from: log.length }),
     ctxFor: (self, opts) => ({
       self: loggingCard(state, self, log),
       you: youLogging,
@@ -166,7 +173,8 @@ export function pilotActions(pilot: EnginePilot, selfId: number): Actions {
  * own real need) — a scenario with more than one live Saga would need
  * extending this to a real per-permanent scan, not supported yet.
  */
-export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer, watchForSaga?: RealCard): void {
+export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer, watchForSaga?: RealCard, label?: string): void {
+  pilot.beginStep(label ?? `Turn passes to ${player.name}'s next Main1`);
   const startTurn = pilot.engine.turn.turnNumber;
   do {
     const beforeLen = pilot.log.length;
@@ -204,13 +212,15 @@ export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer
 }
 
 /** Advances exactly one phase (`advance`), logging the same real `phase` bracket entry `advanceToPlayersNextMain1` logs once for its own whole wait — this one call IS the whole meaningful step, so it always gets its own entry, no spam concern (unlike a multi-iteration loop). The thin single-step version for a pilot script that just needs to cross one specific boundary (Combat Declare Attackers -> Declare Blockers, e.g.) rather than loop until a whole condition is met. */
-export function advanceOneStep(pilot: EnginePilot): void {
+export function advanceOneStep(pilot: EnginePilot, label?: string): void {
+  pilot.beginStep(label ?? 'Advance one step');
   advance(pilot.engine);
   pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
 }
 
 /** Real turn-structure advancement (`advance`), from wherever `pilot.engine.turn` currently is, forward to the Declare Attackers step of THIS SAME turn — logging exactly ONE real `phase` bracket entry for the whole wait (same "one per call, not one per internal step" fix `advanceToPlayersNextMain1` needed), not one per phase crossed getting there. A pilot script normally calls `advanceToPlayersNextMain1` first if the attacker just entered this turn (302.6), then this, to reach a legal Declare Attackers step. */
-export function advanceToDeclareAttackersStep(pilot: EnginePilot): void {
+export function advanceToDeclareAttackersStep(pilot: EnginePilot, label?: string): void {
+  pilot.beginStep(label ?? 'Advance to Declare Attackers');
   while (currentPhase(pilot.engine.turn) !== 'CombatDeclareAttackers') advance(pilot.engine);
   pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
 }
@@ -221,7 +231,8 @@ function logTappedForMana(pilot: EnginePilot, forCard: CardDefinition, tapped: R
 }
 
 /** Real cast (601) — legality-checks via `canCastSpell`, throws with the real reason on an illegal pilot script (a bug in the pilot, not a legitimate "declined" case — this file always drives a KNOWN-legal line), else pays real mana and pushes to the real stack, logging a `cast` entry (matching `harness.ts`'s own `lifecycleBefore` shape) plus one real `tapForMana` entry per real land/source `castSpell`'s own `payMana` call actually tapped (see `logTappedForMana`'s own doc comment). */
-export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions): void {
+export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
+  pilot.beginStep(label ?? `Cast ${card.name} (${card.manaCost})`);
   const check = canCastSpell(pilot.engine, pilot.you, card);
   if (!check.ok) throw new Error(`pilotCast("${card.name}"): illegal — ${check.reason}`);
   pilot.log.push({ fn: 'cast', card: card.name, instanceId: SELF_INSTANCE_ID, from: 'hand', cost: card.manaCost });
@@ -259,7 +270,8 @@ export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefi
  * at a hardcoded `currentLore: 0` here, not read off the (not-yet-existing)
  * registration.
  */
-export function pilotResolveTop(pilot: EnginePilot): void {
+export function pilotResolveTop(pilot: EnginePilot, label?: string): void {
+  pilot.beginStep(label ?? 'Resolve');
   const peeked = pilot.engine.stack.peek();
   if (!peeked) return;
   if (peeked.isAbility) {
@@ -299,20 +311,23 @@ export function pilotResolveTop(pilot: EnginePilot): void {
  * never happened at all (confirmed the hard way: Aerith Gainsborough's own
  * `onLifeGained`/`onDies` wants both hard-failed until this was added).
  */
-export function pilotFireTrigger(pilot: EnginePilot, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName: string): void {
+export function pilotFireTrigger(pilot: EnginePilot, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName: string, label?: string): void {
+  pilot.beginStep(label ?? `Fire ${triggerName}`);
   pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: triggerName });
   resolveCard(card, ctx, actions, triggerName);
 }
 
 /** A real illegal-attempt check worth demonstrating in the trace (e.g. "the transform ability is blocked by summoning sickness the turn it entered") — logs the real rejection reason `canActivateAbility` gives rather than silently skipping it, so a reader of the replay sees the SAME legality wall a real player would hit. Purely observational: never mutates anything. */
-export function pilotExpectIllegalActivate(pilot: EnginePilot, controller: RealPlayer, permanent: RealCard, card: CardDefinition): void {
+export function pilotExpectIllegalActivate(pilot: EnginePilot, controller: RealPlayer, permanent: RealCard, card: CardDefinition, label?: string): void {
+  pilot.beginStep(label ?? `Attempt (expected illegal): ${card.name}`);
   const check = canActivateAbility(pilot.engine, controller, permanent, card);
   if (check.ok) throw new Error(`pilotExpectIllegalActivate("${card.name}"): expected this to be illegal, but it's legal`);
   pilot.log.push({ fn: 'illegalAttempt', card: card.name, reason: check.reason });
 }
 
 /** Real activated ability (602.1) — same shape as `pilotCast` above: legality-checks, pays real mana + taps the permanent if the cost requires it, pushes to the stack, logs `activate`+`payMana`. */
-export function pilotActivate(pilot: EnginePilot, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions): void {
+export function pilotActivate(pilot: EnginePilot, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
+  pilot.beginStep(label ?? `Activate ${card.name}`);
   const check = canActivateAbility(pilot.engine, controller, permanent, card);
   if (!check.ok) throw new Error(`pilotActivate("${card.name}"): illegal — ${check.reason}`);
   pilot.log.push({ fn: 'activate', card: card.name, instanceId: SELF_INSTANCE_ID, cost: card.activationCost ?? '' });
@@ -340,7 +355,8 @@ function logSagaTickThenRun(pilot: EnginePilot, real: RealCard, card: CardDefini
 }
 
 /** Registers `real` as now being represented by `newFace` (a transform), logging `transform` plus — when `newFace` is a Saga (the modern "enters OR transforms into a Saga" errata `saga.ts`'s own `transformPermanent` implements) — its real immediate first lore-counter tick (714.2b/c). Thin wrapper around `saga.ts`'s own `transformPermanent`, not a reimplementation. */
-export function pilotTransform(pilot: EnginePilot, real: RealCard, newFace: CardDefinition, ctx: EffectContext, actions: Actions): void {
+export function pilotTransform(pilot: EnginePilot, real: RealCard, newFace: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
+  pilot.beginStep(label ?? `Transform into ${newFace.name}`);
   pilot.log.push({ fn: 'transform', card: real.name, into: newFace.name });
   logSagaTickThenRun(pilot, real, newFace, () => transformPermanent(pilot.engine, real, newFace, ctx, actions));
 }
@@ -351,6 +367,7 @@ export function finishEnginePilotTrace(pilot: EnginePilot, setup: EnginePilotSet
   return {
     scenario: { setup: describeEngineSetup(setup), action, result, raw },
     log: pilot.log,
+    actions: pilot.actions,
   };
 }
 

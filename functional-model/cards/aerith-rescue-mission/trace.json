@@ -58,6 +58,16 @@
         "from": "stack",
         "to": "Graveyard"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Aerith Rescue Mission ({3}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 5
+      }
     ]
   },
   {
@@ -145,6 +155,16 @@
         "instanceId": 1,
         "from": "stack",
         "to": "Graveyard"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Cast Aerith Rescue Mission ({3}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 5
       }
     ]
   }

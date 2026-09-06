@@ -62,10 +62,12 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real unblocked combat — real Lifelink life gain, then onLifeGained fired manually
   advanceToDeclareAttackersStep(pilot);
+  pilot.beginStep('Declare Aerith as attacker');
   let attack = declareAttackers(pilot.engine, [aerithReal]);
   if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
   pilot.log.push({ fn: 'attack', card: aerithReal.name });
   advanceOneStep(pilot);
+  pilot.beginStep('Resolve unblocked combat damage — real Lifelink');
   declareBlockers(pilot.engine, []);
   const beforeYouLife = pilot.you.life;
   resolveCombatDamage(pilot.engine);
@@ -76,10 +78,12 @@ export function runEngineScenarios(): TraceResult[] {
   // Real turn passage, then real combat again — this time blocked and lethal (704.5g SBA)
   advanceToPlayersNextMain1(pilot, pilot.you);
   advanceToDeclareAttackersStep(pilot);
+  pilot.beginStep('Declare Aerith as attacker (blocked this time)');
   attack = declareAttackers(pilot.engine, [aerithReal]);
   if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
   pilot.log.push({ fn: 'attack', card: aerithReal.name });
   advanceOneStep(pilot);
+  pilot.beginStep('Resolve lethal combat damage (704.5g SBA)');
   declareBlockers(pilot.engine, [{ blocker: bigBlocker, attacker: aerithReal }]);
   pilot.log.push({ fn: 'block', blocker: bigBlocker.name, attacker: aerithReal.name });
   resolveCombatDamage(pilot.engine);

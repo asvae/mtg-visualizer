@@ -237,6 +237,16 @@ export interface TraceResult {
     raw: Scenario;
   };
   log: LogEntry[];
+  /**
+   * A coarser, human-labeled index into `log` — real engine-piloted traces
+   * only (engine-trace.ts's own `pilot.beginStep`/`finishEnginePilotTrace`);
+   * a flat harness.ts scenario has no equivalent concept, so this stays
+   * undefined for one. `from` is where THIS action's own log entries start;
+   * an action's end is never stored (nothing here predicts what a step
+   * will produce) — a reader derives it as `(actions[i+1]?.from ??
+   * log.length) - 1`.
+   */
+  actions?: { label: string; from: number }[];
 }
 
 const PLAYER_STATE_DEFAULTS: PlayerState = { life: 20 };

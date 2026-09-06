@@ -84,6 +84,32 @@
         "validType": "artifact",
         "found": 0
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Ashe, Princess of Dalmasca ({2}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 5
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 6
+      },
+      {
+        "label": "Declare Ashe as attacker",
+        "from": 7
+      },
+      {
+        "label": "Fire onAttack",
+        "from": 8
+      }
     ]
   }
 ]

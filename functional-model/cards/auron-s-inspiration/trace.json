@@ -45,6 +45,16 @@
         "from": "stack",
         "to": "Graveyard"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Auron's Inspiration ({2}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      }
     ]
   }
 ]

@@ -175,6 +175,32 @@
         "player": "you",
         "card": "Summon: Bahamut"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Summon: Bahamut ({9})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 10
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 13
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 16
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 21
+      },
+      {
+        "label": "Real 714.4 sacrifice — lore counters were never reset",
+        "from": 25
+      }
     ]
   },
   {
@@ -337,6 +363,16 @@
         "fn": "destroy",
         "target": "Summon: Bahamut",
         "controller": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Cast Summon: Bahamut ({9})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 10
       }
     ]
   }

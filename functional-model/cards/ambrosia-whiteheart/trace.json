@@ -107,6 +107,36 @@
         "card": "Ambrosia Whiteheart",
         "player": "you"
       }
+    ],
+    "actions": [
+      {
+        "label": "Turn passes to opp0's next Main1",
+        "from": 0
+      },
+      {
+        "label": "Cast Ambrosia Whiteheart ({1}{W})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 8
+      },
+      {
+        "label": "A real land entering",
+        "from": 9
+      },
+      {
+        "label": "Fire onLandfall",
+        "from": 10
+      },
+      {
+        "label": "Real 704.5j legend rule — second copy enters, one is removed",
+        "from": 12
+      }
     ]
   }
 ]

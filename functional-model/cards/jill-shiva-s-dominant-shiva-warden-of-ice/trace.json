@@ -284,6 +284,44 @@
         "card": "Jill, Shiva's Dominant",
         "into": "Jill, Shiva's Dominant"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Jill, Shiva's Dominant ({2}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 17
+      },
+      {
+        "label": "Activate Jill, Shiva's Dominant",
+        "from": 18
+      },
+      {
+        "label": "Resolve",
+        "from": 24
+      },
+      {
+        "label": "Transform into Shiva, Warden of Ice",
+        "from": 26
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 32
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 38
+      },
+      {
+        "label": "Transform into Jill, Shiva's Dominant",
+        "from": 45
+      }
     ]
   }
 ]

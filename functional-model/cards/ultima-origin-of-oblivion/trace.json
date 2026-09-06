@@ -148,6 +148,32 @@
         "counterType": "blight",
         "amount": 1
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Ultima, Origin of Oblivion ({5})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 6
+      },
+      {
+        "label": "Turn passes to you's next Main1",
+        "from": 7
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 8
+      },
+      {
+        "label": "Declare Ultima as attacker",
+        "from": 9
+      },
+      {
+        "label": "Fire onAttack",
+        "from": 10
+      }
     ]
   }
 ]

@@ -45,11 +45,13 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   // Real Equipment attachment (301.5c)
+  pilot.beginStep('Real Equipment attachment (301.5c)');
   const sword = pilot.you.battlefield.find((c) => c.name === 'Sword')!;
   pilot.state.equip(sword, steinerReal);
   pilot.log.push({ fn: 'equip', equipment: sword.name, target: steinerReal.name });
 
   // Real layer-7a CDA recalculation — printed 2/1 +1/+1 for one Equipment
+  pilot.beginStep('Real layer-7a CDA recalculation');
   const [power, toughness] = effectivePT(pilot.state, steinerReal);
   pilot.log.push({ fn: 'read:getNetPower', card: adelbertSteiner.name, power, toughness });
 
@@ -58,10 +60,12 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real, unblocked combat (508/509/510)
   advanceToDeclareAttackersStep(pilot);
+  pilot.beginStep('Declare Steiner as attacker');
   const attack = declareAttackers(pilot.engine, [steinerReal]);
   if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
   pilot.log.push({ fn: 'attack', card: steinerReal.name });
   advanceOneStep(pilot);
+  pilot.beginStep('Resolve combat damage — real Lifelink');
   declareBlockers(pilot.engine, []);
   const opp = pilot.opponents[0]!;
   const beforeOppLife = opp.life;
@@ -74,6 +78,7 @@ export function runEngineScenarios(): TraceResult[] {
   if (lifeGained > 0) pilot.log.push({ fn: 'gainLife', player: pilot.you.name, amount: lifeGained, cause: 'Lifelink' });
 
   // Real 704.5j legend rule — a second real copy enters, one is removed
+  pilot.beginStep('Real 704.5j legend rule — second copy enters, one is removed');
   const secondCopy = pilot.state.addCard(pilot.you, 'Battlefield', {
     name: adelbertSteiner.name,
     types: ['Creature'],

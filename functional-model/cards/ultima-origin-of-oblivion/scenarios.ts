@@ -45,6 +45,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real attack declaration (508.1)
   advanceToDeclareAttackersStep(pilot);
+  pilot.beginStep('Declare Ultima as attacker');
   const attack = declareAttackers(pilot.engine, [ultimaReal]);
   if (!attack.ok) throw new Error(`attack illegal: ${attack.reason}`);
   pilot.log.push({ fn: 'attack', card: ultimaReal.name });

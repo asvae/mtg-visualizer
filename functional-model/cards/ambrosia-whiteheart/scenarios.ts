@@ -52,6 +52,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // A real land entering (no land-drop action exists in this engine — added
   // straight to the battlefield, the only real way to model one entering)
+  pilot.beginStep('A real land entering');
   const forest = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   pilot.log.push({ fn: 'enters', card: forest.name, instanceId: 2, zone: 'Battlefield' });
   // Landfall fired manually — no "another permanent entered" auto-detection in this engine
@@ -60,6 +61,7 @@ export function runEngineScenarios(): TraceResult[] {
   // Real 704.5j legend rule — a second real copy enters, one is removed,
   // satisfying this card's own baseline self-graveyard/self-dies facts
   // (same convention Adelbert Steiner's own legend-rule demonstration uses)
+  pilot.beginStep('Real 704.5j legend rule — second copy enters, one is removed');
   const secondCopy = pilot.state.addCard(pilot.you, 'Battlefield', {
     name: ambrosiaWhiteheart.name,
     types: ['Creature'],

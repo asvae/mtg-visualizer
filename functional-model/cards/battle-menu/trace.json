@@ -46,6 +46,16 @@
         "from": "stack",
         "to": "Graveyard"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Battle Menu ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      }
     ]
   },
   {
@@ -110,6 +120,16 @@
         "instanceId": 1,
         "from": "stack",
         "to": "Graveyard"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Cast Battle Menu ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
       }
     ]
   },
@@ -195,6 +215,16 @@
         "from": "stack",
         "to": "Graveyard"
       }
+    ],
+    "actions": [
+      {
+        "label": "Cast Battle Menu ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      }
     ]
   },
   {
@@ -241,6 +271,16 @@
         "instanceId": 1,
         "from": "stack",
         "to": "Graveyard"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Cast Battle Menu ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
       }
     ]
   }
