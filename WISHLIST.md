@@ -103,6 +103,26 @@ Consider reserving visual segments, lanes, or other regions for specific
 relation types so the graph remains clear when several kinds of connections
 are visible at once.
 
+### Known-combo highlighting
+
+Highlight when two or more cards on the graph form a known real combo (cast
+this, activate that, loop for infinite mana/damage/tokens, or a one-shot
+win/lock condition), distinct from the existing produce/consume synergy
+scoring — a combo is a specific, named, human-verified interaction, not a
+computed weight. On the card detail page, showcase the real combos a card is
+known to participate in: the other card(s) involved, the step-by-step line,
+and what it produces.
+
+Since most real combos need 3 or more cards, not just 2, this likely wants its
+own "combo cluster" highlight distinct from a plain pairwise edge — lighting
+up every card in the combo together, possibly extending to a "you're one card
+away" partial-match state for a combo where most but not all pieces are
+already in view.
+
+Real combo data for this already exists (Commander Spellbook's own database,
+synced locally, filtered to the currently modeled card pool) — parked rather
+than wired into the graph/card page yet.
+
 ### Negative synergy
 
 Represent anti-synergies within a deck: cards, themes, costs, or restrictions
