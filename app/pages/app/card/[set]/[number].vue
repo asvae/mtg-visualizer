@@ -293,14 +293,16 @@ watch(
   { immediate: true }
 );
 
-// Scenarios' own label carries its `scenariosReview` status right in the
-// tab strip (user's own request — "[Draft]" is the exception worth calling
-// out; a reviewed card's tab reads plain "Scenarios", same "flag what needs
-// attention, not what's already fine" convention the H1's own `review`
-// badge (facts) already follows).
+// Same orange pill look the old H1 badge used (moved off the title
+// entirely per the user's own request — "no draft marker on card title,
+// just on scenarios/facts/interactions" — and onto whichever of the three
+// it actually describes), as a UTabs `item.badge` (real Nuxt UI support —
+// Tabs.vue renders `item.badge` through its own UBadge, reactively, one per
+// trigger) rather than baked into the label text.
+const DRAFT_BADGE = { label: 'Draft', class: 'rounded bg-warn/20 px-1.5 py-px text-[10px] font-bold tracking-wide text-warn uppercase' };
 const functionalModelTabs = computed(() => [
-  { label: 'Facts', value: 'facts' as const },
-  { label: scenariosReviewStatus.value === 'reviewed' ? 'Scenarios' : 'Scenarios [Draft]', value: 'scenarios' as const },
+  { label: 'Facts', value: 'facts' as const, badge: data.value?.functionalModel?.review !== 'human' ? DRAFT_BADGE : undefined },
+  { label: 'Scenarios', value: 'scenarios' as const, badge: scenariosReviewStatus.value === 'reviewed' ? undefined : DRAFT_BADGE },
   { label: 'Json', value: 'json' as const },
   { label: 'Card Definition', value: 'definition' as const },
 ]);
@@ -393,12 +395,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <span v-if="deckQty" class="rounded-full bg-bg px-2 py-0.5 text-xs font-bold text-muted" title="Copies in your imported deck">
           ×{{ deckQty }}
         </span>
-        <span
-          v-if="data?.functionalModel && data.functionalModel.review !== 'human'"
-          class="-translate-y-px rounded bg-warn/20 px-1.5 py-px text-[10px] font-bold tracking-wide text-warn uppercase"
-          title="AI-authored, not yet human-reviewed against the real card"
-          >draft</span
-        >
       </h1>
       <CardMedia :images="card.images" :tokens="card.tokens" />
 
@@ -507,8 +503,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            server/api/card/[set]/[number].ts (no full-corpus join yet). -->
       <div v-if="data?.interactions?.length" class="mt-4 w-full max-w-full">
         <div class="mb-1 flex items-center gap-2">
-          <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">
-            {{ interactionsReviewStatus === 'reviewed' ? 'Interactions' : 'Interactions [Draft]' }}
+          <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</span>
+          <span v-if="interactionsReviewStatus !== 'reviewed'" class="rounded bg-warn/20 px-1.5 py-px text-[10px] font-bold tracking-wide text-warn uppercase">
+            Draft
           </span>
           <button
             v-if="data.functionalModel"
