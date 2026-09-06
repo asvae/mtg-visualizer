@@ -236,6 +236,29 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         if (c) c.zone = (str(entry.zone) as ZoneType | undefined) ?? 'Battlefield';
         break;
       }
+      case 'transform': {
+        // engine-trace.ts's own `pilotTransform` — `card` is the STABLE
+        // identity name (`RealCard.name` never changes on a transform, same
+        // convention `moveTo`/`tap`/etc already rely on), `into` is whichever
+        // face is now active. Until now nothing handled this fn at all —
+        // the flip display only ever updated as an ACCIDENTAL side effect of
+        // a LATER cast/activate/trigger/enters entry happening to name the
+        // new face (`ensureSelf`'s own `faceName` write below) — real for
+        // front->back (chapter I's own trigger fires right after and names
+        // the back face), but transforming BACK to the front face has no
+        // such follow-up entry to ever name it again, so `faceName` never
+        // cleared and the display stayed stuck on the back face forever
+        // (confirmed the hard way: Jill never visually flipped back after
+        // chapter III's real transform-back). Handled directly here instead
+        // of relying on that coincidence — `into === c.name` (transforming
+        // back to the stable/front identity) clears `faceName`, anything
+        // else sets it, matching `ensureSelf`'s own "faceName only when it
+        // differs from name" rule.
+        const c = cardName ? ensure(cardName) : undefined;
+        const into = str(entry.into);
+        if (c) c.faceName = into && into !== c.name ? into : undefined;
+        break;
+      }
       case 'moveTo': {
         const c = ensure(target);
         if (c) c.zone = (str(entry.zone) as ZoneType | undefined) ?? c.zone;
