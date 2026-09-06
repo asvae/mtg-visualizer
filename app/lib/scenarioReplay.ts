@@ -148,6 +148,29 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     }
     return card;
   };
+  /**
+   * Real per-source `tapForMana`/`tap`/`untap` entries name a fungible
+   * card by its bare name (Island, Treasure, ...) — when several
+   * same-named instances are on the board, `ensure()`'s own single-alias
+   * lookup would keep re-tapping the SAME one (confirmed the hard way:
+   * three real `tapForMana` entries all named "Island" only ever tapped
+   * one of the five). Instead, find any instance matching `name`/`zone`
+   * whose CURRENT tapped state is `wantTapped`'s opposite — any untapped
+   * one for a tap, any tapped one for an untap — and flip that one. Since
+   * same-named untapped/tapped instances are visually indistinguishable
+   * anyway (that's what "fungible" means here), which SPECIFIC one gets
+   * picked doesn't matter — only that N real events end up as N different
+   * chips changing state, not one chip flipping N times. Falls back to
+   * `ensure()`'s create-or-alias behavior when nothing matching exists yet
+   * (a genuinely not-yet-seen name, or every instance already in the
+   * target state — the tap/untap then becomes a harmless no-op on
+   * whichever one `ensure` aliases to, same as before this fix).
+   */
+  const ensureForTap = (name: string | undefined, wantTapped: boolean, zone: ZoneType | 'Unknown' = 'Battlefield'): ReplayCard | undefined => {
+    if (!name) return undefined;
+    const candidate = cards.find((c) => c.name === name && c.zone === zone && c.tapped !== wantTapped);
+    return candidate ?? ensure(name, zone);
+  };
   // A transforming DFC's `card` field on trigger/activate/enters/cast
   // entries names whichever FACE is currently active, not a stable id —
   // `instanceId` (present on all four) is the one thing that stays fixed
@@ -231,7 +254,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'tap': {
-        const c = ensure(target, 'Battlefield');
+        const c = ensureForTap(target, true);
         if (c) c.tapped = true;
         break;
       }
@@ -243,13 +266,16 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // be a cosmetic, greedy-order approximation off a single summary
         // `payMana` entry; now it's just the real fact). Logged as its own
         // fn, not plain `tap`, so `verify-synergy.mjs` never misreads a
-        // mana-cost payment as a card EFFECT tapping something.
-        const c = ensure(target, 'Battlefield');
+        // mana-cost payment as a card EFFECT tapping something. `ensureForTap`
+        // (not `ensure`) — see that helper's own doc comment: several real
+        // tapForMana entries commonly share one fungible name (paying {3} off
+        // 3 Islands, say), and each one needs to land on a DIFFERENT chip.
+        const c = ensureForTap(target, true);
         if (c) c.tapped = true;
         break;
       }
       case 'untap': {
-        const c = ensure(target, 'Battlefield');
+        const c = ensureForTap(target, false);
         if (c) c.tapped = false;
         break;
       }
