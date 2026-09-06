@@ -26,3 +26,8 @@ tmp/
 # scripts/sync-card-db.mjs, not meaningful project history (multi-hundred-MB).
 data/cards.db
 data/.bulk-default-cards.jsonl.gz
+
+# Commander Spellbook bulk-data cache — regenerated via
+# functional-model/scripts/sync-combos.mjs, not meaningful project history
+# (data/combos.json, its filtered output, IS committed).
+data/.bulk-commander-spellbook-variants.json.gz
