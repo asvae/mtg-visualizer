@@ -1,0 +1,159 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> real turn passage -> unblocked combat -> real Lifelink life gain",
+      "result": "Real Lifelink (state.ts's own `dealDamage`): every point of combat damage Steiner deals to the opponent (2) is genuinely mirrored as life gain for its controller (2) — not a separate scripted \"and also gain life\" step, the SAME real damage call does both.",
+      "raw": {
+        "result": "Real Lifelink (state.ts's own `dealDamage`): every point of combat damage Steiner deals to the opponent (2) is genuinely mirrored as life gain for its controller (2) — not a separate scripted \"and also gain life\" step, the SAME real damage call does both.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Adelbert Steiner"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Adelbert Steiner"
+      },
+      {
+        "fn": "enters",
+        "card": "Adelbert Steiner",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Adelbert Steiner"
+      },
+      {
+        "fn": "attack",
+        "card": "Adelbert Steiner"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Adelbert Steiner",
+        "target": "opp0",
+        "amount": 2
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 2,
+        "cause": "Lifelink"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Adelbert Steiner ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 4
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 8
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 11
+      },
+      {
+        "label": "Declare Adelbert Steiner as attacker",
+        "from": 12
+      },
+      {
+        "label": "Advance to Declare Blockers",
+        "from": 14
+      },
+      {
+        "label": "Declare no blockers",
+        "from": 15
+      },
+      {
+        "label": "Resolve unblocked combat damage — real Lifelink",
+        "from": 15
+      }
+    ]
+  }
+]

@@ -1,0 +1,85 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 Mountain(s)",
+      "action": "real engine playthrough: cast -> same-turn attack declaration succeeds via real Haste",
+      "result": "Real 302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and `pilotDeclareAttackers` throws on any illegal declaration — but its real printed Haste exempts it in the engine's own `canAttack` check, so the declaration succeeds for real.",
+      "raw": {
+        "result": "Real 302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and `pilotDeclareAttackers` throws on any illegal declaration — but its real printed Haste exempts it in the engine's own `canAttack` check, so the declaration succeeds for real.",
+        "you": {
+          "basicLands": [
+            "Mountain",
+            "Mountain"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Prompto Argentum",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{R}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Prompto Argentum"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Prompto Argentum"
+      },
+      {
+        "fn": "enters",
+        "card": "Prompto Argentum",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Prompto Argentum"
+      },
+      {
+        "fn": "attack",
+        "card": "Prompto Argentum"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Prompto Argentum ({1}{R})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 4
+      },
+      {
+        "label": "Declare Prompto Argentum as attacker (same turn it entered)",
+        "from": 5
+      }
+    ]
+  }
+]

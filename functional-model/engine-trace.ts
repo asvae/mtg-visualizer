@@ -50,6 +50,7 @@ import {
   advance,
   declareAttackers,
   declareBlockers,
+  canAttack,
   type GameEngine,
 } from './engine';
 import { transformPermanent } from './saga';
@@ -464,6 +465,35 @@ export function pilotExpectIllegalActivate(pilot: EnginePilot, controller: RealP
   pilot.beginStep(label ?? `Attempt (expected illegal): ${card.name}`);
   const check = canActivateAbility(pilot.engine, controller, permanent, card);
   if (check.ok) throw new Error(`pilotExpectIllegalActivate("${card.name}"): expected this to be illegal, but it's legal`);
+  pilot.log.push({ fn: 'illegalAttempt', card: card.name, reason: check.reason });
+}
+
+/** Real 508.1a-legal attacker declaration expected to be REJECTED (Defender's real 302.6a "can't attack" clause, e.g.) — same purely-observational contract as `pilotExpectIllegalActivate`: checks `canAttack` for every proposed attacker, throws if all of them turn out legal (the pilot script's own bug, not a real rejection to show), else logs the real reason `engine.ts` itself gives. Never mutates — no `declareAttackers` call, no tap. */
+export function pilotExpectIllegalAttack(pilot: EnginePilot, attackers: RealCard[], label?: string): void {
+  pilot.beginStep(label ?? `Attempt (expected illegal): declare ${attackers.map((c) => c.name).join(', ')} as attacker${attackers.length > 1 ? 's' : ''}`);
+  for (const creature of attackers) {
+    const check = canAttack(pilot.engine, creature);
+    if (!check.ok) {
+      pilot.log.push({ fn: 'illegalAttempt', card: creature.name, reason: check.reason });
+      return;
+    }
+  }
+  throw new Error('pilotExpectIllegalAttack: expected at least one of these to be illegal, but every one is legal');
+}
+
+/** Real 509.1-legal blocker declaration expected to be REJECTED (Flying's real 509.1b restriction, Menace's real 509.1b/702.111b two-blocker minimum, e.g.) — same purely-observational contract as `pilotExpectIllegalActivate`. Checks the WHOLE batch via `declareBlockers`'s own real legality (per-pair `canBlock` plus its own whole-batch Menace/one-blocker-per-attacker rules), throws if it turns out legal, else logs the real rejection reason. Never mutates — `engine.blockers` is untouched either way. */
+export function pilotExpectIllegalBlock(pilot: EnginePilot, assignments: Array<{ blocker: RealCard; attacker: RealCard }>, label?: string): void {
+  pilot.beginStep(label ?? `Attempt (expected illegal): declare ${assignments.map((a) => a.blocker.name).join(', ')} as blocker${assignments.length > 1 ? 's' : ''}`);
+  const result = declareBlockers(pilot.engine, assignments);
+  if (result.ok) throw new Error('pilotExpectIllegalBlock: expected this to be illegal, but it is legal');
+  pilot.log.push({ fn: 'illegalAttempt', card: assignments[0]?.blocker.name ?? '', reason: result.reason });
+}
+
+/** Real 601/307.1a/117.1a cast expected to be REJECTED (sorcery-speed timing outside caster's own Main1/Main2 with an empty stack, e.g. — the real contrast a Flash card's own legal cast at the same moment demonstrates) — same purely-observational contract as `pilotExpectIllegalActivate`. Never mutates — no stack push, no mana paid. */
+export function pilotExpectIllegalCast(pilot: EnginePilot, caster: RealPlayer, card: CardDefinition, label?: string): void {
+  pilot.beginStep(label ?? `Attempt (expected illegal): cast ${card.name}`);
+  const check = canCastSpell(pilot.engine, caster, card);
+  if (check.ok) throw new Error(`pilotExpectIllegalCast("${card.name}"): expected this to be illegal, but it's legal`);
   pilot.log.push({ fn: 'illegalAttempt', card: card.name, reason: check.reason });
 }
 

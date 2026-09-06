@@ -1,0 +1,481 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 8 Plains(s)",
+      "action": "real engine playthrough: cast -> automatic Saga lore-counter ticks across 5 real turns -> chapters I-V -> real 714.4 sacrifice",
+      "result": "Summon: Knights of Round enters and real 714.2b immediately puts its first lore counter on, firing chapter I (three real 2/2 Knight tokens) — each of the next three real turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth real turn ticks chapter V (Ultimate End: the other real Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the real 714.4 sacrifice removes it automatically.",
+      "raw": {
+        "result": "Summon: Knights of Round enters and real 714.2b immediately puts its first lore counter on, firing chapter I (three real 2/2 Knight tokens) — each of the next three real turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth real turn ticks chapter V (Ultimate End: the other real Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the real 714.4 sacrifice removes it automatically.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 10
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{6}{W}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Summon: Knights of Round"
+      },
+      {
+        "fn": "enters",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Knights of Round",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterI"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Knights of Round",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterII"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 2,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Knights of Round",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterIII"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Knights of Round",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterIV"
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Knight",
+        "qty": 3,
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 4,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Knights of Round",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
+        "fn": "trigger",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "name": "chapterV"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 13
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 13
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "card": "Summon: Knights of Round"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Summon: Knights of Round ({6}{W}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 9
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 21
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 27
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 33
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 39
+      },
+      {
+        "label": "Real 714.4 sacrifice — greatest chapter (V) reached",
+        "from": 70
+      }
+    ]
+  }
+]

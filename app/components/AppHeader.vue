@@ -222,6 +222,9 @@ function submitDeckImport(clear = false) {
         aria-label="Card review session"
         @click="store.reviewSessionOpen.value = !store.reviewSessionOpen.value"
       />
+      <NuxtLink to="/app/keywords">
+        <UButton icon="i-lucide-list-checks" color="neutral" variant="subtle" square aria-label="Keyword & mechanic coverage suite" />
+      </NuxtLink>
 
       <UPopover :content="{ side: 'bottom', align: 'end' }">
         <UButton icon="i-lucide-circle-help" color="neutral" variant="subtle" square aria-label="Show legend" />

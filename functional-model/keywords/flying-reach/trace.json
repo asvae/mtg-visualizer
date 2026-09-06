@@ -1,0 +1,127 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "real engine playthrough: declare Flying attacker -> illegal block rejected (509.1b) -> legal Reach block -> real combat damage",
+      "result": "Real 509.1b: Grounded Blocker (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
+      "raw": {
+        "result": "Real 509.1b: Grounded Blocker (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
+        "you": {
+          "libraryCount": 3
+        },
+        "opponents": [
+          {
+            "libraryCount": 3
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "enters",
+        "card": "Ahriman",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "enters",
+        "card": "Iron Giant",
+        "zone": "Battlefield",
+        "power": 6,
+        "toughness": 6,
+        "controller": "opp0"
+      },
+      {
+        "fn": "enters",
+        "card": "Grounded Blocker",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Ahriman"
+      },
+      {
+        "fn": "attack",
+        "card": "Ahriman"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "illegalAttempt",
+        "card": "Grounded Blocker",
+        "reason": "\"Ahriman\" has flying — only a creature with flying or reach can block it (509.1b)"
+      },
+      {
+        "fn": "block",
+        "blocker": "Iron Giant",
+        "attacker": "Ahriman"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Ahriman",
+        "target": "Iron Giant",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Iron Giant",
+        "target": "Ahriman",
+        "amount": 6
+      },
+      {
+        "fn": "destroy",
+        "target": "Ahriman",
+        "controller": "you"
+      },
+      {
+        "fn": "destroy",
+        "target": "Iron Giant",
+        "controller": "opp0"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 3
+      },
+      {
+        "label": "Declare Ahriman (Flying) as attacker",
+        "from": 4
+      },
+      {
+        "label": "Advance to Declare Blockers",
+        "from": 6
+      },
+      {
+        "label": "Attempt (expected illegal): Grounded Blocker (no Flying/Reach) blocks Ahriman",
+        "from": 7
+      },
+      {
+        "label": "Declare Iron Giant (Reach) as blocker",
+        "from": 8
+      },
+      {
+        "label": "Resolve combat damage",
+        "from": 9
+      }
+    ]
+  }
+]

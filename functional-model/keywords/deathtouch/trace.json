@@ -1,0 +1,110 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "real engine playthrough: declare Deathtouch attacker -> blocked -> real lethal-by-Deathtouch SBA",
+      "result": "Real 702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its real printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own real SBA sweep (`isLethallyDamaged`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a genuine mutual kill, not a one-sided effect.",
+      "raw": {
+        "result": "Real 702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its real printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own real SBA sweep (`isLethallyDamaged`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a genuine mutual kill, not a one-sided effect.",
+        "you": {
+          "libraryCount": 3
+        },
+        "opponents": [
+          {
+            "libraryCount": 3
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "enters",
+        "card": "Gran Pulse Ochu",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 1
+      },
+      {
+        "fn": "enters",
+        "card": "Big Blocker",
+        "zone": "Battlefield",
+        "power": 4,
+        "toughness": 4,
+        "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Gran Pulse Ochu"
+      },
+      {
+        "fn": "attack",
+        "card": "Gran Pulse Ochu"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Big Blocker",
+        "attacker": "Gran Pulse Ochu"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Gran Pulse Ochu",
+        "target": "Big Blocker",
+        "amount": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Big Blocker",
+        "target": "Gran Pulse Ochu",
+        "amount": 4
+      },
+      {
+        "fn": "destroy",
+        "target": "Gran Pulse Ochu",
+        "controller": "you"
+      },
+      {
+        "fn": "destroy",
+        "target": "Big Blocker",
+        "controller": "opp0"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 2
+      },
+      {
+        "label": "Declare Gran Pulse Ochu (Deathtouch) as attacker",
+        "from": 3
+      },
+      {
+        "label": "Advance to Declare Blockers",
+        "from": 5
+      },
+      {
+        "label": "Declare Big Blocker as blocker",
+        "from": 6
+      },
+      {
+        "label": "Resolve combat damage — real Deathtouch (702.2e)",
+        "from": 7
+      }
+    ]
+  }
+]

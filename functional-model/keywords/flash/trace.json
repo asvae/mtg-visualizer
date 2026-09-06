@@ -1,0 +1,113 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 Plains(s)",
+      "action": "real engine playthrough: opponent's turn -> sorcery-speed cast rejected -> Flash cast succeeds",
+      "result": "Real 307.1a/117.1a: Gran Pulse Ochu, a plain sorcery-speed creature, is correctly rejected when cast during the opponent's own turn — the engine's own real reason is logged. Ambrosia Whiteheart's real printed Flash exempts it from that same check (`isInstantSpeed` in engine.ts), so the identical cast attempt succeeds for real at the exact same moment.",
+      "raw": {
+        "result": "Real 307.1a/117.1a: Gran Pulse Ochu, a plain sorcery-speed creature, is correctly rejected when cast during the opponent's own turn — the engine's own real reason is logged. Ambrosia Whiteheart's real printed Flash exempts it from that same check (`isInstantSpeed` in engine.ts), so the identical cast attempt succeeds for real at the exact same moment.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Forest",
+            "Plains"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "illegalAttempt",
+        "card": "Gran Pulse Ochu",
+        "reason": "sorcery-speed timing violated (307.1a/117.1a): \"Gran Pulse Ochu\" can only be cast during your own main phase with an empty stack"
+      },
+      {
+        "fn": "cast",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "enters",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 4,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Plains",
+        "zone": "Hand",
+        "controller": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 0
+      },
+      {
+        "label": "Attempt (expected illegal): cast Gran Pulse Ochu (sorcery-speed) during the opponent's turn",
+        "from": 3
+      },
+      {
+        "label": "Cast Ambrosia Whiteheart via Flash during the opponent's turn",
+        "from": 4
+      },
+      {
+        "label": "Resolve",
+        "from": 7
+      }
+    ]
+  }
+]

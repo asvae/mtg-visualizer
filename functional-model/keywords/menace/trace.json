@@ -1,0 +1,138 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "real engine playthrough: declare Menace attacker -> single-blocker rejected -> two-blocker block legal -> real combat",
+      "result": "Real 509.1b/702.111b: a single blocker is rejected outright against Xande's real printed Menace — the engine's own real reason is logged, not a scripted assumption. Two blockers satisfy Menace's real minimum and the block is declared legally; real combat damage then splits Xande's 3 power lethally across both 1-toughness blockers (both destroyed, 704.5g) while their combined 2 power back doesn't kill Xande's own 3 toughness.",
+      "raw": {
+        "result": "Real 509.1b/702.111b: a single blocker is rejected outright against Xande's real printed Menace — the engine's own real reason is logged, not a scripted assumption. Two blockers satisfy Menace's real minimum and the block is declared legally; real combat damage then splits Xande's 3 power lethally across both 1-toughness blockers (both destroyed, 704.5g) while their combined 2 power back doesn't kill Xande's own 3 toughness.",
+        "you": {
+          "libraryCount": 3
+        },
+        "opponents": [
+          {
+            "libraryCount": 3
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "enters",
+        "card": "Xande, Dark Mage",
+        "zone": "Battlefield",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "enters",
+        "card": "Blocker One",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 1,
+        "controller": "opp0"
+      },
+      {
+        "fn": "enters",
+        "card": "Blocker Two",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 1,
+        "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Xande, Dark Mage"
+      },
+      {
+        "fn": "attack",
+        "card": "Xande, Dark Mage"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "illegalAttempt",
+        "card": "Blocker One",
+        "reason": "\"Xande, Dark Mage\" has menace — it can't be blocked by only one creature (509.1b/702.111b)"
+      },
+      {
+        "fn": "block",
+        "blocker": "Blocker One",
+        "attacker": "Xande, Dark Mage"
+      },
+      {
+        "fn": "block",
+        "blocker": "Blocker Two",
+        "attacker": "Xande, Dark Mage"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Xande, Dark Mage",
+        "target": "Blocker One",
+        "amount": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Xande, Dark Mage",
+        "target": "Blocker Two",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Blocker One & Blocker Two",
+        "target": "Xande, Dark Mage",
+        "amount": 2
+      },
+      {
+        "fn": "destroy",
+        "target": "Blocker One",
+        "controller": "opp0"
+      },
+      {
+        "fn": "destroy",
+        "target": "Blocker Two",
+        "controller": "opp0"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 3
+      },
+      {
+        "label": "Declare Xande, Dark Mage (Menace) as attacker",
+        "from": 4
+      },
+      {
+        "label": "Advance to Declare Blockers",
+        "from": 6
+      },
+      {
+        "label": "Attempt (expected illegal): only Blocker One blocks Xande, Dark Mage",
+        "from": 7
+      },
+      {
+        "label": "Declare Blocker One and Blocker Two as blockers",
+        "from": 8
+      },
+      {
+        "label": "Resolve combat damage",
+        "from": 10
+      }
+    ]
+  }
+]

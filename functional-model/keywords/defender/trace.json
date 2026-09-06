@@ -1,0 +1,49 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "real engine playthrough: declare Defender creature as attacker -> real rejection (302.6a)",
+      "result": "Real 302.6a: Demon Wall's real printed Defender rejects its own attacker declaration outright — the engine's own real reason (canAttack) is logged, not a scripted assumption. (Demon Wall's own real text has a conditional exception — \"as long as this creature has a counter on it, it can attack as though it didn't have defender\" — that clause is plain descriptive text in this model, since there is no attack-legality hook a counter-count condition could plug into; see that card's own definition.ts comment.)",
+      "raw": {
+        "result": "Real 302.6a: Demon Wall's real printed Defender rejects its own attacker declaration outright — the engine's own real reason (canAttack) is logged, not a scripted assumption. (Demon Wall's own real text has a conditional exception — \"as long as this creature has a counter on it, it can attack as though it didn't have defender\" — that clause is plain descriptive text in this model, since there is no attack-legality hook a counter-count condition could plug into; see that card's own definition.ts comment.)",
+        "you": {
+          "libraryCount": 3
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "enters",
+        "card": "Demon Wall",
+        "zone": "Battlefield",
+        "power": 3,
+        "toughness": 3
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "illegalAttempt",
+        "card": "Demon Wall",
+        "reason": "creatures with Defender can't attack (302.6)"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 1
+      },
+      {
+        "label": "Attempt (expected illegal): declare Demon Wall as attacker",
+        "from": 2
+      }
+    ]
+  }
+]

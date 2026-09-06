@@ -1,0 +1,207 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "real engine playthrough: declare First Strike attacker -> blocked -> real two-pass combat damage",
+      "result": "Real 510.5: Lightning's First Strike deals its 3 damage in the FIRST combat-damage sub-step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular sub-step ever runs — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-pass resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning is the real, observable proof First Strike's own ordering actually ran.",
+      "raw": {
+        "result": "Real 510.5: Lightning's First Strike deals its 3 damage in the FIRST combat-damage sub-step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular sub-step ever runs — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-pass resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning is the real, observable proof First Strike's own ordering actually ran.",
+        "you": {
+          "libraryCount": 3
+        },
+        "opponents": [
+          {
+            "libraryCount": 3
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "enters",
+        "card": "Lightning, Army of One",
+        "zone": "Battlefield",
+        "power": 3,
+        "toughness": 2
+      },
+      {
+        "fn": "enters",
+        "card": "Would-Be Trader",
+        "zone": "Battlefield",
+        "power": 3,
+        "toughness": 3,
+        "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Lightning, Army of One"
+      },
+      {
+        "fn": "attack",
+        "card": "Lightning, Army of One"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Would-Be Trader",
+        "attacker": "Lightning, Army of One"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Lightning, Army of One",
+        "target": "Would-Be Trader",
+        "amount": 3
+      },
+      {
+        "fn": "destroy",
+        "target": "Would-Be Trader",
+        "controller": "opp0"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 2
+      },
+      {
+        "label": "Declare Lightning, Army of One (First Strike) as attacker",
+        "from": 3
+      },
+      {
+        "label": "Advance to Declare Blockers",
+        "from": 5
+      },
+      {
+        "label": "Declare Would-Be Trader as blocker",
+        "from": 6
+      },
+      {
+        "label": "Resolve combat damage — real First Strike (510.5) two-pass ordering",
+        "from": 7
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "real engine playthrough: declare Double Strike attacker -> blocked -> real two-pass combat damage",
+      "result": "Real 510.5: Giott's Double Strike deals its 1 power in BOTH the first-strike AND the regular combat-damage sub-step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal. Giott also takes the blocker's 1 power back in the regular sub-step (real-lethal to its own 1 toughness) — both destroyed.",
+      "raw": {
+        "result": "Real 510.5: Giott's Double Strike deals its 1 power in BOTH the first-strike AND the regular combat-damage sub-step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal. Giott also takes the blocker's 1 power back in the regular sub-step (real-lethal to its own 1 toughness) — both destroyed.",
+        "you": {
+          "libraryCount": 3
+        },
+        "opponents": [
+          {
+            "libraryCount": 3
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "enters",
+        "card": "Giott, King of the Dwarves",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 1
+      },
+      {
+        "fn": "enters",
+        "card": "Two-Toughness Blocker",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Giott, King of the Dwarves"
+      },
+      {
+        "fn": "attack",
+        "card": "Giott, King of the Dwarves"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Two-Toughness Blocker",
+        "attacker": "Giott, King of the Dwarves"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Giott, King of the Dwarves",
+        "target": "Two-Toughness Blocker",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Two-Toughness Blocker",
+        "target": "Giott, King of the Dwarves",
+        "amount": 1
+      },
+      {
+        "fn": "destroy",
+        "target": "Giott, King of the Dwarves",
+        "controller": "you"
+      },
+      {
+        "fn": "destroy",
+        "target": "Two-Toughness Blocker",
+        "controller": "opp0"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 2
+      },
+      {
+        "label": "Declare Giott, King of the Dwarves (Double Strike) as attacker",
+        "from": 3
+      },
+      {
+        "label": "Advance to Declare Blockers",
+        "from": 5
+      },
+      {
+        "label": "Declare Two-Toughness Blocker as blocker",
+        "from": 6
+      },
+      {
+        "label": "Resolve combat damage — real Double Strike (510.5) two-pass damage",
+        "from": 7
+      }
+    ]
+  }
+]

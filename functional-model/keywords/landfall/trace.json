@@ -1,0 +1,103 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> real land ETB -> onLandfall fired manually -> real pump",
+      "result": "Landfall isn't auto-detected in this engine (a real, documented gap — see this file's own header), so the land's real entrance is played for real, then the SAME real \"+1/+0 until end of turn\" effect the card is printed with fires manually — Ambrosia's real power genuinely goes from 1 to 2 via the same `pump` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.",
+      "raw": {
+        "result": "Landfall isn't auto-detected in this engine (a real, documented gap — see this file's own header), so the land's real entrance is played for real, then the SAME real \"+1/+0 until end of turn\" effect the card is printed with fires manually — Ambrosia's real power genuinely goes from 1 to 2 via the same `pump` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 5
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "enters",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Plains",
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Forest",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "pump",
+        "target": "Ambrosia Whiteheart",
+        "power": 1,
+        "toughness": 0
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Ambrosia Whiteheart ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      },
+      {
+        "label": "A real land enters",
+        "from": 7
+      },
+      {
+        "label": "Fire onLandfall",
+        "from": 8
+      }
+    ]
+  }
+]
