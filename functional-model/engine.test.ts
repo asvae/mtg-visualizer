@@ -564,6 +564,98 @@ describe('Equip (301.5c) — canActivateAbility/activateAbility', () => {
   });
 });
 
+describe('Crew (702.121b/c) — canActivateAbility/activateAbility', () => {
+  const VEHICLE: CardDefinition = {
+    name: 'Test Vehicle',
+    manaCost: '{3}',
+    typeLine: 'Artifact — Vehicle',
+    crewCost: 2,
+    activationCost: 'Crew 2 (tap creatures with total power 2 or more)',
+    effects: [{ kind: 'animate', target: 'self', types: ['Artifact', 'Creature'] }],
+  };
+
+  it('allows crewing with one creature whose power alone meets the total, taps only the creature (not the Vehicle), and the resolved ability really animates it', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const crewer = state.addCard(you, 'Battlefield', { name: 'Crewer', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    const self = wrapCard(state, vehicle);
+    // A real `animate` (unlike `noopActions`) so the ability's own
+    // `{ kind: 'animate' }` effect genuinely resolves, same "just enough
+    // of `Actions` for this test card's own effect" convention
+    // `saga.test.ts`'s own `testActions` already established.
+    const animateActions = { animate: (target, types) => state.animate(state.cards.get(target.getId())!, types) } as Actions;
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [crewer]).ok).toBe(true);
+    const result = activateAbility(engine, you, vehicle, VEHICLE, ctxFor(state, self, youPlayer, [oppPlayer]), animateActions, undefined, [crewer]);
+    expect(result.ok).toBe(true);
+    expect(crewer.tapped).toBe(true);
+    expect(vehicle.tapped).toBe(false);
+    expect(engine.stack.size).toBe(1);
+    resolveTop(engine);
+    expect(wrapCard(state, vehicle).isCreature()).toBe(true);
+  });
+
+  it('allows crewing with MULTIPLE creatures whose combined power meets the total', () => {
+    const { state, you, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const crewerA = state.addCard(you, 'Battlefield', { name: 'Crewer A', types: ['Creature'], basePower: 1, baseToughness: 1 });
+    const crewerB = state.addCard(you, 'Battlefield', { name: 'Crewer B', types: ['Creature'], basePower: 1, baseToughness: 1 });
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [crewerA, crewerB]).ok).toBe(true);
+  });
+
+  it("rejects crewing when the tapped creatures' total power is below crewCost, mutating nothing", () => {
+    const { state, you, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const weak = state.addCard(you, 'Battlefield', { name: 'Weak', types: ['Creature'], basePower: 1, baseToughness: 1 });
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [weak])).toEqual({ ok: false, reason: expect.stringMatching(/total power/) });
+    expect(weak.tapped).toBe(false);
+  });
+
+  it('rejects crewing with no creatures specified at all', () => {
+    const { state, you, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE)).toEqual({ ok: false, reason: expect.stringMatching(/no creatures specified/) });
+  });
+
+  it("rejects crewing with a creature the controller doesn't control, mutating nothing", () => {
+    const { state, you, opp, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const oppCreature = state.addCard(opp, 'Battlefield', { name: 'Opp Creature', types: ['Creature'], basePower: 5, baseToughness: 5 });
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [oppCreature])).toEqual({ ok: false, reason: expect.stringMatching(/not a permanent you control/) });
+    expect(oppCreature.tapped).toBe(false);
+  });
+
+  it('rejects crewing with an already-tapped creature', () => {
+    const { state, you, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const tapped = state.addCard(you, 'Battlefield', { name: 'Tapped', types: ['Creature'], basePower: 5, baseToughness: 5 });
+    state.tap(tapped);
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [tapped])).toEqual({ ok: false, reason: expect.stringMatching(/already tapped/) });
+  });
+
+  it('rejects crewing with a non-creature permanent even if it has high power (this engine has no "power" outside effectivePT anyway, but the type check must fire regardless)', () => {
+    const { state, you, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const notACreature = state.addCard(you, 'Battlefield', { name: 'Just An Artifact', types: ['Artifact'] });
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [notACreature])).toEqual({ ok: false, reason: expect.stringMatching(/not a creature/) });
+  });
+
+  it('crewing is legal outside a main phase / with a non-empty stack (702.121c has no sorcery-speed restriction)', () => {
+    const { state, you, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const crewer = state.addCard(you, 'Battlefield', { name: 'Crewer', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatBegin') advance(engine);
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [crewer]).ok).toBe(true);
+  });
+
+  it('a freshly-entered (summoning-sick) creature can still crew — 302.6 restricts its OWN {T} ability/attacking, not being tapped as a cost by another permanent', () => {
+    const { state, you, engine } = setupGame();
+    const vehicle = state.addCard(you, 'Battlefield', { name: VEHICLE.name, types: ['Artifact'] });
+    const sickCreature = state.addCard(you, 'Battlefield', { name: 'Sick Crewer', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    engine.enteredThisTurn.set(sickCreature.id, engine.turn.turnNumber);
+    expect(canActivateAbility(engine, you, vehicle, VEHICLE, undefined, [sickCreature]).ok).toBe(true);
+  });
+});
+
 describe('resolveCard dispatch collision (a permanent with BOTH an on:"enter" trigger AND activationCost+effects)', () => {
   function dualCard(order: string[]): CardDefinition {
     return {

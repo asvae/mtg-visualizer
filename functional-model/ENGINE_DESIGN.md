@@ -332,6 +332,56 @@ turn)` correctly still rejects — stripping the "Equip—" prefix leaves
 Pay-life stays a real, separately-tracked gap (ENGINE_GAPS.md gap #11),
 not silently legalized by this change.
 
+### Crew (702.121b/c) — `canActivateAbility`/`activateAbility`
+
+`CardDefinition.crewCost` already existed as a declared field before this
+pass, entirely unconsumed by any real code. Checked the real pool: 5
+Vehicle cards set it, 3 of which (Magitek Armor, The Prima Vista, The
+Lunar Whale) also already declare `effects: [{ kind: 'animate', target:
+'self', types: ['Artifact', 'Creature'] }]` — meaning the RESOLUTION half
+of Crew was already fully wired through the existing `animate` Effect/
+`resolveCard` pipeline; only the COST half (paying it at all) was
+missing.
+
+Crew's own real cost — "tap creatures you control with total power >= N"
+— has no `{}` mana/tap shape at all, so it can't reuse
+`unsupportedCostComponent`'s string parsing. Same "caller supplies the
+real objects, engine only validates" shape `declareBlockers` already
+established for combat: both `canActivateAbility` and `activateAbility`
+take a new optional `crewedBy: RealCard[]`, and a `crewCost`-bearing card
+bypasses the free-text cost checks entirely:
+
+```ts
+canActivateAbility(engine, controller, vehicle, card, undefined, crewedBy);
+activateAbility(engine, controller, vehicle, card, ctx, actions, undefined, crewedBy);
+```
+
+Legal iff every creature in `crewedBy` is controlled by the activator,
+is actually a creature (`effectiveTypes`), is untapped, and their summed
+`effectivePT` power meets `crewCost`. No sorcery-speed restriction (real:
+702.121c has none) and no 302.6 summoning-sickness check on the tapped
+creatures (real: sickness restricts a creature's OWN {T} ability or
+attacking, not being tapped as a cost by a DIFFERENT permanent's
+ability — the same real distinction Convoke-shaped tap-as-cost effects
+rely on). `activateAbility` taps the listed creatures (never the Vehicle
+itself) and pushes onto the stack exactly like any other activated
+ability — no new Effect kind needed, since `animate` already exists and
+already resolves through `resolveCard`.
+
+Cargo Ship and The Regalia both set `crewCost` but declare neither
+`activationCost` nor `effects` in their own `definition.ts` (their own
+comments say the wiring doesn't exist yet) — `activationCostFor` returns
+`undefined` for them, so `canActivateAbility`'s existing "has no such
+activated ability" check correctly rejects them. Same `cards/*`-boundary
+situation as gap #8's damage-prevention shields (ENGINE_GAPS.md) — the
+engine-side mechanism is ready the moment those two files can be edited.
+
+**Inherited, pre-existing limitation, not a new gap**: `animate`/
+`LayerSet` track no duration (`layers.ts`'s own documented scope), so a
+crewed Vehicle becomes a creature PERMANENTLY rather than "until end of
+turn" — the same simplification the 3 real cards' own `effects:
+[animate]` already committed to before this pass touched anything.
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -384,6 +434,10 @@ not silently legalized by this change.
   pure mana, and any Equipment-typeLine permanent's activation is gated to
   sorcery-speed regardless of its own cost text — see "Equip (301.5c)"
   above.
+- **Crew (702.121b/c)** — a real structured cost (`crewCost` + explicit
+  `crewedBy` creature list) bypassing the free-text cost checks entirely,
+  reusing the existing `animate` Effect/stack pipeline for resolution —
+  see "Crew (702.121b/c)" above.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -441,6 +495,13 @@ activation, the 301.5c timing rejection outside a main phase (even with
 no "activate only as a sorcery" cost text), an unaffordable equip cost,
 Pay-life correctly still rejecting despite the "Equip" prefix strip, and
 a non-Equipment permanent confirming no false-positive sorcery-speed gate.
+Its `Crew (702.121b/c)` describe block covers a legal single-creature
+crew (including the resolved ability genuinely animating the Vehicle via
+a real, non-stub `animate` action), multiple creatures combining their
+power, insufficient total power, no creatures specified, an opponent's
+creature, an already-tapped creature, a non-creature permanent, legality
+outside a main phase/with a non-empty stack (no sorcery-speed
+restriction), and a summoning-sick creature still being allowed to crew.
 
 ## Gap analysis vs. real Forge
 

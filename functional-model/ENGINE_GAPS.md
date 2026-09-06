@@ -234,6 +234,22 @@ so a future pass doesn't mistake them for missing work:
    (optionally: only combat damage)" shields, checked inside `dealDamage`
    only, before applying damage. Still real, still worth doing — just not
    what "614" as a whole implies.
+   **Blocked on the `cards/*` boundary, not on engine design**: checked
+   both cards' own current `definition.ts`. Crystal Fragments/Summon:
+   Alexander's chapters I/II are already real triggers, but their own
+   `run` bodies are explicit no-ops (`run: () => {}`) specifically because
+   no hook exists for them to call — activating a `dealDamage`-side shield
+   for real means that `run` calling some new `actions.*` method, which
+   means editing the card's own `definition.ts`. Diamond Weapon's shield
+   is plain `staticAbilities` freeform text, not a structured field at
+   all — modeling it without a card-file change would mean matching on
+   the card's own NAME inside `dealDamage`, which is exactly the
+   per-card special-casing this codebase's own conventions (Saga
+   automation, e.g.) deliberately avoid. So: the engine-side design here
+   (a short-lived/always-on shield list, checked in `dealDamage`) is
+   ready to implement the moment either card's own file can be touched —
+   it just can't be done from the engine side alone under the current
+   `cards/*`-is-out-of-scope boundary.
 
 ### Lower priority (narrow, or already partially mitigated)
 
@@ -262,7 +278,40 @@ so a future pass doesn't mistake them for missing work:
     just (until this pass) missing the 301.5c timing gate they now also
     get. Dark Knight's Greatsword's own `Equip—Pay 3 life` correctly still
     rejects (Pay-life remains unsupported).
-    Still open: `Sacrifice another artifact or creature`, `Crew N`, `{X}`,
+    ~~Crew N~~ **CLOSED** — `card.crewCost` (a structured field that
+    already existed, unused, before this pass) now drives a real cost
+    path: `canActivateAbility`/`activateAbility` take an explicit
+    `crewedBy: RealCard[]` (same "caller supplies the real objects,
+    engine validates" shape `declareBlockers` already established for
+    combat), bypassing the free-text cost-string checks entirely for a
+    `crewCost` card. Legal iff every listed creature is controlled by the
+    activator, actually a creature, untapped, and their combined
+    `effectivePT` power meets `crewCost` — no sorcery-speed restriction
+    and no 302.6 summoning-sickness check on the tapped creatures (both
+    real: 702.121c has no such restriction, and sickness only restricts a
+    creature's OWN {T} ability/attacking, not being tapped as a cost by
+    something else). No new Effect kind needed — the real cards here
+    already declare `effects: [{ kind: 'animate', ... }]`, which resolves
+    for real through the existing stack/`resolveCard` pipeline once the
+    cost is payable at all.
+    Verified against the real pool: of 5 Vehicle cards with `crewCost`,
+    only 3 (Magitek Armor, The Prima Vista, The Lunar Whale) also declare
+    the matching `activationCost`+`effects: [animate]` needed to actually
+    resolve — those 3 are real and tested. Cargo Ship and The Regalia's
+    own `definition.ts` set `crewCost` but declare NEITHER field (their
+    own comments say so explicitly), so `activationCostFor` correctly
+    returns `undefined` for them and `canActivateAbility`'s existing
+    "has no such activated ability" check rejects them — same "blocked on
+    `cards/*`, not on engine design" situation as gap #8's damage-shields
+    above, not a bug.
+    One inherited, pre-existing limitation: the `animate` Effect (and
+    `LayerSet` generally) has no duration tracking (`layers.ts`'s own
+    documented scope), so a crewed Vehicle becomes a creature
+    PERMANENTLY, not "until end of turn" as 702.121b's real text says —
+    the same simplification the 3 real cards' own `effects: [animate]`
+    already commits to by using this mechanism, not a new gap introduced
+    here.
+    Still open: `Sacrifice another artifact or creature`, `{X}`,
     `Pay N life` — all real, common cost shapes verified by grepping every
     `activationCost:` string across every card's own `definition.ts`.
     Actually supporting them (not just rejecting) is the remaining work.

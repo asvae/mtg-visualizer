@@ -85,8 +85,10 @@
 //  - Activated-ability legality (602.1) — same sorcery-speed-timing/
 //    affordability shape as casting, plus real `{T}`-cost tapping, plus a
 //    real Equip {N} mana-only cost (301.5c's own sorcery-speed timing,
-//    `isEquipment`) — see "Equip (301.5c)" below. Only a {T}/Equip +
-//    mana-only cost is payable; a real Sacrifice/Crew/Pay-life/{X} cost
+//    `isEquipment`), plus real Crew N (702.121b/c — tap creatures with
+//    total power >= N, an explicit `crewedBy` list, no sickness/timing
+//    restriction on the tapped creatures). Only a {T}/Equip/Crew +
+//    mana-only cost is payable; a real Sacrifice/Pay-life/{X} cost
 //    component (common among the 312 FIN cards — see
 //    `unsupportedCostComponent`'s own doc comment) is REJECTED (a real,
 //    explicit answer), not silently mispaid.
@@ -315,15 +317,45 @@ function activationCostFor(card: CardDefinition, abilityName?: string): string |
  * cost with NO such text is treated as instant-speed, matching real MTG's
  * own default) OR real 301.5c equip-timing (`isEquipment` — type-based,
  * not text-based, since no real Equipment card prints "activate only as
- * a sorcery" on its own equip cost), and cost affordability (`{T}`/Equip
- * + mana only — `unsupportedCostComponent`'s own doc comment lists what a
- * real card's cost can contain that this engine can't pay yet:
- * Sacrifice/Crew/Pay-life/{X}). Read-only, same shape as `canCastSpell`.
+ * a sorcery" on its own equip cost), OR real Crew N (702.121b/c —
+ * `card.crewCost`, a structured field entirely bypassing the free-text
+ * cost checks below in favor of validating the caller-supplied
+ * `crewedBy` creature list), and cost affordability (`{T}`/Equip + mana
+ * only — `unsupportedCostComponent`'s own doc comment lists what a real
+ * card's cost can contain that this engine can't pay yet:
+ * Sacrifice/Pay-life/{X}). Read-only, same shape as `canCastSpell`.
  */
-export function canActivateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, abilityName?: string): ActionResult {
+export function canActivateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, abilityName?: string, crewedBy?: RealCard[]): ActionResult {
   const cost = activationCostFor(card, abilityName);
   if (!cost) return { ok: false, reason: `"${card.name}" has no such activated ability${abilityName ? ` named "${abilityName}"` : ''}` };
   if (permanent.controllerId !== controller.id) return { ok: false, reason: 'you do not control this permanent (602.1)' };
+  if (card.crewCost !== undefined) {
+    // Real Crew (702.121b/c): "Tap any number of untapped creatures you
+    // control with total power N or greater" — a real, STRUCTURED cost
+    // distinct from the free-text `activationCost` (kept only as a
+    // descriptive label — see `card.ts`'s own `crewCost` doc comment), so
+    // it bypasses the {T}/mana cost-string checks below entirely. No
+    // sorcery-speed restriction (crewing is legal any time its controller
+    // could cast an instant, same as most activated abilities), and no
+    // 302.6 summoning-sickness check on the TAPPED creatures — crewing
+    // taps them as a cost of the VEHICLE's own ability, not their own
+    // {T} ability, the same real distinction Convoke-shaped tap-as-cost
+    // effects rely on elsewhere in real Forge.
+    const creatures = crewedBy ?? [];
+    if (creatures.length === 0) {
+      return { ok: false, reason: `Crew ${card.crewCost}: no creatures specified to tap` };
+    }
+    for (const c of creatures) {
+      if (c.controllerId !== controller.id) return { ok: false, reason: `Crew: "${c.name}" is not a permanent you control` };
+      if (!effectiveTypes(c).includes('Creature')) return { ok: false, reason: `Crew: "${c.name}" is not a creature` };
+      if (c.tapped) return { ok: false, reason: `Crew: "${c.name}" is already tapped` };
+    }
+    const totalPower = creatures.reduce((sum, c) => sum + effectivePT(engine.state, c)[0], 0);
+    if (totalPower < card.crewCost) {
+      return { ok: false, reason: `Crew ${card.crewCost}: tapped creatures' total power (${totalPower}) is less than required` };
+    }
+    return { ok: true };
+  }
   if (/activate only as a sorcery/i.test(cost) && !sorcerySpeedTimingOk(engine, controller)) {
     return { ok: false, reason: `"${cost}" restricts this to sorcery-speed timing: only during your own main phase with an empty stack` };
   }
@@ -370,9 +402,21 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
  * its OWN effects (if any) do that (Jill's own transform ability moves
  * itself via its own `custom` effect's `actions.moveTo` calls, e.g.).
  */
-export function activateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, abilityName?: string): ActionResult {
-  const check = canActivateAbility(engine, controller, permanent, card, abilityName);
+export function activateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, abilityName?: string, crewedBy?: RealCard[]): ActionResult {
+  const check = canActivateAbility(engine, controller, permanent, card, abilityName, crewedBy);
   if (!check.ok) return check;
+  if (card.crewCost !== undefined) {
+    // Real 702.121c: crewing taps the CREATURES paying the cost, never
+    // the Vehicle itself. The ability's own effect (real cards here all
+    // declare `effects: [{ kind: 'animate', ... }]`, magitek-armor/
+    // the-prima-vista/the-lunar-whale) resolves later off the stack
+    // exactly like any other activated ability's effects — no new Effect
+    // kind needed, `animate` already exists and already grants Creature
+    // type through the real, existing `resolveCard` dispatch.
+    for (const c of crewedBy!) engine.state.tap(c);
+    engine.stack.push({ card, ctx, actions, abilityName, isAbility: true });
+    return { ok: true };
+  }
   const cost = activationCostFor(card, abilityName)!;
   const manaPortion = manaPortionOf(cost);
   if (/\{[^}]+\}/.test(manaPortion)) payMana(engine.state, untappedManaSources(controller), parseManaCost(manaPortion));
