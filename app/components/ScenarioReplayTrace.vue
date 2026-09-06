@@ -331,9 +331,23 @@ const currentActionRawEntries = computed(() => {
               >
                 <span class="absolute top-0.5 left-1 text-[9px] text-muted/50">{{ zr.label }}</span>
               </div>
+              <!-- Keyed on qty too, not just identity (`card.key` alone) —
+                   a fungible pile (several same-named lands drawn one at a
+                   time, e.g.) never moves position when its qty ticks up,
+                   so with an identity-only key Vue just patches the "×N"
+                   text in place: real for the FIRST card ever drawn into an
+                   empty Hand (a brand new key pops in), but every
+                   subsequent same-named draw showed no visible change at
+                   all (confirmed the hard way — a second Forest drawn had
+                   no motion). Appending qty forces the card-pop transition
+                   to replay on every count change, at the same screen
+                   position either side, cross-fading old->new sizes —
+                   `cardStyle`'s own position math still reads `card.key`
+                   directly (untouched), this only affects Vue's own vdom
+                   reconciliation key. -->
               <Transition
                 v-for="card in ownerCards(owner).filter((c) => c.zone !== 'Unknown')"
-                :key="card.key"
+                :key="`${card.key}:${card.qty}`"
                 name="card-pop"
               >
                 <div
