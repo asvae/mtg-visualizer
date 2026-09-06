@@ -101,16 +101,16 @@ interface FunctionalModelData {
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
-// request, so a hand-edit (definition.ts, scenarios.ts, engine-scenario.ts,
-// progress.json, synergy.json) shows up on the very next load with no
-// server restart and no run-scenarios.mjs step, while a request for a card
-// nobody's touched skips the readFileSync/dynamic-import/runScenarios/
-// annotateCardText work entirely. Keyed on cardText too (not just slug)
-// since annotatedText depends on it and it comes from data/cards.db,
-// outside this folder's own signature — cheap insurance against a stale
-// annotation if the card's real oracle text ever changes between requests
-// (a DB re-sync) without the folder itself changing.
-const FM_FOLDER_FILES = ['definition.ts', 'scenarios.ts', 'engine-scenario.ts', 'progress.json', 'synergy.json'] as const;
+// request, so a hand-edit (definition.ts, scenarios.ts, progress.json,
+// synergy.json) shows up on the very next load with no server restart and
+// no run-scenarios.mjs step, while a request for a card nobody's touched
+// skips the readFileSync/dynamic-import/runScenarios/annotateCardText work
+// entirely. Keyed on cardText too (not just slug) since annotatedText
+// depends on it and it comes from data/cards.db, outside this folder's own
+// signature — cheap insurance against a stale annotation if the card's real
+// oracle text ever changes between requests (a DB re-sync) without the
+// folder itself changing.
+const FM_FOLDER_FILES = ['definition.ts', 'scenarios.ts', 'progress.json', 'synergy.json'] as const;
 function functionalModelSignature(slug: string): string {
   return FM_FOLDER_FILES.map((f) => {
     try {
@@ -150,18 +150,20 @@ async function loadFunctionalModel(name: string, cardText: string): Promise<Func
   let data: FunctionalModelData | null;
   try {
     let source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
-    // A card that's opted into a real engine-piloted trace (see
-    // engine-trace.ts's own header — `cards/<slug>/engine-scenario.ts`,
-    // picked up INSTEAD of scenarios.ts for that one card, same dispatch
-    // run-one-card.mjs uses to compute `traces` below) has its own pilot
-    // script, worth showing right alongside the definition rather than
-    // leaving it invisible on disk. Appended, not a separate field, to keep
-    // the Card Definition tab's existing single-`source` shape
-    // (FunctionalModelScript) unchanged.
-    const engineScenarioPath = join(process.cwd(), `functional-model/cards/${slug}/engine-scenario.ts`);
-    if (existsSync(engineScenarioPath)) {
-      const pilotSource = readFileSync(engineScenarioPath, 'utf8');
-      source += `\n\n// ============================================================\n// engine-scenario.ts — this card's own real engine-piloted trace\n// (runs INSTEAD OF scenarios.ts for this card)\n// ============================================================\n\n${pilotSource}`;
+    // A card's own scenarios.ts is one of two shapes (see run-one-card.mjs's
+    // own header) — a plain `scenarios` array (the common case, already
+    // fully captured by `traces` below, nothing extra worth showing) or a
+    // real engine-piloted `runEngineScenarios()` pilot script, worth showing
+    // right alongside the definition since it's otherwise invisible on disk.
+    // Appended, not a separate field, to keep the Card Definition tab's
+    // existing single-`source` shape (FunctionalModelScript) unchanged.
+    // Detected by a text match rather than importing the module (execution
+    // already happens in run-one-card.mjs's own subprocess below) — cheap,
+    // and this is a display-only decision.
+    const scenariosPath = join(process.cwd(), `functional-model/cards/${slug}/scenarios.ts`);
+    const scenariosSource = existsSync(scenariosPath) ? readFileSync(scenariosPath, 'utf8') : '';
+    if (/export\s+function\s+runEngineScenarios\b/.test(scenariosSource)) {
+      source += `\n\n// ============================================================\n// scenarios.ts — this card's own real engine-piloted trace\n// ============================================================\n\n${scenariosSource}`;
     }
     const traces = await computeTracesLive(slug);
     const synergy = loadCardSynergy(slug);
