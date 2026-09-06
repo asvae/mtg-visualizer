@@ -14,6 +14,7 @@ import {
   computeZoneRects,
   boardHeight,
   groupForDisplay,
+  actionEndIndices,
   CARD_LAYOUT,
   ZONE_PADDING,
   type GroupedReplayCard,
@@ -35,7 +36,12 @@ const ZONE_COLOR: Record<ZoneType, string> = {
 };
 
 const props = defineProps<{
-  trace: { scenario: { setup: string; action: string; result: string; raw?: Scenario }; log: LogEntry[] };
+  trace: {
+    scenario: { setup: string; action: string; result: string; raw?: Scenario };
+    log: LogEntry[];
+    /** A coarser, human-labeled index into `log` — real engine-piloted traces only (see harness.ts's own `TraceResult.actions` doc comment). Undefined/empty for a flat harness.ts scenario, which falls back to today's per-log-entry stepping. */
+    actions?: { label: string; from: number }[];
+  };
   /** The tested card's own real Scryfall image(s) (front, then back for a DFC) — app/pages/app/card/[set]/[number].vue's own `card.images`. */
   cardImages?: string[];
   /** Real name -> image, for basic-land/named-token filler (harness.ts's `PlayerState.basicLands`/`tokens`) — resolved once in ScenarioReplay.vue via server/api/cards/by-names.ts and server/api/tokens/by-key.ts. */
@@ -61,13 +67,41 @@ function iconKeywords(card: GroupedReplayCard): string[] {
 // mutate the board — they're candidate-pool/predicate evidence for the
 // synergy matcher (see harness.ts's own `loggingCard`/`loggingPlayer`
 // comment), not something a scenario replay's step-through needs to show.
+// Used for the SECONDARY raw-log display, and (when this trace has no
+// `actions`) for stepping itself — the pre-actions behavior, unchanged.
 const log = computed(() => props.trace.log.filter((e) => !e.fn.startsWith('read:')));
 const filteredTrace = computed(() => ({ scenario: props.trace.scenario, log: log.value }));
-const snapshots = computed(() => replayTrace(filteredTrace.value));
-const maxStep = computed(() => snapshots.value.length - 1);
+const filteredSnapshots = computed(() => replayTrace(filteredTrace.value));
+
+const hasActions = computed(() => (props.trace.actions?.length ?? 0) > 0);
+// `actions[].from` is authored against the RAW log (engine-trace.ts's own
+// `pilot.log`, `read:*` included) — replaying that same raw log (not
+// `log`/`filteredSnapshots` above, which strips `read:*` and would shift
+// every index) is what keeps these lined up. Only computed when actually
+// needed — a harness.ts scenario's `log` can be large-ish and this trace
+// has no `actions` to index into it with anyway.
+const rawSnapshots = computed(() => (hasActions.value ? replayTrace({ scenario: props.trace.scenario, log: props.trace.log }) : []));
+const actionEnds = computed(() => (hasActions.value ? actionEndIndices(props.trace.actions!, props.trace.log.length) : []));
+
+// The user's current position — an ACTION index (0..actions.length-1) when
+// this trace has them, else today's raw filtered-log entry index
+// (0..filteredSnapshots.length-1). One ref for both: a single trace instance
+// only ever has one meaning for its own lifetime, and `play`/`pause`/`jumpTo`
+// below don't care which — they just walk `stepIndex` up to `maxStep.value`.
 const stepIndex = ref(0);
-const snapshot = computed(() => snapshots.value[stepIndex.value]!);
-const prevLife = computed(() => (stepIndex.value > 0 ? snapshots.value[stepIndex.value - 1]!.life : undefined));
+const maxStep = computed(() => (hasActions.value ? props.trace.actions!.length - 1 : filteredSnapshots.value.length - 1));
+
+const activeSnapshots = computed(() => (hasActions.value ? rawSnapshots.value : filteredSnapshots.value));
+/** Which index into `activeSnapshots` the CURRENT `stepIndex` resolves to — the end of the current action, or `stepIndex` itself in the no-actions fallback (today's exact meaning). */
+const activeIndex = computed(() => (hasActions.value ? (actionEnds.value[stepIndex.value] ?? 0) : stepIndex.value));
+/** Same resolution, one step back — the end of the PREVIOUS action (not just "one raw entry earlier," which could still be inside the current action) when this trace has them. */
+const prevIndex = computed(() => {
+  if (stepIndex.value <= 0) return undefined;
+  return hasActions.value ? actionEnds.value[stepIndex.value - 1]! : stepIndex.value - 1;
+});
+
+const snapshot = computed(() => activeSnapshots.value[activeIndex.value]!);
+const prevLife = computed(() => (prevIndex.value !== undefined ? activeSnapshots.value[prevIndex.value]!.life : undefined));
 
 const roles = computed(() => playerRoles(props.trace.scenario.raw));
 const boardOrder = computed(() => [...roles.value.filter((r) => r !== 'you'), 'you']);
@@ -103,7 +137,19 @@ function cardStyle(card: GroupedReplayCard): Record<string, string> {
   return { left: `${x}px`, top: `${CARD_LAYOUT.labelHeight}px` };
 }
 
-const highlighted = computed(() => new Set(snapshot.value.entry ? entryRefs(snapshot.value.entry) : []));
+// Which chips/life this step actually touched — the whole action's own
+// entries when this trace has actions (a multi-entry action, e.g. a cast
+// plus its tapForMana lines, should highlight all of it, not just the
+// single entry `snapshot` happens to land on), else just the one entry that
+// produced the current snapshot (today's exact behavior).
+const highlighted = computed(() => {
+  if (hasActions.value) {
+    const from = props.trace.actions![stepIndex.value]!.from;
+    const to = actionEnds.value[stepIndex.value]!;
+    return new Set(props.trace.log.slice(from, to).flatMap((e) => entryRefs(e)));
+  }
+  return new Set(snapshot.value.entry ? entryRefs(snapshot.value.entry) : []);
+});
 
 // Playback — a plain setInterval driving stepIndex forward; pauses itself
 // at the end rather than looping, so "done" reads as done.
@@ -151,10 +197,14 @@ const scenarioRows = computed(() => {
   return Object.entries(raw).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)] as const);
 });
 
-// Auto-scroll the active log row into view as playback/step-clicks move it.
-const logRows = ref<(HTMLElement | null)[]>([]);
+// Auto-scroll the active row (an action row when this trace has them, else
+// a raw log row) into view as playback/step-clicks move it. Only one of the
+// two lists ever renders for a given trace instance, so one ref array
+// serves both — whichever list is on screen is the one populating it.
+const stepRows = ref<(HTMLElement | null)[]>([]);
 watch(stepIndex, (i) => {
-  logRows.value[i - 1]?.scrollIntoView({ block: 'nearest' });
+  const rowIndex = hasActions.value ? i : i - 1;
+  stepRows.value[rowIndex]?.scrollIntoView({ block: 'nearest' });
 });
 </script>
 
@@ -313,30 +363,66 @@ watch(stepIndex, (i) => {
         </template>
       </div>
 
-      <div class="max-h-36 overflow-y-auto rounded border border-border bg-panel p-2">
-        <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
-          <thead>
-            <tr class="bg-panel text-muted/70 uppercase sticky top-0">
-              <th class="pr-2 pb-1 text-left font-normal">#</th>
-              <th class="pr-2 pb-1 text-left font-normal">fn</th>
-              <th class="pb-1 text-left font-normal">fields</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(entry, ei) in log"
-              :key="ei"
-              :ref="(el) => (logRows[ei] = el as HTMLElement | null)"
-              class="cursor-pointer align-top"
-              :class="stepIndex === ei + 1 ? 'bg-surface' : 'hover:bg-surface/50'"
-              @click="jumpTo(ei + 1)"
-            >
-              <td class="py-0.5 pr-2 text-muted/50">{{ ei + 1 }}</td>
-              <td class="py-0.5 pr-2 text-text">{{ entry.fn }}</td>
-              <td class="py-0.5 whitespace-pre-wrap text-muted">{{ fieldsOf(entry) }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="flex flex-col gap-2">
+        <!-- Actions: the primary clickable list driving the slider, when
+             this trace has them (an engine-piloted trace — see harness.ts's
+             own `TraceResult.actions` doc comment). -->
+        <div v-if="hasActions" class="max-h-36 overflow-y-auto rounded border border-border bg-panel p-2">
+          <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
+            <thead>
+              <tr class="bg-panel text-muted/70 uppercase sticky top-0">
+                <th class="pr-2 pb-1 text-left font-normal">#</th>
+                <th class="pb-1 text-left font-normal">action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(act, ai) in trace.actions"
+                :key="ai"
+                :ref="(el) => (stepRows[ai] = el as HTMLElement | null)"
+                class="cursor-pointer align-top"
+                :class="stepIndex === ai ? 'bg-surface' : 'hover:bg-surface/50'"
+                @click="jumpTo(ai)"
+              >
+                <td class="py-0.5 pr-2 text-muted/50">{{ ai }}</td>
+                <td class="py-0.5 whitespace-pre-wrap text-text">{{ act.label }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Raw log: the primary (and only) list for a harness.ts flat
+             scenario (no actions); a smaller, secondary detail panel scoped
+             to just the current action's own entries otherwise — not
+             something this replay needs to make especially readable, just
+             not thrown away (still useful for debugging). -->
+        <div class="max-h-36 overflow-y-auto rounded border border-border bg-panel p-2" :class="{ 'max-h-24': hasActions }">
+          <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
+            <thead>
+              <tr class="bg-panel text-muted/70 uppercase sticky top-0">
+                <th class="pr-2 pb-1 text-left font-normal">#</th>
+                <th class="pr-2 pb-1 text-left font-normal">fn</th>
+                <th class="pb-1 text-left font-normal">fields</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(entry, ei) in hasActions
+                  ? trace.log.slice(trace.actions![stepIndex]!.from, actionEnds[stepIndex]!).filter((e) => !e.fn.startsWith('read:'))
+                  : log"
+                :key="ei"
+                :ref="(el) => { if (!hasActions) stepRows[ei] = el as HTMLElement | null; }"
+                class="align-top"
+                :class="[hasActions ? '' : 'cursor-pointer', !hasActions && stepIndex === ei + 1 ? 'bg-surface' : 'hover:bg-surface/50']"
+                @click="hasActions ? undefined : jumpTo(ei + 1)"
+              >
+                <td class="py-0.5 pr-2 text-muted/50">{{ ei + 1 }}</td>
+                <td class="py-0.5 pr-2 text-text">{{ entry.fn }}</td>
+                <td class="py-0.5 whitespace-pre-wrap text-muted">{{ fieldsOf(entry) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

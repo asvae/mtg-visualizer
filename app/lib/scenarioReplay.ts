@@ -446,3 +446,24 @@ export function computeZoneRects(ownerCards: ReplayCard[]): ZoneRect[] {
 export function boardHeight(): number {
   return CARD_LAYOUT.labelHeight + CARD_LAYOUT.height + ZONE_PADDING.bottom;
 }
+
+// ---------------------------------------------------------------------------
+// Action stepping — an engine-piloted trace's `TraceResult.actions` (harness.ts)
+// is a coarser, human-labeled index into the SAME flat `log` `replayTrace`
+// already replays: `actions[i].from` is the log index where action i's own
+// entries start, authored against the RAW log (engine-trace.ts's own
+// `pilot.log`, `read:*` entries included) — so a caller indexing snapshots
+// by action must replay the trace's RAW `log`, not the `read:*`-filtered one
+// the component displays elsewhere, or these indices point at the wrong
+// entries.
+
+/**
+ * The snapshot index marking the END of each action — `snapshots[k]` is the
+ * board state once `log[k-1]` has applied (see `replayTrace`'s own doc
+ * comment), so "action i is fully done" is just `snapshots[actionEndIndices(...)[i]]`,
+ * no new snapshot computation needed. Action i's own log span is
+ * `[actions[i].from, actionEndIndices(...)[i])`.
+ */
+export function actionEndIndices(actions: { from: number }[], logLength: number): number[] {
+  return actions.map((_, i) => actions[i + 1]?.from ?? logLength);
+}

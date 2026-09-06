@@ -20,7 +20,11 @@ interface CardResponse {
   functionalModel: {
     source: string;
     synergy: { source: Fact[]; sink: Fact[] } | null;
-    traces: { scenario: { setup: string; action: string; result: string; raw: Scenario }; log: LogEntry[] }[];
+    traces: {
+      scenario: { setup: string; action: string; result: string; raw: Scenario };
+      log: LogEntry[];
+      actions?: { label: string; from: number }[];
+    }[];
     annotatedCard: AnnotatedCard | null;
     review: 'ai' | 'human' | null;
   } | null;

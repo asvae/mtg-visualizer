@@ -7,7 +7,11 @@ import { ref, watch } from 'vue';
 import type { LogEntry, Scenario } from '../../functional-model/harness';
 
 const props = defineProps<{
-  traces: { scenario: { setup: string; action: string; result: string; raw?: Scenario }; log: LogEntry[] }[];
+  traces: {
+    scenario: { setup: string; action: string; result: string; raw?: Scenario };
+    log: LogEntry[];
+    actions?: { label: string; from: number }[];
+  }[];
   /** The real card's own images (front/back) — forwarded to each ScenarioReplayTrace so the one "self" chip per board can show real art instead of a placeholder. */
   cardImages?: string[];
   /** The real card's own printed keywords (Scryfall's `card.keywords`) — shown on the "self" chip alongside any mid-scenario `grantKeyword` log entries. */
