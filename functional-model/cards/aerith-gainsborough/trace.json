@@ -1,15 +1,83 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onLifeGained\" trigger fires",
-      "result": "puts a +1/+1 counter on itself",
+      "setup": "you: 3 Plains(s)",
+      "action": "real engine playthrough: cast -> real Lifelink -> onLifeGained -> real lethal combat (SBA) -> onDies",
+      "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life (702.15e) — `onLifeGained` is fired manually right after (a real event, no auto-fire wiring yet, same accepted gap as Ultima's own `onAttack`), putting a real +1/+1 counter on herself; another real turn later she attacks again, this time blocked by a creature that deals real lethal damage back — a genuine 704.5g state-based destruction (sba.ts), not a scripted death — after which `onDies` fires manually, spreading X real +1/+1 counters (X = however many she actually had, read live, not hardcoded) onto the other real legendary creature on the battlefield.",
       "raw": {
-        "result": "puts a +1/+1 counter on itself",
-        "trigger": "onLifeGained"
+        "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life (702.15e) — `onLifeGained` is fired manually right after (a real event, no auto-fire wiring yet, same accepted gap as Ultima's own `onAttack`), putting a real +1/+1 counter on herself; another real turn later she attacks again, this time blocked by a creature that deals real lethal damage back — a genuine 704.5g state-based destruction (sba.ts), not a scripted death — after which `onDies` fires manually, spreading X real +1/+1 counters (X = however many she actually had, read live, not hardcoded) onto the other real legendary creature on the battlefield.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Aerith Gainsborough",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Gainsborough"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Gainsborough"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Gainsborough"
+      },
+      {
+        "fn": "enters",
+        "card": "Aerith Gainsborough",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "attack",
+        "card": "Aerith Gainsborough"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1,
+        "cause": "Lifelink"
+      },
       {
         "fn": "trigger",
         "card": "Aerith Gainsborough",
@@ -21,223 +89,72 @@
         "target": "Aerith Gainsborough",
         "counterType": "+1/+1",
         "amount": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 Legendary creature(s); self already has 2 +1/+1 counter(s)",
-      "action": "\"onDies\" trigger fires",
-      "result": "puts 2 +1/+1 counters on each legendary creature it controls, including itself",
-      "raw": {
-        "result": "puts 2 +1/+1 counters on each legendary creature it controls, including itself",
-        "trigger": "onDies",
-        "selfCounters": {
-          "+1/+1": 2
-        },
-        "you": {
-          "creaturesCount": 1,
-          "creatureSubtypes": [
-            "Legendary"
-          ]
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Aerith Gainsborough",
-        "instanceId": 1,
-        "name": "onDies"
       },
       {
-        "fn": "read:getCounters",
-        "target": "Aerith Gainsborough",
-        "counterType": "+1/+1",
-        "result": 2
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 2
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
-        "subtype": "Legendary",
-        "result": true
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Aerith Gainsborough",
-        "subtype": "Legendary",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "you-creature-token-0",
-        "counterType": "+1/+1",
-        "amount": 2
-      },
-      {
-        "fn": "putCounter",
-        "target": "Aerith Gainsborough",
-        "counterType": "+1/+1",
-        "amount": 2
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 creature(s); self already has 2 +1/+1 counter(s)",
-      "action": "\"onDies\" trigger fires",
-      "result": "no other legendary creature present, but it still counts itself: puts 2 +1/+1 counters on itself",
-      "raw": {
-        "result": "no other legendary creature present, but it still counts itself: puts 2 +1/+1 counters on itself",
-        "trigger": "onDies",
-        "selfCounters": {
-          "+1/+1": 2
-        },
-        "you": {
-          "creaturesCount": 1
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Aerith Gainsborough",
-        "instanceId": 1,
-        "name": "onDies"
-      },
-      {
-        "fn": "read:getCounters",
-        "target": "Aerith Gainsborough",
-        "counterType": "+1/+1",
-        "result": 2
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 2
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
-        "subtype": "Legendary",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Aerith Gainsborough",
-        "subtype": "Legendary",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "Aerith Gainsborough",
-        "counterType": "+1/+1",
-        "amount": 2
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "\"onDies\" trigger fires",
-      "result": "no counters on itself, no effect",
-      "raw": {
-        "result": "no counters on itself, no effect",
-        "trigger": "onDies",
-        "selfCounters": {},
-        "you": {
-          "creaturesCount": 1
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Aerith Gainsborough",
-        "instanceId": 1,
-        "name": "onDies"
-      },
-      {
-        "fn": "read:getCounters",
-        "target": "Aerith Gainsborough",
-        "counterType": "+1/+1",
-        "result": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent",
-      "raw": {
-        "label": "Lifelink: deals 3 combat damage to an opponent",
-        "dealsCombatDamage": {
-          "amount": 3
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Aerith Gainsborough",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{2}{W}"
-      },
-      {
-        "fn": "enters",
-        "card": "Aerith Gainsborough",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "dealDamage",
-        "source": "Aerith Gainsborough",
-        "target": "opp0",
-        "amount": 3
-      },
-      {
-        "fn": "gainLife",
-        "player": "you",
-        "amount": 3,
-        "cause": "Lifelink"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Aerith Gainsborough",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{2}{W}"
-      },
-      {
-        "fn": "enters",
-        "card": "Aerith Gainsborough",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "legendRule",
-        "card": "Aerith Gainsborough",
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
         "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "attack",
+        "card": "Aerith Gainsborough"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Lethal Blocker",
+        "attacker": "Aerith Gainsborough"
+      },
+      {
+        "fn": "destroy",
+        "target": "Aerith Gainsborough",
+        "controller": "you"
+      },
+      {
+        "fn": "destroy",
+        "target": "Lethal Blocker",
+        "controller": "you"
+      },
+      {
+        "fn": "trigger",
+        "card": "Aerith Gainsborough",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "read:getCounters",
+        "target": "Aerith Gainsborough",
+        "counterType": "+1/+1",
+        "result": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Bystander Legend",
+        "subtype": "Legendary",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Bystander Legend",
+        "counterType": "+1/+1",
+        "amount": 1
       }
     ]
   }

@@ -1,29 +1,32 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 1 artifact(s)",
-      "action": "cast from hand",
-      "result": "chapters I and II both decline their optional destroy (a legal target exists on the opponent side, but this line chooses not to spend it there or on itself), III draws two cards, IV deals damage equal to other permanents’ total mana value, then Bahamut is sacrificed",
+      "setup": "you: 10 Forest(s); opp0: a c_a_treasure_sac",
+      "action": "real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice",
+      "result": "Bahamut enters, chapter I fires for real (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice, not a missing target; chapter II fires on your next draw step and declines the same way; chapter III fires the turn after, drawing two real cards; chapter IV fires the turn after that, dealing real damage equal to a real (scenario-supplied) total mana value, then Bahamut is really sacrificed (714.4) since nothing reset its lore counters first — all through the real turn-based engine's own Saga automation (saga.ts), not a flat named-trigger sequence.",
       "raw": {
-        "result": "chapters I and II both decline their optional destroy (a legal target exists on the opponent side, but this line chooses not to spend it there or on itself), III draws two cards, IV deals damage equal to other permanents’ total mana value, then Bahamut is sacrificed",
-        "sequence": [
-          "chapterI",
-          "chapterII",
-          "chapterIII",
-          "chapterIV"
-        ],
-        "declineTriggers": [
-          "chapterI",
-          "chapterII"
-        ],
-        "sacrificeSelfAfter": true,
-        "triggerInput": {
-          "totalManaValue": 7
+        "result": "Bahamut enters, chapter I fires for real (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice, not a missing target; chapter II fires on your next draw step and declines the same way; chapter III fires the turn after, drawing two real cards; chapter IV fires the turn after that, dealing real damage equal to a real (scenario-supplied) total mana value, then Bahamut is really sacrificed (714.4) since nothing reset its lore counters first — all through the real turn-based engine's own Saga automation (saga.ts), not a flat named-trigger sequence.",
+        "you": {
+          "libraryCount": 15,
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
         },
         "opponents": [
           {
-            "artifactsCount": 1,
-            "life": 20
+            "tokens": [
+              "c_a_treasure_sac"
+            ],
+            "libraryCount": 10
           }
         ]
       }
@@ -37,10 +40,61 @@
         "cost": "{9}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
         "fn": "enters",
         "card": "Summon: Bahamut",
         "instanceId": 1,
         "zone": "Battlefield"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Bahamut",
+        "counterType": "LORE",
+        "amount": 1
       },
       {
         "fn": "trigger",
@@ -49,10 +103,28 @@
         "name": "chapterI"
       },
       {
+        "fn": "putCounter",
+        "target": "Summon: Bahamut",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
         "fn": "trigger",
         "card": "Summon: Bahamut",
         "instanceId": 1,
         "name": "chapterII"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Bahamut",
+        "counterType": "LORE",
+        "amount": 1
       },
       {
         "fn": "trigger",
@@ -69,6 +141,18 @@
         "player": "you"
       },
       {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Bahamut",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
         "fn": "trigger",
         "card": "Summon: Bahamut",
         "instanceId": 1,
@@ -81,6 +165,12 @@
         "amount": 7
       },
       {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 7,
+        "player": "you"
+      },
+      {
         "fn": "sacrifice",
         "player": "you",
         "card": "Summon: Bahamut"
@@ -89,15 +179,92 @@
   },
   {
     "scenario": {
-      "setup": "",
-      "action": "\"chapterI\" trigger fires",
-      "result": "chapter I’s own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself on your side, so it legally (if pointlessly) destroys itself — documenting the effect actually fires, not just declines",
+      "setup": "you: 10 Forest(s)",
+      "action": "real engine playthrough: cast -> ETB Saga tick fires chapter I with no other target",
+      "result": "chapter I's own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself anywhere on the board, so it legally (if pointlessly) destroys itself for real — documenting the effect actually fires, not just declines (the sane real line is scenario A above).",
       "raw": {
-        "result": "chapter I’s own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself on your side, so it legally (if pointlessly) destroys itself — documenting the effect actually fires, not just declines",
-        "trigger": "chapterI"
+        "result": "chapter I's own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself anywhere on the board, so it legally (if pointlessly) destroys itself for real — documenting the effect actually fires, not just declines (the sane real line is scenario A above).",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Summon: Bahamut",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{9}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Summon: Bahamut"
+      },
+      {
+        "fn": "enters",
+        "card": "Summon: Bahamut",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Bahamut",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Bahamut",
@@ -108,8 +275,58 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 1,
+        "count": 11,
         "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",

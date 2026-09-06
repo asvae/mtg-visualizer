@@ -26,10 +26,16 @@
 //    (`state.checkLegendRule`, state.ts) — folded into this same
 //    loop-until-stable sweep rather than left for a caller to remember to
 //    call separately.
+//  - 704.5a: a player at 0-or-less life, OR one who just attempted to draw
+//    more cards than remained in their library (104.3c — the ATTEMPT is
+//    what matters, not merely an empty library nobody's asked anything of
+//    — `state.drawCards`'s own `attemptedDrawFromEmpty` flag is set right
+//    there, before this file ever sees it), loses the game — real,
+//    persistent state now (`RealPlayer.hasLost`, state.ts), set here and
+//    never cleared. `engine.ts`'s own `advance` refuses to run any further
+//    once any player has this set (a real, deliberate stop, not a silent
+//    continuation of a game that's already over).
 // NOT in scope (real, plainly-flagged gaps):
-//  - 704.5a (a player at 0 or less life loses the game) — no "loses the
-//    game"/game-over concept exists anywhere in this codebase yet; a
-//    separate primitive, not attempted here.
 //  - 704.5i (a planeswalker with loyalty 0) — no FIN card in this pool has
 //    a Planeswalker typeLine today (checked); not modeled until one does.
 //  - Damage CLEARING at cleanup (514.2) — a real, separate rule (not
@@ -51,6 +57,8 @@ export interface StateBasedActionsResult {
   putIntoGraveyard: RealCard[];
   /** 704.5j — the legend rule, via the pre-existing `state.checkLegendRule`. */
   legendRuleRemoved: RealCard[];
+  /** 704.5a — players newly marked `hasLost` THIS call (0-or-less life, or an attempted draw from an empty library) — empty on every later call once a player's already lost (a real, persistent loss, not re-detected/re-reported). */
+  lost: RealPlayer[];
 }
 
 /** One real, narrow sweep of state-based actions — see this file's own header for exactly which ones. Loops until a full pass makes no further change (704.3). */
@@ -58,6 +66,7 @@ export function checkStateBasedActions(state: GameState, players: RealPlayer[]):
   const destroyed: RealCard[] = [];
   const putIntoGraveyard: RealCard[] = [];
   const legendRuleRemoved: RealCard[] = [];
+  const lost: RealPlayer[] = [];
 
   let changed = true;
   while (changed) {
@@ -87,8 +96,17 @@ export function checkStateBasedActions(state: GameState, players: RealPlayer[]):
         legendRuleRemoved.push(...removedThisPlayer);
         changed = true;
       }
+      // 704.5a — checked LAST for this player, same real ordering rationale
+      // 704.3's own "simultaneously, then re-check" already covers: a loss
+      // condition doesn't need to precede/follow any of the above within
+      // one sweep, it just needs to be caught before this function returns.
+      if (!player.hasLost && (player.life <= 0 || player.attemptedDrawFromEmpty)) {
+        player.hasLost = true;
+        lost.push(player);
+        changed = true;
+      }
     }
   }
 
-  return { destroyed, putIntoGraveyard, legendRuleRemoved };
+  return { destroyed, putIntoGraveyard, legendRuleRemoved, lost };
 }

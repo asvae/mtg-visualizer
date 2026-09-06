@@ -16,7 +16,8 @@
             "Island",
             "Island",
             "Island"
-          ]
+          ],
+          "libraryCount": 15
         },
         "opponents": [
           {
@@ -25,7 +26,8 @@
             ],
             "basicLands": [
               "Forest"
-            ]
+            ],
+            "libraryCount": 10
           }
         ]
       }
@@ -39,9 +41,31 @@
         "cost": "{2}{U}"
       },
       {
-        "fn": "payMana",
-        "for": "Jill, Shiva's Dominant",
-        "cost": "{2}{U}"
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
+      },
+      {
+        "fn": "enters",
+        "card": "Jill, Shiva's Dominant",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "trigger",
+        "card": "Jill, Shiva's Dominant",
+        "instanceId": 1,
+        "name": "onEnter"
       },
       {
         "fn": "read:getCardsIn",
@@ -67,21 +91,15 @@
         "controller": "opp0"
       },
       {
-        "fn": "enters",
-        "card": "Jill, Shiva's Dominant",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "trigger",
-        "card": "Jill, Shiva's Dominant",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
         "fn": "illegalAttempt",
         "card": "Jill, Shiva's Dominant",
         "reason": "summoning sickness (302.6): hasn't been under its controller's control continuously since their most recent turn began, so its {T} cost can't be paid"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
       },
       {
         "fn": "activate",
@@ -90,9 +108,29 @@
         "cost": "{3}{U}{U}, {T} (activate only as a sorcery)"
       },
       {
-        "fn": "payMana",
-        "for": "Jill, Shiva's Dominant",
-        "cost": "{3}{U}{U}, {T} (activate only as a sorcery)"
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Jill, Shiva's Dominant"
       },
       {
         "fn": "moveTo",
@@ -166,6 +204,12 @@
         "keyword": "Unblockable"
       },
       {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
+        "player": "you"
+      },
+      {
         "fn": "putCounter",
         "target": "Jill, Shiva's Dominant",
         "counterType": "LORE",
@@ -197,6 +241,12 @@
         "target": "Jill, Shiva's Dominant",
         "zone": "Battlefield",
         "controller": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 7,
+        "player": "you"
       },
       {
         "fn": "transform",

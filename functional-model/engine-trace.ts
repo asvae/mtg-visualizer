@@ -35,6 +35,7 @@
 // other card is unaffected.
 
 import type { CardDefinition, EffectContext, Actions } from './card';
+import { resolveCard } from './card';
 import { GameState, wrapCard } from './state';
 import type { RealCard, RealPlayer } from './state';
 import {
@@ -48,7 +49,7 @@ import {
   type GameEngine,
 } from './engine';
 import { transformPermanent } from './saga';
-import { PHASES } from './turn';
+import { PHASES, currentPhase, activePlayer } from './turn';
 import { setupPlayer, loggingPlayer, loggingCard, loggingActions } from './harness';
 import type { PlayerState, TraceResult, LogEntry, Scenario } from './harness';
 
@@ -64,6 +65,13 @@ export interface EnginePilotSetup {
   opponents?: PlayerState[];
 }
 
+/** Optional real `EffectContext` fields a pilot script sometimes needs to fix before a specific resolution — same real fields harness.ts's own `Scenario.declineTriggers`/`Scenario.triggerInput`/`Scenario.mode` doc comments already explain the need for (a genuine "decline the optional target" demonstration; a value this model can't compute itself, like a card's own printed X or a total-mana-value read; which modal branch was chosen). Note that `ctxFor`'s returned `EffectContext` is the SAME object a permanent's `resolvedPermanents` entry keeps around for its whole battlefield lifetime (`engine.ts`'s own `resolveTop`/`saga.ts`'s `transformPermanent` both store the exact reference passed in, never a copy) — so mutating fields directly on a previously-returned `ctx` (e.g. setting `ctx.triggerInput` right before a later Saga chapter tick that needs it) works too, and is how a pilot script gives a LATER automatic trigger fire a value this call didn't need yet. */
+export interface EnginePilotCtxOpts {
+  declineOptional?: boolean;
+  triggerInput?: Record<string, unknown>;
+  mode?: number;
+}
+
 export interface EnginePilot {
   state: GameState;
   engine: GameEngine;
@@ -71,7 +79,7 @@ export interface EnginePilot {
   opponents: RealPlayer[];
   log: LogEntry[];
   /** A fresh `EffectContext` for `self` — `you`/`opponents` are the SAME logging-wrapped players every call reuses (matching `runScenario`'s own one-`ctx`-per-run shape, just rebuilt per `self` since a transform changes which `CardDefinition` `self` represents, not which real object it is). */
-  ctxFor(self: RealCard): EffectContext;
+  ctxFor(self: RealCard, opts?: EnginePilotCtxOpts): EffectContext;
 }
 
 /**
@@ -106,11 +114,14 @@ export function setupEnginePilot(setup: EnginePilotSetup): EnginePilot {
     you,
     opponents,
     log,
-    ctxFor: (self) => ({
+    ctxFor: (self, opts) => ({
       self: loggingCard(state, self, log),
       you: youLogging,
       opponents: opponentsLogging,
       castFrom: 'hand',
+      declineOptional: opts?.declineOptional,
+      triggerInput: opts?.triggerInput,
+      mode: opts?.mode,
     }),
   };
 }
@@ -164,6 +175,15 @@ export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer
     if (watchForSaga && registeredBefore && PHASES[pilot.engine.turn.phaseIndex] === 'Main1' && pilot.engine.players[pilot.engine.turn.activePlayerIndex]!.id === watchForSaga.controllerId) {
       const chapterName = nextChapterFor(registeredBefore.card, beforeLore);
       if (chapterName) {
+        // Spliced at `beforeLen` (log length before THIS iteration's own
+        // `advance()` ran) so a Saga tick that happens partway through a
+        // multi-turn wait lands in its real chronological spot, before
+        // whatever `advance()` itself already appended internally for it
+        // (the chapter's own effects) — same real-causal-order reasoning
+        // `pilotResolveTop`'s own doc comment establishes elsewhere. This
+        // one genuinely is per-iteration: a Saga can tick on ANY Main1
+        // crossing along the way, not just the final one this loop stops
+        // at (unlike the generic "arrived" marker below, which is not).
         pilot.log.splice(
           beforeLen,
           0,
@@ -173,31 +193,114 @@ export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer
       }
     }
   } while (!(PHASES[pilot.engine.turn.phaseIndex] === 'Main1' && pilot.engine.turn.turnNumber !== startTurn && pilot.engine.players[pilot.engine.turn.activePlayerIndex]!.id === player.id));
+  // ONE real "we arrived" marker for the WHOLE multi-turn wait — not one
+  // per internal phase crossed along the way (confirmed too spammy the
+  // hard way: a real playthrough logged ~50 phase entries for what's
+  // really a handful of meaningful waits). Appended at the end, after any
+  // Saga tick(s) spliced in above, since this marks the DESTINATION this
+  // call was waiting for, not the journey there.
+  pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
 }
 
-/** Real cast (601) — legality-checks via `canCastSpell`, throws with the real reason on an illegal pilot script (a bug in the pilot, not a legitimate "declined" case — this file always drives a KNOWN-legal line), else pays real mana and pushes to the real stack, logging a `cast` entry (matching `harness.ts`'s own `lifecycleBefore` shape) plus a `payMana` entry (real mana sources really got tapped by `castSpell`'s own `payMana` call — logged here since `engine.ts` is a legality/mutation layer, not a tracing one, and a mana-source tap must NOT be logged as a plain `tap` entry, which would misread as a card EFFECT tapping something for `verify-synergy.mjs`). */
+/** Advances exactly one phase (`advance`), logging the same real `phase` bracket entry `advanceToPlayersNextMain1` logs once for its own whole wait — this one call IS the whole meaningful step, so it always gets its own entry, no spam concern (unlike a multi-iteration loop). The thin single-step version for a pilot script that just needs to cross one specific boundary (Combat Declare Attackers -> Declare Blockers, e.g.) rather than loop until a whole condition is met. */
+export function advanceOneStep(pilot: EnginePilot): void {
+  advance(pilot.engine);
+  pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
+}
+
+/** Real turn-structure advancement (`advance`), from wherever `pilot.engine.turn` currently is, forward to the Declare Attackers step of THIS SAME turn — logging exactly ONE real `phase` bracket entry for the whole wait (same "one per call, not one per internal step" fix `advanceToPlayersNextMain1` needed), not one per phase crossed getting there. A pilot script normally calls `advanceToPlayersNextMain1` first if the attacker just entered this turn (302.6), then this, to reach a legal Declare Attackers step. */
+export function advanceToDeclareAttackersStep(pilot: EnginePilot): void {
+  while (currentPhase(pilot.engine.turn) !== 'CombatDeclareAttackers') advance(pilot.engine);
+  pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
+}
+
+/** Logs one real `tapForMana` entry per real source `mana.ts`'s own `payMana` actually tapped (its return value — see that function's own doc comment) — a DIFFERENT fn than plain `tap` (same reasoning this used to log a single summary `payMana` entry instead: a mana-source tap must not be misread as a card EFFECT tapping something by `verify-synergy.mjs`), but now naming exactly which real land/source paid, not just that some real cost was paid (a user's own real question this answers: "which specific lands got tapped for mana?"). A no-op for an empty/undefined list (a `{T}`-only ability's activation cost, e.g. — nothing needed tapping for mana). */
+function logTappedForMana(pilot: EnginePilot, forCard: CardDefinition, tapped: RealCard[] | undefined): void {
+  for (const source of tapped ?? []) pilot.log.push({ fn: 'tapForMana', target: source.name, for: forCard.name });
+}
+
+/** Real cast (601) — legality-checks via `canCastSpell`, throws with the real reason on an illegal pilot script (a bug in the pilot, not a legitimate "declined" case — this file always drives a KNOWN-legal line), else pays real mana and pushes to the real stack, logging a `cast` entry (matching `harness.ts`'s own `lifecycleBefore` shape) plus one real `tapForMana` entry per real land/source `castSpell`'s own `payMana` call actually tapped (see `logTappedForMana`'s own doc comment). */
 export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions): void {
   const check = canCastSpell(pilot.engine, pilot.you, card);
   if (!check.ok) throw new Error(`pilotCast("${card.name}"): illegal — ${check.reason}`);
   pilot.log.push({ fn: 'cast', card: card.name, instanceId: SELF_INSTANCE_ID, from: 'hand', cost: card.manaCost });
   const result = castSpell(pilot.engine, pilot.you, cardReal, card, ctx, actions);
   if (!result.ok) throw new Error(`pilotCast("${card.name}"): ${result.reason}`);
-  pilot.log.push({ fn: 'payMana', for: card.name, cost: card.manaCost });
+  logTappedForMana(pilot, card, result.tappedForMana);
 }
 
-/** Resolves the top of the real stack (`resolveTop`) and logs the real lifecycle event that follows — `enters`+auto-fired ETB `trigger` (matching `Trigger.on:'enter'`, `engine.ts`'s own real 603.6b auto-fire — the trigger's own effects log for real via whatever `Actions` it was registered with) for a permanent, or a plain `move`-to-graveyard for an instant/sorcery. A no-op (nothing logged) on an empty stack. */
+/**
+ * Resolves the top of the real stack (`resolveTop`) and logs the real
+ * lifecycle event that follows — `enters`+auto-fired ETB `trigger`
+ * (matching `Trigger.on:'enter'`, `engine.ts`'s own real 603.6b auto-fire)
+ * for a permanent, or a plain `move`-to-graveyard for an instant/sorcery. A
+ * no-op (nothing logged) on an empty stack.
+ *
+ * The bracketing entries (`enters`, a fresh Saga's own immediate 714.2b/c
+ * lore-counter tick, the ETB `trigger` name) are logged BEFORE calling
+ * `resolveTop`, not after: `resolveTop` (`engine.ts`) performs the real
+ * mutation AND runs the entering permanent's own Saga tick / ETB trigger
+ * SYNCHRONOUSLY inside itself, appending their own real effect log lines
+ * (via whatever `Actions` the permanent was cast with) before returning —
+ * so logging the bracket only after it returns would put a trigger's own
+ * effects BEFORE the "enters"/"trigger" lines that supposedly caused them
+ * (confirmed the wrong way in an earlier draft of this file: Jill's own
+ * ETB bounce logged BEFORE her "enters"/"trigger" bracket). Peeking the
+ * stack's top card first (`Stack.peek`, read-only) lets this log the
+ * correct causal shell first, THEN let the real resolution fill in what
+ * happened inside it — same real-causal-order principle `logSagaTickThenRun`
+ * already established for a transform's own tick.
+ *
+ * A Saga cast straight from hand (Summon: Bahamut, e.g. — as opposed to a
+ * transform INTO a Saga, which `pilotTransform`'s own `logSagaTickThenRun`
+ * already handles) always has exactly 0 lore counters before this specific
+ * tick (714.2b: a Saga enters with none) — so `nextChapterFor` is checked
+ * at a hardcoded `currentLore: 0` here, not read off the (not-yet-existing)
+ * registration.
+ */
 export function pilotResolveTop(pilot: EnginePilot): void {
-  const resolved = resolveTop(pilot.engine);
-  if (!resolved) return;
-  if (resolved.isAbility) return; // the ability's own effects already logged via its own `actions`; no zone change to report (see `engine.ts`'s own `resolveTop` doc comment).
-  const isPermanent = !/\b(Instant|Sorcery)\b/.test(resolved.card.typeLine);
-  if (isPermanent) {
-    pilot.log.push({ fn: 'enters', card: resolved.card.name, instanceId: SELF_INSTANCE_ID, zone: 'Battlefield' });
-    const enterTrigger = resolved.card.triggers?.find((t) => t.on === 'enter');
-    if (enterTrigger) pilot.log.push({ fn: 'trigger', card: resolved.card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
-  } else {
-    pilot.log.push({ fn: 'move', card: resolved.card.name, instanceId: SELF_INSTANCE_ID, from: 'stack', to: 'Graveyard' });
+  const peeked = pilot.engine.stack.peek();
+  if (!peeked) return;
+  if (peeked.isAbility) {
+    resolveTop(pilot.engine); // the ability's own effects log via its own `actions`; no zone change to report (see `engine.ts`'s own `resolveTop` doc comment).
+    return;
   }
+  const isPermanent = !/\b(Instant|Sorcery)\b/.test(peeked.card.typeLine);
+  if (isPermanent) {
+    pilot.log.push({ fn: 'enters', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, zone: 'Battlefield' });
+    const chapterName = nextChapterFor(peeked.card, 0);
+    if (chapterName) {
+      pilot.log.push({ fn: 'putCounter', target: peeked.ctx.self.getName(), counterType: 'LORE', amount: 1 });
+      pilot.log.push({ fn: 'trigger', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, name: chapterName });
+    }
+    const enterTrigger = peeked.card.triggers?.find((t) => t.on === 'enter');
+    if (enterTrigger) pilot.log.push({ fn: 'trigger', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+    resolveTop(pilot.engine);
+  } else {
+    resolveTop(pilot.engine);
+    pilot.log.push({ fn: 'move', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, from: 'stack', to: 'Graveyard' });
+  }
+}
+
+/**
+ * Manually fires a named trigger that has no auto-fire mechanism in
+ * `engine.ts` yet (an attack/life-gain/dies trigger, e.g. — `Trigger.on`
+ * only recognizes `'enter'|'upkeep'|'endStep'`, a real, accepted gap) —
+ * logs the SAME real `{fn:'trigger', card, instanceId, name}` bracket entry
+ * `pilotResolveTop`/`saga.ts`'s own auto-fires already produce for a
+ * recognized one, THEN runs it via `resolveCard` (whose own effects log for
+ * real via `actions`). Logging this bracket matters beyond readability:
+ * `verify-synergy.mjs`'s own `triggerNames` set (used to satisfy a
+ * synergy.json "want" fact mapped to this trigger via its
+ * `TRIGGER_EVENT_MAP`) is built ENTIRELY from `{fn:'trigger', name}`
+ * entries — a bare `resolveCard` call with no such entry logged first would
+ * genuinely run the effect but leave it looking, to that check, like it
+ * never happened at all (confirmed the hard way: Aerith Gainsborough's own
+ * `onLifeGained`/`onDies` wants both hard-failed until this was added).
+ */
+export function pilotFireTrigger(pilot: EnginePilot, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName: string): void {
+  pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: triggerName });
+  resolveCard(card, ctx, actions, triggerName);
 }
 
 /** A real illegal-attempt check worth demonstrating in the trace (e.g. "the transform ability is blocked by summoning sickness the turn it entered") — logs the real rejection reason `canActivateAbility` gives rather than silently skipping it, so a reader of the replay sees the SAME legality wall a real player would hit. Purely observational: never mutates anything. */
@@ -214,7 +317,7 @@ export function pilotActivate(pilot: EnginePilot, controller: RealPlayer, perman
   pilot.log.push({ fn: 'activate', card: card.name, instanceId: SELF_INSTANCE_ID, cost: card.activationCost ?? '' });
   const result = activateAbility(pilot.engine, controller, permanent, card, ctx, actions);
   if (!result.ok) throw new Error(`pilotActivate("${card.name}"): ${result.reason}`);
-  pilot.log.push({ fn: 'payMana', for: card.name, cost: card.activationCost ?? '' });
+  logTappedForMana(pilot, card, result.tappedForMana);
 }
 
 /** The next chapter name this Saga would fire, given its CURRENT (pre-tick) lore-counter count — `undefined` if `card` isn't a Saga, or has no matching chapter trigger declared at that count (714.3a/b, same `CHAPTER_NAMES` convention `saga.ts` itself uses). */

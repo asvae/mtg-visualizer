@@ -137,8 +137,12 @@ import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './p
 import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn as turnQueueExtraTurn, type TurnState } from './turn';
 import { parseManaCost, canAfford, payMana, untappedManaSources, manaAbilityColorFromStaticText } from './mana';
 import { advanceSaga, advanceSagasAfterDrawStep } from './saga';
+import { checkStateBasedActions } from './sba';
 
 export type ActionResult = { ok: true } | { ok: false; reason: string };
+
+/** `ActionResult` plus, on success, exactly which real mana sources got tapped to pay for it (`mana.ts`'s own `payMana` already picks these deterministically — this just surfaces the choice instead of throwing it away, so a caller like `engine-trace.ts`'s pilot logging can report WHICH lands paid for something instead of only that some real cost was paid). Empty/omitted when nothing needed tapping for mana (a `{T}`-only ability, e.g.). */
+export type CastResult = ActionResult & { tappedForMana?: RealCard[] };
 
 export interface GameEngine {
   state: GameState;
@@ -254,11 +258,11 @@ export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardD
  * (build them the same way `harness.ts`'s own `runScenario` does). Returns
  * `{ok:false, reason}` and mutates NOTHING if illegal.
  */
-export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName?: string): ActionResult {
+export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName?: string): CastResult {
   const check = canCastSpell(engine, caster, card);
   if (!check.ok) return check;
   const cost = parseManaCost(card.manaCost);
-  payMana(engine.state, payableManaSources(engine, caster), cost);
+  const tappedForMana = payMana(engine.state, payableManaSources(engine, caster), cost);
   engine.state.move(cardReal, 'Stack');
   // A permanent with its OWN `activationCost` reserves `card.effects` for
   // that LATER activation (602.1) — real Magic has no "cast effects" for a
@@ -280,7 +284,7 @@ export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: Real
   // ENGINE_GAPS.md for the fuller writeup of why this collision exists.
   const pushedCard = isPermanentTypeLine(card.typeLine) && card.activationCost ? { ...card, effects: undefined } : card;
   engine.stack.push({ card: pushedCard, ctx, actions, triggerName });
-  return { ok: true };
+  return { ok: true, tappedForMana };
 }
 
 function isPermanentTypeLine(typeLine: string): boolean {
@@ -457,7 +461,7 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
  * its OWN effects (if any) do that (Jill's own transform ability moves
  * itself via its own `custom` effect's `actions.moveTo` calls, e.g.).
  */
-export function activateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, abilityName?: string, crewedBy?: RealCard[]): ActionResult {
+export function activateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, abilityName?: string, crewedBy?: RealCard[]): CastResult {
   const check = canActivateAbility(engine, controller, permanent, card, abilityName, crewedBy);
   if (!check.ok) return check;
   if (card.crewCost !== undefined) {
@@ -474,10 +478,10 @@ export function activateAbility(engine: GameEngine, controller: RealPlayer, perm
   }
   const cost = activationCostFor(card, abilityName)!;
   const manaPortion = manaPortionOf(cost);
-  if (/\{[^}]+\}/.test(manaPortion)) payMana(engine.state, payableManaSources(engine, controller), parseManaCost(manaPortion));
+  const tappedForMana = /\{[^}]+\}/.test(manaPortion) ? payMana(engine.state, payableManaSources(engine, controller), parseManaCost(manaPortion)) : undefined;
   if (costRequiresTap(cost)) engine.state.tap(permanent);
   engine.stack.push({ card, ctx, actions, abilityName, isAbility: true });
-  return { ok: true };
+  return { ok: true, tappedForMana };
 }
 
 /**
@@ -552,6 +556,17 @@ function doAdvance(engine: GameEngine): void {
   // a structurally exact stand-in, not an approximation with edge cases.
   if (currentPhase(engine.turn) === 'Main1') {
     advanceSagasAfterDrawStep(engine, activePlayer(engine.turn, engine.players));
+    // Real 704.5a's draw-attempt half (104.3c) — the one loss condition
+    // this engine can genuinely hit on its own, autonomously, via the plain
+    // automatic draw-step draw (`turn.ts`'s own `runPhaseEntryAction`,
+    // called from `advancePhase` just above) rather than only through a
+    // caller-driven combat/effect sequence. The other half (0-or-less
+    // life) and every OTHER state-based destruction stay caller-invoked,
+    // same established design (`sba.ts`'s own header, `resolveCombatDamage`'s
+    // own doc comment on why) — this one hook exists because a real game
+    // can otherwise silently keep advancing turns past the point it should
+    // already be over, with nothing else in this engine ever checking.
+    checkStateBasedActions(engine.state, engine.players);
   }
 }
 
@@ -575,7 +590,10 @@ export function stepPriority(engine: GameEngine, choices: PriorityChoice[]): Pri
 }
 
 /** Direct phase advance, bypassing priority entirely — for a caller that isn't scripting responses this round and just wants to move on (real games still pass priority around an empty stack first; this is the same shortcut `harness.ts`'s own `advanceToPhase` already takes for the same reason: only the phase transition itself is being demonstrated). */
+/** Throws if the game is already over (real 704.5a — see `RealPlayer.hasLost`, state.ts) rather than silently continuing to simulate turns past the point a real game would have ended — a deliberate stop, not a guess about what SHOULD happen next once someone's lost. */
 export function advance(engine: GameEngine): void {
+  const loser = engine.players.find((p) => p.hasLost);
+  if (loser) throw new Error(`advance: the game is already over — ${loser.name} has lost (704.5a)`);
   doAdvance(engine);
 }
 

@@ -30,6 +30,16 @@ function setupGame() {
   state.addCard(you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   state.addCard(you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   state.addCard(you, 'Battlefield', { name: 'Mountain', types: ['Land'], subtypes: ['Mountain'] });
+  // A real library for each player — plenty for any test that advances
+  // several turns (the automatic per-turn draw, turn.ts's own
+  // runPhaseEntryAction, would otherwise genuinely run a player out and
+  // trigger real 704.5a — a test that wants THAT specific case seeds its
+  // own empty library deliberately instead, same as this file's own
+  // "advance() refuses once a player has lost" describe block does).
+  for (let i = 0; i < 20; i++) {
+    state.addCard(you, 'Library', { name: `you-library-filler-${i}`, types: [] });
+    state.addCard(opp, 'Library', { name: `opp-library-filler-${i}`, types: [] });
+  }
   const engine = createEngine(state, [you, opp]);
   // `startGame()` (turn.ts) begins at Untap, turn 1 — advance to Main1
   // (harness.ts's own `advanceToPhase` doc comment notes this same gap
@@ -914,5 +924,27 @@ describe('queueExtraTurn (500.7)', () => {
     while (engine.turn.turnNumber === 1) advance(engine);
     expect(engine.players[engine.turn.activePlayerIndex]).toBe(you);
     expect(you).not.toBe(opp); // sanity: distinct players
+  });
+});
+
+describe('advance() refuses once a player has lost (704.5a)', () => {
+  it('throws rather than silently continuing to simulate a game that is already over', () => {
+    const { you, engine } = setupGame();
+    you.hasLost = true; // sba.ts's own real 704.5a detection is covered separately (sba.test.ts) — this tests the engine's own stop
+    expect(() => advance(engine)).toThrow(/game is already over/);
+  });
+
+  it('an active player instructed to draw more cards than remain in their library really loses the game on the very next draw step', () => {
+    const { you, opp, engine } = setupGame();
+    you.library.length = 0; // this test specifically wants `you` to run out — `opp` keeps setupGame's own real library, drawing normally on their own turn 2 in between.
+    // Advance a full round back to `you`'s own next Draw step — the real
+    // automatic per-turn draw (turn.ts's own runPhaseEntryAction) attempts
+    // to draw 1 with 0 cards left, setting `attemptedDrawFromEmpty` for
+    // real (state.ts's own `drawCards`), which `engine.ts`'s own `doAdvance`
+    // now checks for real via `checkStateBasedActions` right after.
+    while (!(engine.turn.turnNumber === 3 && engine.players[engine.turn.activePlayerIndex] === you && PHASES[engine.turn.phaseIndex] === 'Main1')) advance(engine);
+    expect(you.hasLost).toBe(true);
+    expect(() => advance(engine)).toThrow(/game is already over/);
+    expect(opp.hasLost).toBeFalsy(); // only the player who actually attempted the draw loses
   });
 });

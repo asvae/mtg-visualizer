@@ -159,19 +159,22 @@ export function canAfford(sources: RealCard[], cost: ParsedManaCost): boolean {
   return remaining.length >= cost.generic;
 }
 
-/** Taps exactly enough of `sources` to pay `cost` (colored pips first, then generic off whatever's left) — real `payMana` mutation (`state.tap`), not a log-only observation. Throws if `canAfford` would say no, rather than tapping a partial/wrong set. */
-export function payMana(state: GameState, sources: RealCard[], cost: ParsedManaCost): void {
+/** Taps exactly enough of `sources` to pay `cost` (colored pips first, then generic off whatever's left) — real `payMana` mutation (`state.tap`), not a log-only observation. Throws if `canAfford` would say no, rather than tapping a partial/wrong set. Returns the exact real sources tapped, in order — the same deterministic choice this function already makes, just surfaced instead of thrown away (a caller has no other way to know WHICH lands paid for something; `engine-trace.ts`'s own pilot logging is what this return value exists for). */
+export function payMana(state: GameState, sources: RealCard[], cost: ParsedManaCost): RealCard[] {
   if (!canAfford(sources, cost)) throw new Error('payMana: cannot afford this cost with the given sources');
   const remaining = [...sources];
+  const tapped: RealCard[] = [];
   const tapMatching = (predicate: (c: RealCard) => boolean) => {
     const idx = remaining.findIndex(predicate);
     const card = remaining[idx]!;
     remaining.splice(idx, 1);
     state.tap(card);
+    tapped.push(card);
   };
   for (const color of COLORS) {
     const need = cost.colors[color] ?? 0;
     for (let i = 0; i < need; i++) tapMatching((c) => manaColorOf(c) === color);
   }
   for (let i = 0; i < cost.generic; i++) tapMatching(() => true);
+  return tapped;
 }

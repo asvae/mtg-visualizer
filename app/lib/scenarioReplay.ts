@@ -46,6 +46,10 @@ export interface ReplaySnapshot {
   entry?: LogEntry;
   life: Record<string, number>;
   cards: ReplayCard[];
+  /** Real turn/phase/active-player, tracked from `{fn:'phase', phase, turn, player}` entries — only an engine-piloted trace (functional-model/engine-trace.ts's own `advanceToPlayersNextMain1`/`advanceToDeclareAttackersStep`/`advanceOneStep`) logs `turn`/`player` on these; harness.ts's own flat `Scenario.advanceToPhase` logs a bare `{fn:'phase', phase}` with neither (no real turn concept there), so those two fields just stay whatever they last were (undefined, for a scenario that never crosses a real turn). `phase` updates either way. */
+  turn?: number;
+  activePlayer?: string;
+  phase?: string;
 }
 
 const DEFAULT_LIFE = 20;
@@ -124,7 +128,15 @@ export function entryRefs(entry: LogEntry): string[] {
 export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry[] }): ReplaySnapshot[] {
   const roles = playerRoles(trace.scenario.raw);
   const life: Record<string, number> = initialLife(trace.scenario.raw);
-  const byName = new Map<string, ReplayCard>(initialCards(trace.scenario.raw).map((c) => [c.name, c]));
+  // The full seeded board, kept as a plain array so same-named fungible
+  // fillers (5 basicLands entries all named "Island", say) all survive —
+  // `byName` below is keyed by name too, but only as a lookup INDEX for log
+  // entries that reference a card by name; no log entry ever singles out
+  // "which Island" (they're never individually targeted), so aliasing every
+  // same-named duplicate to one representative there is safe as long as
+  // rendering reads from this array instead of the lossy Map.
+  const cards: ReplayCard[] = initialCards(trace.scenario.raw);
+  const byName = new Map<string, ReplayCard>(cards.map((c) => [c.name, c]));
 
   const ensure = (name: string | undefined, zone: ZoneType | 'Unknown' = 'Unknown'): ReplayCard | undefined => {
     if (!name) return undefined;
@@ -132,6 +144,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     if (!card) {
       card = { name, zone, owner: guessOwner(name, roles), tapped: false, counters: {}, keywords: new Set() };
       byName.set(name, card);
+      cards.push(card);
     }
     return card;
   };
@@ -157,11 +170,28 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     }
     return card;
   };
+  // Real turn/phase/active-player — only ever set by an engine-piloted
+  // trace's own `{fn:'phase', phase, turn, player}` entries (see
+  // `ReplaySnapshot`'s own doc comment); a harness.ts flat scenario has no
+  // such entries at all, so these three just stay undefined for one. An
+  // engine-piloted trace (detected by the mere presence of any `phase`
+  // entry — the only kind that ever logs one) always genuinely starts at
+  // Main1 of turn 1 with `you` active (functional-model/engine-trace.ts's
+  // own `setupEnginePilot` doc comment) BEFORE its first logged action —
+  // seeded here so the header reads correctly from step 0 onward, not just
+  // once the first real phase crossing happens to log later.
+  const isEnginePiloted = trace.log.some((e) => e.fn === 'phase');
+  let turn: number | undefined = isEnginePiloted ? 1 : undefined;
+  let activePlayer: string | undefined = isEnginePiloted ? 'you' : undefined;
+  let phase: string | undefined = isEnginePiloted ? 'Main1' : undefined;
   const snapshotOf = (step: number, entry: LogEntry | undefined): ReplaySnapshot => ({
     step,
     entry,
     life: { ...life },
-    cards: [...byName.values()].map((c) => ({ ...c, counters: { ...c.counters }, keywords: new Set(c.keywords) })),
+    cards: cards.map((c) => ({ ...c, counters: { ...c.counters }, keywords: new Set(c.keywords) })),
+    turn,
+    activePlayer,
+    phase,
   });
 
   const snapshots: ReplaySnapshot[] = [snapshotOf(0, undefined)];
@@ -201,6 +231,19 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'tap': {
+        const c = ensure(target, 'Battlefield');
+        if (c) c.tapped = true;
+        break;
+      }
+      case 'tapForMana': {
+        // engine-trace.ts's own real per-source mana-payment entry
+        // (`mana.ts`'s own `payMana` return value, surfaced — see that
+        // file's doc comment) — `target` names the EXACT real land/source
+        // that got tapped, no reconstruction/guessing needed (this used to
+        // be a cosmetic, greedy-order approximation off a single summary
+        // `payMana` entry; now it's just the real fact). Logged as its own
+        // fn, not plain `tap`, so `verify-synergy.mjs` never misreads a
+        // mana-cost payment as a card EFFECT tapping something.
         const c = ensure(target, 'Battlefield');
         if (c) c.tapped = true;
         break;
@@ -264,14 +307,25 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         if (target && roles.includes(target)) life[target] = (life[target] ?? DEFAULT_LIFE) - (num(entry.amount) ?? 0);
         break;
       }
+      case 'phase': {
+        // engine-trace.ts's own real turn/phase marker (see
+        // `ReplaySnapshot`'s own doc comment) — harness.ts's flat
+        // `advanceToPhase` logs the same `fn` with only `phase` set, which
+        // still updates `phase` here, just never `turn`/`activePlayer`.
+        phase = str(entry.phase);
+        const t = num(entry.turn);
+        if (t !== undefined) turn = t;
+        const p = str(entry.player);
+        if (p !== undefined) activePlayer = p;
+        break;
+      }
       default: {
         // read:* entries (and any other event-only fn — addMana, pump,
-        // animate, copyPermanent, dig, delayUntil, phase, legendRule,
-        // surveil, discard, createToken, destroyPrevented)
-        // don't mutate the board, but a `target` they mention should
-        // still register as "on the board somewhere" the first time it's
-        // seen, so it isn't invisible until some later fn happens to
-        // move it.
+        // animate, copyPermanent, dig, delayUntil, legendRule, surveil,
+        // discard, createToken, destroyPrevented) don't mutate the board,
+        // but a `target` they mention should still register as "on the
+        // board somewhere" the first time it's seen, so it isn't invisible
+        // until some later fn happens to move it.
         if (fn.startsWith('read:')) ensure(target);
         break;
       }
@@ -279,6 +333,44 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     snapshots.push(snapshotOf(i + 1, entry));
   });
   return snapshots;
+}
+
+export interface GroupedReplayCard extends ReplayCard {
+  /** How many otherwise-identical cards this one chip stands in for (>1 for fungible duplicates — several basicLands entries all named "Island", say). Always 1 for the real tested card. */
+  qty: number;
+  /** Stable identity for this group, derived purely from the fields that define it (see `groupKey`) — not object identity, since the board/component/layout code each call `groupForDisplay` independently on their own slice of a snapshot and get back fresh (but equal-by-key) objects, not the same references. Used for Vue's `:key` and for `cardStyle`'s within-zone position lookup. */
+  key: string;
+}
+
+/** Everything that makes two cards fungible right now — same owner/zone/name/face/tapped-state/counters/keywords, nothing on screen would tell them apart. The real tested card (`isSelf`) always gets its own unique key (folding in `name`, which is unique to it) since it must never merge with anything even if some filler happened to match all these fields. */
+function groupKey(c: ReplayCard): string {
+  return [
+    c.isSelf ? 'self' : 'fungible',
+    c.owner,
+    c.zone,
+    c.name,
+    c.faceName ?? '',
+    c.tapped,
+    JSON.stringify(Object.entries(c.counters).sort()),
+    [...c.keywords].sort().join(','),
+  ].join('|');
+}
+
+/** Collapses cards that are fungible right now (see `groupKey`) into one chip with a qty count, so N identical filler lands take one board slot instead of N. Order-preserving (first occurrence of each group wins its slot). */
+export function groupForDisplay(cards: ReplayCard[]): GroupedReplayCard[] {
+  const groups = new Map<string, GroupedReplayCard>();
+  const ordered: GroupedReplayCard[] = [];
+  for (const c of cards) {
+    const key = groupKey(c);
+    const existing = groups.get(key);
+    if (existing) existing.qty += 1;
+    else {
+      const grouped: GroupedReplayCard = { ...c, qty: 1, key };
+      groups.set(key, grouped);
+      ordered.push(grouped);
+    }
+  }
+  return ordered;
 }
 
 /** Drops the `${owner}-` prefix `setupPlayer`'s own filler names carry, for a less noisy chip label — a real card's own name (no matching prefix) passes through unchanged. Prefers the card's current face (`faceName`) when a transform has moved it away from its original name. */

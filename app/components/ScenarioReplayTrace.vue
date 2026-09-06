@@ -13,11 +13,12 @@ import {
   playerRoles,
   computeZoneRects,
   boardHeight,
+  groupForDisplay,
   CARD_LAYOUT,
   ZONE_PADDING,
-  type ReplayCard,
+  type GroupedReplayCard,
 } from '../lib/scenarioReplay';
-import { KEYWORD_ICON_NAMES } from '../lib/keywordIcons';
+import { ABILITY_ICON_NAMES } from '../lib/abilityIconPaths';
 import type { LogEntry, Scenario } from '../../functional-model/harness';
 import type { ZoneType } from '../../functional-model/interfaces';
 
@@ -44,16 +45,16 @@ const props = defineProps<{
 }>();
 
 /** One or two image URLs to show for this card (front, then back for a flipping self) — undefined when this card has no real art to show (an old-style synthetic filler, `placeholderLabel` covers it instead). */
-function imagesFor(card: ReplayCard): string[] | undefined {
+function imagesFor(card: GroupedReplayCard): string[] | undefined {
   if (card.isSelf) return props.cardImages?.length ? props.cardImages : undefined;
   const filler = props.fillerImages?.[card.name];
   return filler ? [filler] : undefined;
 }
 
-/** This card's keywords worth a badge — its own real printed ones (self only) plus anything `grantKeyword` added mid-scenario, filtered down to what KeywordIcon.vue actually has a glyph for. */
-function iconKeywords(card: ReplayCard): string[] {
+/** This card's keywords worth a badge — its own real printed ones (self only) plus anything `grantKeyword` added mid-scenario, filtered down to what AbilityIcon.vue actually has a glyph for. */
+function iconKeywords(card: GroupedReplayCard): string[] {
   const all = card.isSelf ? new Set([...(props.cardKeywords ?? []), ...card.keywords]) : card.keywords;
-  return [...all].filter((k) => KEYWORD_ICON_NAMES.has(k));
+  return [...all].filter((k) => ABILITY_ICON_NAMES.has(k));
 }
 
 // Pure reads (`read:hasSubtype`, `read:getCreaturesInPlay`, ...) never
@@ -71,11 +72,11 @@ const prevLife = computed(() => (stepIndex.value > 0 ? snapshots.value[stepIndex
 const roles = computed(() => playerRoles(props.trace.scenario.raw));
 const boardOrder = computed(() => [...roles.value.filter((r) => r !== 'you'), 'you']);
 
-function cardsFor(owner: string, zone: ZoneType): ReplayCard[] {
-  return snapshot.value.cards.filter((c) => c.owner === owner && c.zone === zone);
+function ownerCards(owner: string): GroupedReplayCard[] {
+  return groupForDisplay(snapshot.value.cards.filter((c) => c.owner === owner));
 }
-function ownerCards(owner: string): ReplayCard[] {
-  return snapshot.value.cards.filter((c) => c.owner === owner);
+function cardsFor(owner: string, zone: ZoneType): GroupedReplayCard[] {
+  return ownerCards(owner).filter((c) => c.zone === zone);
 }
 // Recomputed every step, not cached across the whole trace — a zone's box
 // only exists while it actually holds a card (Battlefield always keeps a
@@ -94,10 +95,10 @@ function boardWidth(owner: string): number {
 }
 
 /** Pure function of (zone, position within that zone) — bound straight to a CSS `left`/`top` with a `transition`, so a card changing zone (or its zone box resizing) slides there instead of popping. */
-function cardStyle(card: ReplayCard): Record<string, string> {
+function cardStyle(card: GroupedReplayCard): Record<string, string> {
   const rect = zonesFor(card.owner).find((r) => r.zone === card.zone);
   const siblings = cardsFor(card.owner, card.zone as ZoneType);
-  const index = Math.max(0, siblings.findIndex((c) => c.name === card.name));
+  const index = Math.max(0, siblings.findIndex((c) => c.key === card.key));
   const x = (rect?.x ?? 0) + ZONE_PADDING.x + index * (CARD_LAYOUT.width + CARD_LAYOUT.gap);
   return { left: `${x}px`, top: `${CARD_LAYOUT.labelHeight}px` };
 }
@@ -165,7 +166,6 @@ watch(stepIndex, (i) => {
       <span><span class="text-muted/60">action:</span> {{ trace.scenario.action }}</span>
       <span class="text-text"><span class="text-muted/60">result:</span> {{ trace.scenario.result }}</span>
     </div>
-
     <div v-if="scenarioRows.length" class="mt-1.5 max-h-24 overflow-y-auto rounded border border-border bg-panel p-2">
       <table class="w-full border-collapse font-mono text-[10px] whitespace-nowrap">
         <thead>
@@ -202,85 +202,115 @@ watch(stepIndex, (i) => {
 
     <div class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-[1fr_minmax(220px,320px)]">
       <div class="flex flex-col gap-3 rounded border border-border bg-panel p-2">
-        <div v-for="owner in boardOrder" :key="owner" class="flex flex-col gap-1">
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">{{ owner === 'you' ? 'You' : owner }}</span>
-            <span
-              class="rounded px-1 text-[10px] transition-colors duration-300"
-              :class="prevLife && prevLife[owner] !== snapshot.life[owner] ? 'bg-warn/15 text-text' : 'text-muted'"
-            >
-              <Transition name="life-pop">
-                <span :key="snapshot.life[owner] ?? 20">{{ snapshot.life[owner] ?? 20 }} life</span>
-              </Transition>
-              <template v-if="prevLife && prevLife[owner] !== snapshot.life[owner]">
-                <span :class="(snapshot.life[owner] ?? 20) > (prevLife[owner] ?? 20) ? 'text-produce' : 'text-warn'">
-                  ({{ (snapshot.life[owner] ?? 20) > (prevLife[owner] ?? 20) ? '+' : '' }}{{ (snapshot.life[owner] ?? 20) - (prevLife[owner] ?? 20) }})
-                </span>
-              </template>
-            </span>
+        <template v-for="(owner, ownerIdx) in boardOrder" :key="owner">
+          <!-- Real turn/phase/active-player — only an engine-piloted trace
+               ever sets these (scenarioReplay.ts's own `ReplaySnapshot.turn`/
+               `activePlayer`/`phase` doc comment); a harness.ts flat scenario
+               has no real turn concept, so this divider just doesn't render
+               for one. Placed right before the LAST board (boardOrder always
+               ends with 'you' — see playerRoles), so it sits between the
+               opponent(s)' board(s) and yours regardless of opponent count. -->
+          <div
+            v-if="ownerIdx === boardOrder.length - 1 && snapshot.turn !== undefined"
+            class="flex items-center gap-1.5 self-start rounded bg-surface/50 px-2 py-1 font-mono text-[10px] text-muted"
+          >
+            <span class="rounded bg-surface px-1.5 py-0.5 text-text">Turn {{ snapshot.turn }}</span>
+            <span>{{ snapshot.activePlayer === 'you' ? 'Your' : `${snapshot.activePlayer}'s` }} turn</span>
+            <span class="text-muted/50">·</span>
+            <span>{{ snapshot.phase }}</span>
           </div>
-          <div class="relative transition-[width] duration-500 ease-out" :style="{ width: boardWidth(owner) + 'px', height: boardHeight() + 'px' }">
-            <div
-              v-for="zr in zonesFor(owner)"
-              :key="zr.zone"
-              class="absolute rounded border border-dashed transition-[left,width] duration-500 ease-out"
-              :class="ZONE_COLOR[zr.zone]"
-              :style="{ left: zr.x + 'px', top: 0, width: zr.width + 'px', height: boardHeight() + 'px' }"
-            >
-              <span class="absolute top-0.5 left-1 text-[9px] text-muted/50">{{ zr.label }}</span>
-            </div>
-            <Transition
-              v-for="card in snapshot.cards.filter((c) => c.owner === owner && c.zone !== 'Unknown')"
-              :key="card.name"
-              name="card-pop"
-            >
-              <div
-                class="absolute shrink-0 transition-[left,top] duration-500 ease-out"
-                :style="cardStyle(card)"
-                :title="displayName(card) + (card.tapped ? ' (tapped)' : '')"
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span
+                class="flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase transition-colors duration-300"
+                :class="snapshot.activePlayer === owner ? 'text-warn' : 'text-muted'"
               >
-                <div class="relative transition-transform duration-300" :class="card.tapped ? 'rotate-90' : ''">
-                  <div v-if="imagesFor(card)" class="flip-outer h-[126px] w-[90px]">
-                    <div class="flip-inner h-full w-full" :class="{ flipped: !!card.faceName }">
-                      <img
-                        :src="imagesFor(card)![0]"
-                        alt=""
-                        class="flip-face front h-full w-full rounded-[3px] border object-cover transition-shadow duration-300"
-                        :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
-                      />
-                      <img
-                        v-if="imagesFor(card)![1]"
-                        :src="imagesFor(card)![1]"
-                        alt=""
-                        class="flip-face back h-full w-full rounded-[3px] border object-cover transition-shadow duration-300"
-                        :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
-                      />
+                <span v-if="snapshot.activePlayer === owner" class="h-1.5 w-1.5 rounded-full bg-warn" />
+                {{ owner === 'you' ? 'You' : owner }}
+              </span>
+              <span
+                class="rounded px-1 text-[10px] transition-colors duration-300"
+                :class="prevLife && prevLife[owner] !== snapshot.life[owner] ? 'bg-warn/15 text-text' : 'text-muted'"
+              >
+                <Transition name="life-pop">
+                  <span :key="snapshot.life[owner] ?? 20">{{ snapshot.life[owner] ?? 20 }} life</span>
+                </Transition>
+                <template v-if="prevLife && prevLife[owner] !== snapshot.life[owner]">
+                  <span :class="(snapshot.life[owner] ?? 20) > (prevLife[owner] ?? 20) ? 'text-produce' : 'text-warn'">
+                    ({{ (snapshot.life[owner] ?? 20) > (prevLife[owner] ?? 20) ? '+' : '' }}{{ (snapshot.life[owner] ?? 20) - (prevLife[owner] ?? 20) }})
+                  </span>
+                </template>
+              </span>
+            </div>
+            <div class="relative transition-[width] duration-500 ease-out" :style="{ width: boardWidth(owner) + 'px', height: boardHeight() + 'px' }">
+              <div
+                v-for="zr in zonesFor(owner)"
+                :key="zr.zone"
+                class="absolute rounded border border-dashed transition-[left,width] duration-500 ease-out"
+                :class="ZONE_COLOR[zr.zone]"
+                :style="{ left: zr.x + 'px', top: 0, width: zr.width + 'px', height: boardHeight() + 'px' }"
+              >
+                <span class="absolute top-0.5 left-1 text-[9px] text-muted/50">{{ zr.label }}</span>
+              </div>
+              <Transition
+                v-for="card in ownerCards(owner).filter((c) => c.zone !== 'Unknown')"
+                :key="card.key"
+                name="card-pop"
+              >
+                <div
+                  class="absolute shrink-0 transition-[left,top] duration-500 ease-out"
+                  :style="cardStyle(card)"
+                  :title="displayName(card) + (card.tapped ? ' (tapped)' : '')"
+                >
+                  <div class="relative transition-transform duration-300" :class="card.tapped ? 'rotate-90' : ''">
+                    <div v-if="imagesFor(card)" class="flip-outer h-[126px] w-[90px]">
+                      <div class="flip-inner h-full w-full" :class="{ flipped: !!card.faceName }">
+                        <img
+                          :src="imagesFor(card)![0]"
+                          alt=""
+                          class="flip-face front h-full w-full rounded-[3px] border object-cover transition-shadow duration-300"
+                          :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
+                        />
+                        <img
+                          v-if="imagesFor(card)![1]"
+                          :src="imagesFor(card)![1]"
+                          alt=""
+                          class="flip-face back h-full w-full rounded-[3px] border object-cover transition-shadow duration-300"
+                          :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
+                        />
+                      </div>
+                    </div>
+                    <div
+                      v-else
+                      class="flex h-[126px] w-[90px] items-center justify-center rounded-[3px] border font-mono text-[9px] transition-colors duration-300"
+                      :class="highlighted.has(card.name) ? 'border-warn bg-warn/10 text-text' : 'border-border-subtle bg-surface text-muted'"
+                    >
+                      {{ placeholderLabel(card) }}
+                    </div>
+                    <span
+                      v-if="Object.keys(card.counters).length"
+                      class="absolute -right-1 -bottom-1 rounded bg-warn px-0.5 text-[8px] leading-tight text-bg"
+                    >
+                      <template v-for="(amount, type) in card.counters" :key="type">{{ amount }}{{ type }}</template>
+                    </span>
+                    <span
+                      v-if="card.qty > 1"
+                      class="absolute -top-1 -right-1 rounded bg-surface px-0.5 text-[8px] leading-tight text-text"
+                    >
+                      ×{{ card.qty }}
+                    </span>
+                    <div
+                      v-if="iconKeywords(card).length"
+                      class="absolute top-0 left-0 flex gap-0.5 rounded-br-[3px] bg-bg/80 px-0.5 py-0.5"
+                    >
+                      <AbilityIcon v-for="kw in iconKeywords(card)" :key="kw" :keyword="kw" :size="10" class="text-text/90" />
                     </div>
                   </div>
-                  <div
-                    v-else
-                    class="flex h-[126px] w-[90px] items-center justify-center rounded-[3px] border font-mono text-[9px] transition-colors duration-300"
-                    :class="highlighted.has(card.name) ? 'border-warn bg-warn/10 text-text' : 'border-border-subtle bg-surface text-muted'"
-                  >
-                    {{ placeholderLabel(card) }}
-                  </div>
-                  <span
-                    v-if="Object.keys(card.counters).length"
-                    class="absolute -right-1 -bottom-1 rounded bg-warn px-0.5 text-[8px] leading-tight text-bg"
-                  >
-                    <template v-for="(amount, type) in card.counters" :key="type">{{ amount }}{{ type }}</template>
-                  </span>
-                  <div
-                    v-if="iconKeywords(card).length"
-                    class="absolute top-0 left-0 flex gap-0.5 rounded-br-[3px] bg-bg/80 px-0.5 py-0.5"
-                  >
-                    <KeywordIcon v-for="kw in iconKeywords(card)" :key="kw" :keyword="kw" :size="10" class="text-text/90" />
-                  </div>
                 </div>
-              </div>
-            </Transition>
+              </Transition>
+            </div>
           </div>
-        </div>
+        </template>
       </div>
 
       <div class="max-h-36 overflow-y-auto rounded border border-border bg-panel p-2">

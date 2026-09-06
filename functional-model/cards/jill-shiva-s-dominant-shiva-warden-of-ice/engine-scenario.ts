@@ -34,8 +34,11 @@ import {
 
 export function runEngineScenarios(): TraceResult[] {
   const setup: EnginePilotSetup = {
-    you: { tokens: ['c_1_1_hero'], basicLands: basicLandsFor('{3}{U}{U}') },
-    opponents: [{ tokens: ['c_a_treasure_sac'], basicLands: ['Forest'] }],
+    // Both players need a real library — this scenario crosses several
+    // real turns (real 704.5a, sba.ts, genuinely loses the game for
+    // whoever's instructed to draw with none left).
+    you: { tokens: ['c_1_1_hero'], basicLands: basicLandsFor('{3}{U}{U}'), libraryCount: 15 },
+    opponents: [{ tokens: ['c_a_treasure_sac'], basicLands: ['Forest'], libraryCount: 10 }],
   };
   const pilot = setupEnginePilot(setup);
 

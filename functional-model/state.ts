@@ -158,6 +158,10 @@ export interface RealPlayer {
   graveyard: RealCard[];
   battlefield: RealCard[];
   exile: RealCard[];
+  /** Real 104.3c/120.3 signal, set by `drawCards` below the instant a draw is ATTEMPTED for more cards than remain in the library — distinct from merely "library is empty" (a player who's simply never been asked to draw more than they have shouldn't lose). Consumed by `sba.ts`'s own `checkStateBasedActions` (704.5a). */
+  attemptedDrawFromEmpty?: boolean;
+  /** Real 104.3a/704.5a — set once by `sba.ts`'s `checkStateBasedActions` (0-or-less life, or `attemptedDrawFromEmpty` above) and never cleared; `engine.ts`'s own `advance` refuses to run any further once ANY player has this set (a real, deliberate stop — the game is over, not something to keep silently simulating). */
+  hasLost?: boolean;
 }
 
 function zoneArray(player: RealPlayer, zone: ZoneType): RealCard[] | undefined {
@@ -348,8 +352,9 @@ export class GameState {
     return chosen;
   }
 
-  /** `Player.drawCard`/`drawCards` (forge-game/.../player/Player.java ~line 1113/1117) — real top-of-library -> hand move, in library order. */
+  /** `Player.drawCard`/`drawCards` (forge-game/.../player/Player.java ~line 1113/1117) — real top-of-library -> hand move, in library order. Real 104.3c: attempting to draw more cards than remain (checked BEFORE drawing whatever's actually left, not after — the ATTEMPT is what matters, same as a real empty-library draw) sets `player.attemptedDrawFromEmpty`, consumed by `sba.ts`'s own `checkStateBasedActions` (704.5a). */
   drawCards(player: RealPlayer, n: number): RealCard[] {
+    if (n > player.library.length) player.attemptedDrawFromEmpty = true;
     const drawn: RealCard[] = [];
     for (let i = 0; i < n && player.library.length > 0; i++) {
       const card = player.library[0]!;

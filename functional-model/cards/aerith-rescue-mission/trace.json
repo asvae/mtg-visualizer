@@ -1,13 +1,19 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand, mode 0 chosen",
-      "result": "creates three 1/1 colorless Hero creature tokens",
+      "setup": "you: 4 Plains(s)",
+      "action": "real engine playthrough: cast -> mode 0 (Take the Elevator)",
+      "result": "Take the Elevator — creates three real 1/1 colorless Hero creature tokens.",
       "raw": {
-        "result": "creates three 1/1 colorless Hero creature tokens",
-        "castFrom": "hand",
-        "mode": 0
+        "result": "Take the Elevator — creates three real 1/1 colorless Hero creature tokens.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ]
+        }
       }
     },
     "log": [
@@ -17,6 +23,26 @@
         "instanceId": 1,
         "from": "hand",
         "cost": "{3}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
       },
       {
         "fn": "createToken",
@@ -30,23 +56,35 @@
         "card": "Aerith Rescue Mission",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Sorcery"
+        "to": "Graveyard"
       }
     ]
   },
   {
     "scenario": {
-      "setup": "you: 3 creature(s)",
-      "action": "cast from hand, mode 1 chosen",
-      "result": "taps all three creatures and puts a stun counter on the first one tapped",
+      "setup": "you: a c_1_1_hero; you: 4 Plains(s); opp0: a w_1_1_cat",
+      "action": "real engine playthrough: cast -> mode 1 (Take 59 Flights of Stairs)",
+      "result": "Take 59 Flights of Stairs — real creatures on the battlefield (your Hero, the opponent's Cat) get tapped (up to three targets — only two real candidates exist here), and the first one tapped gets a real stun counter.",
       "raw": {
-        "result": "taps all three creatures and puts a stun counter on the first one tapped",
-        "castFrom": "hand",
-        "mode": 1,
+        "result": "Take 59 Flights of Stairs — real creatures on the battlefield (your Hero, the opponent's Cat) get tapped (up to three targets — only two real candidates exist here), and the first one tapped gets a real stun counter.",
         "you": {
-          "creaturesCount": 3
-        }
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "tokens": [
+            "c_1_1_hero"
+          ]
+        },
+        "opponents": [
+          {
+            "tokens": [
+              "w_1_1_cat"
+            ]
+          }
+        ]
       }
     },
     "log": [
@@ -58,25 +96,46 @@
         "cost": "{3}{W}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Aerith Rescue Mission"
+      },
+      {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 3
+        "count": 1
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 1
       },
       {
         "fn": "tap",
-        "target": "you-creature-token-0"
+        "target": "Hero"
       },
       {
         "fn": "tap",
-        "target": "you-creature-token-1"
-      },
-      {
-        "fn": "tap",
-        "target": "you-creature-token-2"
+        "target": "Cat"
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Hero",
         "counterType": "stun",
         "amount": 1
       },
@@ -85,42 +144,7 @@
         "card": "Aerith Rescue Mission",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Sorcery"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, mode 1 chosen",
-      "result": "no creatures to tap, no effect",
-      "raw": {
-        "result": "no creatures to tap, no effect",
-        "castFrom": "hand",
-        "mode": 1
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Aerith Rescue Mission",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{3}{W}"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 0
-      },
-      {
-        "fn": "move",
-        "card": "Aerith Rescue Mission",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Sorcery"
+        "to": "Graveyard"
       }
     ]
   }

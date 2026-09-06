@@ -22,7 +22,9 @@ import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/l
 import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
 import { findInteractionsForCard, annotateCardText } from '../../../../functional-model/synergy';
 import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
-import type { Scenario } from '../../../../functional-model/harness';
+import { runScenarios } from '../../../../functional-model/harness';
+import type { Scenario, TraceResult } from '../../../../functional-model/harness';
+import type { CardDefinition } from '../../../../functional-model/card';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
@@ -53,29 +55,34 @@ function loadJsonFresh<T>(relativePath: string, bundled: T): T {
 // functional-model/harness.ts's real, mutable game state
 // (functional-model/state.ts) across its own scenarios.ts. No bundled
 // fallback, dev-time comparison artifact — a miss here is the common case
-// (only a hand-built subset of cards exist
-// in this design so far, see functional-model/cards/), and regenerating
-// trace.json after editing a card needs
-// `npx vite-node functional-model/scripts/run-scenarios.mjs`.
+// (only a hand-built subset of cards exist in this design so far, see
+// functional-model/cards/).
+//
+// Traces are computed LIVE, in-process, on every cache-miss (see
+// loadFunctionalModel below) — not read from the committed trace.json.
+// runScenarios/runEngineScenarios are pure and deterministic, so this gives
+// the identical result, just always fresh: editing a card's scenarios.ts/
+// engine-scenario.ts and reloading the page shows the change immediately,
+// no `run-scenarios.mjs` step needed. trace.json itself stays committed and
+// unread by this route — it's still what functional-model/scripts/
+// verify-synergy.mjs and run-scenarios.mjs themselves read/write, a
+// separate corpus-wide batch/CI path this route has nothing to do with.
 //
 // Supersedes the older functional-model/data/<slug>.ts generator (one
 // exported function per Forge ability line, produced by
 // app/lib/functionalTranslate.ts) — that design is retired; this route no
 // longer reads from it.
-interface FunctionalModelTraceResult {
-  scenario: { setup: string; action: string; result: string; raw: Scenario };
-  log: Record<string, unknown>[];
-}
+//
 // loadCardSynergy (v2 SYNERGY_DESIGN.md attribute-bag facts) and
 // loadFunctionalModelPool are shared with server/api/graph-links.ts — see
 // server/utils/functionalModelPool.ts.
 interface FunctionalModelData {
   source: string;
   synergy: { source: Fact[]; sink: Fact[] } | null;
-  // Raw per-scenario output (functional-model/harness.ts's own
+  // Live-computed per-scenario output (functional-model/harness.ts's own
   // TraceResult[]) — kept as each scenario's own ordered log, for seeing
   // exactly what one specific scenario actually did.
-  traces: FunctionalModelTraceResult[];
+  traces: TraceResult[];
   // The card's own full text — title, mana cost, type line, then oracle text,
   // same order a real printed card reads — pre-split into plain/fact-linked
   // runs (functional-model/synergy.ts's annotateCardText) — computed here, in
@@ -93,17 +100,17 @@ interface FunctionalModelData {
   review: 'ai' | 'human' | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
-// signature (mtimeMs of its 4 files) is cheap enough to check on every
-// request, so a hand-edit (definition.ts, trace.json via
-// run-scenarios.mjs, progress.json, synergy.json) shows up on the very next
-// load with no server restart, while a request for a card nobody's touched
-// skips the readFileSync/JSON.parse/annotateCardText work entirely. Keyed
-// on cardText too (not just slug) since annotatedText depends on it and it
-// comes from data/cards.db, outside this folder's own signature — cheap
-// insurance against a stale annotation if the card's real oracle text ever
-// changes between requests (a DB re-sync) without the folder itself
-// changing.
-const FM_FOLDER_FILES = ['definition.ts', 'trace.json', 'progress.json', 'synergy.json'] as const;
+// signature (mtimeMs of its own files) is cheap enough to check on every
+// request, so a hand-edit (definition.ts, scenarios.ts, engine-scenario.ts,
+// progress.json, synergy.json) shows up on the very next load with no
+// server restart and no run-scenarios.mjs step, while a request for a card
+// nobody's touched skips the readFileSync/dynamic-import/runScenarios/
+// annotateCardText work entirely. Keyed on cardText too (not just slug)
+// since annotatedText depends on it and it comes from data/cards.db,
+// outside this folder's own signature — cheap insurance against a stale
+// annotation if the card's real oracle text ever changes between requests
+// (a DB re-sync) without the folder itself changing.
+const FM_FOLDER_FILES = ['definition.ts', 'scenarios.ts', 'engine-scenario.ts', 'progress.json', 'synergy.json'] as const;
 function functionalModelSignature(slug: string): string {
   return FM_FOLDER_FILES.map((f) => {
     try {
@@ -114,7 +121,7 @@ function functionalModelSignature(slug: string): string {
   }).join('|');
 }
 const functionalModelCache = new Map<string, { signature: string; cardText: string; data: FunctionalModelData | null }>();
-function loadFunctionalModel(name: string, cardText: string): FunctionalModelData | null {
+async function loadFunctionalModel(name: string, cardText: string): Promise<FunctionalModelData | null> {
   const slug = slugify(name);
   const signature = functionalModelSignature(slug);
   const cached = functionalModelCache.get(slug);
@@ -122,8 +129,33 @@ function loadFunctionalModel(name: string, cardText: string): FunctionalModelDat
 
   let data: FunctionalModelData | null;
   try {
-    const source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
-    const traces = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/trace.json`), 'utf8'));
+    let source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
+    // A card that's opted into a real engine-piloted trace (see
+    // engine-trace.ts's own header — `cards/<slug>/engine-scenario.ts`,
+    // picked up INSTEAD of scenarios.ts for that one card) has its own
+    // pilot script, which is what actually produces `traces` below — worth
+    // showing right alongside the definition rather than leaving it
+    // invisible on disk. Appended, not a separate field, to keep the Card
+    // Definition tab's existing single-`source` shape (FunctionalModelScript)
+    // unchanged.
+    //
+    // Same dispatch functional-model/scripts/run-scenarios.mjs itself
+    // uses — `.catch(() => null)` on the dynamic import is how it (and
+    // this route) tells "no engine-scenario.ts for this card" (the common
+    // case) apart from a real error inside one that exists.
+    const engineScenarioModule = await import(`../../../../functional-model/cards/${slug}/engine-scenario.ts`).catch(() => null);
+    let traces: TraceResult[];
+    if (engineScenarioModule) {
+      const pilotSource = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/engine-scenario.ts`), 'utf8');
+      source += `\n\n// ============================================================\n// engine-scenario.ts — this card's own real engine-piloted trace\n// (runs INSTEAD OF scenarios.ts for this card)\n// ============================================================\n\n${pilotSource}`;
+      traces = engineScenarioModule.runEngineScenarios();
+    } else {
+      const cardModule = await import(`../../../../functional-model/cards/${slug}/definition.ts`);
+      const scenariosModule = await import(`../../../../functional-model/cards/${slug}/scenarios.ts`).catch(() => null);
+      if (!scenariosModule) throw new Error(`no scenarios.ts for ${slug}`);
+      const card = Object.values(cardModule)[0] as CardDefinition;
+      traces = runScenarios(card, scenariosModule.scenarios);
+    }
     const synergy = loadCardSynergy(slug);
     const annotatedText = synergy && cardText ? annotateCardText(cardText, [...synergy.source, ...synergy.sink]) : null;
     let review: 'ai' | 'human' | null = null;
@@ -480,7 +512,7 @@ export default defineEventHandler(async (event) => {
     card: cardData,
     edges,
     themes,
-    functionalModel: loadFunctionalModel(card.name, cardText),
+    functionalModel: await loadFunctionalModel(card.name, cardText),
     interactions: await loadInteractionGroups(card.name, filterNames),
   };
 });

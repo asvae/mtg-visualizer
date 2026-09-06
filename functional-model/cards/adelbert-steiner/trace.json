@@ -1,11 +1,26 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "creature enters, no other effect (Lifelink and the Equipment-count P/T bonus are both continuous, not resolvable effects)",
+      "setup": "you: a sword; you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> equip -> CDA recalculation -> real combat -> Lifelink",
+      "result": "Steiner enters, a real Equipment (Sword) is attached — the printed \"+1/+1 for each Equipment you control\" CDA recalculates for real (layer 7a) to 3/2; real turn passage clears summoning sickness, then it attacks unblocked, dealing real combat damage to the opponent and, via Lifelink (real 702.15e handling in state.dealDamage), gaining its controller that much real life; a second real copy of Steiner then enters, and the real legend rule (704.5j) removes one of the two — all through the real turn-based engine's own combat/state-based-action machinery, not harness.ts's own (replaced) flat synthetic probes.",
       "raw": {
-        "result": "creature enters, no other effect (Lifelink and the Equipment-count P/T bonus are both continuous, not resolvable effects)"
+        "result": "Steiner enters, a real Equipment (Sword) is attached — the printed \"+1/+1 for each Equipment you control\" CDA recalculates for real (layer 7a) to 3/2; real turn passage clears summoning sickness, then it attacks unblocked, dealing real combat damage to the opponent and, via Lifelink (real 702.15e handling in state.dealDamage), gaining its controller that much real life; a second real copy of Steiner then enters, and the real legend rule (704.5j) removes one of the two — all through the real turn-based engine's own combat/state-based-action machinery, not harness.ts's own (replaced) flat synthetic probes.",
+        "you": {
+          "tokens": [
+            "sword"
+          ],
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
@@ -17,44 +32,53 @@
         "cost": "{1}{W}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Adelbert Steiner"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Adelbert Steiner"
+      },
+      {
         "fn": "enters",
         "card": "Adelbert Steiner",
         "instanceId": 1,
         "zone": "Battlefield"
+      },
+      {
+        "fn": "equip",
+        "equipment": "Sword",
+        "target": "Adelbert Steiner"
       },
       {
         "fn": "read:getNetPower",
         "card": "Adelbert Steiner",
-        "power": 2,
-        "toughness": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent",
-      "raw": {
-        "label": "Lifelink: deals 3 combat damage to an opponent",
-        "dealsCombatDamage": {
-          "amount": 3
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Adelbert Steiner",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
+        "power": 3,
+        "toughness": 2
       },
       {
-        "fn": "enters",
-        "card": "Adelbert Steiner",
-        "instanceId": 1,
-        "zone": "Battlefield"
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "attack",
+        "card": "Adelbert Steiner"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
       },
       {
         "fn": "dealDamage",
@@ -69,115 +93,15 @@
         "cause": "Lifelink"
       },
       {
-        "fn": "read:getNetPower",
-        "card": "Adelbert Steiner",
-        "power": 2,
-        "toughness": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 Equipment",
-      "action": "cast from hand",
-      "result": "CDA: 2 Equipment on the battlefield (P/T should reflect it)",
-      "raw": {
-        "label": "CDA: 2 Equipment on the battlefield (P/T should reflect it)",
-        "you": {
-          "equipmentCount": 2
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Adelbert Steiner",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
-      },
-      {
         "fn": "enters",
         "card": "Adelbert Steiner",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "read:getNetPower",
-        "card": "Adelbert Steiner",
-        "power": 4,
-        "toughness": 3
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "CDA: no Equipment on the battlefield",
-      "raw": {
-        "label": "CDA: no Equipment on the battlefield",
-        "you": {
-          "equipmentCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Adelbert Steiner",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
-      },
-      {
-        "fn": "enters",
-        "card": "Adelbert Steiner",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "read:getNetPower",
-        "card": "Adelbert Steiner",
-        "power": 2,
-        "toughness": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Adelbert Steiner",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
-      },
-      {
-        "fn": "enters",
-        "card": "Adelbert Steiner",
-        "instanceId": 1,
+        "instanceId": 2,
         "zone": "Battlefield"
       },
       {
         "fn": "legendRule",
         "card": "Adelbert Steiner",
         "player": "you"
-      },
-      {
-        "fn": "read:getNetPower",
-        "card": "Adelbert Steiner",
-        "power": 2,
-        "toughness": 1
       }
     ]
   }

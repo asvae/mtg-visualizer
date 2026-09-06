@@ -1,20 +1,87 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 1 land(s)",
-      "action": "\"onAttack\" trigger fires",
-      "result": "attacks, puts a blight counter on the opponent's only land — that land then loses all land types/abilities and gains \"{T}: Add {C}\" (real static consequence, no engine machinery to verify it), doubled to 2 colorless when tapped per the second static (also unmodeled — no \"land tapped for mana\" trigger hook)",
+      "setup": "you: 6 Forest(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> turn passage -> real attack -> onAttack",
+      "result": "Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1, tapping it) — the attack trigger itself has no auto-fire in this engine yet (a real, accepted gap, same as harness.ts's own \"dealsCombatDamage\" synthetic-probe convention), so it's fired manually right after the real attack declaration, putting a real blight counter on the opponent's only land. The land's own granted \"{T}: Add {C}\" and Ultima's second static (doubling mana from tapped lands) are real printed text with no engine machinery behind them (no continuous-effect-tied-to-a-counter grant, no \"land tapped for mana\" trigger hook) — narrated here as the human-known real consequence, same as harness.ts's own (replaced) flat scenario already documented.",
       "raw": {
-        "result": "attacks, puts a blight counter on the opponent's only land — that land then loses all land types/abilities and gains \"{T}: Add {C}\" (real static consequence, no engine machinery to verify it), doubled to 2 colorless when tapped per the second static (also unmodeled — no \"land tapped for mana\" trigger hook)",
-        "trigger": "onAttack",
+        "result": "Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1, tapping it) — the attack trigger itself has no auto-fire in this engine yet (a real, accepted gap, same as harness.ts's own \"dealsCombatDamage\" synthetic-probe convention), so it's fired manually right after the real attack declaration, putting a real blight counter on the opponent's only land. The land's own granted \"{T}: Add {C}\" and Ultima's second static (doubling mana from tapped lands) are real printed text with no engine machinery behind them (no continuous-effect-tied-to-a-counter grant, no \"land tapped for mana\" trigger hook) — narrated here as the human-known real consequence, same as harness.ts's own (replaced) flat scenario already documented.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "libraryCount": 5
+        },
         "opponents": [
           {
-            "landsCount": 1
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 5
           }
         ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Ultima, Origin of Oblivion",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{5}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ultima, Origin of Oblivion"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ultima, Origin of Oblivion"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ultima, Origin of Oblivion"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ultima, Origin of Oblivion"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ultima, Origin of Oblivion"
+      },
+      {
+        "fn": "enters",
+        "card": "Ultima, Origin of Oblivion",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "attack",
+        "card": "Ultima, Origin of Oblivion"
+      },
       {
         "fn": "trigger",
         "card": "Ultima, Origin of Oblivion",
@@ -25,7 +92,7 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 1,
+        "count": 7,
         "creatureCount": 1
       },
       {
@@ -37,17 +104,47 @@
       },
       {
         "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
         "target": "Ultima, Origin of Oblivion",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "opp0-land-0",
+        "target": "Forest",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "opp0-land-0",
+        "target": "Forest",
         "counterType": "blight",
         "amount": 1
       }

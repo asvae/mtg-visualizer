@@ -116,6 +116,14 @@ function setupGame() {
   const oppLand = state.addCard(opp, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   const jill = state.addCard(you, 'Hand', { name: jillShivasDominant.name, types: ['Creature'], subtypes: ['Human', 'Noble', 'Warrior'], basePower: 2, baseToughness: 2 });
 
+  // A real library for each player — this playthrough advances several
+  // real turns for Shiva's own Saga chapters (one per draw step), which
+  // would otherwise genuinely run a player out and trigger real 704.5a.
+  for (let i = 0; i < 20; i++) {
+    state.addCard(you, 'Library', { name: `you-library-filler-${i}`, types: [] });
+    state.addCard(opp, 'Library', { name: `opp-library-filler-${i}`, types: [] });
+  }
+
   const engine = createEngine(state, [you, opp]);
   advance(engine); // Untap -> Upkeep
   advance(engine); // Upkeep -> Draw

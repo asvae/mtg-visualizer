@@ -298,7 +298,19 @@ async function verifyCard(slug) {
       if (!hasAggregateRead && !hasTypedRead) failures.push(`want {zone:${w.zone}} has no read:getCardsIn/getCreaturesInPlay/getLandsInPlay (or per-object type read) anywhere in the trace`);
     } else {
       const triggerEvidence = [...triggerNames].some((n) => TRIGGER_EVENT_MAP[n] === w.event);
-      const readEvidence = w.event === 'dies' || w.event === 'lifegain' ? triggerEvidence : false;
+      // A real `read:getCounters` line is direct evidence for a
+      // `{event:'putCounter', target:'self'}` want (an effect's own "X =
+      // however many counters are already on this" read, e.g. Aerith
+      // Gainsborough's own onDies spread) — same "a low-level read backs a
+      // want it corroborates" reasoning this file's own header comment
+      // already establishes for zone/type wants, just extended to this one
+      // event shape (no card needed it until now).
+      const readEvidence =
+        w.event === 'dies' || w.event === 'lifegain'
+          ? triggerEvidence
+          : w.event === 'putCounter'
+            ? allEntries.some((e) => e.fn === 'read:getCounters' && (!w.counterType || e.counterType === w.counterType))
+            : false;
       if (!triggerEvidence && !readEvidence) {
         // With/without diff fallback — a scenario pair whose logs differ at
         // all counts as the want being demonstrated (SYNERGY_DESIGN.md's

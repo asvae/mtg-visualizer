@@ -1,0 +1,46 @@
+// Real engine-piloted trace for this card (see engine-trace.ts's own
+// header) — a plain modal sorcery, fully covered by `pilotCast`/
+// `pilotResolveTop` (no new engine-trace.ts work needed). Two real
+// scenarios, one per mode (`ctx.mode`), same "both are real, both are
+// worth showing" reasoning `finishEnginePilotTrace`'s own array return
+// already supports.
+
+import { aerithRescueMission } from './definition';
+import { basicLandsFor } from '../../mana';
+import type { TraceResult } from '../../harness';
+import { setupEnginePilot, pilotActions, pilotCast, pilotResolveTop, finishEnginePilotTrace, type EnginePilotSetup } from '../../engine-trace';
+
+function elevatorMode(): TraceResult {
+  const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{3}{W}') } };
+  const pilot = setupEnginePilot(setup);
+  const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: aerithRescueMission.name, types: [] });
+  const actions = pilotActions(pilot, cardReal.id);
+  const ctx = pilot.ctxFor(cardReal, { mode: 0 });
+
+  pilotCast(pilot, cardReal, aerithRescueMission, ctx, actions);
+  pilotResolveTop(pilot); // an instant/sorcery — resolves, moves to graveyard.
+
+  const result = 'Take the Elevator — creates three real 1/1 colorless Hero creature tokens.';
+  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 0 (Take the Elevator)', result);
+}
+
+function stairsMode(): TraceResult {
+  const setup: EnginePilotSetup = {
+    you: { basicLands: basicLandsFor('{3}{W}'), tokens: ['c_1_1_hero'] },
+    opponents: [{ tokens: ['w_1_1_cat'] }],
+  };
+  const pilot = setupEnginePilot(setup);
+  const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: aerithRescueMission.name, types: [] });
+  const actions = pilotActions(pilot, cardReal.id);
+  const ctx = pilot.ctxFor(cardReal, { mode: 1 });
+
+  pilotCast(pilot, cardReal, aerithRescueMission, ctx, actions);
+  pilotResolveTop(pilot);
+
+  const result = 'Take 59 Flights of Stairs — real creatures on the battlefield (your Hero, the opponent\'s Cat) get tapped (up to three targets — only two real candidates exist here), and the first one tapped gets a real stun counter.';
+  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 1 (Take 59 Flights of Stairs)', result);
+}
+
+export function runEngineScenarios(): TraceResult[] {
+  return [elevatorMode(), stairsMode()];
+}

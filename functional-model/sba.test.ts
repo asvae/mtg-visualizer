@@ -9,7 +9,7 @@ describe('checkStateBasedActions (704)', () => {
     const opp = state.addPlayer('opp');
     const creature = state.addCard(you, 'Battlefield', { name: 'Fine Bear', types: ['Creature'], basePower: 2, baseToughness: 2 });
     const result = checkStateBasedActions(state, [you, opp]);
-    expect(result).toEqual({ destroyed: [], putIntoGraveyard: [], legendRuleRemoved: [] });
+    expect(result).toEqual({ destroyed: [], putIntoGraveyard: [], legendRuleRemoved: [], lost: [] });
     expect(creature.zone).toBe('Battlefield');
   });
 
@@ -113,7 +113,52 @@ describe('checkStateBasedActions (704)', () => {
     const opp = state.addPlayer('opp');
     const artifact = state.addCard(you, 'Battlefield', { name: 'Sword', types: ['Artifact'], basePower: 0, baseToughness: 0 });
     const result = checkStateBasedActions(state, [you, opp]);
-    expect(result).toEqual({ destroyed: [], putIntoGraveyard: [], legendRuleRemoved: [] });
+    expect(result).toEqual({ destroyed: [], putIntoGraveyard: [], legendRuleRemoved: [], lost: [] });
     expect(artifact.zone).toBe('Battlefield');
+  });
+});
+
+describe('704.5a — a player at 0-or-less life, or one who attempted to draw more cards than remain, loses', () => {
+  it('life <= 0 marks that player hasLost, real and persistent', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    you.life = 0;
+    const result = checkStateBasedActions(state, [you, opp]);
+    expect(result.lost).toEqual([you]);
+    expect(you.hasLost).toBe(true);
+    expect(opp.hasLost).toBeFalsy();
+  });
+
+  it('a merely-empty library with no draw ever attempted does NOT lose the game', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    expect(you.library).toEqual([]);
+    const result = checkStateBasedActions(state, [you, opp]);
+    expect(result.lost).toEqual([]);
+    expect(you.hasLost).toBeFalsy();
+  });
+
+  it('attempting to draw more cards than remain (104.3c) really loses the game — the attempt, not the empty library, is what matters', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    state.drawCards(you, 1); // 0 cards in library — a real, failed attempt
+    expect(you.attemptedDrawFromEmpty).toBe(true);
+    const result = checkStateBasedActions(state, [you, opp]);
+    expect(result.lost).toEqual([you]);
+    expect(you.hasLost).toBe(true);
+  });
+
+  it('a repeat sweep does not re-report an already-lost player', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    you.life = -3;
+    checkStateBasedActions(state, [you, opp]);
+    const second = checkStateBasedActions(state, [you, opp]);
+    expect(second.lost).toEqual([]);
+    expect(you.hasLost).toBe(true); // still real, just not re-announced
   });
 });

@@ -12,6 +12,14 @@ function setupGame() {
   const opp = state.addPlayer('opp');
   state.addCard(you, 'Battlefield', { name: 'Mountain', types: ['Land'], subtypes: ['Mountain'] });
   state.addCard(you, 'Battlefield', { name: 'Mountain', types: ['Land'], subtypes: ['Mountain'] });
+  // A real library for each player — several of these tests advance
+  // multiple real turns (a Saga's own chapters, one per draw step), which
+  // would otherwise genuinely run a player out and trigger real 704.5a
+  // (engine.ts's own `advance`/sba.ts's `checkStateBasedActions`).
+  for (let i = 0; i < 20; i++) {
+    state.addCard(you, 'Library', { name: `you-library-filler-${i}`, types: [] });
+    state.addCard(opp, 'Library', { name: `opp-library-filler-${i}`, types: [] });
+  }
   const engine = createEngine(state, [you, opp]);
   advance(engine); // Untap -> Upkeep
   advance(engine); // Upkeep -> Draw
