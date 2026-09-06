@@ -177,6 +177,23 @@ export interface EffectContext {
    * needs the same demonstration.
    */
   declineOptional?: boolean;
+  /**
+   * A real player's own manual pick among legal targets — NOT a heuristic
+   * (no automated "best" target selection exists or is planned here, see
+   * ENGINE_GAPS.md's "no AI / player decision process": that's about
+   * `forge-ai`-style weighing, a real, separately-scoped, out-of-scope
+   * thing; this is a plain manual override, same category as `mode`/
+   * `declineOptional`/`triggerInput` above). Every `chooseTarget` call site
+   * in this file passes `ctx.preferTarget` through as `chooseTarget`'s own
+   * optional second (predicate) argument (interfaces.ts's own ambient
+   * `chooseTarget(pool, predicate?)` signature already declared this,
+   * unused until now) — `harness.ts`'s real implementation picks the first
+   * pool member matching this predicate, falling back to its old
+   * deterministic `pool[0]` when unset or nothing matches. A scenario sets
+   * this the same way it sets `mode`/`declineOptional` — fixed per
+   * resolution, not computed by an effect.
+   */
+  preferTarget?: (c: Card) => boolean;
 }
 
 /**
@@ -757,7 +774,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         for (let i = 0; i < qty; i++) {
           const remaining = pool.filter((c) => !targets.includes(c));
           if (remaining.length === 0) break;
-          targets.push(actions.chooseTarget(remaining));
+          targets.push(actions.chooseTarget(remaining, ctx.preferTarget));
         }
         for (const target of targets) actions.moveTo(target, effect.to);
       } else {
@@ -779,7 +796,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       for (let i = 0; i < qty; i++) {
         const remaining = pool.filter((c) => !chosen.includes(c));
         if (remaining.length === 0) break;
-        chosen.push(actions.chooseTarget(remaining));
+        chosen.push(actions.chooseTarget(remaining, ctx.preferTarget));
       }
       for (const target of chosen) actions.putCounter(target, effect.counterType, resolve(effect.amount, ctx));
       return;
@@ -813,7 +830,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       for (let i = 0; i < qty; i++) {
         const remaining = pool.filter((c) => !targets.includes(c));
         if (remaining.length === 0) break;
-        targets.push(actions.chooseTarget(remaining));
+        targets.push(actions.chooseTarget(remaining, ctx.preferTarget));
       }
       for (const target of targets) actions.destroy(target);
       return;
@@ -825,7 +842,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'dealDamageTarget': {
       const pool = playersFor(effect.owner ?? 'each', ctx).flatMap((p) => p.getCreaturesInPlay());
-      const target = actions.chooseTarget(pool);
+      const target = actions.chooseTarget(pool, ctx.preferTarget);
       if (target) actions.dealDamage(ctx.self, target, resolve(effect.amount, ctx));
       return;
     }
@@ -842,7 +859,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       const players = playersFor(effect.owner ?? 'each', ctx);
       const creaturePool = players.flatMap((p) => p.getCreaturesInPlay());
       if (creaturePool.length > 0) {
-        const target = actions.chooseTarget(creaturePool);
+        const target = actions.chooseTarget(creaturePool, ctx.preferTarget);
         if (target) actions.dealDamage(ctx.self, target, amount);
       } else if (players[0]) {
         actions.dealDamage(ctx.self, players[0], amount);
@@ -851,7 +868,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'fightTarget': {
       const pool = playersFor(effect.owner ?? 'each', ctx).flatMap((p) => p.getCreaturesInPlay());
-      const target = actions.chooseTarget(pool);
+      const target = actions.chooseTarget(pool, ctx.preferTarget);
       if (target) {
         actions.dealDamage(ctx.self, target, ctx.self.getNetPower());
         actions.dealDamage(target, ctx.self, target.getNetPower());
@@ -871,7 +888,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       const pool = playersFor(effect.owner ?? 'each', ctx)
         .flatMap((p) => p.getCreaturesInPlay())
         .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
-      const target = actions.chooseTarget(pool);
+      const target = actions.chooseTarget(pool, ctx.preferTarget);
       if (target) actions.pump(target, resolve(effect.power, ctx), resolve(effect.toughness, ctx));
       return;
     }
@@ -882,7 +899,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       const pool = playersFor(effect.owner ?? 'each', ctx)
         .flatMap((p) => p.getCreaturesInPlay())
         .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
-      const target = actions.chooseTarget(pool);
+      const target = actions.chooseTarget(pool, ctx.preferTarget);
       if (target) actions.grantKeyword(target, effect.keyword);
       return;
     }
@@ -899,13 +916,13 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       return;
     case 'tapTarget': {
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType).filter((c) => !effect.excludeEnchantment || !c.isEnchantment());
-      const target = actions.chooseTarget(pool);
+      const target = actions.chooseTarget(pool, ctx.preferTarget);
       if (target) actions.tap(target);
       return;
     }
     case 'untapTarget': {
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType).filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
-      const target = actions.chooseTarget(pool);
+      const target = actions.chooseTarget(pool, ctx.preferTarget);
       if (target) actions.untap(target);
       return;
     }

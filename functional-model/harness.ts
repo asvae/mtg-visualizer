@@ -622,8 +622,13 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
     // WHICH specific object got picked is pure targeting mechanics, not a
     // game-state fact. The real consequence (a card actually moving zones,
     // etc.) still logs via whatever action is called on the chosen target
-    // right after this.
-    chooseTarget: (pool) => pool[0]!,
+    // right after this. `predicate` is a real player's own manual pick
+    // (`EffectContext.preferTarget`, threaded through by every `card.ts`
+    // call site) — not automated/weighed selection (see that field's own
+    // doc comment), just an optional override of the old unconditional
+    // `pool[0]` default, which stays the fallback when unset or nothing
+    // in `pool` matches.
+    chooseTarget: (pool, predicate) => (predicate && pool.find(predicate)) || pool[0]!,
     move: (player, from, to, qty, validType) => {
       const real = playerOf(player);
       const fromArr = from === 'Hand' ? real.hand : from === 'Library' ? real.library : from === 'Graveyard' ? real.graveyard : from === 'Battlefield' ? real.battlefield : real.exile;

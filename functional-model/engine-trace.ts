@@ -36,6 +36,7 @@
 // unaffected.
 
 import type { CardDefinition, EffectContext, Actions } from './card';
+import type { Card } from './interfaces';
 import { resolveCard } from './card';
 import { GameState, wrapCard } from './state';
 import type { RealCard, RealPlayer } from './state';
@@ -71,6 +72,8 @@ export interface EnginePilotCtxOpts {
   declineOptional?: boolean;
   triggerInput?: Record<string, unknown>;
   mode?: number;
+  /** A real player's own manual target pick (`EffectContext.preferTarget` — see card.ts's own doc comment on it) — NOT automated/weighed selection, just an explicit override of `chooseTarget`'s old unconditional `pool[0]` default. */
+  preferTarget?: (c: Card) => boolean;
 }
 
 export interface EnginePilot {
@@ -130,6 +133,7 @@ export function setupEnginePilot(setup: EnginePilotSetup): EnginePilot {
       declineOptional: opts?.declineOptional,
       triggerInput: opts?.triggerInput,
       mode: opts?.mode,
+      preferTarget: opts?.preferTarget,
     }),
   };
 }
