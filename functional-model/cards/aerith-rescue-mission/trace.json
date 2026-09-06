@@ -64,9 +64,9 @@
     "scenario": {
       "setup": "you: a c_1_1_hero; you: 4 Plains(s); opp0: a w_1_1_cat",
       "action": "real engine playthrough: cast -> mode 1 (Take 59 Flights of Stairs)",
-      "result": "Take 59 Flights of Stairs — real creatures on the battlefield (your Hero, the opponent's Cat) get tapped (up to three targets — only two real candidates exist here), and the first one tapped gets a real stun counter.",
+      "result": "Take 59 Flights of Stairs — real creatures on the battlefield get tapped (up to three targets), and the first one tapped gets a real stun counter.",
       "raw": {
-        "result": "Take 59 Flights of Stairs — real creatures on the battlefield (your Hero, the opponent's Cat) get tapped (up to three targets — only two real candidates exist here), and the first one tapped gets a real stun counter.",
+        "result": "Take 59 Flights of Stairs — real creatures on the battlefield get tapped (up to three targets), and the first one tapped gets a real stun counter.",
         "you": {
           "basicLands": [
             "Plains",

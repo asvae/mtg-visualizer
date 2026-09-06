@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: a sword; you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> equip -> CDA recalculation -> real combat -> Lifelink",
-      "result": "Steiner enters, a real Equipment (Sword) is attached — the printed \"+1/+1 for each Equipment you control\" CDA recalculates for real (layer 7a) to 3/2; real turn passage clears summoning sickness, then it attacks unblocked, dealing real combat damage to the opponent and, via Lifelink (real 702.15e handling in state.dealDamage), gaining its controller that much real life; a second real copy of Steiner then enters, and the real legend rule (704.5j) removes one of the two — all through the real turn-based engine's own combat/state-based-action machinery, not harness.ts's own (replaced) flat synthetic probes.",
+      "result": "Steiner enters, a real Equipment (Sword) attaches — the printed \"+1/+1 for each Equipment\" CDA recalculates (layer 7a) to 3/2; real turn passage clears summoning sickness, then it attacks unblocked, dealing real combat damage and gaining its controller life via Lifelink; a second real copy of Steiner enters, and the real legend rule (704.5j) removes one of the two.",
       "raw": {
-        "result": "Steiner enters, a real Equipment (Sword) is attached — the printed \"+1/+1 for each Equipment you control\" CDA recalculates for real (layer 7a) to 3/2; real turn passage clears summoning sickness, then it attacks unblocked, dealing real combat damage to the opponent and, via Lifelink (real 702.15e handling in state.dealDamage), gaining its controller that much real life; a second real copy of Steiner then enters, and the real legend rule (704.5j) removes one of the two — all through the real turn-based engine's own combat/state-based-action machinery, not harness.ts's own (replaced) flat synthetic probes.",
+        "result": "Steiner enters, a real Equipment (Sword) attaches — the printed \"+1/+1 for each Equipment\" CDA recalculates (layer 7a) to 3/2; real turn passage clears summoning sickness, then it attacks unblocked, dealing real combat damage and gaining its controller life via Lifelink; a second real copy of Steiner enters, and the real legend rule (704.5j) removes one of the two.",
         "you": {
           "tokens": [
             "sword"

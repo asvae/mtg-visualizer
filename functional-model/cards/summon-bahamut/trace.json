@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 10 Forest(s); opp0: a c_a_treasure_sac",
       "action": "real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice",
-      "result": "Bahamut enters, chapter I fires for real (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice, not a missing target; chapter II fires on your next draw step and declines the same way; chapter III fires the turn after, drawing two real cards; chapter IV fires the turn after that, dealing real damage equal to a real (scenario-supplied) total mana value, then Bahamut is really sacrificed (714.4) since nothing reset its lore counters first — all through the real turn-based engine's own Saga automation (saga.ts), not a flat named-trigger sequence.",
+      "result": "Bahamut enters, chapter I fires (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice; chapter II declines the same way; chapter III draws two real cards; chapter IV deals real damage equal to a real total mana value, then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
       "raw": {
-        "result": "Bahamut enters, chapter I fires for real (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice, not a missing target; chapter II fires on your next draw step and declines the same way; chapter III fires the turn after, drawing two real cards; chapter IV fires the turn after that, dealing real damage equal to a real (scenario-supplied) total mana value, then Bahamut is really sacrificed (714.4) since nothing reset its lore counters first — all through the real turn-based engine's own Saga automation (saga.ts), not a flat named-trigger sequence.",
+        "result": "Bahamut enters, chapter I fires (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice; chapter II declines the same way; chapter III draws two real cards; chapter IV deals real damage equal to a real total mana value, then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
         "you": {
           "libraryCount": 15,
           "basicLands": [
@@ -181,9 +181,9 @@
     "scenario": {
       "setup": "you: 10 Forest(s)",
       "action": "real engine playthrough: cast -> ETB Saga tick fires chapter I with no other target",
-      "result": "chapter I's own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself anywhere on the board, so it legally (if pointlessly) destroys itself for real — documenting the effect actually fires, not just declines (the sane real line is scenario A above).",
+      "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real — documenting the effect actually fires (the sane real line is scenario A above).",
       "raw": {
-        "result": "chapter I's own unrestricted \"destroy up to one target nonland permanent\" has no target other than Bahamut itself anywhere on the board, so it legally (if pointlessly) destroys itself for real — documenting the effect actually fires, not just declines (the sane real line is scenario A above).",
+        "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real — documenting the effect actually fires (the sane real line is scenario A above).",
         "you": {
           "basicLands": [
             "Forest",

@@ -1,9 +1,5 @@
-// Real engine-piloted trace for this card (see engine-trace.ts's own
-// header) — a plain modal sorcery, fully covered by `pilotCast`/
-// `pilotResolveTop` (no new engine-trace.ts work needed). Two real
-// scenarios, one per mode (`ctx.mode`), same "both are real, both are
-// worth showing" reasoning `finishEnginePilotTrace`'s own array return
-// already supports.
+// Real engine-piloted trace (see engine-trace.ts's own header) — a plain
+// modal sorcery, one real scenario per mode.
 
 import { aerithRescueMission } from './definition';
 import { basicLandsFor } from '../../mana';
@@ -18,7 +14,7 @@ function elevatorMode(): TraceResult {
   const ctx = pilot.ctxFor(cardReal, { mode: 0 });
 
   pilotCast(pilot, cardReal, aerithRescueMission, ctx, actions);
-  pilotResolveTop(pilot); // an instant/sorcery — resolves, moves to graveyard.
+  pilotResolveTop(pilot);
 
   const result = 'Take the Elevator — creates three real 1/1 colorless Hero creature tokens.';
   return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 0 (Take the Elevator)', result);
@@ -37,7 +33,7 @@ function stairsMode(): TraceResult {
   pilotCast(pilot, cardReal, aerithRescueMission, ctx, actions);
   pilotResolveTop(pilot);
 
-  const result = 'Take 59 Flights of Stairs — real creatures on the battlefield (your Hero, the opponent\'s Cat) get tapped (up to three targets — only two real candidates exist here), and the first one tapped gets a real stun counter.';
+  const result = "Take 59 Flights of Stairs — real creatures on the battlefield get tapped (up to three targets), and the first one tapped gets a real stun counter.";
   return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 1 (Take 59 Flights of Stairs)', result);
 }
 

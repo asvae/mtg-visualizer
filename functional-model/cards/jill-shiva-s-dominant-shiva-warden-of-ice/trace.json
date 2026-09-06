@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: a c_1_1_hero; you: 5 Island(s); opp0: a c_a_treasure_sac; opp0: 1 Forest(s)",
       "action": "real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns",
-      "result": "Jill enters, ETB returns the opponent's Treasure (not their land — real text is nonland only) to hand; the transform ability is blocked by summoning sickness until your next turn, then {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; a real lore counter fires chapter I (grants your Hero unblockable) immediately on transforming, chapter II fires for real on your next draw step (unblockable again), chapter III fires the turn after that (taps all the opponent's lands, then exiles Shiva and returns it front-face-up as Jill) — all played out through the real turn-based engine (real mana payment, real summoning-sickness wait, real Saga lore-counter automation), not a flat named-trigger sequence.",
+      "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the real turn-based engine.",
       "raw": {
-        "result": "Jill enters, ETB returns the opponent's Treasure (not their land — real text is nonland only) to hand; the transform ability is blocked by summoning sickness until your next turn, then {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; a real lore counter fires chapter I (grants your Hero unblockable) immediately on transforming, chapter II fires for real on your next draw step (unblockable again), chapter III fires the turn after that (taps all the opponent's lands, then exiles Shiva and returns it front-face-up as Jill) — all played out through the real turn-based engine (real mana payment, real summoning-sickness wait, real Saga lore-counter automation), not a flat named-trigger sequence.",
+        "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the real turn-based engine.",
         "you": {
           "tokens": [
             "c_1_1_hero"
@@ -89,11 +89,6 @@
         "target": "Treasure",
         "zone": "Hand",
         "controller": "opp0"
-      },
-      {
-        "fn": "illegalAttempt",
-        "card": "Jill, Shiva's Dominant",
-        "reason": "summoning sickness (302.6): hasn't been under its controller's control continuously since their most recent turn began, so its {T} cost can't be paid"
       },
       {
         "fn": "phase",

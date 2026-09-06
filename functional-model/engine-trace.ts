@@ -29,10 +29,11 @@
 // Saga `putCounter`+chapter `trigger` pair fired by `saga.ts` rather than a
 // scenario naming the chapter itself).
 //
-// Opt-in, per-card: run-scenarios.mjs checks for an optional
-// `cards/<slug>/engine-scenario.ts` exporting `runEngineScenarios(): TraceResult[]`
-// and uses ITS output instead of the harness path for that one card. Every
-// other card is unaffected.
+// Opt-in, per-card: a card's own `scenarios.ts` exports `runEngineScenarios():
+// TraceResult[]` instead of the usual `scenarios` array; run-scenarios.mjs
+// dispatches on which export it finds and uses this path's output for that
+// one card's trace.json instead of the harness path. Every other card is
+// unaffected.
 
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { resolveCard } from './card';
