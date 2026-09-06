@@ -102,6 +102,23 @@ interface FunctionalModelData {
   // card page treats null the same as 'ai' (show the draft badge) since an
   // untracked card is certainly not confirmed human-reviewed.
   review: 'ai' | 'human' | null;
+  // cards/<slug>/progress.json's own `scenariosReview` field — a SEPARATE
+  // axis from `review` above (that one's about the synergy.json FACTS;
+  // this one's about whether a human has actually looked over the
+  // Scenarios tab's own replay content and confirmed it's a realistic,
+  // correctly-caused depiction of the card — see this session's own
+  // fin/1-10 audit for what "unreviewed" catches: effects with no
+  // traceable cause, wrong owners, bystanders that never appear, etc.).
+  // Missing/malformed progress.json (or no `scenariosReview` field at all)
+  // reads as 'draft' — every card starts unreviewed on this axis until
+  // someone actually marks it, same "untracked = not confirmed" reasoning
+  // `review` already uses.
+  scenariosReview: 'draft' | 'reviewed';
+  // Same axis/convention as `scenariosReview` above, for this card's own
+  // Interactions section (the cross-card synergy join below `interactions`
+  // at the top level of this route's own response) instead of its
+  // Scenarios tab.
+  interactionsReview: 'draft' | 'reviewed';
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -214,13 +231,17 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
       ? { faces: faces.map((f) => ({ name: f.name, manaCost: f.manaCost, colorIndicator: f.colorIndicator, typeLine: f.typeLine, oracleLines: annotateOracleText(f.oracleText, allFacts), power: f.power, toughness: f.toughness })) }
       : null;
     let review: 'ai' | 'human' | null = null;
+    let scenariosReview: 'draft' | 'reviewed' = 'draft';
+    let interactionsReview: 'draft' | 'reviewed' = 'draft';
     try {
       const progress = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/progress.json`), 'utf8'));
       review = progress.review === 'human' ? 'human' : 'ai';
+      scenariosReview = progress.scenariosReview === 'reviewed' ? 'reviewed' : 'draft';
+      interactionsReview = progress.interactionsReview === 'reviewed' ? 'reviewed' : 'draft';
     } catch {
       // progress.json is optional — a card can exist without one
     }
-    data = { source, synergy, traces, annotatedCard, review };
+    data = { source, synergy, traces, annotatedCard, review, scenariosReview, interactionsReview };
   } catch {
     data = null;
   }

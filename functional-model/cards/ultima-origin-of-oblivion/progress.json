@@ -7,5 +7,7 @@
   "textCoverageAudited": false,
   "knownGaps": [
     "'Whenever you tap a land for {C}, add an additional {C}' has no engine trigger hook for 'land tapped for mana' at all — left as descriptive text in definition.ts, real ability entirely unmodeled"
-  ]
+  ],
+  "interactionsReview": "draft",
+  "scenariosReview": "draft"
 }

@@ -27,6 +27,8 @@ interface CardResponse {
     }[];
     annotatedCard: AnnotatedCard | null;
     review: 'ai' | 'human' | null;
+    scenariosReview: 'draft' | 'reviewed';
+    interactionsReview: 'draft' | 'reviewed';
   } | null;
   interactions: EnrichedInteractionGroup[];
 }
@@ -265,12 +267,42 @@ const hoveredFactKey = ref<string | null>(null);
 // different route), and the tab should stay put across that, not reset to
 // 'facts' every time; see the store's own comment for why it's still
 // session-only, not localStorage-persisted.
-const functionalModelTabs = [
+// Scenarios' own label carries its `scenariosReview` status right in the
+// tab strip (user's own request — "[Draft]" is the exception worth calling
+// out; a reviewed card's tab reads plain "Scenarios", same "flag what needs
+// attention, not what's already fine" convention the H1's own `review`
+// badge (facts) already follows).
+const functionalModelTabs = computed(() => [
   { label: 'Facts', value: 'facts' as const },
-  { label: 'Scenarios', value: 'scenarios' as const },
+  { label: data.value?.functionalModel?.scenariosReview === 'reviewed' ? 'Scenarios' : 'Scenarios [Draft]', value: 'scenarios' as const },
   { label: 'Json', value: 'json' as const },
   { label: 'Card Definition', value: 'definition' as const },
-];
+]);
+
+// POSTs cards/<slug>/progress.json's own `scenariosReview`/`interactionsReview`
+// field (see server/api/card/review-status.ts) and updates the already-loaded
+// response in place — no need to refetch the whole card just for this one
+// field, and refetching would also re-run every trace live (computeTracesLive)
+// for no reason.
+const reviewStatusSaving = ref<'scenariosReview' | 'interactionsReview' | null>(null);
+async function toggleReviewStatus(field: 'scenariosReview' | 'interactionsReview') {
+  if (!data.value?.functionalModel || reviewStatusSaving.value) return;
+  const reviewed = data.value.functionalModel[field] !== 'reviewed';
+  reviewStatusSaving.value = field;
+  try {
+    const res = await fetch('/api/card/review-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: card.value!.name, field, reviewed }),
+    });
+    if (res.ok && data.value?.functionalModel) {
+      const body = await res.json();
+      data.value.functionalModel[field] = body[field];
+    }
+  } finally {
+    reviewStatusSaving.value = null;
+  }
+}
 
 const themeLabelById = computed(() => {
   const map = new Map<string, string>();
@@ -400,6 +432,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         </template>
 
         <template v-else-if="store.functionalModelTab.value === 'scenarios'">
+          <div class="mb-2 flex items-center gap-2">
+            <button
+              class="rounded border border-border px-1.5 py-0.5 text-xs hover:bg-surface disabled:opacity-50"
+              :disabled="reviewStatusSaving === 'scenariosReview'"
+              @click="toggleReviewStatus('scenariosReview')"
+            >
+              {{ data.functionalModel.scenariosReview === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
+            </button>
+            <span v-if="data.functionalModel.scenariosReview === 'reviewed'" class="text-xs text-muted">
+              Reviewed — this Scenarios tab's own replay content has been checked against the real card.
+            </span>
+          </div>
           <ScenarioReplay
             v-if="data.functionalModel.traces?.length"
             :traces="data.functionalModel.traces"
@@ -433,7 +477,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            not pre-baked; only wired for the small worked-example pool in
            server/api/card/[set]/[number].ts (no full-corpus join yet). -->
       <div v-if="data?.interactions?.length" class="mt-4 w-full max-w-full">
-        <div class="mb-1 text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</div>
+        <div class="mb-1 flex items-center gap-2">
+          <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">
+            {{ data.functionalModel?.interactionsReview === 'reviewed' ? 'Interactions' : 'Interactions [Draft]' }}
+          </span>
+          <button
+            v-if="data.functionalModel"
+            class="rounded border border-border px-1 py-px text-[10px] hover:bg-surface disabled:opacity-50"
+            :disabled="reviewStatusSaving === 'interactionsReview'"
+            @click="toggleReviewStatus('interactionsReview')"
+          >
+            {{ data.functionalModel.interactionsReview === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
+          </button>
+        </div>
         <ul class="flex flex-col gap-1.5">
           <li
             v-for="(group, gi) in data.interactions"
