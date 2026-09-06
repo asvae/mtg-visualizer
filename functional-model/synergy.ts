@@ -61,7 +61,7 @@ export type Subject = 'self' | { token: string };
 /** A persistent object in a zone. */
 export interface ZoneFact extends Constraints {
   role: 'source' | 'sink';
-  /** Stable per-card identity — unique among THIS card's own facts only (not pool-wide), author-chosen (e.g. `"exile"`, `"return-enters"`). Required going forward; older cards authored before this field existed won't actually have it on disk despite the type (a plain JSON cast, not runtime-validated) — a caller keying off `id` should still tolerate `undefined` in practice. Lets a caller (the card page's Functional model table, `annotateCardText`'s own hover wiring) key off something stable instead of re-deriving an identity from `role`/`sourceText`/`description`, which breaks the moment two facts share all three. */
+  /** Stable per-card identity — unique among THIS card's own facts only (not pool-wide), author-chosen (e.g. `"exile"`, `"return-enters"`). Required going forward; older cards authored before this field existed won't actually have it on disk despite the type (a plain JSON cast, not runtime-validated) — a caller keying off `id` should still tolerate `undefined` in practice. Lets a caller (the card page's Functional model table, `annotateOracleText`'s own hover wiring) key off something stable instead of re-deriving an identity from `role`/`sourceText`/`description`, which breaks the moment two facts share all three. */
   id: string;
   zone: string;
   controller?: Side;
@@ -70,7 +70,7 @@ export interface ZoneFact extends Constraints {
   value?: Weight;
   /** A short verbatim (or near-verbatim) snippet of the card's own oracle text this fact was derived from — purely documentary, read by nobody but a human looking at the Functional model table wondering "why does this card want that?" (FIN #16's "wants permanents on your battlefield" was the case that prompted this: unreadable without the source line). Not authored for every card — see progress.json's own textCoverageAudited flag for which cards have it. */
   sourceText?: string;
-  /** The exact substring of `sourceText` that names THIS fact specifically, for `annotateCardText`'s inline card-text view — AI-authored per fact, same as `sourceText` itself, NOT derived by a generic per-event-kind regex (a regex like "draws? a card" can't tell which of several "draw a card" clauses on one card is this fact's own, especially once conditions/exceptions are in play; the author reading the real card text can). Must be a literal substring of `sourceText` — `annotateCardText` verifies this and silently skips the fact (no inline link, still visible in the plain facts table) if it isn't. */
+  /** The exact substring of `sourceText` that names THIS fact specifically, for `annotateOracleText`'s inline card-text view — AI-authored per fact, same as `sourceText` itself, NOT derived by a generic per-event-kind regex (a regex like "draws? a card" can't tell which of several "draw a card" clauses on one card is this fact's own, especially once conditions/exceptions are in play; the author reading the real card text can). Must be a literal substring of `sourceText` — `annotateOracleText` verifies this and silently skips the fact (no inline link, still visible in the plain facts table) if it isn't. */
   highlight?: string;
 }
 
@@ -368,7 +368,7 @@ export function describeFact(fact: Fact): string {
   return `${qualifier}${event}`;
 }
 
-/** Everything a hover needs about one fact behind a linked phrase — see `AnnotatedText`. */
+/** Everything a hover needs about one fact behind a linked phrase — see `AnnotatedSegment`. */
 export interface AnnotatedFactRef {
   /** See `ZoneFact.id` — required by the type, but a fact predating per-fact ids won't actually carry one at runtime; a caller matching against this should still tolerate `undefined` and fall back to `role`/`sourceText`/`description`. */
   id: string;
@@ -378,48 +378,32 @@ export interface AnnotatedFactRef {
   sourceText: string;
 }
 
-/**
- * Wire format for a card's annotated FULL card text — title, mana cost, type
- * line, then oracle text, same order a real printed card reads (see
- * `annotateCardText`'s own `cardText` param for how that string gets built)
- * — with fact-linked phrases marked inline, markdown-link style —
- * `[phrase](N)` where N indexes into `facts` (`facts[N]`, itself an array
- * since rare cases put more than one fact behind the same phrase). One
- * string plus one small array is the whole payload; the client only has to
- * split on that one marker pattern to render — it never re-derives WHICH
- * phrase belongs to which fact, that's decided here. Safe against real
- * oracle text's own parentheses (reminder text, e.g. "(Whenever this
- * creature...)") because the marker requires an immediately preceding `]`,
- * which plain prose parens never have.
- */
-export interface AnnotatedText {
+/** One run of a face's oracle text — either plain prose, or a phrase with one or more real facts behind it (rare: two facts sharing the same anchor phrase). Real structured data, not a string marker — a consumer never parses anything out of `text`, it just renders `facts?.length` differently. */
+export interface AnnotatedSegment {
   text: string;
-  facts: AnnotatedFactRef[][];
+  facts?: AnnotatedFactRef[];
 }
 
 /**
- * Computed once server-side (see server/api/card/[set]/[number].ts, which
- * builds `cardText` as `"${name}\t${manaCost}\n${typeLine}\n${oracleText}"`)
- * so the client never re-derives which substring belongs to which fact. Only
- * ever anchors within the oracle-text portion in practice — a fact's
- * `sourceText`/`highlight` are quoted from real rules text, never the
- * title/mana/type lines — but nothing here assumes that; it's a plain
- * substring search over whatever string it's given.
+ * Splits one face's oracle text into LINES (Scryfall's own `\n`-separated
+ * printed paragraphs — one per triggered/activated ability, e.g.) of
+ * `AnnotatedSegment`s, with fact-linked phrases carrying their own real
+ * `AnnotatedFactRef[]` directly — no markdown-link-style `[phrase](N)`
+ * string marker and no side-array-of-groups a client has to index into
+ * (an earlier version of this worked that way; real structured JSON per the
+ * user's own framing: "parse everything into json, then add annotations
+ * there... decide on frontend how to format... not worry about recompiling
+ * every annotated text" — a client that wants a DIFFERENT layout never
+ * touches this function again).
  *
  * Deliberately conservative: a fact only gets a linked phrase when it
  * declares its own `highlight` (AI-authored, same as `sourceText`) AND that
  * `highlight` is actually a substring of the fact's own `sourceText` AND
- * `sourceText` itself appears verbatim in `cardText` — three independent
- * honesty checks against three independently-fallible things (a typo in
- * `highlight`; `sourceText` predating a wording fix). Deliberately NOT a
- * generic per-event-kind regex ("draws? a card," e.g.) — a card can use the
- * same words for more than one ability under different conditions, and only
- * the author reading the real card text (not a pattern matched against every
- * card in the pool) can say which occurrence is THIS fact's own. A fact that
- * fails any of these just isn't clickable inline — it's still visible in the
+ * `sourceText` itself appears verbatim in `oracleText`. A fact that fails
+ * any of these just isn't clickable inline — it's still visible in the
  * plain facts table below, this is additive, not a replacement.
  */
-export function annotateCardText(cardText: string, facts: Fact[]): AnnotatedText {
+export function annotateOracleText(oracleText: string, facts: Fact[]): AnnotatedSegment[][] {
   interface Range {
     start: number;
     end: number;
@@ -428,7 +412,7 @@ export function annotateCardText(cardText: string, facts: Fact[]): AnnotatedText
   const ranges: Range[] = [];
   for (const f of facts) {
     if (!f.sourceText || !f.highlight) continue;
-    const sourceIdx = cardText.indexOf(f.sourceText);
+    const sourceIdx = oracleText.indexOf(f.sourceText);
     if (sourceIdx === -1) continue;
     const highlightIdx = f.sourceText.indexOf(f.highlight);
     if (highlightIdx === -1) continue;
@@ -447,18 +431,25 @@ export function annotateCardText(cardText: string, facts: Fact[]): AnnotatedText
     accepted.push(r);
   }
 
-  let text = '';
+  const lines: AnnotatedSegment[][] = [[]];
+  const pushText = (text: string, factRefs?: AnnotatedFactRef[]) => {
+    const parts = text.split('\n');
+    parts.forEach((part, i) => {
+      if (i > 0) lines.push([]);
+      if (part.length > 0 || factRefs) lines[lines.length - 1]!.push({ text: part, facts: factRefs });
+    });
+  };
   let cursor = 0;
-  const factGroups: AnnotatedFactRef[][] = [];
   for (const r of accepted) {
-    text += cardText.slice(cursor, r.start);
-    const idx = factGroups.length;
-    factGroups.push(r.facts.map((f) => ({ id: f.id, role: f.role, value: f.value, description: describeFact(f), sourceText: f.sourceText! })));
-    text += `[${cardText.slice(r.start, r.end)}](${idx})`;
+    pushText(oracleText.slice(cursor, r.start));
+    pushText(
+      oracleText.slice(r.start, r.end),
+      r.facts.map((f) => ({ id: f.id, role: f.role, value: f.value, description: describeFact(f), sourceText: f.sourceText! })),
+    );
     cursor = r.end;
   }
-  text += cardText.slice(cursor);
-  return { text, facts: factGroups };
+  pushText(oracleText.slice(cursor));
+  return lines;
 }
 
 function selfInteractionKind(fact: Fact, card: PoolCard): SelfInteractionKind {

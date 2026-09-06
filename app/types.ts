@@ -1,7 +1,25 @@
+import type { AnnotatedSegment } from '../functional-model/synergy';
+
 // Every relation type is a flat, independent role — a card gets a separate edge
 // per relation type that applies (same as produce/consume have always coexisted
 // as two edges), rather than a role plus an orthogonal "modifiers" array on it.
 export type Role = 'produce' | 'consume' | 'atypical' | 'grant' | 'magnifier';
+
+/** One face of a card, real structured data (server/api/card/[set]/[number].ts) — a single-faced card is a one-entry `AnnotatedCard.faces`. Oracle text is pre-split into lines of fact-annotated segments (functional-model/synergy.ts's `annotateOracleText`); nothing else here needs client-side parsing — a consumer just renders these fields however it wants (a different layout is a client-only change, no server round-trip). */
+export interface AnnotatedFace {
+  name: string;
+  /** '' for a back face with none of its own. */
+  manaCost: string;
+  /** Real color letters (`['U']`, `['W','U']`, ...) — only set for a face that prints "Color Indicator: ..." instead of its own mana cost (a transform DFC's back face, e.g.). Empty array (not omitted) for a genuinely colorless indicator. */
+  colorIndicator?: string[];
+  typeLine: string;
+  oracleLines: AnnotatedSegment[][];
+  power?: string;
+  toughness?: string;
+}
+export interface AnnotatedCard {
+  faces: AnnotatedFace[];
+}
 
 export interface CardData {
   id: string;

@@ -22,11 +22,11 @@ import { DatabaseSync } from 'node:sqlite';
 import { cardArtCrop, cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
 import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
-import { findInteractionsForCard, annotateCardText } from '../../../../functional-model/synergy';
-import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
+import { findInteractionsForCard, annotateOracleText } from '../../../../functional-model/synergy';
+import type { InteractionGroup, Fact } from '../../../../functional-model/synergy';
+import type { AnnotatedCard } from '../../../../app/types';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
-import { DFC_FACE_BREAK, colorIndicatorMarker } from '../../../../app/lib/cardTextMarkers';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
@@ -84,14 +84,17 @@ interface FunctionalModelData {
   // TraceResult[]) — kept as each scenario's own ordered log, for seeing
   // exactly what one specific scenario actually did.
   traces: TraceResult[];
-  // The card's own full text — title, mana cost, type line, then oracle text,
-  // same order a real printed card reads — pre-split into plain/fact-linked
-  // runs (functional-model/synergy.ts's annotateCardText) — computed here, in
-  // the card data extraction flow, rather than client-side, so the card page
-  // just renders segments and never re-parses card text itself. `null` when
-  // there's no card text to annotate (a synergy-less card, or a DFC whose
-  // oracle text this route doesn't carry — see `cardText` below).
-  annotatedText: AnnotatedText | null;
+  // Real structured per-face data (name/manaCost/colorIndicator/typeLine/
+  // oracleLines/power/toughness), one entry per face — a single-faced card is
+  // a one-entry array. Oracle text is pre-split into plain/fact-linked runs
+  // (functional-model/synergy.ts's annotateOracleText) here, in the card data
+  // extraction flow, rather than client-side, so the card page just renders
+  // fields/segments and never re-parses card text itself; everything else
+  // (dividers, color-indicator swatches, layout) is a client-only decision
+  // now — no server round-trip needed to change how faces are presented.
+  // `null` when there's no synergy data to annotate against (a synergy-less
+  // card).
+  annotatedCard: AnnotatedCard | null;
   // cards/<slug>/progress.json's own `review` field — 'ai' (the common case,
   // never human-checked against the real card) vs 'human' (someone actually
   // played/verified it — see this session's own review process). `null` when
@@ -105,12 +108,12 @@ interface FunctionalModelData {
 // request, so a hand-edit (definition.ts, scenarios.ts, progress.json,
 // synergy.json) shows up on the very next load with no server restart and
 // no run-scenarios.mjs step, while a request for a card nobody's touched
-// skips the readFileSync/dynamic-import/runScenarios/annotateCardText work
-// entirely. Keyed on cardText too (not just slug) since annotatedText
-// depends on it and it comes from data/cards.db, outside this folder's own
-// signature — cheap insurance against a stale annotation if the card's real
-// oracle text ever changes between requests (a DB re-sync) without the
-// folder itself changing.
+// skips the readFileSync/dynamic-import/runScenarios/annotateOracleText work
+// entirely. Keyed on the faces' own JSON too (not just slug) since
+// annotatedCard depends on them and they come from data/cards.db, outside
+// this folder's own signature — cheap insurance against a stale annotation
+// if the card's real oracle text ever changes between requests (a DB
+// re-sync) without the folder itself changing.
 const FM_FOLDER_FILES = ['definition.ts', 'scenarios.ts', 'progress.json', 'synergy.json'] as const;
 function functionalModelSignature(slug: string): string {
   return FM_FOLDER_FILES.map((f) => {
@@ -141,12 +144,27 @@ async function computeTracesLive(slug: string): Promise<TraceResult[]> {
   return JSON.parse(stdout);
 }
 
-const functionalModelCache = new Map<string, { signature: string; cardText: string; data: FunctionalModelData | null }>();
-async function loadFunctionalModel(name: string, cardText: string): Promise<FunctionalModelData | null> {
+// One face's raw Scryfall-derived fields, extracted by the route's own card-
+// data flow (below) with no string formatting — annotateOracleText only ever
+// needs `oracleText` itself; the rest ride along unannotated straight onto
+// the matching AnnotatedFace field.
+export interface FaceInput {
+  name: string;
+  manaCost: string;
+  colorIndicator?: string[];
+  typeLine: string;
+  oracleText: string;
+  power?: string;
+  toughness?: string;
+}
+
+const functionalModelCache = new Map<string, { signature: string; facesKey: string; data: FunctionalModelData | null }>();
+async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
   const slug = slugify(name);
   const signature = functionalModelSignature(slug);
+  const facesKey = JSON.stringify(faces);
   const cached = functionalModelCache.get(slug);
-  if (cached && cached.signature === signature && cached.cardText === cardText) return cached.data;
+  if (cached && cached.signature === signature && cached.facesKey === facesKey) return cached.data;
 
   let data: FunctionalModelData | null;
   try {
@@ -168,7 +186,10 @@ async function loadFunctionalModel(name: string, cardText: string): Promise<Func
     }
     const traces = await computeTracesLive(slug);
     const synergy = loadCardSynergy(slug);
-    const annotatedText = synergy && cardText ? annotateCardText(cardText, [...synergy.source, ...synergy.sink]) : null;
+    const allFacts = synergy ? [...synergy.source, ...synergy.sink] : [];
+    const annotatedCard: AnnotatedCard | null = synergy
+      ? { faces: faces.map((f) => ({ name: f.name, manaCost: f.manaCost, colorIndicator: f.colorIndicator, typeLine: f.typeLine, oracleLines: annotateOracleText(f.oracleText, allFacts), power: f.power, toughness: f.toughness })) }
+      : null;
     let review: 'ai' | 'human' | null = null;
     try {
       const progress = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/progress.json`), 'utf8'));
@@ -176,11 +197,11 @@ async function loadFunctionalModel(name: string, cardText: string): Promise<Func
     } catch {
       // progress.json is optional — a card can exist without one
     }
-    data = { source, synergy, traces, annotatedText, review };
+    data = { source, synergy, traces, annotatedCard, review };
   } catch {
     data = null;
   }
-  functionalModelCache.set(slug, { signature, cardText, data });
+  functionalModelCache.set(slug, { signature, facesKey, data });
   return data;
 }
 
@@ -509,30 +530,30 @@ export default defineEventHandler(async (event) => {
 
   // Scryfall's own two-part DFC layout (scryfall.com/card/<set>/<number> —
   // the user's own reference): each face is a FULL, independent card block —
-  // its own name/mana cost, type line (a back face with no mana cost of its
-  // own prints "Color Indicator: ..." in its place, real Scryfall
-  // convention, Shiva, Warden of Ice's own real card the reference case),
-  // oracle text, flavor text, and P/T — stacked front-then-back, separated
-  // by a rule, rather than the old lossy "just concatenate both faces' bare
-  // oracle_text" version (which silently dropped the back face's own name,
-  // type line, P/T, and flavor text entirely). A single-faced card's
-  // `cardText` is unchanged. `annotateCardText` (functional-model/synergy.ts)
-  // only ever substring-searches a fact's own `sourceText`/`highlight`
-  // within this blob — it doesn't parse structure — so this reshaping is
-  // free to add real content without touching that matching logic at all.
-  function faceText(face: { name?: string; mana_cost?: string; type_line?: string; oracle_text?: string; power?: string; toughness?: string; color_indicator?: string[] }): string {
-    const header = face.mana_cost ? `${face.name}\t${face.mana_cost}` : (face.name ?? '');
-    const colorIndicator = !face.mana_cost && face.color_indicator?.length ? `${colorIndicatorMarker(face.color_indicator)}\n` : '';
-    const pt = face.power !== undefined && face.toughness !== undefined ? `${face.power}/${face.toughness}` : '';
-    return [header, '', `${colorIndicator}${face.type_line ?? ''}`, '', face.oracle_text ?? '', pt].filter((s) => s !== '').join('\n\n');
-  }
-  const cardText = card.card_faces?.length ? card.card_faces.map((f) => faceText(f)).join(`\n\n${DFC_FACE_BREAK}\n\n`) : faceText(card);
+  // its own name/mana cost, type line, color indicator (a back face with no
+  // mana cost of its own prints one instead — real Scryfall convention,
+  // Shiva, Warden of Ice's own real card the reference case), oracle text,
+  // and P/T. Real structured data (`FaceInput[]`), not a formatted string —
+  // per the user's own framing ("parse everything into json... decide on
+  // frontend how to format"), `annotateOracleText` (functional-model/synergy.ts)
+  // never sees anything but one face's own plain oracle text at a time; all
+  // the "how does a whole card's worth of faces stack together" shaping
+  // lives client-side now (FunctionalModelText.vue), not baked in here.
+  const faces: FaceInput[] = (card.card_faces?.length ? card.card_faces : [card]).map((f) => ({
+    name: f.name ?? card.name,
+    manaCost: f.mana_cost ?? '',
+    typeLine: f.type_line ?? '',
+    oracleText: f.oracle_text ?? '',
+    power: f.power,
+    toughness: f.toughness,
+    colorIndicator: !f.mana_cost && f.color_indicator?.length ? f.color_indicator : undefined,
+  }));
 
   return {
     card: cardData,
     edges,
     themes,
-    functionalModel: await loadFunctionalModel(card.name, cardText),
+    functionalModel: await loadFunctionalModel(card.name, faces),
     interactions: await loadInteractionGroups(card.name, filterNames),
   };
 });

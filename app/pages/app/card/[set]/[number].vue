@@ -2,9 +2,9 @@
 import { computed, inject, onMounted, onUnmounted, ref } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
 import { describeFact } from '../../../../../functional-model/synergy';
-import type { Fact, AnnotatedText } from '../../../../../functional-model/synergy';
+import type { Fact } from '../../../../../functional-model/synergy';
 import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
-import type { CardData, EdgeData, ThemeData } from '../../../../types';
+import type { CardData, EdgeData, ThemeData, AnnotatedCard } from '../../../../types';
 import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
 import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
 
@@ -21,7 +21,7 @@ interface CardResponse {
     source: string;
     synergy: { source: Fact[]; sink: Fact[] } | null;
     traces: { scenario: { setup: string; action: string; result: string; raw: Scenario }; log: LogEntry[] }[];
-    annotatedText: AnnotatedText | null;
+    annotatedCard: AnnotatedCard | null;
     review: 'ai' | 'human' | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
@@ -344,17 +344,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            anymore) — synergy-model/forge-model are deprecated (see their
            own README/SCHEMA.md banners), this is the current direction. -->
       <div v-if="data?.functionalModel" class="mt-2">
-        <!-- Real oracle text, pre-split server-side (functional-model/synergy.ts's
-             annotateCardText, see server/api/card/[set]/[number].ts) into plain
-             runs and fact-linked runs — hover a dotted-underline phrase to see
-             the same role/value info the Facts tab's own table shows per row,
+        <!-- Real structured per-face card data, pre-split server-side
+             (functional-model/synergy.ts's annotateOracleText, see
+             server/api/card/[set]/[number].ts) into plain runs and
+             fact-linked runs — hover a dotted-underline phrase to see the
+             same role/value info the Facts tab's own table shows per row,
              anchored to the exact words that fact came from. Sits above the
              tabs (not inside the Facts one) since it's a separate thing — the
              card's own annotated text, not one of the four data views below. -->
-        <div v-if="data.functionalModel.annotatedText" class="mb-2">
+        <div v-if="data.functionalModel.annotatedCard" class="mb-2">
           <FunctionalModelText
-            :text="data.functionalModel.annotatedText.text"
-            :facts="data.functionalModel.annotatedText.facts"
+            :card="data.functionalModel.annotatedCard"
             :highlight-key="hoveredFactKey"
             @hover="hoveredFactKey = $event"
           />
