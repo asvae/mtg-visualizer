@@ -90,10 +90,13 @@
 //    real Equip {N} mana-only cost (301.5c's own sorcery-speed timing,
 //    `isEquipment`), plus real Crew N (702.121b/c — tap creatures with
 //    total power >= N, an explicit `crewedBy` list, no sickness/timing
-//    restriction on the tapped creatures). Only a {T}/Equip/Crew +
-//    mana-only cost is payable; a real Sacrifice/Pay-life/{X} cost
-//    component (common among the 312 FIN cards — see
-//    `unsupportedCostComponent`'s own doc comment) is REJECTED (a real,
+//    restriction on the tapped creatures), plus a real "Sacrifice
+//    another/a/two X" cost when the card's OWN `effects` already pay it
+//    for real at resolution (Ahriman/Phantom Train/Quina, Qu Gourmet —
+//    see `unsupportedCostComponent`'s own doc comment). Only a
+//    {T}/Equip/Crew/matched-Sacrifice + mana-only cost is payable; a real
+//    self-Sacrifice/Pay-life/{X} cost component (common among the 312 FIN
+//    cards — see `unsupportedCostComponent`'s own doc comment) is REJECTED (a real,
 //    explicit answer), not silently mispaid.
 //  - Summoning sickness (302.6) and Defender/tapped-creature attack
 //    restrictions (508.1a).
@@ -305,7 +308,7 @@ function manaPortionOf(cost: string): string {
  * mana+tap-only model. `canActivateAbility` rejects (doesn't throw) on a
  * hit — a real, common shape, not a programming error.
  */
-function unsupportedCostComponent(cost: string): string | undefined {
+function unsupportedCostComponent(cost: string, card: CardDefinition): string | undefined {
   // A real card's own printed "Equip {N}"/"Equip—" cost-string prefix is
   // NOT itself an extra cost component to pay (real Forge's own
   // `Equip.java`/`CostEquip` never generates a Sacrifice/Pay-life/etc.
@@ -317,6 +320,32 @@ function unsupportedCostComponent(cost: string): string | undefined {
   // "Pay 3 life" itself remains unsupported.
   const stripped = cost.replace(/^Equip[\s—-]*/, '').replace(/\{T\}/g, '').replace(/\([^)]*\)/g, '');
   for (const part of stripped.split(',').map((p) => p.trim()).filter(Boolean)) {
+    // "Sacrifice another X"/"Sacrifice a X"/"Sacrifice two X" (NEVER self —
+    // that wording always names a DIFFERENT permanent, unlike "Sacrifice
+    // this X"/"Sacrifice <CardName>") is accepted iff `card.effects`
+    // already declares a real `{kind:'sacrifice', ...}` effect — checked
+    // against the real pool: Ahriman, Phantom Train, and Quina, Qu
+    // Gourmet's own `definition.ts` files all already model paying this
+    // EXACT cost as the FIRST resolution effect (their own comments say
+    // so explicitly — a documented, deliberate "cost modeled as effect #1
+    // for trace visibility" simplification, not something this pass
+    // invented), so accepting the cost string here causes NO double
+    // payment — the real consequence already happens for real once
+    // `resolveCard` runs. A card whose OWN `effects` do NOT include a
+    // matching `sacrifice` (The Gold Saucer's "Sacrifice two artifacts,"
+    // e.g. — its own comment says the sacrifice is cost-only, not
+    // modeled) still correctly falls through and gets rejected: accepting
+    // it would let the ability resolve with nothing ever actually
+    // sacrificed. Self-sacrifice ("Sacrifice this creature"/"Sacrifice
+    // Zack Fair") is NOT recognized here at all — Blazing Bomb/Zack
+    // Fair's own effects read `ctx.self`'s live state (power/counters)
+    // AFTER the ability would resolve, which only stays correct today
+    // because the sacrifice never actually happens; genuinely sacrificing
+    // `self` as part of paying the cost would need real 608.2h
+    // last-known-information tracking (a real, separate, unbuilt gap) to
+    // keep those two cards correct, so self-sacrifice deliberately stays
+    // unsupported rather than risk that regression.
+    if (/^Sacrifice (another|an?|two)\b/i.test(part) && (card.effects ?? []).some((e) => e.kind === 'sacrifice')) continue;
     if (!/^(\{[^}]+\})+$/.test(part)) return part;
   }
   return undefined;
@@ -345,9 +374,11 @@ function activationCostFor(card: CardDefinition, abilityName?: string): string |
  * `card.crewCost`, a structured field entirely bypassing the free-text
  * cost checks below in favor of validating the caller-supplied
  * `crewedBy` creature list), and cost affordability (`{T}`/Equip + mana
- * only — `unsupportedCostComponent`'s own doc comment lists what a real
- * card's cost can contain that this engine can't pay yet:
- * Sacrifice/Pay-life/{X}). Read-only, same shape as `canCastSpell`.
+ * only, PLUS a real "Sacrifice another/a/two X" cost trusted whenever the
+ * card's own `effects` already pay it for real at resolution —
+ * `unsupportedCostComponent`'s own doc comment lists what a real card's
+ * cost can still contain that this engine can't pay: self-Sacrifice/
+ * Pay-life/{X}). Read-only, same shape as `canCastSpell`.
  */
 export function canActivateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, abilityName?: string, crewedBy?: RealCard[]): ActionResult {
   const cost = activationCostFor(card, abilityName);
@@ -397,7 +428,7 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
     const sick = enteredTurn === engine.turn.turnNumber && !permanent.keywords.includes('Haste');
     if (sick) return { ok: false, reason: "summoning sickness (302.6): hasn't been under its controller's control continuously since their most recent turn began, so its {T} cost can't be paid" };
   }
-  const unsupported = unsupportedCostComponent(cost);
+  const unsupported = unsupportedCostComponent(cost, card);
   if (unsupported) {
     return { ok: false, reason: `activation cost includes an unsupported component ("${unsupported}") — this engine only pays {T} + mana costs so far` };
   }

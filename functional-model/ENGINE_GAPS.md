@@ -328,10 +328,41 @@ so a future pass doesn't mistake them for missing work:
     the same simplification the 3 real cards' own `effects: [animate]`
     already commits to by using this mechanism, not a new gap introduced
     here.
-    Still open: `Sacrifice another artifact or creature`, `{X}`,
-    `Pay N life` — all real, common cost shapes verified by grepping every
-    `activationCost:` string across every card's own `definition.ts`.
-    Actually supporting them (not just rejecting) is the remaining work.
+    ~~Sacrifice another/a/two X~~ **CLOSED for the non-self cases, trusting
+    an already-real matching effect** — checked every real
+    `Sacrifice`-shaped `activationCost` string across the pool (12 files):
+    Ahriman ("another creature or artifact"), Phantom Train ("another
+    artifact or creature"), and Quina, Qu Gourmet ("a Frog") each already
+    declare a matching `{ kind: 'sacrifice', notSelf: true, ... }` as the
+    FIRST effect in their own `effects` array — their own comments
+    explicitly document this as a deliberate "cost modeled as effect #1,
+    for trace visibility" choice, not something this pass invented.
+    `unsupportedCostComponent` now accepts a `Sacrifice another/a/an/two`-
+    shaped cost component IFF `card.effects` already contains a
+    `sacrifice` effect — trusting the card's own resolution to pay it for
+    real, with NO risk of double-payment (the engine itself never calls
+    `state.sacrifice` for this cost component; the card's own effect
+    still does, exactly as before, just now actually reachable through
+    `canActivateAbility` at all).
+    **Still open, deliberately NOT recognized**: The Gold Saucer's own
+    "Sacrifice two artifacts" has no matching effect in its own
+    `definition.ts` (its own comment says the sacrifice is cost-only, not
+    modeled) — correctly still rejected, since accepting it would let the
+    ability resolve with nothing ever actually sacrificed; a real
+    `cards/*`-boundary gap, not an engine-design one. Self-sacrifice
+    ("Sacrifice this creature"/"Sacrifice <CardName>" — Blazing Bomb, Zack
+    Fair, and Elven Passage's compound cost) is deliberately never
+    recognized at all: both real self-sacrifice cards' own `effects` read
+    `ctx.self`'s live state (power/counters) AFTER the ability would
+    resolve, which only stays correct today because the sacrifice never
+    actually happens — genuinely sacrificing `self` as a cost would need
+    real 608.2h last-known-information tracking (a real, separate,
+    unbuilt gap) to keep those two cards correct, so this stays a
+    deliberately deferred gap rather than risk a regression.
+    Still fully open: `{X}`, `Pay N life` — real, common cost shapes
+    verified by grepping every `activationCost:` string across every
+    card's own `definition.ts`. Actually supporting them (not just
+    rejecting) is the remaining work.
 
 ## What's already solid (don't re-litigate)
 

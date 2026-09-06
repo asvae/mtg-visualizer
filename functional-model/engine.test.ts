@@ -737,6 +737,71 @@ describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real ETB d
   });
 });
 
+describe('Sacrifice cost trusted when matched by the card\'s own effects (Ahriman/Phantom Train/Quina-shaped)', () => {
+  const AHRIMAN_SHAPED: CardDefinition = {
+    name: 'Test Ahriman',
+    manaCost: '{2}{B}',
+    typeLine: 'Creature — Eye Horror',
+    pt: [2, 2],
+    activationCost: '{3}, Sacrifice another creature or artifact',
+    effects: [
+      { kind: 'sacrifice', owner: 'you', validType: 'creature-or-artifact', notSelf: true },
+      { kind: 'drawCard' },
+    ],
+  };
+
+  const GOLD_SAUCER_SHAPED: CardDefinition = {
+    name: 'Test Gold Saucer',
+    manaCost: '',
+    typeLine: 'Land — Town',
+    activationCost: '{3}, Sacrifice two artifacts',
+    effects: [{ kind: 'drawCard' }],
+  };
+
+  it('is legal once the mana portion is affordable (a real, matched sacrifice effect is trusted, not re-paid)', () => {
+    const { state, you, engine } = setupGame();
+    const source = state.addCard(you, 'Battlefield', { name: AHRIMAN_SHAPED.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, source, AHRIMAN_SHAPED).ok).toBe(true);
+  });
+
+  it("resolving it sacrifices exactly ONE other permanent (never the source itself, never twice)", () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const source = state.addCard(you, 'Battlefield', { name: AHRIMAN_SHAPED.name, types: ['Creature'] });
+    const fodderA = state.addCard(you, 'Battlefield', { name: 'Fodder A', types: ['Creature'] });
+    const fodderB = state.addCard(you, 'Battlefield', { name: 'Fodder B', types: ['Creature'] });
+    const self = wrapCard(state, source);
+    const sacActions: Actions = {
+      sacrifice: (_controller, qty, validType, notSelf) => {
+        const matches = (c: RealCard) => {
+          if (notSelf && c.id === source.id) return false;
+          if (validType === 'creature-or-artifact') return c.types.includes('Creature') || c.types.includes('Artifact');
+          return true;
+        };
+        return state.sacrifice(you, qty, matches).map((c) => wrapCard(state, c));
+      },
+    } as Actions;
+    const result = activateAbility(engine, you, source, AHRIMAN_SHAPED, ctxFor(state, self, youPlayer, [oppPlayer]), sacActions);
+    expect(result.ok).toBe(true);
+    resolveTop(engine);
+    const remaining = you.battlefield.filter((c) => c.name === 'Fodder A' || c.name === 'Fodder B');
+    expect(remaining).toHaveLength(1); // exactly one fodder sacrificed, not zero, not both
+    expect(source.zone).toBe('Battlefield'); // the source itself was never touched — "notSelf" honored
+  });
+
+  it('a "Sacrifice N X" cost with NO matching effect in card.effects (The Gold Saucer-shaped) stays rejected — nothing would ever actually be sacrificed', () => {
+    const { state, you, engine } = setupGame();
+    const source = state.addCard(you, 'Battlefield', { name: GOLD_SAUCER_SHAPED.name, types: ['Land'] });
+    expect(canActivateAbility(engine, you, source, GOLD_SAUCER_SHAPED)).toEqual({ ok: false, reason: expect.stringMatching(/unsupported component/) });
+  });
+
+  it('self-sacrifice cost text ("Sacrifice this creature") is never recognized, even with a matching sacrifice effect present', () => {
+    const { state, you, engine } = setupGame();
+    const selfSac: CardDefinition = { ...AHRIMAN_SHAPED, activationCost: '{3}, Sacrifice this creature' };
+    const source = state.addCard(you, 'Battlefield', { name: selfSac.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, source, selfSac)).toEqual({ ok: false, reason: expect.stringMatching(/unsupported component/) });
+  });
+});
+
 describe('resolveCard dispatch collision (a permanent with BOTH an on:"enter" trigger AND activationCost+effects)', () => {
   function dualCard(order: string[]): CardDefinition {
     return {

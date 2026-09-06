@@ -420,6 +420,47 @@ does) — `engine.ts`'s 4 call sites (`canCastSpell`/`castSpell`/
 `canActivateAbility`/`activateAbility`) all use this wrapper now instead
 of calling `untappedManaSources` directly.
 
+### Sacrifice-cost activated abilities — trusted, not re-paid, `unsupportedCostComponent`
+
+Checked every real `Sacrifice`-shaped `activationCost` string (12 files).
+Three — Ahriman, Phantom Train, Quina, Qu Gourmet — already declare a
+matching `{ kind: 'sacrifice', notSelf: true, ... }` as the FIRST effect
+in `card.effects`, each with its own comment explaining this is a
+deliberate "cost modeled as effect #1, for trace visibility" choice, not
+an oversight. That meant the real consequence already happened for real
+at resolution — the ONLY thing broken was that `canActivateAbility`
+rejected the cost string outright, so these 3 real cards couldn't be
+activated through the engine at all.
+
+Rather than have the engine ALSO pay this cost (which would
+double-sacrifice, since the card's own effect already does it),
+`unsupportedCostComponent` now recognizes the shape and trusts the
+card:
+
+```ts
+if (/^Sacrifice (another|an?|two)\b/i.test(part) && (card.effects ?? []).some((e) => e.kind === 'sacrifice')) continue;
+```
+
+The "another/a/an/two" wording is the key signal — it's the one that
+NEVER means self (unlike "Sacrifice this X"/"Sacrifice <CardName>"), and
+every real card using it in this pool already pairs it with a matching
+effect. A "Sacrifice N X" cost with NO matching effect (The Gold
+Saucer's own "Sacrifice two artifacts," whose own comment says the
+sacrifice is cost-only, not modeled) still correctly falls through and
+gets rejected — accepting it would mean nothing is ever actually
+sacrificed.
+
+**Self-sacrifice is deliberately never recognized, on purpose, not by
+omission**: Blazing Bomb ("Sacrifice this creature") and Zack Fair
+("Sacrifice Zack Fair") both read `ctx.self`'s own live power/counters
+in their OWN effects, and both currently rely on the sacrifice NEVER
+actually happening for that to stay correct (their own comments say so).
+Real Forge would read this off 608.2h last-known-information instead —
+a real, separate, unbuilt gap here — so genuinely sacrificing `self` as
+part of paying the cost would silently break both cards (their own
+`ctx.self` would report post-zone-change-reset values instead). Left
+unsupported rather than risk that regression.
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -481,6 +522,10 @@ of calling `untappedManaSources` directly.
   `RealCard.manaAbility` field, with real 302.6 summoning-sickness
   enforcement for a creature mana source — see "Non-basic mana sources"
   above.
+- **Sacrifice-cost activated abilities (non-self)** — a real
+  "Sacrifice another/a/two X" cost trusted whenever the card's own
+  `effects` already pay it for real at resolution, with no risk of
+  double-payment — see "Sacrifice-cost activated abilities" above.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -555,7 +600,13 @@ covers a resolved artifact mana rock genuinely becoming payable (and
 really getting tapped), a freshly-resolved mana-dork CREATURE correctly
 NOT counting toward affordability the turn it enters (302.6), the same
 dork correctly counting on a later turn, and a dual-color ability
-correctly not being recognized at all.
+correctly not being recognized at all. Its `Sacrifice cost trusted...`
+describe block covers a legal Ahriman-shaped activation, a real
+resolution proving exactly one OTHER permanent is sacrificed (never the
+source, never twice — the actual double-payment risk this fix avoids), a
+Gold-Saucer-shaped cost with no matching effect staying rejected, and
+self-sacrifice cost text staying rejected even alongside a matching
+effect.
 
 ## Gap analysis vs. real Forge
 
