@@ -16,10 +16,13 @@
 // uses (players/cards are logged by name, never by internal id) — filler
 // names are per-player-prefixed by setupPlayer, so they're unique across
 // players; a real card's own name is unique within one scenario's single
-// GameState. See harness.ts's own SELF_INSTANCE_ID/`setupPlayer` comments
-// for the two known exceptions (a >1-qty createToken batch, and
-// duplicateLegendaryEnters) this can't tell apart by name alone — both are
-// rare and just collapse onto one chip today.
+// GameState. Two real exceptions to that last rule (a >1-qty createToken
+// batch; two genuinely distinct legendary copies sharing a name) are
+// handled by pushing separate objects directly rather than aliasing
+// through `ensure`'s shared name lookup — see `createToken`'s own case and
+// `ensureSelf`'s own doc comment. `legendRule` itself still can't always
+// tell WHICH of two same-named survivors/removals is which (no instanceId
+// on that fn) — see that case's own doc comment for the remaining gap.
 
 import type { LogEntry, PlayerState, Scenario } from '../../functional-model/harness';
 import type { ZoneType } from '../../functional-model/interfaces';
@@ -184,17 +187,32 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
   // `instanceId` (present on all four) is the one thing that stays fixed
   // across a transform, so it's what canonicalizes "same physical card,
   // new face name" back onto one chip instead of spawning a second one.
-  const instanceCanonical = new Map<number, string>();
+  // Keyed by the OBJECT itself (not by name — a real duplicate-legendary
+  // scenario has TWO instanceIds sharing the SAME name; keying by name
+  // would alias the second one straight onto the first's object via
+  // `ensure`'s own byName map, same class of bug fixed elsewhere for
+  // fungible lands — confirmed the hard way against fin/3's own real
+  // scenario: legendRule then had only one chip to move, so the survivor
+  // silently vanished too instead of staying on the battlefield).
+  const instanceCards = new Map<number, ReplayCard>();
   const ensureSelf = (entry: LogEntry, zone: ZoneType | 'Unknown'): ReplayCard | undefined => {
     const cardName = str(entry.card);
     const instanceId = num(entry.instanceId);
-    let key = cardName;
-    if (instanceId !== undefined) {
-      const existing = instanceCanonical.get(instanceId);
-      if (existing) key = existing;
-      else if (cardName) instanceCanonical.set(instanceId, cardName);
+    let card: ReplayCard | undefined;
+    if (instanceId !== undefined && instanceCards.has(instanceId)) {
+      card = instanceCards.get(instanceId);
+    } else if (cardName && byName.has(cardName)) {
+      // A DIFFERENT instanceId already claimed this exact name — a genuinely
+      // separate physical object (not a face-name coincidence; a real same-
+      // instance transform always hits the branch above first). Pushed
+      // directly, bypassing `ensure`/`byName` entirely, so it can never get
+      // silently merged back onto the first one.
+      card = { name: cardName, zone, owner: guessOwner(cardName, roles), tapped: false, counters: {}, keywords: new Set() };
+      cards.push(card);
+    } else {
+      card = ensure(cardName, zone);
     }
-    const card = ensure(key, zone);
+    if (instanceId !== undefined && card) instanceCards.set(instanceId, card);
     if (card) {
       card.isSelf = true;
       if (cardName && cardName !== card.name) card.faceName = cardName;
@@ -423,17 +441,19 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'legendRule': {
-        // Real 704.5j — `card` names the SPECIFIC real copy 704.5j removed
-        // (sba.ts's own `legendRuleRemoved`/engine-trace.ts's own pilot
-        // scripts both name the actual removed object, not a guess). Known
-        // limitation, not a new one: a duplicate legendary that entered
-        // during SETUP (this file's own header comment on
-        // `duplicateLegendaryEnters`) is already collapsed onto one chip by
-        // the time this fires — moving that one chip to the graveyard then
-        // incorrectly hides the SURVIVOR too. Rare (setup-time duplicate
-        // legendaries aren't used by any current scenario) and already
-        // documented as accepted; a real per-instance identity split would
-        // need `ensure`'s own name-keying reworked, out of scope here.
+        // Real 704.5j. `card` here is just a NAME, no `instanceId` (sba.ts's
+        // own `legendRuleRemoved`/engine-trace.ts's pilot scripts never
+        // attach one) — so when two real distinct copies coexist (fixed:
+        // `ensureSelf` above now gives a genuine duplicate its own object
+        // instead of aliasing it onto the first), this can't tell WHICH of
+        // the two same-named copies 704.5j actually removed. Deterministic
+        // fallback: always resolves to whichever copy `byName` points at —
+        // the FIRST one seen (`ensure`'s own alias target) — same real
+        // rules-legal OUTCOME either way (exactly one of two identical
+        // copies leaves, one stays; which specific one is a real 704.5j
+        // player choice anyway), just not necessarily the same one sba.ts
+        // itself picked. A precise fix needs `card`+`instanceId` both on
+        // this fn (harness.ts/engine-trace.ts's own emitters), not done here.
         const c = ensure(cardName);
         if (c) c.zone = 'Graveyard';
         break;

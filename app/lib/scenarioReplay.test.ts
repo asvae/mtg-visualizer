@@ -40,6 +40,24 @@ describe('replayTrace', () => {
     expect(cards.find((c) => c.name === 'Adelbert Steiner')?.zone).toBe('Graveyard');
   });
 
+  it('a real LIVE duplicate legendary (two distinct instanceIds, same name) gets two chips, not one shared alias', () => {
+    // Regression for a real bug: `ensureSelf` used to key its lookup by
+    // NAME once a canonical name was picked, so the second copy's own
+    // `enters` entry aliased straight onto the first copy's object —
+    // legendRule then had only one chip to move, silently disappearing
+    // the survivor too. Confirmed against fin/3 (Adelbert Steiner)'s own
+    // real scenario.
+    const cards = lastCards([
+      { fn: 'enters', card: 'Adelbert Steiner', instanceId: 1, zone: 'Battlefield' },
+      { fn: 'enters', card: 'Adelbert Steiner', instanceId: 2, zone: 'Battlefield' },
+      { fn: 'legendRule', card: 'Adelbert Steiner', player: 'you' },
+    ]);
+    const steiners = cards.filter((c) => c.name === 'Adelbert Steiner');
+    expect(steiners).toHaveLength(2);
+    expect(steiners.filter((c) => c.zone === 'Graveyard')).toHaveLength(1);
+    expect(steiners.filter((c) => c.zone === 'Battlefield')).toHaveLength(1);
+  });
+
   it('pump accumulates power/toughness across multiple entries', () => {
     const cards = lastCards([
       { fn: 'pump', target: 'Bear', power: 1, toughness: 1 },
