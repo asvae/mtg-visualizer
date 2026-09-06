@@ -172,7 +172,7 @@ function play() {
       return;
     }
     stepIndex.value++;
-  }, 850);
+  }, 2550);
 }
 function toggle() {
   playing.value ? pause() : play();
