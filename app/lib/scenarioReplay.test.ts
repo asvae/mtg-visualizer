@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionEndIndices, groupForDisplay, replayTrace } from './scenarioReplay';
+import { actionEndIndices, entryRefs, groupForDisplay, replayTrace } from './scenarioReplay';
 import type { LogEntry } from '../../functional-model/harness';
 
 /** Minimal trace wrapper — every test here seeds an empty board (no `raw`) and drives everything through log entries, since `replayTrace` creates a chip on first reference regardless of whether `raw` seeded it. */
@@ -230,5 +230,20 @@ describe('actionEndIndices', () => {
 
   it('handles a single action spanning the whole log', () => {
     expect(actionEndIndices([{ from: 0 }], 5)).toEqual([5]);
+  });
+});
+
+describe('entryRefs', () => {
+  it('scopes a ref to its owner when one is derivable, instead of a bare name', () => {
+    // Regression (ui-reported): two players sharing a fungible name
+    // (GENERIC_FILLER_LAND) both glowed for a single player's own draw,
+    // since the old bare-name-only refs matched ANY same-named chip
+    // regardless of owner.
+    expect(entryRefs({ fn: 'drawCard', player: 'opp0', card: 'Forest' })).toEqual(['opp0:Forest', 'opp0']);
+    expect(entryRefs({ fn: 'moveTo', target: 'Treasure', zone: 'Hand', controller: 'opp0' })).toEqual(['opp0:Treasure', 'opp0']);
+  });
+
+  it('falls back to a bare name when the entry has no player/controller field', () => {
+    expect(entryRefs({ fn: 'tapForMana', target: 'Forest' })).toEqual(['Forest']);
   });
 });

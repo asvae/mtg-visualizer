@@ -153,6 +153,10 @@ const highlighted = computed(() => {
   }
   return new Set(snapshot.value.entry ? entryRefs(snapshot.value.entry) : []);
 });
+/** Whether `card` was touched THIS step — `entryRefs` keys by `${owner}:${name}` when an entry has a derivable owner, bare `name` otherwise (see that function's own doc comment on why: two players sharing a fungible name, GENERIC_FILLER_LAND, would otherwise both glow for one player's own draw). Checks both shapes since not every fn carries an owner. */
+function isHighlighted(card: GroupedReplayCard): boolean {
+  return highlighted.value.has(`${card.owner}:${card.name}`) || highlighted.value.has(card.name);
+}
 
 // Playback — a plain setInterval driving stepIndex forward; pauses itself
 // at the end rather than looping, so "done" reads as done.
@@ -347,28 +351,28 @@ const currentActionRawEntries = computed(() => {
                           :src="imagesFor(card)![0]"
                           alt=""
                           class="flip-face front h-full w-full rounded-[3px] border object-cover transition-shadow duration-300"
-                          :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
+                          :class="isHighlighted(card) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
                         />
                         <img
                           v-if="imagesFor(card)![1]"
                           :src="imagesFor(card)![1]"
                           alt=""
                           class="flip-face back h-full w-full rounded-[3px] border object-cover transition-shadow duration-300"
-                          :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
+                          :class="isHighlighted(card) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
                         />
                       </div>
                     </div>
                     <div
                       v-else-if="card.zone === 'Library'"
                       class="card-back flex h-[126px] w-[90px] items-center justify-center rounded-[3px] border transition-colors duration-300"
-                      :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
+                      :class="isHighlighted(card) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
                     >
                       <svg viewBox="0 0 24 24" class="h-8 w-8 text-white/25"><path fill="currentColor" d="M12 2 22 12 12 22 2 12Z" /></svg>
                     </div>
                     <div
                       v-else
                       class="flex h-[126px] w-[90px] items-center justify-center rounded-[3px] border font-mono text-[9px] transition-colors duration-300"
-                      :class="highlighted.has(card.name) ? 'border-warn bg-warn/10 text-text' : 'border-border-subtle bg-surface text-muted'"
+                      :class="isHighlighted(card) ? 'border-warn bg-warn/10 text-text' : 'border-border-subtle bg-surface text-muted'"
                     >
                       {{ placeholderLabel(card) }}
                     </div>

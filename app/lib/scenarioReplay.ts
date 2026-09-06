@@ -136,10 +136,30 @@ function num(v: unknown): number | undefined {
   return typeof v === 'number' ? v : undefined;
 }
 
-/** Every log entry field value that plausibly names a card or player — used to highlight the board chips/life a step actually touched. Loose by design (a false-positive highlight is harmless; a missed one just looks inert). */
+/**
+ * Every log entry field value that plausibly names a card or player — used
+ * to highlight the board chips/life a step actually touched. Loose by
+ * design (a false-positive highlight is harmless; a missed one just looks
+ * inert) — EXCEPT scoped to `owner` (`entry.player`/`entry.controller`,
+ * whichever this entry carries) whenever one is present, as `${owner}:
+ * ${name}` rather than a bare name: confirmed the hard way that a bare name
+ * alone false-positives across BOTH players the instant they can share one
+ * (GENERIC_FILLER_LAND — every "Forest" on the whole board glowed for a
+ * single player's own draw). Falls back to a bare name when an entry has
+ * no player/controller field at all (most fn kinds — enters/cast/trigger/
+ * tap/putCounter/dealDamage/equip/... never carried one, so this keeps
+ * exactly today's loose behavior for those, unchanged). The caller checks
+ * BOTH the owner-scoped key and the bare name (see ScenarioReplayTrace.vue).
+ */
 export function entryRefs(entry: LogEntry): string[] {
-  const keys = ['target', 'card', 'player', 'controller', 'source', 'equipment', 'token'];
-  return keys.map((k) => str(entry[k])).filter((v): v is string => !!v);
+  const owner = str(entry.player) ?? str(entry.controller);
+  const keys = ['target', 'card', 'source', 'equipment', 'token'];
+  const refs = keys
+    .map((k) => str(entry[k]))
+    .filter((v): v is string => !!v)
+    .map((name) => (owner ? `${owner}:${name}` : name));
+  if (owner) refs.push(owner);
+  return refs;
 }
 
 /** Replays one scenario's log over its seeded starting board, returning one snapshot per step (index 0 = before the log runs). Pure/deterministic — same trace always replays identically, so a caller can memoize this per trace. */
