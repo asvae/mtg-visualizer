@@ -1,15 +1,21 @@
 [
   {
     "scenario": {
-      "setup": "you: a Hero; opp0: a Treasure; opp0: a Forest",
-      "action": "\"onEnter\" trigger fires",
-      "result": "Jill enters, ETB returns the opponent's artifact (not their land — real text is nonland only) to hand; {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I grants your creature unblockable; chapter II grants it again; chapter III taps all the opponent's lands, then exiles Shiva and returns it front-face-up",
+      "setup": "you: a c_1_1_hero; you: 5 Island(s); opp0: a c_a_treasure_sac; opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns",
+      "result": "Jill enters, ETB returns the opponent's Treasure (not their land — real text is nonland only) to hand; the transform ability is blocked by summoning sickness until your next turn, then {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; a real lore counter fires chapter I (grants your Hero unblockable) immediately on transforming, chapter II fires for real on your next draw step (unblockable again), chapter III fires the turn after that (taps all the opponent's lands, then exiles Shiva and returns it front-face-up as Jill) — all played out through the real turn-based engine (real mana payment, real summoning-sickness wait, real Saga lore-counter automation), not a flat named-trigger sequence.",
       "raw": {
-        "result": "Jill enters, ETB returns the opponent's artifact (not their land — real text is nonland only) to hand; {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I grants your creature unblockable; chapter II grants it again; chapter III taps all the opponent's lands, then exiles Shiva and returns it front-face-up",
-        "trigger": "onEnter",
+        "result": "Jill enters, ETB returns the opponent's Treasure (not their land — real text is nonland only) to hand; the transform ability is blocked by summoning sickness until your next turn, then {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; a real lore counter fires chapter I (grants your Hero unblockable) immediately on transforming, chapter II fires for real on your next draw step (unblockable again), chapter III fires the turn after that (taps all the opponent's lands, then exiles Shiva and returns it front-face-up as Jill) — all played out through the real turn-based engine (real mana payment, real summoning-sickness wait, real Saga lore-counter automation), not a flat named-trigger sequence.",
         "you": {
           "tokens": [
             "c_1_1_hero"
+          ],
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
           ]
         },
         "opponents": [
@@ -21,30 +27,21 @@
               "Forest"
             ]
           }
-        ],
-        "sequence": [
-          {
-            "activate": true
-          },
-          {
-            "trigger": "chapterI",
-            "face": "back"
-          },
-          {
-            "trigger": "chapterII"
-          },
-          {
-            "trigger": "chapterIII"
-          }
         ]
       }
     },
     "log": [
       {
-        "fn": "trigger",
+        "fn": "cast",
         "card": "Jill, Shiva's Dominant",
         "instanceId": 1,
-        "name": "onEnter"
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "payMana",
+        "for": "Jill, Shiva's Dominant",
+        "cost": "{2}{U}"
       },
       {
         "fn": "read:getCardsIn",
@@ -70,9 +67,31 @@
         "controller": "opp0"
       },
       {
+        "fn": "enters",
+        "card": "Jill, Shiva's Dominant",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "trigger",
+        "card": "Jill, Shiva's Dominant",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "illegalAttempt",
+        "card": "Jill, Shiva's Dominant",
+        "reason": "summoning sickness (302.6): hasn't been under its controller's control continuously since their most recent turn began, so its {T} cost can't be paid"
+      },
+      {
         "fn": "activate",
         "card": "Jill, Shiva's Dominant",
         "instanceId": 1,
+        "cost": "{3}{U}{U}, {T} (activate only as a sorcery)"
+      },
+      {
+        "fn": "payMana",
+        "for": "Jill, Shiva's Dominant",
         "cost": "{3}{U}{U}, {T} (activate only as a sorcery)"
       },
       {
@@ -86,6 +105,17 @@
         "target": "Jill, Shiva's Dominant",
         "zone": "Battlefield",
         "controller": "you"
+      },
+      {
+        "fn": "transform",
+        "card": "Jill, Shiva's Dominant",
+        "into": "Shiva, Warden of Ice"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Jill, Shiva's Dominant",
+        "counterType": "LORE",
+        "amount": 1
       },
       {
         "fn": "trigger",
@@ -109,6 +139,12 @@
         "keyword": "Unblockable"
       },
       {
+        "fn": "putCounter",
+        "target": "Jill, Shiva's Dominant",
+        "counterType": "LORE",
+        "amount": 1
+      },
+      {
         "fn": "trigger",
         "card": "Shiva, Warden of Ice",
         "instanceId": 1,
@@ -128,6 +164,12 @@
         "fn": "grantKeyword",
         "target": "Hero",
         "keyword": "Unblockable"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Jill, Shiva's Dominant",
+        "counterType": "LORE",
+        "amount": 1
       },
       {
         "fn": "trigger",
@@ -155,6 +197,11 @@
         "target": "Jill, Shiva's Dominant",
         "zone": "Battlefield",
         "controller": "you"
+      },
+      {
+        "fn": "transform",
+        "card": "Jill, Shiva's Dominant",
+        "into": "Jill, Shiva's Dominant"
       }
     ]
   }

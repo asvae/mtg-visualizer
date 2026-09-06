@@ -315,7 +315,8 @@ function describeAction(card: CardDefinition, scenario: Scenario): string {
 // is just a card whose `types` includes 'Creature'), just backed by real,
 // mutable objects now instead of throwaway snapshots.
 
-function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState = {}): void {
+/** Exported (visibility only, same behavior) so `engine-trace.ts` can build a real engine-piloted trace off the SAME board-setup logic instead of re-deriving it — see that file's own header. */
+export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState = {}): void {
   real.life = ps.life ?? 20;
   // Every generated name is prefixed with the OWNING player's own name
   // (real.name — "you"/"opp0"/...) — without this, two different players'
@@ -407,7 +408,8 @@ function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState = {}): 
 // `instanceId` field, which existing traces/dedup already depend on.
 const SELF_INSTANCE_ID = 1;
 
-function typesFromTypeLine(typeLine: string): string[] {
+/** Exported (visibility only) for `engine-trace.ts` — see `setupPlayer`'s own export note just above. */
+export function typesFromTypeLine(typeLine: string): string[] {
   const types: string[] = [];
   if (/\bCreature\b/.test(typeLine)) types.push('Creature');
   if (/\bArtifact\b/.test(typeLine)) types.push('Artifact');
@@ -424,7 +426,8 @@ function typesFromTypeLine(typeLine: string): string[] {
 // same pragmatic approximation aerith-gainsborough's own "each legendary
 // creature you control" already established (`hasSubtype('Legendary')`, not
 // a real supertype lookup).
-function subtypesFromTypeLine(typeLine: string): string[] {
+/** Exported (visibility only) for `engine-trace.ts` — see `setupPlayer`'s own export note above. */
+export function subtypesFromTypeLine(typeLine: string): string[] {
   const subtypes = typeLine.split('—')[1]?.trim().split(/\s+/).filter(Boolean) ?? [];
   if (/\bLegendary\b/.test(typeLine)) subtypes.push('Legendary');
   return subtypes;
@@ -449,7 +452,8 @@ function subtypesFromTypeLine(typeLine: string): string[] {
 // too (`loggingCard` below), not just the Player-level aggregates.
 
 /** Wraps a real Card the same way `loggingPlayer` wraps a real Player — every query method a card.ts lambda (a `Computed` field, a `custom` effect's `run`) can branch on logs its argument(s) and result. Applied to `self` and to every Card a logging Player hands back (getCreaturesInPlay/getLandsInPlay/getCardsIn/drawCard(s)), so a lambda's own filtering (`.filter(c => c.hasSubtype(...))`) is captured automatically — card.ts's own declarative effects (`matchesValidType`, `battlefieldPool`, etc.) source their candidate pools the exact same way, so this also captures a plain (non-`custom`) effect's own type-gated pool building for free. */
-function loggingCard(state: GameState, real: RealCard, log: LogEntry[]): Card {
+/** Exported (visibility only) for `engine-trace.ts` — see `setupPlayer`'s own export note above. */
+export function loggingCard(state: GameState, real: RealCard, log: LogEntry[]): Card {
   const base = wrapCard(state, real);
   const name = real.name;
   const wrapOne = (c: Card | undefined): Card | undefined => (c ? loggingCard(state, state.cards.get(c.getId() as number)!, log) : undefined);
@@ -524,7 +528,8 @@ function loggingCard(state: GameState, real: RealCard, log: LogEntry[]): Card {
   } as unknown as Card;
 }
 
-function loggingPlayer(state: GameState, real: RealPlayer, log: LogEntry[]): Player {
+/** Exported (visibility only) for `engine-trace.ts` — see `setupPlayer`'s own export note above. */
+export function loggingPlayer(state: GameState, real: RealPlayer, log: LogEntry[]): Player {
   const base = wrapPlayer(state, real);
   const name = real.name;
   const toLogging = (c: Card): Card => loggingCard(state, state.cards.get(c.getId() as number)!, log);
@@ -578,7 +583,8 @@ function loggingPlayer(state: GameState, real: RealPlayer, log: LogEntry[]): Pla
   } as unknown as Player;
 }
 
-function loggingActions(state: GameState, log: LogEntry[], selfId: number): Actions {
+/** Exported (visibility only) for `engine-trace.ts` — see `setupPlayer`'s own export note above. */
+export function loggingActions(state: GameState, log: LogEntry[], selfId: number): Actions {
   const cardOf = (c: Card): RealCard => state.cards.get(c.getId() as number)!;
   const playerOf = (p: Player): RealPlayer => state.players.get(p.getId() as number)!;
   return {
