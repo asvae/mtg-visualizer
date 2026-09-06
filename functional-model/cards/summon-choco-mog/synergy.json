@@ -2,6 +2,7 @@
   "source": [],
   "sink": [
     {
+      "id": "stampede-anthem",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -10,6 +11,7 @@
         ]
       },
       "sourceText": "I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn.",
+      "highlight": "Other creatures you control get +1/+0 until end of turn",
       "value": 1
     }
   ]

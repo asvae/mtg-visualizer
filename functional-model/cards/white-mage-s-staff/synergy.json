@@ -1,17 +1,20 @@
 {
   "source": [
     {
+      "id": "job-select-token",
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)"
+      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+      "highlight": "create a 1/1 colorless Hero creature token"
     }
   ],
   "sink": [
     {
+      "id": "equip-3",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -20,6 +23,7 @@
         ]
       },
       "sourceText": "Equip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)",
+      "highlight": "Attach to target creature you control",
       "value": 1
     }
   ]

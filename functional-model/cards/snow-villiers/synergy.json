@@ -1,18 +1,22 @@
 {
   "source": [
     {
+      "id": "self-battlefield",
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — Snow Villiers's own text is entirely static: \"Vigilance\" and \"Snow Villiers's power is equal to the number of creatures you control,\" both of which only matter while it's on the battlefield)"
+      "sourceText": "(baseline — Snow Villiers's own text is entirely static: \"Vigilance\" and \"Snow Villiers's power is equal to the number of creatures you control,\" both of which only matter while it's on the battlefield)",
+      "highlight": "Snow Villiers's power is equal to the number of creatures you control"
     },
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)"
+      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)",
+      "highlight": "goes to the graveyard like any creature that dies"
     }
   ],
   "sink": []

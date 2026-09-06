@@ -5,7 +5,9 @@
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flying, vigilance. As long as you control two or more artifacts, this creature gets +2/+0."
+      "sourceText": "Flying, vigilance. As long as you control two or more artifacts, this creature gets +2/+0.",
+      "id": "self-battlefield",
+      "highlight": "As long as you control two or more artifacts, this creature gets +2/+0"
     }
   ],
   "sink": []

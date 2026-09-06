@@ -1,13 +1,15 @@
 {
   "source": [
     {
+      "id": "etb-token",
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "sourceText": "When this creature enters, create a 1/1 colorless Hero creature token."
+      "sourceText": "When this creature enters, create a 1/1 colorless Hero creature token.",
+      "highlight": "create a 1/1 colorless Hero creature token"
     }
   ],
   "sink": []

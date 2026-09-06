@@ -1,20 +1,25 @@
 {
   "source": [
     {
+      "id": "flashback",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flashback {4}{W}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+      "sourceText": "Flashback {4}{W}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "highlight": "Flashback {4}{W}{W}{W}"
     },
     {
+      "id": "flashback-exile",
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "You may cast this card from your graveyard for its flashback cost. Then exile it."
+      "sourceText": "You may cast this card from your graveyard for its flashback cost. Then exile it.",
+      "highlight": "Then exile it"
     },
     {
+      "id": "search-vehicle",
       "zone": "Hand",
       "controller": "you",
       "types": {
@@ -23,9 +28,11 @@
         ]
       },
       "value": 1,
-      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand."
+      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand.",
+      "highlight": "Search your library for a Vehicle card"
     },
     {
+      "id": "flashback-cast-to-battlefield",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -34,11 +41,13 @@
         ]
       },
       "value": 1,
-      "sourceText": "If this spell was cast from a graveyard, put that card onto the battlefield instead."
+      "sourceText": "If this spell was cast from a graveyard, put that card onto the battlefield instead.",
+      "highlight": "put that card onto the battlefield instead"
     }
   ],
   "sink": [
     {
+      "id": "wants-vehicle-in-library",
       "zone": "Library",
       "controller": "you",
       "types": {
@@ -47,6 +56,7 @@
         ]
       },
       "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand.",
+      "highlight": "Search your library for a Vehicle card",
       "value": 1
     }
   ]

@@ -1,18 +1,22 @@
 {
   "source": [
     {
+      "id": "graveyard-flashback-source",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flashback {3}{U} (You may cast this card from your graveyard for its flashback cost.) — also the generic 'instant goes to its owner's graveyard after resolving' rule (608.2m) on the card's first, non-flashback cast."
+      "sourceText": "Flashback {3}{U} (You may cast this card from your graveyard for its flashback cost.) — also the generic 'instant goes to its owner's graveyard after resolving' rule (608.2m) on the card's first, non-flashback cast.",
+      "highlight": "Flashback {3}{U}"
     },
     {
+      "id": "flashback-exile",
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flashback ... Then exile it."
+      "sourceText": "Flashback ... Then exile it.",
+      "highlight": "Then exile it"
     }
   ],
   "sink": []

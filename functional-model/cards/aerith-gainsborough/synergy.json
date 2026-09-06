@@ -5,27 +5,33 @@
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — Aerith Gainsborough is itself a permanent on your battlefield, no special ability text)"
+      "sourceText": "(baseline — Aerith Gainsborough is itself a permanent on your battlefield, no special ability text)",
+      "id": "self-battlefield"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — Aerith Gainsborough can die and go to your graveyard like any creature)"
+      "sourceText": "(baseline — Aerith Gainsborough can die and go to your graveyard like any creature)",
+      "id": "self-graveyard"
     },
     {
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Lifelink"
+      "sourceText": "Lifelink",
+      "id": "lifelink",
+      "highlight": "Lifelink"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
       "value": 4,
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough."
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.",
+      "id": "lifegain-counter-produce",
+      "highlight": "put a +1/+1 counter on Aerith Gainsborough"
     },
     {
       "event": "putCounter",
@@ -40,7 +46,9 @@
         }
       },
       "value": 4,
-      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough."
+      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
+      "id": "dies-counter-spread",
+      "highlight": "put X +1/+1 counters on each legendary creature you control"
     }
   ],
   "sink": [
@@ -48,20 +56,24 @@
       "event": "lifegain",
       "controller": "you",
       "sourceText": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.",
-      "value": 1
+      "value": 1,
+      "id": "wants-lifegain",
+      "highlight": "Whenever you gain life"
     },
     {
       "event": "dies",
       "target": "self",
       "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control...",
-      "value": 1
+      "value": 1,
+      "id": "wants-self-dies"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
       "sourceText": "...where X is the number of +1/+1 counters on Aerith Gainsborough.",
-      "value": 1
+      "value": 1,
+      "id": "wants-own-counters"
     },
     {
       "zone": "Battlefield",
@@ -73,7 +85,8 @@
         ]
       },
       "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control...",
-      "value": 1
+      "value": 1,
+      "id": "wants-legendary-creatures"
     }
   ]
 }

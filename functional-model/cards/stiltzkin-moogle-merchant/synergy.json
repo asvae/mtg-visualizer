@@ -1,24 +1,30 @@
 {
   "source": [
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)"
+      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)",
+      "highlight": "goes to the graveyard like any creature that dies"
     },
     {
+      "id": "lifelink-gain",
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Lifelink (deals combat damage → you gain that much life)"
+      "sourceText": "Lifelink (deals combat damage → you gain that much life)",
+      "highlight": "Lifelink"
     }
   ],
   "sink": [
     {
+      "id": "gift-permanent",
       "zone": "Battlefield",
       "controller": "you",
       "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card. (needs another permanent you control to give away)",
+      "highlight": "another target permanent you control",
       "value": 1
     }
   ]

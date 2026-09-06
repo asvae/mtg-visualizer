@@ -7,7 +7,9 @@
         "token": "c_1_1_hero"
       },
       "value": 5,
-      "sourceText": "Take the Elevator — Create three 1/1 colorless Hero creature tokens."
+      "sourceText": "Take the Elevator — Create three 1/1 colorless Hero creature tokens.",
+      "id": "create-hero-tokens",
+      "highlight": "Create three 1/1 colorless Hero creature tokens"
     },
     {
       "event": "putCounter",
@@ -20,14 +22,17 @@
         }
       },
       "value": 1,
-      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them."
+      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them.",
+      "id": "stun-counter-produce",
+      "highlight": "Put a stun counter on one of them"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)"
+      "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)",
+      "id": "self-graveyard"
     }
   ],
   "sink": [
@@ -39,7 +44,9 @@
         ]
       },
       "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them.",
-      "value": 1
+      "value": 1,
+      "id": "wants-target-creatures",
+      "highlight": "Tap up to three target creatures"
     }
   ]
 }

@@ -1,6 +1,7 @@
 {
   "source": [
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
@@ -10,6 +11,7 @@
   ],
   "sink": [
     {
+      "id": "three-plus-creatures-bonus",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -18,9 +20,11 @@
         ]
       },
       "sourceText": "If you control three or more creatures, it gets +4/+4 instead.",
+      "highlight": "you control three or more creatures",
       "value": 1
     },
     {
+      "id": "pump-target",
       "zone": "Battlefield",
       "types": {
         "has": [
@@ -28,6 +32,7 @@
         ]
       },
       "sourceText": "Target creature gets +2/+2 until end of turn — the target itself, no controller restriction printed (any creature is legal).",
+      "highlight": "Target creature gets +2/+2 until end of turn",
       "value": 1
     }
   ]

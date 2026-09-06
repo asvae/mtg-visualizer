@@ -1,15 +1,18 @@
 {
   "source": [
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — Slash of Light is a sorcery/instant-shaped spell; it goes to its owner's graveyard after resolving, no recursion text of its own)"
+      "sourceText": "(baseline — Slash of Light is a sorcery/instant-shaped spell; it goes to its owner's graveyard after resolving, no recursion text of its own)",
+      "highlight": "goes to its owner's graveyard after resolving"
     }
   ],
   "sink": [
     {
+      "id": "damage-creatures-count",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -18,9 +21,11 @@
         ]
       },
       "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
+      "highlight": "the number of creatures you control",
       "value": 1
     },
     {
+      "id": "damage-equipment-count",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -29,9 +34,11 @@
         ]
       },
       "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
+      "highlight": "the number of Equipment you control",
       "value": 1
     },
     {
+      "id": "damage-target-creature",
       "zone": "Battlefield",
       "types": {
         "has": [
@@ -39,6 +46,7 @@
         ]
       },
       "sourceText": "...to target creature.",
+      "highlight": "target creature",
       "value": 1
     }
   ]

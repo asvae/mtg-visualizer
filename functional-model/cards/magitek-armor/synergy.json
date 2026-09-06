@@ -7,7 +7,9 @@
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "sourceText": "When this Vehicle enters, create a 1/1 colorless Hero creature token."
+      "sourceText": "When this Vehicle enters, create a 1/1 colorless Hero creature token.",
+      "id": "etb-hero",
+      "highlight": "create a 1/1 colorless Hero creature token"
     }
   ],
   "sink": []

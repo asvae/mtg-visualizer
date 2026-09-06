@@ -5,12 +5,15 @@
       "controller": "you",
       "subject": "self",
       "value": 1,
+      "id": "self-graveyard",
       "sourceText": "a sorcery — goes to its owner's graveyard after resolving (rule 608.2m)"
     },
     {
       "zone": "Graveyard",
       "controller": "opp",
       "value": 1,
+      "id": "destroy-opp-graveyard",
+      "highlight": "Destroy target nonland permanent",
       "sourceText": "Destroy target nonland permanent — the destroyed permanent lands in its owner's graveyard, here an opponent's."
     },
     {
@@ -24,6 +27,8 @@
         }
       },
       "value": 1,
+      "id": "destroy-opp-dies",
+      "highlight": "Destroy target nonland permanent",
       "sourceText": "Destroy target nonland permanent — fires that permanent's own dies trigger, here an opponent's."
     }
   ],
@@ -37,6 +42,8 @@
         ]
       },
       "sourceText": "Destroy target nonland permanent, no controller restriction — can target one of YOUR OWN permanents.",
+      "id": "wants-own-permanent",
+      "highlight": "Destroy target nonland permanent",
       "value": 1
     },
     {
@@ -48,6 +55,8 @@
         ]
       },
       "sourceText": "Destroy target nonland permanent, no controller restriction — can equally target an OPPONENT'S permanent.",
+      "id": "wants-opp-permanent",
+      "highlight": "Destroy target nonland permanent",
       "value": 1
     }
   ]

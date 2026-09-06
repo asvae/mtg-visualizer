@@ -8,6 +8,8 @@
         "eq": "Magitek Infantry"
       },
       "sourceText": "{2}{W}: Search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle.",
+      "id": "search-namesake",
+      "highlight": "Search your library for a card named Magitek Infantry",
       "value": 1
     }
   ]

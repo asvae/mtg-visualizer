@@ -9,6 +9,8 @@
         ]
       },
       "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature.",
+      "id": "wants-tap-target",
+      "highlight": "Tap target nonenchantment creature",
       "value": 1
     }
   ]

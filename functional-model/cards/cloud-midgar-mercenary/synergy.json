@@ -4,7 +4,9 @@
       "zone": "Hand",
       "controller": "you",
       "value": 1,
-      "sourceText": "When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle."
+      "sourceText": "When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle.",
+      "id": "tutor-equipment",
+      "highlight": "search your library for an Equipment card"
     }
   ],
   "sink": []

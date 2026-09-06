@@ -7,7 +7,9 @@
         "token": "w_2_2_knight"
       },
       "value": 1,
-      "sourceText": "Attack — Create a 2/2 white Knight creature token."
+      "sourceText": "Attack — Create a 2/2 white Knight creature token.",
+      "id": "attack-token",
+      "highlight": "Create a 2/2 white Knight creature token"
     },
     {
       "event": "dies",
@@ -22,26 +24,32 @@
         }
       },
       "value": 1,
-      "sourceText": "Magic — Destroy target creature with power 4 or greater."
+      "sourceText": "Magic — Destroy target creature with power 4 or greater.",
+      "id": "magic-destroy",
+      "highlight": "Destroy target creature with power 4 or greater"
     },
     {
       "zone": "Graveyard",
       "controller": "opp",
       "value": 1,
-      "sourceText": "Magic — Destroy target creature with power 4 or greater. (NOTE: real text has no controller restriction on the target — this fact assumes it lands in an opponent's graveyard, but the printed mode can equally hit your own creature.)"
+      "sourceText": "Magic — Destroy target creature with power 4 or greater. (NOTE: real text has no controller restriction on the target — this fact assumes it lands in an opponent's graveyard, but the printed mode can equally hit your own creature.)",
+      "id": "magic-destroy-graveyard-opp"
     },
     {
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Item — You gain 4 life."
+      "sourceText": "Item — You gain 4 life.",
+      "id": "item-lifegain",
+      "highlight": "You gain 4 life"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)"
+      "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)",
+      "id": "self-graveyard"
     }
   ],
   "sink": [
@@ -53,7 +61,9 @@
         ]
       },
       "sourceText": "Ability — Target creature gets +0/+4 until end of turn.",
-      "value": 1
+      "value": 1,
+      "id": "wants-target-creature-pump",
+      "highlight": "Target creature gets +0/+4 until end of turn"
     },
     {
       "zone": "Battlefield",
@@ -66,7 +76,9 @@
         "min": 4
       },
       "sourceText": "Magic — Destroy target creature with power 4 or greater.",
-      "value": 1
+      "value": 1,
+      "id": "wants-power-4-creature",
+      "highlight": "target creature with power 4 or greater"
     }
   ]
 }

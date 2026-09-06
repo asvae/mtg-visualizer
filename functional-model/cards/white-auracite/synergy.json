@@ -1,13 +1,16 @@
 {
   "source": [
     {
+      "id": "exile-on-etb",
       "zone": "Exile",
       "value": 1,
-      "sourceText": "When this artifact enters, exile target nonland permanent an opponent controls until this artifact leaves the battlefield."
+      "sourceText": "When this artifact enters, exile target nonland permanent an opponent controls until this artifact leaves the battlefield.",
+      "highlight": "exile target nonland permanent an opponent controls"
     }
   ],
   "sink": [
     {
+      "id": "wants-opp-nonland-permanent",
       "zone": "Battlefield",
       "controller": "opp",
       "types": {
@@ -16,6 +19,7 @@
         ]
       },
       "sourceText": "exile target nonland permanent an opponent controls — needs a legal nonland permanent on an opponent's battlefield to target.",
+      "highlight": "exile target nonland permanent an opponent controls",
       "value": 1
     }
   ]

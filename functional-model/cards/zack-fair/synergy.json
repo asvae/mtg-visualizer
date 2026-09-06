@@ -1,13 +1,16 @@
 {
   "source": [
     {
+      "id": "etb-counter",
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
       "value": 4,
-      "sourceText": "Zack Fair enters with a +1/+1 counter on it."
+      "sourceText": "Zack Fair enters with a +1/+1 counter on it.",
+      "highlight": "enters with a +1/+1 counter"
     },
     {
+      "id": "transfer-counters-produce",
       "event": "putCounter",
       "counterType": "+1/+1",
       "controller": "you",
@@ -19,18 +22,22 @@
         }
       },
       "value": 4,
-      "sourceText": "Put Zack Fair's counters on that creature."
+      "sourceText": "Put Zack Fair's counters on that creature.",
+      "highlight": "Put Zack Fair's counters on that creature"
     },
     {
+      "id": "sac-self",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "{1}, Sacrifice Zack Fair: ..."
+      "sourceText": "{1}, Sacrifice Zack Fair: ...",
+      "highlight": "Sacrifice Zack Fair"
     }
   ],
   "sink": [
     {
+      "id": "grant-indestructible",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -39,13 +46,16 @@
         ]
       },
       "sourceText": "Target creature you control gains indestructible until end of turn.",
+      "highlight": "gains indestructible until end of turn",
       "value": 1
     },
     {
+      "id": "wants-own-counters",
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
       "sourceText": "Put Zack Fair's counters on that creature — depends on Zack Fair already carrying +1/+1 counters from its own 'enters with a +1/+1 counter' ETB.",
+      "highlight": "Put Zack Fair's counters on that creature",
       "value": 1
     }
   ]

@@ -2,6 +2,7 @@
   "source": [],
   "sink": [
     {
+      "id": "equipment-check",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -10,9 +11,11 @@
         ]
       },
       "sourceText": "At the beginning of combat on your turn, if you control an Equipment, you may pay {1}.",
+      "highlight": "if you control an Equipment",
       "value": 1
     },
     {
+      "id": "attach-equipment",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -21,6 +24,7 @@
         ]
       },
       "sourceText": "When you do, attach target Equipment you control to target creature you control.",
+      "highlight": "attach target Equipment you control to target creature you control",
       "value": 1
     }
   ]

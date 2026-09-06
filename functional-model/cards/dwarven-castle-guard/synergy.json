@@ -7,6 +7,8 @@
         "token": "c_1_1_hero"
       },
       "value": 1,
+      "id": "dies-hero-token",
+      "highlight": "create a 1/1 colorless Hero creature token",
       "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token."
     }
   ],
@@ -15,6 +17,8 @@
       "event": "dies",
       "target": "self",
       "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token. (needs itself to die)",
+      "id": "wants-self-dies",
+      "highlight": "When this creature dies",
       "value": 1
     }
   ]

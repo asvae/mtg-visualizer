@@ -9,6 +9,8 @@
         ]
       },
       "value": 1,
+      "id": "find-artifact-to-hand",
+      "highlight": "put it into your hand",
       "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less... put it into your hand"
     }
   ],
@@ -22,6 +24,8 @@
         ]
       },
       "sourceText": "search your library ... for an artifact card with mana value 2 or less",
+      "id": "wants-artifact-in-library",
+      "highlight": "for an artifact card with mana value 2 or less",
       "value": 1
     },
     {
@@ -33,6 +37,8 @@
         ]
       },
       "sourceText": "search ... your ... graveyard for an artifact card with mana value 2 or less",
+      "id": "wants-artifact-in-graveyard",
+      "highlight": "for an artifact card with mana value 2 or less",
       "value": 1
     }
   ]

@@ -1,19 +1,24 @@
 {
   "source": [
     {
+      "id": "reanimate",
       "zone": "Battlefield",
       "controller": "you",
       "value": 1,
-      "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped."
+      "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.",
+      "highlight": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped"
     },
     {
+      "id": "exile-skeleton-spirit-zombie",
       "zone": "Exile",
       "value": 1,
-      "sourceText": "Exile target Skeleton, Spirit, or Zombie."
+      "sourceText": "Exile target Skeleton, Spirit, or Zombie.",
+      "highlight": "Exile target Skeleton, Spirit, or Zombie"
     }
   ],
   "sink": [
     {
+      "id": "wants-cheap-creature-in-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "types": {
@@ -22,9 +27,11 @@
         ]
       },
       "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.",
+      "highlight": "creature card with mana value 4 or less from your graveyard",
       "value": 1
     },
     {
+      "id": "wants-skeleton-spirit-zombie",
       "zone": "Battlefield",
       "types": {
         "hasAny": [
@@ -34,6 +41,7 @@
         ]
       },
       "sourceText": "Exile target Skeleton, Spirit, or Zombie.",
+      "highlight": "Exile target Skeleton, Spirit, or Zombie",
       "value": 1
     }
   ]

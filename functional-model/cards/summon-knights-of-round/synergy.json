@@ -1,15 +1,18 @@
 {
   "source": [
     {
+      "id": "create-knights",
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "w_2_2_knight"
       },
       "value": 5,
-      "sourceText": "I, II, III, IV — Create three 2/2 white Knight creature tokens."
+      "sourceText": "I, II, III, IV — Create three 2/2 white Knight creature tokens.",
+      "highlight": "Create three 2/2 white Knight creature tokens"
     },
     {
+      "id": "ultimate-end-indestructible",
       "event": "putCounter",
       "counterType": "Indestructible",
       "controller": "you",
@@ -21,11 +24,13 @@
         }
       },
       "value": 1,
-      "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them."
+      "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them.",
+      "highlight": "Put an indestructible counter on each of them"
     }
   ],
   "sink": [
     {
+      "id": "ultimate-end-pump-target",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -34,6 +39,7 @@
         ]
       },
       "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn.",
+      "highlight": "Other creatures you control get +2/+2 until end of turn",
       "value": 1
     }
   ]

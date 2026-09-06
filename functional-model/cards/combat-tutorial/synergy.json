@@ -1,6 +1,7 @@
 {
   "source": [
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
@@ -8,6 +9,7 @@
       "sourceText": "(implicit — not a printed clause: any sorcery goes to its owner's graveyard after it resolves, a generic MTG rule (608.2m), not specific to this card's own text.)"
     },
     {
+      "id": "counter-target",
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": {
@@ -18,11 +20,13 @@
         }
       },
       "value": 1,
-      "sourceText": "Put a +1/+1 counter on up to one target creature you control."
+      "sourceText": "Put a +1/+1 counter on up to one target creature you control.",
+      "highlight": "Put a +1/+1 counter on up to one target creature you control"
     }
   ],
   "sink": [
     {
+      "id": "wants-creature-target",
       "zone": "Battlefield",
       "types": {
         "has": [
@@ -30,6 +34,7 @@
         ]
       },
       "sourceText": "Put a +1/+1 counter on up to one target creature you control — needs a legal creature to target.",
+      "highlight": "Put a +1/+1 counter on up to one target creature you control",
       "value": 1
     }
   ]

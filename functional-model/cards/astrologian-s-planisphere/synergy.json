@@ -1,24 +1,29 @@
 {
   "source": [
     {
+      "id": "job-select-token",
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)"
+      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+      "highlight": "create a 1/1 colorless Hero creature token"
     },
     {
+      "id": "granted-spellcast-draw-counter",
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
       "value": 1,
-      "sourceText": "\"...whenever you cast a noncreature spell and whenever you draw your third card each turn, put a +1/+1 counter on this creature.\" (granted ability, both triggers collapsed into this one fact — same declarative payoff either way)"
+      "sourceText": "\"...whenever you cast a noncreature spell and whenever you draw your third card each turn, put a +1/+1 counter on this creature.\" (granted ability, both triggers collapsed into this one fact — same declarative payoff either way)",
+      "highlight": "put a +1/+1 counter on this creature"
     }
   ],
   "sink": [
     {
+      "id": "equip-2",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -27,6 +32,7 @@
         ]
       },
       "sourceText": "Diana — Equip {2} (standard Equip ability: attach to target creature you control).",
+      "highlight": "attach to target creature you control",
       "value": 1
     }
   ]

@@ -1,6 +1,7 @@
 {
   "source": [
     {
+      "id": "self-battlefield",
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",

@@ -7,6 +7,8 @@
         "token": "c_1_1_hero"
       },
       "value": 1,
+      "id": "job-select-token",
+      "highlight": "create a 1/1 colorless Hero creature token",
       "sourceText": "Job select — When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it."
     }
   ],
@@ -20,6 +22,8 @@
         ]
       },
       "sourceText": "Gae Bolg — Equip {4} (attach to target creature you control).",
+      "id": "wants-creature-equip-target",
+      "highlight": "attach to target creature you control",
       "value": 1
     }
   ]

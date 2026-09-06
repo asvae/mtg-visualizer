@@ -1,15 +1,18 @@
 {
   "source": [
     {
+      "id": "moogles-per-creature",
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "w_1_2_moogle_lifelink"
       },
       "value": 5,
-      "sourceText": "For each creature you control, create a 1/2 white Moogle creature token with lifelink."
+      "sourceText": "For each creature you control, create a 1/2 white Moogle creature token with lifelink.",
+      "highlight": "create a 1/2 white Moogle creature token with lifelink"
     },
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
@@ -19,6 +22,7 @@
   ],
   "sink": [
     {
+      "id": "wants-creatures-to-scale",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -27,6 +31,7 @@
         ]
       },
       "sourceText": "For each creature you control, create a 1/2 white Moogle creature token with lifelink (scales with existing creature count).",
+      "highlight": "For each creature you control",
       "value": 1
     }
   ]

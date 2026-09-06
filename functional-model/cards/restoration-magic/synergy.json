@@ -1,6 +1,7 @@
 {
   "source": [
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
@@ -8,16 +9,20 @@
       "sourceText": "Instant (goes to the graveyard after resolving, like any instant)."
     },
     {
+      "id": "cura-curaga-lifegain",
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Cura — {1} — ...You gain 3 life. / Curaga — {3}{W} — ...You gain 6 life."
+      "sourceText": "Cura — {1} — ...You gain 3 life. / Curaga — {3}{W} — ...You gain 6 life.",
+      "highlight": "You gain 6 life"
     }
   ],
   "sink": [
     {
+      "id": "wants-permanent-to-protect",
       "zone": "Battlefield",
       "sourceText": "Cure — {0} — Target permanent gains hexproof and indestructible until end of turn (any permanent, either side).",
+      "highlight": "gains hexproof and indestructible until end of turn",
       "value": 1
     }
   ]

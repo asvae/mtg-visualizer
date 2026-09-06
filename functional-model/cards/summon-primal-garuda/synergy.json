@@ -1,14 +1,17 @@
 {
   "source": [
     {
+      "id": "aerial-blast",
       "event": "damage",
       "controller": "you",
       "value": 5,
-      "sourceText": "I — Aerial Blast — This creature deals 4 damage to target tapped creature an opponent controls."
+      "sourceText": "I — Aerial Blast — This creature deals 4 damage to target tapped creature an opponent controls.",
+      "highlight": "deals 4 damage to target tapped creature an opponent controls"
     }
   ],
   "sink": [
     {
+      "id": "aerial-blast-target",
       "zone": "Battlefield",
       "controller": "opp",
       "types": {
@@ -17,9 +20,11 @@
         ]
       },
       "sourceText": "I — Aerial Blast — ...target tapped creature an opponent controls.",
+      "highlight": "target tapped creature an opponent controls",
       "value": 1
     },
     {
+      "id": "slipstream-target",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -28,6 +33,7 @@
         ]
       },
       "sourceText": "II, III — Slipstream — Another target creature you control gets +1/+0 and gains flying until end of turn.",
+      "highlight": "Another target creature you control",
       "value": 1
     }
   ]

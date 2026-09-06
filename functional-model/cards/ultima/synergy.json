@@ -1,39 +1,50 @@
 {
   "source": [
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — Ultima is a sorcery-shaped spell; it goes to its owner's graveyard after resolving)"
+      "sourceText": "(baseline — Ultima is a sorcery-shaped spell; it goes to its owner's graveyard after resolving)",
+      "highlight": "goes to its owner's graveyard after resolving"
     },
     {
+      "id": "wipe-graveyard-you",
       "zone": "Graveyard",
       "controller": "you",
       "value": 1,
-      "sourceText": "Destroy all artifacts and creatures. (your own permanents caught by the wipe)"
+      "sourceText": "Destroy all artifacts and creatures. (your own permanents caught by the wipe)",
+      "highlight": "Destroy all artifacts and creatures"
     },
     {
+      "id": "wipe-graveyard-opp",
       "zone": "Graveyard",
       "controller": "opp",
       "value": 1,
-      "sourceText": "Destroy all artifacts and creatures. (an opponent's permanents caught by the wipe)"
+      "sourceText": "Destroy all artifacts and creatures. (an opponent's permanents caught by the wipe)",
+      "highlight": "Destroy all artifacts and creatures"
     },
     {
+      "id": "wipe-dies-you",
       "event": "dies",
       "controller": "you",
       "value": 5,
-      "sourceText": "Destroy all artifacts and creatures. (your own permanents dying to the wipe, all at once)"
+      "sourceText": "Destroy all artifacts and creatures. (your own permanents dying to the wipe, all at once)",
+      "highlight": "Destroy all artifacts and creatures"
     },
     {
+      "id": "wipe-dies-opp",
       "event": "dies",
       "controller": "opp",
       "value": 5,
-      "sourceText": "Destroy all artifacts and creatures. (an opponent's permanents dying to the wipe, all at once)"
+      "sourceText": "Destroy all artifacts and creatures. (an opponent's permanents dying to the wipe, all at once)",
+      "highlight": "Destroy all artifacts and creatures"
     }
   ],
   "sink": [
     {
+      "id": "wipe-needs-you",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -43,9 +54,11 @@
         ]
       },
       "sourceText": "Destroy all artifacts and creatures. (needs your own artifacts/creatures present to actually destroy)",
+      "highlight": "Destroy all artifacts and creatures",
       "value": 1
     },
     {
+      "id": "wipe-needs-opp",
       "zone": "Battlefield",
       "controller": "opp",
       "types": {
@@ -55,6 +68,7 @@
         ]
       },
       "sourceText": "Destroy all artifacts and creatures. (needs an opponent's artifacts/creatures present to actually destroy)",
+      "highlight": "Destroy all artifacts and creatures",
       "value": 1
     }
   ]

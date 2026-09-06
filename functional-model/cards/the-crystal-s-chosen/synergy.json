@@ -7,6 +7,8 @@
         "token": "c_1_1_hero"
       },
       "value": 5,
+      "id": "create-hero-tokens",
+      "highlight": "Create four 1/1 colorless Hero creature tokens",
       "sourceText": "Create four 1/1 colorless Hero creature tokens."
     },
     {
@@ -21,6 +23,8 @@
         }
       },
       "value": 1,
+      "id": "pump-your-creatures",
+      "highlight": "put a +1/+1 counter on each creature you control",
       "sourceText": "Then put a +1/+1 counter on each creature you control."
     },
     {
@@ -28,6 +32,7 @@
       "controller": "you",
       "subject": "self",
       "value": 1,
+      "id": "self-graveyard",
       "sourceText": "a sorcery — goes to its owner's graveyard after resolving (rule 608.2m)"
     }
   ],
@@ -41,6 +46,8 @@
         ]
       },
       "sourceText": "put a +1/+1 counter on EACH creature you control — needs a creature already on the battlefield beyond the tokens it just made",
+      "id": "wants-creature-you-control",
+      "highlight": "put a +1/+1 counter on EACH creature you control",
       "value": 1
     }
   ]

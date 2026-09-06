@@ -1,6 +1,7 @@
 {
   "source": [
     {
+      "id": "self-battlefield",
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
@@ -8,12 +9,15 @@
       "sourceText": "Legendary Creature — Human Cleric. Whenever you gain life, put a +1/+1 counter on each Cleric you control (Minwu is itself a Cleric)."
     },
     {
+      "id": "lifegain",
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Vigilance, lifelink"
+      "sourceText": "Vigilance, lifelink",
+      "highlight": "lifelink"
     },
     {
+      "id": "counters-per-cleric",
       "event": "putCounter",
       "counterType": "+1/+1",
       "controller": "you",
@@ -26,9 +30,11 @@
         }
       },
       "value": 1,
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control."
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
+      "highlight": "put a +1/+1 counter on each Cleric you control"
     },
     {
+      "id": "self-graveyard",
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
@@ -36,6 +42,7 @@
       "sourceText": "Legendary Creature — Human Cleric (generic creature-dies-to-graveyard fact; no additional death text on this card)."
     },
     {
+      "id": "self-dies",
       "event": "dies",
       "target": "self",
       "value": 1,
@@ -44,12 +51,15 @@
   ],
   "sink": [
     {
+      "id": "wants-lifegain",
       "event": "lifegain",
       "controller": "you",
       "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
+      "highlight": "Whenever you gain life",
       "value": 1
     },
     {
+      "id": "wants-other-clerics",
       "zone": "Battlefield",
       "controller": "you",
       "types": {
@@ -59,6 +69,7 @@
         ]
       },
       "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control (needs other Clerics to benefit from).",
+      "highlight": "put a +1/+1 counter on each Cleric you control",
       "value": 1
     }
   ]

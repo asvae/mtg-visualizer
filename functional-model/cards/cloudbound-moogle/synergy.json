@@ -11,6 +11,8 @@
         }
       },
       "value": 1,
+      "id": "etb-counter",
+      "highlight": "put a +1/+1 counter on target creature",
       "sourceText": "When this creature enters, put a +1/+1 counter on target creature."
     }
   ],
@@ -23,6 +25,8 @@
         ]
       },
       "sourceText": "put a +1/+1 counter on target creature (needs a creature on the battlefield to target)",
+      "id": "wants-creature-target",
+      "highlight": "put a +1/+1 counter on target creature",
       "value": 1
     }
   ]

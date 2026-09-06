@@ -5,14 +5,17 @@
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — this sorcery goes to your graveyard after first resolving, no special ability text)"
+      "sourceText": "(baseline — this sorcery goes to your graveyard after first resolving, no special ability text)",
+      "id": "self-graveyard"
     },
     {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+      "sourceText": "Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "id": "flashback-exile",
+      "highlight": "Flashback {2}{W}{W}"
     }
   ],
   "sink": []
