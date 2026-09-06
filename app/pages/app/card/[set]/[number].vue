@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, onUnmounted, ref } from 'vue';
+import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
 import { describeFact } from '../../../../../functional-model/synergy';
 import type { Fact } from '../../../../../functional-model/synergy';
@@ -267,6 +267,32 @@ const hoveredFactKey = ref<string | null>(null);
 // different route), and the tab should stay put across that, not reset to
 // 'facts' every time; see the store's own comment for why it's still
 // session-only, not localStorage-persisted.
+// Dedicated local refs for `scenariosReview`/`interactionsReview`, NOT read
+// directly off `data.value.functionalModel` — confirmed the hard way ("ui"'s
+// own before/after test): `useFetch`'s `data` mutated in place
+// (`data.value.functionalModel[field] = ...`) never invalidated
+// `functionalModelTabs`'s own `computed()` (it only tracked `data.value`
+// itself as a dependency, not the nested property a plain in-place mutation
+// touches), so the tab label stayed frozen at whatever it read on first
+// render — no amount of re-keying the consuming component fixes that, since
+// a fresh instance still reads the same stale computed output. A plain
+// template expression (the Interactions header) "worked" only by accident
+// (any UNRELATED re-render re-evaluates it fresh), which is why the bug was
+// invisible there. These two refs are real, independently reactive state,
+// synced from the server response whenever a NEW card loads, and written
+// directly (not routed back through `data.value`) whenever the user toggles
+// one — no computed/nested-mutation trap either way.
+const scenariosReviewStatus = ref<'draft' | 'reviewed'>('draft');
+const interactionsReviewStatus = ref<'draft' | 'reviewed'>('draft');
+watch(
+  () => data.value?.functionalModel,
+  (fm) => {
+    scenariosReviewStatus.value = fm?.scenariosReview ?? 'draft';
+    interactionsReviewStatus.value = fm?.interactionsReview ?? 'draft';
+  },
+  { immediate: true }
+);
+
 // Scenarios' own label carries its `scenariosReview` status right in the
 // tab strip (user's own request — "[Draft]" is the exception worth calling
 // out; a reviewed card's tab reads plain "Scenarios", same "flag what needs
@@ -274,20 +300,22 @@ const hoveredFactKey = ref<string | null>(null);
 // badge (facts) already follows).
 const functionalModelTabs = computed(() => [
   { label: 'Facts', value: 'facts' as const },
-  { label: data.value?.functionalModel?.scenariosReview === 'reviewed' ? 'Scenarios' : 'Scenarios [Draft]', value: 'scenarios' as const },
+  { label: scenariosReviewStatus.value === 'reviewed' ? 'Scenarios' : 'Scenarios [Draft]', value: 'scenarios' as const },
   { label: 'Json', value: 'json' as const },
   { label: 'Card Definition', value: 'definition' as const },
 ]);
 
 // POSTs cards/<slug>/progress.json's own `scenariosReview`/`interactionsReview`
-// field (see server/api/card/review-status.ts) and updates the already-loaded
-// response in place — no need to refetch the whole card just for this one
-// field, and refetching would also re-run every trace live (computeTracesLive)
-// for no reason.
+// field (see server/api/card/review-status.ts) and updates the matching
+// local ref above directly — no need to refetch the whole card just for
+// this one field, and refetching would also re-run every trace live
+// (computeTracesLive) for no reason.
 const reviewStatusSaving = ref<'scenariosReview' | 'interactionsReview' | null>(null);
+const reviewStatusRefs = { scenariosReview: scenariosReviewStatus, interactionsReview: interactionsReviewStatus };
 async function toggleReviewStatus(field: 'scenariosReview' | 'interactionsReview') {
   if (!data.value?.functionalModel || reviewStatusSaving.value) return;
-  const reviewed = data.value.functionalModel[field] !== 'reviewed';
+  const statusRef = reviewStatusRefs[field];
+  const reviewed = statusRef.value !== 'reviewed';
   reviewStatusSaving.value = field;
   try {
     const res = await fetch('/api/card/review-status', {
@@ -295,9 +323,10 @@ async function toggleReviewStatus(field: 'scenariosReview' | 'interactionsReview
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: card.value!.name, field, reviewed }),
     });
-    if (res.ok && data.value?.functionalModel) {
+    if (res.ok) {
       const body = await res.json();
-      data.value.functionalModel[field] = body[field];
+      statusRef.value = body[field];
+      if (data.value?.functionalModel) data.value.functionalModel[field] = body[field];
     }
   } finally {
     reviewStatusSaving.value = null;
@@ -399,22 +428,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <!-- Same "strip only, content switched separately" split AppHeader.vue's
              own filter-mode UTabs already uses — nothing here depends on
              UTabs rendering slotted content itself. -->
-        <!-- Keyed on `scenariosReview` — UTabs doesn't pick up a label-only
-             change to an already-mounted item (confirmed by `ui`: the
-             Interactions header, a plain reactive template expression,
-             updates immediately on the SAME data mutation that leaves this
-             tab's own "[Draft]" suffix stuck until a full reload). Forcing a
-             remount on the one thing that changes this label is simpler and
-             more robust than chasing UTabs' own internal item-reactivity
-             model. -->
-        <UTabs
-          :key="data.functionalModel.scenariosReview"
-          v-model="store.functionalModelTab.value"
-          :items="functionalModelTabs"
-          variant="link"
-          size="xs"
-          class="mb-2"
-        />
+        <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
 
         <template v-if="store.functionalModelTab.value === 'facts'">
           <div v-if="synergy" class="overflow-x-auto">
@@ -453,9 +467,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
               :disabled="reviewStatusSaving === 'scenariosReview'"
               @click="toggleReviewStatus('scenariosReview')"
             >
-              {{ data.functionalModel.scenariosReview === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
+              {{ scenariosReviewStatus === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
             </button>
-            <span v-if="data.functionalModel.scenariosReview === 'reviewed'" class="text-xs text-muted">
+            <span v-if="scenariosReviewStatus === 'reviewed'" class="text-xs text-muted">
               Reviewed — this Scenarios tab's own replay content has been checked against the real card.
             </span>
           </div>
@@ -494,7 +508,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
       <div v-if="data?.interactions?.length" class="mt-4 w-full max-w-full">
         <div class="mb-1 flex items-center gap-2">
           <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">
-            {{ data.functionalModel?.interactionsReview === 'reviewed' ? 'Interactions' : 'Interactions [Draft]' }}
+            {{ interactionsReviewStatus === 'reviewed' ? 'Interactions' : 'Interactions [Draft]' }}
           </span>
           <button
             v-if="data.functionalModel"
@@ -502,7 +516,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             :disabled="reviewStatusSaving === 'interactionsReview'"
             @click="toggleReviewStatus('interactionsReview')"
           >
-            {{ data.functionalModel.interactionsReview === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
+            {{ interactionsReviewStatus === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
           </button>
         </div>
         <ul class="flex flex-col gap-1.5">
