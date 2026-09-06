@@ -296,7 +296,7 @@
         "from": 4
       },
       {
-        "label": "Turn passes to you's next Main1",
+        "label": "Pass turn to next Main1",
         "from": 17
       },
       {
@@ -308,11 +308,11 @@
         "from": 24
       },
       {
-        "label": "Turn passes to you's next Main1",
+        "label": "Pass turn to next Main1",
         "from": 32
       },
       {
-        "label": "Turn passes to you's next Main1",
+        "label": "Pass turn to next Main1",
         "from": 38
       }
     ]

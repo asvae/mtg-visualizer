@@ -178,7 +178,7 @@ export function pilotActions(pilot: EnginePilot, selfId: number): Actions {
  * extending this to a real per-permanent scan, not supported yet.
  */
 export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer, watchForSaga?: RealCard, label?: string): void {
-  pilot.beginStep(label ?? `Turn passes to ${player.name}'s next Main1`);
+  pilot.beginStep(label ?? (player.name === 'you' ? 'Pass turn to next Main1' : `Pass turn to ${player.name}'s next Main1`));
   const startTurn = pilot.engine.turn.turnNumber;
   do {
     const beforeLen = pilot.log.length;
