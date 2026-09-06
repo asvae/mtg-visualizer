@@ -110,6 +110,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Pass turn (you)",
         "from": 0
       },

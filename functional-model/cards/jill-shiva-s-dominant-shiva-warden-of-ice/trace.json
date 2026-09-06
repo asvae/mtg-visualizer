@@ -288,6 +288,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Jill, Shiva's Dominant ({2}{U})",
         "from": 0
       },

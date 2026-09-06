@@ -113,7 +113,19 @@ export function setupEnginePilot(setup: EnginePilotSetup): EnginePilot {
   advance(engine); // Draw -> Main1
 
   const log: LogEntry[] = [];
-  const actions: { label: string; from: number }[] = [];
+  // Every real action's own span already reaches the END of the log for
+  // free (the LAST one's span runs to `log.length`, nothing needed there —
+  // an "End" marker would just be a redundant duplicate of that same final
+  // snapshot under a new label, tried and reverted earlier). The gap is at
+  // the OTHER end: `stepIndex`'s minimum position already jumps to the END
+  // of the first real action (mana already tapped, etc. — see
+  // `finishEnginePilotTrace`'s own `actions` doc comment for the exact
+  // span math), with no way to see the genuinely untouched starting board.
+  // This one real "before anything happened" marker fixes that — always
+  // `from: 0`, always first, so the SECOND entry (whatever the scenario's
+  // own first real beginStep call turns out to be) still spans exactly the
+  // same real range it always did.
+  const actions: { label: string; from: number }[] = [{ label: 'Start', from: 0 }];
   const youLogging = loggingPlayer(state, you, log);
   const opponentsLogging = opponents.map((o) => loggingPlayer(state, o, log));
 

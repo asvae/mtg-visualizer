@@ -151,6 +151,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Ultima, Origin of Oblivion ({5})",
         "from": 0
       },

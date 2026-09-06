@@ -92,6 +92,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Cloud, Midgar Mercenary ({W}{W})",
         "from": 0
       },

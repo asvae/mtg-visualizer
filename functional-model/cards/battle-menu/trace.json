@@ -49,6 +49,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Battle Menu ({1}{W})",
         "from": 0
       },
@@ -123,6 +127,10 @@
       }
     ],
     "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
       {
         "label": "Cast Battle Menu ({1}{W})",
         "from": 0
@@ -218,6 +226,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Battle Menu ({1}{W})",
         "from": 0
       },
@@ -274,6 +286,10 @@
       }
     ],
     "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
       {
         "label": "Cast Battle Menu ({1}{W})",
         "from": 0

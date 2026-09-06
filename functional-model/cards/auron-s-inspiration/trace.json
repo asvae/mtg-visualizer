@@ -48,6 +48,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Auron's Inspiration ({2}{W})",
         "from": 0
       },

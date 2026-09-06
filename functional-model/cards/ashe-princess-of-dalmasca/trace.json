@@ -87,6 +87,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Ashe, Princess of Dalmasca ({2}{W})",
         "from": 0
       },

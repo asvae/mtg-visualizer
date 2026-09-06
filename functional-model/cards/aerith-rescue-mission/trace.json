@@ -61,6 +61,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Aerith Rescue Mission ({3}{W})",
         "from": 0
       },
@@ -158,6 +162,10 @@
       }
     ],
     "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
       {
         "label": "Cast Aerith Rescue Mission ({3}{W})",
         "from": 0

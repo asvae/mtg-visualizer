@@ -178,6 +178,10 @@
     ],
     "actions": [
       {
+        "label": "Start",
+        "from": 0
+      },
+      {
         "label": "Cast Summon: Bahamut ({9})",
         "from": 0
       },
@@ -378,6 +382,10 @@
       }
     ],
     "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
       {
         "label": "Cast Summon: Bahamut ({9})",
         "from": 0
