@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 10 Forest(s); opp0: a c_a_treasure_sac",
       "action": "real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice",
-      "result": "Bahamut enters, chapter I fires (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice; chapter II declines the same way; chapter III draws two real cards; chapter IV deals real damage equal to a real total mana value, then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
+      "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself — the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
       "raw": {
-        "result": "Bahamut enters, chapter I fires (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice; chapter II declines the same way; chapter III draws two real cards; chapter IV deals real damage equal to a real total mana value, then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
+        "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself — the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
         "you": {
           "libraryCount": 15,
           "basicLands": [
@@ -101,6 +101,90 @@
         "card": "Summon: Bahamut",
         "instanceId": 1,
         "name": "chapterI"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 12,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Ally Legend",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Summon: Bahamut",
+        "result": false
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Treasure",
+        "result": false
+      },
+      {
+        "fn": "destroy",
+        "target": "Treasure",
+        "controller": "opp0"
       },
       {
         "fn": "drawCard",
@@ -227,10 +311,72 @@
         "name": "chapterIV"
       },
       {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 12,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Ally Legend",
+        "result": 3
+      },
+      {
         "fn": "dealDamage",
         "source": "Summon: Bahamut",
         "target": "opp0",
-        "amount": 7
+        "amount": 3
       },
       {
         "fn": "phase",
@@ -259,31 +405,31 @@
       },
       {
         "label": "Pass turn (you)",
-        "from": 13
+        "from": 29
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 23
+        "from": 39
       },
       {
         "label": "Pass turn (you)",
-        "from": 27
+        "from": 43
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 28
+        "from": 44
       },
       {
         "label": "Pass turn (you)",
-        "from": 34
+        "from": 50
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 35
+        "from": 51
       },
       {
         "label": "Real 714.4 sacrifice — lore counters were never reset",
-        "from": 40
+        "from": 68
       }
     ]
   },

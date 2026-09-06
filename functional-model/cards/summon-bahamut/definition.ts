@@ -34,15 +34,13 @@ export const summonBahamut: CardDefinition = {
         {
           kind: 'dealDamage',
           target: 'opponents',
-          // "Total mana value of OTHER permanents you control" — this
-          // model has no mana-value field on RealCard at all (see
-          // interfaces.ts's TokenInfo/state.ts's RealCard — neither tracks
-          // it), so the real number can't be computed here. Same "trigger
-          // fixes a value once, read back downstream" pattern Kain's own
-          // custom effect uses: a scenario supplies the real total via
-          // triggerInput, this just reads it back rather than guessing 0
-          // or inventing a fake mana-value system for one card.
-          amount: (ctx) => (ctx.triggerInput?.totalManaValue as number) ?? 0,
+          // "Total mana value of OTHER permanents you control" — computed
+          // live off each real permanent's own `Card.getCMC()` (state.ts's
+          // `RealCard.cmc`, the same real field Dark Confidant's own
+          // upkeep life-loss reads), not a scenario-supplied stand-in —
+          // `wrapCard` mints a fresh object per call (state.ts), so `self`
+          // is excluded by id, not by reference equality.
+          amount: (ctx) => ctx.you.getCardsIn('Battlefield').reduce((sum, c) => (c.getId() === ctx.self.getId() ? sum : sum + c.getCMC()), 0),
         } satisfies Effect,
       ],
     },

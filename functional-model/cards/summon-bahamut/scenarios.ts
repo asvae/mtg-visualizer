@@ -1,12 +1,14 @@
 // Real engine-piloted trace (see engine-trace.ts's own header). Chapter
 // I/II's "destroy up to one target nonland permanent" has no owner
-// restriction, and this model's chooseTarget always picks the first
-// candidate in an unrestricted pool — which is self. Scenario A declines
-// both times (a real opponent permanent is present, so it's a genuine
-// choice); scenario B is a minimal, separate proof that "destroy" actually
-// fires (with no other target around, it legally, if pointlessly, destroys
-// itself) — needed since declining short-circuits before the real target
-// pool is even built (card.ts's own `declineOptional` check).
+// restriction, so the real pool is BOTH players' nonland permanents.
+// Scenario A: chapter I genuinely prefers the opponent's real Treasure over
+// Bahamut itself (`preferTarget`, real 704.5d — the token then ceases to
+// exist), then chapter II — Bahamut is the only nonland permanent left —
+// genuinely declines rather than destroying itself (a real choice, not
+// forced; declining is what lets the rest of the Saga's own chapters play
+// out at all). Scenario B is a minimal, separate proof that "destroy"
+// actually fires when it's forced to (no decline, no other target around —
+// it legally, if pointlessly, destroys itself).
 
 import { summonBahamut } from './definition';
 import { basicLandsFor } from '../../mana';
@@ -20,6 +22,11 @@ function scenarioA(): TraceResult {
   };
   const pilot = setupEnginePilot(setup);
 
+  // A real, nonzero-mana-value permanent under your own control — without
+  // one, chapter IV's real "total mana value of other permanents" sum would
+  // be a true but unillustrative 0 (your 9 lands are all mana value 0).
+  pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Ally Legend', types: ['Creature'], basePower: 2, baseToughness: 2, cmc: 3 });
+
   const bahamutReal = pilot.state.addCard(pilot.you, 'Hand', {
     name: summonBahamut.name,
     types: ['Creature', 'Enchantment'],
@@ -27,28 +34,33 @@ function scenarioA(): TraceResult {
     keywords: summonBahamut.keywords,
   });
   const actions = pilotActions(pilot, bahamutReal.id);
-  // Same ctx reused verbatim by every later chapter (resolveTop at cast,
-  // then advanceSagasAfterDrawStep) — one real "decline" choice, honored
-  // automatically each time it applies.
-  const ctx = pilot.ctxFor(bahamutReal, { declineOptional: true });
+  // Chapter I genuinely prefers the opponent's Treasure over Bahamut itself
+  // — the real pool (card.ts's own unrestricted `destroy` case) is BOTH
+  // players' nonland permanents, so without this it'd pick Bahamut (first
+  // in an unrestricted pool) and blow itself up before chapter III/IV ever
+  // get to run.
+  const ctx = pilot.ctxFor(bahamutReal, { preferTarget: (c) => c.getName() === 'Treasure' });
 
   // Cast Bahamut ({9}), real mana payment
   pilotCast(pilot, bahamutReal, summonBahamut, ctx, actions);
-  // Resolves; real 714.2b/c fires chapter I immediately — declines the destroy
+  // Resolves; real 714.2b/c fires chapter I immediately — destroys the real
+  // Treasure (704.5d: a destroyed token ceases to exist)
   pilotResolveTop(pilot);
 
-  // Real turn passage — chapter II fires on your next draw step, declines again
+  // Chapter II: the Treasure's gone now, so Bahamut itself is the only
+  // legal nonland target left — decline (a real choice, not forced) rather
+  // than destroying itself, same reasoning `preferTarget` avoided above.
+  ctx.declineOptional = true;
+
+  // Real turn passage — chapter II fires on your next draw step, declines
   advanceToPlayersNextMain1(pilot, pilot.you, bahamutReal);
 
   // Another real turn — chapter III fires: draw two cards
   advanceToPlayersNextMain1(pilot, pilot.you, bahamutReal);
 
-  // This model has no mana-value field on RealCard — supply the real
-  // number chapter IV's "total mana value" read needs.
-  ctx.triggerInput = { totalManaValue: 7 };
-
-  // Another real turn — chapter IV fires: 7 damage to the opponent (Mega
-  // Flare), then 714.4's real sacrifice (nothing reset lore counters first)
+  // Another real turn — chapter IV fires: real damage to the opponent (Mega
+  // Flare) equal to the real total mana value of Ally Legend (lands are 0),
+  // then 714.4's real sacrifice (nothing reset lore counters first)
   advanceToPlayersNextMain1(pilot, pilot.you, bahamutReal);
   if (bahamutReal.zone === 'Graveyard') {
     pilot.beginStep('Real 714.4 sacrifice — lore counters were never reset');
@@ -56,7 +68,7 @@ function scenarioA(): TraceResult {
   }
 
   const result =
-    'Bahamut enters, chapter I fires (714.2b) but declines its own destroy — a real opponent Treasure is on the battlefield the whole time, so this is a genuine choice; chapter II declines the same way; chapter III draws two real cards; chapter IV deals real damage equal to a real total mana value, then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.';
+    "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself — the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.";
   return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice', result);
 }
 
