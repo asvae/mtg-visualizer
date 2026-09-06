@@ -29,8 +29,25 @@ export interface ScryfallCard {
   digital?: boolean;
   oracle_text?: string;
   mana_cost?: string;
+  power?: string;
+  toughness?: string;
+  flavor_text?: string;
+  color_indicator?: string[];
   image_uris?: { normal: string; art_crop?: string };
-  card_faces?: { name?: string; colors?: string[]; type_line?: string; keywords?: string[]; oracle_text?: string; mana_cost?: string; image_uris?: { normal: string; art_crop?: string } }[];
+  card_faces?: {
+    name?: string;
+    colors?: string[];
+    /** A back face with no mana cost of its own (a transform DFC) prints this instead — Scryfall's own "Color Indicator: ..." line (e.g. Shiva, Warden of Ice). */
+    color_indicator?: string[];
+    type_line?: string;
+    keywords?: string[];
+    oracle_text?: string;
+    mana_cost?: string;
+    power?: string;
+    toughness?: string;
+    flavor_text?: string;
+    image_uris?: { normal: string; art_crop?: string };
+  }[];
   all_parts?: { id: string; component: string }[];
   set?: string;
   collector_number?: string;

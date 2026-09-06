@@ -26,6 +26,7 @@ import { findInteractionsForCard, annotateCardText } from '../../../../functiona
 import type { InteractionGroup, Fact, AnnotatedText } from '../../../../functional-model/synergy';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
+import { COLOR_LABEL } from '../../../../app/lib/constants';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
@@ -506,17 +507,26 @@ export default defineEventHandler(async (event) => {
     ...(usedThemeIds.has('not-processed') ? [{ id: 'not-processed', label: 'Not Processed' }] : []),
   ];
 
-  // Scryfall's own oracle text/mana cost — a DFC has neither at the top
-  // level, only per face (card_faces[].oracle_text/mana_cost), joined the
-  // same "front // back" order the rest of this route already treats a DFC's
-  // combined name as (see deckQty's own comment on the card detail page).
-  const oracleText = card.oracle_text || (card.card_faces ? card.card_faces.map((f) => f.oracle_text || '').join('\n') : '');
-  const manaCost = card.mana_cost || (card.card_faces ? card.card_faces.map((f) => f.mana_cost || '').join(' // ') : '');
-  // Full card text, same order a real printed card reads — title, mana cost,
-  // type line, then rules text — so annotateCardText's inline-linked view
-  // (app/components/FunctionalModelText.vue) reads like the whole card, not
-  // just its bottom rules-text box.
-  const cardText = `${card.name}\t${manaCost}\n\n${card.type_line || ''}\n\n${oracleText}`;
+  // Scryfall's own two-part DFC layout (scryfall.com/card/<set>/<number> —
+  // the user's own reference): each face is a FULL, independent card block —
+  // its own name/mana cost, type line (a back face with no mana cost of its
+  // own prints "Color Indicator: ..." in its place, real Scryfall
+  // convention, Shiva, Warden of Ice's own real card the reference case),
+  // oracle text, flavor text, and P/T — stacked front-then-back, separated
+  // by a rule, rather than the old lossy "just concatenate both faces' bare
+  // oracle_text" version (which silently dropped the back face's own name,
+  // type line, P/T, and flavor text entirely). A single-faced card's
+  // `cardText` is unchanged. `annotateCardText` (functional-model/synergy.ts)
+  // only ever substring-searches a fact's own `sourceText`/`highlight`
+  // within this blob — it doesn't parse structure — so this reshaping is
+  // free to add real content without touching that matching logic at all.
+  function faceText(face: { name?: string; mana_cost?: string; type_line?: string; oracle_text?: string; power?: string; toughness?: string; flavor_text?: string; color_indicator?: string[] }): string {
+    const header = face.mana_cost ? `${face.name}\t${face.mana_cost}` : (face.name ?? '');
+    const colorIndicator = !face.mana_cost && face.color_indicator?.length ? `Color Indicator: ${face.color_indicator.map((c) => COLOR_LABEL[c] ?? c).join(', ')}\n` : '';
+    const pt = face.power !== undefined && face.toughness !== undefined ? `${face.power}/${face.toughness}` : '';
+    return [header, '', `${colorIndicator}${face.type_line ?? ''}`, '', face.oracle_text ?? '', face.flavor_text ?? '', pt].filter((s) => s !== '').join('\n\n');
+  }
+  const cardText = card.card_faces?.length ? card.card_faces.map((f) => faceText(f)).join('\n\n------\n\n') : faceText(card);
 
   return {
     card: cardData,
