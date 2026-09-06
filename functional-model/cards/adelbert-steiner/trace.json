@@ -122,7 +122,11 @@
         "from": 5
       },
       {
-        "label": "Pass turn to next Main1",
+        "label": "Pass turn (you)",
+        "from": 6
+      },
+      {
+        "label": "Pass turn (opp0)",
         "from": 6
       },
       {

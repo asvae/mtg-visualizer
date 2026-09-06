@@ -177,11 +177,12 @@ export function pilotActions(pilot: EnginePilot, selfId: number): Actions {
  * own real need) — a scenario with more than one live Saga would need
  * extending this to a real per-permanent scan, not supported yet.
  */
-export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer, watchForSaga?: RealCard, label?: string): void {
-  pilot.beginStep(label ?? (player.name === 'you' ? 'Pass turn to next Main1' : `Pass turn to ${player.name}'s next Main1`));
+export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer, watchForSaga?: RealCard): void {
   const startTurn = pilot.engine.turn.turnNumber;
   do {
     const beforeLen = pilot.log.length;
+    const beforeTurn = pilot.engine.turn.turnNumber;
+    const endingPlayer = activePlayer(pilot.engine.turn, pilot.engine.players);
     const registeredBefore = watchForSaga ? pilot.engine.resolvedPermanents.get(watchForSaga.id) : undefined;
     const beforeLore = watchForSaga ? (watchForSaga.counters['LORE'] ?? 0) : 0;
     advance(pilot.engine);
@@ -204,6 +205,26 @@ export function advanceToPlayersNextMain1(pilot: EnginePilot, player: RealPlayer
           { fn: 'trigger', card: registeredBefore.card.name, instanceId: SELF_INSTANCE_ID, name: chapterName },
         );
       }
+    }
+    // A real turn boundary crossed THIS iteration (302: the active player
+    // rotates exactly once per Untap-phase entry) — its own real action, a
+    // player's own decision to pass turn, not an opaque "N turns just
+    // happened" skip. Tagged with whichever player's turn just ENDED (not
+    // whose is starting): your own remaining turn (Main2/EndOfTurn/
+    // Cleanup) ends first, THEN the opponent's whole turn happens and
+    // ends, landing back on your Main1 — two real passes in that
+    // chronological order, not one lumped wait. Checked AFTER the splice
+    // above (not before): a chapter tick's own `putCounter`/`trigger` pair
+    // gets inserted at `beforeLen`, an EARLIER log index than whatever
+    // `pilot.log.length` reads once `beginStep` below captures its own
+    // `from` — computing that after the splice keeps it accurate; before
+    // would record a `from` the splice then silently shifts out from under
+    // it. Every OTHER phase crossed along the way (Upkeep, Draw, Combat
+    // steps, ...) stays silent, tailing onto whichever "Pass turn" most
+    // recently opened — same "no beginStep = falls under whatever's open"
+    // convention `pilotTransform`'s own comment establishes.
+    if (pilot.engine.turn.turnNumber !== beforeTurn) {
+      pilot.beginStep(`Pass turn (${endingPlayer.name})`);
     }
   } while (!(PHASES[pilot.engine.turn.phaseIndex] === 'Main1' && pilot.engine.turn.turnNumber !== startTurn && pilot.engine.players[pilot.engine.turn.activePlayerIndex]!.id === player.id));
   // ONE real "we arrived" marker for the WHOLE multi-turn wait — not one

@@ -296,7 +296,11 @@
         "from": 4
       },
       {
-        "label": "Pass turn to next Main1",
+        "label": "Pass turn (you)",
+        "from": 17
+      },
+      {
+        "label": "Pass turn (opp0)",
         "from": 17
       },
       {
@@ -308,11 +312,19 @@
         "from": 24
       },
       {
-        "label": "Pass turn to next Main1",
+        "label": "Pass turn (you)",
         "from": 32
       },
       {
-        "label": "Pass turn to next Main1",
+        "label": "Pass turn (opp0)",
+        "from": 32
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 38
+      },
+      {
+        "label": "Pass turn (opp0)",
         "from": 38
       }
     ]

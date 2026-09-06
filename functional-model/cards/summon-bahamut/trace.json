@@ -186,15 +186,27 @@
         "from": 10
       },
       {
-        "label": "Pass turn to next Main1",
+        "label": "Pass turn (you)",
         "from": 13
       },
       {
-        "label": "Pass turn to next Main1",
+        "label": "Pass turn (opp0)",
+        "from": 13
+      },
+      {
+        "label": "Pass turn (you)",
         "from": 16
       },
       {
-        "label": "Pass turn to next Main1",
+        "label": "Pass turn (opp0)",
+        "from": 16
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 21
+      },
+      {
+        "label": "Pass turn (opp0)",
         "from": 21
       },
       {
