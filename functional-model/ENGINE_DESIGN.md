@@ -299,6 +299,39 @@ Exile already wipes `card.counters` via the existing 400.7 reset (the same
 mechanic Saga automation above reuses), so there's nothing left to remove
 by the time the permanent could ever be checked again.
 
+### Equip (301.5c) — `canActivateAbility`/`unsupportedCostComponent`
+
+Verified against the real pool first: 11 real Equipment cards. 7 already
+had a bare mana-only `activationCost` (`'{2}'`, e.g.) with no literal
+"Equip" text and so were already payable — but, like every other
+Equipment card, missing 301.5c's own sorcery-speed timing restriction,
+since that restriction is real-Forge tied to the permanent's card TYPE
+("Equipment"), not printed as "activate only as a sorcery" cost text the
+way `canActivateAbility`'s pre-existing text-pattern check expects. 4 more
+(Coral Sword `Equip {1}`, Magitek Scythe `Equip {2}`, Bard's Bow
+`Equip {6}`, Ultima Weapon `Equip {7}`) additionally had a literal "Equip"
+cost-string prefix that made `unsupportedCostComponent` reject them
+outright (the whole-part regex requires the ENTIRE cost component be
+`{...}` groups; "Equip {1}" fails that with the bare word "Equip" in it).
+
+Two small, narrow additions fix both real gaps at once:
+
+```ts
+// unsupportedCostComponent — strip a literal "Equip"/"Equip—" prefix
+// the same way {T} already is, BEFORE checking each part is pure mana.
+const stripped = cost.replace(/^Equip[\s—-]*/, '').replace(/\{T\}/g, '')...
+
+// canActivateAbility — 301.5c's own type-based sorcery-speed gate,
+// independent of any cost text.
+if (isEquipment(card) && !sorcerySpeedTimingOk(engine, controller)) { ... }
+```
+
+Dark Knight's Greatsword's own `Equip—Pay 3 life (activate only once each
+turn)` correctly still rejects — stripping the "Equip—" prefix leaves
+"Pay 3 life", which still isn't a pure-mana cost component, so
+Pay-life stays a real, separately-tracked gap (ENGINE_GAPS.md gap #11),
+not silently legalized by this change.
+
 ## In scope for this first slice
 
 - **Sorcery-speed timing** (307.1a/117.1a): a non-Instant/non-Flash spell can
@@ -347,6 +380,10 @@ by the time the permanent could ever be checked again.
   CR 122.1d untap-replacement and a real die→exile replacement, each
   modeled as a narrow check at the one real mutation method it intercepts
   — see "Stun and finality counters" above.
+- **Equip (301.5c)** — a real "Equip {N}" cost-string prefix now parses as
+  pure mana, and any Equipment-typeLine permanent's activation is gated to
+  sorcery-speed regardless of its own cost text — see "Equip (301.5c)"
+  above.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -398,7 +435,12 @@ sacrificed, `transformPermanent`'s own "transforms into a Saga" vs.
 `state.test.ts` also covers the stun-counter untap-replacement (both real
 casings, multi-counter decrement, and the no-counter negative path) and
 the finality-counter die→exile replacement (including a non-Graveyard
-destination correctly NOT being redirected).
+destination correctly NOT being redirected). `engine.test.ts`'s own
+`Equip (301.5c)` describe block covers a legal mana-only equip
+activation, the 301.5c timing rejection outside a main phase (even with
+no "activate only as a sorcery" cost text), an unaffordable equip cost,
+Pay-life correctly still rejecting despite the "Equip" prefix strip, and
+a non-Equipment permanent confirming no false-positive sorcery-speed gate.
 
 ## Gap analysis vs. real Forge
 

@@ -509,6 +509,61 @@ describe('canActivateAbility / activateAbility (602.1)', () => {
   });
 });
 
+describe('Equip (301.5c) — canActivateAbility/activateAbility', () => {
+  const EQUIPMENT: CardDefinition = {
+    name: 'Test Blade',
+    manaCost: '{1}',
+    typeLine: 'Artifact — Equipment',
+    activationCost: 'Equip {1}',
+    effects: [],
+  };
+
+  it('allows activating a real "Equip {N}" mana-only cost during a main phase with an empty stack', () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Battlefield', { name: EQUIPMENT.name, types: ['Artifact'] });
+    const self = wrapCard(state, permanent);
+    const youPlayer = wrapPlayer(state, you);
+    expect(canActivateAbility(engine, you, permanent, EQUIPMENT).ok).toBe(true);
+    const result = activateAbility(engine, you, permanent, EQUIPMENT, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, noopActions);
+    expect(result.ok).toBe(true);
+    expect(engine.stack.size).toBe(1);
+    // Equip has no {T} in its own cost — the Equipment itself is never
+    // tapped by activating it (real 301.5c/read of Card.java's own equip
+    // ability generation: no `Tap$ True` on the cost side).
+    expect(permanent.tapped).toBe(false);
+  });
+
+  it('rejects equip outside a main phase with an empty stack (301.5c), even though "Equip {N}" has no "activate only as a sorcery" text', () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Battlefield', { name: EQUIPMENT.name, types: ['Artifact'] });
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatBegin') advance(engine);
+    expect(canActivateAbility(engine, you, permanent, EQUIPMENT)).toEqual({ ok: false, reason: expect.stringMatching(/301\.5c/) });
+  });
+
+  it('rejects an unaffordable "Equip {N}" cost (bard-s-bow-shaped Equip {6}), mutating nothing', () => {
+    const { state, you, engine } = setupGame();
+    const expensive: CardDefinition = { ...EQUIPMENT, activationCost: 'Equip {6}' };
+    const permanent = state.addCard(you, 'Battlefield', { name: expensive.name, types: ['Artifact'] });
+    expect(canActivateAbility(engine, you, permanent, expensive)).toEqual({ ok: false, reason: expect.stringMatching(/cannot afford/) });
+    expect(you.battlefield.every((c) => !c.tapped)).toBe(true);
+  });
+
+  it('a non-mana equip cost (dark-knight-s-greatsword-shaped "Equip—Pay 3 life") still correctly rejects as unsupported — stripping "Equip" does not accidentally legalize Pay-life', () => {
+    const { state, you, engine } = setupGame();
+    const payLife: CardDefinition = { ...EQUIPMENT, activationCost: 'Equip—Pay 3 life (activate only once each turn)' };
+    const permanent = state.addCard(you, 'Battlefield', { name: payLife.name, types: ['Artifact'] });
+    expect(canActivateAbility(engine, you, permanent, payLife)).toEqual({ ok: false, reason: expect.stringMatching(/unsupported component/) });
+  });
+
+  it('a non-Equipment permanent with a {T}-cost ability is unaffected by 301.5c (no false-positive sorcery-speed gate)', () => {
+    const { state, you, engine } = setupGame();
+    const nonEquipment: CardDefinition = { name: 'Test Tapper 2', manaCost: '{1}', typeLine: 'Creature — Test', activationCost: '{T}', effects: [] };
+    const permanent = state.addCard(you, 'Battlefield', { name: nonEquipment.name, types: ['Creature'] });
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatBegin') advance(engine);
+    expect(canActivateAbility(engine, you, permanent, nonEquipment).ok).toBe(true);
+  });
+});
+
 describe('resolveCard dispatch collision (a permanent with BOTH an on:"enter" trigger AND activationCost+effects)', () => {
   function dualCard(order: string[]): CardDefinition {
     return {

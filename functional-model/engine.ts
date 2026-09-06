@@ -83,9 +83,11 @@
 //    lands (see mana.ts's own scope note — nonbasic lands/mana rocks/mana
 //    abilities are NOT recognized sources).
 //  - Activated-ability legality (602.1) — same sorcery-speed-timing/
-//    affordability shape as casting, plus real `{T}`-cost tapping. Only a
-//    {T} + mana-only cost is payable; a real Sacrifice/Crew/Equip/Pay-life/
-//    {X} cost component (common among the 312 FIN cards — see
+//    affordability shape as casting, plus real `{T}`-cost tapping, plus a
+//    real Equip {N} mana-only cost (301.5c's own sorcery-speed timing,
+//    `isEquipment`) — see "Equip (301.5c)" below. Only a {T}/Equip +
+//    mana-only cost is payable; a real Sacrifice/Crew/Pay-life/{X} cost
+//    component (common among the 312 FIN cards — see
 //    `unsupportedCostComponent`'s own doc comment) is REJECTED (a real,
 //    explicit answer), not silently mispaid.
 //  - Summoning sickness (302.6) and Defender/tapped-creature attack
@@ -278,11 +280,25 @@ function manaPortionOf(cost: string): string {
  * hit — a real, common shape, not a programming error.
  */
 function unsupportedCostComponent(cost: string): string | undefined {
-  const stripped = cost.replace(/\{T\}/g, '').replace(/\([^)]*\)/g, '');
+  // A real card's own printed "Equip {N}"/"Equip—" cost-string prefix is
+  // NOT itself an extra cost component to pay (real Forge's own
+  // `Equip.java`/`CostEquip` never generates a Sacrifice/Pay-life/etc.
+  // requirement from the bare keyword) — it's just how equip costs are
+  // templated. Stripped here the same way `{T}` is, so a mana-only equip
+  // cost ("Equip {1}", coral-sword, e.g.) parses as pure mana; a NON-mana
+  // equip cost ("Equip—Pay 3 life...", dark-knight-s-greatsword) still
+  // correctly falls through to the loop below and gets rejected, since
+  // "Pay 3 life" itself remains unsupported.
+  const stripped = cost.replace(/^Equip[\s—-]*/, '').replace(/\{T\}/g, '').replace(/\([^)]*\)/g, '');
   for (const part of stripped.split(',').map((p) => p.trim()).filter(Boolean)) {
     if (!/^(\{[^}]+\})+$/.test(part)) return part;
   }
   return undefined;
+}
+
+/** Real 301.5c: an Equipment's own equip ability can only be activated as a sorcery (same timing restriction as a land drop) — a real rule tied to the permanent's TYPE, not printed as "activate only as a sorcery" cost text the way other sorcery-speed-restricted activated abilities are (see `canActivateAbility`'s own text-pattern check just below this). Verified against the real pool: every Equipment card's own `definition.ts` here uses its bare top-level `activationCost` as its one equip ability, no `abilities` array — so "this permanent is an Equipment" is a safe, unambiguous stand-in for "this specific activated ability is the equip ability." */
+function isEquipment(card: CardDefinition): boolean {
+  return /\bEquipment\b/.test(card.typeLine);
 }
 
 /** The activationCost/`Ability.cost` string for one of `card`'s activated abilities — the single default one (`card.activationCost`) when `abilityName` is omitted, matching `resolveCard`'s own default-branch convention, or a named entry from `card.abilities` (Qiqirn Merchant's own pair, e.g.) when given. `undefined` if no such ability exists at all. */
@@ -297,10 +313,12 @@ function activationCostFor(card: CardDefinition, abilityName?: string): string |
  * structured timing field exists on `CardDefinition.activationCost`, so
  * this is a real but narrow text-pattern check, not a parsed grammar; a
  * cost with NO such text is treated as instant-speed, matching real MTG's
- * own default), and cost affordability (`{T}` + mana only —
- * `unsupportedCostComponent`'s own doc comment lists what a real card's
- * cost can contain that this engine can't pay yet: Sacrifice/Crew/Equip/
- * Pay-life/{X}). Read-only, same shape as `canCastSpell`.
+ * own default) OR real 301.5c equip-timing (`isEquipment` — type-based,
+ * not text-based, since no real Equipment card prints "activate only as
+ * a sorcery" on its own equip cost), and cost affordability (`{T}`/Equip
+ * + mana only — `unsupportedCostComponent`'s own doc comment lists what a
+ * real card's cost can contain that this engine can't pay yet:
+ * Sacrifice/Crew/Pay-life/{X}). Read-only, same shape as `canCastSpell`.
  */
 export function canActivateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, abilityName?: string): ActionResult {
   const cost = activationCostFor(card, abilityName);
@@ -308,6 +326,9 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
   if (permanent.controllerId !== controller.id) return { ok: false, reason: 'you do not control this permanent (602.1)' };
   if (/activate only as a sorcery/i.test(cost) && !sorcerySpeedTimingOk(engine, controller)) {
     return { ok: false, reason: `"${cost}" restricts this to sorcery-speed timing: only during your own main phase with an empty stack` };
+  }
+  if (isEquipment(card) && !sorcerySpeedTimingOk(engine, controller)) {
+    return { ok: false, reason: `equip abilities can only be activated as a sorcery (301.5c): only during your own main phase with an empty stack` };
   }
   if (costRequiresTap(cost) && permanent.tapped) {
     return { ok: false, reason: `"${card.name}"'s cost requires tapping it, but it's already tapped` };

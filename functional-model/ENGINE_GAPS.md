@@ -247,13 +247,25 @@ so a future pass doesn't mistake them for missing work:
     (`state.checkLegendRule`); `sba.test.ts` specifically tests two
     same-named Legendary permanents (Jill's own card is Legendary) both
     alone and combined with a lethal-damage case in the same sweep.
-11. **Activated-ability cost components beyond `{T}` + mana.** Just closed
-    partially this pass: `canActivateAbility` now explicitly REJECTS (rather
-    than silently mispaying) costs like `Sacrifice another artifact or
-    creature`, `Crew N`, `{X}`, `Pay N life` — all real, common cost shapes
-    verified by grepping every `activationCost:` string across
-    `functional-model/cards/<slug>/definition.ts`. Actually supporting them
-    (not just rejecting) is the remaining work.
+11. **Activated-ability cost components beyond `{T}` + mana.** ~~Equip
+    {N}~~ **CLOSED** — `unsupportedCostComponent` now strips a real
+    "Equip"/"Equip—" cost-string prefix the same way `{T}` is, and
+    `canActivateAbility` gates any Equipment-typeLine permanent's
+    activation to sorcery-speed (301.5c) via a new `isEquipment` check —
+    real Forge ties this restriction to the permanent's TYPE, not to
+    printed cost text, so the existing "activate only as a sorcery"
+    text-pattern check alone would've missed it. Verified against the real
+    pool: unlocks Coral Sword (`Equip {1}`), Magitek Scythe (`Equip {2}`),
+    Bard's Bow (`Equip {6}`), Ultima Weapon (`Equip {7}`) — 4 of 11 real
+    Equipment cards, the other 7 already had a bare mana-only
+    `activationCost` (no literal "Equip" text) so were already payable,
+    just (until this pass) missing the 301.5c timing gate they now also
+    get. Dark Knight's Greatsword's own `Equip—Pay 3 life` correctly still
+    rejects (Pay-life remains unsupported).
+    Still open: `Sacrifice another artifact or creature`, `Crew N`, `{X}`,
+    `Pay N life` — all real, common cost shapes verified by grepping every
+    `activationCost:` string across every card's own `definition.ts`.
+    Actually supporting them (not just rejecting) is the remaining work.
 
 ## What's already solid (don't re-litigate)
 
