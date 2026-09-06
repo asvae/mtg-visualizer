@@ -56,7 +56,21 @@
 // `sacrifice`, `move`, `putCounter`, `equip`, `animate`).
 
 import type { Card, Player, TokenInfo, ZoneType } from './interfaces';
-import {
+// Type-only — interfaces.ts's own header is explicit that these are ambient
+// `declare function` signatures with NO body, kept purely so a card
+// definition reads as code written against Forge's real shape; nothing here
+// is ever meant to run. Importing them as VALUES (as this file used to) and
+// wiring them into a `defaultActions` fallback below "worked" only because
+// esbuild-based bundlers (vitest, the app) never verify a named import
+// actually resolves to a real runtime export — Nitro's dev server routes a
+// dynamic `import()` through Rollup, which DOES verify this, and correctly
+// 500s trying to link a value with no export to bind. Every real
+// `resolveCard()` call site in this codebase already passes an explicit
+// `actions` argument (harness.ts's `loggingActions`, engine-trace.ts's
+// `pilotActions`, engine.test.ts's own fixtures) — a `defaultActions`
+// fallback was dead at the VALUE level from the start, just never linked
+// strictly enough for that to surface until now.
+import type {
   createToken as realCreateToken,
   pump as realPump,
   moveTo as realMoveTo,
@@ -113,29 +127,6 @@ export interface Actions {
   copyPermanent: typeof realCopyPermanent;
   delayUntil: typeof realDelayUntil;
 }
-const defaultActions: Actions = {
-  createToken: realCreateToken,
-  pump: realPump,
-  moveTo: realMoveTo,
-  chooseTarget: realChooseTarget,
-  move: realMove,
-  sacrifice: realSacrifice,
-  discard: realDiscard,
-  putCounter: realPutCounter,
-  equip: realEquip,
-  animate: realAnimate,
-  gainControl: realGainControl,
-  surveil: realSurveil,
-  counter: realCounter,
-  destroy: realDestroy,
-  dealDamage: realDealDamage,
-  tap: realTap,
-  untap: realUntap,
-  dig: realDig,
-  grantKeyword: realGrantKeyword,
-  copyPermanent: realCopyPermanent,
-  delayUntil: realDelayUntil,
-};
 
 /** Everything an effect needs to read at resolution time — the one argument every effect/Computed function receives. */
 export interface EffectContext {
@@ -663,7 +654,7 @@ export interface CardDefinition {
  * engine over many data records" instead of "one method implementation per
  * card."
  */
-export function resolveCard(card: CardDefinition, ctx: EffectContext, actions: Actions = defaultActions, triggerName?: string, abilityName?: string): void {
+export function resolveCard(card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName?: string, abilityName?: string): void {
   const effects = triggerName
     ? (card.triggers?.find((t) => t.name === triggerName)?.effects ?? [])
     : abilityName
