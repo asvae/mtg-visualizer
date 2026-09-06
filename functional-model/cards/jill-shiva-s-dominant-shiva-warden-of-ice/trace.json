@@ -130,7 +130,7 @@
       {
         "fn": "drawCard",
         "player": "opp0",
-        "card": "opp0-library-0"
+        "card": "Forest"
       },
       {
         "fn": "untap",
@@ -147,7 +147,7 @@
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "phase",
@@ -233,7 +233,7 @@
       {
         "fn": "drawCard",
         "player": "opp0",
-        "card": "opp0-library-1"
+        "card": "Forest"
       },
       {
         "fn": "untap",
@@ -258,7 +258,7 @@
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-1"
+        "card": "Forest"
       },
       {
         "fn": "putCounter",
@@ -296,12 +296,12 @@
       {
         "fn": "drawCard",
         "player": "opp0",
-        "card": "opp0-library-2"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-2"
+        "card": "Forest"
       },
       {
         "fn": "putCounter",

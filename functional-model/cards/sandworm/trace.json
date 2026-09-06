@@ -50,6 +50,16 @@
         "fn": "destroy",
         "target": "opp0-land-0",
         "controller": "opp0"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Battlefield",
+        "controller": "opp0"
+      },
+      {
+        "fn": "tap",
+        "target": "Forest"
       }
     ]
   },

@@ -61,7 +61,7 @@
       {
         "fn": "drawCard",
         "player": "opp0",
-        "card": "opp0-library-0"
+        "card": "Forest"
       },
       {
         "fn": "untap",
@@ -74,7 +74,7 @@
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "phase",

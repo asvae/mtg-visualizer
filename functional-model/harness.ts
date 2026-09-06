@@ -325,6 +325,23 @@ function describeAction(card: CardDefinition, scenario: Scenario): string {
 // is just a card whose `types` includes 'Creature'), just backed by real,
 // mutable objects now instead of throwaway snapshots.
 
+/**
+ * The plain, untyped hand/library filler (below) used to be a synthetic
+ * `${owner}-hand-${i}`/`${owner}-library-${i}` placeholder with no real
+ * card identity at all — nothing in this pool ever addresses one of these
+ * individually by name (every effect that needs to find ONE SPECIFIC card
+ * among many fillers already uses a dedicated typed/subtyped category
+ * instead — libraryArtifactCount/libraryLandCount/librarySubtypeCount, all
+ * still their own thing, untouched), so giving them a REAL identity is a
+ * free upgrade: a card actually drawn now looks like a real card (with real
+ * art) instead of a generic "?" placeholder. One fixed land (not a
+ * per-index rotation across several) — deliberately, so N of them collapse
+ * onto one grouped "×N" display chip (same fungible-merge every other
+ * same-named pile already gets) instead of spreading across several
+ * ungrouped single-count stacks.
+ */
+export const GENERIC_FILLER_LAND = 'Forest';
+
 /** Exported (visibility only, same behavior) so `engine-trace.ts` can build a real engine-piloted trace off the SAME board-setup logic instead of re-deriving it — see that file's own header. */
 export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState = {}): void {
   real.life = ps.life ?? 20;
@@ -384,7 +401,9 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
     state.addCard(real, 'Battlefield', { name: `${n}-land-${i}`, types: ['Land'] });
   }
   for (let i = 0; i < (ps.handCount ?? 0); i++) {
-    state.addCard(real, 'Hand', { name: `${n}-hand-${i}`, types: [] });
+    // A real basic land, not a synthetic untyped placeholder — see
+    // GENERIC_FILLER_LAND's own doc comment.
+    state.addCard(real, 'Hand', { name: GENERIC_FILLER_LAND, isTokenCard: false, types: ['Land'], subtypes: [GENERIC_FILLER_LAND] });
   }
   const libraryArtifacts = ps.libraryArtifactCount ?? 0;
   for (let i = 0; i < libraryArtifacts; i++) {
@@ -404,7 +423,9 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
   }
   const libraryPlain = Math.max(0, (ps.libraryCount ?? 0) - libraryArtifacts - libraryLands - librarySubtyped);
   for (let i = 0; i < libraryPlain; i++) {
-    state.addCard(real, 'Library', { name: `${n}-library-${i}`, types: [] });
+    // Real basic land, not a synthetic placeholder — see the `handCount`
+    // loop above's own doc comment (same reasoning applies here).
+    state.addCard(real, 'Library', { name: GENERIC_FILLER_LAND, isTokenCard: false, types: ['Land'], subtypes: [GENERIC_FILLER_LAND] });
   }
 }
 

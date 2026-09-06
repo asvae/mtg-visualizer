@@ -23,14 +23,14 @@
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "discard",
         "player": "you",
         "qty": 1,
         "cards": [
-          "you-hand-0"
+          "Forest"
         ]
       }
     ]

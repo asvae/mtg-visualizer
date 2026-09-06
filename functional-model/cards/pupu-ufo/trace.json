@@ -22,8 +22,8 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-hand-0",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "move",

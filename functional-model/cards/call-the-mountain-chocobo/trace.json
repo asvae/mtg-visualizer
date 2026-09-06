@@ -29,17 +29,35 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-0",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Mountain",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-1",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Mountain",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-2",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Mountain",
         "result": false
       },
       {

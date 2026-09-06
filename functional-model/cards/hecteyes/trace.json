@@ -26,7 +26,7 @@
         "player": "opp0",
         "qty": 1,
         "cards": [
-          "opp0-hand-0"
+          "Forest"
         ]
       }
     ]
@@ -61,7 +61,7 @@
         "player": "opp0",
         "qty": 1,
         "cards": [
-          "opp0-hand-0"
+          "Forest"
         ]
       },
       {
@@ -69,7 +69,7 @@
         "player": "opp1",
         "qty": 1,
         "cards": [
-          "opp1-hand-0"
+          "Forest"
         ]
       }
     ]

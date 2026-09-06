@@ -28,22 +28,19 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-0",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
-        "fn": "read:isLand",
-        "target": "you-library-1",
-        "result": false
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
       },
       {
-        "fn": "read:isLand",
-        "target": "you-library-2",
-        "result": false
-      },
-      {
-        "fn": "read:isLand",
-        "target": "you-library-3",
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Town",
         "result": false
       }
     ]

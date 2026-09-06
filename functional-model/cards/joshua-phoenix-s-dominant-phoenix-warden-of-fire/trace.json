@@ -25,19 +25,19 @@
         "player": "you",
         "qty": 2,
         "cards": [
-          "you-hand-0",
-          "you-hand-1"
+          "Forest",
+          "Forest"
         ]
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-1"
+        "card": "Forest"
       }
     ]
   },

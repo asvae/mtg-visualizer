@@ -30,7 +30,7 @@
         "player": "you",
         "qty": 1,
         "cards": [
-          "you-hand-0"
+          "Forest"
         ]
       },
       {
@@ -38,18 +38,18 @@
         "player": "opp0",
         "qty": 1,
         "cards": [
-          "opp0-hand-0"
+          "Forest"
         ]
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-1"
+        "card": "Forest"
       }
     ]
   },
@@ -84,7 +84,7 @@
         "player": "you",
         "qty": 1,
         "cards": [
-          "you-hand-0"
+          "Forest"
         ]
       },
       {
@@ -92,18 +92,18 @@
         "player": "opp0",
         "qty": 1,
         "cards": [
-          "opp0-hand-0"
+          "Forest"
         ]
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-1"
+        "card": "Forest"
       }
     ]
   },
@@ -177,27 +177,27 @@
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-1"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-2"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-3"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-4"
+        "card": "Forest"
       }
     ]
   },

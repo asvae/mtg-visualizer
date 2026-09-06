@@ -12,6 +12,25 @@ function lastCards(log: LogEntry[]) {
 }
 
 describe('replayTrace', () => {
+  it('seeds the self/tested card into step 0 (Start) at its real starting zone, from a cast entry', () => {
+    // Regression: Start's whole point is "the genuinely untouched starting
+    // board" — but the self card previously had NO seeding at all (its
+    // first log entry was assumed to always be the first time anyone needs
+    // to see it), so Start showed a board missing the very card under test.
+    const snapshots = replayTrace(
+      trace([
+        { fn: 'cast', card: 'Test Card', instanceId: 1, from: 'hand', cost: '{1}' },
+        { fn: 'enters', card: 'Test Card', instanceId: 1, zone: 'Battlefield' },
+      ]),
+    );
+    expect(snapshots[0]!.cards.find((c) => c.isSelf)).toMatchObject({ name: 'Test Card', zone: 'Hand' });
+  });
+
+  it('seeds the self/tested card into Start at Battlefield when its first entry is not a cast', () => {
+    const snapshots = replayTrace(trace([{ fn: 'activate', card: 'Test Permanent', instanceId: 1 }]));
+    expect(snapshots[0]!.cards.find((c) => c.isSelf)).toMatchObject({ name: 'Test Permanent', zone: 'Battlefield' });
+  });
+
   it('ceasesToExist removes the token from the board (real 111.7), not just moves it to the requested zone', () => {
     // Regression for a real bug: a bounced Treasure TOKEN was showing up
     // sitting in Hand — harness.ts's moveTo now logs ceasesToExist instead
@@ -105,6 +124,26 @@ describe('replayTrace', () => {
     for (const name of ['you-library-0', 'you-library-1', 'you-library-2']) {
       expect(cards.find((c) => c.name === name)?.zone).toBe('Hand');
     }
+  });
+
+  it('drawCard picks a DIFFERENT fungible same-named library card each time (GENERIC_FILLER_LAND), not the same one repeatedly', () => {
+    // Regression: harness.ts's plain library/hand filler is now a real
+    // basic land (GENERIC_FILLER_LAND) — every filler shares that ONE name,
+    // so drawing several needs the same "pick any matching instance in the
+    // expected zone" fix tapForMana/untap already needed for fungible lands
+    // (a plain `ensure(name)` would keep re-aliasing the SAME already-drawn
+    // instance instead of advancing a second/third one still in Library).
+    const snapshots = replayTrace({
+      scenario: { raw: { you: { libraryCount: 3 } } as never },
+      log: [
+        { fn: 'drawCard', player: 'you', card: 'Forest' },
+        { fn: 'drawCard', player: 'you', card: 'Forest' },
+      ],
+    });
+    const forests = snapshots.at(-1)!.cards.filter((c) => c.name === 'Forest');
+    expect(forests).toHaveLength(3);
+    expect(forests.filter((c) => c.zone === 'Hand')).toHaveLength(2);
+    expect(forests.filter((c) => c.zone === 'Library')).toHaveLength(1);
   });
 
   it('attack/block set visual flags that clear on the next real phase entry', () => {

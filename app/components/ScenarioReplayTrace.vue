@@ -270,7 +270,12 @@ const currentActionRawEntries = computed(() => {
     </div>
 
     <div class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-[1fr_minmax(220px,320px)]">
-      <div class="flex flex-col gap-3 rounded border border-border bg-panel p-2">
+      <!-- `min-w-0` — without it, a grid item's default min-width (`auto`)
+           refuses to shrink below its content's intrinsic width, so a wide
+           board (many cards in one zone) would grow this WHOLE grid track
+           instead of scrolling within it, pushing the actions/trace column
+           off to the right instead of staying put. -->
+      <div class="flex min-w-0 flex-col gap-3 overflow-x-auto rounded border border-border bg-panel p-2">
         <template v-for="(owner, ownerIdx) in boardOrder" :key="owner">
           <!-- Real turn/phase/active-player — only an engine-piloted trace
                ever sets these (scenarioReplay.ts's own `ReplaySnapshot.turn`/

@@ -4,6 +4,7 @@
 // Supersedes TraceViewer.vue's flat log table — same raw log, now paired
 // with a reconstructed board instead of read alone.
 import { ref, watch } from 'vue';
+import { GENERIC_FILLER_LAND } from '../../functional-model/harness';
 import type { LogEntry, Scenario } from '../../functional-model/harness';
 
 const props = defineProps<{
@@ -31,7 +32,12 @@ watch(
   () => props.traces,
   async (traces) => {
     const playerStates = traces.flatMap((t) => [t.scenario.raw?.you, ...(t.scenario.raw?.opponents ?? [])]);
-    const landNames = [...new Set(playerStates.flatMap((ps) => ps?.basicLands ?? []))];
+    // `GENERIC_FILLER_LAND` (harness.ts) — the real basic land a plain
+    // hand/library filler now uses (scenarioReplay.ts's own `seedPlayerCards`
+    // mirror) — always requested alongside any scenario's own real
+    // `basicLands`, since a plain filler's identity isn't itself a field on
+    // `PlayerState` to read off here.
+    const landNames = [...new Set([...playerStates.flatMap((ps) => ps?.basicLands ?? []), GENERIC_FILLER_LAND])];
     const tokenKeys = [...new Set(playerStates.flatMap((ps) => ps?.tokens ?? []))];
     const images: Record<string, string> = {};
     await Promise.all([

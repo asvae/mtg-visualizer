@@ -104,13 +104,13 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-0",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-1",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "moveTo",
@@ -171,23 +171,35 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-0",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-1",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-2",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-3",
-        "result": false
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",

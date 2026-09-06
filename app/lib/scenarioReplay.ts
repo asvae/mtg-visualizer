@@ -25,6 +25,7 @@
 // on that fn) — see that case's own doc comment for the remaining gap.
 
 import type { LogEntry, PlayerState, Scenario } from '../../functional-model/harness';
+import { GENERIC_FILLER_LAND } from '../../functional-model/harness';
 import type { ZoneType } from '../../functional-model/interfaces';
 import { TOKENS } from '../../functional-model/tokens';
 
@@ -87,7 +88,13 @@ function seedPlayerCards(owner: string, ps: PlayerState | undefined): ReplayCard
   for (let i = 0; i < (ps?.enchantmentsCount ?? 0); i++) push(`${n}-enchantment-${i}`, 'Battlefield');
   for (let i = 0; i < (ps?.graveyardCreatureCount ?? 0); i++) push(`${n}-gy-creature-${i}`, 'Graveyard');
   for (let i = 0; i < (ps?.landsCount ?? 0); i++) push(`${n}-land-${i}`, 'Battlefield');
-  for (let i = 0; i < (ps?.handCount ?? 0); i++) push(`${n}-hand-${i}`, 'Hand');
+  // Real basic land (harness.ts's `GENERIC_FILLER_LAND`) — not the old
+  // synthetic `${n}-hand-${i}`/`${n}-library-${i}` placeholder, so a
+  // drawn/discarded one gets real art instead of a "?" chip. Pushed
+  // unprefixed like `basicLands` above, for the same reason — and always
+  // the SAME one (not a rotation), so N of them collapse onto one grouped
+  // "×N" chip instead of spreading across several ungrouped stacks.
+  for (let i = 0; i < (ps?.handCount ?? 0); i++) push(GENERIC_FILLER_LAND, 'Hand');
   const libraryArtifacts = ps?.libraryArtifactCount ?? 0;
   for (let i = 0; i < libraryArtifacts; i++) push(`${n}-library-artifact-${i}`, 'Library');
   const libraryLands = ps?.libraryLandCount ?? 0;
@@ -95,7 +102,7 @@ function seedPlayerCards(owner: string, ps: PlayerState | undefined): ReplayCard
   const librarySubtyped = ps?.librarySubtypeCount ?? 0;
   for (let i = 0; i < librarySubtyped; i++) push(`${n}-library-${ps?.librarySubtype ?? 'subtype'}-${i}`, 'Library');
   const libraryPlain = Math.max(0, (ps?.libraryCount ?? 0) - libraryArtifacts - libraryLands - librarySubtyped);
-  for (let i = 0; i < libraryPlain; i++) push(`${n}-library-${i}`, 'Library');
+  for (let i = 0; i < libraryPlain; i++) push(GENERIC_FILLER_LAND, 'Library');
   return cards;
 }
 
@@ -182,6 +189,20 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     const candidate = cards.find((c) => c.name === name && c.zone === zone && c.tapped !== wantTapped);
     return candidate ?? ensure(name, zone);
   };
+  /**
+   * Same "several real instances share a fungible name, pick any ONE
+   * currently in the FROM zone" fix `ensureForTap` needed for lands —
+   * `GENERIC_FILLER_LAND` (harness.ts) now gives multiple Library/Hand
+   * fillers the same real land name, so a plain `ensure(name)` for a
+   * drawCard/drawCards/discard entry would keep re-aliasing the SAME
+   * already-moved instance instead of picking a genuinely different one
+   * still sitting in `fromZone`.
+   */
+  const ensureForZone = (name: string | undefined, fromZone: ZoneType): ReplayCard | undefined => {
+    if (!name) return undefined;
+    const candidate = cards.find((c) => c.name === name && c.zone === fromZone);
+    return candidate ?? ensure(name, fromZone);
+  };
   // A transforming DFC's `card` field on trigger/activate/enters/cast
   // entries names whichever FACE is currently active, not a stable id —
   // `instanceId` (present on all four) is the one thing that stays fixed
@@ -242,6 +263,33 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     activePlayer,
     phase,
   });
+
+  // The tested "self" card usually needs no seeding at all — its own first
+  // log entry (cast/activate/trigger/enters) always names it, `ensureSelf`
+  // picks it up there — EXCEPT for step 0 itself, the "Start" marker's own
+  // "before anything happened" board: without this, Start shows a board
+  // missing the one card actually being tested, reading as if it appeared
+  // from nowhere the instant the first real action runs. Pre-seeded here
+  // from whichever entry names it FIRST (SELF_INSTANCE_ID convention —
+  // instanceId only ever appears on cast/activate/trigger/enters, and the
+  // self card's own first one always logs before any other instanceId a
+  // scenario might introduce later, e.g. a duplicate legendary's second
+  // copy) — its starting zone is `cast`'s own `from` field when that's the
+  // first entry (hand/graveyard/exile), else Battlefield (already in play
+  // with no preceding cast — an activated-ability/trigger demonstration).
+  const firstSelfEntry = trace.log.find((e) => num(e.instanceId) !== undefined);
+  if (firstSelfEntry) {
+    const selfName = str(firstSelfEntry.card);
+    const selfInstanceId = num(firstSelfEntry.instanceId)!;
+    if (selfName && !byName.has(selfName)) {
+      const from = str(firstSelfEntry.from);
+      const startZone: ZoneType = firstSelfEntry.fn !== 'cast' ? 'Battlefield' : from === 'graveyard' ? 'Graveyard' : from === 'exile' ? 'Exile' : 'Hand';
+      const selfCard: ReplayCard = { name: selfName, zone: startZone, owner: 'you', tapped: false, counters: {}, keywords: new Set(), isSelf: true };
+      cards.push(selfCard);
+      byName.set(selfName, selfCard);
+      instanceCards.set(selfInstanceId, selfCard);
+    }
+  }
 
   const snapshots: ReplaySnapshot[] = [snapshotOf(0, undefined)];
   trace.log.forEach((entry, i) => {
@@ -494,20 +542,20 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // through when it was promoted off a summary-only entry).
         const names = Array.isArray(entry.cards) ? entry.cards.filter((n): n is string => typeof n === 'string') : [];
         for (const n of names) {
-          const c = ensure(n);
+          const c = ensureForZone(n, 'Hand');
           if (c) c.zone = 'Graveyard';
         }
         break;
       }
       case 'drawCard': {
-        const c = cardName ? ensure(cardName) : undefined;
+        const c = cardName ? ensureForZone(cardName, 'Library') : undefined;
         if (c) c.zone = 'Hand';
         break;
       }
       case 'drawCards': {
         const names = Array.isArray(entry.cards) ? entry.cards.filter((n): n is string => typeof n === 'string') : [];
         for (const n of names) {
-          const c = ensure(n);
+          const c = ensureForZone(n, 'Library');
           if (c) c.zone = 'Hand';
         }
         break;

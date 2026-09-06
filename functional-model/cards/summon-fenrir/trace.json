@@ -28,18 +28,24 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-0",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-1",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-2",
-        "result": false
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Battlefield",
+        "controller": "you"
       }
     ]
   },

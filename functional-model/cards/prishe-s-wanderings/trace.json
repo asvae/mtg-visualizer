@@ -23,8 +23,8 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-0",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "move",
@@ -38,13 +38,18 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 1,
+        "count": 2,
         "creatureCount": 1
       },
       {
         "fn": "read:isCreature",
         "target": "you-creature-token-0",
         "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Forest",
+        "result": false
       },
       {
         "fn": "putCounter",
@@ -86,8 +91,8 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-library-0",
-        "result": false
+        "target": "Forest",
+        "result": true
       },
       {
         "fn": "move",
@@ -101,8 +106,13 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 0,
+        "count": 1,
         "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Forest",
+        "result": false
       },
       {
         "fn": "move",

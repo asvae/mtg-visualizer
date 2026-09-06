@@ -73,12 +73,12 @@
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-0"
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-1"
+        "card": "Forest"
       },
       {
         "fn": "move",
