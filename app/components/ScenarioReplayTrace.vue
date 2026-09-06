@@ -50,8 +50,9 @@ const props = defineProps<{
   cardKeywords?: string[];
 }>();
 
-/** One or two image URLs to show for this card (front, then back for a flipping self) — undefined when this card has no real art to show (an old-style synthetic filler, `placeholderLabel` covers it instead). */
+/** One or two image URLs to show for this card (front, then back for a flipping self) — undefined when this card has no real art to show (an old-style synthetic filler, `placeholderLabel` covers it instead) OR when it's real hidden information (a card sitting in Library — real MTG rules, a library is secret; the `card-back` branch below covers that instead, even for a real-identity filler like GENERIC_FILLER_LAND that this file otherwise happily shows real art for everywhere else). */
 function imagesFor(card: GroupedReplayCard): string[] | undefined {
+  if (card.zone === 'Library') return undefined;
   if (card.isSelf) return props.cardImages?.length ? props.cardImages : undefined;
   const filler = props.fillerImages?.[card.name];
   return filler ? [filler] : undefined;

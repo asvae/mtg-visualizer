@@ -196,11 +196,16 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
    * fillers the same real land name, so a plain `ensure(name)` for a
    * drawCard/drawCards/discard entry would keep re-aliasing the SAME
    * already-moved instance instead of picking a genuinely different one
-   * still sitting in `fromZone`.
+   * still sitting in `fromZone`. ALSO scoped to `owner` — confirmed the
+   * hard way: without it, an opponent's real draw picked YOUR "Forest"
+   * out of your own library instead of theirs (both players seed the SAME
+   * fungible name, `ensureForTap` never needed owner-scoping since a
+   * tap/untap entry has no `player` field to scope by in the first place,
+   * but drawCard/drawCards/discard all do).
    */
-  const ensureForZone = (name: string | undefined, fromZone: ZoneType): ReplayCard | undefined => {
+  const ensureForZone = (name: string | undefined, fromZone: ZoneType, owner?: string): ReplayCard | undefined => {
     if (!name) return undefined;
-    const candidate = cards.find((c) => c.name === name && c.zone === fromZone);
+    const candidate = cards.find((c) => c.name === name && c.zone === fromZone && (!owner || c.owner === owner));
     return candidate ?? ensure(name, fromZone);
   };
   // A transforming DFC's `card` field on trigger/activate/enters/cast
@@ -542,20 +547,20 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // through when it was promoted off a summary-only entry).
         const names = Array.isArray(entry.cards) ? entry.cards.filter((n): n is string => typeof n === 'string') : [];
         for (const n of names) {
-          const c = ensureForZone(n, 'Hand');
+          const c = ensureForZone(n, 'Hand', player);
           if (c) c.zone = 'Graveyard';
         }
         break;
       }
       case 'drawCard': {
-        const c = cardName ? ensureForZone(cardName, 'Library') : undefined;
+        const c = cardName ? ensureForZone(cardName, 'Library', player) : undefined;
         if (c) c.zone = 'Hand';
         break;
       }
       case 'drawCards': {
         const names = Array.isArray(entry.cards) ? entry.cards.filter((n): n is string => typeof n === 'string') : [];
         for (const n of names) {
-          const c = ensureForZone(n, 'Library');
+          const c = ensureForZone(n, 'Library', player);
           if (c) c.zone = 'Hand';
         }
         break;

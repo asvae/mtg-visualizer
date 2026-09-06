@@ -146,6 +146,22 @@ describe('replayTrace', () => {
     expect(forests.filter((c) => c.zone === 'Library')).toHaveLength(1);
   });
 
+  it('drawCard scopes to the drawing PLAYER, not just any same-named card anywhere', () => {
+    // Regression: both players seed the SAME fungible GENERIC_FILLER_LAND
+    // name — an opp0 draw was picking YOUR "Forest" out of your own
+    // library instead of theirs (ensureForZone had no owner filter at
+    // all), confirmed the hard way against adelbert-steiner's own real
+    // trace (opp0's own draw was decrementing "you"'s library count).
+    const snapshots = replayTrace({
+      scenario: { raw: { you: { libraryCount: 2 }, opponents: [{ libraryCount: 2 }] } as never },
+      log: [{ fn: 'drawCard', player: 'opp0', card: 'Forest' }],
+    });
+    const cards = snapshots.at(-1)!.cards.filter((c) => c.name === 'Forest');
+    expect(cards.filter((c) => c.owner === 'you' && c.zone === 'Library')).toHaveLength(2);
+    expect(cards.filter((c) => c.owner === 'opp0' && c.zone === 'Library')).toHaveLength(1);
+    expect(cards.filter((c) => c.owner === 'opp0' && c.zone === 'Hand')).toHaveLength(1);
+  });
+
   it('attack/block set visual flags that clear on the next real phase entry', () => {
     const snapshots = replayTrace(
       trace([
