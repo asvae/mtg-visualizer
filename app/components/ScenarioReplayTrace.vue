@@ -72,6 +72,10 @@ function iconKeywords(card: GroupedReplayCard): string[] {
 
 /** This card's CURRENT power/toughness (base, then real 704.5r/107.11 layer 7d +1/+1 / -1/-1 counters, then layer 7c `pump`), or undefined when it isn't a creature right now. Self's own base comes from the real Scryfall props (`cardPower`/`cardToughness`, back-face variants once `faceName` shows a transform has flipped it) — a "*" or otherwise non-numeric base (variable P/T, e.g. Tarmogoyf) can't be added to, so those render no badge rather than a wrong number. Every other chip's base is `card.power`/`toughness` (seeded from `ps.creaturePower`, a real named token's own basePower/baseToughness, or a `createToken`/`copyPermanent` entry — see scenarioReplay.ts) — undefined for anything that isn't a creature, same "no field set = no badge" rule. Confirmed against real usage (`ui`'s own browser check on Aerith, fin/4): a +1/+1 counter alone must move this number, not just show up in the separate counter badge — the two badges together should always foot to the SAME real total a player would count on the card. */
 function ptFor(card: GroupedReplayCard): [number, number] | undefined {
+  // Only on the battlefield — a card sitting in Hand (or anywhere else
+  // off it) isn't "currently" anything; no pump/counters apply there, and
+  // the badge only means "this creature's live stats right now."
+  if (card.zone !== 'Battlefield') return undefined;
   let base: [number, number] | undefined;
   if (card.isSelf) {
     const flipped = !!card.faceName;
