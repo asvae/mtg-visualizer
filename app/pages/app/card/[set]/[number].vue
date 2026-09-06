@@ -337,7 +337,6 @@ async function toggleReviewStatus(field: 'review' | 'scenariosReview' | 'interac
       if (field === 'review') factsReviewStatus.value = body.review;
       else if (field === 'scenariosReview') scenariosReviewStatus.value = body.scenariosReview;
       else interactionsReviewStatus.value = body.interactionsReview;
-      if (data.value?.functionalModel) data.value.functionalModel[field] = body[field];
     }
   } finally {
     reviewStatusSaving.value = null;
