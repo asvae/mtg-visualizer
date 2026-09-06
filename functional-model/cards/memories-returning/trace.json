@@ -28,6 +28,24 @@
         "found": 3
       },
       {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
         "fn": "move",
         "card": "Memories Returning",
         "instanceId": 1,
@@ -64,6 +82,24 @@
         "qty": 5,
         "take": 3,
         "found": 3
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "zone": "Hand",
+        "controller": "you"
       },
       {
         "fn": "move",

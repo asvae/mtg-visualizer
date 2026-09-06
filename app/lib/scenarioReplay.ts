@@ -240,6 +240,35 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     const candidate = cards.find((c) => c.name === name && c.zone === fromZone && (!owner || c.owner === owner));
     return candidate ?? ensure(name, fromZone);
   };
+  /**
+   * Real 400.7 — an object that changes zones becomes a NEW object; nothing
+   * about its recent battlefield life (a `pump`'s own temporary continuous
+   * effect, `putCounter`'s counters, whether it happened to be tapped, a
+   * mid-scenario `grantKeyword`) carries over. Confirmed the hard way: a
+   * creature killed the same turn Landfall pumped it kept showing that
+   * +1/+0 baked into its graveyard chip's own P/T forever, instead of its
+   * real printed stats. Called right before reassigning `c.zone` in every
+   * case below that represents a permanent actually leaving the
+   * battlefield (`moveTo`/`ceasesToExist`/`move`/`destroy`/`sacrifice`/
+   * `legendRule`) — a no-op for a card that wasn't on the battlefield to
+   * begin with (a hand/library card discarded/milled, e.g.), and safe to
+   * call unconditionally since every one of those cases' own destination is
+   * never 'Battlefield' itself (that's what `enters` is for). Identity
+   * fields (`name`/`owner`/`isSelf`/`faceName`) are untouched — the replay
+   * still tracks "the same card," just resets what its last battlefield
+   * life left on it.
+   */
+  const resetOnLeavingBattlefield = (c: ReplayCard | undefined): void => {
+    if (!c || c.zone !== 'Battlefield') return;
+    c.powerMod = undefined;
+    c.toughnessMod = undefined;
+    c.counters = {};
+    c.tapped = false;
+    c.keywords = new Set();
+    c.animatedTypes = undefined;
+    c.attacking = undefined;
+    c.blocking = undefined;
+  };
   // A transforming DFC's `card` field on trigger/activate/enters/cast
   // entries names whichever FACE is currently active, not a stable id —
   // `instanceId` (present on all four) is the one thing that stays fixed
@@ -253,10 +282,11 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
   // scenario: legendRule then had only one chip to move, so the survivor
   // silently vanished too instead of staying on the battlefield).
   const instanceCards = new Map<number, ReplayCard>();
-  const ensureSelf = (entry: LogEntry, zone: ZoneType | 'Unknown'): ReplayCard | undefined => {
+  const ensureSelf = (entry: LogEntry, zone: ZoneType | 'Unknown', forceZone = false): ReplayCard | undefined => {
     const cardName = str(entry.card);
     const instanceId = num(entry.instanceId);
     let card: ReplayCard | undefined;
+    let fresh = false;
     if (instanceId !== undefined && instanceCards.has(instanceId)) {
       card = instanceCards.get(instanceId);
     } else if (cardName && byName.has(cardName)) {
@@ -267,11 +297,29 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
       // silently merged back onto the first one.
       card = { name: cardName, zone, owner: guessOwner(cardName, roles), tapped: false, counters: {}, keywords: new Set() };
       cards.push(card);
+      fresh = true;
     } else {
       card = ensure(cardName, zone);
+      fresh = true;
     }
     if (instanceId !== undefined && card) instanceCards.set(instanceId, card);
     if (card) {
+      // `forceZone` (true for 'cast' only, see its own call site) is
+      // applied even when `card` already existed — self is now ALWAYS
+      // pre-registered at Start (its own starting zone, 33bfbaa), so its
+      // later real `cast` entry always hits the already-existing branch
+      // above, and without this it silently never actually MOVED the chip
+      // to 'Stack' at all (confirmed the hard way: a cast step visibly
+      // never left Hand). NOT applied for 'trigger'/'activate' (their own
+      // call sites both pass 'Battlefield', which is only true while the
+      // permanent is STILL there — an onDies-shaped trigger fires for one
+      // that's already left, real 603.6d "last known information," so
+      // blindly forcing it back to Battlefield here would un-kill it on
+      // screen; trusting whatever an earlier real `destroy`/`enters`/etc.
+      // entry already set is the correct behavior there). A freshly
+      // created object (`fresh`) always gets the passed zone regardless —
+      // there's no prior value to trust yet.
+      if (forceZone || fresh) card.zone = zone;
       card.isSelf = true;
       if (cardName && cardName !== card.name) card.faceName = cardName;
     }
@@ -336,7 +384,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
     const cardName = str(entry.card);
     switch (fn) {
       case 'cast':
-        ensureSelf(entry, 'Stack');
+        ensureSelf(entry, 'Stack', true);
         break;
       case 'activate':
       case 'trigger':
@@ -399,6 +447,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
       }
       case 'moveTo': {
         const c = ensure(target);
+        resetOnLeavingBattlefield(c);
         if (c) c.zone = (str(entry.zone) as ZoneType | undefined) ?? c.zone;
         break;
       }
@@ -410,6 +459,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // every other never-seeded reference already falls back to — no new
         // sentinel needed, this file's own render filter already skips it.
         const c = ensure(target);
+        resetOnLeavingBattlefield(c);
         if (c) c.zone = 'Unknown';
         break;
       }
@@ -421,6 +471,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // card name, nothing to replay.
         if (cardName) {
           const c = ensure(cardName);
+          resetOnLeavingBattlefield(c);
           if (c) c.zone = (str(entry.to) as ZoneType | undefined) ?? c.zone;
         }
         break;
@@ -471,6 +522,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
       }
       case 'destroy': {
         const c = ensure(target);
+        resetOnLeavingBattlefield(c);
         if (c) c.zone = 'Graveyard';
         break;
       }
@@ -480,6 +532,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // shape split as `move` above.
         if (cardName) {
           const c = ensure(cardName);
+          resetOnLeavingBattlefield(c);
           if (c) c.zone = 'Graveyard';
         }
         break;
@@ -612,6 +665,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // itself picked. A precise fix needs `card`+`instanceId` both on
         // this fn (harness.ts/engine-trace.ts's own emitters), not done here.
         const c = ensure(cardName);
+        resetOnLeavingBattlefield(c);
         if (c) c.zone = 'Graveyard';
         break;
       }
@@ -793,7 +847,7 @@ export interface ZoneRect {
   width: number;
 }
 
-/** One owner's zone boxes for THIS snapshot's cards — widths track the actual count (plus Battlefield's own minimum), positions packed left to right with only the zones currently in use. */
+/** One owner's zone boxes for THIS snapshot's cards — widths track the actual count (plus Battlefield's own minimum), positions packed left to right with only the zones currently in use. Library is the one exception: facedown, nothing in there is ever individually distinguishable by sight, so it's ALWAYS exactly one slot wide (a plain count, see `libraryCount` below) regardless of how many distinct fungible groups it actually holds — never one card-back chip per group. */
 export function computeZoneRects(ownerCards: ReplayCard[]): ZoneRect[] {
   const counts = new Map<ZoneType, number>();
   for (const c of ownerCards) {
@@ -803,13 +857,19 @@ export function computeZoneRects(ownerCards: ReplayCard[]): ZoneRect[] {
   const rects: ZoneRect[] = [];
   let x = 0;
   for (const z of ZONE_ORDER) {
-    const slots = Math.max(z.minSlots, counts.get(z.zone) ?? 0);
+    const rawCount = counts.get(z.zone) ?? 0;
+    const slots = z.zone === 'Library' ? (rawCount > 0 ? 1 : 0) : Math.max(z.minSlots, rawCount);
     if (slots === 0) continue;
     const width = slots * CARD_LAYOUT.width + (slots - 1) * CARD_LAYOUT.gap + 2 * ZONE_PADDING.x;
     rects.push({ zone: z.zone, label: z.label, x, width });
     x += width + ZONE_GAP;
   }
   return rects;
+}
+
+/** Total real cards in `owner`'s library right now — summed off UNGROUPED cards (`qty`-summing the grouped list would work too, but this stays correct even if a caller passes raw cards) for the Library zone's own plain-number display (see `computeZoneRects`'s own doc comment). */
+export function libraryCount(cards: ReplayCard[], owner: string): number {
+  return cards.filter((c) => c.owner === owner && c.zone === 'Library').length;
 }
 
 export function boardHeight(): number {

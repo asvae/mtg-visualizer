@@ -1,15 +1,12 @@
 [
   {
     "scenario": {
-      "setup": "you: a c_a_treasure_sac; you: 2 Plains(s)",
+      "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: Flash cast on opponent's turn -> real ETB bounce -> real Landfall pump",
-      "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) \u2014 legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
+      "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; real ETB (603.6b) returns one of your own real Plains to hand (\"another permanent you control,\" no artifact restriction); later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real.",
       "raw": {
-        "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) \u2014 legal despite it not being your main phase; real ETB (603.6b) returns your own Treasure to hand; later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real; finally a second real copy enters and the real legend rule (704.5j) removes one.",
+        "result": "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; real ETB (603.6b) returns one of your own real Plains to hand (\"another permanent you control,\" no artifact restriction); later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real.",
         "you": {
-          "tokens": [
-            "c_a_treasure_sac"
-          ],
           "basicLands": [
             "Plains",
             "Plains"
@@ -74,18 +71,14 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 4,
+        "count": 3,
         "creatureCount": 1
       },
       {
-        "fn": "ceasesToExist",
-        "target": "Treasure",
+        "fn": "moveTo",
+        "target": "Plains",
         "zone": "Hand",
         "controller": "you"
-      },
-      {
-        "fn": "untap",
-        "target": "Plains"
       },
       {
         "fn": "untap",
@@ -125,17 +118,6 @@
         "target": "Ambrosia Whiteheart",
         "power": 1,
         "toughness": 0
-      },
-      {
-        "fn": "enters",
-        "card": "Ambrosia Whiteheart",
-        "instanceId": 2,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "legendRule",
-        "card": "Ambrosia Whiteheart",
-        "player": "you"
       }
     ],
     "actions": [
@@ -157,19 +139,15 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 12
+        "from": 11
       },
       {
         "label": "A real land entering",
-        "from": 15
+        "from": 14
       },
       {
         "label": "Fire onLandfall",
-        "from": 16
-      },
-      {
-        "label": "Real 704.5j legend rule \u2014 second copy enters, one is removed",
-        "from": 18
+        "from": 15
       }
     ]
   }

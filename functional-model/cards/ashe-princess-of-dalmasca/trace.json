@@ -3,17 +3,16 @@
     "scenario": {
       "setup": "you: 3 Plains(s); opp0: 1 Forest(s)",
       "action": "real engine playthrough: cast -> turn passage -> real attack -> onAttack (real dig)",
-      "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them to hand.",
+      "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them (Phoenix Down) to hand.",
       "raw": {
-        "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them to hand.",
+        "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them (Phoenix Down) to hand.",
         "you": {
           "basicLands": [
             "Plains",
             "Plains",
             "Plains"
           ],
-          "libraryCount": 8,
-          "libraryArtifactCount": 1
+          "libraryCount": 4
         },
         "opponents": [
           {
@@ -55,6 +54,12 @@
         "zone": "Battlefield"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -72,9 +77,15 @@
         "target": "Plains"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
         "fn": "drawCard",
         "player": "you",
-        "card": "you-library-artifact-0"
+        "card": "Forest"
       },
       {
         "fn": "phase",
@@ -108,7 +119,13 @@
         "qty": 5,
         "take": 1,
         "validType": "artifact",
-        "found": 0
+        "found": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Phoenix Down",
+        "zone": "Hand",
+        "controller": "you"
       }
     ],
     "actions": [
@@ -130,19 +147,19 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 9
+        "from": 10
       },
       {
         "label": "Advance to Declare Attackers",
-        "from": 11
+        "from": 13
       },
       {
         "label": "Declare Ashe as attacker",
-        "from": 12
+        "from": 14
       },
       {
         "label": "Fire onAttack",
-        "from": 14
+        "from": 16
       }
     ]
   }

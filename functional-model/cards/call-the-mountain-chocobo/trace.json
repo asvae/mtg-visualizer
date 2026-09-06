@@ -65,7 +65,9 @@
         "controller": "you",
         "token": "Bird",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
       },
       {
         "fn": "move",
@@ -107,7 +109,9 @@
         "controller": "you",
         "token": "Bird",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
       },
       {
         "fn": "move",

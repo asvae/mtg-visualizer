@@ -12,6 +12,7 @@ import {
   placeholderLabel,
   playerRoles,
   computeZoneRects,
+  libraryCount,
   boardHeight,
   groupForDisplay,
   actionEndIndices,
@@ -356,6 +357,16 @@ const currentActionRawEntries = computed(() => {
                 :style="{ left: zr.x + 'px', top: 0, width: zr.width + 'px', height: boardHeight() + 'px' }"
               >
                 <span class="absolute top-0.5 left-1 text-[9px] text-muted/50">{{ zr.label }}</span>
+                <!-- Library is facedown — nothing in there is ever
+                     individually distinguishable by sight, so it renders as
+                     a plain count instead of one card-back chip per
+                     fungible group (see computeZoneRects's own doc comment
+                     for why this zone alone is a fixed one-slot width). -->
+                <span
+                  v-if="zr.zone === 'Library'"
+                  class="absolute inset-0 flex items-center justify-center font-mono text-lg text-muted"
+                  >{{ libraryCount(snapshot.cards, owner) }}</span
+                >
               </div>
               <!-- Keyed on qty too, not just identity (`card.key` alone) —
                    a fungible pile (several same-named lands drawn one at a
@@ -372,7 +383,7 @@ const currentActionRawEntries = computed(() => {
                    directly (untouched), this only affects Vue's own vdom
                    reconciliation key. -->
               <Transition
-                v-for="card in ownerCards(owner).filter((c) => c.zone !== 'Unknown')"
+                v-for="card in ownerCards(owner).filter((c) => c.zone !== 'Unknown' && c.zone !== 'Library')"
                 :key="`${card.key}:${card.qty}`"
                 name="card-pop"
               >
@@ -401,13 +412,6 @@ const currentActionRawEntries = computed(() => {
                           :class="isHighlighted(card) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
                         />
                       </div>
-                    </div>
-                    <div
-                      v-else-if="card.zone === 'Library'"
-                      class="card-back flex h-[126px] w-[90px] items-center justify-center rounded-[3px] border transition-colors duration-300"
-                      :class="isHighlighted(card) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
-                    >
-                      <svg viewBox="0 0 24 24" class="h-8 w-8 text-white/25"><path fill="currentColor" d="M12 2 22 12 12 22 2 12Z" /></svg>
                     </div>
                     <div
                       v-else

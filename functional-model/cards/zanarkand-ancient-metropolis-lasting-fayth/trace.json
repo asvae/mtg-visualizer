@@ -61,7 +61,9 @@
         "controller": "you",
         "token": "Hero",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 1
       },
       {
         "fn": "read:getLandsInPlay",
@@ -109,7 +111,9 @@
         "controller": "you",
         "token": "Hero",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 1
       },
       {
         "fn": "read:getLandsInPlay",

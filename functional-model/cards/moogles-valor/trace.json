@@ -30,7 +30,9 @@
         "controller": "you",
         "token": "Moogle",
         "qty": 3,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 2
       },
       {
         "fn": "move",

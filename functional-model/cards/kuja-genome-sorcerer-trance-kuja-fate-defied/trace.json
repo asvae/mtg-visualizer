@@ -24,7 +24,9 @@
         "controller": "you",
         "token": "Wizard",
         "qty": 1,
-        "tapped": true
+        "tapped": true,
+        "power": 0,
+        "toughness": 1
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -73,7 +75,9 @@
         "controller": "you",
         "token": "Wizard",
         "qty": 1,
-        "tapped": true
+        "tapped": true,
+        "power": 0,
+        "toughness": 1
       },
       {
         "fn": "read:getCreaturesInPlay",

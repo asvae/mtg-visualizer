@@ -69,7 +69,9 @@
         "controller": "you",
         "token": "Elemental",
         "qty": 0,
-        "tapped": false
+        "tapped": false,
+        "power": 2,
+        "toughness": 2
       }
     ]
   },

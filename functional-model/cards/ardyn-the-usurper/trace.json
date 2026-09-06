@@ -51,7 +51,9 @@
         "controller": "you",
         "token": "opp0-gy-creature-0",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 5,
+        "toughness": 5
       }
     ]
   },

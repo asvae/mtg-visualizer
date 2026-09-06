@@ -827,6 +827,12 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       const matches = (c: RealCard) => !validType || validType === 'any' || (validType === 'artifact' && effectiveTypes(c).includes('Artifact'));
       const found = state.dig(playerOf(player), qty, take, matches);
       log.push({ fn: 'dig', player: player.getName(), qty, take, validType, found: found.length });
+      // Real per-card evidence — WHICH specific card(s) actually got taken to
+      // hand, same "who/what specifically" upgrade drawCard/tapForMana/
+      // putCounter already got (the summary entry above only ever said HOW
+      // MANY). Reuses `moveTo`'s existing shape/replay case for free —
+      // `state.dig` already really moved each of these to Hand.
+      for (const c of found) log.push({ fn: 'moveTo', target: c.name, zone: 'Hand', controller: player.getName() });
       return found.map((c) => loggingCard(state, c, log));
     },
     delayUntil: (phase, run) => {

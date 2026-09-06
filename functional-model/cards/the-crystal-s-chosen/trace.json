@@ -24,7 +24,9 @@
         "controller": "you",
         "token": "Hero",
         "qty": 4,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 1
       },
       {
         "fn": "read:getCreaturesInPlay",

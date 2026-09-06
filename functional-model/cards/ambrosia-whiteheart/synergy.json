@@ -5,26 +5,16 @@
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — Ambrosia Whiteheart is itself a permanent on your battlefield, no special ability text)"
+      "sourceText": "(baseline — Ambrosia Whiteheart is itself a permanent on your battlefield, no special ability text)",
+      "id": "self-battlefield"
     },
     {
       "zone": "Hand",
       "controller": "you",
       "value": 1,
-      "sourceText": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand."
-    },
-    {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — Ambrosia Whiteheart can die and go to your graveyard like any creature)"
-    },
-    {
-      "event": "dies",
-      "target": "self",
-      "value": 1,
-      "sourceText": "(baseline — Ambrosia Whiteheart dying, no special ability text)"
+      "sourceText": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand.",
+      "id": "bounce-produce",
+      "highlight": "return another permanent you control to its owner's hand"
     }
   ],
   "sink": [
@@ -37,13 +27,16 @@
         ]
       },
       "sourceText": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand. (NOTE: real text has no Creature-type restriction on the bounce target — this fact's type constraint looks broader than the printed ability; flagged, not corrected here.)",
-      "value": 1
+      "value": 1,
+      "id": "wants-permanent-you-control"
     },
     {
       "event": "landfall",
       "controller": "you",
       "sourceText": "Landfall — Whenever a land you control enters, Ambrosia Whiteheart gets +1/+0 until end of turn.",
-      "value": 1
+      "value": 1,
+      "id": "wants-landfall",
+      "highlight": "Whenever a land you control enters"
     }
   ]
 }

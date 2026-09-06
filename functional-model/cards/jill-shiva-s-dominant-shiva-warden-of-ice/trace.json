@@ -128,6 +128,12 @@
         "controller": "opp0"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -143,6 +149,12 @@
       {
         "fn": "untap",
         "target": "Island"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -231,6 +243,12 @@
         "keyword": "Unblockable"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -254,6 +272,12 @@
       {
         "fn": "untap",
         "target": "Island"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -294,9 +318,21 @@
         "player": "you"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 6,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 7,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -367,31 +403,31 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 21
+        "from": 22
       },
       {
         "label": "Activate Jill, Shiva's Dominant",
-        "from": 23
+        "from": 25
       },
       {
         "label": "Resolve",
-        "from": 29
+        "from": 31
       },
       {
         "label": "Pass turn (you)",
-        "from": 37
+        "from": 39
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 43
+        "from": 46
       },
       {
         "label": "Pass turn (you)",
-        "from": 50
+        "from": 54
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 51
+        "from": 56
       }
     ]
   }

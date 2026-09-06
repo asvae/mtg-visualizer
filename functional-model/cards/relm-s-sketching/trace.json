@@ -68,7 +68,9 @@
         "controller": "you",
         "token": "you-creature-token-0",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 4,
+        "toughness": 4
       },
       {
         "fn": "move",

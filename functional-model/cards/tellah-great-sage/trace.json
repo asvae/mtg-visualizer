@@ -24,7 +24,9 @@
         "controller": "you",
         "token": "Hero",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 1
       }
     ]
   },
@@ -56,7 +58,9 @@
         "controller": "you",
         "token": "Hero",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 1
       },
       {
         "fn": "drawCard",
@@ -101,7 +105,9 @@
         "controller": "you",
         "token": "Hero",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 1
       },
       {
         "fn": "drawCard",

@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> mode 0 (Attack)",
-      "result": "Attack \u2014 creates a real 2/2 white Knight creature token.",
+      "result": "Attack — creates a real 2/2 white Knight creature token.",
       "raw": {
-        "result": "Attack \u2014 creates a real 2/2 white Knight creature token.",
+        "result": "Attack — creates a real 2/2 white Knight creature token.",
         "you": {
           "basicLands": [
             "Plains",
@@ -68,9 +68,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s); opp0: a w_1_1_cat",
       "action": "real engine playthrough: cast -> mode 1 (Ability)",
-      "result": "Ability \u2014 a real target creature gets +0/+4 until end of turn.",
+      "result": "Ability — a real target creature gets +0/+4 until end of turn.",
       "raw": {
-        "result": "Ability \u2014 a real target creature gets +0/+4 until end of turn.",
+        "result": "Ability — a real target creature gets +0/+4 until end of turn.",
         "you": {
           "basicLands": [
             "Plains",
@@ -147,9 +147,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> mode 2 (Magic)",
-      "result": "Magic \u2014 destroys Behemoth, a real creature with power 4 or greater.",
+      "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
       "raw": {
-        "result": "Magic \u2014 destroys Behemoth, a real creature with power 4 or greater.",
+        "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
         "you": {
           "basicLands": [
             "Plains",
@@ -253,9 +253,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> mode 3 (Item)",
-      "result": "Item \u2014 you gain 4 real life.",
+      "result": "Item — you gain 4 real life.",
       "raw": {
-        "result": "Item \u2014 you gain 4 real life.",
+        "result": "Item — you gain 4 real life.",
         "you": {
           "basicLands": [
             "Plains",

@@ -21,7 +21,9 @@
         "controller": "you",
         "token": "Wizard",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 0,
+        "toughness": 1
       }
     ]
   }

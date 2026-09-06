@@ -59,6 +59,12 @@
         "toughness": 2
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -70,6 +76,12 @@
       {
         "fn": "untap",
         "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -153,31 +165,31 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 9
+        "from": 10
       },
       {
         "label": "Advance to Declare Attackers",
-        "from": 11
+        "from": 13
       },
       {
         "label": "Declare Steiner as attacker",
-        "from": 12
-      },
-      {
-        "label": "Advance one step",
         "from": 14
       },
       {
+        "label": "Advance one step",
+        "from": 16
+      },
+      {
         "label": "Declare no blockers",
-        "from": 15
+        "from": 17
       },
       {
         "label": "Resolve combat damage — real Lifelink",
-        "from": 15
+        "from": 17
       },
       {
         "label": "Real 704.5j legend rule — second copy enters, one is removed",
-        "from": 17
+        "from": 19
       }
     ]
   }

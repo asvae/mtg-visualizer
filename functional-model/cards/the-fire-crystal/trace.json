@@ -38,7 +38,9 @@
         "controller": "you",
         "token": "you-creature-token-0",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 1,
+        "toughness": 1
       }
     ]
   },

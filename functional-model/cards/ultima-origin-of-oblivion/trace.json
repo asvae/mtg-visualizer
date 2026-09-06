@@ -67,6 +67,12 @@
         "zone": "Battlefield"
       },
       {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
         "fn": "drawCard",
         "player": "opp0",
         "card": "Forest"
@@ -90,6 +96,12 @@
       {
         "fn": "untap",
         "target": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
       },
       {
         "fn": "drawCard",
@@ -203,19 +215,19 @@
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 13
+        "from": 14
       },
       {
         "label": "Advance to Declare Attackers",
-        "from": 15
+        "from": 17
       },
       {
         "label": "Declare Ultima as attacker",
-        "from": 16
+        "from": 18
       },
       {
         "label": "Fire onAttack",
-        "from": 18
+        "from": 20
       }
     ]
   }

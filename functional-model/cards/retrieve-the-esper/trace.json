@@ -22,7 +22,9 @@
         "controller": "you",
         "token": "Robot Warrior",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 3,
+        "toughness": 3
       },
       {
         "fn": "move",
@@ -57,7 +59,9 @@
         "controller": "you",
         "token": "Robot Warrior",
         "qty": 1,
-        "tapped": false
+        "tapped": false,
+        "power": 3,
+        "toughness": 3
       },
       {
         "fn": "putCounter",
