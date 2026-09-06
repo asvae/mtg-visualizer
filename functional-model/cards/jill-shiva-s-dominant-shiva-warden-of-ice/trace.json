@@ -1,12 +1,15 @@
 [
   {
     "scenario": {
-      "setup": "you: 5 Island(s); opp0: a c_a_treasure_sac; opp0: 1 Forest(s)",
+      "setup": "you: a c_1_1_hero; you: 5 Island(s); opp0: a c_a_treasure_sac; opp0: 1 Forest(s)",
       "action": "real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns",
       "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the real turn-based engine.",
       "raw": {
         "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the real turn-based engine.",
         "you": {
+          "tokens": [
+            "c_1_1_hero"
+          ],
           "basicLands": [
             "Island",
             "Island",
@@ -68,8 +71,8 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 6,
-        "creatureCount": 1
+        "count": 7,
+        "creatureCount": 2
       },
       {
         "fn": "read:getCardsIn",
@@ -77,6 +80,11 @@
         "zone": "Battlefield",
         "count": 2,
         "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Hero",
+        "result": false
       },
       {
         "fn": "read:isLand",
@@ -118,13 +126,6 @@
         "target": "Treasure",
         "zone": "Hand",
         "controller": "opp0"
-      },
-      {
-        "fn": "createToken",
-        "controller": "you",
-        "token": "Hero",
-        "qty": 1,
-        "tapped": false
       },
       {
         "fn": "phase",

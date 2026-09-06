@@ -7,7 +7,6 @@ import { jillShivasDominant } from './definition';
 import { basicLandsFor } from '../../mana';
 import { typesFromTypeLine, subtypesFromTypeLine } from '../../harness';
 import type { TraceResult } from '../../harness';
-import { TOKENS } from '../../tokens';
 import {
   setupEnginePilot,
   pilotActions,
@@ -21,15 +20,18 @@ import {
 } from '../../engine-trace';
 
 export function runEngineScenarios(): TraceResult[] {
-  // NOTE: the Hero token isn't seeded here — it's added after Jill's ETB
-  // resolves, below. Real ValidTgts$ Permanent.nonLand+Other has no owner
-  // restriction (card.ts's own `move` case, fixed 2026-09-06), so an ally
-  // creature present on the battlefield when the ETB fires would be an
-  // equally legal (and, since `playersFor` puts `you` first, deterministically
-  // FIRST-PICKED) bounce candidate — seeding it after keeps this scenario's
-  // "bounces the opponent's Treasure" story unambiguous.
+  // Real Hero token, seeded up front — a real target for Shiva's own
+  // chapter I/II Unblockable grant, later. Real ValidTgts$
+  // Permanent.nonLand+Other has no owner restriction (card.ts's own `move`
+  // case), so an ally creature already on the battlefield when Jill's ETB
+  // fires is an equally legal bounce candidate too — `preferTarget` below
+  // is what keeps the ETB's own "bounces the opponent's Treasure" story
+  // unambiguous, not seeding order (chapter I/II's own target pool is
+  // unaffected either way: Jill's later exile-then-return re-adds her to
+  // the end of the battlefield array, so Hero is always first in that
+  // pool regardless of when it was seeded).
   const setup: EnginePilotSetup = {
-    you: { basicLands: basicLandsFor('{3}{U}{U}'), libraryCount: 15 },
+    you: { tokens: ['c_1_1_hero'], basicLands: basicLandsFor('{3}{U}{U}'), libraryCount: 15 },
     opponents: [{ tokens: ['c_a_treasure_sac'], basicLands: ['Forest'], libraryCount: 10 }],
   };
   const pilot = setupEnginePilot(setup);
@@ -43,16 +45,13 @@ export function runEngineScenarios(): TraceResult[] {
   });
   const actions = pilotActions(pilot, jillReal.id);
 
-  // Cast Jill from hand (601), real {2}{U} mana payment
-  pilotCast(pilot, jillReal, jillShivasDominant, pilot.ctxFor(jillReal), actions);
+  // Cast Jill from hand (601), real {2}{U} mana payment. `preferTarget`: a
+  // real player's own manual pick among legal ETB bounce targets (Hero is
+  // an equally legal one) — the opponent's Treasure specifically, so this
+  // demonstrates raiding the opponent rather than bouncing your own stuff.
+  pilotCast(pilot, jillReal, jillShivasDominant, pilot.ctxFor(jillReal, { preferTarget: (c) => c.getName() === 'Treasure' }), actions);
   // Resolves; real ETB (603.6b) bounces the opponent's Treasure
   pilotResolveTop(pilot);
-
-  // Real Hero token, added only NOW (after the ETB bounce already resolved)
-  // — a real target for Shiva's own chapter I/II Unblockable grant, seeded
-  // late so it was never an ambiguous extra ETB-bounce candidate (see this
-  // file's own note above).
-  actions.createToken(pilot.ctxFor(jillReal).you, TOKENS.c_1_1_hero, 1);
 
   // Real turn passage — summoning sickness (302.6) clears
   advanceToPlayersNextMain1(pilot, pilot.you);
