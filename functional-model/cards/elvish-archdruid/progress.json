@@ -1,12 +1,12 @@
 {
   "enrichment": "ai",
   "review": "ai",
-  "verifySynergy": "pending",
+  "verifySynergy": "pass",
   "lastVerified": "2026-09-05",
-  "notes": "Non-Legendary creature with no printed death trigger and no engine way to trace it dying (no legend-rule probe available, unlike most FIN creatures which happen to be Legendary) — graveyard-self/dies baseline facts intentionally omitted rather than declared with no possible evidence. Both real abilities (anthem, mana) are staticAbilities text only — no engine support for either (see definition.ts comment).",
+  "notes": "User flagged this as a real build-around: 'very powerful anthem effect for elves... generally a super good card for elves' — prioritize once anthem engine support exists. The mana ability now has real engine support (new addMana Effect kind + Player.addMana, deliberately inert — no spendable pool modeled, just a real checkable trace line), added specifically for this card at the user's request ('we need mana producing source'). Adding activationCost meant losing the self-battlefield produce fact this card used to declare — harness.ts's lifecycleBefore/After treat ANY card.activationCost as taking over every scenario's lifecycle branch (never falls through to the plain 'enters battlefield' baseline once set), same reason Coeurl's own synergy.json has an empty source[] too — not something this card's own definition.ts can work around.",
   "textCoverageAudited": true,
   "knownGaps": [
-    "'Other Elf creatures you control get +1/+1' (continuous anthem) has no engine support — no ptFormula shape for a subtype-filtered flat P/T bonus.",
-    "'{T}: Add {G} for each Elf you control' (mana ability) has no engine support at all — this model has no mana-pool/addMana concept anywhere."
+    "'Other Elf creatures you control get +1/+1' (continuous anthem) has no engine support — no ptFormula shape for a subtype-filtered flat P/T bonus to OTHER creatures (only self-only addPerEquipmentControlled/setToCreaturesControlled exist). Real infra gap, recurring (Thranduil, Sindarin Liege hits the same wall) — worth dedicated engine work, not a one-card fix.",
+    "no self-battlefield produce fact — activationCost forces every scenario through the 'activate' lifecycle branch, which never logs 'enters' (see notes)."
   ]
 }

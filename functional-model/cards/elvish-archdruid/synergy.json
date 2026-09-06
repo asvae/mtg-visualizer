@@ -1,12 +1,24 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "id": "mana-per-elf",
+      "event": "addMana",
       "controller": "you",
-      "subject": "self",
-      "sourceText": "(baseline — Elvish Archdruid is itself a permanent on your battlefield, no special ability text)",
+      "sourceText": "{T}: Add {G} for each Elf you control.",
+      "highlight": "Add {G} for each Elf you control",
       "value": 1
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "id": "counts-elves-in-play",
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": ["Creature"]
+      },
+      "sourceText": "counts Elf creatures you control to determine how much mana this produces — not a want for a specific effect, just the read the amount is computed from",
+      "value": 1
+    }
+  ]
 }

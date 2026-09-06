@@ -32,7 +32,7 @@ import type { TokenInfo } from './interfaces';
 // ability, never cast) — `'0'` is TokenInfo(String)'s own real default for
 // an unspecified cost (TokenInfo.java's string-constructor branch), not a
 // value invented for this file.
-export const TOKENS: Record<string, TokenInfo> = {
+export const TOKENS = {
   w_1_1_cat: { name: 'Cat', manaCost: '0', types: ['Creature', 'Cat'], basePower: 1, baseToughness: 1 },
   w_1_1_cat_lifelink: { name: 'Cat', manaCost: '0', types: ['Creature', 'Cat'], basePower: 1, baseToughness: 1 },
   w_1_1_rabbit: { name: 'Rabbit', manaCost: '0', types: ['Creature', 'Rabbit'], basePower: 1, baseToughness: 1 },
@@ -65,4 +65,4 @@ export const TOKENS: Record<string, TokenInfo> = {
   // landfall token (a green 1/1 Elf, Forge's real `g_1_1_elf`), same
   // ad-hoc-addition precedent as b_2_2_horror/c_1_1_hero above.
   g_1_1_elf: { name: 'Elf', manaCost: '0', types: ['Creature', 'Elf'], basePower: 1, baseToughness: 1 },
-};
+} satisfies Record<string, TokenInfo>;

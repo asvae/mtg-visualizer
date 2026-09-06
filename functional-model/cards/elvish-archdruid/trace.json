@@ -2,22 +2,126 @@
   {
     "scenario": {
       "setup": "",
-      "action": "cast from hand",
-      "result": "enters the battlefield, no other effect (both abilities are documentary text — see definition.ts comment)"
+      "action": "activated ({T})",
+      "result": "enters the battlefield, no other effect (the anthem is documentary text — see definition.ts comment)",
+      "raw": {
+        "result": "enters the battlefield, no other effect (the anthem is documentary text — see definition.ts comment)"
+      }
     },
     "log": [
       {
-        "fn": "cast",
+        "fn": "activate",
         "card": "Elvish Archdruid",
         "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{G}{G}"
+        "cost": "{T}"
       },
       {
-        "fn": "enters",
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Elvish Archdruid",
+        "subtype": "Elf",
+        "result": true
+      },
+      {
+        "fn": "addMana",
+        "player": "you",
+        "color": "G",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({T})",
+      "result": "adds {G} for each Elf you control — itself only (1 Elf, itself)",
+      "raw": {
+        "result": "adds {G} for each Elf you control — itself only (1 Elf, itself)",
+        "you": {
+          "creaturesCount": 0
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
         "card": "Elvish Archdruid",
         "instanceId": 1,
-        "zone": "Battlefield"
+        "cost": "{T}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Elvish Archdruid",
+        "subtype": "Elf",
+        "result": true
+      },
+      {
+        "fn": "addMana",
+        "player": "you",
+        "color": "G",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Elf creature(s)",
+      "action": "activated ({T})",
+      "result": "adds {G} for each Elf you control — itself plus 2 other Elves (3 total)",
+      "raw": {
+        "result": "adds {G} for each Elf you control — itself plus 2 other Elves (3 total)",
+        "you": {
+          "creaturesCount": 2,
+          "creatureSubtypes": [
+            "Elf"
+          ]
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elvish Archdruid",
+        "instanceId": 1,
+        "cost": "{T}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-0",
+        "subtype": "Elf",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-creature-token-1",
+        "subtype": "Elf",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Elvish Archdruid",
+        "subtype": "Elf",
+        "result": true
+      },
+      {
+        "fn": "addMana",
+        "player": "you",
+        "color": "G",
+        "amount": 3
       }
     ]
   }
