@@ -331,6 +331,13 @@ watch(stepIndex, (i) => {
                       </div>
                     </div>
                     <div
+                      v-else-if="card.zone === 'Library'"
+                      class="card-back flex h-[126px] w-[90px] items-center justify-center rounded-[3px] border transition-colors duration-300"
+                      :class="highlighted.has(card.name) ? 'border-warn ring-1 ring-warn/60' : 'border-border-subtle'"
+                    >
+                      <svg viewBox="0 0 24 24" class="h-8 w-8 text-white/25"><path fill="currentColor" d="M12 2 22 12 12 22 2 12Z" /></svg>
+                    </div>
+                    <div
                       v-else
                       class="flex h-[126px] w-[90px] items-center justify-center rounded-[3px] border font-mono text-[9px] transition-colors duration-300"
                       :class="highlighted.has(card.name) ? 'border-warn bg-warn/10 text-text' : 'border-border-subtle bg-surface text-muted'"
@@ -429,6 +436,15 @@ watch(stepIndex, (i) => {
 </template>
 
 <style scoped>
+/* A generic MTG card-back look for a Library-zone filler chip — no real
+   Scryfall "back of any card" image exists to fetch (checked; nothing
+   stable enough to depend on), so this is a plain CSS approximation
+   instead: a dark radial ground plus the rhombus outline every real Magic
+   card back centers, not an attempt at a pixel match. */
+.card-back {
+  background: radial-gradient(circle at 50% 40%, #3a2a1e 0%, #1a1006 70%, #0d0803 100%);
+}
+
 /* A real DFC flip (rotateY), not a cut — Tailwind has no 3D-transform
    utilities, so this one bit of visual behavior lives in plain CSS. */
 .flip-outer {
