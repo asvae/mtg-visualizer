@@ -101,7 +101,7 @@ describe('a plain Saga (714.2b/c/714.3a/b/714.4) — cast, chapters across turns
     expect(canCastSpell(engine, you, card).ok).toBe(true);
     castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), actions);
     resolveTop(engine);
-    expect(real.counters['lore']).toBe(1);
+    expect(real.counters['LORE']).toBe(1);
     expect(order).toEqual(['chapterI']);
     expect(real.zone).toBe('Battlefield');
   });
@@ -117,12 +117,12 @@ describe('a plain Saga (714.2b/c/714.3a/b/714.4) — cast, chapters across turns
     resolveTop(engine); // chapterI, lore=1
 
     toYourNextMain1(engine); // your next draw step -> chapterII, lore=2
-    expect(real.counters['lore']).toBe(2);
+    expect(real.counters['LORE']).toBe(2);
     expect(order).toEqual(['chapterI', 'chapterII']);
     expect(real.zone).toBe('Battlefield');
 
     toYourNextMain1(engine); // chapterIII, lore=3
-    expect(real.counters['lore']).toBe(3);
+    expect(real.counters['LORE']).toBe(3);
     expect(order).toEqual(['chapterI', 'chapterII', 'chapterIII']);
     expect(real.zone).toBe('Battlefield');
 
@@ -147,7 +147,7 @@ describe('a plain Saga (714.2b/c/714.3a/b/714.4) — cast, chapters across turns
       advance(engine);
     } while (!(PHASES[engine.turn.phaseIndex] === 'Main1' && engine.turn.turnNumber !== startTurn && engine.turn.activePlayerIndex === 1));
 
-    expect(real.counters['lore']).toBe(1); // unchanged — that was the OPPONENT's draw step
+    expect(real.counters['LORE']).toBe(1); // unchanged — that was the OPPONENT's draw step
     expect(order).toEqual(['chapterI']);
   });
 });
@@ -169,7 +169,7 @@ describe('a transforming Saga whose final chapter exiles-and-returns itself is N
 
     expect(order).toEqual(['chapterI', 'chapterII', 'chapterIII']);
     expect(real.zone).toBe('Battlefield'); // survived — NOT in the graveyard
-    expect(real.counters['lore'] ?? 0).toBe(0); // reset by the exile+return (400.7), not left at 3
+    expect(real.counters['LORE'] ?? 0).toBe(0); // reset by the exile+return (400.7), not left at 3
   });
 });
 
@@ -183,13 +183,13 @@ describe('transformPermanent — a permanent transforming INTO a Saga starts its
     const actions = testActions(state);
     castSpell(engine, you, real, frontFace, ctx, actions);
     resolveTop(engine); // front face enters — not a Saga, no lore counter yet
-    expect(real.counters['lore'] ?? 0).toBe(0);
+    expect(real.counters['LORE'] ?? 0).toBe(0);
 
     const order: string[] = [];
     const backFace = plainSaga(order, 3);
     transformPermanent(engine, real, backFace, ctx, actions);
 
-    expect(real.counters['lore']).toBe(1);
+    expect(real.counters['LORE']).toBe(1);
     expect(order).toEqual(['chapterI']);
   });
 
@@ -204,7 +204,7 @@ describe('transformPermanent — a permanent transforming INTO a Saga starts its
     castSpell(engine, you, real, frontFace, ctx, actions);
     resolveTop(engine);
     transformPermanent(engine, real, otherFace, ctx, actions);
-    expect(real.counters['lore'] ?? 0).toBe(0);
+    expect(real.counters['LORE'] ?? 0).toBe(0);
   });
 });
 
@@ -215,7 +215,7 @@ describe('advanceSaga — defensive/no-op paths', () => {
     const real = state.addCard(you, 'Battlefield', { name: notASaga.name, types: ['Creature'] });
     const self = wrapCard(state, real);
     advanceSaga(engine, real, { card: notASaga, ctx: ctxFor(state, self, youPlayer, [oppPlayer]), actions: testActions(state) });
-    expect(real.counters['lore'] ?? 0).toBe(0);
+    expect(real.counters['LORE'] ?? 0).toBe(0);
   });
 
   it('does nothing once a Saga has already reached its greatest chapter number', () => {

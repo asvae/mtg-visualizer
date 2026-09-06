@@ -64,6 +64,16 @@
 //  - "Skip the next lore counter"/"add an EXTRA lore counter" effects
 //    (real but rare) are not modeled — no FIN card in this pool needs
 //    either (checked).
+//  - Counter key is `'LORE'` (uppercase), NOT the more natural-looking
+//    lowercase `'lore'` — `functional-model/cards/clash-of-the-eikons`'s
+//    own two `putCounterTarget` effects ("put/remove a lore counter on
+//    target Saga you control") already use uppercase `'LORE'`, and
+//    `RealCard.counters` keys are plain case-sensitive strings (no
+//    canonicalization layer exists). Using a different case here would
+//    silently desync this file's own bookkeeping from that card's real
+//    effect on the same permanent instead of erroring — matched to the
+//    existing card rather than the other way around, since `cards/*` is
+//    out of scope to edit.
 
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { resolveCard } from './card';
@@ -116,11 +126,11 @@ export function advanceSaga(engine: GameEngine, real: RealCard, registered: Reso
   if (!isSaga(card)) return;
   if (real.zone !== 'Battlefield') return;
   const max = maxChapterOf(card);
-  const lore = real.counters['lore'] ?? 0;
+  const lore = real.counters['LORE'] ?? 0;
   if (max === 0 || lore >= max) return;
 
   const nextCount = lore + 1;
-  engine.state.putCounter(real, 'lore', 1);
+  engine.state.putCounter(real, 'LORE', 1);
   const chapterName = CHAPTER_NAMES[nextCount - 1]!;
   const trigger = card.triggers?.find((t) => t.name === chapterName);
   if (trigger) resolveCard(card, registered.ctx, registered.actions, trigger.name);
@@ -130,7 +140,7 @@ export function advanceSaga(engine: GameEngine, real: RealCard, registered: Reso
     // already reset this permanent's lore counters via a real zone change
     // (a transform-back, e.g.) — see this file's own header for why this
     // is the correct, general signal rather than a per-card special case.
-    if (real.zone === 'Battlefield' && (real.counters['lore'] ?? 0) === nextCount) {
+    if (real.zone === 'Battlefield' && (real.counters['LORE'] ?? 0) === nextCount) {
       const controller = engine.players.find((p) => p.id === real.controllerId);
       if (controller) engine.state.sacrifice(controller, 1, (c) => c.id === real.id);
     }
