@@ -14,7 +14,7 @@
 // whole functional-model corpus. GET (no body) still works identically to
 // before, unscoped, same as a plain page reload with no filter active.
 
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -115,14 +115,37 @@ interface FunctionalModelData {
 // if the card's real oracle text ever changes between requests (a DB
 // re-sync) without the folder itself changing.
 const FM_FOLDER_FILES = ['definition.ts', 'scenarios.ts', 'progress.json', 'synergy.json'] as const;
+// Every engine-piloted trace is computed by ACTUALLY EXECUTING
+// run-one-card.mjs, which imports engine-trace.ts/harness.ts/card.ts/
+// engine.ts/state.ts/turn.ts/saga.ts/sba.ts/mana.ts/tokens.ts/interfaces.ts/
+// synergy.ts — the shared engine core every card's own scenario runs
+// against, not just its own folder's files. `FM_FOLDER_FILES` alone missed
+// this entirely: editing engine-trace.ts (say) never changed a single
+// card's own signature, so every card kept serving whatever got cached
+// before that edit until the server itself restarted — confirmed the hard
+// way, a live request kept serving a "Turn passes to you's next Main1"
+// label two real fixes after that wording was corrected in source. Read
+// fresh each call (not hardcoded) so a NEW shared file added later is
+// covered automatically, same as `FM_FOLDER_FILES`'s own per-card list
+// covers whatever's actually there — cheap (a handful of `.ts` files, one
+// readdir + stat each), same "cheap enough to check every request"
+// philosophy this cache already runs on.
+function sharedEngineSignature(): string {
+  const dir = join(process.cwd(), 'functional-model');
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith('.ts'))
+    .map((e) => `${e.name}:${statSync(join(dir, e.name)).mtimeMs}`)
+    .join('|');
+}
 function functionalModelSignature(slug: string): string {
-  return FM_FOLDER_FILES.map((f) => {
+  const perCard = FM_FOLDER_FILES.map((f) => {
     try {
       return `${f}:${statSync(join(process.cwd(), `functional-model/cards/${slug}/${f}`)).mtimeMs}`;
     } catch {
       return `${f}:x`;
     }
   }).join('|');
+  return `${perCard}||${sharedEngineSignature()}`;
 }
 // Computing traces live means actually EXECUTING the card's own
 // engine-scenario.ts/scenarios.ts — tried as a plain in-process dynamic
