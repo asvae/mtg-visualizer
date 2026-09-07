@@ -467,7 +467,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                       :title="fact.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
                     />
                   </td>
-                  <td class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted first-letter:uppercase">{{ describeFact(fact) }}</td>
+                  <td
+                    class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted first-letter:uppercase"
+                    :title="fact.sourceText"
+                  >
+                    {{ describeFact(fact) }}
+                  </td>
                   <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">{{ factConditions(fact) }}</td>
                 </tr>
               </tbody>
