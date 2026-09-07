@@ -13,6 +13,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Fact, PoolCard } from '../../functional-model/synergy';
+import { fmBundle } from './fmBundle';
 
 function isV2Shaped(synergy: { source?: unknown[]; sink?: unknown[] }): boolean {
   const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
@@ -48,10 +49,12 @@ export function loadCardSynergy(slug: string): { source: Fact[]; sink: Fact[] } 
 // specifier here resolves against THAT bundle's directory at runtime, not
 // this source file's — confirmed the hard way, every import silently
 // resolved outside the project entirely and the whole pool came back empty.
-// Not verified to survive a production `nuxt build` (the raw
-// functional-model/ source tree may not ship in a production bundle at
-// all); this project currently only runs via `npm run dev`, so that's
-// untested, not fixed.
+// Dev-only: none of this (readdirSync over functional-model/cards/, a
+// dynamic import() of an arbitrary slug's definition.ts) survives a
+// production Netlify Function bundle — confirmed in prod as ENOENT scandir
+// '/var/task/functional-model'. loadFunctionalModelPool below branches to
+// fmBundle.ts's statically-imported, build-time-generated snapshot in
+// production instead (see scripts/build-fm-bundle.mjs).
 // Cheap stat-only signature (no JSON.parse, no dynamic import) covering
 // every card folder's synergy.json + definition.ts mtimes, plus the slug
 // list itself (so an added/removed folder changes the signature even if
@@ -75,6 +78,19 @@ function poolSignature(cardsDir: string, slugs: string[]): string {
 let poolCache: { signature: string; pool: PoolCard[] } | null = null;
 
 export async function loadFunctionalModelPool(): Promise<PoolCard[]> {
+  // Production: build the pool from fmBundle.ts's statically-imported,
+  // build-time-generated snapshot (scripts/build-fm-bundle.mjs) instead of
+  // scanning/importing functional-model/cards/ off disk — see this
+  // function's own header comment above for why that never survives a
+  // Netlify Function bundle. `poolFacts` carries just the CardDefinition
+  // fields (name/manaCost/typeLine/cmc/pt) the matcher (synergy.ts's
+  // staticAttrsFor/resolveSubject) ever actually reads off `PoolCard.card`.
+  if (process.env.NODE_ENV === 'production') {
+    return Object.values(fmBundle)
+      .filter((entry): entry is typeof entry & { synergy: NonNullable<typeof entry.synergy> } => entry.synergy !== null)
+      .map((entry) => ({ name: entry.name, card: entry.poolFacts, source: entry.synergy.source, sink: entry.synergy.sink }));
+  }
+
   const cardsDir = join(process.cwd(), 'functional-model/cards');
   let slugs: string[];
   try {

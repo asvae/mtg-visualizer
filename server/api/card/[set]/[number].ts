@@ -27,6 +27,7 @@ import type { InteractionGroup, Fact } from '../../../../functional-model/synerg
 import type { AnnotatedCard } from '../../../../app/types';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
+import { fmBundle } from '../../../utils/fmBundle';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
@@ -59,15 +60,26 @@ function loadJsonFresh<T>(relativePath: string, bundled: T): T {
 // (only a hand-built subset of cards exist in this design so far, see
 // functional-model/cards/).
 //
-// Traces are computed LIVE, in-process, on every cache-miss (see
+// In DEV, traces are computed LIVE, in-process, on every cache-miss (see
 // loadFunctionalModel below) — not read from the committed trace.json.
 // runScenarios/runEngineScenarios are pure and deterministic, so this gives
 // the identical result, just always fresh: editing a card's scenarios.ts/
 // engine-scenario.ts and reloading the page shows the change immediately,
-// no `run-scenarios.mjs` step needed. trace.json itself stays committed and
-// unread by this route — it's still what functional-model/scripts/
-// verify-synergy.mjs and run-scenarios.mjs themselves read/write, a
-// separate corpus-wide batch/CI path this route has nothing to do with.
+// no `run-scenarios.mjs` step needed.
+//
+// In PRODUCTION, none of that survives a Netlify Function bundle (spawning
+// vite-node, readFileSync/readdirSync against the raw functional-model/
+// source tree — confirmed in prod as ENOENT scandir
+// '/var/task/functional-model'), so loadFunctionalModel instead reads
+// server/utils/fmBundle.ts's statically-imported, build-time-generated
+// snapshot (scripts/build-fm-bundle.mjs) — THAT path does read from the
+// committed trace.json (via the bundle), same committed corpus
+// functional-model/scripts/verify-synergy.mjs and run-scenarios.mjs
+// themselves produce, just re-served instead of recomputed. A card edited
+// since the bundle was last regenerated shows the last-committed snapshot
+// in prod until `npm run sync:fm-bundle` is re-run and committed — same
+// staleness contract synergy.json/trace.json/progress.json already carry
+// for every OTHER consumer of them.
 //
 // Supersedes the older functional-model/data/<slug>.ts generator (one
 // exported function per Forge ability line, produced by
@@ -205,19 +217,40 @@ export interface FaceInput {
   toughness?: string;
 }
 
+// Shared between the live-recompute (dev) and bundle-read (prod) branches
+// below — building `annotatedCard` only needs this request's own real
+// Scryfall-derived `faces` plus the card's synergy facts, neither of which
+// depends on which branch produced them.
+function buildAnnotatedCard(faces: FaceInput[], synergy: { source: Fact[]; sink: Fact[] } | null): AnnotatedCard | null {
+  if (!synergy) return null;
+  const allFacts = [...synergy.source, ...synergy.sink];
+  return { faces: faces.map((f) => ({ name: f.name, manaCost: f.manaCost, colorIndicator: f.colorIndicator, typeLine: f.typeLine, oracleLines: annotateOracleText(f.oracleText, allFacts), power: f.power, toughness: f.toughness })) };
+}
+
 const functionalModelCache = new Map<string, { signature: string; facesKey: string; data: FunctionalModelData | null }>();
 async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
-  // Dev-only, same as review-status.ts's NODE_ENV guard: this reads raw
-  // functional-model/ sources off disk and spawns vite-node (computeTracesLive)
-  // to run them — neither the directory nor that devDependency binary
-  // survives a Netlify Function bundle (confirmed in prod: ENOENT scandir
-  // '/var/task/functional-model'). Client already renders null fine
-  // (v-if="data?.functionalModel"). Serving real functional-model data in
-  // prod would mean bundling the committed synergy.json/trace.json/progress.json
-  // via Nitro serverAssets instead — separate follow-up, not this hotfix.
-  if (process.env.NODE_ENV === 'production') return null;
-
   const slug = slugify(name);
+
+  // Production: read server/utils/fmBundle.ts's statically-imported,
+  // build-time-generated snapshot instead of the raw functional-model/
+  // source tree — see this file's own header comment above
+  // (FunctionalModelData) and fmBundle.ts for why. No fs access, no
+  // subprocess, no NODE_ENV-gated cache needed — the bundle is already a
+  // plain in-memory object once Nitro bundles it.
+  if (process.env.NODE_ENV === 'production') {
+    const entry = fmBundle[slug];
+    if (!entry) return null;
+    return {
+      source: entry.source,
+      synergy: entry.synergy,
+      traces: entry.traces,
+      annotatedCard: buildAnnotatedCard(faces, entry.synergy),
+      review: entry.review,
+      scenariosReview: entry.scenariosReview,
+      interactionsReview: entry.interactionsReview,
+    };
+  }
+
   const signature = functionalModelSignature(slug);
   const facesKey = JSON.stringify(faces);
   const cached = functionalModelCache.get(slug);
@@ -243,10 +276,7 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
     }
     const traces = await computeTracesLive(slug);
     const synergy = loadCardSynergy(slug);
-    const allFacts = synergy ? [...synergy.source, ...synergy.sink] : [];
-    const annotatedCard: AnnotatedCard | null = synergy
-      ? { faces: faces.map((f) => ({ name: f.name, manaCost: f.manaCost, colorIndicator: f.colorIndicator, typeLine: f.typeLine, oracleLines: annotateOracleText(f.oracleText, allFacts), power: f.power, toughness: f.toughness })) }
-      : null;
+    const annotatedCard = buildAnnotatedCard(faces, synergy);
     let review: 'ai' | 'human' | null = null;
     let scenariosReview: 'draft' | 'reviewed' = 'draft';
     let interactionsReview: 'draft' | 'reviewed' = 'draft';
