@@ -46,3 +46,15 @@ contract.
 - `engine` agent must not assume how `synergy.json`/`trace.json` get
   rendered — UI presentation concerns (grouping, labels, collapse/expand)
   belong to `card`.
+
+**Engine has no connection to card/UI, full stop.** Logging or similar
+instrumentation baked into engine code is fine; engine code being
+imported and executed by a UI component, or engine changing anything
+under `app/`/`server/api/`, is not. Known current violation:
+`describeFact`/`constraintBits` (label-templating logic) live in
+engine-owned `functional-model/synergy.ts` but are imported and called
+directly by the card page component at render time — that's backwards
+from this rule and should eventually move to card-owned code (engine
+would keep owning the raw `Fact`/`Constraints` vocabulary those functions
+read, just not the templating itself). Not urgent, but don't add more
+engine-owned functions to that import going forward.

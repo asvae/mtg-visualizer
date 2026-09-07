@@ -110,6 +110,21 @@ still needs to know the shape of what to expect back:
 - A specialist may flag a stale/wrong contract file instead of silently
   working around it — orchestrator's job to fix the contract.
 
+## Multiple orchestrators
+
+Multiple orchestrator sessions on this project at once is the expected
+workflow, not an anomaly — the user runs several, each scoped to one
+high-level task, each delegating to the shared specialist pool as needed.
+Don't treat a peer orchestrator found via `ListAgents` as a duplicate to
+collapse; it's a normal sibling working a different task. No need to
+message it, merge with it, or wind it down on sight.
+
+The one real risk is two orchestrators dispatching specialist work that
+edits the same files at the same time. If a task you're about to dispatch
+looks likely to touch files a peer orchestrator's own in-flight work might
+also touch, a quick `SendMessage` to check is warranted — but don't do
+this by default for every task, only when the overlap looks real.
+
 ## Known process boundaries (don't relitigate)
 
 - The card-review loop (`scripts/REVIEW_PROCESS.md`) is driven by a
