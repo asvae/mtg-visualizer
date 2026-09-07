@@ -3,5 +3,16 @@
 # prerendered landing page) plus .netlify/functions-internal/ for the server
 # route(s) — so there's no publish/functions to hand-configure here; Netlify's
 # build image auto-detects a Nitro app in this shape and wires the rest.
+#
+# NODE_VERSION is pinned because server/api/card/[set]/[number].ts,
+# server/api/cards/by-names.ts, and server/api/tokens/by-key.ts import
+# `DatabaseSync` from node:sqlite unflagged — that module doesn't exist
+# before Node 22.5 and still needs --experimental-sqlite before Node 22.13/
+# 23.4. Netlify's build image (and its Functions runtime, which follows the
+# same setting) defaults to an older Node than that when unpinned, which
+# was crashing those three functions at cold start (500 on every call).
 [build]
   command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "24"
