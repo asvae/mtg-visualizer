@@ -2,11 +2,11 @@
 import { inject, computed, reactive } from 'vue';
 import { StoreKey } from '../composables/useGraphStore';
 import { COLOR_ORDER, COLOR_LABEL, COLORLESS, COLOR_MAP, RARITY_COLOR } from '../lib/constants';
-import { computeFacetCounts, passesAttrFilters } from '../lib/filters';
+import { computeFacetCounts, passesAttrFilters, availableKeywords } from '../lib/filters';
 
 const store = inject(StoreKey)!;
 
-const open = reactive({ colors: true, rarity: true, type: true });
+const open = reactive({ colors: true, rarity: true, type: true, edges: true });
 
 const attrFilters = computed(() => ({
   selectedColors: store.selectedColors,
@@ -18,7 +18,7 @@ const attrFilters = computed(() => ({
 // current selection, with this axis itself ignored — so toggling a color never
 // moves that color's own count, only the other axes' counts (and vice versa).
 const facetCounts = computed(() => {
-  if (!store.graph.value) return { colors: {}, rarities: {}, types: {} };
+  if (!store.graph.value) return { colors: {}, rarities: {}, types: {}, keywords: {} };
   return computeFacetCounts(store.graph.value, attrFilters.value);
 });
 
@@ -42,6 +42,43 @@ const rarityItems = computed(() =>
 );
 
 const typeItems = computed(() => store.availableTypes.value.map((t) => ({ id: t, label: t, count: facetCounts.value.types[t] ?? 0 })));
+
+// Unlike every other checklist here, checking a keyword does NOT hide/show
+// cards — it spawns a synthetic "keyword hub" node in the graph (see
+// graphRenderer.ts's keyword-hub force) that every card with that keyword
+// gets pulled toward, and unchecking it removes the hub again. `count` here
+// is informational only (how many of the currently color/rarity/type-visible
+// cards carry it), not a faceted "would still match" number the way Colors/
+// Rarity/Type's counts are — see computeFacetCounts' own comment.
+// Not sourced from a store.availableX ref (unlike rarity/type above) — nothing
+// else needs "every keyword this corpus has" outside this one checklist, so a
+// plain computed off the live graph is enough; see selectedKeywords' own
+// comment in useGraphStore.ts for why there's no "select all keywords" default
+// to seed from a store ref in the first place.
+// availableKeywords() itself is already the right "does this exist at all"
+// base set — it scans the WHOLE current corpus (`graph.cards`, every card
+// this set/query/deck has, before ANY filter axis), same as
+// availableRarities/availableTypes above. It deliberately does NOT react to
+// Source-Sink (an edge-level toggle that never touches which CARDS exist) —
+// gating keyword availability on that would make rows flicker in/out as
+// someone toggles an unrelated edge filter, which is confusing and has
+// nothing to do with "does this keyword exist here."
+//
+// What DOES get filtered out here is a row whose live count (facetCounts,
+// which — like the other three axes' own counts — respects the CURRENT
+// Colors/Rarity/Type selection) has dropped to zero: e.g. checking only
+// Black removes every Flying card from view, so showing a "Flying: 0" row
+// would just be clutter. A keyword the user already has CHECKED is kept
+// visible regardless of its count reaching zero, though — hiding a checked
+// row would strand it: `store.selectedKeywords` (and therefore its hub)
+// stays set with no visible checkbox left to uncheck it from until the
+// color/rarity/type selection changes back or Reset Filters is used.
+const keywordItems = computed(() => {
+  if (!store.graph.value) return [];
+  return availableKeywords(store.graph.value)
+    .map((k) => ({ id: k, label: k, count: facetCounts.value.keywords[k] ?? 0 }))
+    .filter((item) => item.count > 0 || store.selectedKeywords.has(item.id));
+});
 
 const totalCards = computed(() => store.graph.value?.cards.length ?? 0);
 const matchingCards = computed(() => {
@@ -73,6 +110,34 @@ const SECTIONS = [
       </button>
       <template #content>
         <ChecklistSection :items="s.items.value" :selected="s.selected.value" />
+      </template>
+    </UCollapsible>
+
+    <UCollapsible v-model:open="open.edges" class="mb-2.5 pb-2.5">
+      <button
+        class="mb-1.5 -mx-1.5 flex w-full items-center gap-1.5 rounded-md p-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase hover:bg-surface/50 hover:text-text"
+      >
+        <UIcon name="i-lucide-chevron-right" class="size-3.5 shrink-0 transition-transform" :class="{ 'rotate-90': open.edges }" />
+        Edges
+      </button>
+      <template #content>
+        <!-- Plain checkbox, not a ChecklistSection item — this is a single
+             topology-based toggle (source-node/target-node in/out degree
+             across the WHOLE graph, see filters.ts's isSourceSinkReason),
+             not one more option in an attribute checklist. -->
+        <UCheckbox
+          v-model="store.showSourceSinkOnly.value"
+          class="mb-2.5 w-full py-1"
+          :ui="{ label: 'flex w-full items-center gap-1.5 text-xs' }"
+        >
+          <template #label>
+            <span class="truncate">Show Source-Sink connections</span>
+          </template>
+        </UCheckbox>
+
+        <div class="mb-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Keywords</div>
+        <div class="mb-1.5 text-[10px] text-muted">Checking one adds a hub node that pulls its cards in.</div>
+        <ChecklistSection :items="keywordItems" :selected="store.selectedKeywords" />
       </template>
     </UCollapsible>
   </aside>

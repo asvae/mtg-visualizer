@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch, inject } from 'vue';
-import { createGraphRenderer } from '../lib/graphRenderer';
+import { createGraphRenderer, type RenderOptions } from '../lib/graphRenderer';
 import type { AttrFilters } from '../lib/filters';
 import { StoreKey } from '../composables/useGraphStore';
 import type { GraphFile } from '../types';
@@ -16,6 +16,15 @@ function currentFilters(): AttrFilters {
     selectedRarities: store.selectedRarities,
     selectedTypes: store.selectedTypes,
   };
+}
+
+// Edge-level, not per-card, so these stay out of AttrFilters above (which
+// governs node visibility) — Source-Sink narrows which real synergy edges
+// draw, keywordIds spawns/despawns synthetic keyword-hub nodes. Both live
+// entirely in graphRenderer.ts; see its own RenderOptions/keyword-hub
+// comments.
+function currentRenderOptions(): RenderOptions {
+  return { sourceSinkOnly: store.showSourceSinkOnly.value, keywordIds: store.selectedKeywords };
 }
 
 onMounted(async () => {
@@ -74,13 +83,16 @@ onMounted(async () => {
       store.cardSelection.clear();
     },
   });
-  renderer.render(currentFilters());
+  renderer.render(currentFilters(), currentRenderOptions());
 
   // Spreading each reactive Set inside the getter makes Vue track their iteration,
-  // so add/delete on any filter re-triggers this — one watcher for all three.
+  // so add/delete on any filter/keyword-hub selection re-triggers this — one
+  // watcher for all axes plus the Source-Sink toggle and keyword-hub selection
+  // (both edge/hub-level, not part of AttrFilters itself — see render()'s own
+  // second parameter, RenderOptions).
   watch(
-    () => [...store.selectedColors, ...store.selectedRarities, ...store.selectedTypes],
-    () => renderer!.render(currentFilters())
+    () => [...store.selectedColors, ...store.selectedRarities, ...store.selectedTypes, ...store.selectedKeywords, store.showSourceSinkOnly.value],
+    () => renderer!.render(currentFilters(), currentRenderOptions())
   );
   watch(
     () => store.searchQuery.value,
@@ -132,7 +144,7 @@ onMounted(async () => {
   );
   watch(
     () => store.rerenderTrigger.value,
-    () => renderer!.resetLayout(currentFilters())
+    () => renderer!.resetLayout(currentFilters(), currentRenderOptions())
   );
   // immediate: true — same reasoning as the forces watch above, so a
   // localStorage-restored 'manaCost' mode applies from the first render
@@ -198,5 +210,30 @@ svg#graph {
 
 .node-card:hover .scryfall-link {
   opacity: 1;
+}
+
+.keyword-link {
+  /* Dashed + muted slate-violet (graphRenderer.ts's own KEYWORD_HUB_COLOR) —
+     visually distinct from a real synergy `.link` (solid, colored by match
+     quality) since this is a "you checked this keyword" association, not a
+     scored produce/consume/etc relation. Lines themselves stay
+     non-interactive even though the hub circle they connect to now is (see
+     `.node-keyword` below) — nothing to click/drag a plain connector for. */
+  stroke: #7d739c;
+  stroke-opacity: 0.3;
+  stroke-width: 1.5px;
+  stroke-dasharray: 4 3;
+  fill: none;
+  pointer-events: none;
+}
+
+.node-keyword {
+  /* Draggable (graphRenderer.ts's keywordDrag) — unlike the links above,
+     this needs real pointer events, same as `.node-card`. */
+  cursor: grab;
+}
+
+.node-keyword:active {
+  cursor: grabbing;
 }
 </style>

@@ -94,6 +94,28 @@ export function cardKeywords(card: ScryfallCard): string[] {
   return [...kws];
 }
 
+// Scryfall's own `keywords` array (cardKeywords above) only ever lists
+// abilities the card itself HAS — never one it merely GRANTS or references
+// on something else. FIN's Zack Fair ("{1}, Sacrifice Zack Fair: Target
+// creature you control gains indestructible until end of turn...") carries
+// an empty `keywords` array despite very much being "about" indestructible;
+// no amount of reading that array catches it. This instead scans the card's
+// own raw oracle text (all faces) for a plain, case-insensitive, whole-word
+// match against each BADGE_KEYWORDS entry — deliberately not scoped to
+// "grants X" phrasing specifically: a card that only REFERENCES a keyword
+// ability on something else (e.g. "creatures you control with flying get
+// +1/+1") is just as relevant to badge, by this feature's own design call
+// (see graphRenderer.ts's keyword-icon strip, the only consumer of this).
+function keywordMentions(card: ScryfallCard, badgeKeywords: Set<string>): string[] {
+  const text = [card.oracle_text, ...(card.card_faces || []).map((f) => f.oracle_text)].filter(Boolean).join('\n');
+  if (!text) return [];
+  const found: string[] = [];
+  for (const kw of badgeKeywords) {
+    if (new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text)) found.push(kw);
+  }
+  return found;
+}
+
 export function cardTokens(card: ScryfallCard, tokensById: TokensById): { name: string; image: string }[] {
   const seen = new Set<string>();
   const tokens: { name: string; image: string }[] = [];
@@ -156,7 +178,22 @@ export function buildGraph(setCode: string, allRaw: ScryfallCard[], tokensById: 
     id: c.id,
     name: c.name,
     cmc: c.cmc ?? 0,
-    manaCost: c.mana_cost ?? c.card_faces?.[0]?.mana_cost ?? null,
+    // Front face's own cost FIRST, top-level `mana_cost` only as a fallback
+    // for a genuinely single-faced card (no `card_faces` at all) — the
+    // reverse priority looked equivalent for a transform/modal_dfc card
+    // (Scryfall leaves the top-level field blank there, so it always fell
+    // through to card_faces[0] anyway) but silently broke for split/
+    // adventure/flip layouts: Scryfall's top-level `mana_cost` for THOSE is
+    // every face's own cost joined by " // " as one literal string (e.g.
+    // "{2}{G/U}{G/U} // {1}{G/U}{G/U}" for an adventure card) — confirmed
+    // concretely via a live `?sf=` query surfacing "Thranduil, Sindarin
+    // Liege // Silvan Rally" (HOB), whose node showed BOTH faces' pips
+    // concatenated in one title bar (6 pips: 2, G/U, G/U, 1, G/U, G/U) since
+    // manaPipCodes()/parseManaSegments() below just extracts every `{...}`
+    // chunk in the string, oblivious to the " // " separator in between.
+    // card_faces[0].mana_cost is always just the single front/primary
+    // face's own cost, correct across every layout this corpus can see.
+    manaCost: c.card_faces?.[0]?.mana_cost ?? c.mana_cost ?? null,
     colors: c.colors || (c.card_faces ? c.card_faces.flatMap((f) => f.colors || []) : []),
     colorIdentity: c.color_identity || [],
     typeLine: c.type_line || '',
@@ -165,7 +202,7 @@ export function buildGraph(setCode: string, allRaw: ScryfallCard[], tokensById: 
     artCrop: cardArtCrop(c),
     tokens: cardTokens(c, tokensById),
     scryfallUri: c.scryfall_uri,
-    keywords: cardKeywords(c).filter((k) => BADGE_KEYWORDS.has(k)),
+    keywords: [...new Set([...cardKeywords(c).filter((k) => BADGE_KEYWORDS.has(k)), ...keywordMentions(c, BADGE_KEYWORDS)])],
     set: c.set || '',
     collectorNumber: c.collector_number || '',
     qty: c.qty,

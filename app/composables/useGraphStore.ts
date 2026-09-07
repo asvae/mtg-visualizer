@@ -1,7 +1,11 @@
 import { computed, onMounted, reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
 import type { CardData, GraphFile, GraphReason } from '../types';
 import { COLOR_ORDER, RARITY_ORDER } from '../lib/constants';
-import { availableRarities as computeAvailableRarities, availableTypes as computeAvailableTypes } from '../lib/filters';
+import {
+  availableRarities as computeAvailableRarities,
+  availableTypes as computeAvailableTypes,
+  availableKeywords as computeAvailableKeywords,
+} from '../lib/filters';
 import { DEFAULT_FORCES, type ForceConfig, type GravityMode } from '../lib/graphRenderer';
 import { buildGraph, type NameLink, type ScryfallCard, type TokensById } from '../lib/buildGraph';
 import { parseDecklist, type ParsedDeckCard } from '../lib/deckImport';
@@ -239,6 +243,12 @@ interface SavedFilters {
   colors: string[];
   rarities: string[];
   types: string[];
+  // Optional (not `?? []`-defaulted at the type level) — a blob saved before
+  // this feature existed simply won't have these keys, and JSON.parse won't
+  // invent them; applySavedFilters below treats their absence as "empty
+  // set"/"off", same neutral default a fresh, never-saved visit already gets.
+  keywords?: string[];
+  sourceSinkOnly?: boolean;
 }
 
 function loadSavedFilters(): SavedFilters | null {
@@ -341,6 +351,16 @@ export function useGraphStore() {
   const selectedColors = reactive(new Set<string>());
   const selectedRarities = reactive(new Set<string>());
   const selectedTypes = reactive(new Set<string>());
+  // Keywords/Source-Sink (FilterPanel.vue's "Edges" section) — unlike the
+  // three axes above, both default to their neutral/off state (empty set,
+  // false) rather than "everything selected": most cards carry no
+  // BADGE_KEYWORDS at all, and Source-Sink is an opt-in topology view, not
+  // a per-card attribute with a natural "every option" default. Persisted to
+  // localStorage the same way colors/rarity/type are (see filterPayload/
+  // applySavedFilters below) — NOT mirrored to the URL/share-link the way
+  // colors/rarity/type optionally are, since nothing asked for that yet.
+  const selectedKeywords = reactive(new Set<string>());
+  const showSourceSinkOnly = ref(false);
 
   // Click-to-select highlight on card nodes — ephemeral exploration state, not
   // persisted anywhere (not URL, not localStorage) and compounds with search
@@ -521,6 +541,8 @@ export function useGraphStore() {
     selectAllColors();
     selectAllRarities();
     selectAllTypes();
+    selectedKeywords.clear();
+    showSourceSinkOnly.value = false;
   }
 
   // Plain snapshot of the filter state that gets persisted to localStorage —
@@ -530,9 +552,11 @@ export function useGraphStore() {
     colors: [...selectedColors],
     rarities: [...selectedRarities],
     types: [...selectedTypes],
+    keywords: [...selectedKeywords],
+    sourceSinkOnly: showSourceSinkOnly.value,
   }));
 
-  function applySavedFilters(data: GraphFile, rarities: string[], types: string[]) {
+  function applySavedFilters(data: GraphFile, rarities: string[], types: string[], keywords: string[]) {
     const stored = loadSavedFilters();
     // A URL query param, when present, wins over whatever's in localStorage for
     // that one key — an explicit/shared URL is a more deliberate statement of
@@ -559,6 +583,19 @@ export function useGraphStore() {
     const validTypes = new Set(types);
     selectedTypes.clear();
     (urlTypes ?? stored?.types ?? types).filter((t) => validTypes.has(t)).forEach((t) => selectedTypes.add(t));
+
+    // No URL param for either (unlike colors/rarity/type above) — restored
+    // from localStorage alone, or left at their already-empty/off default
+    // (an older saved blob predating this feature simply lacks these keys,
+    // same as a genuinely fresh visit; see SavedFilters' own comment).
+    // Keywords are validated against THIS corpus's own available keywords
+    // (a saved "Flying" from a previous FIN visit shouldn't silently persist
+    // into an unrelated `?sf=` query that has no flyers at all) — same
+    // stale-value guard colors/rarities/types already get above.
+    const validKeywords = new Set(keywords);
+    selectedKeywords.clear();
+    (stored?.keywords ?? []).filter((k) => validKeywords.has(k)).forEach((k) => selectedKeywords.add(k));
+    showSourceSinkOnly.value = stored?.sourceSinkOnly ?? false;
 
     return true;
   }
@@ -673,11 +710,14 @@ export function useGraphStore() {
 
       const rarities = computeAvailableRarities(data, RARITY_ORDER);
       const types = computeAvailableTypes(data);
+      const keywords = computeAvailableKeywords(data);
       availableRarities.value = rarities;
       availableTypes.value = types;
 
-      if (!applySavedFilters(data, rarities, types)) {
+      if (!applySavedFilters(data, rarities, types, keywords)) {
         // No saved filters (first visit) — default to every color/rarity/type.
+        // Keywords/Source-Sink already start at their correct off/empty
+        // default (see their own declaration above) — nothing to do here.
         selectAllColors();
         rarities.forEach((r) => selectedRarities.add(r));
         types.forEach((t) => selectedTypes.add(t));
@@ -713,6 +753,8 @@ export function useGraphStore() {
     selectedColors,
     selectedRarities,
     selectedTypes,
+    selectedKeywords,
+    showSourceSinkOnly,
     cardSelection,
     toggleCardSelection,
     availableRarities,

@@ -1,9 +1,10 @@
 import * as d3 from 'd3';
 import type { CardData, GraphFile, GraphReason } from '../types';
 import { COLOR_MAP, COLORLESS } from './constants';
-import { passesAttrFilters, type AttrFilters } from './filters';
+import { passesAttrFilters, computeNodeDegrees, isSourceSinkReason, reasonSource, reasonTarget, type AttrFilters } from './filters';
 import { parseManaSegments } from './manaSegments';
 import manaSymbolManifest from '../../data/mana_symbols/manifest.json';
+import { ABILITY_ICON_PATHS, ABILITY_ICON_VIEWBOX } from './abilityIconPaths';
 
 // linkCount is recomputed every render() call (the active link set changes
 // with filters) and read by cardChargeFor/linkStrengthFor below — see their
@@ -29,6 +30,54 @@ interface VisualEdge {
   laneCount: number;
   description: string;
 }
+
+// A "keyword hub" — a synthetic, non-card node that exists only while its
+// keyword is checked in FilterPanel.vue's Keywords checklist (useGraphStore's
+// `selectedKeywords`). Deliberately NOT part of `graph` (no buildGraph.ts
+// involvement — this is a pure runtime augmentation, entirely contained in
+// this renderer instance) and NOT a d3.SimulationNodeDatum in the main
+// simulation's own node array either: widening CardNode's generic everywhere
+// forceLink/forceManyBody/forceX/forceY/forceCollide are typed to it would
+// touch most of this file for a feature that doesn't need a card's own
+// physics (no charge/collision/drag of its own). Instead each hub eases
+// toward the live centroid of its member cards' current positions every tick
+// (keywordHubForce below), and a custom velocity nudge pulls each member
+// toward it — real physics integration on the SAME simulation loop, just
+// without formally being one of its "nodes." `x`/`y` are owned by
+// keywordHubForce once a hub exists; render()/updateKeywordHubs only ever
+// seed them once (on first appearance) and update `memberIds` afterward.
+interface KeywordHubState {
+  id: string; // the keyword itself (e.g. "Flying") — unique, doubles as the DOM/data key
+  label: string;
+  x: number;
+  y: number;
+  memberIds: string[];
+  // Set true for the duration of an active drag (keywordDrag() below) — while
+  // true, keywordHubForce leaves x/y alone (the drag handler owns them
+  // directly) instead of easing them back toward the members' centroid every
+  // tick, which would otherwise fight the cursor. Members still get pulled
+  // toward wherever the hub currently is regardless of this flag, same as a
+  // stationary hub — dragging one visibly tows its cluster along.
+  dragging?: boolean;
+}
+
+interface KeywordLinkDatum {
+  hub: KeywordHubState;
+  cardId: string;
+}
+
+// render()'s own second parameter — edge/hub-level toggles that aren't
+// per-card attributes (AttrFilters' own job) but still need to reach the
+// renderer: keywordIds drives which keyword hubs exist right now.
+// sourceSinkOnly === false is what actually narrows real synergy edges down
+// to the pure-source->pure-sink subset (see isSourceSinkReason, and its
+// consuming `if` in render() below for why the polarity reads this way) —
+// `true` (checked) shows the full, untouched graph instead.
+export interface RenderOptions {
+  sourceSinkOnly?: boolean;
+  keywordIds?: ReadonlySet<string>;
+}
+const EMPTY_KEYWORD_IDS: ReadonlySet<string> = new Set();
 
 // One reason's own combined strength — each raw ratio (this match's slice of
 // its source fact's total output / its sink fact's total demand, see
@@ -169,6 +218,13 @@ const MIN_TITLE_FONT_SIZE = 2.25 * NODE_SCALE;
 const MANA_PIP_SIZE = 4 * NODE_SCALE;
 const MANA_PIP_GAP = 1 * NODE_SCALE;
 const TITLE_PADDING = 3 * NODE_SCALE;
+// Keyword ability icons (Flying/Trample/etc — see renderCardArt's own
+// "Keyword ability icons" block below) — sized noticeably bigger than a mana
+// pip: these are detailed illustrative glyphs (arbitrary path art, not a
+// small flat mana symbol), and at pip size they'd be an illegible smudge.
+const KEYWORD_ICON_SIZE = 7 * NODE_SCALE;
+const KEYWORD_ICON_GAP = 1.5 * NODE_SCALE;
+const KEYWORD_ICON_MARGIN = 3 * NODE_SCALE;
 // Tried EB Garamond (the app's own "MTG-like" font, see FunctionalModelText.vue)
 // here — reverted: its serifs make it barely legible at the small sizes
 // these titles actually render at, worse than a plain sans-serif.
@@ -240,6 +296,20 @@ function manaPipCodes(manaCost: string | null): string[] {
     .filter((code) => MANA_SYMBOL_MANIFEST[code]);
 }
 
+// BADGE_KEYWORDS (buildGraph.ts) keeps Scryfall's own keyword spelling —
+// including two-word keywords with a plain space ("First strike", "Double
+// strike") — since that's what filters/tooltips already compare against;
+// the ability-icon set's own keys are functional-model's PascalCase, no
+// space ("FirstStrike", "DoubleStrike" — see abilityIconPaths.ts's own
+// comment). Converts one to the other; a no-op for every single-word
+// keyword, which is already exactly PascalCase to begin with (e.g. "Flying").
+function abilityIconKey(keyword: string): string {
+  return keyword
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('');
+}
+
 // How far apart parallel arrows fan out when the same pair has more than one
 // relation — purely a drawing offset, never fed into the simulation.
 const EDGE_LANE_SPACING = 7;
@@ -254,6 +324,24 @@ const EDGE_ARROW_GAP = 3;
 function cardRadius(): number {
   return Math.max(RECT_WIDTH, TOTAL_HEIGHT) / 2;
 }
+
+// Smaller than a card node (an earlier pass went bigger AND brighter —
+// walked both back: this should read as a quiet, secondary landmark you
+// glance at, not something competing for attention with the cards
+// themselves) and drawn with a soft blurred glow + a fairly translucent
+// fill (see its render() usage below) rather than a hard-edged disc, for the
+// same "relaxed, not rigid" reasoning. Muted slate-violet — every hue
+// already in use elsewhere is spoken for (WUBRG identity colors, rarity's
+// own gold/orange/grey, and produce/consume/atypical/grant/magnifier's own
+// green/blue/grey/cyan/pink — see main.css/constants.ts), so violet is the
+// one family nothing else in this UI uses; kept low-saturation rather than
+// a vivid purple to stay subtle rather than jump out.
+const KEYWORD_HUB_RADIUS = cardRadius() * 0.55;
+const KEYWORD_HUB_COLOR = '#7d739c';
+// Icon sized well under the hub's own radius — the label stays the primary
+// identifier (unlike a card-node keyword badge, where the icon IS the whole
+// point), the icon is just a matching-glyph accent above it.
+const KEYWORD_HUB_ICON_SIZE = KEYWORD_HUB_RADIUS * 0.55;
 
 // Scryfall's art_crop (just the illustration, no card frame/text) for the
 // front face, sized to a fixed rectangle (cropped to fill it via
@@ -436,6 +524,49 @@ function renderCardArt(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
       .attr('stroke-opacity', 0.5)
       .attr('stroke-width', 0.3);
 
+    // Keyword ability icons — a vertical strip immediately to the RIGHT of
+    // the node, outside the art rect entirely (past x + RECT_WIDTH), so it
+    // never competes with anything drawn INSIDE the rect on that same side
+    // (mana pips in the title bar, the scryfall link, the qty badge below —
+    // all still exactly where they were). Stacks top-down starting flush
+    // with the top of the art band (artY), not vertically centered — reads
+    // as a fixed-position list rather than shifting position card to card
+    // as the keyword count changes. Reuses the exact glyph set
+    // AbilityIcon.vue renders (ABILITY_ICON_PATHS/VIEWBOX) — this whole node
+    // is raw D3/SVG, not a Vue tree, so it references that data directly
+    // instead of the component. A keyword with no matching glyph
+    // (BADGE_KEYWORDS includes Crew, which the icon set doesn't cover) is
+    // silently skipped, same as AbilityIcon.vue's own `v-if="path"`.
+    // Uncapped: BADGE_KEYWORDS is a short, curated evergreen/combat list
+    // (buildGraph.ts) — no real card stacks enough of them at once for this
+    // to actually clutter.
+    const iconKeys = d.keywords.map(abilityIconKey).filter((k) => ABILITY_ICON_PATHS[k]);
+    if (iconKeys.length) {
+      const iconX = x + RECT_WIDTH + KEYWORD_ICON_MARGIN;
+      let iconY = artY;
+      const keywordGroup = g.append('g').attr('class', 'card-keyword-icons');
+      for (const key of iconKeys) {
+        const cell = keywordGroup.append('g').attr('transform', `translate(${iconX},${iconY})`);
+        cell
+          .append('rect')
+          .attr('width', KEYWORD_ICON_SIZE)
+          .attr('height', KEYWORD_ICON_SIZE)
+          .attr('rx', 1.5 * NODE_SCALE)
+          .attr('fill', '#000')
+          .attr('fill-opacity', 0.55);
+        cell
+          .append('svg')
+          .attr('width', KEYWORD_ICON_SIZE)
+          .attr('height', KEYWORD_ICON_SIZE)
+          .attr('viewBox', ABILITY_ICON_VIEWBOX[key]!)
+          .append('path')
+          .attr('d', ABILITY_ICON_PATHS[key]!)
+          .attr('fill', '#fff')
+          .attr('fill-rule', 'evenodd');
+        iconY += KEYWORD_ICON_SIZE + KEYWORD_ICON_GAP;
+      }
+    }
+
     // Scryfall shortcut — hidden until the node is hovered (see the
     // `.scryfall-link` CSS rule in GraphCanvas.vue), so it doesn't compete
     // with the art at rest. Its own click handler stops propagation so it
@@ -560,6 +691,133 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   const cardNodeById = new Map<string, CardNode>();
   for (const c of graph.cards) cardNodeById.set(c.id, { ...c, kind: 'card' });
 
+  // Computed once from the graph's FULL edge list, never recomputed per
+  // render() — the Source-Sink filter's whole point is that a node's
+  // "pure producer/root" or "pure consumer/leaf" status is a fixed fact
+  // about this graph's topology, unaffected by which color/rarity/type
+  // filters happen to be active right now (see filters.ts's own header
+  // comment on computeNodeDegrees/isSourceSinkReason).
+  const nodeDegrees = computeNodeDegrees(graph);
+
+  // Keyword hubs — keyed by keyword id, persisted for this renderer
+  // instance's whole lifetime (never reset/recreated wholesale) so an
+  // already-settled hub's live x/y — owned by keywordHubForce below, never
+  // written by render() past its first appearance — survives an unrelated
+  // color/rarity/type filter toggle across the SAME set of checked keywords.
+  // See KeywordHubState's own doc comment above for why these aren't real
+  // d3 simulation nodes.
+  const keywordHubsById = new Map<string, KeywordHubState>();
+  // How strongly a member card gets nudged toward its hub each tick, and how
+  // fast the hub itself eases toward its members' live centroid — both flat
+  // constants (not user-tunable sliders, unlike ForceConfig) since this is a
+  // first pass at the feature. Deliberately gentle (loose association, not a
+  // tight magnet) — an earlier pass at 0.12/0.15 crushed members into a rigid
+  // clump almost immediately; these values (~1/6 and ~1/3 of the old ones)
+  // still visibly gather members toward the hub over several seconds while
+  // leaving plenty of room for cardCharge/collide to keep them loosely
+  // spread, same "gathered, not glued" feel a real (weak) synergy edge has.
+  const KEYWORD_HUB_PULL_STRENGTH = 0.02;
+  const KEYWORD_HUB_EASE = 0.05;
+
+  // Refreshes hub membership for whichever keywords are currently checked —
+  // called once per render(), same cadence as everything else filter-driven.
+  // Adds a hub the first time its keyword is checked (seeded near its
+  // members' current on-screen centroid, or screen center if none have
+  // settled anywhere yet, rather than snapping in from a fixed corner),
+  // drops a hub the moment its keyword is unchecked, and otherwise only ever
+  // touches `memberIds` on an existing hub — never its `x`/`y`, which
+  // keywordHubForce owns exclusively once a hub exists.
+  function updateKeywordHubs(activeNodes: CardNode[], keywordIds: ReadonlySet<string>) {
+    for (const kw of [...keywordHubsById.keys()]) if (!keywordIds.has(kw)) keywordHubsById.delete(kw);
+
+    for (const kw of keywordIds) {
+      const members = activeNodes.filter((c) => c.keywords.includes(kw)).map((c) => c.id);
+      const existing = keywordHubsById.get(kw);
+      if (existing) {
+        existing.memberIds = members;
+        continue;
+      }
+      let cx = width / 2;
+      let cy = height / 2;
+      let sx = 0;
+      let sy = 0;
+      let n = 0;
+      for (const id of members) {
+        const node = cardNodeById.get(id);
+        if (node?.x != null && node?.y != null) {
+          sx += node.x;
+          sy += node.y;
+          n++;
+        }
+      }
+      if (n > 0) {
+        cx = sx / n;
+        cy = sy / n;
+      }
+      keywordHubsById.set(kw, { id: kw, label: kw, x: cx, y: cy, memberIds: members });
+    }
+  }
+
+  // Registered as its own named force (alongside link/charge/x/y/collide
+  // below) so it runs every tick the SAME way every other force does — real
+  // integration into the simulation's own velocity, not a separate
+  // requestAnimationFrame loop layered on top. A member with no settled
+  // position yet, or a hub with zero current members, is skipped for that
+  // tick rather than pulling toward/from a stale (0,0).
+  function keywordHubForce(alpha: number) {
+    for (const hub of keywordHubsById.values()) {
+      if (hub.memberIds.length === 0) continue;
+      // While the user is actively dragging this hub (keywordDrag below),
+      // its x/y are the drag handler's to own — easing it back toward the
+      // centroid here every tick would just fight the cursor.
+      if (!hub.dragging) {
+        let sx = 0;
+        let sy = 0;
+        let n = 0;
+        for (const id of hub.memberIds) {
+          const node = cardNodeById.get(id);
+          if (node?.x == null || node?.y == null) continue;
+          sx += node.x;
+          sy += node.y;
+          n++;
+        }
+        if (n > 0) {
+          const cx = sx / n;
+          const cy = sy / n;
+          hub.x += (cx - hub.x) * KEYWORD_HUB_EASE;
+          hub.y += (cy - hub.y) * KEYWORD_HUB_EASE;
+        }
+      }
+      for (const id of hub.memberIds) {
+        const node = cardNodeById.get(id);
+        if (node?.x == null || node?.y == null) continue;
+        node.vx = (node.vx ?? 0) + (hub.x - node.x) * KEYWORD_HUB_PULL_STRENGTH * alpha;
+        node.vy = (node.vy ?? 0) + (hub.y - node.y) * KEYWORD_HUB_PULL_STRENGTH * alpha;
+      }
+    }
+  }
+
+  // Lets a hub be click-dragged like a card node (drag() above) — plain x/y
+  // assignment straight from the event, not fx/fy pinning (a hub isn't a
+  // real simulation node, nothing else would ever fight over its position
+  // the way d3.forceLink/forceX would for a card), released back to
+  // keywordHubForce's own centroid-follow on drag end.
+  function keywordDrag() {
+    function dragstarted(event: any, d: KeywordHubState) {
+      if (!event.active) simulation.alphaTarget(0.2).restart();
+      d.dragging = true;
+    }
+    function dragged(event: any, d: KeywordHubState) {
+      d.x = event.x;
+      d.y = event.y;
+    }
+    function dragended(event: any, d: KeywordHubState) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.dragging = false;
+    }
+    return d3.drag<any, KeywordHubState>().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+  }
+
   const forces: ForceConfig = { ...DEFAULT_FORCES };
 
   const svg = d3.select(svgEl);
@@ -680,7 +938,18 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   });
 
   const linkLayer = root.append('g');
+  // Keyword-hub links (hub -> member card) get their own layer, appended
+  // right after the real synergy links so they sit in the same "under the
+  // cards" plane but stay visually distinct (dashed, see the .keyword-link
+  // CSS in GraphCanvas.vue) rather than mixing into the `.link` selection
+  // applyEdgeStyle colors by match quality — a keyword-hub connection has no
+  // quality/reasons of its own to color by.
+  const keywordLinkLayer = root.append('g');
   const cardLayer = root.append('g');
+  // Keyword-hub nodes render ABOVE cards (unlike keywordLinkLayer above) —
+  // they're meant to read as a visible landmark you're pulling cards toward,
+  // not something a pile of card art can bury.
+  const keywordLayer = root.append('g');
 
   // See setGravityMode below — read by cardChargeFor/xForce/yForce (and the
   // tick handler's own hard top-clamp) to switch behavior; changing it alone
@@ -832,6 +1101,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     .force('x', xForce)
     .force('y', yForce)
     .force('collide', collideForce)
+    .force('keywordHub', keywordHubForce)
     .alphaDecay(forces.alphaDecay)
     .velocityDecay(forces.velocityDecay);
 
@@ -900,6 +1170,8 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
 
   let link = linkLayer.selectAll<SVGPathElement, VisualEdge>('path.link');
   let cardG = cardLayer.selectAll<SVGGElement, CardNode>('g.node-card');
+  let keywordLink = keywordLinkLayer.selectAll<SVGLineElement, KeywordLinkDatum>('line.keyword-link');
+  let keywordG = keywordLayer.selectAll<SVGGElement, KeywordHubState>('g.node-keyword');
 
   let searchQuery = '';
   let cardSelection = new Set<string>();
@@ -922,13 +1194,37 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       .style('opacity', (d) => 0.15 + qualityNorm(linkQuality(d.parent, forces)) * 0.65);
   }
 
-  function render(filters: AttrFilters) {
+  function render(filters: AttrFilters, options: RenderOptions = {}) {
+    const { sourceSinkOnly = false, keywordIds = EMPTY_KEYWORD_IDS } = options;
     const activeCardNodes = graph.cards.filter((c) => passesAttrFilters(c, filters)).map((c) => cardNodeById.get(c.id)!);
     const activeCardIdSet = new Set(activeCardNodes.map((c) => c.id));
 
-    const activeLinks: SimLink[] = graph.links
+    const nodeFilteredLinks: SimLink[] = graph.links
       .filter((l) => activeCardIdSet.has(l.a) && activeCardIdSet.has(l.b))
       .map((l) => ({ source: l.a, target: l.b, reasons: l.reasons, a: l.a, b: l.b }));
+
+    // Source-Sink mode narrows each link down to just its qualifying
+    // directed reasons (a link whose OTHER reasons don't qualify still
+    // shows, just with fewer lanes) and drops any link left with none —
+    // done here, before this becomes both the simulation's own link set AND
+    // the visual fan-out below, so an edge hidden by this filter also stops
+    // pulling its two cards together physically, not just stops being drawn.
+    //
+    // Checkbox polarity is deliberately inverted from what its own
+    // `showSourceSinkOnly` field name/label would suggest — UNCHECKED
+    // (`sourceSinkOnly === false`) applies the isolate filter, CHECKED shows
+    // the full untouched graph. Confirmed direction (not a leftover bug): a
+    // prior pass had this the "natural" way round (checked = isolate) and
+    // that was reported back as backwards, twice, against the live app — the
+    // isolate/degree computation itself was independently verified correct
+    // both times (filters.ts's isSourceSinkReason/computeNodeDegrees), so
+    // this negation is the ONLY change; don't "fix" it back without
+    // re-confirming against the live checkbox first.
+    const activeLinks: SimLink[] = sourceSinkOnly
+      ? nodeFilteredLinks
+      : nodeFilteredLinks
+          .map((l) => ({ ...l, reasons: l.reasons.filter((r) => isSourceSinkReason(reasonSource(l, r), reasonTarget(l, r), nodeDegrees)) }))
+          .filter((l) => l.reasons.length > 0);
 
     // One VisualEdge per reason (not per pair) — this is the only place a
     // pair's relations fan out into separate arrows; `activeLinks` above
@@ -980,6 +1276,81 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
           .on('mouseleave', () => handlers.onHoverEnd())
           .on('click', (event, d) => handlers.onCardClick(d, event));
         renderCardArt(g);
+        return g;
+      });
+
+    // Keyword hubs (see keywordHubForce/updateKeywordHubs above) — membership
+    // is scoped to activeCardNodes (the same node-attr-filtered set the real
+    // graph uses), so unchecking a color that happened to be a hub's only
+    // member leaves that hub drawn but pulling nothing, same as a real
+    // synergy edge would.
+    updateKeywordHubs(activeCardNodes, keywordIds);
+    const activeKeywordHubs = [...keywordHubsById.values()];
+    const keywordLinkData: KeywordLinkDatum[] = activeKeywordHubs.flatMap((hub) => hub.memberIds.map((cardId) => ({ hub, cardId })));
+
+    keywordLink = keywordLink
+      .data(keywordLinkData, (d) => `${d.hub.id}::${d.cardId}`)
+      .join((enter) => enter.append('line').attr('class', 'keyword-link'));
+
+    keywordG = keywordG
+      .data(activeKeywordHubs, (d) => d.id)
+      .join((enter) => {
+        const g = enter.append('g').attr('class', 'node-keyword').call(keywordDrag() as any);
+        // Per-datum (not one shared .attr/.text chain across the whole enter
+        // selection) — whether a hub gets an icon at all depends on its own
+        // label, so each hub's inner markup is built individually, same
+        // pattern renderCardArt's own keyword-icon strip uses.
+        g.each(function (d) {
+          const cell = d3.select(this);
+          // Soft blurred glow instead of a hard stroke, and a fairly
+          // translucent (not fully opaque) fill — reads as a quiet, relaxed
+          // landmark rather than a rigid disc competing with the crisp card
+          // art around it. Reuses the SAME glow filter card nodes' own
+          // outline uses (defs, near the top of this function) rather than a
+          // second near-identical filter def.
+          cell.append('circle').attr('r', KEYWORD_HUB_RADIUS).attr('fill', KEYWORD_HUB_COLOR).attr('fill-opacity', 0.62).attr('filter', 'url(#card-outline-glow)');
+
+          // Reuses the exact glyph set the card-node keyword badge strip
+          // uses (ABILITY_ICON_PATHS/VIEWBOX, abilityIconKey — see
+          // renderCardArt's own "Keyword ability icons" block) so a hub's
+          // icon matches its keyword's badge on every card carrying it,
+          // rather than a second icon source. Silently omitted (label only,
+          // same layout as before) for a keyword with no matching glyph
+          // (BADGE_KEYWORDS' own "Crew" has none).
+          const iconKey = abilityIconKey(d.label);
+          const hasIcon = !!ABILITY_ICON_PATHS[iconKey];
+          if (hasIcon) {
+            cell
+              .append('svg')
+              .attr('x', -KEYWORD_HUB_ICON_SIZE / 2)
+              .attr('y', -KEYWORD_HUB_RADIUS * 0.5)
+              .attr('width', KEYWORD_HUB_ICON_SIZE)
+              .attr('height', KEYWORD_HUB_ICON_SIZE)
+              .attr('viewBox', ABILITY_ICON_VIEWBOX[iconKey]!)
+              .attr('pointer-events', 'none')
+              .append('path')
+              .attr('d', ABILITY_ICON_PATHS[iconKey]!)
+              .attr('fill', '#e9e6f2')
+              .attr('fill-rule', 'evenodd');
+          }
+
+          // Label stays — the icon is an accent alongside it, not a
+          // replacement (a hub's keyword name is still its primary
+          // identifier, unlike a card's badge strip where the icon alone is
+          // the point). Sits below the icon when one exists, otherwise
+          // vertically centered same as before.
+          cell
+            .append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .attr('y', hasIcon ? KEYWORD_HUB_RADIUS * 0.4 : 0)
+            .attr('fill', '#e9e6f2')
+            .attr('font-size', 5.5 * NODE_SCALE)
+            .attr('font-weight', 700)
+            .attr('font-family', TITLE_FONT_FAMILY)
+            .attr('pointer-events', 'none')
+            .text(d.label);
+        });
         return g;
       });
 
@@ -1087,13 +1458,19 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       }
       return `translate(${d.x},${d.y})`;
     });
+    keywordG.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    keywordLink.each(function (d) {
+      const member = cardNodeById.get(d.cardId);
+      if (!member || member.x == null || member.y == null) return;
+      d3.select(this).attr('x1', d.hub.x).attr('y1', d.hub.y).attr('x2', member.x).attr('y2', member.y);
+    });
   });
 
   // "Rerender from the ground up" — clears every node's position (and any pinned
   // drag position) so the simulation starts over from d3's default random scatter
   // instead of wherever it previously settled, for when a layout got stuck clumped
   // up and no amount of force-slider tweaking un-sticks it.
-  function resetLayout(filters: AttrFilters) {
+  function resetLayout(filters: AttrFilters, options: RenderOptions = {}) {
     for (const node of cardNodeById.values()) {
       delete node.x;
       delete node.y;
@@ -1102,12 +1479,18 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       delete node.fx;
       delete node.fy;
     }
+    // Any existing hub gets dropped too — its old x/y was a centroid of
+    // positions that no longer exist, so keeping it around would seed the
+    // fresh layout from a stale, meaningless spot instead of re-seeding
+    // clean once cards resettle (updateKeywordHubs recreates it on the very
+    // next render() call below, same as an initial check would).
+    keywordHubsById.clear();
     // A "rerender" while in manaCost mode should still respect its own
     // column lock — without this, clearing fx above would have re-freed
     // every node to drift horizontally again until something else
     // re-applied it.
     applyGravityModePins();
-    render(filters);
+    render(filters, options);
     simulation.alpha(1).restart();
   }
 
