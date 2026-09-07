@@ -147,12 +147,19 @@ const FM_FOLDER_FILES = ['definition.ts', 'scenarios.ts', 'progress.json', 'syne
 // covers whatever's actually there — cheap (a handful of `.ts` files, one
 // readdir + stat each), same "cheap enough to check every request"
 // philosophy this cache already runs on.
+// Guards ENOENT for a production deploy where functional-model/ isn't on
+// disk (loadFunctionalModel's own NODE_ENV short-circuit below should mean
+// this never runs there — belt and suspenders).
 function sharedEngineSignature(): string {
-  const dir = join(process.cwd(), 'functional-model');
-  return readdirSync(dir, { withFileTypes: true })
-    .filter((e) => e.isFile() && e.name.endsWith('.ts'))
-    .map((e) => `${e.name}:${statSync(join(dir, e.name)).mtimeMs}`)
-    .join('|');
+  try {
+    const dir = join(process.cwd(), 'functional-model');
+    return readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith('.ts'))
+      .map((e) => `${e.name}:${statSync(join(dir, e.name)).mtimeMs}`)
+      .join('|');
+  } catch {
+    return 'x';
+  }
 }
 function functionalModelSignature(slug: string): string {
   const perCard = FM_FOLDER_FILES.map((f) => {
@@ -200,6 +207,16 @@ export interface FaceInput {
 
 const functionalModelCache = new Map<string, { signature: string; facesKey: string; data: FunctionalModelData | null }>();
 async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
+  // Dev-only, same as review-status.ts's NODE_ENV guard: this reads raw
+  // functional-model/ sources off disk and spawns vite-node (computeTracesLive)
+  // to run them — neither the directory nor that devDependency binary
+  // survives a Netlify Function bundle (confirmed in prod: ENOENT scandir
+  // '/var/task/functional-model'). Client already renders null fine
+  // (v-if="data?.functionalModel"). Serving real functional-model data in
+  // prod would mean bundling the committed synergy.json/trace.json/progress.json
+  // via Nitro serverAssets instead — separate follow-up, not this hotfix.
+  if (process.env.NODE_ENV === 'production') return null;
+
   const slug = slugify(name);
   const signature = functionalModelSignature(slug);
   const facesKey = JSON.stringify(faces);
