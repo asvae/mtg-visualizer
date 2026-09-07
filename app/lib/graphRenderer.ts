@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import type { CardData, GraphFile, GraphReason } from '../types';
 import { COLOR_MAP, COLORLESS } from './constants';
-import { passesAttrFilters, computeNodeDegrees, isSourceSinkReason, reasonSource, reasonTarget, type AttrFilters } from './filters';
+import { passesAttrFilters, reasonSource, reasonTarget, type AttrFilters } from './filters';
 import { parseManaSegments } from './manaSegments';
 import manaSymbolManifest from '../../data/mana_symbols/manifest.json';
 import { ABILITY_ICON_PATHS, ABILITY_ICON_VIEWBOX } from './abilityIconPaths';
@@ -66,18 +66,93 @@ interface KeywordLinkDatum {
   cardId: string;
 }
 
+// PROTOTYPE (see this session's design discussion, not yet a shipped
+// feature) — a "relation hub," the keyword-hub mechanism generalized to
+// ordinary produce/consume/atypical/grant/magnifier synergy edges instead of
+// just BADGE_KEYWORDS. Some (source card, matched-fact) pairs fan out to a
+// huge number of distinct targets (a broadly-shared fact like "battlefield
+// presence" — see describeFact in functional-model/synergy.ts — matched by
+// nearly every legendary creature in FIN against nearly every other one) and
+// used to draw one real `.link` PER TARGET from that one source, both
+// visually (a hairball of parallel lines fanning off one node) and
+// physically (one real forceLink entry per target, same simulation cost as
+// any other edge). Grouping key is (sourceId, reason.description) — the
+// closest client-visible proxy for server/api/graph-links.ts's own
+// `sourceKey` (`${producer}::${fact.id}`), which isn't itself shipped to the
+// client (see GraphReason's own fields) — two distinct facts on the same
+// card landing on an identical description string would incorrectly merge
+// under this proxy, a known, accepted approximation for a prototype, not
+// re-derived from a raw fact id since none crosses the API boundary today.
+// A group whose target-id count crosses `relationHubThreshold` (see
+// RenderOptions below) auto-collapses: those reasons are pulled OUT of the
+// normal active-link set entirely (see render()'s own hub-collapse step) and
+// replaced by ONE synthetic hub node + one anchor line back to the source,
+// same non-simulation-node non-forceLink shape KeywordHubState models
+// (deliberately NOT unified with it — a relation hub tracks its own
+// source/description/expanded state a keyword hub has no analogue for, and
+// this file's own header explicitly asks that the keyword-hub code path
+// itself stay untouched). `expanded` (toggled by clicking the hub — see
+// toggleRelationHub) is the "reveal individual links" affordance the design
+// asked for: an expanded group's reasons flow back into the normal
+// activeLinks/activeEdges pipeline unchanged (real `.link` edges, real
+// forceLink physics) — no separate rendering path needed for "expanded," it
+// just stops being collapsed. The hub itself stays visible either way (so
+// it can be clicked again to re-collapse), but only nudges member velocity
+// while collapsed — once expanded, real forceLink already pulls those pairs
+// together, double-pulling them would just distort the physics.
+interface RelationHubState {
+  key: string; // `${sourceId}::${description}` — unique, doubles as the DOM/data key
+  sourceId: string;
+  description: string;
+  x: number;
+  y: number;
+  memberIds: string[]; // target card ids this source's fact currently fans out to
+  expanded: boolean;
+  dragging?: boolean;
+}
+
+interface RelationLinkDatum {
+  hub: RelationHubState;
+}
+
 // render()'s own second parameter — edge/hub-level toggles that aren't
 // per-card attributes (AttrFilters' own job) but still need to reach the
 // renderer: keywordIds drives which keyword hubs exist right now.
-// sourceSinkOnly === false is what actually narrows real synergy edges down
-// to the pure-source->pure-sink subset (see isSourceSinkReason, and its
-// consuming `if` in render() below for why the polarity reads this way) —
-// `true` (checked) shows the full, untouched graph instead.
+// showSynergyEdges is a plain show/hide toggle over ALL card-to-card synergy
+// edges (produce/consume/atypical/grant/magnifier alike — every reason in
+// `graph.links`, no topological subset) — `true` (checked, the default)
+// shows them same as if this toggle didn't exist; `false` (unchecked)
+// removes them entirely, from the simulation as well as the drawing (see
+// render()'s own consuming code below), same "actually gone, not just faded"
+// requirement the feature always had. Keyword-hub edges/nodes are a
+// completely separate category (keywordIds below) and are never affected by
+// this toggle either way. This replaced an earlier, more complicated
+// "Source-Sink" topological pure-producer->pure-consumer subset design
+// (see filters.ts's own comment where that computation used to live) that
+// turned out to not match what was actually wanted.
+// relationHubsEnabled/relationHubThreshold gate the PROTOTYPE relation-hub
+// collapse above — off by default (undefined/false), a temporary dev toggle
+// (FilterPanel.vue) until/unless this graduates past "does the idea read
+// well" — see RelationHubState's own comment.
 export interface RenderOptions {
-  sourceSinkOnly?: boolean;
+  showSynergyEdges?: boolean;
   keywordIds?: ReadonlySet<string>;
+  relationHubsEnabled?: boolean;
+  relationHubThreshold?: number;
 }
 const EMPTY_KEYWORD_IDS: ReadonlySet<string> = new Set();
+// Default fan-out threshold above which a (source, fact) group auto-collapses
+// — landed on 20 by eyeballing the real FIN corpus (see this session's own
+// design notes): FIN's own worst-case groups are ~93 near-identical
+// "battlefield presence" cliques at fanout 100-129, well clear of this any
+// direction, and the next-broadest real category (zone-count facts like
+// "Creature permanents in your battlefield") tops out around 11 — so 20
+// draws a clean line between "the runaway clique case this feature targets"
+// and "a normal, if generous, multi-target match" without needing to be
+// precisely tuned; PhysicsControls-style live tuning wasn't built for this
+// prototype pass (FilterPanel's own number input covers "eyeball a few
+// values" well enough for now).
+const DEFAULT_RELATION_HUB_THRESHOLD = 20;
 
 // One reason's own combined strength — each raw ratio (this match's slice of
 // its source fact's total output / its sink fact's total demand, see
@@ -342,6 +417,25 @@ const KEYWORD_HUB_COLOR = '#7d739c';
 // identifier (unlike a card-node keyword badge, where the icon IS the whole
 // point), the icon is just a matching-glyph accent above it.
 const KEYWORD_HUB_ICON_SIZE = KEYWORD_HUB_RADIUS * 0.55;
+
+// PROTOTYPE relation-hub (see RelationHubState above) — deliberately a
+// different color family from KEYWORD_HUB_COLOR's violet, per this feature's
+// own design ask ("should read as visually distinct... this is a relation-
+// hub, not a keyword-hub"). Every other hue already in use elsewhere is
+// spoken for (WUBRG identity colors; rarity's gold/orange/grey; produce/
+// consume/atypical/grant/magnifier's green/blue/grey/cyan/pink; keyword
+// hub's violet — see constants.ts/main.css) — landed on a warm copper/amber,
+// the one family left, even though it sits reasonably close to rarity's own
+// mythic orange (#e2622b) and the app's --color-warn (#e0a030); flagged as a
+// possible clash worth a second look, not a hard collision the way gold vs.
+// keyword-hub's original color was (see this file's own keyword-hub design
+// notes) since it never appears in the same visual context as either.
+const RELATION_HUB_COLOR = '#c9762e';
+// Slightly bigger than a keyword hub — a relation hub's label carries TWO
+// lines (source card name + description/count, see its own render block
+// below) where a keyword hub's carries one, so it needs a bit more room to
+// not read as pure text soup.
+const RELATION_HUB_RADIUS = cardRadius() * 0.65;
 
 // Scryfall's art_crop (just the illustration, no card frame/text) for the
 // front face, sized to a fixed rectangle (cropped to fill it via
@@ -691,14 +785,6 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   const cardNodeById = new Map<string, CardNode>();
   for (const c of graph.cards) cardNodeById.set(c.id, { ...c, kind: 'card' });
 
-  // Computed once from the graph's FULL edge list, never recomputed per
-  // render() — the Source-Sink filter's whole point is that a node's
-  // "pure producer/root" or "pure consumer/leaf" status is a fixed fact
-  // about this graph's topology, unaffected by which color/rarity/type
-  // filters happen to be active right now (see filters.ts's own header
-  // comment on computeNodeDegrees/isSourceSinkReason).
-  const nodeDegrees = computeNodeDegrees(graph);
-
   // Keyword hubs — keyed by keyword id, persisted for this renderer
   // instance's whole lifetime (never reset/recreated wholesale) so an
   // already-settled hub's live x/y — owned by keywordHubForce below, never
@@ -816,6 +902,166 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       d.dragging = false;
     }
     return d3.drag<any, KeywordHubState>().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+  }
+
+  // --- PROTOTYPE: relation hubs (fan-out auto-collapse) --------------------
+  // See RelationHubState's own doc comment for the full design. Persisted for
+  // this renderer instance's whole lifetime, same reasoning keywordHubsById
+  // above already has (an already-settled hub's x/y survives an unrelated
+  // filter toggle across the same qualifying group).
+  const relationHubsById = new Map<string, RelationHubState>();
+  // Which hub keys the user has clicked open — survives across render()
+  // calls the same way relationHubsById does, deliberately NOT reset when a
+  // hub's group temporarily stops qualifying (a filter toggle dropping fanout
+  // below threshold) so re-crossing the threshold later doesn't silently
+  // re-collapse something the user explicitly opened.
+  const relationHubExpandedIds = new Set<string>();
+  // Reused verbatim from keywordHubForce's own tuning (see its comment above)
+  // — no reason to re-derive a second "gathers loosely, doesn't crush" pair
+  // of constants for what's physically the same kind of nudge.
+  const RELATION_HUB_PULL_STRENGTH = KEYWORD_HUB_PULL_STRENGTH;
+  const RELATION_HUB_EASE = KEYWORD_HUB_EASE;
+
+  interface RelationGroup {
+    key: string;
+    sourceId: string;
+    description: string;
+    targetIds: Set<string>;
+  }
+
+  // Groups a link set's own reasons by (sourceId, description) — see
+  // RelationHubState's own comment for why this pairing (not a raw fact id,
+  // which never crosses the API boundary) is the grouping key. Takes the
+  // link set AFTER the synergy-edges show/hide toggle but BEFORE hub-collapse
+  // filtering — fan-out is measured against whatever's actually visible
+  // right now, same "recomputed every render()" cadence updateKeywordHubs'
+  // own membership already uses.
+  function computeRelationGroups(links: SimLink[]): Map<string, RelationGroup> {
+    const groups = new Map<string, RelationGroup>();
+    for (const l of links) {
+      for (const r of l.reasons) {
+        const sourceId = reasonSource(l, r);
+        const targetId = reasonTarget(l, r);
+        const key = `${sourceId}::${r.description}`;
+        let g = groups.get(key);
+        if (!g) {
+          g = { key, sourceId, description: r.description, targetIds: new Set() };
+          groups.set(key, g);
+        }
+        g.targetIds.add(targetId);
+      }
+    }
+    return groups;
+  }
+
+  // Mirrors updateKeywordHubs' own shape: drops a hub whose group no longer
+  // qualifies (fanout back under threshold, or its source/targets left the
+  // active filtered set entirely), seeds a freshly-qualifying hub near its
+  // members' current centroid (or screen center, nothing settled yet),
+  // otherwise only ever touches memberIds/expanded on an existing hub — x/y
+  // stays relationHubForce's own once a hub exists (same "never touched past
+  // first appearance" contract keywordHubsById's own entries have).
+  function updateRelationHubs(groups: Map<string, RelationGroup>, threshold: number): Set<string> {
+    const qualifyingKeys = new Set([...groups.values()].filter((g) => g.targetIds.size > threshold).map((g) => g.key));
+    for (const key of [...relationHubsById.keys()]) if (!qualifyingKeys.has(key)) relationHubsById.delete(key);
+
+    for (const key of qualifyingKeys) {
+      const g = groups.get(key)!;
+      const members = [...g.targetIds];
+      const existing = relationHubsById.get(key);
+      if (existing) {
+        existing.memberIds = members;
+        existing.expanded = relationHubExpandedIds.has(key);
+        continue;
+      }
+      let cx = width / 2;
+      let cy = height / 2;
+      let sx = 0;
+      let sy = 0;
+      let n = 0;
+      for (const id of members) {
+        const node = cardNodeById.get(id);
+        if (node?.x != null && node?.y != null) {
+          sx += node.x;
+          sy += node.y;
+          n++;
+        }
+      }
+      if (n > 0) {
+        cx = sx / n;
+        cy = sy / n;
+      }
+      relationHubsById.set(key, {
+        key,
+        sourceId: g.sourceId,
+        description: g.description,
+        x: cx,
+        y: cy,
+        memberIds: members,
+        expanded: relationHubExpandedIds.has(key),
+      });
+    }
+    return qualifyingKeys;
+  }
+
+  // Same tick-integrated shape as keywordHubForce, with one difference: once
+  // a hub is `expanded`, its member reasons have flowed back into the normal
+  // activeLinks/forceLink pipeline (see render()'s own hub-collapse step) —
+  // nudging member velocity here TOO would double-pull them against real
+  // physics that's now also acting on the same pair, distorting both. So the
+  // member-nudge loop is skipped while expanded, but the hub's own position
+  // still eases toward its members' centroid regardless (dragging aside) —
+  // otherwise an expanded hub would freeze at wherever it last was while its
+  // now-really-linked members drift away under real forceLink, reading as a
+  // stray, disconnected landmark instead of an "opened" version of the same
+  // cluster.
+  function relationHubForce(alpha: number) {
+    for (const hub of relationHubsById.values()) {
+      if (hub.memberIds.length === 0) continue;
+      if (!hub.dragging) {
+        let sx = 0;
+        let sy = 0;
+        let n = 0;
+        for (const id of hub.memberIds) {
+          const node = cardNodeById.get(id);
+          if (node?.x == null || node?.y == null) continue;
+          sx += node.x;
+          sy += node.y;
+          n++;
+        }
+        if (n > 0) {
+          const cx = sx / n;
+          const cy = sy / n;
+          hub.x += (cx - hub.x) * RELATION_HUB_EASE;
+          hub.y += (cy - hub.y) * RELATION_HUB_EASE;
+        }
+      }
+      if (hub.expanded) continue;
+      for (const id of hub.memberIds) {
+        const node = cardNodeById.get(id);
+        if (node?.x == null || node?.y == null) continue;
+        node.vx = (node.vx ?? 0) + (hub.x - node.x) * RELATION_HUB_PULL_STRENGTH * alpha;
+        node.vy = (node.vy ?? 0) + (hub.y - node.y) * RELATION_HUB_PULL_STRENGTH * alpha;
+      }
+    }
+  }
+
+  // Mirrors keywordDrag() exactly — see its own comment for why this is
+  // plain x/y assignment rather than fx/fy pinning.
+  function relationDrag() {
+    function dragstarted(event: any, d: RelationHubState) {
+      if (!event.active) simulation.alphaTarget(0.2).restart();
+      d.dragging = true;
+    }
+    function dragged(event: any, d: RelationHubState) {
+      d.x = event.x;
+      d.y = event.y;
+    }
+    function dragended(event: any, d: RelationHubState) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.dragging = false;
+    }
+    return d3.drag<any, RelationHubState>().on('start', dragstarted).on('drag', dragged).on('end', dragended);
   }
 
   const forces: ForceConfig = { ...DEFAULT_FORCES };
@@ -945,11 +1191,20 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   // applyEdgeStyle colors by match quality — a keyword-hub connection has no
   // quality/reasons of its own to color by.
   const keywordLinkLayer = root.append('g');
+  // PROTOTYPE relation-hub anchor lines — one PER HUB (source card -> hub),
+  // never one per member (that would just be the same fan-out hairball this
+  // feature exists to collapse, only dashed) — see RelationHubState's own
+  // comment for why membership itself is conveyed by the hub's label/count
+  // instead of drawing a line per member.
+  const relationLinkLayer = root.append('g');
   const cardLayer = root.append('g');
   // Keyword-hub nodes render ABOVE cards (unlike keywordLinkLayer above) —
   // they're meant to read as a visible landmark you're pulling cards toward,
   // not something a pile of card art can bury.
   const keywordLayer = root.append('g');
+  // Same "visible landmark, not buried under card art" reasoning as
+  // keywordLayer above.
+  const relationLayer = root.append('g');
 
   // See setGravityMode below — read by cardChargeFor/xForce/yForce (and the
   // tick handler's own hard top-clamp) to switch behavior; changing it alone
@@ -1102,6 +1357,7 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     .force('y', yForce)
     .force('collide', collideForce)
     .force('keywordHub', keywordHubForce)
+    .force('relationHub', relationHubForce)
     .alphaDecay(forces.alphaDecay)
     .velocityDecay(forces.velocityDecay);
 
@@ -1172,9 +1428,19 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   let cardG = cardLayer.selectAll<SVGGElement, CardNode>('g.node-card');
   let keywordLink = keywordLinkLayer.selectAll<SVGLineElement, KeywordLinkDatum>('line.keyword-link');
   let keywordG = keywordLayer.selectAll<SVGGElement, KeywordHubState>('g.node-keyword');
+  let relationLink = relationLinkLayer.selectAll<SVGLineElement, RelationLinkDatum>('line.relation-link');
+  let relationG = relationLayer.selectAll<SVGGElement, RelationHubState>('g.node-relation-hub');
 
   let searchQuery = '';
   let cardSelection = new Set<string>();
+
+  // PROTOTYPE relation-hub — last render()'s own (filters, options), kept so
+  // toggleRelationHub (a hub click, not a store-driven watch like every other
+  // re-render trigger in GraphCanvas.vue) can re-invoke render() with
+  // whatever the rest of the UI last asked for, instead of needing its own
+  // parallel "just re-run the hub-collapse step" code path.
+  let lastFilters: AttrFilters | null = null;
+  let lastOptions: RenderOptions = {};
 
   // Last render()'s active link set — kept around so setForces() (a budget/
   // qtyBoost slider moving, with the filtered set unchanged) can recompute
@@ -1195,7 +1461,14 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   }
 
   function render(filters: AttrFilters, options: RenderOptions = {}) {
-    const { sourceSinkOnly = false, keywordIds = EMPTY_KEYWORD_IDS } = options;
+    lastFilters = filters;
+    lastOptions = options;
+    const {
+      showSynergyEdges = true,
+      keywordIds = EMPTY_KEYWORD_IDS,
+      relationHubsEnabled = false,
+      relationHubThreshold = DEFAULT_RELATION_HUB_THRESHOLD,
+    } = options;
     const activeCardNodes = graph.cards.filter((c) => passesAttrFilters(c, filters)).map((c) => cardNodeById.get(c.id)!);
     const activeCardIdSet = new Set(activeCardNodes.map((c) => c.id));
 
@@ -1203,28 +1476,47 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       .filter((l) => activeCardIdSet.has(l.a) && activeCardIdSet.has(l.b))
       .map((l) => ({ source: l.a, target: l.b, reasons: l.reasons, a: l.a, b: l.b }));
 
-    // Source-Sink mode narrows each link down to just its qualifying
-    // directed reasons (a link whose OTHER reasons don't qualify still
-    // shows, just with fewer lanes) and drops any link left with none —
-    // done here, before this becomes both the simulation's own link set AND
-    // the visual fan-out below, so an edge hidden by this filter also stops
-    // pulling its two cards together physically, not just stops being drawn.
-    //
-    // Checkbox polarity is deliberately inverted from what its own
-    // `showSourceSinkOnly` field name/label would suggest — UNCHECKED
-    // (`sourceSinkOnly === false`) applies the isolate filter, CHECKED shows
-    // the full untouched graph. Confirmed direction (not a leftover bug): a
-    // prior pass had this the "natural" way round (checked = isolate) and
-    // that was reported back as backwards, twice, against the live app — the
-    // isolate/degree computation itself was independently verified correct
-    // both times (filters.ts's isSourceSinkReason/computeNodeDegrees), so
-    // this negation is the ONLY change; don't "fix" it back without
-    // re-confirming against the live checkbox first.
-    const activeLinks: SimLink[] = sourceSinkOnly
-      ? nodeFilteredLinks
-      : nodeFilteredLinks
-          .map((l) => ({ ...l, reasons: l.reasons.filter((r) => isSourceSinkReason(reasonSource(l, r), reasonTarget(l, r), nodeDegrees)) }))
-          .filter((l) => l.reasons.length > 0);
+    // Plain show/hide over ALL card-to-card synergy edges — no per-reason
+    // filtering, no topological subset, no opacity/quality involvement:
+    // `false` (unchecked) skips normal links ENTIRELY (both the simulation's
+    // own link set AND the visual fan-out below see nothing — an unaffected
+    // node genuinely stops being pulled by these, same "actually removed,
+    // not just hidden" requirement this always had); `true` (checked, the
+    // default) passes nodeFilteredLinks straight through, byte-for-byte the
+    // same as if this toggle didn't exist. Keyword-hub edges/nodes are a
+    // wholly separate rendering path (keywordIds below) and are never
+    // affected either way. See RenderOptions' own comment for the earlier,
+    // more complicated topological design this replaced.
+    const synergyLinks: SimLink[] = showSynergyEdges ? nodeFilteredLinks : [];
+
+    // PROTOTYPE relation-hub collapse — see RelationHubState's own comment.
+    // Groups synergyLinks' own reasons by (sourceId, description), then
+    // pulls any reason whose group crosses `relationHubThreshold` (and isn't
+    // currently expanded — see toggleRelationHub) OUT of the set that
+    // becomes both the simulation's own links AND the visual fan-out below.
+    // When the toggle itself is off (relationHubsEnabled === false, this
+    // feature's own default), every group is left alone and relationHubsById
+    // is cleared outright — no hub ever exists, byte-for-byte the same graph
+    // this file always drew before this feature existed.
+    let qualifyingHubKeys: Set<string>;
+    if (relationHubsEnabled) {
+      const relationGroups = computeRelationGroups(synergyLinks);
+      qualifyingHubKeys = updateRelationHubs(relationGroups, relationHubThreshold);
+    } else {
+      relationHubsById.clear();
+      qualifyingHubKeys = new Set();
+    }
+    const activeLinks: SimLink[] = qualifyingHubKeys.size
+      ? synergyLinks
+          .map((l) => ({
+            ...l,
+            reasons: l.reasons.filter((r) => {
+              const key = `${reasonSource(l, r)}::${r.description}`;
+              return !qualifyingHubKeys.has(key) || relationHubExpandedIds.has(key);
+            }),
+          }))
+          .filter((l) => l.reasons.length > 0)
+      : synergyLinks;
 
     // One VisualEdge per reason (not per pair) — this is the only place a
     // pair's relations fan out into separate arrows; `activeLinks` above
@@ -1354,11 +1646,111 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
         return g;
       });
 
+    // PROTOTYPE relation hubs (see updateRelationHubs/relationHubForce above)
+    // — one hub per qualifying (source, description) group, one anchor line
+    // per hub back to its source card (never one per member — see
+    // relationLinkLayer's own comment). `activeKeywordHubs`'s own drop-hubs-
+    // whose-selection-changed step already happened inside updateRelationHubs
+    // itself (relationHubsEnabled === false clears the whole map instead).
+    const activeRelationHubs = [...relationHubsById.values()];
+    const relationLinkData: RelationLinkDatum[] = activeRelationHubs.map((hub) => ({ hub }));
+
+    relationLink = relationLink
+      .data(relationLinkData, (d) => d.hub.key)
+      .join((enter) => enter.append('line').attr('class', 'relation-link'));
+
+    relationG = relationG
+      .data(activeRelationHubs, (d) => d.key)
+      .join((enter) => {
+        const g = enter
+          .append('g')
+          .attr('class', 'node-relation-hub')
+          .call(relationDrag() as any)
+          .on('click', (event: MouseEvent, d) => {
+            // Stops here rather than bubbling to svg's own background-click
+            // handler (GraphCanvas.vue's onBackgroundClick) — a hub click is
+            // a real interaction with this node, not empty canvas space.
+            event.stopPropagation();
+            toggleRelationHub(d.key);
+          });
+        return g;
+      });
+    // Whole inner markup rebuilt on EVERY render (not just `.join`'s enter
+    // branch, unlike every other node type in this file) — deliberately
+    // simple for a prototype: `expanded` can flip on the SAME hub datum
+    // between renders (a click doesn't change its identity/key), and the
+    // label/style differs by that flag, so there's no stable "build once"
+    // markup to reuse the way a card or keyword hub's own fixed-forever
+    // content has. Cheap at this scale (a handful of qualifying groups, not
+    // hundreds of cards).
+    relationG.selectAll('*').remove();
+    relationG.each(function (d) {
+      const cell = d3.select(this);
+      cell
+        .append('circle')
+        .attr('r', RELATION_HUB_RADIUS)
+        .attr('fill', RELATION_HUB_COLOR)
+        .attr('fill-opacity', d.expanded ? 0.3 : 0.62)
+        .attr('stroke', RELATION_HUB_COLOR)
+        .attr('stroke-opacity', d.expanded ? 0.9 : 0)
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', d.expanded ? '3 2' : null)
+        .attr('filter', 'url(#card-outline-glow)');
+
+      const sourceCard = cardNodeById.get(d.sourceId);
+      cell
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('y', -RELATION_HUB_RADIUS * 0.3)
+        .attr('fill', '#fff3e6')
+        .attr('font-size', 4.6 * NODE_SCALE)
+        .attr('font-weight', 700)
+        .attr('font-family', TITLE_FONT_FAMILY)
+        .attr('pointer-events', 'none')
+        .text(sourceCard ? sourceCard.name : '?');
+      cell
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('y', RELATION_HUB_RADIUS * 0.25)
+        .attr('fill', '#fff3e6')
+        .attr('fill-opacity', 0.85)
+        .attr('font-size', 3.8 * NODE_SCALE)
+        .attr('font-family', TITLE_FONT_FAMILY)
+        .attr('pointer-events', 'none')
+        .text(`${d.description} ×${d.memberIds.length}`);
+      cell
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('y', RELATION_HUB_RADIUS * 0.65)
+        .attr('fill', '#fff3e6')
+        .attr('fill-opacity', 0.6)
+        .attr('font-size', 3.2 * NODE_SCALE)
+        .attr('font-style', 'italic')
+        .attr('font-family', TITLE_FONT_FAMILY)
+        .attr('pointer-events', 'none')
+        .text(d.expanded ? 'click to collapse' : 'click to expand');
+    });
+
     simulation.nodes(activeCardNodes);
     (simulation.force('link') as d3.ForceLink<CardNode, SimLink>).links(activeLinks);
     simulation.alpha(0.6).restart();
 
     refreshHighlight();
+  }
+
+  // PROTOTYPE relation-hub click handler — flips a hub's own expanded flag
+  // and re-runs render() with whatever (filters, options) it was last called
+  // with (lastFilters/lastOptions, set at the top of render() itself). A
+  // full re-render (not a cheaper partial patch) since expanding genuinely
+  // changes the active link/simulation set, not just this one hub's own
+  // visuals — same cost as any other filter-driven re-render already is.
+  function toggleRelationHub(key: string) {
+    if (relationHubExpandedIds.has(key)) relationHubExpandedIds.delete(key);
+    else relationHubExpandedIds.add(key);
+    if (lastFilters) render(lastFilters, lastOptions);
   }
 
   // Search text and a single pinned "lookup" card (the card-lookup dropdown) feed
@@ -1464,6 +1856,12 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       if (!member || member.x == null || member.y == null) return;
       d3.select(this).attr('x1', d.hub.x).attr('y1', d.hub.y).attr('x2', member.x).attr('y2', member.y);
     });
+    relationG.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    relationLink.each(function (d) {
+      const source = cardNodeById.get(d.hub.sourceId);
+      if (!source || source.x == null || source.y == null) return;
+      d3.select(this).attr('x1', source.x).attr('y1', source.y).attr('x2', d.hub.x).attr('y2', d.hub.y);
+    });
   });
 
   // "Rerender from the ground up" — clears every node's position (and any pinned
@@ -1485,6 +1883,13 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     // clean once cards resettle (updateKeywordHubs recreates it on the very
     // next render() call below, same as an initial check would).
     keywordHubsById.clear();
+    // Same reasoning as keywordHubsById.clear() above — a relation hub's own
+    // x/y is a stale centroid once every card position is wiped, and
+    // updateRelationHubs recreates it on the very next render() call the same
+    // way updateKeywordHubs does. `relationHubExpandedIds` is left alone —
+    // which hubs the user opened isn't a position, nothing about a layout
+    // reset makes that choice stale.
+    relationHubsById.clear();
     // A "rerender" while in manaCost mode should still respect its own
     // column lock — without this, clearing fx above would have re-freed
     // every node to drift horizontally again until something else

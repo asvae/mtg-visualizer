@@ -19,12 +19,21 @@ function currentFilters(): AttrFilters {
 }
 
 // Edge-level, not per-card, so these stay out of AttrFilters above (which
-// governs node visibility) — Source-Sink narrows which real synergy edges
-// draw, keywordIds spawns/despawns synthetic keyword-hub nodes. Both live
-// entirely in graphRenderer.ts; see its own RenderOptions/keyword-hub
-// comments.
+// governs node visibility) — showSynergyEdges toggles visibility of ALL
+// card-to-card synergy edges as a whole (never touches which cards show),
+// keywordIds spawns/despawns synthetic keyword-hub nodes (a wholly separate
+// edge category, unaffected by showSynergyEdges). Both live entirely in
+// graphRenderer.ts; see its own RenderOptions/keyword-hub comments.
 function currentRenderOptions(): RenderOptions {
-  return { sourceSinkOnly: store.showSourceSinkOnly.value, keywordIds: store.selectedKeywords };
+  return {
+    showSynergyEdges: store.showSynergyEdges.value,
+    keywordIds: store.selectedKeywords,
+    // PROTOTYPE relation-hub toggle (see graphRenderer.ts's own
+    // RelationHubState/RenderOptions comments) — off by default, no effect
+    // on the graph at all unless FilterPanel's own dev control is checked.
+    relationHubsEnabled: store.relationHubsEnabled.value,
+    relationHubThreshold: store.relationHubThreshold.value,
+  };
 }
 
 onMounted(async () => {
@@ -87,11 +96,19 @@ onMounted(async () => {
 
   // Spreading each reactive Set inside the getter makes Vue track their iteration,
   // so add/delete on any filter/keyword-hub selection re-triggers this — one
-  // watcher for all axes plus the Source-Sink toggle and keyword-hub selection
+  // watcher for all axes plus the synergy-edges toggle and keyword-hub selection
   // (both edge/hub-level, not part of AttrFilters itself — see render()'s own
   // second parameter, RenderOptions).
   watch(
-    () => [...store.selectedColors, ...store.selectedRarities, ...store.selectedTypes, ...store.selectedKeywords, store.showSourceSinkOnly.value],
+    () => [
+      ...store.selectedColors,
+      ...store.selectedRarities,
+      ...store.selectedTypes,
+      ...store.selectedKeywords,
+      store.showSynergyEdges.value,
+      store.relationHubsEnabled.value,
+      store.relationHubThreshold.value,
+    ],
     () => renderer!.render(currentFilters(), currentRenderOptions())
   );
   watch(
@@ -234,6 +251,33 @@ svg#graph {
 }
 
 .node-keyword:active {
+  cursor: grabbing;
+}
+
+/* PROTOTYPE relation-hub (graphRenderer.ts's own RelationHubState) — dashed
+   like .keyword-link above, but its own copper/amber tone
+   (RELATION_HUB_COLOR) rather than keyword-hub's violet, so the two families
+   read as visually distinct at a glance despite sharing the same "synthetic
+   hub, not a real card" shape. Only ONE of these exists per hub (source card
+   -> hub), never one per member — see relationLinkLayer's own comment in
+   graphRenderer.ts for why that's a deliberate difference from
+   .keyword-link's per-member fan. */
+.relation-link {
+  stroke: #c9762e;
+  stroke-opacity: 0.35;
+  stroke-width: 1.5px;
+  stroke-dasharray: 4 3;
+  fill: none;
+  pointer-events: none;
+}
+
+.node-relation-hub {
+  /* Draggable (graphRenderer.ts's relationDrag) AND clickable (toggles
+     expand/collapse) — needs real pointer events, same as .node-keyword. */
+  cursor: pointer;
+}
+
+.node-relation-hub:active {
   cursor: grabbing;
 }
 </style>

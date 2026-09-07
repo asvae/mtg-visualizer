@@ -121,23 +121,59 @@ const SECTIONS = [
         Edges
       </button>
       <template #content>
-        <!-- Plain checkbox, not a ChecklistSection item — this is a single
-             topology-based toggle (source-node/target-node in/out degree
-             across the WHOLE graph, see filters.ts's isSourceSinkReason),
-             not one more option in an attribute checklist. -->
+        <!-- Plain checkbox, not a ChecklistSection item — a single show/hide
+             toggle over ALL card-to-card synergy edges (produce/consume/
+             atypical/grant/magnifier alike), not one more option in an
+             attribute checklist and not a per-card filter either (no card
+             ever disappears because of this — only edges do). Unchecking
+             removes every synergy edge entirely (not faded, gone from the
+             simulation too); keyword-hub edges are a wholly separate
+             category and stay unaffected either way. See graphRenderer.ts's
+             own `showSynergyEdges` RenderOptions comment for the earlier,
+             more complicated topological "Source-Sink subset" design this
+             replaced. Deliberately NOT reset by "Reset filters" above
+             (store.resetFilters()) — see that function's own comment in
+             useGraphStore.ts for why this whole Edges section is treated as
+             separate from the card-attribute filters. -->
         <UCheckbox
-          v-model="store.showSourceSinkOnly.value"
+          v-model="store.showSynergyEdges.value"
           class="mb-2.5 w-full py-1"
           :ui="{ label: 'flex w-full items-center gap-1.5 text-xs' }"
         >
           <template #label>
-            <span class="truncate">Show Source-Sink connections</span>
+            <span class="truncate">Show synergy edges</span>
           </template>
         </UCheckbox>
 
         <div class="mb-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Keywords</div>
         <div class="mb-1.5 text-[10px] text-muted">Checking one adds a hub node that pulls its cards in.</div>
         <ChecklistSection :items="keywordItems" :selected="store.selectedKeywords" />
+
+        <!-- PROTOTYPE, not a shipped feature — see graphRenderer.ts's own
+             RelationHubState comment. Generalizes the keyword-hub mechanism
+             above to ordinary synergy edges: any (source card, matched fact)
+             pair whose fan-out crosses the threshold below auto-collapses
+             into one synthetic hub instead of drawing a real link per
+             target. Deliberately not styled/labeled like a finished control
+             (no icon, plain "(prototype)" suffix) — this is here to be
+             clicked during a review pass, not to live in the UI long-term. -->
+        <div class="mt-2.5 border-t border-border-subtle pt-2.5">
+          <UCheckbox v-model="store.relationHubsEnabled.value" class="mb-1.5 w-full py-1" :ui="{ label: 'flex w-full items-center gap-1.5 text-xs' }">
+            <template #label>
+              <span class="truncate">Relation hubs (prototype)</span>
+            </template>
+          </UCheckbox>
+          <div v-if="store.relationHubsEnabled.value" class="flex items-center gap-1.5 text-[10px] text-muted">
+            <span>Fan-out threshold</span>
+            <input
+              type="number"
+              min="1"
+              :value="store.relationHubThreshold.value"
+              class="w-14 rounded border border-border-subtle bg-surface px-1 py-0.5 text-[11px] text-text"
+              @change="store.relationHubThreshold.value = Math.max(1, Number(($event.target as HTMLInputElement).value) || 1)"
+            />
+          </div>
+        </div>
       </template>
     </UCollapsible>
   </aside>

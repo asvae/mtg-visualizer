@@ -248,7 +248,17 @@ interface SavedFilters {
   // invent them; applySavedFilters below treats their absence as "empty
   // set"/"off", same neutral default a fresh, never-saved visit already gets.
   keywords?: string[];
-  sourceSinkOnly?: boolean;
+  // Absence means "on" (true) here, unlike every other optional field in
+  // this interface, which defaults to "off"/empty — `showSynergyEdges`'s own
+  // default IS true (see its declaration above), so a blob saved before this
+  // field existed, or before its predecessor `sourceSinkOnly` was redesigned
+  // into this, correctly falls back to the new normal/default look rather
+  // than silently hiding every synergy edge. Deliberately not read from a
+  // stale `sourceSinkOnly` key either — that field's OLD meaning (isolate to
+  // a topological pure-producer->pure-consumer subset) doesn't map onto this
+  // one's meaning (plain show/hide of everything) at all, so an old saved
+  // value is just orphaned/ignored rather than reinterpreted.
+  showSynergyEdges?: boolean;
 }
 
 function loadSavedFilters(): SavedFilters | null {
@@ -351,16 +361,36 @@ export function useGraphStore() {
   const selectedColors = reactive(new Set<string>());
   const selectedRarities = reactive(new Set<string>());
   const selectedTypes = reactive(new Set<string>());
-  // Keywords/Source-Sink (FilterPanel.vue's "Edges" section) — unlike the
-  // three axes above, both default to their neutral/off state (empty set,
-  // false) rather than "everything selected": most cards carry no
-  // BADGE_KEYWORDS at all, and Source-Sink is an opt-in topology view, not
-  // a per-card attribute with a natural "every option" default. Persisted to
-  // localStorage the same way colors/rarity/type are (see filterPayload/
-  // applySavedFilters below) — NOT mirrored to the URL/share-link the way
-  // colors/rarity/type optionally are, since nothing asked for that yet.
+  // Keywords (FilterPanel.vue's "Edges" section) — unlike the three axes
+  // above, defaults to its neutral/off state (empty set) rather than
+  // "everything selected": most cards carry no BADGE_KEYWORDS at all.
+  // Persisted to localStorage the same way colors/rarity/type are (see
+  // filterPayload/applySavedFilters below) — NOT mirrored to the URL/
+  // share-link the way colors/rarity/type optionally are, since nothing
+  // asked for that yet.
   const selectedKeywords = reactive(new Set<string>());
-  const showSourceSinkOnly = ref(false);
+  // Plain show/hide over ALL card-to-card synergy edges (graphRenderer.ts's
+  // own `showSynergyEdges` RenderOptions field has the full comment) —
+  // `true` (checked) is the default/normal look; unchecking removes every
+  // synergy edge entirely (not just fades it), leaving only keyword-hub
+  // edges (a separate category) if any are active. Named/shaped this way
+  // after a redesign — an earlier version (`showSourceSinkOnly`) isolated
+  // the graph down to a topological pure-producer->pure-consumer SUBSET
+  // instead, which turned out not to match what was actually wanted; see
+  // this session's own design notes for the full history.
+  const showSynergyEdges = ref(true);
+
+  // PROTOTYPE (see .claude/agent-memory/ui/notes.md's own design writeup) —
+  // generalizes the keyword-hub mechanism above to ordinary synergy edges: a
+  // (source card, matched fact) pair whose fan-out crosses this threshold
+  // auto-collapses into a synthetic "relation hub" instead of drawing one
+  // real link per target (graphRenderer.ts's own RelationHubState). Off by
+  // default and deliberately NOT persisted to localStorage the way every
+  // other filter/force above is — a temporary dev toggle for evaluating the
+  // idea, not a real setting yet. FilterPanel.vue's own "Relation hubs
+  // (prototype)" control is the only place these are read from.
+  const relationHubsEnabled = ref(false);
+  const relationHubThreshold = ref(20);
 
   // Click-to-select highlight on card nodes — ephemeral exploration state, not
   // persisted anywhere (not URL, not localStorage) and compounds with search
@@ -537,12 +567,21 @@ export function useGraphStore() {
     availableTypes.value.forEach((t) => selectedTypes.add(t));
   }
 
+  // Colors/Rarity/Type only — deliberately does NOT touch selectedKeywords,
+  // showSynergyEdges, or the relation-hub prototype's own
+  // relationHubsEnabled/relationHubThreshold. Those all live in FilterPanel's
+  // "Edges" section, but per the user's own explicit call, that section
+  // isn't a filter the same way Colors/Rarity/Type are (it never hides a
+  // CARD — a keyword hub is a synthetic node, showSynergyEdges toggles
+  // visibility of the synergy-edge category as a whole, relation hubs
+  // collapse rendering, not membership), so bundling their reset into THIS
+  // button would surprise someone who just wanted to re-widen an attribute
+  // filter back out. If a reset affordance for the Edges section is ever
+  // wanted, it should be its own separate control, not folded in here.
   function resetFilters() {
     selectAllColors();
     selectAllRarities();
     selectAllTypes();
-    selectedKeywords.clear();
-    showSourceSinkOnly.value = false;
   }
 
   // Plain snapshot of the filter state that gets persisted to localStorage —
@@ -553,7 +592,7 @@ export function useGraphStore() {
     rarities: [...selectedRarities],
     types: [...selectedTypes],
     keywords: [...selectedKeywords],
-    sourceSinkOnly: showSourceSinkOnly.value,
+    showSynergyEdges: showSynergyEdges.value,
   }));
 
   function applySavedFilters(data: GraphFile, rarities: string[], types: string[], keywords: string[]) {
@@ -595,7 +634,10 @@ export function useGraphStore() {
     const validKeywords = new Set(keywords);
     selectedKeywords.clear();
     (stored?.keywords ?? []).filter((k) => validKeywords.has(k)).forEach((k) => selectedKeywords.add(k));
-    showSourceSinkOnly.value = stored?.sourceSinkOnly ?? false;
+    // `?? true`, not `?? false` — see SavedFilters.showSynergyEdges' own
+    // comment for why this one field's absence means "on," unlike every
+    // other optional field restored here.
+    showSynergyEdges.value = stored?.showSynergyEdges ?? true;
 
     return true;
   }
@@ -754,7 +796,9 @@ export function useGraphStore() {
     selectedRarities,
     selectedTypes,
     selectedKeywords,
-    showSourceSinkOnly,
+    showSynergyEdges,
+    relationHubsEnabled,
+    relationHubThreshold,
     cardSelection,
     toggleCardSelection,
     availableRarities,

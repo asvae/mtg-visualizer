@@ -84,49 +84,18 @@ export function computeFacetCounts(graph: GraphFile, f: AttrFilters): FacetCount
   return { colors, rarities, types, keywords };
 }
 
-// --- Edge topology (Source-Sink filter) ------------------------------------
-// A node's in/out degree, counted per DIRECTED relation (GraphReason.from),
-// not per undirected CardLink pair — a single pair can carry reasons
-// pointing both ways (each card is a source for one fact and a sink for
-// another), so degree has to be tallied per-reason.
-export interface NodeDegree {
-  inDegree: number;
-  outDegree: number;
-}
-
-export function computeNodeDegrees(graph: GraphFile): Map<string, NodeDegree> {
-  const degrees = new Map<string, NodeDegree>();
-  const entry = (id: string) => {
-    let d = degrees.get(id);
-    if (!d) {
-      d = { inDegree: 0, outDegree: 0 };
-      degrees.set(id, d);
-    }
-    return d;
-  };
-  for (const l of graph.links) {
-    for (const r of l.reasons) {
-      const sourceId = r.from === 'a' ? l.a : l.b;
-      const targetId = r.from === 'a' ? l.b : l.a;
-      entry(sourceId).outDegree++;
-      entry(targetId).inDegree++;
-    }
-  }
-  return degrees;
-}
-
-// "Source-Sink connection": a directed edge whose source has NO incoming
-// edges anywhere in the graph (a pure producer/root — nothing feeds it) and
-// whose target has NO outgoing edges anywhere in the graph (a pure
-// consumer/leaf — it feeds nothing onward). `degrees` is expected to be
-// computed once from the graph's FULL, unfiltered edge list (see
-// computeNodeDegrees) — recomputing it from an already-filtered edge set
-// would make toggling an unrelated filter (colors, say) change what counts
-// as "pure," which defeats the point of a stable topology-based filter.
-export function isSourceSinkReason(sourceId: string, targetId: string, degrees: ReadonlyMap<string, NodeDegree>): boolean {
-  return (degrees.get(sourceId)?.inDegree ?? 0) === 0 && (degrees.get(targetId)?.outDegree ?? 0) === 0;
-}
-
+// reasonSource/reasonTarget: which of a link's a/b is a given reason's
+// source (arrow tail) vs. target (arrow head) — see GraphReason.from's own
+// doc comment (app/types.ts). Used by graphRenderer.ts's relation-hub
+// grouping (RelationHubState). This file previously also had a topological
+// "Source-Sink" degree computation here (computeNodeDegrees/
+// isSourceSinkReason/NodeDegree) backing a since-abandoned FilterPanel
+// feature that isolated the graph down to pure-producer->pure-consumer
+// edges only — removed outright (not just unwired) once the feature's
+// actual design settled on a much simpler plain show/hide toggle over ALL
+// card-to-card synergy edges (see graphRenderer.ts's own render() and
+// GraphCanvas.vue's `showSynergyEdges`), which needs no per-node degree
+// concept at all.
 export function reasonSource(l: { a: string; b: string }, r: GraphReason): string {
   return r.from === 'a' ? l.a : l.b;
 }

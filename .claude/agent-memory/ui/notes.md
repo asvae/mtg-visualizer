@@ -200,18 +200,224 @@ resume alone (session transcripts are swept after ~30 days).
     if this reads as *too* washed out in practice — the opacity number was a
     judgment call, not a hard requirement.
 
+- PROTOTYPE (not shipped, dev-only toggle, off by default) — "relation hubs":
+  generalized the keyword-hub mechanism (see keyword-hub entries above) to
+  ordinary produce/consume/atypical/grant/magnifier synergy edges, per an
+  explicit ask to prototype "critical mass" edge collapse for broad
+  affects-all-X effects (an anthem hitting every creature in a set, e.g.).
+  Lives entirely in graphRenderer.ts (`RelationHubState`/`relationHubsById`/
+  `relationHubForce`/`relationDrag`/`toggleRelationHub`, new `.relation-link`/
+  `.node-relation-hub` CSS in GraphCanvas.vue), plus a `relationHubsEnabled`/
+  `relationHubThreshold` pair on the store and a "Relation hubs (prototype)"
+  checkbox + number input in FilterPanel.vue's Edges section (explicitly
+  labeled non-production, not styled as a finished control on purpose).
+  Deliberately did NOT touch the keyword-hub or Source-Sink code paths
+  themselves — built alongside, reusing the same custom-D3-force pattern
+  (ease hub toward member centroid + nudge member velocity every tick,
+  registered as its own named `simulation.force('relationHub', ...)`) rather
+  than modifying KeywordHubState/keywordHubForce's own behavior, per explicit
+  instruction.
+  - Grouping key: `${sourceId}::${reason.description}` — the closest
+    client-visible proxy for server/api/graph-links.ts's own `sourceKey`
+    (`${producer}::${fact.id}`), which never crosses the API boundary (see
+    GraphReason's own fields, api-contract.md). A distinct fact landing on an
+    identical description string as another one on the SAME card would
+    incorrectly merge under this proxy — accepted as a known approximation
+    for a prototype pass, not chased further (would need a new field added to
+    GraphReason to fix properly, which is server/api/graph-links.ts's own
+    surface — flag to `card`/whoever owns that route if this graduates past
+    prototype).
+  - Threshold landed on 20 (FilterPanel's own number input, live-tunable, no
+    re-fetch needed) by eyeballing the REAL FIN corpus via a standalone graph-
+    links.json pull + grouping script (not committed, scratch-only): the
+    dominant high-fanout category by far is a generic zone-presence fact
+    ("battlefield presence" — see `describeFact` in functional-model/
+    synergy.ts, meaning roughly "this card merely exists on the battlefield")
+    matched almost universally among FIN's ~100 legendary creatures against
+    each other, fanning out 100-129 targets per source, ~93 such source
+    groups. The next-broadest REAL category (e.g. "Creature permanents in
+    your battlefield," a genuine zone-count fact) tops out around 11 — so 20
+    cleanly separates "the runaway-clique case this feature targets" from
+    "a normal, if generous, match" without fine-tuning.
+  - IMPORTANT CAVEAT, worth relaying if this idea moves past prototype: FIN's
+    corpus has NO genuine single-card "anthem grants +1/+1 to all creatures"
+    edge case in the actual graph-links data today — a real card with that
+    exact oracle text (Rydia's Return, "Creatures you control get +3/+3 until
+    end of turn") produces ZERO source-fact edges for that clause at all
+    (confirmed directly against graph-links.json). The functional-model
+    matcher apparently doesn't model "buffs your own board" as a two-card
+    interaction the way it does produce/consume-style facts — that's an
+    `engine`-side modeling gap, not something I chased further (out of my
+    lane). The concrete demo this prototype actually exercises is the
+    "battlefield presence" zone-presence clique instead — a real, if
+    less-relatable, stand-in for the same "broad fact matched by nearly
+    everything" shape the task described. Flag this if the user wants a truer
+    "one anthem card, its whole board glows" demo — that needs an `engine`
+    change first, not a `ui` one.
+  - Verified end-to-end via Playwright against the live dev server (FIN,
+    default corpus): full ungated graph (Source-Sink checkbox checked) draws
+    10179 `path.link` elements; flipping "Relation hubs (prototype)" on at the
+    default threshold (20) collapses that down to 2696 real links + 73
+    synthetic hub nodes (a ~74% cut in real SVG/simulation edge count).
+    Clicking one hub's `<g>` (real click, not a synthetic DOM event) flips its
+    `expanded` flag and its own reasons flow back into the normal
+    activeLinks/activeEdges pipeline unchanged — no separate "expanded"
+    render path needed, confirmed the specific hub's own reason-count worth
+    of real links reappeared (+118) while the hub itself stayed on-screen
+    (relabeled "click to collapse") to toggle back. Confirmed a fresh,
+    untouched page load is byte-for-byte unaffected (753 links — the
+    existing Source-Sink-isolate default — 0 hub nodes, 0 console errors)
+    since `relationHubsEnabled` defaults to `false` and nothing reads
+    threshold/groups at all when it's off.
+  - Own take, for whoever reviews this: the mechanism itself works (edge
+    count genuinely collapses, expand/collapse toggling is real, default
+    behavior is untouched) but the FIN corpus's actual dominant high-fanout
+    case (many source cards independently forming ~93 NEAR-IDENTICAL
+    "battlefield presence" cliques against nearly the same ~100-card
+    population) is a worse test case than a clean single-anthem scenario:
+    since each qualifying source gets its OWN hub, ~93 hubs end up densely
+    overlapping/stacked on nearly the same screen position (their member
+    centroids are nearly identical), reading as a confusing amber blob
+    instead of N clean separate landmarks — screenshotted, visibly a mess at
+    the "73 hubs on screen" zoom level. If this graduates past prototype,
+    worth exploring merging/deduplicating hubs whose member SETS are
+    near-identical (one hub per distinct membership signature rather than
+    per source card) rather than tuning the threshold further — the fanout
+    threshold itself isn't the problem, the 1-hub-per-source assumption is.
+    Didn't attempt that consolidation here (scope: get the core auto-collapse
+    idea running and evaluable, not solve every corpus-specific rough edge).
+
+- Follow-up bug investigation on the relation-hub prototype above (two
+  issues the user hit testing it live) — BOTH resolved as non-bugs, verified
+  via real Playwright interaction (real button/checkbox clicks through
+  Playwright's own actionability checks, not `page.evaluate(() =>
+  el.click())`, which — found out the hard way — bypasses visibility/
+  clickability entirely and had been silently masking whether the panel was
+  even open during my own first-pass verification):
+  - **"Checkbox has no visible effect"**: the wiring is correct end-to-end
+    (`v-model` -> `relationHubsEnabled` ref -> `currentRenderOptions()` ->
+    watch -> `render()`, confirmed the checkbox's own `aria-checked`
+    actually flips true on a real click). The real explanation: the DEFAULT
+    view is the Source-Sink-isolated 753-edge subset (unchecked = isolate,
+    see that filter's own polarity note above), and within that
+    topologically-restricted subset (pure-producer -> pure-consumer edges
+    only), NO (source, description) group happens to cross the default
+    threshold of 20 — so there's genuinely nothing to collapse until either
+    the threshold is lowered (confirmed: dropping it to 5 in that same
+    isolated view produces 44 hubs / 96 links) or Source-Sink is ALSO
+    checked (full graph — confirmed: 2696 links / 73 hubs at the default
+    threshold, same numbers as my original verification pass). Not a code
+    fix — this is a discoverability/default-view gap worth flagging if the
+    feature continues: the prototype's own effect is invisible under this
+    app's actual default filter state unless the user also touches a SEPARATE
+    checkbox first. Didn't change anything here (evaluation-stage
+    prototype, not a fix task) — flagging for whoever reviews next.
+  - **"Stray faint edges on Choco/Mog, Cid, Esper Ramuh with Source-Sink
+    unchecked"**: NOT stale DOM/exit-not-removed, NOT keyword/relation-hub
+    link bleed-through (confirmed zero `.relation-link`/`.node-relation-hub`
+    elements exist while the prototype toggle is off, which it was for this
+    repro), NOT an opacity leak on filtered-OUT edges. Every single edge
+    touching these three unrelated cards (41 for Summon: Choco/Mog, 26 for
+    Summon: Esper Ramuh, both counts independently re-derived from raw
+    graph-links.json + a from-scratch reimplementation of
+    computeNodeDegrees/isSourceSinkReason, then cross-checked byte-for-byte
+    against the LIVE DOM's own bound `__data__`) is a real, correctly-
+    qualifying pure-source->pure-sink edge — description `"battlefield
+    presence"` or `"graveyard presence"` on all of them. Systemic across
+    unrelated cards for a real reason, not a shared bug: those two facts are
+    near-universal in FIN (matched by ~100+ legendary/permanent cards each),
+    so a large fraction of the topologically-pure-sink nodes in this corpus
+    happen to be reachable by one of them — same card set the relation-hub
+    prototype's own "battlefield presence" cliques above are built from.
+    "Barely visible" is the PRE-EXISTING quality-based opacity gradient
+    (`edgeColorScale`/`qualityNorm`, floor 0.15) correctly bottoming out for
+    a fact this widely shared (its `reasonWeight` budget splits ~100+ ways) —
+    by design (reasonWeight's own header comment: "a fact matched by dozens
+    spreads thin"), not a defect. Confirmed this ALSO reproduces identically
+    (same 41/26 counts) on a clean `git stash` back to the pre-prototype
+    commit — predates every line of my relation-hub work, not a regression
+    I introduced. No code change made (correctly-functioning existing
+    behavior, not a bug) — if the user still wants "presence" facts excluded
+    from the Source-Sink filter's qualifying set entirely (a real, separate
+    design question: should a near-universal fact ever count as a "pure"
+    source/sink edge at all?), that's a `filters.ts`/`isSourceSinkReason`
+    scope question for a future task, and arguably touches whether
+    functional-model should even MODEL "presence" as a matchable fact in the
+    first place (`engine`'s lane) — flagged, not actioned.
+  - Reusable finding for future live-repro tasks in this app: this project's
+    FilterPanel starts CLOSED (`store.panelOpen` defaults false, off-screen
+    via negative margin), so any Playwright repro against a fresh page load
+    needs a real click on the header's "Toggle themes panel" button
+    (`aria-label`, not a literal "Filters" text) before any filter-panel
+    control is actually clickable/visible — `page.evaluate(() =>
+    el.click())` will "work" (fires the framework's click handler) even
+    while the panel is off-screen and would NOT catch this class of gap;
+    only a real Playwright `locator.click()` (which asserts visibility
+    first) surfaces it.
+
+- SUPERSEDES all "Source-Sink" entries above (the checkbox polarity
+  back-and-forth, the isolate-753-edges design, the topological
+  computeNodeDegrees/isSourceSinkReason machinery, the "checkbox has no
+  visible effect because default view is the isolated 753-edge subset" bug
+  finding) — the whole topological "pure producer -> pure consumer subset"
+  MODEL was confirmed wrong by the user, not just its polarity, and was
+  scrapped entirely rather than patched again. Real intent: the graph has
+  two independent edge categories — (1) keyword-to-card (keyword hubs) and
+  (2) card-to-card (ALL produce/consume/atypical/grant/magnifier reasons, no
+  topological subset). The control formerly named "Source-Sink" is now a
+  PLAIN show/hide toggle over category 2 as a whole:
+  - `store.showSynergyEdges` (renamed from `showSourceSinkOnly` — the old
+    name's "Only" no longer means anything once there's no subset), default
+    `true` (checked = normal look, same as if the feature didn't exist).
+  - `false` (unchecked) removes EVERY card-to-card synergy edge completely —
+    not faded, not filtered by degree, genuinely absent from both
+    `activeLinks` (so physics stops pulling too) and the visual `activeEdges`
+    fan-out. `graphRenderer.ts`'s `render()`: `const synergyLinks: SimLink[]
+    = showSynergyEdges ? nodeFilteredLinks : [];` — the entire prior
+    per-reason `isSourceSinkReason` filtering step is gone, not just
+    inverted again.
+  - Deleted `computeNodeDegrees`/`isSourceSinkReason`/`NodeDegree` from
+    `filters.ts` outright (not left orphaned-but-unused) — no other
+    consumer existed project-wide (grepped to confirm) and keeping a dead
+    topological model around would misdirect a future reader. `reasonSource`/
+    `reasonTarget` stay (still used by the relation-hub prototype's own
+    grouping).
+  - Checkbox polarity is now genuinely natural (checked=show, unchecked=hide,
+    matching its own label) — no inversion, no polarity-justifying comment
+    needed anymore. Relabeled "Show Source-Sink connections" ->
+    **"Show synergy edges"** since "Source-Sink" as a concept no longer
+    exists in this feature at all.
+  - `resetFilters()` (useGraphStore.ts) — confirmed separately, this was
+    ALSO the task that first pulled `showSourceSinkOnly`/`selectedKeywords`/
+    relation-hub state out of "Reset filters" — that decoupling survives
+    this redesign unchanged (Edges section still isn't reset by the
+    Colors/Rarity/Type reset button).
+  - Verified live via real Playwright clicks (not `page.evaluate(() =>
+    el.click())`) against FIN's real graph-links: checked (default) = 10179
+    links (byte-for-byte the same as if the toggle didn't exist); one real
+    click -> unchecked = 0 card-to-card links; one more real click -> back to
+    10179. Separately confirmed a keyword hub (checked "Flying", 36
+    keyword-link lines + 1 hub node) is completely unaffected by toggling
+    this checkbox either way — category 1 (keyword) and category 2
+    (card-to-card) are fully decoupled, per spec. Card count (Colors/Rarity/
+    Type-driven) never moved in any of this — confirmed unchanged at 306
+    throughout.
+  - `SavedFilters.showSynergyEdges` (localStorage) is the one field in that
+    interface whose ABSENCE means "on" (`?? true`), not "off" — every other
+    optional field there defaults to off/empty. Deliberately does NOT read
+    from a stale `sourceSinkOnly` key as a fallback either — that field's OLD
+    meaning (isolate to a topological subset) doesn't map onto this one's
+    meaning (plain show/hide of everything) at all, so an old saved value is
+    orphaned/ignored rather than reinterpreted; a pre-existing saved blob
+    from before this redesign just gets the new default (shown) on next
+    load, not a silently-wrong inherited value.
+
 ## Open questions
 
-- RESOLVED (was the entry above): Source-Sink checkbox polarity was
-  intentional, not a bug — confirmed explicitly. Unchecked=isolate (753),
-  checked=full graph (10179). See the "RESOLVED" note under Decisions above
-  for what actually changed.
-- ❓ The checkbox's own label ("Show Source-Sink connections") now reads
-  backwards from its real polarity (unchecked isolates, checked shows
-  everything) — worth a copy tweak at some point (e.g. "Isolate Source-Sink
-  connections," unchecked by default) but not done yet since it wasn't asked
-  for and touching label text felt like scope creep on top of an already
-  multi-round fix; flag if it should happen now.
+(none currently open on the synergy-edges toggle — see the SUPERSEDES entry
+above for the full redesign history; the old "checkbox label reads
+backwards" question no longer applies now that the polarity is natural and
+the label itself changed.)
 
 - Fixed a real bug (buildGraph.ts's `manaCost` field): a split/adventure/
   multi-way-split card's node showed EVERY face's mana pips concatenated
