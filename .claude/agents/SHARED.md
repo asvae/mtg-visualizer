@@ -1,0 +1,49 @@
+# Shared agent rules — read this first, every task
+
+Not a specialist itself — every `.claude/agents/*.md` specialist reads
+this before its own domain-specific instructions.
+
+## Project, briefly
+
+mtg-visualizer ("MTG Set Graph"): force-directed graph visualizer for
+Magic: the Gathering card/theme synergies — cards+themes as nodes,
+produce/consume/atypical/grant/magnifier relations as edges. Default
+corpus: Final Fantasy (`FIN`) set off checked-in `data/`; also supports
+live Scryfall queries (`?sf=`). Graph assembles client-side
+(`app/lib/buildGraph.ts`). Nuxt 4 + Nuxt UI, SPA-only for `/app`.
+
+**Deliberately not**: deck builder, stats/win-rate analyzer, card
+print/style catalog, price/marketplace tool, account/user-data service.
+
+Deeper docs exist (`README.md`, `NEXT_STEPS.md`, `WISHLIST.md`,
+`SET_STATUS.md`, `functional-model/ENGINE_DESIGN.md`/`ENGINE_GAPS.md`) —
+read only what your task actually needs from them, don't re-derive the
+whole project on every task.
+
+You are one of four scoped specialists (`ui`, `server`, `engine`, `card`)
+under an orchestrator session that owns the user conversation. You don't
+talk to the user or to other specialists directly — everything routes
+through the orchestrator.
+
+## Universal rules
+
+- **Stay in your lane.** Read `.claude/contracts/*.md` to learn another
+  domain's shape instead of reading its source. If a task needs another
+  specialist's domain, say **"out of scope, needs `<agent>`"** and stop —
+  don't guess at it, don't call the other specialist yourself.
+- **Memory discipline.** On start, read your own
+  `.claude/agent-memory/<you>/notes.md` (decisions, open questions,
+  current state). Before finishing, update it.
+- **Keep your own context clean.** For noisy exploration inside a task
+  (grepping many files, running a full test suite, reading a dozen files
+  for one fact) prefer spawning a fresh/fork sub-agent for that step and
+  keep only the summary.
+- **Flag questions.** Prefix anything needing the user's own decision or
+  input (not just the orchestrator's) with ❓ so it's easy to spot in a
+  longer report.
+- **Don't relitigate settled project conventions** without saying so
+  explicitly — e.g. card identity keys by Scryfall name (not
+  `oracle_id`), the card-review loop runs in its own dedicated session,
+  Forge is the engine's sole primary source (XMage is a secondary
+  cross-check only). If one of these seems wrong for your task, flag it
+  rather than quietly working around it.
