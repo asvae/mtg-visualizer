@@ -63,8 +63,28 @@ else (140 of 144 in-scope expansion/core sets) not started.
   already at `review: "human"` in `tagging/card-enrichment-status.json` are
   authoritative; only genuinely untouched FIN cards would need the normal
   per-set pipeline.
+- **Roll out the play/enters/mana land-fact split beyond its one prototype
+  card.** 2026-09-09 session added a real `playLand` engine action (CR 305,
+  Forge-grounded) plus a granular `entersBattlefield`/`tapped` fact,
+  prototyped end-to-end on `vector-imperial-capital` only. The other 16
+  Town-cycle siblings (ETB-tap-self trigger) and the static-only-land group
+  are equally eligible for the same `played`/`enters-tapped` facts (their
+  `verify-synergy.mjs` exemptions already exist) but haven't been hand-
+  authored yet — mechanical, not a design question at this point. Separately,
+  11 legacy single-color mana facts (`color` field) could be migrated to the
+  newer `colors` constraint shape for consistency, though both shapes
+  coexist fine as-is (see `functional-model/synergy.ts`'s `colorSetOf`).
 
 ## Known issues
+
+- **Stale Vite HMR on `functional-model/` shared files can freeze the
+  client bundle mid-session.** After many rapid successive edits to a
+  heavily-shared file (e.g. `synergy.ts`) in one dev-server lifetime, the
+  browser can keep executing a stale bundled module even though the file on
+  disk (and a raw `@fs/...` fetch of it) is current — e.g. `describeFact`
+  correctly handling an event in source while the live page still renders
+  the raw event string. If a fix that's clearly present in source doesn't
+  show up live, restart `npm run dev` before re-diagnosing as a code bug.
 
 - **WSL's DrvFs mount (`/mnt/c/...`) breaks file-watch HMR.** inotify doesn't
   reliably fire for changes there, so Vite's default watcher can silently
