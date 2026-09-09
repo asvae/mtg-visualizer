@@ -33,11 +33,13 @@ export function runEngineScenarios(): TraceResult[] {
   });
   pilot.log.push({ fn: 'enters', card: ochuReal.name, zone: 'Battlefield', power: ochuReal.basePower, toughness: ochuReal.baseToughness });
 
-  // A 4-toughness blocker — without Deathtouch, Ochu's 1 damage would be
-  // nowhere near lethal (1 << 4). Its own 4 power is real lethal to Ochu's
-  // 1 toughness too, so both sides genuinely die — Deathtouch's own real
-  // effect is what makes the BIG blocker's death the surprising half.
-  const bigBlocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Big Blocker', types: ['Creature'], basePower: 4, baseToughness: 4 });
+  // Gigantoad — a real FIN 4-toughness blocker (printed base 4/4; its own
+  // conditional +2/+2-at-seven-lands static ability never fires here). Without
+  // Deathtouch, Ochu's 1 damage would be nowhere near lethal (1 << 4). Its own
+  // 4 power is real lethal to Ochu's 1 toughness too, so both sides genuinely
+  // die — Deathtouch's own real effect is what makes Gigantoad's death the
+  // surprising half.
+  const bigBlocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Gigantoad', types: ['Creature'], subtypes: ['Frog'], basePower: 4, baseToughness: 4 });
   pilot.log.push({
     fn: 'enters',
     card: bigBlocker.name,

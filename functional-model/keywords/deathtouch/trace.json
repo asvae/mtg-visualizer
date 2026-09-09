@@ -26,7 +26,7 @@
       },
       {
         "fn": "enters",
-        "card": "Big Blocker",
+        "card": "Gigantoad",
         "zone": "Battlefield",
         "power": 4,
         "toughness": 4,
@@ -54,18 +54,18 @@
       },
       {
         "fn": "block",
-        "blocker": "Big Blocker",
+        "blocker": "Gigantoad",
         "attacker": "Gran Pulse Ochu"
       },
       {
         "fn": "dealDamage",
         "source": "Gran Pulse Ochu",
-        "target": "Big Blocker",
+        "target": "Gigantoad",
         "amount": 1
       },
       {
         "fn": "dealDamage",
-        "source": "Big Blocker",
+        "source": "Gigantoad",
         "target": "Gran Pulse Ochu",
         "amount": 4
       },
@@ -76,7 +76,7 @@
       },
       {
         "fn": "destroy",
-        "target": "Big Blocker",
+        "target": "Gigantoad",
         "controller": "opp0"
       }
     ],
@@ -98,7 +98,7 @@
         "from": 5
       },
       {
-        "label": "Declare Big Blocker as blocker",
+        "label": "Declare Gigantoad as blocker",
         "from": 6
       },
       {

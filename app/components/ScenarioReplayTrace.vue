@@ -54,19 +54,30 @@ const props = defineProps<{
   cardToughness?: string;
   cardBackPower?: string;
   cardBackToughness?: string;
+  /** See ScenarioReplay.vue's own doc comment on this prop — real art/keywords for any OTHER genuinely-named real card, keyed by name. Undefined everywhere except the keywords-coverage page. */
+  namedCardArt?: Record<string, { images: string[]; keywords: string[]; power?: string; toughness?: string }>;
 }>();
 
-/** One or two image URLs to show for this card (front, then back for a flipping self) — undefined when this card has no real art to show (an old-style synthetic filler, `placeholderLabel` covers it instead) OR when it's real hidden information (a card sitting in Library — real MTG rules, a library is secret; the `card-back` branch below covers that instead, even for a real-identity filler like GENERIC_FILLER_LAND that this file otherwise happily shows real art for everywhere else). */
+/** One or two image URLs to show for this card (front, then back for a flipping self) — undefined when this card has no real art to show (an old-style synthetic filler, `placeholderLabel` covers it instead), or when it's real hidden information (a card sitting in Library — real MTG rules, a library is secret; the `card-back` branch below covers that instead, even for a real-identity filler like GENERIC_FILLER_LAND that this file otherwise happily shows real art for everywhere else). `namedCardArt` (keyed by this card's own real name) is checked FIRST, ahead of the singular `isSelf`-only `cardImages` prop below — it covers the exact same tested "self" card just as well when present (see its own doc comment), PLUS any other real card a keywords-page scenario puts on the board that isn't `isSelf` at all (e.g. flying-reach's own Iron Giant blocking Ahriman — neither is ever marked `isSelf` there, see scenarioReplay.ts's own `instanceId`-driven detection). */
 function imagesFor(card: GroupedReplayCard): string[] | undefined {
   if (card.zone === 'Library') return undefined;
+  const named = props.namedCardArt?.[card.name];
+  if (named?.images.length) return named.images;
   if (card.isSelf) return props.cardImages?.length ? props.cardImages : undefined;
   const filler = props.fillerImages?.[card.name];
   return filler ? [filler] : undefined;
 }
 
-/** This card's keywords worth a badge — its own real printed ones (self only) plus anything `grantKeyword` added mid-scenario, filtered down to what AbilityIcon.vue actually has a glyph for. */
+/** This card's own real printed keywords — `namedCardArt` by name when present (any real card a keywords-page scenario references), else the singular `cardKeywords` prop for the `isSelf` card only (per-card page's own Scenarios tab), else none (a bystander/filler with no real identity of its own). */
+function printedKeywords(card: GroupedReplayCard): string[] {
+  const named = props.namedCardArt?.[card.name];
+  if (named) return named.keywords;
+  return card.isSelf ? (props.cardKeywords ?? []) : [];
+}
+
+/** This card's keywords worth a badge — its own real printed ones (see `printedKeywords`) plus anything `grantKeyword` added mid-scenario, filtered down to what AbilityIcon.vue actually has a glyph for. */
 function iconKeywords(card: GroupedReplayCard): string[] {
-  const all = card.isSelf ? new Set([...(props.cardKeywords ?? []), ...card.keywords]) : card.keywords;
+  const all = new Set([...printedKeywords(card), ...card.keywords]);
   return [...all].filter((k) => ABILITY_ICON_NAMES.has(k));
 }
 

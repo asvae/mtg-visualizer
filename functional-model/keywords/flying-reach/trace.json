@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "",
       "action": "real engine playthrough: declare Flying attacker -> illegal block rejected (509.1b) -> legal Reach block -> real combat damage",
-      "result": "Real 509.1b: Grounded Blocker (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
+      "result": "Real 509.1b: Coeurl (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
       "raw": {
-        "result": "Real 509.1b: Grounded Blocker (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
+        "result": "Real 509.1b: Coeurl (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
         "you": {
           "libraryCount": 3
         },
@@ -34,7 +34,7 @@
       },
       {
         "fn": "enters",
-        "card": "Grounded Blocker",
+        "card": "Coeurl",
         "zone": "Battlefield",
         "power": 2,
         "toughness": 2,
@@ -62,7 +62,7 @@
       },
       {
         "fn": "illegalAttempt",
-        "card": "Grounded Blocker",
+        "card": "Coeurl",
         "reason": "\"Ahriman\" has flying — only a creature with flying or reach can block it (509.1b)"
       },
       {
@@ -111,7 +111,7 @@
         "from": 6
       },
       {
-        "label": "Attempt (expected illegal): Grounded Blocker (no Flying/Reach) blocks Ahriman",
+        "label": "Attempt (expected illegal): Coeurl (no Flying/Reach) blocks Ahriman",
         "from": 7
       },
       {

@@ -4,7 +4,9 @@
 // Lightning, Army of One (real FirstStrike) and Giott, King of the Dwarves
 // (real DoubleStrike), reused directly (name/pt/keywords) onto a
 // battlefield rather than cast — this bundle's subject is real combat's own
-// 510.5 two-pass damage ordering (`engine.ts`'s `resolveCombatDamage`).
+// 510.5 two-pass damage ordering (`engine.ts`'s `resolveCombatDamage`). Both
+// blockers are also real FIN cards (Shambling Cie'th, Stiltzkin) reused the
+// same un-cast way, their own unrelated abilities left un-fired.
 
 import { lightningArmyOfOne } from '../../cards/lightning-army-of-one/definition';
 import { giottKingOfTheDwarves } from '../../cards/giott-king-of-the-dwarves/definition';
@@ -35,12 +37,15 @@ function firstStrikeScenario(): TraceResult {
   });
   pilot.log.push({ fn: 'enters', card: lightningReal.name, zone: 'Battlefield', power: lightningReal.basePower, toughness: lightningReal.baseToughness });
 
-  // Exactly 3 toughness — Lightning's 3 power is real lethal in the FIRST
-  // (First Strike) damage sub-step alone, before the blocker (no First/
-  // Double Strike of its own) ever gets to deal ITS power back. Without
-  // real 510.5 ordering, both would just trade simultaneously — this
-  // blocker's own 3 power is real lethal to Lightning's 2 toughness too.
-  const blocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Would-Be Trader', types: ['Creature'], basePower: 3, baseToughness: 3 });
+  // Shambling Cie'th — a real FIN 3/3 (its own "enters tapped" static
+  // ability and noncreature-spell-return trigger never come into play,
+  // since it's placed directly rather than cast). Exactly 3 toughness —
+  // Lightning's 3 power is real lethal in the FIRST (First Strike) damage
+  // sub-step alone, before the blocker (no First/Double Strike of its own)
+  // ever gets to deal ITS power back. Without real 510.5 ordering, both
+  // would just trade simultaneously — this blocker's own 3 power is real
+  // lethal to Lightning's 2 toughness too.
+  const blocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: "Shambling Cie'th", types: ['Creature'], subtypes: ['Mutant', 'Horror'], basePower: 3, baseToughness: 3 });
   pilot.log.push({ fn: 'enters', card: blocker.name, zone: 'Battlefield', power: blocker.basePower, toughness: blocker.baseToughness, controller: pilot.opponents[0]!.name });
 
   advanceToDeclareAttackersStep(pilot);
@@ -82,10 +87,12 @@ function doubleStrikeScenario(): TraceResult {
   });
   pilot.log.push({ fn: 'enters', card: giottReal.name, zone: 'Battlefield', power: giottReal.basePower, toughness: giottReal.baseToughness });
 
-  // 2 toughness — Giott's single-pass power (1) alone is NOT lethal; only
-  // Double Strike dealing it TWICE (once per real 510.5 sub-step) adds up
-  // to the real lethal total of 2.
-  const blocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Two-Toughness Blocker', types: ['Creature'], basePower: 1, baseToughness: 2 });
+  // Stiltzkin, Moogle Merchant — a real FIN 1/2 (its own real Lifelink and
+  // control-swap activated ability never come into play here). 2 toughness —
+  // Giott's single-pass power (1) alone is NOT lethal; only Double Strike
+  // dealing it TWICE (once per real 510.5 sub-step) adds up to the real
+  // lethal total of 2.
+  const blocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Stiltzkin, Moogle Merchant', types: ['Creature'], subtypes: ['Moogle', 'Legendary'], basePower: 1, baseToughness: 2 });
   pilot.log.push({ fn: 'enters', card: blocker.name, zone: 'Battlefield', power: blocker.basePower, toughness: blocker.baseToughness, controller: pilot.opponents[0]!.name });
 
   advanceToDeclareAttackersStep(pilot);

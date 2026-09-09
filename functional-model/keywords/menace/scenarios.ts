@@ -2,7 +2,9 @@
 // coverage suite — Xande, Dark Mage's real printed Menace, reused directly
 // (name/pt/keywords) onto a battlefield rather than cast, since this
 // bundle's own subject is Menace's real blocking-legality rule (509.1b/
-// 702.111b) itself.
+// 702.111b) itself. The two blockers are also real FIN 1/1s (Hecteyes,
+// Town Greeter), their own unrelated enters-the-battlefield triggers never
+// firing since neither is cast.
 
 import { xandeDarkMage } from '../../cards/xande-dark-mage/definition';
 import type { TraceResult } from '../../harness';
@@ -33,8 +35,8 @@ export function runEngineScenarios(): TraceResult[] {
   });
   pilot.log.push({ fn: 'enters', card: xandeReal.name, zone: 'Battlefield', power: xandeReal.basePower, toughness: xandeReal.baseToughness });
 
-  const blocker1 = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Blocker One', types: ['Creature'], basePower: 1, baseToughness: 1 });
-  const blocker2 = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Blocker Two', types: ['Creature'], basePower: 1, baseToughness: 1 });
+  const blocker1 = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Hecteyes', types: ['Creature'], subtypes: ['Ooze', 'Horror'], basePower: 1, baseToughness: 1 });
+  const blocker2 = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Town Greeter', types: ['Creature'], subtypes: ['Human', 'Citizen'], basePower: 1, baseToughness: 1 });
   for (const b of [blocker1, blocker2]) {
     pilot.log.push({ fn: 'enters', card: b.name, zone: 'Battlefield', power: b.basePower, toughness: b.baseToughness, controller: pilot.opponents[0]!.name });
   }

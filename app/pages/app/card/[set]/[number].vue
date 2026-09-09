@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
-import { describeFact } from '../../../../../functional-model/synergy';
-import type { Fact } from '../../../../../functional-model/synergy';
+import { describeFact, isEventFact } from '../../../../../functional-model/synergy';
+import type { Fact, EventFact } from '../../../../../functional-model/synergy';
+import { COLOR_LABEL } from '../../../../lib/constants';
 import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
-import type { CardData, EdgeData, ThemeData, AnnotatedCard } from '../../../../types';
+import type { CardData, EdgeData, ThemeData, AnnotatedCard, ReviewStatus } from '../../../../types';
 import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
 import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
 
@@ -256,6 +257,82 @@ function factKey(fact: Fact): string {
 }
 const hoveredFactKey = ref<string | null>(null);
 
+// Card-owned grouping (see .claude/contracts/card-schema.md — this kind of
+// display/collapse decision belongs here, not in engine's own describeFact)
+// — one or more `addMana` EventFacts (mana.ts's `manaAbilityColorFromStaticText`
+// or a structured `addMana` Effect, see synergy.ts's `EventFact.color`) on
+// the same role collapse into a single "Mana" summary row instead of one row
+// per color/ability, so a many-color producer doesn't blow out the table.
+// Every OTHER fact still renders as its own row exactly as before — only
+// consecutive addMana facts within a role get pulled out and regrouped.
+type FactRow = { kind: 'fact'; fact: Fact; key: string } | { kind: 'manaGroup'; role: 'source' | 'sink'; facts: EventFact[]; key: string };
+const factRows = computed<FactRow[]>(() => {
+  if (!synergy.value) return [];
+  const rows: FactRow[] = [];
+  for (const role of ['sink', 'source'] as const) {
+    const manaFacts: EventFact[] = [];
+    for (const fact of role === 'sink' ? synergy.value.sink : synergy.value.source) {
+      if (isEventFact(fact) && fact.event === 'addMana') manaFacts.push(fact);
+      else rows.push({ kind: 'fact', fact, key: factKey(fact) });
+    }
+    if (manaFacts.length) rows.push({ kind: 'manaGroup', role, facts: manaFacts, key: `mana-group:${role}` });
+  }
+  return rows;
+});
+// `Weight` (ValueBar's own 1-5 dial) is "how easy to trigger", not a real
+// magnitude — summing it across colors would misrepresent the scale, so the
+// summary row's own bar is the group's single most notable value, not a
+// total.
+function manaGroupValue(facts: EventFact[]): number | undefined {
+  return facts.reduce<number | undefined>((max, f) => (f.value === undefined ? max : Math.max(max ?? 0, f.value)), undefined);
+}
+
+// Per-color-row label for the expanded mana breakdown below. Engine's
+// `EventFact.colors` (added 2026-09-09, see synergy.ts's own doc comment on
+// that field) superseded the legacy singular `color` string for any NEW
+// choice-of-color ability, but 11 real cards still only carry `color` and
+// both shapes now coexist in the corpus — this reads both rather than just
+// the legacy field the old single-color-only version of this row read
+// (which is what made a `colors`-only fact like Vector, Imperial Capital's
+// fall through to the "Any color" fallback despite very much having known
+// colors). Mirrors `colors`' own `has`/`hasAny`/`not` semantics rather than
+// treating them the same: `has` = makes/needs ALL listed colors at once
+// ("Black and Red"), `hasAny` = a genuine choice among them, exactly one
+// per activation ("Black or Red" — the Vector, Imperial Capital case),
+// `not` = any color except the listed ones. `describeFact` (synergy.ts)
+// uses terser space/slash-joined color-code wording for its own flat
+// description string; this is the card-owned grouped/expandable label, not
+// a reuse of that, so full color names read better standalone here. Falls
+// back to 'Any color' only when a fact has genuinely neither field — per
+// synergy.ts's own `colorSetOf` doc, that should mean an addMana fact
+// authored before either field existed; flag to engine if one turns up.
+function manaFactColorLabel(f: EventFact): { codes: string[]; label: string } {
+  const name = (code: string) => COLOR_LABEL[code] ?? code;
+  if (f.colors?.has?.length) {
+    return { codes: f.colors.has, label: f.colors.has.map(name).join(' and ') };
+  }
+  if (f.colors?.hasAny?.length) {
+    return { codes: f.colors.hasAny, label: f.colors.hasAny.map(name).join(' or ') };
+  }
+  if (f.colors?.not?.length) {
+    return { codes: [], label: `any color other than ${f.colors.not.map(name).join(' or ')}` };
+  }
+  if (f.color) {
+    return { codes: [f.color], label: name(f.color) };
+  }
+  return { codes: [], label: 'Any color' };
+}
+// Collapsed by default — the whole point is keeping the main row terse
+// ("Mana", not "Green mana, Blue mana, ..."); expanding is what reveals the
+// per-color/per-ability breakdown in factConditions' own spot.
+const expandedManaGroups = ref<Set<string>>(new Set());
+function toggleManaGroup(key: string) {
+  const next = new Set(expandedManaGroups.value);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  expandedManaGroups.value = next;
+}
+
 // Functional model's own four views, tabbed instead of stacked
 // <details>/<summary> spoilers — Facts is the default (the primary,
 // AI-authored+verified representation this page leads with), the other
@@ -295,19 +372,22 @@ watch(
   { immediate: true }
 );
 
-// Same orange pill look the old H1 badge used (moved off the title
-// entirely per the user's own request — "no draft marker on card title,
-// just on scenarios/facts/interactions" — and onto whichever of the three
-// it actually describes), as a UTabs `item.badge` (real Nuxt UI support —
-// Tabs.vue renders `item.badge` through its own UBadge, reactively, one per
-// trigger) rather than baked into the label text.
-const DRAFT_BADGE = { label: 'Draft', class: 'rounded bg-warn/20 px-1.5 py-px text-[10px] font-bold tracking-wide text-warn uppercase' };
-const functionalModelTabs = computed(() => [
-  { label: 'Facts', value: 'facts' as const, badge: factsReviewStatus.value === 'human' ? undefined : DRAFT_BADGE },
-  { label: 'Scenarios', value: 'scenarios' as const, badge: scenariosReviewStatus.value === 'reviewed' ? undefined : DRAFT_BADGE },
+// Card page's own two-state fields mapped onto ReviewStatusBadge.vue's
+// shared 3-way `ReviewStatus` vocabulary (app/types.ts) — a card's facts/
+// scenarios/interactions are always "there" (never `'not_implemented'`,
+// that value's only ever reached by the keywords page's own gap entries),
+// so only the other two values are ever produced here. Purely a display
+// mapping — progress.json's own stored 'ai'/'human'/'draft'/'reviewed'
+// values (and review-status.ts's contract) are completely unchanged.
+const factsStatus = computed<ReviewStatus>(() => (factsReviewStatus.value === 'human' ? 'human_reviewed' : 'ai_reviewed'));
+const scenariosStatus = computed<ReviewStatus>(() => (scenariosReviewStatus.value === 'reviewed' ? 'human_reviewed' : 'ai_reviewed'));
+const interactionsStatus = computed<ReviewStatus>(() => (interactionsReviewStatus.value === 'reviewed' ? 'human_reviewed' : 'ai_reviewed'));
+const functionalModelTabs = [
+  { label: 'Facts', value: 'facts' as const },
+  { label: 'Scenarios', value: 'scenarios' as const },
   { label: 'Json', value: 'json' as const },
   { label: 'Card Definition', value: 'definition' as const },
-]);
+];
 
 // Dev-only — see server/api/card/review-status.ts's own header for why
 // (writes into the repo's functional-model/ source tree; refused outright
@@ -431,50 +511,103 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
         <!-- Same "strip only, content switched separately" split AppHeader.vue's
              own filter-mode UTabs already uses — nothing here depends on
-             UTabs rendering slotted content itself. -->
+             UTabs rendering slotted content itself. Facts/Scenarios' own
+             Draft-status control lives at the top of each tab's own content
+             below (not in the tab strip — UTabs' `item.badge` is only a
+             plain string/object prop, no way to host a real interactive
+             button there), same placement as the Interactions section's own
+             inline ReviewStatusBadge just below its own heading. -->
         <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
 
         <template v-if="store.functionalModelTab.value === 'facts'">
-          <div v-if="isDev" class="mb-2 flex items-center gap-2">
-            <button
-              class="rounded border border-border px-1.5 py-0.5 text-xs hover:bg-surface disabled:opacity-50"
-              :disabled="reviewStatusSaving === 'review'"
-              @click="toggleReviewStatus('review')"
-            >
-              {{ factsReviewStatus === 'human' ? 'Mark as draft' : 'Mark as reviewed' }}
-            </button>
-            <span v-if="factsReviewStatus === 'human'" class="text-xs text-muted">
-              Reviewed — these facts have been checked against the real card.
-            </span>
+          <div class="mb-2">
+            <ReviewStatusBadge
+              :badge="true"
+              :status="factsStatus"
+              size="xs"
+              :readonly="!isDev"
+              :pending="reviewStatusSaving === 'review'"
+              @confirm="toggleReviewStatus('review')"
+            />
           </div>
           <div v-if="synergy" class="overflow-x-auto">
             <table class="border-collapse text-xs whitespace-nowrap">
               <tbody>
-                <tr
-                  v-for="(fact, fi) in [...synergy.sink, ...synergy.source]"
-                  :key="fi"
-                  class="align-middle"
-                  :class="hoveredFactKey === factKey(fact) ? 'bg-surface/60' : 'hover:bg-surface/25'"
-                  @mouseenter="hoveredFactKey = factKey(fact)"
-                  @mouseleave="hoveredFactKey = null"
-                >
-                  <td class="py-1 px-2"><ValueBar :value="fact.value" /></td>
-                  <td class="py-1 px-2">
-                    <Icon
-                      :name="fact.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
-                      :class="fact.role === 'source' ? 'text-blue-400' : 'text-emerald-500'"
-                      class="h-3.5 w-3.5"
-                      :title="fact.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
-                    />
-                  </td>
-                  <td
-                    class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted first-letter:uppercase"
-                    :title="fact.sourceText"
+                <template v-for="row in factRows" :key="row.key">
+                  <tr
+                    v-if="row.kind === 'fact'"
+                    class="align-middle"
+                    :class="hoveredFactKey === factKey(row.fact) ? 'bg-surface/60' : 'hover:bg-surface/25'"
+                    @mouseenter="hoveredFactKey = factKey(row.fact)"
+                    @mouseleave="hoveredFactKey = null"
                   >
-                    {{ describeFact(fact) }}
-                  </td>
-                  <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">{{ factConditions(fact) }}</td>
-                </tr>
+                    <td class="py-1 px-2"><ValueBar :value="row.fact.value" /></td>
+                    <td class="py-1 px-2">
+                      <Icon
+                        :name="row.fact.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
+                        :class="row.fact.role === 'source' ? 'text-blue-400' : 'text-emerald-500'"
+                        class="h-3.5 w-3.5"
+                        :title="row.fact.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
+                      />
+                    </td>
+                    <td
+                      class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted first-letter:uppercase"
+                      :title="row.fact.sourceText"
+                    >
+                      {{ describeFact(row.fact) }}
+                    </td>
+                    <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">{{ factConditions(row.fact) }}</td>
+                  </tr>
+                  <!-- Grouped mana summary row — one or more `addMana` facts on this
+                       role collapsed to a single terse row; click to expand into the
+                       per-color/per-ability breakdown below (each still its own row,
+                       still individually hoverable/factKey-addressable so hover-link
+                       to the annotated oracle text keeps working per color). -->
+                  <template v-else>
+                    <tr
+                      class="cursor-pointer align-middle"
+                      :class="row.facts.some((f) => hoveredFactKey === factKey(f)) ? 'bg-surface/60' : 'hover:bg-surface/25'"
+                      :title="row.facts.map((f) => f.sourceText).filter(Boolean).join('\n')"
+                      @click="toggleManaGroup(row.key)"
+                      @mouseenter="hoveredFactKey = factKey(row.facts[0]!)"
+                      @mouseleave="hoveredFactKey = null"
+                    >
+                      <td class="py-1 px-2"><ValueBar :value="manaGroupValue(row.facts)" /></td>
+                      <td class="py-1 px-2">
+                        <Icon
+                          :name="row.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
+                          :class="row.role === 'source' ? 'text-blue-400' : 'text-emerald-500'"
+                          class="h-3.5 w-3.5"
+                          :title="row.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
+                        />
+                      </td>
+                      <td class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted">
+                        <Icon
+                          :name="expandedManaGroups.has(row.key) ? 'lucide:chevron-down' : 'lucide:chevron-right'"
+                          class="mr-1 h-3 w-3 text-muted/60"
+                        />{{ row.role === 'source' ? 'Source' : 'Sink' }}: Mana{{ row.facts.length > 1 ? ` (${row.facts.length})` : '' }}
+                      </td>
+                      <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">
+                        {{ expandedManaGroups.has(row.key) ? '—' : 'click to expand' }}
+                      </td>
+                    </tr>
+                    <tr
+                      v-for="f in expandedManaGroups.has(row.key) ? row.facts : []"
+                      :key="factKey(f)"
+                      class="align-middle"
+                      :class="hoveredFactKey === factKey(f) ? 'bg-surface/60' : 'hover:bg-surface/25'"
+                      @mouseenter="hoveredFactKey = factKey(f)"
+                      @mouseleave="hoveredFactKey = null"
+                    >
+                      <td class="py-1 px-2"><ValueBar :value="f.value" /></td>
+                      <td class="py-1 px-2"></td>
+                      <td class="py-1 px-2 pl-5 text-[13px] whitespace-pre-wrap text-muted" :title="f.sourceText">
+                        <ManaSymbol v-for="code in manaFactColorLabel(f).codes" :key="code" :code="code" class="mr-1" />{{ manaFactColorLabel(f).label }} mana
+                      </td>
+                      <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">{{ factConditions(f) }}</td>
+                    </tr>
+                  </template>
+                </template>
               </tbody>
             </table>
           </div>
@@ -482,17 +615,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         </template>
 
         <template v-else-if="store.functionalModelTab.value === 'scenarios'">
-          <div v-if="isDev" class="mb-2 flex items-center gap-2">
-            <button
-              class="rounded border border-border px-1.5 py-0.5 text-xs hover:bg-surface disabled:opacity-50"
-              :disabled="reviewStatusSaving === 'scenariosReview'"
-              @click="toggleReviewStatus('scenariosReview')"
-            >
-              {{ scenariosReviewStatus === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
-            </button>
-            <span v-if="scenariosReviewStatus === 'reviewed'" class="text-xs text-muted">
-              Reviewed — this Scenarios tab's own replay content has been checked against the real card.
-            </span>
+          <div class="mb-2">
+            <ReviewStatusBadge
+              :badge="true"
+              :status="scenariosStatus"
+              size="xs"
+              :readonly="!isDev"
+              :pending="reviewStatusSaving === 'scenariosReview'"
+              @confirm="toggleReviewStatus('scenariosReview')"
+            />
           </div>
           <ScenarioReplay
             v-if="data.functionalModel.traces?.length"
@@ -529,17 +660,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
       <div v-if="data?.interactions?.length" class="mt-4 w-full max-w-full">
         <div class="mb-1 flex items-center gap-2">
           <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</span>
-          <span v-if="interactionsReviewStatus !== 'reviewed'" class="rounded bg-warn/20 px-1.5 py-px text-[10px] font-bold tracking-wide text-warn uppercase">
-            Draft
-          </span>
-          <button
-            v-if="isDev && data.functionalModel"
-            class="rounded border border-border px-1 py-px text-[10px] hover:bg-surface disabled:opacity-50"
-            :disabled="reviewStatusSaving === 'interactionsReview'"
-            @click="toggleReviewStatus('interactionsReview')"
-          >
-            {{ interactionsReviewStatus === 'reviewed' ? 'Mark as draft' : 'Mark as reviewed' }}
-          </button>
+          <ReviewStatusBadge
+            :status="interactionsStatus"
+            size="xs"
+            :readonly="!(isDev && data.functionalModel)"
+            :pending="reviewStatusSaving === 'interactionsReview'"
+            @confirm="toggleReviewStatus('interactionsReview')"
+          />
         </div>
         <ul class="flex flex-col gap-1.5">
           <li

@@ -5,6 +5,17 @@ import type { AnnotatedSegment } from '../functional-model/synergy';
 // as two edges), rather than a role plus an orthogonal "modifiers" array on it.
 export type Role = 'produce' | 'consume' | 'atypical' | 'grant' | 'magnifier';
 
+// Shared 3-way review-status vocabulary — ReviewStatusBadge.vue's own
+// `status` prop. Matches functional-model/keywords/registry.ts's
+// `KeywordEntry.status` (a keyword genuinely has a "not yet implemented"
+// state with no badge/button at all); the card page's own two-state
+// fields (`review`: 'ai'|'human', `scenariosReview`/`interactionsReview`:
+// 'draft'|'reviewed') map onto just the latter two values — a card's own
+// facts/scenarios/interactions are always "there", never "not
+// implemented" — without changing what's actually stored in
+// progress.json (see server/api/card/review-status.ts, untouched).
+export type ReviewStatus = 'not_implemented' | 'ai_reviewed' | 'human_reviewed';
+
 /** One face of a card, real structured data (server/api/card/[set]/[number].ts) — a single-faced card is a one-entry `AnnotatedCard.faces`. Oracle text is pre-split into lines of fact-annotated segments (functional-model/synergy.ts's `annotateOracleText`); nothing else here needs client-side parsing — a consumer just renders these fields however it wants (a different layout is a client-only change, no server round-trip). */
 export interface AnnotatedFace {
   name: string;

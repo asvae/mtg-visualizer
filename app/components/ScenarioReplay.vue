@@ -22,6 +22,8 @@ const props = defineProps<{
   cardToughness?: string;
   cardBackPower?: string;
   cardBackToughness?: string;
+  /** Real art/keywords/power/toughness for every OTHER genuinely-named real card this scenario references (keyed by that card's own real Scryfall name) — not just the singular tested "self" card above, and not just filler basic lands/tokens (`fillerImages` below already covers those). Only ever set by the keywords-coverage page (KeywordEntryCard.vue, from its own already-fetched `entry.cards`) for a bundle whose scenario genuinely puts a SECOND real card on the board (e.g. flying-reach's own Iron Giant blocking Ahriman) — undefined everywhere else (the per-card page's own Scenarios tab only ever has the one real tested card, already covered by `cardImages` et al above). */
+  namedCardArt?: Record<string, { images: string[]; keywords: string[]; power?: string; toughness?: string }>;
 }>();
 
 // Two kinds of scenario filler are real named cards, not the synthetic
@@ -95,6 +97,7 @@ watch(
       :card-back-power="cardBackPower"
       :card-back-toughness="cardBackToughness"
       :filler-images="fillerImages"
+      :named-card-art="namedCardArt"
       :class="{ 'border-t border-border-subtle pt-3': ti > 0 }"
     />
   </div>

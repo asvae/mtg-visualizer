@@ -26,7 +26,7 @@
       },
       {
         "fn": "enters",
-        "card": "Blocker One",
+        "card": "Hecteyes",
         "zone": "Battlefield",
         "power": 1,
         "toughness": 1,
@@ -34,7 +34,7 @@
       },
       {
         "fn": "enters",
-        "card": "Blocker Two",
+        "card": "Town Greeter",
         "zone": "Battlefield",
         "power": 1,
         "toughness": 1,
@@ -62,45 +62,45 @@
       },
       {
         "fn": "illegalAttempt",
-        "card": "Blocker One",
+        "card": "Hecteyes",
         "reason": "\"Xande, Dark Mage\" has menace — it can't be blocked by only one creature (509.1b/702.111b)"
       },
       {
         "fn": "block",
-        "blocker": "Blocker One",
+        "blocker": "Hecteyes",
         "attacker": "Xande, Dark Mage"
       },
       {
         "fn": "block",
-        "blocker": "Blocker Two",
+        "blocker": "Town Greeter",
         "attacker": "Xande, Dark Mage"
       },
       {
         "fn": "dealDamage",
         "source": "Xande, Dark Mage",
-        "target": "Blocker One",
+        "target": "Hecteyes",
         "amount": 1
       },
       {
         "fn": "dealDamage",
         "source": "Xande, Dark Mage",
-        "target": "Blocker Two",
+        "target": "Town Greeter",
         "amount": 2
       },
       {
         "fn": "dealDamage",
-        "source": "Blocker One & Blocker Two",
+        "source": "Hecteyes & Town Greeter",
         "target": "Xande, Dark Mage",
         "amount": 2
       },
       {
         "fn": "destroy",
-        "target": "Blocker One",
+        "target": "Hecteyes",
         "controller": "opp0"
       },
       {
         "fn": "destroy",
-        "target": "Blocker Two",
+        "target": "Town Greeter",
         "controller": "opp0"
       }
     ],
@@ -122,11 +122,11 @@
         "from": 6
       },
       {
-        "label": "Attempt (expected illegal): only Blocker One blocks Xande, Dark Mage",
+        "label": "Attempt (expected illegal): only Hecteyes blocks Xande, Dark Mage",
         "from": 7
       },
       {
-        "label": "Declare Blocker One and Blocker Two as blockers",
+        "label": "Declare Hecteyes and Town Greeter as blockers",
         "from": 8
       },
       {

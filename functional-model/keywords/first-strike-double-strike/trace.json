@@ -26,7 +26,7 @@
       },
       {
         "fn": "enters",
-        "card": "Would-Be Trader",
+        "card": "Shambling Cie'th",
         "zone": "Battlefield",
         "power": 3,
         "toughness": 3,
@@ -54,18 +54,18 @@
       },
       {
         "fn": "block",
-        "blocker": "Would-Be Trader",
+        "blocker": "Shambling Cie'th",
         "attacker": "Lightning, Army of One"
       },
       {
         "fn": "dealDamage",
         "source": "Lightning, Army of One",
-        "target": "Would-Be Trader",
+        "target": "Shambling Cie'th",
         "amount": 3
       },
       {
         "fn": "destroy",
-        "target": "Would-Be Trader",
+        "target": "Shambling Cie'th",
         "controller": "opp0"
       }
     ],
@@ -87,7 +87,7 @@
         "from": 5
       },
       {
-        "label": "Declare Would-Be Trader as blocker",
+        "label": "Declare Shambling Cie'th as blocker",
         "from": 6
       },
       {
@@ -123,7 +123,7 @@
       },
       {
         "fn": "enters",
-        "card": "Two-Toughness Blocker",
+        "card": "Stiltzkin, Moogle Merchant",
         "zone": "Battlefield",
         "power": 1,
         "toughness": 2,
@@ -151,18 +151,18 @@
       },
       {
         "fn": "block",
-        "blocker": "Two-Toughness Blocker",
+        "blocker": "Stiltzkin, Moogle Merchant",
         "attacker": "Giott, King of the Dwarves"
       },
       {
         "fn": "dealDamage",
         "source": "Giott, King of the Dwarves",
-        "target": "Two-Toughness Blocker",
+        "target": "Stiltzkin, Moogle Merchant",
         "amount": 2
       },
       {
         "fn": "dealDamage",
-        "source": "Two-Toughness Blocker",
+        "source": "Stiltzkin, Moogle Merchant",
         "target": "Giott, King of the Dwarves",
         "amount": 1
       },
@@ -173,7 +173,7 @@
       },
       {
         "fn": "destroy",
-        "target": "Two-Toughness Blocker",
+        "target": "Stiltzkin, Moogle Merchant",
         "controller": "opp0"
       }
     ],
@@ -195,7 +195,7 @@
         "from": 5
       },
       {
-        "label": "Declare Two-Toughness Blocker as blocker",
+        "label": "Declare Stiltzkin, Moogle Merchant as blocker",
         "from": 6
       },
       {

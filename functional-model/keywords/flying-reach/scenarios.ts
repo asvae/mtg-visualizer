@@ -1,10 +1,10 @@
 // Real engine-piloted trace (see engine-trace.ts's own header). Keyword
 // coverage suite — proves the engine's real blocking-legality enforcement
-// for Flying (509.1b) and its real Reach exception, using two real cards'
-// own printed stats/keywords (no fabricated stat lines): Ahriman (real
-// Flying attacker) and Iron Giant (real Reach blocker), plus one plain
-// vanilla (no-keyword) creature to show the rejection Flying alone causes.
-// Neither card is CAST here — only its printed name/pt/keywords are reused
+// for Flying (509.1b) and its real Reach exception, using three real cards'
+// own printed stats (no fabricated stat lines): Ahriman (real Flying
+// attacker), Iron Giant (real Reach blocker), and Coeurl (a real, plain
+// Flying/Reach-less FIN creature) to show the rejection Flying alone
+// causes. Neither card is CAST here — only its printed name/pt/keywords are reused
 // directly onto a battlefield (`addCard`), since this bundle's own subject
 // is the blocking-legality rule itself, not either card's full cast/ability
 // lifecycle (already covered by their own functional-model/cards/<slug>
@@ -57,9 +57,14 @@ export function runEngineScenarios(): TraceResult[] {
     controller: pilot.opponents[0]!.name,
   });
 
+  // Coeurl — real FIN printing, plain 2/2 with neither Flying nor Reach
+  // (its own real ability, a tap-target activated ability, is irrelevant
+  // here and never fires — this bundle's subject is the blocking-legality
+  // check itself, not Coeurl's own kit).
   const groundedBlocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', {
-    name: 'Grounded Blocker',
+    name: 'Coeurl',
     types: ['Creature'],
+    subtypes: ['Cat', 'Beast'],
     basePower: 2,
     baseToughness: 2,
   });
@@ -79,7 +84,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real 509.1b — a creature with neither Flying nor Reach can't block a
   // Flying attacker at all, no matter how many are assigned.
-  pilotExpectIllegalBlock(pilot, [{ blocker: groundedBlocker, attacker: ahrimanReal }], `Attempt (expected illegal): Grounded Blocker (no Flying/Reach) blocks ${ahriman.name}`);
+  pilotExpectIllegalBlock(pilot, [{ blocker: groundedBlocker, attacker: ahrimanReal }], `Attempt (expected illegal): ${groundedBlocker.name} (no Flying/Reach) blocks ${ahriman.name}`);
 
   // Real 509.1b's own exception — Reach legally blocks a Flying attacker.
   pilotDeclareBlockers(pilot, [{ blocker: ironGiantReal, attacker: ahrimanReal }], `Declare ${ironGiant.name} (Reach) as blocker`);

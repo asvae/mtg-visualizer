@@ -3,7 +3,10 @@
 // keywords card (no other abilities to muddy the demo), reused directly
 // (its real name/pt/keywords) onto a battlefield rather than cast, since
 // this bundle's own subject is Vigilance (508.1f) and Trample (702.19c)
-// themselves, not Iron Giant's own cast lifecycle.
+// themselves, not Iron Giant's own cast lifecycle. The blocker is Magitek
+// Infantry, a real FIN 1/1 (its own real conditional +1/+0 static ability
+// never fires here — no other artifact is on this board — leaving it a
+// plain 1/1 body for the Trample-overflow math).
 
 import { ironGiant } from '../../cards/iron-giant/definition';
 import type { TraceResult } from '../../harness';
@@ -33,7 +36,7 @@ export function runEngineScenarios(): TraceResult[] {
   });
   pilot.log.push({ fn: 'enters', card: ironGiantReal.name, zone: 'Battlefield', power: ironGiantReal.basePower, toughness: ironGiantReal.baseToughness });
 
-  const smallBlocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Small Blocker', types: ['Creature'], basePower: 1, baseToughness: 1 });
+  const smallBlocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Magitek Infantry', types: ['Artifact', 'Creature'], subtypes: ['Robot', 'Soldier'], basePower: 1, baseToughness: 1 });
   pilot.log.push({
     fn: 'enters',
     card: smallBlocker.name,

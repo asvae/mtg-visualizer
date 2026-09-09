@@ -510,6 +510,26 @@ export interface Trigger {
  * change resolution behavior (today: only `Lifelink`/`Indestructible`) vs.
  * are recognized-but-inert structured facts. Deliberately not exhaustive of
  * every real MTG keyword — extend as a real card needs one not listed here.
+ *
+ * 2026-09-09: `functional-model/keywords/registry.ts` was expanded from a
+ * 15-entry FIN-only subset to the FULL historical MTG keyword taxonomy
+ * (369 entries, sourced from Scryfall's own public keyword-abilities/
+ * keyword-actions/ability-words catalogs) for the "Keywords" coverage page.
+ * That expansion deliberately did NOT bulk-extend this union to match —
+ * this stays scoped to "an identifier some real CardDefinition/effect
+ * actually uses" (the discipline this doc comment already stated), not
+ * "every term the coverage page happens to catalog." `Protection` and
+ * `Saga` were added here as real, concrete fixes (both were already
+ * referenced by registry.ts's own `keywords` field before this pass,
+ * despite not being union members — a real inconsistency, not a design
+ * choice); `Saga`'s own set-specific mechanical behavior lives in
+ * `saga.ts`/`state.ts`'s lore-counter primitives, not a `grantKeyword`-style
+ * flag, but it's included here since a Saga's own `CardDefinition.keywords`
+ * can legitimately declare it as a structural fact the same way any other
+ * entry here does. Everything else the registry now catalogs (354 new
+ * entries) intentionally stays OUTSIDE this union — see registry.ts's own
+ * `KeywordEntry.keywords` doc comment for why that field is plain
+ * `string[]`, not `Keyword[]`, specifically so this stays decoupled.
  */
 export type Keyword =
   | 'Flying'
@@ -528,6 +548,8 @@ export type Keyword =
   | 'Ward'
   | 'Flash'
   | 'Convoke'
+  | 'Protection'
+  | 'Saga'
   /**
    * Not literally a `K:` line — real Forge represents "target creature
    * can't be blocked this turn" (Shiva, Warden of Ice's own Mesmerize) as a

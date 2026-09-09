@@ -7,6 +7,38 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- keywords/index.vue redesigned from a stacked list of independently
+  collapsible `KeywordEntryCard`s into a sidebar-nav + content layout: a
+  `w-[240px]` `<nav>` (same convention as FilterPanel's own sidebar) lists
+  every entry grouped evergreen/fin-mechanic (unchanged grouping), a single
+  `selectedKey` ref (defaults to the first entry once `/api/keywords`
+  resolves) drives which ONE entry's content renders in the main pane.
+  `KeywordEntryCard.vue` kept as the content renderer (only ever used from
+  this one page — confirmed via grep before deciding this over inlining,
+  so "less churn" came out in its favor) but stripped of its own `open`
+  ref/toggle button entirely — it now always renders its body, single-
+  selection is enforced by the PAGE only ever mounting one instance
+  (`v-if="selectedEntry"`, keyed on `entry.key` so switching resets any
+  ScenarioReplay-internal step state cleanly).
+  Also removed KeywordEntryCard's own card-art thumbnail gallery (the
+  "Xande, Dark Mage" portrait+name header that used to sit above the
+  ScenarioReplay for a `covered` entry) entirely for this page, per an
+  explicit mid-task correction — not just made text-only, gone outright.
+  Added a `forceTextOnly` boolean prop threaded ScenarioReplay.vue ->
+  ScenarioReplayTrace.vue (defaults undefined/false everywhere else, so
+  the per-card page's own Scenarios tab is untouched) — `imagesFor()` in
+  ScenarioReplayTrace.vue returns `undefined` unconditionally when set,
+  falling through to the existing `placeholderLabel()` text chip (a 2-char
+  abbreviation, e.g. "Xa" for Xande) that already exists for cards with no
+  real art — didn't invent a new label scheme, this reuses what the
+  no-art fallback path already rendered. KeywordEntryCard.vue passes
+  `force-text-only` (bare, always true) on its own ScenarioReplay since
+  it's the only caller. Verified end-to-end with a throwaway Playwright
+  script against the already-running dev server (localhost:3000): sidebar
+  single-select works, 0 `<img>` tags anywhere in a covered entry's replay
+  board, gap entries (Hexproof/Ward/Protection) still show `gapNote` text,
+  switching keywords swings cleanly with no console/page errors.
+
 - Keyword ability icons on graph nodes (graphRenderer.ts): rendered as a
   vertical strip immediately to the RIGHT of each card node, entirely
   OUTSIDE the art rect (past x + RECT_WIDTH) — this was a user-specified
@@ -412,6 +444,83 @@ resume alone (session transcripts are swept after ~30 days).
     from before this redesign just gets the new default (shown) on next
     load, not a silently-wrong inherited value.
 
+- keywords/index.vue + KeywordEntryCard.vue: built the real 3-way status
+  treatment on top of `engine`'s stopgap mechanical typecheck fix (369-entry
+  registry expansion), using the new shared `ReviewStatusBadge.vue` +
+  `POST /api/keywords/review-status`:
+  - Sidebar search: a `UInput` (same component/props AppHeader.vue's own
+    card/theme search box already uses) drives a plain case-insensitive
+    substring match against `entry.title`, applied independently inside
+    each of the two group computeds (`evergreen`/`finMechanics`) so the
+    evergreen-first grouping structure survives filtering; a group's own
+    `<div>` is now `v-if`'d on its filtered array's length so a
+    zero-match group (e.g. searching an evergreen-only term) disappears
+    entirely rather than showing an empty heading. Renamed the second
+    group's heading from "FIN-set mechanics" to "Set-specific keywords &
+    mechanics" while touching this file — the old label was stale after
+    `category: 'fin-mechanic'` became `'set-specific'` (full historical
+    taxonomy, not FIN-only) — a copy fix riding along, not a separate ask.
+  - Sidebar perf (369 entries, up from ~15): measured live, no jank —
+    it's a flat list of plain `<button>`s with no per-row image/compute
+    cost, well within what an unvirtualized `v-for` handles fine.
+    Deliberately did NOT add a virtualization library for this — would be
+    real added complexity (scroll-into-view-on-select would need its own
+    handling once rows aren't all real DOM nodes) for a problem that
+    isn't actually present at this size.
+  - `setsUsed` (KeywordEntryCard.vue): rendered as a wrapped chip list
+    ABOVE the gap/replay content, for ANY entry that has it (not gated on
+    `not_implemented` vs `ai_reviewed`/`human_reviewed` — the task's own
+    "for set-specific keywords" wording, and registry.ts's own doc
+    comment, both scope this by category/field-presence, not by review
+    status) — confirmed live against Enchant (293 sets, `not_implemented`)
+    it still shows the full sets header before the "no gapNote" empty
+    body. Capped display at 16 chips (`SETS_SHOWN_COLLAPSED`) with a
+    "+N more"/"show fewer" toggle rather than dumping ~80-290 raw codes;
+    did NOT add a set-code -> full-name tooltip (no such mapping is
+    cheaply available client-side — `data/cards.db` is a sqlite mirror,
+    not something to ship to the client just for this) — flagged in the
+    task as optional/judgment-call, skipped rather than over-building.
+  - 3-way status: `ReviewStatusBadge` renders above `ScenarioReplay` for
+    both `ai_reviewed` (`:badge="entry.status === 'ai_reviewed'"` → true)
+    and `human_reviewed` (→ false, no Draft pill) — same component
+    instance/props shape for both, matching how the card page's own
+    Facts/Scenarios tabs already use it. `not_implemented` renders
+    nothing from ReviewStatusBadge at all (component's own `v-if="status
+    !== 'not_implemented'"` at its root) and KeywordEntryCard only shows
+    `entry.gapNote` `v-if` it's actually present (never fabricated —
+    matches registry.ts's own "gapNote only for FIN-relevant gaps" rule,
+    confirmed live: Hexproof shows its note, Abandon — real keyword, zero
+    FIN presence — shows nothing extra).
+  - Confirm wiring: `confirmReview()` lives in KeywordEntryCard.vue
+    (has `entry.key` already), POSTs `{ key, reviewed: entry.status !==
+    'human_reviewed' }` (toggles whichever direction ISN'T current, same
+    pattern the card page's own `toggleReviewStatus` uses for its two
+    two-state fields) and emits the server's own returned `reviewStatus`
+    up via a `reviewed` event. The PAGE (not the card component) owns
+    `/api/keywords`'s fetched array, so `handleReviewed()` in
+    keywords/index.vue mutates `selectedEntry.value.status` directly (the
+    computed returns the SAME object living inside `data.value`, not a
+    copy) rather than refetching — confirmed no full-page reload, no
+    re-render of the whole sidebar, just the one badge/button flipping
+    live. This also means the "Mark as draft" direction (undo) works for
+    free even though the task only explicitly asked to wire the
+    ai_reviewed→human_reviewed direction — left it working both ways
+    since it's the same shared component/button and an inert button would
+    have been worse.
+  - Verified end-to-end live (Playwright against the running dev server,
+    real `locator.click()`/`.fill()`, not `page.evaluate`): 369 sidebar
+    buttons render; searching "enchant" narrows to exactly that one
+    entry; Enchant's 293-set chip list shows collapsed-then-"show
+    all"-then-293; Hexproof (not_implemented, FIN-relevant) shows its
+    gapNote; Abandon (not_implemented, non-FIN) shows nothing past the
+    header; Menace (ai_reviewed) confirmed live → Draft pill disappeared,
+    button flipped to "Mark as draft", reviewedNote appeared, zero
+    console errors, no navigation — then reverted back to draft via the
+    same button (and deleted the resulting
+    `functional-model/keywords/review-status.json` test artifact
+    afterward) to leave the dev-only override file exactly as found.
+    `npm run typecheck` clean throughout.
+
 ## Open questions
 
 (none currently open on the synergy-edges toggle — see the SUPERSEDES entry
@@ -470,3 +579,63 @@ worth remembering the pitfalls before re-deriving them:
   at that exact rect (in the same `page.evaluate` that read the rect) and
   screenshot with it on — confirms immediately whether the geometry is
   actually right (it was) rather than chasing a phantom rendering bug.
+
+- 2026-09-09, keywords page: reverted `forceTextOnly` (real card art back
+  on, per the user's own explicit reversal) and added per-keyword URL
+  routing. Two things worth remembering:
+  - **Routing shape**: `app/pages/app/keywords/index.vue` became
+    `app/pages/app/keywords/[[slug]].vue` (Nuxt's optional-catch-all
+    syntax) rather than splitting into separate `index.vue` +
+    `[slug].vue` files — one file serves both the bare route
+    (`route.params.slug` undefined -> defaults to the first entry) and
+    `/app/keywords/<slug>`, no duplicated fetch/sidebar/search logic.
+    `selectedEntry` is a plain `computed` off `(data, route.params.slug)`,
+    not a `ref` synced via a `watch` — an unmatched/absent slug falls back
+    to the first entry, same as before. Sidebar clicks call `navigateTo`
+    to the entry's own slug URL instead of mutating local state, so back/
+    forward walks between keywords for free. Slug scheme lives in
+    `app/lib/keywordSlug.ts` (`slugifyKeywordTitle`) — lowercases, expands
+    `&` to `" and "` BEFORE the generic non-alphanumeric-run-to-hyphen
+    collapse (so "Flying & Reach" -> "flying-and-reach", not
+    "flying-reach" — matches the user's own literal example), and is run
+    in BOTH directions (link generation and route-param resolution) so
+    there's no separate reverse-slug parser to keep in sync. Verified
+    against all 369 registry titles: zero slug collisions.
+  - **Real second-card art gap, found and fixed while reverting
+    `forceTextOnly`**: simply removing `forceTextOnly` wasn't enough for
+    Flying & Reach specifically — its own scenario (Ahriman attacking,
+    Iron Giant blocking) never marks EITHER card `isSelf`
+    (scenarioReplay.ts's `isSelf` detection keys off a log entry's
+    `instanceId`, which only ever appears on cast/activate/trigger
+    lifecycle entries; flying-reach's own scenarios.ts adds both creatures
+    as plain bystanders via `pilot.state.addCard` + a manual `enters` log
+    push, no `instanceId` at all) — so NEITHER card ever hit the old
+    `imagesFor`'s only two art sources (`isSelf` -> singular `cardImages`
+    prop, or `fillerImages` for basic lands/named tokens). Fixed generally,
+    not just for this one bundle: added a `namedCardArt` prop
+    (`ScenarioReplay.vue` -> `ScenarioReplayTrace.vue`, keyed by a card's
+    own real name, carrying images/keywords/power/toughness) that
+    `imagesFor`/`iconKeywords` check FIRST, ahead of the old singular-self/
+    filler logic — populated only by `KeywordEntryCard.vue`, built from
+    `entry.cards` (every name in a bundle's own `cardNames`, already
+    fetched server-side with real Scryfall art). Undefined everywhere else
+    (the per-card page's own Scenarios tab never sets it, unaffected —
+    confirmed via its own scenarios tab + the existing 21-test
+    `scenarioReplay.test.ts` suite, both still pass). A card with NO real
+    identity at all (flying-reach's own synthetic "Grounded Blocker",
+    added purely to demonstrate the illegal-block rejection) correctly
+    still renders its placeholder chip — that's the intended fallback, not
+    a bug, per the user's own "text placeholder only when a card genuinely
+    has no art" framing.
+  - Verified live end-to-end via Playwright against the already-running
+    dev server: bare `/app/keywords` defaults to first entry; clicking
+    Flying & Reach in the sidebar navigates to
+    `/app/keywords/flying-and-reach` and shows 2 real `<img>`s (Ahriman +
+    Iron Giant) plus exactly one remaining placeholder chip (Grounded
+    Blocker, correctly); a fresh direct load of that same URL (new
+    `page.goto`, not client-nav) resolves the same content immediately;
+    back/forward between Flying & Reach and Menace both work; search
+    ("enchant" -> exactly one sidebar result) and a set-specific entry's
+    sets-used chip list (Cascade -> "Printed in 41 sets") both still work;
+    zero console errors throughout. `npm run typecheck` and
+    `scenarioReplay.test.ts` both clean.
