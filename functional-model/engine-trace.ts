@@ -44,6 +44,8 @@ import {
   createEngine,
   canCastSpell,
   castSpell,
+  canPlayLand,
+  playLand,
   canActivateAbility,
   activateAbility,
   resolveTop,
@@ -382,6 +384,46 @@ export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefi
   const result = castSpell(pilot.engine, pilot.you, cardReal, card, ctx, actions);
   if (!result.ok) throw new Error(`pilotCast("${card.name}"): ${result.reason}`);
   logTappedForMana(pilot, card, result.tappedForMana);
+}
+
+/**
+ * Real CR 305.1 special action (`engine.ts`'s own `canPlayLand`/`playLand`)
+ * — legality-checks, throws with the real reason on an illegal pilot script
+ * (same "this file always drives a KNOWN-legal line" contract every other
+ * `pilot*` helper here has), else logs the real bracket entries a land-drop
+ * produces BEFORE calling the real mutating `playLand` — same real-causal-
+ * order reasoning `pilotResolveTop`'s own doc comment establishes (a
+ * `Trigger.on === 'enter'` ETB fires SYNCHRONOUSLY inside `playLand` and
+ * logs its own effects via `actions`, so the bracket that supposedly CAUSED
+ * them needs to already be in the log first): a `playLand` entry matching
+ * `harness.ts`'s own `lifecycleBefore` shape for a Land typeLine (`{fn:
+ * 'playLand', card, instanceId}`, no `from`/`cost` — a land has neither), an
+ * `enters` entry (a land-drop is ALSO a real zone change onto the
+ * battlefield, same as `harness.ts`'s own doc comment on this), and the ETB
+ * `trigger` bracket if `card` declares one (e.g. Vector, Imperial Capital's
+ * own tap-a-land trigger). Unlike `pilotCast`+`pilotResolveTop`'s own two-
+ * call split (needed for a spell's real wait on the Stack), this is ONE
+ * call — CR 305.1 lands never touch the stack, so there's no separate
+ * "resolve" step to pair it with.
+ */
+export function pilotPlayLand(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
+  pilot.beginStep(label ?? `Play ${card.name}`);
+  const check = canPlayLand(pilot.engine, pilot.you, card);
+  if (!check.ok) throw new Error(`pilotPlayLand("${card.name}"): illegal — ${check.reason}`);
+  pilot.log.push({ fn: 'playLand', card: card.name, instanceId: SELF_INSTANCE_ID });
+  pilot.log.push({ fn: 'enters', card: card.name, instanceId: SELF_INSTANCE_ID, zone: 'Battlefield' });
+  const enterTrigger = card.triggers?.find((t) => t.on === 'enter');
+  if (enterTrigger) pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+  const result = playLand(pilot.engine, pilot.you, cardReal, card, ctx, actions);
+  if (!result.ok) throw new Error(`pilotPlayLand("${card.name}"): ${result.reason}`);
+}
+
+/** Real CR 305.1 land-drop attempt expected to be REJECTED (the once-per-turn limit, 305.3's own sorcery-speed timing outside a main phase or with a non-empty stack, e.g.) — same purely-observational contract as `pilotExpectIllegalCast`. Never mutates — no zone change, no counter increment. */
+export function pilotExpectIllegalPlayLand(pilot: EnginePilot, caster: RealPlayer, card: CardDefinition, label?: string): void {
+  pilot.beginStep(label ?? `Attempt (expected illegal): play ${card.name}`);
+  const check = canPlayLand(pilot.engine, caster, card);
+  if (check.ok) throw new Error(`pilotExpectIllegalPlayLand("${card.name}"): expected this to be illegal, but it's legal`);
+  pilot.log.push({ fn: 'illegalAttempt', card: card.name, reason: check.reason });
 }
 
 /**

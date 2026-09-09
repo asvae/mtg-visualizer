@@ -1,5 +1,7 @@
 import type { Scenario } from '../../harness';
 
-export const scenarios: Scenario[] = [
-  { result: 'enters the battlefield UNTAPPED, no resolvable effect — unlike most of this batch, Capital City has no real ETBTapped replacement; every real ability is static text (see definition.ts)' },
-];
+// Empty: this card's own facts are all covered by verify-synergy.mjs's
+// static-check exemptions (see its own isStaticOnlyLand/
+// hasStaticLandTapSelfTrigger doc comments) — no scenario/trace evidence
+// is required to reconcile them.
+export const scenarios: Scenario[] = [];

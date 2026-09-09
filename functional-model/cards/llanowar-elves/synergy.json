@@ -6,6 +6,15 @@
       "subject": "self",
       "sourceText": "(baseline — Llanowar Elves is itself a permanent on your battlefield, no special ability text)",
       "value": 1
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "G",
+      "sourceText": "{T}: Add {G}.",
+      "highlight": "{G}",
+      "value": 1
     }
   ],
   "sink": []

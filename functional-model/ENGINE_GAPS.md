@@ -364,6 +364,111 @@ so a future pass doesn't mistake them for missing work:
     card's own `definition.ts`. Actually supporting them (not just
     rejecting) is the remaining work.
 
+12. ~~**CR 305 "playing a land" — real special-action mechanics, still only
+    closed for the harness/trace-generation path, not `engine.ts`'s own
+    real pilot.**~~ **CLOSED (2026-09-09, later same day)**: a real
+    `canPlayLand`/`playLand` pair now exists in `engine.ts`'s own real
+    pilot path (`engine.test.ts`'s new `canPlayLand / playLand` describe
+    block), plus `engine-trace.ts`'s `pilotPlayLand`/
+    `pilotExpectIllegalPlayLand`. Real Forge reference, this time from an
+    actual `../mtg-forge` checkout (sparse-cloned this pass —
+    `Player.java`/`PlayerController.java`/`GameAction.java`/
+    `PhaseHandler.java`), not reasoned from CR text alone as the prior
+    same-day pass below had to: `Player.playLand` (`Player.java`
+    ~1624-1651) does a direct `game.getAction().moveTo(Battlefield, land,
+    cause)` — no Stack trip — then fires `TriggerType.LandPlayed`, then
+    `addLandPlayedThisTurn()`; `Player.canPlayLand` (~1653-1688) gates on
+    305.3's own timing via `canCastSorcery()` (~2508-2511: own turn + main
+    phase + empty stack — the SAME rule this engine's own
+    `sorcerySpeedTimingOk` already implements for sorcery-speed spells,
+    reused directly) plus `getLandsPlayedThisTurn() < getMaxLandPlays()`
+    (default max 1, `Player.java` ~1690-1696, reset each cleanup by
+    `Player.onCleanupPhase()`'s own `resetLandsPlayedThisTurn()` call,
+    ~2456-2473 — mirrored here in `turn.ts`'s Cleanup branch, active
+    player only). New `RealPlayer.landsPlayedThisTurn` (`state.ts`) tracks
+    the counter. `playLand` is ONE call, not a cast+resolve split like
+    `castSpell`+`resolveTop` — CR 305.1 lands never wait on the Stack, so
+    there's no separate "resolve" step. The dormant mis-cast bug flagged
+    below is ALSO fixed in this same pass: `canCastSpell` now rejects a
+    Land typeLine outright at the top (so `castSpell`/`pilotCast` inherit
+    the guard for free, since both call `canCastSpell` first). **Real,
+    deliberately not closed**: Zell Dincht's own "You may play an
+    additional land on each of your turns" — real, checked (grepped the
+    pool, exactly one hit), but `canPlayLand`'s once-per-turn check stays a
+    hardcoded `>= 1` (mirroring Forge's own default max) since Zell's own
+    grant is freeform `staticAbilities` text, not a structured field this
+    engine can read yet — same "blocked on `cards/*` boundary, not engine
+    design" situation as gap #8's damage-shields/gap #11's Vehicle
+    `crewCost` gaps. No FIN land currently exercises this path for real
+    (no card's own `scenarios.ts` migrated to `runEngineScenarios()` —
+    out of scope for this pass, proven instead via `engine.test.ts`'s new
+    tests with a synthetic Land `CardDefinition`, same "Test Bear"/"Test
+    Bolt" convention that file's own pre-existing fixtures already use).
+    Original gap writeup, preserved below for history:
+
+    Surveyed first (2026-09-09, the same session that added
+    `synergy.ts`'s new `event: 'playLand'`/harness.ts's own `playLand`
+    lifecycle branch): before this pass, NEITHER `harness.ts` NOR
+    `engine.ts` distinguished "a land was played" from "a permanent was
+    cast" at all — `harness.ts`'s own `lifecycleBefore` unconditionally
+    emitted `fn: 'cast'` for any non-Instant/Sorcery/non-triggered/
+    non-activated card, land included, and `engine.ts`'s `castSpell` has
+    no land-typeLine branch whatsoever: a land goes through the exact same
+    `canCastSpell`/`payMana`/`state.move(..., 'Stack')`/stack-push path as
+    any other permanent spell, with an empty `manaCost` incidentally making
+    it "affordable," but with none of 305.1's real restrictions actually
+    enforced (no once-per-turn limit, no "sorcery-speed timing" gate
+    distinct from spell-casting, and — wrongly — a real trip through the
+    Stack a land never actually takes). **Closed for `harness.ts`**: a
+    Land typeLine going through the ordinary scenario path now emits a
+    real, distinct `fn: 'playLand'` (see synergy.ts's own `EventFact` doc
+    comment for the paired Fact-vocab half, and `scripts/verify-synergy.mjs`'s
+    matching `producedEvent` case) — this is what makes a card's own
+    `play` fact require genuine trace evidence instead of an
+    assumed/derived label, and is what actually proves Elven Passage's own
+    library-fetched land (a bare `moveTo`, never a `cast`/`playLand`
+    bracket) correctly does NOT produce one.
+    **Still open, corrected framing (2026-09-09 follow-up)**: the real gap
+    in `engine.ts`/`engine-trace.ts` is NOT "`castSpell` is missing a land
+    case" — a land is never cast at all (CR 305), so "add a land branch to
+    `castSpell`" would repeat the exact conceptual mistake `harness.ts` just
+    got fixed for, just in a different file. The actual gap is that the
+    real-engine pilot path has **no `playLand` action whatsoever** —
+    nothing analogous to `castSpell`/`pilotCast` exists for CR 305's own
+    special action (no stack, own once-per-turn limit, its own
+    sorcery-speed-equivalent timing check, separate from spell-casting
+    entirely). Building it is a genuinely separate, larger lift than the
+    harness-side trace fix (a new per-turn-per-player counter `turn.ts`
+    would need to track, plus the timing/legality check itself) — not
+    attempted here.
+    **Distinct from the gap, and worth flagging separately: whether
+    `castSpell`/`canCastSpell` actively MIS-treat a land as castable today.**
+    Checked: yes, structurally, if either is ever called on a land — nothing
+    in either function branches on `typeLine`, so a Land `CardDefinition`
+    passed to `canCastSpell` is checked under ordinary spell-casting rules
+    (its empty `manaCost` parses as trivially affordable) and `castSpell`
+    would genuinely `state.move(cardReal, 'Stack')` and push a `StackObject`
+    for it — the same wrong "a land takes a trip through the Stack" behavior
+    `harness.ts`'s own pre-fix `lifecycleBefore` used to produce, and
+    `engine-trace.ts`'s `pilotCast` (~line 381) would unconditionally log
+    `fn: 'cast'` for it too, regardless of typeLine. **However**: this is
+    reachable only if some caller actually invokes `castSpell`/`pilotCast`
+    with a Land `CardDefinition` — surveyed the real pool (2026-09-09): no
+    FIN land's own `scenarios.ts` exports `runEngineScenarios()` today, so
+    nothing in this codebase currently DOES call either function that way.
+    So: a **live, dormant bug** — the code would misbehave the exact moment
+    any FIN land adopts the real-engine-piloted path, not a hypothetical —
+    but not (yet) an actively wrong result for any real card's own generated
+    trace.json/synergy.json today, unlike the harness.ts case (which WAS
+    live for every land in the pool, since every land already goes through
+    `harness.ts`'s ordinary scenario path). Whoever builds the real
+    `playLand` action above should treat guarding `castSpell`/`canCastSpell`
+    against a Land typeLine (reject outright, same "fail loud" convention
+    `parseManaCost` already uses for an unsupported mana symbol) as part of
+    the same pass, not a separate follow-up — leaving the dormant mis-cast
+    path reachable once a real `playLand` action exists alongside it would
+    reintroduce exactly the ambiguity this whole gap is about.
+
 ## What's already solid (don't re-litigate)
 
 - Turn/phase order (all 12 real phases except the first-strike sub-step),

@@ -7,6 +7,33 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- 2026-09-09: Reverted the mana-producer grouping feature's two UI choices
+  in `app/pages/app/card/[set]/[number].vue`'s Facts table, per direct user
+  pushback ("Source: Source: Mana? Why the hell collapse?"). Removed
+  entirely: the `manaGroup` FactRow variant, `expandedManaGroups` state,
+  `toggleManaGroup`, `manaGroupValue`, and the "Source:"/"Sink:"-prefixed
+  summary row + click-to-expand chevron. Checked the corpus first
+  (`functional-model/cards/*/synergy.json`): NO card currently has more
+  than one `addMana` fact per role, so the "group N facts under one
+  collapsible row" structure was solving a case that doesn't exist yet —
+  confirms the fresh-eyes call the task asked for. Replaced with: every
+  `addMana` fact is just its own plain `FactRow`, identical row shape/
+  hover/icon convention to every other fact (no prefix, no chevron, no
+  click), fully visible immediately. Kept ONE piece of the original
+  grouping work since it's independently useful even for a single fact:
+  `manaFactColorLabel()`'s full-color-name label (reads both new `colors`
+  {has/hasAny/not} and the 11 legacy single-`color` cards) + per-color
+  `ManaSymbol` icons in that row's own description cell, instead of
+  `describeFact`'s terser "(B/R)" text or (for legacy `color`-only facts)
+  no color shown at all. Verified live via Playwright screenshot against
+  fin/291 (Vector, Imperial Capital, `colors:{hasAny:['B','R']}` → renders
+  "Black or Red mana" with both mana symbols, one plain row) and fin/293
+  (Zanarkand, legacy `color:'G'` → "Green mana", one plain row) — no
+  "Source: Source", no chevron, no click-to-expand on either.
+  `npm run typecheck` clean. If a future card genuinely needs >1 addMana
+  fact per role, re-evaluate row-count-blowout then rather than
+  pre-building for it.
+
 - 2026-09-07: Fixed prod 500 on POST /api/card/fin/1 (Netlify Function
   ENOENT scandir '/var/task/functional-model'). Root cause:
   `server/api/card/[set]/[number].ts`'s `loadFunctionalModel` (added in
@@ -448,6 +475,67 @@ resume alone (session transcripts are swept after ~30 days).
     a keywords-page/review-status-badge refactor) — none of that touched
     here; my diff on `[number].vue` is additive (one new function, one
     template line swapped), verified via `git diff` before finishing.
+
+- 2026-09-09 (follow-up, part 5): Per explicit instruction, un-did part 4's
+  color-specific mana row in favor of the plain, generic label every other
+  fact row already uses — labels stay short/generic, color/type specifics
+  belong in the details/JSON column only.
+  - `app/pages/app/card/[set]/[number].vue`: removed `manaFactColorLabel`
+    entirely (function + its doc comment), the addMana-specific template
+    branch (`ManaSymbol` ×N + color-name label), and the now-unused
+    `isEventFact`/`EventFact`/`COLOR_LABEL` imports. The addMana row now
+    goes through the same plain `{{ describeFact(row.fact) }}` every other
+    row uses — no more per-row `v-if` branch at all.
+  - Added `'colors'`, `'color'`, `'tapped'` to `CONDITION_KEYS` (~line 238)
+    so the existing `factConditions()` details/JSON column picks them up
+    automatically, same verbatim-JSON mechanism as `types`/`cmc`/etc. — no
+    new column, no new formatting logic.
+  - `describeFact`'s own `addMana` case (`functional-model/synergy.ts`,
+    engine-owned file, small in-place tweak per the task's explicit
+    allowance): dropped the `(B/R)`-style color-code suffix added earlier
+    this session right after `colors` superseded legacy `color` — that
+    made the label color-specific, contradicting the generic-label
+    convention. Now just `"${describeSide(fact.controller)} mana
+    production"` unconditionally, matching the terser pre-`colors`
+    wording. Left a comment pointing at the card page's own
+    `CONDITION_KEYS` as where the color detail now lives.
+  - Root-caused the still-raw `"playLand"` text the user kept seeing live:
+    NOT a source bug — `describeFact`'s `event === 'playLand'` case has
+    correctly returned `'Play a land.'` on disk the whole time. It was a
+    genuinely stale Vite dev-server module state: a raw `curl`/direct
+    `page.request.get` fetch of `@fs/.../functional-model/synergy.ts`
+    already reflected fresh disk content (including `playLand` and
+    `entersBattlefield`'s `tapped` ternary), but the actual bundled JS
+    module the browser executed at runtime stayed on an OLDER version
+    (missing both `playLand` and the `tapped` ternary — i.e. frozen at a
+    point before either was added this session, despite reflecting an
+    even-more-recent edit of mine to the very same function's `addMana`
+    branch moments earlier) — a corrupted/partial HMR module-graph state
+    after many rapid successive edits to this shared file across the
+    session's larger uncommitted diff, not a browser-cache or curl-cache
+    artifact (confirmed via completely fresh `chromium.launch()` browser
+    processes each time, no persistent profile). Killed the running dev
+    server (PID from a peer session/earlier boot, port 3000) and started
+    a fresh one — `playLand` and the `tapped` ternary immediately rendered
+    correctly on the very next request, no further code change needed.
+    Flag: if raw event-string text (`"someEvent"`) is ever reported live
+    again despite `describeFact` clearly handling it in source, suspect
+    this same stale-HMR-module-graph failure mode before re-reading
+    source — a dev-server restart is the fix, not a code change.
+  - Verified live against the restarted dev server via a throwaway
+    Playwright script (temp file in repo root, deleted after — same
+    `node_modules` resolution reason as part 4): fresh `chromium.launch()`
+    navigations to fin/291 now show `Play a land.` / `battlefield
+    presence` / `enters the battlefield tapped` (JSON column
+    `{"tapped":true}`) / `your mana production` (JSON column
+    `{"colors":{"hasAny":["B","R"]}}`) — all four rows now generic-labeled
+    with color/tapped detail readable in the JSON column. fin/293 (legacy
+    single-color) unaffected: `your mana production` with JSON column
+    `{"color":"G"}`, other three rows unchanged, no regression.
+  - `npm run typecheck` clean (exit 0) after the restart.
+  - No contract mismatch found against `.claude/contracts/card-schema.md`
+    this round — `colors`/`color`/`tapped` were already documented engine-
+    side fields, this was purely a card-page display change.
 
 ## Open questions
 

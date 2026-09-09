@@ -7,18 +7,16 @@
         "token": "b_0_1_wizard_snipe"
       },
       "value": 1
-    }
-  ],
-  "sink": [
+    },
     {
-      "zone": "Battlefield",
+      "id": "mana",
+      "event": "addMana",
       "controller": "you",
-      "types": {
-        "has": [
-          "Land"
-        ]
-      },
+      "color": "R",
+      "sourceText": "{T}: Add {R}.",
+      "highlight": "{R}",
       "value": 1
     }
-  ]
+  ],
+  "sink": []
 }

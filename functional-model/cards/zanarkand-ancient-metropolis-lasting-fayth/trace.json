@@ -1,41 +1,6 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped",
-      "raw": {
-        "result": "enters tapped",
-        "trigger": "onEnter"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Zanarkand, Ancient Metropolis",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Zanarkand, Ancient Metropolis",
-        "result": true
-      },
-      {
-        "fn": "tap",
-        "target": "Zanarkand, Ancient Metropolis"
-      }
-    ]
-  },
-  {
-    "scenario": {
       "setup": "you: 3 land(s)",
       "action": "cast from hand, back face",
       "result": "creates a 1/1 colorless Hero creature token with three +1/+1 counters on it (3 lands controlled)",
@@ -82,7 +47,7 @@
         "card": "Lasting Fayth",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
+        "to": "Exile",
         "cardType": "Sorcery"
       }
     ]
@@ -125,7 +90,7 @@
         "card": "Lasting Fayth",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
+        "to": "Exile",
         "cardType": "Sorcery"
       }
     ]

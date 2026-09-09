@@ -1,3 +1,7 @@
 import type { Scenario } from '../../harness';
 
-export const scenarios: Scenario[] = [{ result: 'enters tapped (the color choice itself is static text — see definition.ts)', trigger: 'onEnter' }];
+// Empty: this card's own facts are all covered by verify-synergy.mjs's
+// static-check exemptions (see its own isStaticOnlyLand/
+// hasStaticLandTapSelfTrigger doc comments) — no scenario/trace evidence
+// is required to reconcile them.
+export const scenarios: Scenario[] = [];

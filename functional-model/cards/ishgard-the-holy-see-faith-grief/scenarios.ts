@@ -1,7 +1,10 @@
 import type { Scenario } from '../../harness';
 
+// The front face's own "enters tapped" scenario was dropped — its facts
+// are now covered by verify-synergy.mjs's static-check exemptions (see
+// hasStaticLandTapSelfTrigger's doc comment); the back face's own facts
+// below still need real scenario evidence.
 export const scenarios: Scenario[] = [
-  { result: 'enters tapped', trigger: 'onEnter' },
   {
     // Real harness limitation, not a card.ts gap: `PlayerState` has no
     // graveyard-artifact/graveyard-enchantment field (only

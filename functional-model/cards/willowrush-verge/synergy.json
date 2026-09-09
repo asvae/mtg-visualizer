@@ -6,6 +6,15 @@
       "subject": "self",
       "sourceText": "(baseline — Willowrush Verge is itself a permanent on your battlefield, no special ability text)",
       "value": 1
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "U",
+      "sourceText": "{T}: Add {U}.",
+      "highlight": "{U}",
+      "value": 1
     }
   ],
   "sink": []

@@ -131,7 +131,7 @@
         "card": "Silvan Rally",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
+        "to": "Exile",
         "cardType": "Sorcery"
       }
     ]
@@ -208,7 +208,7 @@
         "card": "Silvan Rally",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
+        "to": "Exile",
         "cardType": "Sorcery"
       }
     ]

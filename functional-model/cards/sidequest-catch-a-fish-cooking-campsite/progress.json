@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-09",
+  "notes": "2026-09-09: back face Cooking Campsite's '{T}: Add {W}.' now has a real source fact (event:'addMana', color:'W') via scripts/prefill-mana-facts.mjs's mechanical, corpus-wide pass — definition.ts's own comment calling this 'genuinely out of scope, kept as text only' predates addMana's later promotion to a real Effect kind/fact vocabulary and is now stale for the FACT side (still true that no mana-pool is modeled).",
   "textCoverageAudited": false,
   "knownGaps": [
     "back face's 'sacrifice an artifact' activation cost is cost-text only, not modeled"

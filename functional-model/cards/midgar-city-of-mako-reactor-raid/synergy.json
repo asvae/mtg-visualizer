@@ -9,19 +9,18 @@
       "event": "dies",
       "controller": "you",
       "value": 1
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "B",
+      "sourceText": "{T}: Add {B}.",
+      "highlight": "{B}",
+      "value": 1
     }
   ],
   "sink": [
-    {
-      "zone": "Battlefield",
-      "controller": "you",
-      "types": {
-        "has": [
-          "Land"
-        ]
-      },
-      "value": 1
-    },
     {
       "zone": "Battlefield",
       "controller": "you",

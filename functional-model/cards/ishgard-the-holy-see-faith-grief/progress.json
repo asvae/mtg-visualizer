@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has move ({\"fn\":\"move\",\"card\":\"Faith & Grief\",\"instanceId\":1,\"from\":\"stack\",\"to\":\"Graveyard\",\"cardType\":\"Sorcery\"}) with no matching declared produce",
+  "lastVerified": "2026-09-09",
+  "notes": "2026-09-09: trace.json regenerated — harness.ts's lifecycleAfter now correctly exiles an Adventure spell instead of graveyarding it (CR 715.3d; was a generic bug, see zanarkand-ancient-metropolis-lasting-fayth's own progress.json note). trace has move ({\"fn\":\"move\",\"card\":\"Faith & Grief\",\"instanceId\":1,\"from\":\"stack\",\"to\":\"Exile\",\"cardType\":\"Sorcery\"}) with no matching declared produce. Also 2026-09-09: front face's '{T}: Add {W}.' now has a real source fact (event:'addMana', color:'W') via scripts/prefill-mana-facts.mjs's mechanical pass — this card's own source[] used to be empty. 2026-09-09: removed the {zone:'Battlefield',controller:'you',types:{has:['Land']}} sink fact — an artifact of the shared ETB-tap-self trigger's tapTarget{validType:'land',owner:'you'} effect needing a valid pool candidate, not a real 'this card wants more lands' synergy claim (trivially self-satisfied by the card itself). Removed pool-wide for every Town-cycle card whose ONLY source for this fact was this trigger shape; zanarkand-ancient-metropolis-lasting-fayth kept it (its own back face genuinely counts lands you control for a token's +1/+1 counters — an independent real want, not from this trigger).",
   "textCoverageAudited": false,
   "knownGaps": [
     "back face's want is declared but NO scenario in trace.json ever demonstrates the return-to-hand effect actually succeeding — the only back-face scenario has zero matching cards in the graveyard, so this real branch is completely untested"

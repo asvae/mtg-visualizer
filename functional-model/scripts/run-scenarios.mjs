@@ -12,14 +12,21 @@
 //     shapes produce the same TraceResult[], so nothing downstream needs to
 //     know which one a given card uses.
 //
-// Usage: npx vite-node functional-model/scripts/run-scenarios.mjs
+// Usage: npx vite-node functional-model/scripts/run-scenarios.mjs [--slug=<slug>]
+// `--slug` scopes a run to exactly one card folder — same "trial a change
+// on one card without touching the rest of the corpus's checked-in
+// trace.json files" convention prefill-mana-facts.mjs's own `--slug`
+// already established.
 
 import { readdir, writeFile } from 'node:fs/promises';
 
 const { runScenarios } = await import('../harness.ts');
 
 const cardsDir = new URL('../cards/', import.meta.url);
-const slugs = (await readdir(cardsDir, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
+const onlySlug = process.argv.find((a) => a.startsWith('--slug='))?.split('=')[1];
+const slugs = onlySlug
+  ? [onlySlug]
+  : (await readdir(cardsDir, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
 
 for (const slug of slugs) {
   const scenariosModule = await import(`../cards/${slug}/scenarios.ts`).catch(() => null);

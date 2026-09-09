@@ -5,6 +5,15 @@
       "controller": "you",
       "subject": "self",
       "value": 1
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "G",
+      "sourceText": "{T}: Add {G}.",
+      "highlight": "{G}",
+      "value": 1
     }
   ],
   "sink": []

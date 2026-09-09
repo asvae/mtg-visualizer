@@ -34,6 +34,15 @@
       "value": 1,
       "sourceText": "Cooking Campsite — {3}, {T}, Sacrifice an artifact: Put a +1/+1 counter on each creature you control.",
       "highlight": "Put a +1/+1 counter on each creature you control"
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "W",
+      "sourceText": "{T}: Add {W}.",
+      "highlight": "{W}",
+      "value": 1
     }
   ],
   "sink": [

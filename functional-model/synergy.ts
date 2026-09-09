@@ -74,7 +74,30 @@ export interface ZoneFact extends Constraints {
   highlight?: string;
 }
 
-/** An occurrence. */
+/**
+ * An occurrence.
+ *
+ * `event: 'playLand'` vs. `event: 'entersBattlefield'` — DELIBERATELY two
+ * separate events, not one derived from the other. CR 305's land-drop
+ * special action ("play a land" — hand to battlefield, no stack, no mana
+ * cost, once per turn) is genuinely NOT the same fact as "a permanent
+ * entered the battlefield" — the latter fires no matter HOW a permanent
+ * got there (cast, a land drop, or an effect that puts it there directly,
+ * e.g. Elven Passage's own library-search-to-battlefield). A land found by
+ * Elven Passage's own effect really does trigger `entersBattlefield` (its
+ * own landfall/ETB triggers see it) but was never PLAYED — no `playLand`
+ * fact for it. Conversely a land played normally always gets BOTH: a
+ * `playLand` fact for the special action itself, and an `entersBattlefield`
+ * fact once it actually resolves onto the battlefield. Never assume one
+ * implies the other when authoring a card's own facts. Structural
+ * grounding: `harness.ts`'s own `lifecycleBefore` emits a real, distinct
+ * `fn: 'playLand'` trace line only for a Land typeLine going through the
+ * ordinary (non-trigger/non-ability/non-activation) scenario path — an
+ * effect that moves a land onto the battlefield some other way (a
+ * `moveTo`/`custom` effect, e.g.) never emits it, so `scripts/
+ * verify-synergy.mjs` can actually tell the two apart instead of trusting
+ * an author's label.
+ */
 export interface EventFact extends Constraints {
   role: 'source' | 'sink';
   /** See `ZoneFact.id`. */
@@ -86,6 +109,12 @@ export interface EventFact extends Constraints {
   target?: 'self' | Constraints;
   /** Free-form event-specific fields a real card's own effect carries (Aerith's own `counterType: '+1/+1'`, e.g.) — not part of the fixed constraint vocabulary, matched by plain equality when both sides declare it. */
   counterType?: string;
+  /** `event: 'addMana'`'s own free-form detail — the color produced (card.ts's `Effect` `kind: 'addMana'`'s own `color` field, or the single symbol `mana.ts`'s `manaAbilityColorFromStaticText` recognizes off a plain `"{T}: Add {X}."` static-ability string). Superseded by `colors` below for anything NEW (a plain string can't express a real choice-of-color ability as one matchable fact, only as display-equality) — kept only because 11 real single-color cards (Druid of the Cowl, Goobbue Gardener, Llanowar Elves, Midgar, Ishgard, Jidoor, Lindblum, Zanarkand, White Auracite, Willowrush Verge, Elvish Archdruid) already declare this field and migrating them is out of scope for the pass that added `colors` (2026-09-09) — still matched (by plain equality, same as `counterType`) for backward compatibility, and `factsInteract` also treats it as an implicit single-element `colors` set so it stays comparable against a `colors`-shaped want on the other side. */
+  color?: string;
+  /** `event: 'addMana'`'s own color-SET detail, added 2026-09-09 alongside `playLand` — reuses `TypeConstraint`'s exact `has`/`hasAny`/`not` vocabulary/matching (`satisfiesType`) rather than inventing a fourth constraint pattern, since "does the producer's color set satisfy the consumer's color need" is structurally the identical question `Constraints.types` already answers for card types. On a PRODUCE fact: which color(s) this ability can actually make — `hasAny` for a genuine choice-of-color ability (Vector, Imperial Capital's own "{T}: Add {B} or {R}." → `{hasAny:['B','R']}`, ONE fact instead of two `color:'B'`/`color:'R'` facts — it makes one of these per activation, never both at once, so `has` would misstate it as "makes both simultaneously"; a fixed single-color ability would use `{has:['G']}` if migrated). On a WANT fact: what color(s) the consumer needs — `has:['R']` for "needs R specifically," `hasAny:['W','U']` for "needs any of W or U," `not:['B']` for "needs any non-black source" — matched against the producer's own declared set (see `factsInteract`'s `colorSetOf`/`satisfiesType` reuse below), no separate matching code written for color. Coexists with `color` above (a legacy single-color fact) via the same `colorSetOf` helper, so a `colors`-shaped want still matches a `color`-shaped produce and vice versa. */
+  colors?: TypeConstraint;
+  /** `event: 'entersBattlefield'`'s own free-form detail — a real "enters the battlefield tapped" replacement (e.g. Vector, Imperial Capital's own "Vector, Imperial Capital enters tapped."). Same "documented free-form field, matched by plain equality when both sides declare it" treatment as `counterType`/`color` — no want declares one yet, so this is purely descriptive today. */
+  tapped?: boolean;
   /** Documentary only — this event's own trigger/activation is capped to once per turn on the real card (e.g. Elrond's draw-per-activation), but nothing in state.ts/turn.ts enforces that cap yet (see progress.json's knownGaps). Not matched against anything. */
   oncePerTurn?: boolean;
   value?: Weight;
@@ -195,6 +224,13 @@ export function resolveSubject(subject: Subject | undefined, ownCard: CardDefini
 // ---------------------------------------------------------------------------
 // Constraint evaluation
 
+/** The real, enumerable set of colors an `addMana` fact's own PRODUCE side carries — flattens `colors` (both `has` and `hasAny`, since either just enumerates what the ability can make) and falls back to the legacy singular `color` as a one-element set, so a `colors`-shaped want still matches a `color`-shaped produce (and vice versa — see `factsInteract`). `undefined` only when neither field is declared at all (an addMana fact authored before either existed). */
+function colorSetOf(fact: EventFact): string[] | undefined {
+  if (fact.colors) return [...(fact.colors.has ?? []), ...(fact.colors.hasAny ?? [])];
+  if (fact.color) return [fact.color];
+  return undefined;
+}
+
 function satisfiesType(types: string[], c: TypeConstraint | undefined): boolean {
   if (!c) return true;
   if (c.has && !c.has.every((t) => types.includes(t))) return false;
@@ -302,6 +338,8 @@ export function themeOf(fact: Fact): string[] {
   if (fact.toughness) theme.push('toughness');
   if (fact.name) theme.push('name');
   if (isEventFact(fact) && fact.counterType) theme.push('counterType');
+  if (isEventFact(fact) && (fact.color || fact.colors)) theme.push('color');
+  if (isEventFact(fact) && fact.tapped) theme.push('tapped');
   return theme;
 }
 
@@ -356,6 +394,15 @@ export function describeFact(fact: Fact): string {
       return fact.controller === 'opp' ? `opponent's ${presence}` : presence;
     }
     const noun = ZONE_NOUN[fact.zone] ?? 'things';
+    // Battlefield is a shared zone, not a per-player one like Hand/Graveyard/
+    // Library/Exile — "in your battlefield" is not real MTG terminology (there
+    // is no possessive "your battlefield," CR 400.2), so a qualified Battlefield
+    // fact phrases control the same way real oracle text does ("Lands you
+    // control"), not as a zone possessive.
+    if (fact.zone === 'Battlefield') {
+      const control = fact.controller === 'opp' ? 'an opponent controls' : fact.controller === 'you' ? 'you control' : undefined;
+      return control ? `${qualifier}${noun} ${control} on the battlefield` : `${qualifier}${noun} on the battlefield`;
+    }
     return `${qualifier}${noun} in ${describeSide(fact.controller)} ${fact.zone.toLowerCase()}`;
   }
   const event = fact.event;
@@ -363,8 +410,18 @@ export function describeFact(fact: Fact): string {
   if (event === 'dies') return fact.target === 'self' ? 'dying' : `${describeSide(fact.controller)} creature dying`;
   if (event === 'putCounter') return `${fact.counterType ?? ''} counters${fact.target === 'self' ? ' on itself' : ''}`.trim();
   if (event === 'drawCard' || event === 'drawCards') return 'card draw';
-  if (event === 'entersBattlefield') return 'enters the battlefield';
+  if (event === 'entersBattlefield') return fact.tapped ? 'enters the battlefield tapped' : 'enters the battlefield';
+  if (event === 'playLand') return 'Play a land.';
   if (event === 'activateAbility') return 'activate ability';
+  // Deliberately generic — no color breakdown in this label (`colors`/
+  // `color` either way, whichever the fact carries) — that's the card
+  // page's own "details"/JSON column's job (see `CONDITION_KEYS` in
+  // app/pages/app/card/[set]/[number].vue), same short-generic-label
+  // convention every other fact row already follows. Was briefly
+  // color-specific ("(B/R)") right after `colors` (added 2026-09-09)
+  // superseded the legacy singular `color` — reverted per explicit
+  // instruction, not a further engine-side vocabulary change.
+  if (event === 'addMana') return `${describeSide(fact.controller)} mana production`;
   return `${qualifier}${event}`;
 }
 
@@ -478,6 +535,18 @@ function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sin
   const we = w as EventFact;
   if (pe.event !== we.event) return false;
   if (pe.counterType && we.counterType && pe.counterType !== we.counterType) return false;
+  // Reuses `satisfiesType` (the exact `TypeConstraint` matcher `Constraints.types`
+  // already uses) against the producer's own real color set — a want's
+  // `colors` (or legacy `color`, treated as an implicit one-element `has`)
+  // is checked the same "has = all of, hasAny = any of, not = none of" way a
+  // type want already is; see `colorSetOf`/`EventFact.colors`'s own doc
+  // comment for why this reuses rather than reinvents.
+  const wantColors: TypeConstraint | undefined = we.colors ?? (we.color ? { has: [we.color] } : undefined);
+  if (wantColors) {
+    const produced = colorSetOf(pe);
+    if (produced && !satisfiesType(produced, wantColors)) return false;
+  }
+  if (pe.tapped !== undefined && we.tapped !== undefined && pe.tapped !== we.tapped) return false;
 
   // "A want with target: 'self' on the consumer side matches a produce
   // whose target filter the consumer card satisfies" (SYNERGY_DESIGN.md).

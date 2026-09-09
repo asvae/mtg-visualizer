@@ -2,10 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pending",
-  "lastVerified": "2026-09-05",
-  "notes": "Non-Legendary vanilla mana dork, same shape as llanowar-elves. Graveyard/dies baseline facts omitted (no death mechanism to trace).",
+  "lastVerified": "2026-09-09",
+  "notes": "Non-Legendary vanilla mana dork, same shape as llanowar-elves. Graveyard/dies baseline facts omitted (no death mechanism to trace). 2026-09-09: '{T}: Add {G}' now has a real source fact (event:'addMana', color:'G') via scripts/prefill-mana-facts.mjs's mechanical, corpus-wide pass — no mana-pool is modeled (still real, see mana.ts's own header), but the ability is no longer invisible to synergy matching, and scripts/verify-synergy.mjs no longer requires a scenario to prove it (a plain static-text mana ability has no trace line to produce either way; verified statically off definition.ts instead, same treatment DEATH_TRIGGER_NAMES already gets for a self-dies fact).",
   "textCoverageAudited": true,
-  "knownGaps": [
-    "'{T}: Add {G}' has no engine support — this model has no mana-pool/addMana concept anywhere."
-  ]
+  "knownGaps": []
 }

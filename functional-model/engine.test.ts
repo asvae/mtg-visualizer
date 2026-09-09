@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { GameState, wrapPlayer, wrapCard } from './state';
 import type { RealCard } from './state';
-import { createEngine, canCastSpell, castSpell, canActivateAbility, activateAbility, resolveTop, stepPriority, canAttack, declareAttackers, canBlock, declareBlockers, resolveCombatDamage, queueExtraTurn, advance } from './engine';
+import { createEngine, canCastSpell, castSpell, canPlayLand, playLand, canActivateAbility, activateAbility, resolveTop, stepPriority, canAttack, declareAttackers, canBlock, declareBlockers, resolveCombatDamage, queueExtraTurn, advance } from './engine';
 import { PHASES } from './turn';
 
 // Same `{} as Actions` stub stack.test.ts/priority.test.ts already use —
@@ -21,6 +21,18 @@ const INSTANT: CardDefinition = {
   name: 'Test Bolt',
   manaCost: '{R}',
   typeLine: 'Instant',
+};
+
+// A real onEnter ETB trigger (`gainLife`, the simplest real Effect kind —
+// `applyEffect`'s own `case 'gainLife'` calls `ctx.you.gainLife` directly,
+// no `Actions` methods involved, same reason this file's own `noopActions`
+// stub is safe to use with it) — proves `playLand` genuinely fires a land's
+// own `Trigger.on === 'enter'` entry, not just moving it to the battlefield.
+const LAND: CardDefinition = {
+  name: 'Test Karoo',
+  manaCost: '',
+  typeLine: 'Land',
+  triggers: [{ name: 'onEnter', on: 'enter', effects: [{ kind: 'gainLife', amount: 1 }] }],
 };
 
 function setupGame() {
@@ -120,6 +132,101 @@ describe('castSpell — mana affordability (601.2g/602.2c)', () => {
     expect(cast.ok).toBe(false);
     expect(real.zone).toBe('Hand');
     expect(you.battlefield.every((c) => !c.tapped)).toBe(true);
+  });
+});
+
+describe('canCastSpell / castSpell — reject a Land typeLine (305.1, dormant-bug fix)', () => {
+  it('canCastSpell rejects a Land outright, regardless of timing/affordability', () => {
+    const { engine, you } = setupGame();
+    expect(canCastSpell(engine, you, LAND)).toEqual({ ok: false, reason: expect.stringMatching(/is a Land/) });
+  });
+
+  it('castSpell mutates nothing for a Land — never moves it to the Stack', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const real = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    const self = wrapCard(state, real);
+    const result = castSpell(engine, you, real, LAND, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    expect(result.ok).toBe(false);
+    expect(real.zone).toBe('Hand');
+    expect(engine.stack.size).toBe(0);
+  });
+});
+
+describe('canPlayLand / playLand — CR 305 special action', () => {
+  it('canPlayLand rejects a non-Land CardDefinition outright', () => {
+    const { engine, you } = setupGame();
+    expect(canPlayLand(engine, you, CREATURE)).toEqual({ ok: false, reason: expect.stringMatching(/not a Land/) });
+  });
+
+  it('plays a legal land: real Hand -> Battlefield move (never the Stack), fires its own real ETB trigger, and increments the per-turn counter', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const real = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    const self = wrapCard(state, real);
+    const ctx = ctxFor(state, self, youPlayer, [oppPlayer]);
+    expect(canPlayLand(engine, you, LAND)).toEqual({ ok: true });
+    const startingLife = you.life;
+    const result = playLand(engine, you, real, LAND, ctx, noopActions);
+    expect(result).toEqual({ ok: true });
+    expect(real.zone).toBe('Battlefield');
+    expect(you.battlefield).toContain(real);
+    expect(engine.stack.size).toBe(0); // CR 305.1: a land never touches the Stack
+    expect(you.life).toBe(startingLife + 1); // the real onEnter ETB fired
+    expect(you.landsPlayedThisTurn).toBe(1);
+  });
+
+  it('rejects a second land-play the same turn (305.1 once-per-turn limit), mutating nothing', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const first = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    const firstResult = playLand(engine, you, first, LAND, ctxFor(state, wrapCard(state, first), youPlayer, [oppPlayer]), noopActions);
+    expect(firstResult.ok).toBe(true);
+
+    const second = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    expect(canPlayLand(engine, you, LAND)).toEqual({ ok: false, reason: expect.stringMatching(/land-play limit/) });
+    const secondResult = playLand(engine, you, second, LAND, ctxFor(state, wrapCard(state, second), youPlayer, [oppPlayer]), noopActions);
+    expect(secondResult.ok).toBe(false);
+    expect(second.zone).toBe('Hand');
+    expect(you.landsPlayedThisTurn).toBe(1); // unchanged by the rejected attempt
+  });
+
+  it('rejects a land-play with a non-empty stack (305.3 timing, same gate a sorcery-speed spell uses)', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const bolt = state.addCard(you, 'Hand', { name: INSTANT.name });
+    expect(castSpell(engine, you, bolt, INSTANT, ctxFor(state, wrapCard(state, bolt), youPlayer, [oppPlayer]), noopActions).ok).toBe(true);
+
+    const real = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    expect(canPlayLand(engine, you, LAND)).toEqual({ ok: false, reason: expect.stringMatching(/land-play timing violated/) });
+    const result = playLand(engine, you, real, LAND, ctxFor(state, wrapCard(state, real), youPlayer, [oppPlayer]), noopActions);
+    expect(result.ok).toBe(false);
+    expect(real.zone).toBe('Hand');
+  });
+
+  it('rejects a land-play outside the caster\'s own main phase', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    while (engine.turn.turnNumber === 1 && PHASES[engine.turn.phaseIndex] !== 'CombatBegin') advance(engine);
+    const real = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    expect(canPlayLand(engine, you, LAND).ok).toBe(false);
+    const result = playLand(engine, you, real, LAND, ctxFor(state, wrapCard(state, real), youPlayer, [oppPlayer]), noopActions);
+    expect(result.ok).toBe(false);
+    expect(real.zone).toBe('Hand');
+  });
+
+  it('resets the once-per-turn limit at Cleanup, allowing a land again next turn', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const first = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    playLand(engine, you, first, LAND, ctxFor(state, wrapCard(state, first), youPlayer, [oppPlayer]), noopActions);
+    expect(you.landsPlayedThisTurn).toBe(1);
+
+    const startTurn = engine.turn.turnNumber;
+    do {
+      advance(engine);
+    } while (!(PHASES[engine.turn.phaseIndex] === 'Main1' && engine.turn.turnNumber !== startTurn && engine.turn.activePlayerIndex === 0));
+    expect(you.landsPlayedThisTurn).toBe(0); // reset by Cleanup, real 305.1
+
+    const second = state.addCard(you, 'Hand', { name: LAND.name, types: ['Land'] });
+    expect(canPlayLand(engine, you, LAND)).toEqual({ ok: true });
+    const result = playLand(engine, you, second, LAND, ctxFor(state, wrapCard(state, second), youPlayer, [oppPlayer]), noopActions);
+    expect(result.ok).toBe(true);
+    expect(you.landsPlayedThisTurn).toBe(1);
   });
 });
 

@@ -39,7 +39,9 @@ through the orchestrator.
   for one fact) prefer spawning a fresh/fork sub-agent for that step and
   keep only the summary.
 - **Flag questions.** Prefix anything needing the user's own decision or
-  input (not just the orchestrator's) with ❓ so it's easy to spot in a
+  input (not just the orchestrator's) with a kaomoji (text emoticon, not
+  unicode emoji — e.g. `(・_・?)`; no fixed symbol, vary freely, goal is
+  catching the eye) so it's easy to spot in a
   longer report.
 - **Don't relitigate settled project conventions** without saying so
   explicitly — e.g. card identity keys by Scryfall name (not

@@ -14,9 +14,12 @@
       "value": 5
     },
     {
-      "zone": "Graveyard",
+      "id": "mana",
+      "event": "addMana",
       "controller": "you",
-      "subject": "self",
+      "color": "G",
+      "sourceText": "{T}: Add {G}.",
+      "highlight": "{G}",
       "value": 1
     }
   ],

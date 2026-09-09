@@ -114,6 +114,14 @@ function runPhaseEntryAction(state: GameState, turn: TurnState, players: RealPla
     // 514.2's damage-clearing half only — NOT "until end of turn effects
     // end" (layers.ts's own duration-not-tracked simplification, unchanged).
     state.clearAllDamage();
+    // Real 305.1's own per-turn land-drop counter reset (`Player.onCleanupPhase`'s
+    // own `resetLandsPlayedThisTurn()` call, `Player.java` ~line 2473) — only
+    // the ACTIVE player's own count, same "only the active player's own
+    // Cleanup actions are modeled" scope this file's own header already
+    // established for 514.1's discard (no FIN card plays a land outside its
+    // own controller's turn, so a non-active player's count can never be
+    // nonzero here anyway).
+    active.landsPlayedThisTurn = 0;
   }
   // Real 603.4 delayed-trigger firing: whatever was scheduled for THIS phase
   // (`state.scheduleDelayedTrigger`, see state.ts) fires now, once, then is

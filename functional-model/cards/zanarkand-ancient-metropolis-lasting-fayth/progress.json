@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-09",
+  "notes": "2026-09-09: removed a spurious {zone:'Graveyard', subject:'self'} source fact — it was mis-derived from harness.ts's own pre-fix bug (every Instant/Sorcery lifecycle unconditionally moved to Graveyard after resolving, not accounting for the real Adventure rule, CR 715.3d, that an Adventure spell is exiled instead so it can be cast later as its other half). harness.ts's lifecycleAfter now checks the resolving face's own typeLine for the Adventure subtype generically (not just this card), and trace.json has been regenerated to show 'to: Exile' — verify-synergy.mjs now correctly hard-fails the old fact (no Graveyard evidence in the corrected trace) instead of silently trusting the wrong zone.",
   "textCoverageAudited": false,
   "knownGaps": [
     "front face has the same trigger-only-scenario gap — no enters produce possible for that face"

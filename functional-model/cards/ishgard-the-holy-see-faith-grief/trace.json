@@ -1,41 +1,6 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped",
-      "raw": {
-        "result": "enters tapped",
-        "trigger": "onEnter"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Ishgard, the Holy See",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Ishgard, the Holy See",
-        "result": true
-      },
-      {
-        "fn": "tap",
-        "target": "Ishgard, the Holy See"
-      }
-    ]
-  },
-  {
-    "scenario": {
       "setup": "you: 2 creature card(s) in graveyard",
       "action": "cast from hand, back face",
       "result": "no artifact/enchantment cards in the graveyard (only creature cards) — nothing returned to hand",
@@ -88,7 +53,7 @@
         "card": "Faith & Grief",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
+        "to": "Exile",
         "cardType": "Sorcery"
       }
     ]

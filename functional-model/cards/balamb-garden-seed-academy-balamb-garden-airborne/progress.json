@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Balamb Garden, SeeD Academy\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "lastVerified": "2026-09-09",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Balamb Garden, SeeD Academy\",\"zone\":\"Exile\"}) with no matching declared produce 2026-09-09: removed the {zone:'Battlefield',controller:'you',types:{has:['Land']}} sink fact — an artifact of the shared ETB-tap-self trigger's tapTarget{validType:'land',owner:'you'} effect needing a valid pool candidate, not a real 'this card wants more lands' synergy claim (trivially self-satisfied by the card itself). Removed pool-wide for every Town-cycle card whose ONLY source for this fact was this trigger shape; zanarkand-ancient-metropolis-lasting-fayth kept it (its own back face genuinely counts lands you control for a token's +1/+1 counters — an independent real want, not from this trigger).",
   "textCoverageAudited": false,
   "knownGaps": [
     "transform exile-then-return has no produce fact"

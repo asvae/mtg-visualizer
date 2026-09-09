@@ -19,16 +19,5 @@
       "value": 1
     }
   ],
-  "sink": [
-    {
-      "zone": "Battlefield",
-      "controller": "you",
-      "types": {
-        "has": [
-          "Land"
-        ]
-      },
-      "value": 1
-    }
-  ]
+  "sink": []
 }

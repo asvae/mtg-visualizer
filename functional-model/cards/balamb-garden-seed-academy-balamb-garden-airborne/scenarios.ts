@@ -2,8 +2,11 @@ import type { Scenario } from '../../harness';
 import { keywordScenarios } from '../../keyword-scenarios';
 import { balambGardenSeedAcademyBalambGardenAirborne } from './definition';
 
+// The front face's own "enters tapped" scenario was dropped — its facts
+// are now covered by verify-synergy.mjs's static-check exemptions (see
+// hasStaticLandTapSelfTrigger's doc comment); the rest below still need
+// real scenario evidence.
 export const scenarios: Scenario[] = [
-  { result: 'enters tapped', trigger: 'onEnter' },
   { result: 'transforms into Balamb Garden, Airborne (approximated as exile then return to the battlefield — see definition.ts)' },
   { result: 'attacks and draws a card', face: 'back', trigger: 'onAttacks' },
   // `keywordScenarios` only reads the FRONT face's own `typeLine` (a

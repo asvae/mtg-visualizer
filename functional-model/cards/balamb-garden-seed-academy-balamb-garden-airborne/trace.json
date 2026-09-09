@@ -2,41 +2,6 @@
   {
     "scenario": {
       "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped",
-      "raw": {
-        "result": "enters tapped",
-        "trigger": "onEnter"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Balamb Garden, SeeD Academy",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Balamb Garden, SeeD Academy",
-        "result": true
-      },
-      {
-        "fn": "tap",
-        "target": "Balamb Garden, SeeD Academy"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
       "action": "activated ({5}{G}{U}, {T} (costs {1} less for each other Town you control))",
       "result": "transforms into Balamb Garden, Airborne (approximated as exile then return to the battlefield — see definition.ts)",
       "raw": {

@@ -1,3 +1,7 @@
 import type { Scenario } from '../../harness';
 
-export const scenarios: Scenario[] = [{ result: 'enters the battlefield, no other effect (both mana abilities are documentary text — see definition.ts comment)' }];
+// Empty: this card's own facts are all covered by verify-synergy.mjs's
+// static-check exemptions (see its own isStaticOnlyLand/
+// hasStaticLandTapSelfTrigger doc comments) — no scenario/trace evidence
+// is required to reconcile them.
+export const scenarios: Scenario[] = [];

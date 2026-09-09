@@ -41,6 +41,7 @@
 // failure)
 
 import { readdir, readFile } from 'node:fs/promises';
+import { manaAbilityColorsFromStaticText } from '../mana.ts';
 
 const cardsDir = new URL('../cards/', import.meta.url);
 const requested = process.argv.slice(2);
@@ -139,6 +140,17 @@ function producedEvent(entry, cardName) {
       // Elrond, Moon-Reader's own real "draw a card" trigger) — a real,
       // checkable produce now, not just a soft note.
       return { event: 'drawCard', side: entry.player === 'you' ? 'you' : 'opp' };
+    case 'playLand':
+      // CR 305.1 — harness.ts's own `lifecycleBefore` only emits this for a
+      // Land typeLine going through the ordinary (non-trigger/non-ability/
+      // non-activation) scenario path, never for an effect that moves a
+      // land onto the battlefield some other way (Elven Passage's own
+      // `moveTo`-based fetch, e.g.) — this is what actually makes a
+      // declared `{event:'playLand'}` produce fact require REAL evidence
+      // instead of an assumed label (synergy.ts's own `EventFact` doc
+      // comment). Always the scenario's own controller — no FIN scenario
+      // plays an opponent's land through this path.
+      return { event: 'playLand', side: 'you' };
     case 'moveTo':
       // A real MTG rule, not card-specific: landing on the battlefield always
       // triggers "enters" replacement/triggered abilities (any other zone
@@ -260,6 +272,165 @@ const TRIGGER_EVENT_MAP = {
 // TRIGGER firing, not a move/enters line that will never exist.
 const DEATH_TRIGGER_NAMES = new Set(['onDies']);
 
+/**
+ * A plain, unrestricted `"{T}: Add {X}."` (single-color) or
+ * `"{T}: Add {X} or {Y}."` (choice-of-color) static-ability STRING
+ * (`mana.ts`'s own `manaAbilityColorsFromStaticText`) never produces
+ * its own trace line — card.ts/harness.ts only ever log a real `addMana` fn
+ * when the ability is ALSO modeled as a structured `{kind:'addMana', ...}`
+ * Effect with a matching `activationCost` (Elvish Archdruid's own
+ * "for each Elf you control" shape, which DOES get exercised through a
+ * real scenario and so keeps needing real trace evidence below). A plain
+ * mana-tapping land/artifact has no such scenario to write — the ability's
+ * own existence is already fully verifiable by reading `definition.ts`
+ * directly, same "known statically, no trace needed" treatment
+ * `DEATH_TRIGGER_NAMES` above already gets. Returns every color recognized
+ * across BOTH faces (a two-faced card's front/back can each have their own)
+ * — a choice-of-color ability contributes BOTH its colors, since the
+ * prefill script declares one `addMana` fact per color for that shape (see
+ * prefill-mana-facts.mjs's own header for why).
+ */
+function staticManaColorsFor(card) {
+  const colors = new Set();
+  for (const c of manaAbilityColorsFromStaticText(card?.staticAbilities)) colors.add(c);
+  for (const c of manaAbilityColorsFromStaticText(card?.backFace?.staticAbilities)) colors.add(c);
+  return colors;
+}
+
+/**
+ * A land (typeLine includes 'Land') with NO declarative `effects`,
+ * `triggers`, `activationCost`, or `modal` at all — every real ability is
+ * static text only (an unrecognized mana ability, Cycling, Hideaway, a
+ * turn-count-gated conditional ETB-tap, ... — see each such card's own
+ * definition.ts comment for why). Its baseline `{zone:'Battlefield',
+ * controller:'you', subject:'self'}` fact — "this permanent is on your
+ * battlefield" — is true by construction the instant it resolves; there is
+ * no card-specific behavior left for a scenario to exercise or a trace to
+ * misrepresent, same "known statically" reasoning `staticManaColorsFor`
+ * above already gets for plain mana text. Checked the real FIN land pool:
+ * 6 cards are fully static-text-only this way (cavern-of-souls,
+ * capital-city, clive-s-hideaway, starting-town, eclipsed-realms,
+ * willowrush-verge) — a land with ANY real declarative effect/trigger/
+ * activation (ETB-tap, sacrifice-for-value, Adventure, transform, mill,
+ * search-and-fetch, ...) does NOT qualify; those are exactly the
+ * genuinely card-specific shapes a scenario/trace is still the only way to
+ * reconcile. Deliberately scoped to Land here (the user's own ask), not
+ * generalized to every permanent type, even though the same reasoning
+ * would apply to a fully-vanilla creature too.
+ */
+function isStaticOnlyLand(card) {
+  if (!card || !/\bLand\b/.test(card.typeLine ?? '')) return false;
+  return !card.effects && !card.triggers && !card.activationCost && !card.modal;
+}
+
+/**
+ * A land's own `onEnter` trigger containing the real, mechanically-
+ * identical "enters tapped" replacement effect this model uses across 17
+ * real FIN Town-cycle lands (grep `kind: 'tapTarget', validType: 'land',
+ * owner: 'you'` across `cards/*\/definition.ts`) — self is already on the
+ * battlefield by the time a named trigger's own effects run (harness.ts's
+ * own selfZone rule), so this pool-based tap finds exactly self as long as
+ * no OTHER land is set up for 'you' in a given scenario; treno-dark-city's
+ * own definition.ts comment is the canonical citation. Checked both faces
+ * (a transforming land's back face could in principle carry its own).
+ */
+function hasStaticLandTapSelfTrigger(card) {
+  const triggers = [...(card?.triggers ?? []), ...(card?.backFace?.triggers ?? [])];
+  return triggers.some((t) => (t.effects ?? []).some((e) => e.kind === 'tapTarget' && e.validType === 'land' && e.owner === 'you'));
+}
+
+/**
+ * The SOURCE-side counterpart to `hasStaticLandTapSelfTrigger` above: the
+ * same `tapTarget`/`validType:'land'`/`owner:'you'` onEnter trigger IS the
+ * real card's own "enters tapped" replacement (each of the 17 Town-cycle
+ * lands' own `definition.ts` comment cites this — e.g. treno-dark-city's
+ * "This land enters tapped" real script text). A card carrying that trigger
+ * shape needs no trace/scenario evidence for its own `{event:
+ * 'entersBattlefield', subject:'self', tapped:true}` produce fact — its
+ * mere presence already proves the fact, same "known statically" treatment
+ * the sink side and `isStaticOnlyLand`/`DEATH_TRIGGER_NAMES` above already
+ * get. Scoped narrowly to `subject:'self'`/`controller:'you'`/`tapped:true`
+ * — a differently-shaped `entersBattlefield` fact (some other permanent
+ * entering, no `tapped`, an opponent's side, ...) still needs real evidence.
+ */
+function isLandEntersTappedSelfFact(p, card) {
+  return (
+    p.event === 'entersBattlefield' &&
+    p.subject === 'self' &&
+    p.tapped === true &&
+    (!p.controller || p.controller === 'you') &&
+    hasStaticLandTapSelfTrigger(card)
+  );
+}
+
+/**
+ * The one real WANT `hasStaticLandTapSelfTrigger` above statically
+ * explains: `tapTarget`'s own `validType: 'land'` IS "needs a land on the
+ * battlefield to tap" — a plain, unconstrained `{zone:'Battlefield',
+ * types:{has:['Land']}}` want, never narrower (a cmc/power-constrained
+ * variant is a DIFFERENT, genuinely card-specific want this doesn't
+ * cover). Matches every one of the 17 real cards' own declared sink fact
+ * for this trigger shape (checked).
+ */
+function isLandTapSelfWant(w) {
+  return (
+    w.zone === 'Battlefield' &&
+    (!w.controller || w.controller === 'you') &&
+    w.types &&
+    Array.isArray(w.types.has) &&
+    w.types.has.length === 1 &&
+    w.types.has[0] === 'Land' &&
+    !w.types.hasAny &&
+    !w.types.not &&
+    w.cmc === undefined
+  );
+}
+
+/**
+ * A plain land's own `{event:'playLand', subject:'self'}` produce fact —
+ * "I get played, from hand, when someone plays me" — is just as
+ * tautologically true-by-construction as `isStaticOnlyLand`/
+ * `isLandEntersTappedSelfFact` above: nothing about a Land-typeLine card's
+ * OWN definition.ts is ambiguous about how IT specifically reaches the
+ * battlefield, so no scenario/trace is needed to prove it for THIS card.
+ * Scoped narrowly to `subject:'self'` (and `controller` unset or 'you') on a
+ * card whose own typeLine actually includes Land — the real risk this
+ * fact's evidence requirement guards against is a DIFFERENT card fetching/
+ * putting a land OTHER than itself onto the battlefield without going
+ * through CR 305 at all (cards/elven-passage's own library fetch, e.g.) —
+ * that card's own synergy.json simply never declares a `playLand` fact in
+ * the first place, so this exemption never applies there; it only ever
+ * short-circuits a land's own self-referential fact.
+ */
+function isSelfPlayableLand(p, card) {
+  return p.event === 'playLand' && p.subject === 'self' && (!p.controller || p.controller === 'you') && /\bLand\b/.test(card?.typeLine ?? '');
+}
+
+/**
+ * The zone-fact counterpart to `isSelfPlayableLand` above, added the same
+ * pass (2026-09-09) for the same reason: a Land-typeLine card's own bare,
+ * unconstrained `{zone:'Battlefield', subject:'self'}` "battlefield
+ * presence" fact is tautologically true the instant it resolves — CR
+ * 305.4/601.2i, no replacement effect in this pool redirects a played land
+ * anywhere else — regardless of what OTHER abilities the card has. Unlike
+ * `isStaticOnlyLand` above (which deliberately stays conservative and
+ * requires NO triggers/effects/activation/modal at all, since it's really
+ * asking "is there anything card-specific left to verify"), this predicate
+ * asks a narrower question — "will resolving ever fail to put THIS card on
+ * the battlefield" — which stays "no" even for a card with an onEnter
+ * trigger or a mana ability (Vector, Imperial Capital's own tap-self +
+ * choice-of-color abilities, e.g.): neither changes whether the permanent
+ * itself ends up on the battlefield. Scoped narrowly the same way — bare
+ * `{zone:'Battlefield', subject:'self'}` only (`hasAnyConstraint` false — a
+ * types/cmc/power/toughness/name-qualified zone fact is a DIFFERENT, more
+ * specific claim this doesn't cover), and only for a card whose own
+ * typeLine actually includes Land.
+ */
+function isSelfBattlefieldPresenceLand(p, card) {
+  const unconstrained = !p.types && p.cmc === undefined && p.power === undefined && p.toughness === undefined && !p.name;
+  return p.zone === 'Battlefield' && p.subject === 'self' && (!p.controller || p.controller === 'you') && unconstrained && /\bLand\b/.test(card?.typeLine ?? '');
+}
+
 function wantMatchesZoneRead(want, zone) {
   return want.zone === zone;
 }
@@ -283,6 +454,7 @@ async function verifyCard(slug) {
 
   const source = synergy.source ?? [];
   const sink = synergy.sink ?? [];
+  const staticManaColors = staticManaColorsFor(card);
 
   const failures = [];
   const notes = [];
@@ -291,12 +463,18 @@ async function verifyCard(slug) {
   for (const p of source) {
     if ('zone' in p) {
       if (p.zone === 'Graveyard' && p.subject === 'self' && [...triggerNames].some((n) => DEATH_TRIGGER_NAMES.has(n))) continue; // see DEATH_TRIGGER_NAMES
+      if (p.zone === 'Battlefield' && p.subject === 'self' && (!p.controller || p.controller === 'you') && isStaticOnlyLand(card)) continue; // see isStaticOnlyLand
+      if (isSelfBattlefieldPresenceLand(p, card)) continue; // any Land's own tautological battlefield presence — see isSelfBattlefieldPresenceLand
       const evidence = allEntries.some((e) => {
         const z = producedZone(e, cardName);
         return z && z.zone === p.zone && (!p.controller || z.side === p.controller);
       });
       if (!evidence) failures.push(`produce {zone:${p.zone}${p.controller ? `,controller:${p.controller}` : ''}} has no supporting trace line (enters/move/moveTo/ceasesToExist/createToken/sacrifice/discard/destroy/legendRule)`);
     } else {
+      if (p.event === 'addMana' && p.color && staticManaColors.has(p.color)) continue; // plain "{T}: Add X." text — see staticManaColorsFor
+      if (p.event === 'addMana' && p.colors && [...(p.colors.has ?? []), ...(p.colors.hasAny ?? [])].every((c) => staticManaColors.has(c))) continue; // plain "{T}: Add X or Y." text, combined-fact shape — see staticManaColorsFor
+      if (isLandEntersTappedSelfFact(p, card)) continue; // real "enters tapped" replacement — see isLandEntersTappedSelfFact
+      if (isSelfPlayableLand(p, card)) continue; // a plain land's own self-play fact — see isSelfPlayableLand
       const evidence = allEntries.some((e) => {
         const ev = producedEvent(e, cardName);
         return ev && ev.event === p.event && (!p.counterType || ev.counterType === p.counterType) && (!p.controller || !ev.side || ev.side === p.controller);
@@ -308,6 +486,7 @@ async function verifyCard(slug) {
   // --- Forward: every declared WANT needs supporting trace evidence ---
   for (const w of sink) {
     if ('zone' in w) {
+      if (isLandTapSelfWant(w) && hasStaticLandTapSelfTrigger(card)) continue; // see isLandTapSelfWant/hasStaticLandTapSelfTrigger
       const hasAggregateRead = allEntries.some((e) => aggregateReadZone(e) === w.zone);
       const hasTypedRead = allEntries.some((e) => LOW_LEVEL_READ_FNS.has(e.fn));
       if (!hasAggregateRead && !hasTypedRead) failures.push(`want {zone:${w.zone}} has no read:getCardsIn/getCreaturesInPlay/getLandsInPlay (or per-object type read) anywhere in the trace`);
@@ -345,7 +524,7 @@ async function verifyCard(slug) {
   }
 
   // --- Reverse: every produce-relevant ACTION must be explained (soft) ---
-  const explainableFns = new Set(['enters', 'move', 'moveTo', 'ceasesToExist', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter']);
+  const explainableFns = new Set(['enters', 'move', 'moveTo', 'ceasesToExist', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter', 'playLand']);
   for (const e of allEntries) {
     if (IGNORED_FNS.has(e.fn) || e.fn.startsWith('read:')) continue;
     if (!explainableFns.has(e.fn)) {

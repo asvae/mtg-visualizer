@@ -306,6 +306,7 @@ function describeAction(card: CardDefinition, scenario: Scenario): string {
   if (scenario.trigger) parts.push(`"${scenario.trigger}" trigger fires`);
   else if (scenario.ability) parts.push(`"${scenario.ability}" activated`);
   else if (card.activationCost) parts.push(`activated (${card.activationCost})`);
+  else if (/\bLand\b/.test(card.typeLine)) parts.push('played as a land (CR 305 special action)');
   else {
     const castFrom = scenario.castFrom ?? 'hand';
     parts.push(castFrom === 'hand' ? 'cast from hand' : `cast from ${castFrom}`);
@@ -865,10 +866,29 @@ function isInstantOrSorcery(typeLine: string): boolean {
  *    all) — just a `trigger` event bracketing that one named ability.
  *  - Instant/Sorcery typeLine -> `cast`, then `resolveCard()`'s own effects,
  *    then `move` to graveyard — UNLESS the scenario's `castFrom` matches an
- *    `alternateCosts` entry with `thenExile: true` (Flashback), in which
- *    case it's `move` to exile instead, and critically NEVER graveyard —
- *    real rule text, and the exact fact a "return an instant/sorcery card
- *    from your graveyard" effect elsewhere needs to know didn't happen.
+ *    `alternateCosts` entry with `thenExile: true` (Flashback), OR the
+ *    face's own typeLine carries the real `Adventure` subtype (715.3d: an
+ *    Adventure spell is exiled instead of put into its owner's graveyard as
+ *    it resolves, specifically so it can be cast later as its other half —
+ *    zanarkand-ancient-metropolis-lasting-fayth's own doc comment explains
+ *    the layout; this rule applies to every Adventure card generically, not
+ *    just that one), in which case it's `move` to exile instead, and
+ *    critically NEVER graveyard — real rule text, and the exact fact a
+ *    "return an instant/sorcery card from your graveyard" effect elsewhere
+ *    needs to know didn't happen.
+ *  - A Land typeLine (and none of the above) -> `playLand`, NOT `cast` —
+ *    real CR 305.1: playing a land is a special action, never a spell, so
+ *    it never touches the stack or has a mana cost the way every other
+ *    branch here genuinely does. This is the one real, structural signal
+ *    (not a synergy-layer label) that lets a trace prove "this land
+ *    reached the battlefield via the land-drop action" as opposed to any
+ *    OTHER path an effect might take it (a bare `moveTo`, e.g. Elven
+ *    Passage's own library-fetch, which never sets up a `playLand`/`cast`
+ *    bracket at all for the land it finds) — see synergy.ts's own
+ *    `event: 'playLand'` doc comment for the paired Fact-vocab half of
+ *    this. Still followed by `enters` below like any other permanent —
+ *    playing a land is ALSO a real zone change onto the battlefield, so
+ *    both facts are genuinely true for it.
  *  - Anything else (a permanent being cast, its own ETB effects/triggers
  *    running) -> `cast`, then effects, then `enters` the battlefield rather
  *    than moving to a zone.
@@ -886,6 +906,10 @@ function lifecycleBefore(card: CardDefinition, scenario: Scenario, instanceId: n
     return [{ fn: 'activate', card: card.name, instanceId, cost: ability?.cost ?? '', ability: scenario.ability }];
   }
   if (card.activationCost) return [{ fn: 'activate', card: card.name, instanceId, cost: card.activationCost }];
+  // CR 305.1 — a real, distinct special action, never a spell cast. See
+  // this function's own doc comment above for why this is its own `fn`
+  // rather than folding into `cast` below.
+  if (/\bLand\b/.test(card.typeLine)) return [{ fn: 'playLand', card: card.name, instanceId }];
   const castFrom = scenario.castFrom ?? 'hand';
   // The cost paid to cast THIS way — the card's own printed mana cost for a
   // normal hand-cast, or the matching `alternateCosts` entry's own cost
@@ -903,7 +927,7 @@ function lifecycleAfter(card: CardDefinition, scenario: Scenario, instanceId: nu
   }
   const castFrom = scenario.castFrom ?? 'hand';
   const altCost = card.alternateCosts?.find((c) => c.from === castFrom);
-  const to = altCost?.thenExile ? 'Exile' : 'Graveyard';
+  const to = altCost?.thenExile || /\bAdventure\b/.test(card.typeLine) ? 'Exile' : 'Graveyard';
   state.move(selfReal, to);
   const cardType = /\bSorcery\b/.test(card.typeLine) ? 'Sorcery' : 'Instant';
   return [{ fn: 'move', card: card.name, instanceId, from: 'stack', to, cardType }];

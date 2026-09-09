@@ -2,10 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-09",
+  "notes": "2026-09-09: removed the {zone:'Battlefield',controller:'you',types:{has:['Land']}} sink fact — an artifact of the shared ETB-tap-self trigger's tapTarget{validType:'land',owner:'you'} effect needing a valid pool candidate, not a real 'this card wants more lands' synergy claim (trivially self-satisfied by the card itself). Removed pool-wide for every Town-cycle card whose ONLY source for this fact was this trigger shape; zanarkand-ancient-metropolis-lasting-fayth kept it (its own back face genuinely counts lands you control for a token's +1/+1 counters — an independent real want, not from this trigger).",
   "textCoverageAudited": false,
   "knownGaps": [
-    "same trigger-only-scenario gap as sharlayan-nation-of-scholars — no enters produce possible"
-  ]
+    "RESOLVED 2026-09-09 (differently than expected): the trigger-only-scenario gap sharlayan-nation-of-scholars/treno-dark-city/windurst-federation-center/zanarkand's front face still have (no scenario ever logs a real 'enters' line, so no Battlefield produce fact seemed possible) is now closed for THIS card specifically via a static exemption instead (verify-synergy.mjs's isSelfBattlefieldPresenceLand/isSelfPlayableLand — a Land's own baseline battlefield-presence and playLand facts are tautologically true by construction, no trace needed) rather than an actual 'enters' trace line ever existing. The other 4 sibling cards' own knownGaps note is untouched/still accurate for them until someone gives them the same facts."
+  ],
+  "scenariosReview": "ai"
 }

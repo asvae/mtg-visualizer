@@ -129,6 +129,39 @@ export function manaAbilityColorFromStaticText(staticAbilities?: string[]): Mana
   return undefined;
 }
 
+/**
+ * Widens the above to also recognize a real, common "choice of color" shape
+ * — an EXACT `{T}: Add {X} or {Y}.` string (two real colors, still no
+ * restriction/"spend only"/third-symbol text attached) — checked against the
+ * real pool: 12 real FIN Town-cycle lands use this exact shape (Vector,
+ * Imperial Capital's own "{T}: Add {B} or {R}.", e.g.), on top of the
+ * single-color cards `manaAbilityColorFromStaticText` above already covers.
+ *
+ * Deliberately for `scripts/prefill-mana-facts.mjs`'s own synergy-FACT
+ * generation only (which color(s) can this thing produce, as a disjunction)
+ * — NOT a payment/affordability primitive. Correctly affording a real
+ * choice-of-color source at cast time needs a genuine bipartite-matching
+ * assignment (this file's own header, gap #5's documented remainder), which
+ * stays deliberately unmodeled: `RealCard.manaAbility`/`manaColorOf` are
+ * unchanged by this addition, still single-color-only, so `engine.ts`'s own
+ * affordability checking does not gain dual-land support from this function.
+ *
+ * Returns every color the FIRST matching static-ability string names (in
+ * printed order) — a single-color match short-circuits the same way the
+ * function above does; a choice match returns both colors; neither shape
+ * matching (restricted/hybrid/colorless/variable, same exclusions as above)
+ * returns an empty array, not `undefined` (a caller iterates this one).
+ */
+export function manaAbilityColorsFromStaticText(staticAbilities?: string[]): ManaColor[] {
+  for (const text of staticAbilities ?? []) {
+    const single = /^\{T\}: Add \{([WUBRG])\}\.$/.exec(text);
+    if (single) return [single[1] as ManaColor];
+    const choice = /^\{T\}: Add \{([WUBRG])\} or \{([WUBRG])\}\.$/.exec(text);
+    if (choice) return [choice[1] as ManaColor, choice[2] as ManaColor];
+  }
+  return [];
+}
+
 /** The color this real card produces as a mana source — a basic land subtype, or a real `manaAbility` derived at ETB (see `RealCard`'s own doc comment) — or `undefined` if it's neither. */
 function manaColorOf(card: RealCard): ManaColor | undefined {
   if (card.types.includes('Land')) {

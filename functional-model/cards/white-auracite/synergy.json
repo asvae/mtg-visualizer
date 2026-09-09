@@ -6,6 +6,15 @@
       "value": 1,
       "sourceText": "When this artifact enters, exile target nonland permanent an opponent controls until this artifact leaves the battlefield.",
       "highlight": "exile target nonland permanent an opponent controls"
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "W",
+      "sourceText": "{T}: Add {W}.",
+      "highlight": "{W}",
+      "value": 1
     }
   ],
   "sink": [

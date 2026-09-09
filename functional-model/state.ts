@@ -162,6 +162,22 @@ export interface RealPlayer {
   attemptedDrawFromEmpty?: boolean;
   /** Real 104.3a/704.5a — set once by `sba.ts`'s `checkStateBasedActions` (0-or-less life, or `attemptedDrawFromEmpty` above) and never cleared; `engine.ts`'s own `advance` refuses to run any further once ANY player has this set (a real, deliberate stop — the game is over, not something to keep silently simulating). */
   hasLost?: boolean;
+  /**
+   * Real 305.1's own per-turn land-drop counter — `Player.landsPlayedThisTurn`
+   * (`Player.java` ~line 101/2225/2231). Consumed by `engine.ts`'s
+   * `canPlayLand` (rejects once this reaches the default max of 1 — no FIN
+   * card raises the max yet; Zell Dincht's own "You may play an additional
+   * land on each of your turns" is real but freeform `staticAbilities` text,
+   * not a structured field this counter can read yet — a real, flagged,
+   * not-yet-closed gap, same "blocked on cards/* boundary" shape as
+   * ENGINE_GAPS.md's damage-shield gap #8). Reset to 0 at the OWNING
+   * player's own Cleanup (`turn.ts`'s `runPhaseEntryAction`, mirroring
+   * `Player.onCleanupPhase`'s own `resetLandsPlayedThisTurn()` call,
+   * `Player.java` ~line 2473) — undefined/0 for a player who hasn't played
+   * a land yet this game, same "absent means zero" convention
+   * `attemptedDrawFromEmpty` above already uses.
+   */
+  landsPlayedThisTurn?: number;
 }
 
 function zoneArray(player: RealPlayer, zone: ZoneType): RealCard[] | undefined {

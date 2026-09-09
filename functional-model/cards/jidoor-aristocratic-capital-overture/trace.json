@@ -1,41 +1,6 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "enters tapped",
-      "raw": {
-        "result": "enters tapped",
-        "trigger": "onEnter"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Jidoor, Aristocratic Capital",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Jidoor, Aristocratic Capital",
-        "result": true
-      },
-      {
-        "fn": "tap",
-        "target": "Jidoor, Aristocratic Capital"
-      }
-    ]
-  },
-  {
-    "scenario": {
       "setup": "opp0: 7 card(s) in library",
       "action": "cast from hand, back face",
       "result": "mills 3 cards (opponent has 7 in library, half rounded down)",
@@ -77,7 +42,7 @@
         "card": "Overture",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
+        "to": "Exile",
         "cardType": "Sorcery"
       }
     ]
@@ -123,7 +88,7 @@
         "card": "Overture",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
+        "to": "Exile",
         "cardType": "Sorcery"
       }
     ]

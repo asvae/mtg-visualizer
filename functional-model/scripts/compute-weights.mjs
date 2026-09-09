@@ -87,6 +87,12 @@ function sourceMagnitude(fact, log) {
   if (event === 'damage') return Math.max(1, maxAmount(log, 'dealDamage', 'amount'));
   if (event === 'lifegain') return Math.max(1, maxAmount(log, 'gainLife', 'amount'));
   if (event === 'lifeloss') return Math.max(1, maxAmount(log, 'loseLife', 'amount'));
+  // A plain "{T}: Add X." static-ability text produces no trace line at all
+  // (see scripts/verify-synergy.mjs's own `staticManaColorsFor` doc comment)
+  // — stays the neutral floor for those. A structured `addMana` Effect
+  // (Elvish Archdruid's own variable "for each Elf you control") DOES log a
+  // real amount, same as any other magnitude-bearing event.
+  if (event === 'addMana') return Math.max(1, maxAmount(log, 'addMana', 'amount'));
   if (event === 'dies') return Math.max(1, countOf(log, 'destroy'), countOf(log, 'sacrifice'));
   return 1; // grantKeyword, e.g. — no magnitude concept
 }

@@ -103,6 +103,56 @@ resume alone (session transcripts are swept after ~30 days).
   Hand/Graveyard/Library/Exile's own "in your/an opponent's <zone>" phrasing
   is untouched (those genuinely are per-player zones). Verified against
   fin/293 (Zanarkand, Ancient Metropolis // Lasting Fayth).
+- **2026-09-09 (follow-up): acted on the "land-presence sink is graph
+  noise" flag from earlier this session — removed pool-wide, verified per-
+  card, not blanket-deleted by shape.** For all 17 Town-cycle cards sharing
+  the ETB-tap-self trigger (`{kind:'tapTarget', validType:'land',
+  owner:'you'}`), checked each one's OWN full effect set (front + any back
+  face) individually before touching anything. 16 had the sink fact
+  `{zone:'Battlefield', controller:'you', types:{has:['Land']}, value:1}`
+  produced SOLELY by that trigger shape (no independent land-count want
+  anywhere else in the card) — removed it from their `synergy.json`:
+  baron-airship-kingdom, crossroads-village, gohn-town-of-ruin,
+  gongaga-reactor-town, guadosalam-farplane-gateway, insomnia-crown-city,
+  ishgard-the-holy-see-faith-grief, jidoor-aristocratic-capital-overture,
+  lindblum-industrial-regency-mage-siege, midgar-city-of-mako-reactor-raid,
+  rabanastre-royal-city, sharlayan-nation-of-scholars, treno-dark-city,
+  vector-imperial-capital, windurst-federation-center,
+  balamb-garden-seed-academy-balamb-garden-airborne (the 17th sibling's real
+  slug — corrected from the notes-shorthand "balamb-garden-seed-academy"
+  used in the original flag). For cards with a second sink (ishgard's
+  Graveyard-artifact/enchantment, jidoor's opponent-Library, midgar's
+  Creature/Artifact-battlefield), only the one matching Land-shaped entry
+  was removed — the other sink(s) are real, untouched.
+  **`zanarkand-ancient-metropolis-lasting-fayth` deliberately KEPT** — its
+  back face ("Lasting Fayth") has a real, independent
+  `actions.putCounter(created, '+1/+1', ctx.you.getLandsInPlay().length)`
+  effect (counters on a token scaled by lands you control), a genuine
+  "cares about land count" want unrelated to the front face's ETB-tap
+  trigger — verified this is the ONLY one of the 17 with any such
+  independent effect (checked every other sibling's full `definition.ts`,
+  including all 4 other Adventure-Town backs — ishgard/jidoor/lindblum/
+  midgar's back-face effects are graveyard-return/mill/token/sac+draw,
+  none reference land count).
+  None of the 16 touched cards' `progress.json` had `review`/
+  `scenariosReview` at `"reviewed"`/`"human_reviewed"` (all already `"ai"`)
+  — so the standing "reset reviewed→ai on content change" rule had nothing
+  to actually flip this time; still added a dated `notes` entry + bumped
+  `lastVerified` to today on all 16 for traceability (appended, did not
+  overwrite pre-existing notes text on ishgard/jidoor/lindblum/midgar).
+  Confirmed via `find-synergies.mjs` before/after that no land-related
+  sink edge remains into any of the 16 (Midgar/Jidoor/Ishgard's OTHER real
+  sink edges still correctly present), and that Zanarkand's land-battlefield-
+  presence edges are unchanged/still present from every land-producing
+  card in the pool. `verify-synergy.mjs` (same single pre-existing
+  `auron-s-inspiration` hard failure, unchanged) and `vitest run
+  functional-model` (170/170) both clean after. No `definition.ts`/
+  `scenarios.ts`/`trace.json`/code changed — pure hand-authored
+  `synergy.json` fact removal + `progress.json` notes, so no
+  `run-scenarios.mjs` regeneration was needed. No new Forge citation
+  needed (no rules-behavior change, purely a synergy-fact-authoring
+  correction of an already-Forge-cited trigger shape).
+
 - **2026-09-09: real bug found+fixed — Adventure spells were logged to
   Graveyard instead of Exile.** `harness.ts`'s `lifecycleAfter` only
   special-cased `alternateCosts.thenExile` (Flashback) for the
@@ -673,21 +723,124 @@ resume alone (session transcripts are swept after ~30 days).
      page/HMR state from before the wording landed, or genuinely looking
      at that raw fn column — couldn't reproduce a live bug in the code as
      of this pass.
-  9. **Land-presence sink fact — flagged, not changed (judgment call for
-     the user/coordinator)**: `vector-imperial-capital`'s (and every other
-     Town-cycle ETB-tap sibling's) sink fact `{zone:'Battlefield',
-     controller:'you', types:{has:['Land']}}` — my read: this is graph
-     noise, not a real synergy claim, and should probably be removed/
-     suppressed for this specific trigger shape. Reasoning: it originates
-     from the `tapTarget{validType:'land', owner:'you'}` effect's own
-     candidate-pool requirement, which is ALWAYS trivially self-satisfied
-     (the card itself is a land, already on the battlefield, the instant
-     the trigger fires — harness.ts's own selfZone rule) — the ability
-     gains zero real benefit from more lands existing, unlike a genuine
-     "lands matter" want. As authored it's structurally indistinguishable
-     from a real "cares about land count" want, so it draws a synergy edge
-     from this card to literally every land-producing card in the pool
-     (ramp, fetch, other lands) for no real gameplay reason — probably
-     worth removing/suppressing pool-wide for this trigger shape, but
-     that's 17+ cards' worth of sink facts and a real semantics call, so
-     flagged rather than changed unprompted (・_・?).
+  9. **Land-presence sink fact — flagged this pass, ACTED ON in a later
+     same-day follow-up** (see the dated entry higher up this file, "acted
+     on the 'land-presence sink is graph noise' flag" — removed pool-wide
+     from 16 of the 17 Town-cycle siblings, kept on
+     zanarkand-ancient-metropolis-lasting-fayth since it has a genuine
+     independent land-count want). Original reasoning preserved here:
+     the fact originates from the `tapTarget{validType:'land', owner:'you'}`
+     effect's own candidate-pool requirement, which is ALWAYS trivially
+     self-satisfied (the card itself is a land, already on the battlefield,
+     the instant the trigger fires — harness.ts's own selfZone rule) — the
+     [continued below — see the rest of that note further down this file]
+
+- **2026-09-09 (later same day again) — ENGINE_GAPS.md gap #12 actually
+  CLOSED this pass: a real `playLand`/`canPlayLand` action now exists in
+  `engine.ts`'s real pilot path, not just harness.ts's trace-label fix.**
+  Got a real Forge checkout this time (network was available; sparse-cloned
+  `Player.java`/`PlayerController.java`/`GameAction.java`/`PhaseHandler.java`
+  into `/home/sva/Projects/mtg-forge` — matches the `../mtg-forge`-relative-
+  to-this-repo path every other citation in this codebase already assumes;
+  left the checkout in place afterward per that same standing convention,
+  not scratchpad-cleaned). Real Forge reference, cited directly (not
+  reasoned from CR text alone, unlike the earlier same-day pass that
+  flagged this as owed): `Player.playLand` (`Player.java` ~1624-1651) does
+  a direct `game.getAction().moveTo(Battlefield, land, cause)` — no Stack
+  trip at all — then fires `TriggerType.LandPlayed`, then
+  `addLandPlayedThisTurn()`. `Player.canPlayLand` (~1653-1688) gates on
+  305.3's own timing via `canCastSorcery()` (~2508-2511: own turn + main
+  phase + empty stack — the EXACT SAME rule this engine's own
+  `sorcerySpeedTimingOk` already implements for sorcery-speed spells, so
+  reused directly rather than re-derived) plus
+  `getLandsPlayedThisTurn() < getMaxLandPlays()` (default max 1,
+  `Player.java` ~1690-1696). Reset: `Player.onCleanupPhase()`
+  (~2456-2473) calls `resetLandsPlayedThisTurn()` unconditionally each
+  cleanup — this engine's own `turn.ts` mirrors that for the ACTIVE
+  player only (same established "only the active player's own Cleanup
+  actions are modeled" scope 514.1's discard already uses; a non-active
+  player's count can never be nonzero here anyway, since only the active
+  player passes `sorcerySpeedTimingOk`'s own-turn check).
+
+  **What got built** (all in this one pass):
+  - `state.ts`: new `RealPlayer.landsPlayedThisTurn?: number`.
+  - `turn.ts`: Cleanup's `runPhaseEntryAction` now resets it for the active
+    player, right alongside 514.1/514.2.
+  - `engine.ts`: new `canPlayLand`/`playLand` pair, same `ActionResult`/
+    "check separately from the mutating action" shape `canCastSpell`/
+    `castSpell` already use. `playLand` is ONE call (not a cast+resolve
+    split) — CR 305.1 lands never wait on the Stack, so there's no
+    separate "resolve" step to pair it with, unlike a spell. It does the
+    real Hand->Battlefield `state.move`, stamps `enteredThisTurn` (302.6
+    summoning sickness — yes, a creature-land could still be sick) and
+    `resolvedPermanents` (so upkeep/end-step auto-fire and Saga automation
+    machinery would work on a land too, if a future one needed it) exactly
+    like `resolveTop` already does for a cast permanent, derives
+    `manaAbility` from the land's own `staticAbilities` text (so a
+    mana-producing land like Midgar becomes a real payable mana source the
+    instant it's played, not just when cast), fires the real
+    `Trigger.on === 'enter'` ETB if the land declares one, then increments
+    the counter.
+  - **The dormant bug, actually fixed, not just flagged**: `canCastSpell`
+    now rejects a Land typeLine outright, at the very top, before any
+    other check — `castSpell` calls `canCastSpell` first, so this alone
+    closes it for both; no separate check needed in `castSpell` itself.
+    `engine-trace.ts`'s `pilotCast` needed NO direct edit either — it
+    already just calls `canCastSpell`/`castSpell` and throws on
+    `!check.ok`, so it inherits the guard for free (confirmed via the new
+    "rejects a Land typeLine" describe block in `engine.test.ts` calling
+    `castSpell` directly, plus reasoning through `pilotCast`'s own call
+    chain — not separately unit-tested through `engine-trace.ts` itself,
+    since nothing in this codebase exercises `pilotCast` against a Land
+    today to make that concrete, same "no FIN land uses
+    `runEngineScenarios()` yet" situation as everything else here).
+  - `engine-trace.ts`: new `pilotPlayLand` (the `playLand`-equivalent of
+    `pilotCast`+`pilotResolveTop` combined into one call, same reasoning)
+    and `pilotExpectIllegalPlayLand` (the `playLand`-equivalent of
+    `pilotExpectIllegalCast`) — both follow the exact same
+    `beginStep`/legality-check-then-log-then-mutate shape every other
+    `pilot*` helper in that file already uses, logging the same
+    `{fn:'playLand',...}`/`{fn:'enters',...}`/`{fn:'trigger',...}` bracket
+    shapes `harness.ts`'s own `lifecycleBefore` and `pilotResolveTop`
+    already establish (so a future card that migrates to
+    `runEngineScenarios()` produces a trace.json indistinguishable in
+    shape from the harness-path one for the same events).
+  - `engine.test.ts`: 8 new tests (`canPlayLand`/`playLand` describe
+    block: rejects non-Land, legal play proves real zone move + no Stack
+    trip + ETB fired (life gain) + counter increment, once-per-turn
+    rejection with a mutate-nothing check, 305.3 timing rejection with a
+    non-empty stack, 305.3 timing rejection outside main phase, Cleanup
+    reset allowing a second land next turn; plus a `canCastSpell`/
+    `castSpell` describe block proving the Land-rejection guard). All 178
+    functional-model tests pass (170 pre-existing + 8 new); full-pool
+    `verify-synergy.mjs` unchanged (still only the one pre-existing
+    unrelated `auron-s-inspiration` failure); `npm run test` (whole repo)
+    unchanged (still only the 5 pre-existing unrelated
+    `scripts/relations.test.mjs` failures, a different domain/process).
+
+  **Real, deliberately NOT closed in this pass, flagged for later**:
+  Zell Dincht's own "You may play an additional land on each of your
+  turns" (`staticAbilities`, freeform text) — `canPlayLand`'s once-per-turn
+  check is a hardcoded `>= 1` (mirroring Forge's own default
+  `getMaxLandPlays() == 1`), same "no FIN card modifies X yet" shape this
+  codebase already accepts elsewhere (514.1's hardcoded 7-card hand size,
+  e.g.) — but Zell is a REAL, checked exception (grepped the pool for
+  "additional land"/"extra land"/"play two lands"/`maxLandPlays`; exactly
+  one hit). Not closed here because it needs a structured field this
+  engine can read (no `CardDefinition.extraLandPlays`-shaped field exists;
+  Zell's own text is unstructured, same "engine-side design ready, blocked
+  on `cards/*` boundary" situation ENGINE_GAPS.md's gap #8 damage-shields
+  and gap #11's Vehicle crewCost gaps already document) — `RealPlayer.
+  landsPlayedThisTurn`'s own new doc comment flags this explicitly so a
+  future pass doesn't rediscover it from scratch. ENGINE_GAPS.md's own gap
+  #12 entry needs updating to reflect this closure — not yet edited this
+  pass (flagging here first per this file's own "record before finishing"
+  convention; whoever picks this up next should mark gap #12 CLOSED in
+  ENGINE_GAPS.md's own prioritized list, following the exact "~~old
+  gap~~ **CLOSED**" strikethrough convention every other closed gap there
+  already uses, and fold in this real Forge citation).
+  Also NOT built: no FIN land currently exercises this real path (no
+  card's own `scenarios.ts` migrated to `runEngineScenarios()` — out of
+  this task's explicit scope, "you don't need to migrate any card").
+     ability gains zero real benefit from more lands existing, unlike a
+     genuine "lands matter" want.

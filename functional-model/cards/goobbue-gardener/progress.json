@@ -2,10 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-09",
+  "notes": "2026-09-09: mana ability ('{T}: Add {G}.') now has a real source fact (event:'addMana', color:'G') via scripts/prefill-mana-facts.mjs's mechanical, corpus-wide pass — no mana-pool is modeled (still real, see mana.ts's own header), but the ability is no longer invisible to synergy matching, and scripts/verify-synergy.mjs no longer requires a scenario to prove it.",
   "textCoverageAudited": false,
-  "knownGaps": [
-    "mana ability is real text, entirely unmodeled (no Effect kind exists for it)"
-  ]
+  "knownGaps": []
 }

@@ -4,19 +4,18 @@
       "zone": "Graveyard",
       "controller": "opp",
       "value": 1
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "U",
+      "sourceText": "{T}: Add {U}.",
+      "highlight": "{U}",
+      "value": 1
     }
   ],
   "sink": [
-    {
-      "zone": "Battlefield",
-      "controller": "you",
-      "types": {
-        "has": [
-          "Land"
-        ]
-      },
-      "value": 1
-    },
     {
       "zone": "Library",
       "controller": "opp",

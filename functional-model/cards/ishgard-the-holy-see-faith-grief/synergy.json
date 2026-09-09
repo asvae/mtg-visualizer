@@ -1,16 +1,16 @@
 {
-  "source": [],
-  "sink": [
+  "source": [
     {
-      "zone": "Battlefield",
+      "id": "mana",
+      "event": "addMana",
       "controller": "you",
-      "types": {
-        "has": [
-          "Land"
-        ]
-      },
+      "color": "W",
+      "sourceText": "{T}: Add {W}.",
+      "highlight": "{W}",
       "value": 1
-    },
+    }
+  ],
+  "sink": [
     {
       "zone": "Graveyard",
       "controller": "you",

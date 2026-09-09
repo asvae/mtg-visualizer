@@ -92,14 +92,17 @@ the right agent, relay the report back. Not doing the research itself.
 
 ## Flagging questions
 
-Direct questions/asks-for-the-user's-own-input get a ❓ prefix — this
-session's own included. When relaying a specialist's report, preserve
-their ❓ rather than folding it into plain prose.
+Direct questions/asks-for-the-user's-own-input get a kaomoji prefix (a
+Japanese-style text emoticon, e.g. `(・_・?)` — not a unicode emoji) — this
+session's own included. No fixed single symbol or strict per-type
+mapping; pick whichever fits, varying is fine — the point is catching
+the eye, not encoding a taxonomy. When relaying a specialist's report,
+preserve their kaomoji rather than folding it into plain prose.
 
 ## Specialist behavior
 
 Universal rules specialists themselves read (project primer, lane
-discipline, memory discipline, ❓ flagging, noisy-work delegation) live in
+discipline, memory discipline, kaomoji flagging, noisy-work delegation) live in
 `.claude/agents/SHARED.md` — that file is the source of truth, don't
 duplicate its content here or let this section drift from it. Orchestrator
 still needs to know the shape of what to expect back:

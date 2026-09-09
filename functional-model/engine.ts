@@ -238,8 +238,26 @@ function payableManaSources(engine: GameEngine, player: RealPlayer): RealCard[] 
   });
 }
 
+function isLandTypeLine(typeLine: string): boolean {
+  return /\bLand\b/.test(typeLine);
+}
+
 /** Read-only legality check — same checks `castSpell` performs before it mutates anything, exposed separately so a caller (or a test asserting "this SHOULD be illegal") doesn't have to attempt-and-undo. */
 export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardDefinition): ActionResult {
+  // Real CR 305.1: playing a land is a special action, NEVER a spell —
+  // it has no mana cost to pay, never uses the stack, and isn't subject to
+  // 601's casting process at all. Before this guard, neither this function
+  // nor `castSpell` branched on `typeLine` at all, so a Land `CardDefinition`
+  // passed here would be checked under ordinary spell-casting rules (its
+  // empty `manaCost` parses as trivially affordable) and `castSpell` would
+  // genuinely push it onto the Stack — a real, structural mistake (see
+  // ENGINE_GAPS.md gap #12's own "dormant bug" writeup, checked: unreachable
+  // only because no FIN land's own `scenarios.ts` called `castSpell`/
+  // `pilotCast` before this pass). `canPlayLand`/`playLand` below are the
+  // real, structurally-separate CR 305 path a land must go through instead.
+  if (isLandTypeLine(card.typeLine)) {
+    return { ok: false, reason: `"${card.name}" is a Land (305.1) — lands are never cast; use canPlayLand/playLand instead` };
+  }
   if (!isInstantSpeed(card) && !sorcerySpeedTimingOk(engine, caster)) {
     return { ok: false, reason: `sorcery-speed timing violated (307.1a/117.1a): "${card.name}" can only be cast during your own main phase with an empty stack` };
   }
@@ -289,6 +307,73 @@ export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: Real
 
 function isPermanentTypeLine(typeLine: string): boolean {
   return !/\b(Instant|Sorcery)\b/.test(typeLine);
+}
+
+/**
+ * Real CR 305 "playing a land" — a genuinely SEPARATE special action from
+ * casting (see `canCastSpell`'s own new typeLine guard above), never a
+ * spell: no mana cost paid, no trip through the Stack, no priority-response
+ * window this action itself creates. Modeled after real Forge's own
+ * `Player.canPlayLand`/`Player.playLand` (`Player.java` ~line 1624-1688):
+ *  - `canPlayLand` mirrors `Player.canPlayLand`'s own 305.3 timing check —
+ *    `Player.canCastSorcery()` (own turn + main phase + empty stack,
+ *    `Player.java` ~line 2508-2511) is the EXACT same rule this file's
+ *    `sorcerySpeedTimingOk` already implements for a sorcery-speed spell, so
+ *    this reuses that gate rather than inventing a second one — plus the
+ *    real once-per-turn land-drop limit (`Player.getLandsPlayedThisTurn() <
+ *    Player.getMaxLandPlays()`, default max 1 — no FIN card raises the max
+ *    yet, see `RealPlayer.landsPlayedThisTurn`'s own doc comment for the one
+ *    real, flagged exception this doesn't cover, Zell Dincht).
+ *  - `playLand` mirrors `Player.playLand` itself: a real, direct
+ *    Hand -> Battlefield move (`game.getAction().moveTo`, no Stack
+ *    involved), then fires the real ETB (`TriggerType.LandPlayed` in real
+ *    Forge; this engine's own `Trigger.on === 'enter'` convention, same one
+ *    `resolveTop` already auto-fires for a cast permanent — a land's own
+ *    onEnter trigger, e.g. Vector, Imperial Capital's tap-a-land ETB, is
+ *    genuinely real and needs to fire here too), then increments the
+ *    per-turn counter (`Player.addLandPlayedThisTurn`). Unlike
+ *    `castSpell`+`resolveTop`'s own two-call split (needed because a spell
+ *    waits on the Stack for priority), this is ONE call — CR 305.1 lands
+ *    never wait for anything, so there's no separate "resolve" step to
+ *    pair it with.
+ */
+export function canPlayLand(engine: GameEngine, caster: RealPlayer, card: CardDefinition): ActionResult {
+  if (!isLandTypeLine(card.typeLine)) {
+    return { ok: false, reason: `"${card.name}" is not a Land (305.1) — use canCastSpell for a spell instead` };
+  }
+  if (!sorcerySpeedTimingOk(engine, caster)) {
+    return { ok: false, reason: `land-play timing violated (305.3): "${card.name}" can only be played during your own main phase with an empty stack` };
+  }
+  if ((caster.landsPlayedThisTurn ?? 0) >= 1) {
+    return { ok: false, reason: `land-play limit reached (305.1): you've already played a land this turn` };
+  }
+  return { ok: true };
+}
+
+/**
+ * Legality-checks, then (if legal) performs the real CR 305.1 special
+ * action: moves `cardReal` Hand -> Battlefield directly (never touching the
+ * Stack), stamps it for summoning-sickness purposes and mana-ability
+ * derivation exactly like `resolveTop` already does for a cast permanent
+ * (`enteredThisTurn`/`resolvedPermanents`/`manaAbility` — a land needs all
+ * three same as any other permanent: a creature land could still be
+ * summoning-sick, and a mana-producing land like Midgar needs its
+ * `manaAbility` derived the same narrow-slice way any other mana source
+ * does), fires its own real ETB trigger if it has one, then increments the
+ * per-turn land-drop counter. Returns `{ok:false, reason}` and mutates
+ * NOTHING if illegal.
+ */
+export function playLand(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions): ActionResult {
+  const check = canPlayLand(engine, caster, card);
+  if (!check.ok) return check;
+  engine.state.move(cardReal, 'Battlefield');
+  engine.enteredThisTurn.set(cardReal.id, engine.turn.turnNumber);
+  engine.resolvedPermanents.set(cardReal.id, { card, ctx, actions });
+  cardReal.manaAbility = manaAbilityColorFromStaticText(card.staticAbilities);
+  caster.landsPlayedThisTurn = (caster.landsPlayedThisTurn ?? 0) + 1;
+  const enterTrigger = card.triggers?.find((t) => t.on === 'enter');
+  if (enterTrigger) resolveCard(card, ctx, actions, enterTrigger.name);
+  return { ok: true };
 }
 
 /** Whether `cost`'s own free text requires tapping the permanent itself ({T}) as part of paying (602.1). `CardDefinition.activationCost` is a plain string — no structured cost grammar exists — so this, like the helpers below, is real but narrow text-pattern detection, not a parser. */
