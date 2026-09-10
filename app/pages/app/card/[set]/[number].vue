@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
+import { factConditions } from '../../../../lib/factConditions';
+import { annotatedFactRefKey, orderByTextPosition } from '../../../../lib/factOrder';
+import type { FactRow } from '../../../../lib/factOrder';
 import { describeFact } from '../../../../../functional-model/synergy';
 import type { Fact } from '../../../../../functional-model/synergy';
 import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
-import type { CardData, EdgeData, ThemeData, AnnotatedCard, ReviewStatus } from '../../../../types';
+import type { CardData, EdgeData, ThemeData, AnnotatedCard, AnnotatedFace, ReviewStatus } from '../../../../types';
 import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
 import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
 
@@ -229,20 +232,9 @@ const functionalModelJson = computed(() =>
   synergy.value ? JSON.stringify([...synergy.value.sink, ...synergy.value.source], null, 2) : null
 );
 
-// Raw constraint fields off a fact, verbatim — describeFact()'s own label
-// deliberately omits these now (a `target` constraint, e.g. activateAbility's
-// "target Creature") in favor of a terser label, with the nuance folded into
-// `value` instead; this column is where that omitted detail still shows,
-// exactly as authored, no relabeling.
-const CONDITION_KEYS = ['types', 'cmc', 'power', 'toughness', 'amount', 'name', 'target', 'oncePerTurn', 'colors', 'color', 'tapped'] as const;
-function factConditions(fact: Fact): string {
-  const obj: Record<string, unknown> = {};
-  for (const key of CONDITION_KEYS) {
-    const value = (fact as unknown as Record<string, unknown>)[key];
-    if (value !== undefined) obj[key] = value;
-  }
-  return Object.keys(obj).length ? JSON.stringify(obj) : '—';
-}
+// `factConditions` itself now lives in app/lib/factConditions.ts (extracted
+// for real unit coverage — see that file's own header for why, and its
+// sibling factConditions.test.ts) — imported above, not defined here.
 
 // Same shape as FunctionalModelText.vue's own `factKey` — matches a table
 // row's raw `Fact` to the `AnnotatedFactRef`(s) behind a linked phrase there,
@@ -259,11 +251,111 @@ const hoveredFactKey = ref<string | null>(null);
 // Every fact — including `addMana` events — renders as its own plain row,
 // same convention as any other fact (no card-owned grouping/collapsing;
 // see .claude/contracts/card-schema.md for what's engine- vs. card-owned).
-// Sink then source, same order the Facts tab's own table has always used.
-type FactRow = { fact: Fact; key: string };
+// Source-array-then-sink-array — synergy.json's own authored order, the
+// order a human reads the file in. This is only the BASE order now, not
+// the final displayed one — `factRowGroups` below reorders each group by
+// printed oracle-text position (`orderByTextPosition`,
+// app/lib/factOrder.ts), using this authored order purely as the
+// predecessor-lookup/tiebreak sequence for a fact with no textual anchor
+// of its own. `FactRow` itself is defined there too (shared with
+// `orderByTextPosition`'s own signature) rather than redeclared here.
 const factRows = computed<FactRow[]>(() => {
   if (!synergy.value) return [];
-  return [...synergy.value.sink, ...synergy.value.source].map((fact) => ({ fact, key: factKey(fact) }));
+  return [...synergy.value.source, ...synergy.value.sink].map((fact) => ({ fact, key: factKey(fact) }));
+});
+
+// Multi-face Facts split (Adventure-layout Town lands, e.g. fin/293
+// Zanarkand, Ancient Metropolis // Lasting Fayth) — the user wants the
+// flat Facts table grouped by which face of the card each fact belongs to
+// ("Main card" = the front face, "Other faces/functions" = everything
+// else) rather than one undifferentiated list. Only rendered when there's
+// actually more than one face (`annotatedFaces.value.length > 1`) — the
+// vast majority of cards are single-faced and keep today's flat,
+// ungrouped table exactly as before.
+//
+// Placement signal: primarily the fact's own author-set `Fact.face`
+// (functional-model/synergy.ts) — `'front'` -> Main card, `'back'` -> Other
+// faces/functions, see `isMainFaceFact` below, defined alongside
+// `factRowGroups` since it's the actual per-row grouping decision. This
+// used to be inferred purely from `annotateOracleText`'s oracle-text
+// linking (a fact found in face 0's own oracleLines was "Main card",
+// anything else — including a fact linked to NO face at all — defaulted to
+// "Other faces/functions"). That heuristic mis-filed
+// sidequest-catch-a-fish-cooking-campsite's own front-face
+// `wants-artifact-or-creature-on-top` sink fact (no `sourceText`/`highlight`
+// match at all) into "Other faces/functions" despite it genuinely being a
+// front-face effect — exactly the gap `Fact.face` was added to close. The
+// heuristic below (`mainFaceFactKeys`) is now ONLY the fallback for a fact
+// with no `face` set at all (shouldn't happen on any of today's 33
+// backfilled multi-face cards, but kept rather than deleted in case a
+// future card lands before its own `face` values are authored).
+// `annotatedFactRefKey` itself now lives in app/lib/factOrder.ts (shared
+// with `orderByTextPosition`'s own oracleLines walk) — imported above.
+const annotatedFaces = computed(() => data.value?.functionalModel?.annotatedCard?.faces ?? []);
+const isMultiFace = computed(() => annotatedFaces.value.length > 1);
+// Every fact-key `annotateOracleText` (functional-model/synergy.ts) actually
+// linked into SOME face's oracleLines — i.e. the fact declared a
+// `sourceText`/`highlight` pair that really matched that face's own oracle
+// text, not just "has the fields set". Shared by the multi-face grouping
+// below (face 0 only) and the Facts table's own per-row annotation icon
+// (any face — a back-face-only link still counts as "this fact has a real
+// textual anchor somewhere on the card", which is the icon's own, narrower
+// question).
+function factKeysInFaces(faces: AnnotatedFace[]): Set<string> {
+  const keys = new Set<string>();
+  for (const face of faces) for (const seg of face.oracleLines.flat()) for (const ref of seg.facts ?? []) keys.add(annotatedFactRefKey(ref));
+  return keys;
+}
+// Set of every fact-key linked anywhere in face 0's own oracleLines — the
+// ONLY set actually consulted (a 2+-face card's "main" is always exactly
+// face 0; every other face collapses into the one "Other faces/functions"
+// bucket, matching the user's own "Main card / Other faces" two-way split,
+// not a per-face breakdown).
+const mainFaceFactKeys = computed(() => factKeysInFaces(annotatedFaces.value.slice(0, 1)));
+// Every fact-key linked on ANY face — drives the Facts table's small
+// per-row annotation icon (does this fact have a real textual anchor at
+// all, regardless of which face). A fact with no `sourceText`/`highlight`,
+// or one whose `highlight` never actually matched that face's oracle text,
+// is absent from every face's `oracleLines` and therefore reads as
+// unannotated here — same "no textual anchor" facts that fall into the
+// "Other faces/functions" fallback bucket above.
+const annotatedFactKeys = computed(() => factKeysInFaces(annotatedFaces.value));
+function isFactAnnotated(fact: Fact): boolean {
+  return annotatedFactKeys.value.has(factKey(fact));
+}
+// Which bucket a single row belongs in — prefers the fact's own
+// author-set `face` field (functional-model/synergy.ts's `Fact.face`,
+// backfilled across every multi-face card in the pool) since that's a
+// real, explicit declaration rather than an inference. Only falls back to
+// the old oracleLines-linking heuristic (see `mainFaceFactKeys` above) for
+// a fact that has no `face` set at all — shouldn't happen on any of
+// today's multi-face cards, but a future card might land before its own
+// `face` values are authored, so the heuristic stays as a safety net
+// rather than being deleted outright.
+function isMainFaceFact(row: FactRow): boolean {
+  if (row.fact.face === 'front') return true;
+  if (row.fact.face === 'back') return false;
+  return mainFaceFactKeys.value.has(row.key);
+}
+// Grouped view for the Facts tab template — a flat single group (no
+// header rendered) when `!isMultiFace`, so a single-faced card's markup is
+// completely unchanged; two labeled groups (skipping either one if it ends
+// up empty) otherwise. Each group's own rows are further reordered by
+// `orderByTextPosition` (app/lib/factOrder.ts) to follow the card's own
+// printed oracle-text order (user's own request against fin/279 The Gold
+// Saucer) — applied PER GROUP, each against only ITS OWN relevant face(s)
+// (front face alone for "Main card"; every other face for "Other
+// faces/functions"), never one global cross-face position, per that
+// module's own doc comment.
+const factRowGroups = computed<{ label: string | null; rows: FactRow[] }[]>(() => {
+  if (!isMultiFace.value) return [{ label: null, rows: orderByTextPosition(factRows.value, annotatedFaces.value.slice(0, 1)) }];
+  const main: FactRow[] = [];
+  const other: FactRow[] = [];
+  for (const row of factRows.value) (isMainFaceFact(row) ? main : other).push(row);
+  return [
+    { label: 'Main card', rows: orderByTextPosition(main, annotatedFaces.value.slice(0, 1)) },
+    { label: 'Other faces/functions', rows: orderByTextPosition(other, annotatedFaces.value.slice(1)) },
+  ].filter((g) => g.rows.length > 0);
 });
 
 // Functional model's own four views, tabbed instead of stacked
@@ -315,12 +407,24 @@ watch(
 const factsStatus = computed<ReviewStatus>(() => (factsReviewStatus.value === 'human' ? 'human_reviewed' : 'ai_reviewed'));
 const scenariosStatus = computed<ReviewStatus>(() => (scenariosReviewStatus.value === 'reviewed' ? 'human_reviewed' : 'ai_reviewed'));
 const interactionsStatus = computed<ReviewStatus>(() => (interactionsReviewStatus.value === 'reviewed' ? 'human_reviewed' : 'ai_reviewed'));
-const functionalModelTabs = [
-  { label: 'Facts', value: 'facts' as const },
-  { label: 'Scenarios', value: 'scenarios' as const },
+// Item counts for the Facts/Json tab strip — a plain "how many rows exist"
+// count, NOT a draft/review indicator (see the review-status table's own
+// comment above for why THAT was deliberately pulled off the tab strip;
+// this is an independent, unrelated thing). `undefined` (not `0`) whenever
+// there's nothing to count — a not-yet-migrated card (`synergy` null) or a
+// migrated card with genuinely zero scenarios recorded — so UTabs's own
+// `v-if="item.badge || item.badge === 0"` renders no badge at all rather
+// than a misleading "0"; Json/Card Definition never get one; both counts
+// are `computed`, not read once, so they stay correct if `data`/`synergy`
+// ever change without a full reload.
+const factsCount = computed(() => (synergy.value ? synergy.value.source.length + synergy.value.sink.length : 0));
+const scenariosCount = computed(() => data.value?.functionalModel?.traces?.length ?? 0);
+const functionalModelTabs = computed(() => [
+  { label: 'Facts', value: 'facts' as const, badge: factsCount.value || undefined },
+  { label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined },
   { label: 'Json', value: 'json' as const },
   { label: 'Card Definition', value: 'definition' as const },
-];
+]);
 
 // Dev-only — see server/api/card/review-status.ts's own header for why
 // (writes into the repo's functional-model/ source tree; refused outright
@@ -333,11 +437,36 @@ const isDev = import.meta.dev;
 // updates the matching local ref above directly — no need to refetch the
 // whole card just for this one field, and refetching would also re-run
 // every trace live (computeTracesLive) for no reason.
+//
+// Optimistic: the local ref flips to its new value BEFORE the request is
+// awaited (not after `res.json()` resolves), so the review-status table's
+// Draft pill/Confirm button reflect the click instantly rather than waiting
+// on the round-trip. `reviewStatusSaving` still disables the button while a
+// request for this field is in flight (guards against a double-click racing
+// two writes), but that's just a disabled state layered on top of the
+// already-flipped value, not a "wait to show the change" gate. On a non-ok
+// response or a thrown request, the snapshot taken before the optimistic
+// flip is restored — same rollback either way.
 const reviewStatusSaving = ref<'review' | 'scenariosReview' | 'interactionsReview' | null>(null);
 async function toggleReviewStatus(field: 'review' | 'scenariosReview' | 'interactionsReview') {
   if (!data.value?.functionalModel || reviewStatusSaving.value) return;
   const reviewed =
     field === 'review' ? factsReviewStatus.value !== 'human' : field === 'scenariosReview' ? scenariosReviewStatus.value !== 'reviewed' : interactionsReviewStatus.value !== 'reviewed';
+
+  const prevFacts = factsReviewStatus.value;
+  const prevScenarios = scenariosReviewStatus.value;
+  const prevInteractions = interactionsReviewStatus.value;
+  const applyLocal = (value: 'ai' | 'human' | 'draft' | 'reviewed') => {
+    if (field === 'review') factsReviewStatus.value = value as 'ai' | 'human';
+    else if (field === 'scenariosReview') scenariosReviewStatus.value = value as 'draft' | 'reviewed';
+    else interactionsReviewStatus.value = value as 'draft' | 'reviewed';
+  };
+  // Optimistic flip — happens synchronously, before the fetch below even
+  // starts, so the UI never waits on the network for this.
+  applyLocal(
+    field === 'review' ? (reviewed ? 'human' : 'ai') : reviewed ? 'reviewed' : 'draft'
+  );
+
   reviewStatusSaving.value = field;
   try {
     const res = await fetch('/api/card/review-status', {
@@ -346,11 +475,21 @@ async function toggleReviewStatus(field: 'review' | 'scenariosReview' | 'interac
       body: JSON.stringify({ name: card.value!.name, field, reviewed }),
     });
     if (res.ok) {
+      // Reconcile with the server's own authoritative value (expected to
+      // already match the optimistic one — this just closes the loop).
       const body = await res.json();
       if (field === 'review') factsReviewStatus.value = body.review;
       else if (field === 'scenariosReview') scenariosReviewStatus.value = body.scenariosReview;
       else interactionsReviewStatus.value = body.interactionsReview;
+    } else {
+      factsReviewStatus.value = prevFacts;
+      scenariosReviewStatus.value = prevScenarios;
+      interactionsReviewStatus.value = prevInteractions;
     }
+  } catch {
+    factsReviewStatus.value = prevFacts;
+    scenariosReviewStatus.value = prevScenarios;
+    interactionsReviewStatus.value = prevInteractions;
   } finally {
     reviewStatusSaving.value = null;
   }
@@ -417,7 +556,92 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
           ×{{ deckQty }}
         </span>
       </h1>
-      <CardMedia :images="card.images" :tokens="card.tokens" />
+      <!-- CardMedia + the review-status table side by side once there's
+           room (md and up); stacked (table below the images) on narrow/
+           mobile viewports, same "stack on narrow, row on wide" shape as
+           the rest of the app's own responsive containers. items-start so
+           the table doesn't stretch to the image column's own height. -->
+      <div class="flex flex-col items-start gap-4 md:flex-row">
+        <CardMedia :images="card.images" :tokens="card.tokens" />
+
+        <!-- Review-status overview — one small table, not a per-tab/
+             per-section badge. Used to be three separate ReviewStatusBadge
+             call sites (top of the Facts tab's own content, top of
+             Scenarios', beside the Interactions heading) plus, at various
+             points earlier this session, a UTabs tab-strip badge — all
+             removed in favor of this single table so switching tabs never
+             hides a row's status, and the tab strip itself carries no
+             draft/review indicator at all anymore. All three rows always
+             render now (Facts/Scenarios/Interactions), regardless of
+             whether that section actually has anything in it yet — same
+             "show the true empty state, don't hide the section" reasoning
+             the tab-strip's own item counts use (a 0-count tab and an
+             always-present confirm row are the same idea). Each row's own
+             `readonly` still requires BOTH dev AND `data.functionalModel`
+             (a functional-model/cards/<slug> folder existing at all) —
+             `toggleReviewStatus`'s own no-op guard already refuses to POST
+             without one (its endpoint 404s on a missing folder either way,
+             since all three fields' progress.json lives there), so a
+             not-yet-migrated card's rows render with a disabled confirm
+             button rather than one that silently does nothing on click.
+             ONE button column (no separate Draft pill) —
+             `ReviewStatusBadge`'s own `variant="button"` renders the
+             section's current status as the button's own label/styling
+             (small, muted throughout — "Confirm" reads a shade more
+             prominent than "Unconfirm" only so the two stay
+             distinguishable, neither is a loud color). Same shared status
+             computeds/toggleReviewStatus (and its already-optimistic local
+             state flip) as before — no parallel status system, just a
+             different layout for the same data. -->
+        <div class="mt-2 shrink-0">
+          <table class="border-collapse text-xs">
+            <thead>
+              <tr class="text-left text-[10px] font-semibold tracking-wide text-muted uppercase">
+                <th class="py-1 pr-4">Facts</th>
+                <th class="py-1"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="py-1 pr-4 align-middle">Facts</td>
+                <td class="py-1 align-middle">
+                  <ReviewStatusBadge
+                    variant="button"
+                    :status="factsStatus"
+                    :readonly="!(isDev && data?.functionalModel)"
+                    :pending="reviewStatusSaving === 'review'"
+                    @confirm="toggleReviewStatus('review')"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td class="py-1 pr-4 align-middle">Scenarios</td>
+                <td class="py-1 align-middle">
+                  <ReviewStatusBadge
+                    variant="button"
+                    :status="scenariosStatus"
+                    :readonly="!(isDev && data?.functionalModel)"
+                    :pending="reviewStatusSaving === 'scenariosReview'"
+                    @confirm="toggleReviewStatus('scenariosReview')"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td class="py-1 pr-4 align-middle">Interactions</td>
+                <td class="py-1 align-middle">
+                  <ReviewStatusBadge
+                    variant="button"
+                    :status="interactionsStatus"
+                    :readonly="!(isDev && data?.functionalModel)"
+                    :pending="reviewStatusSaving === 'interactionsReview'"
+                    @confirm="toggleReviewStatus('interactionsReview')"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- functional-model/ — a declarative CardDefinition
            (functional-model/card.ts) run through real, mutable game state
@@ -444,30 +668,28 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
         <!-- Same "strip only, content switched separately" split AppHeader.vue's
              own filter-mode UTabs already uses — nothing here depends on
-             UTabs rendering slotted content itself. Facts/Scenarios' own
-             Draft-status control lives at the top of each tab's own content
-             below (not in the tab strip — UTabs' `item.badge` is only a
-             plain string/object prop, no way to host a real interactive
-             button there), same placement as the Interactions section's own
-             inline ReviewStatusBadge just below its own heading. -->
+             UTabs rendering slotted content itself. No draft/review
+             indicator lives on the tab strip (or per-tab content) at all —
+             see the review-status table above this block for where that
+             now lives, once, covering every section regardless of which
+             tab is active. -->
         <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
 
         <template v-if="store.functionalModelTab.value === 'facts'">
-          <div class="mb-2">
-            <ReviewStatusBadge
-              :badge="true"
-              :status="factsStatus"
-              size="xs"
-              :readonly="!isDev"
-              :pending="reviewStatusSaving === 'review'"
-              @confirm="toggleReviewStatus('review')"
-            />
-          </div>
           <div v-if="synergy" class="overflow-x-auto">
             <table class="border-collapse text-xs whitespace-nowrap">
-              <tbody>
+              <tbody v-for="group in factRowGroups" :key="group.label ?? 'flat'">
+                <!-- Group header — only rendered for a multi-face card (see
+                     `factRowGroups`'s own comment); a single-faced card's
+                     `label` is always null here, so nothing changes for the
+                     vast majority of cards. -->
+                <tr v-if="group.label">
+                  <td colspan="4" class="pt-2 pb-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase">
+                    {{ group.label }}
+                  </td>
+                </tr>
                 <tr
-                  v-for="row in factRows"
+                  v-for="row in group.rows"
                   :key="row.key"
                   class="align-middle"
                   :class="hoveredFactKey === factKey(row.fact) ? 'bg-surface/60' : 'hover:bg-surface/25'"
@@ -487,7 +709,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted first-letter:uppercase"
                     :title="row.fact.sourceText"
                   >
-                    {{ describeFact(row.fact) }}
+                    <Icon
+                      v-if="isFactAnnotated(row.fact)"
+                      name="lucide:link-2"
+                      class="mr-1 inline-block h-2 w-2 shrink-0 align-[1px] text-emerald-500/40"
+                      title="Linked to card text"
+                    />{{ describeFact(row.fact) }}
                   </td>
                   <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">{{ factConditions(row.fact) }}</td>
                 </tr>
@@ -498,16 +725,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         </template>
 
         <template v-else-if="store.functionalModelTab.value === 'scenarios'">
-          <div class="mb-2">
-            <ReviewStatusBadge
-              :badge="true"
-              :status="scenariosStatus"
-              size="xs"
-              :readonly="!isDev"
-              :pending="reviewStatusSaving === 'scenariosReview'"
-              @confirm="toggleReviewStatus('scenariosReview')"
-            />
-          </div>
           <ScenarioReplay
             v-if="data.functionalModel.traces?.length"
             :traces="data.functionalModel.traces"
@@ -543,13 +760,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
       <div v-if="data?.interactions?.length" class="mt-4 w-full max-w-full">
         <div class="mb-1 flex items-center gap-2">
           <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</span>
-          <ReviewStatusBadge
-            :status="interactionsStatus"
-            size="xs"
-            :readonly="!(isDev && data.functionalModel)"
-            :pending="reviewStatusSaving === 'interactionsReview'"
-            @confirm="toggleReviewStatus('interactionsReview')"
-          />
         </div>
         <ul class="flex flex-col gap-1.5">
           <li

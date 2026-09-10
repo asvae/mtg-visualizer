@@ -35,6 +35,26 @@
 // `human_reviewed`, which never had a pill at all). `title`/`aria-label`
 // carry the same "Mark as reviewed"/"Mark as draft" text a sighted mouse
 // user no longer sees on the button face.
+//
+// `variant="button"` (card page's own review-status table, one row per
+// section) is a second, later-added rendering mode alongside the original
+// pill+icon one above — additive, doesn't touch the default `'pill'`
+// behavior any existing caller (keywords page's `KeywordEntryCard.vue`)
+// already relies on. Renders ONE compact text button per status, no
+// separate pill: "Confirm" when `status === 'ai_reviewed'`, "Unconfirm"
+// when `status === 'human_reviewed'` — this is the table's own single
+// action column, so the label doing double duty as the status readout is
+// the point, not an accident. Both states are deliberately low-key/muted
+// (a small table of admin controls, not a call-to-action) — Confirm reads
+// a shade more prominent than Unconfirm (a faint warn tint vs. a plain
+// border) only so the two remain visually distinguishable at a glance, not
+// to make either one loud. `badge`/`reviewedNote` props are ignored in
+// this variant (nothing to attach a pill to, no room for a sentence next
+// to a table-row button). `readonly` still disables the button (and drops
+// the click handler) rather than hiding it outright — unlike the pill
+// variant, this is the table's ONLY per-row content, so a prod visitor
+// should still see current status via the label even if they can't act
+// on it.
 import type { ReviewStatus } from '../types';
 
 withDefaults(
@@ -44,11 +64,12 @@ withDefaults(
      * true — set false when the caller already surfaces the same status
      * another way (the card page's Facts/Scenarios tabs show it via a
      * UTabs `item.badge` instead), so this component renders just the
-     * confirm control. */
+     * confirm control. Ignored when `variant === 'button'`. */
     badge?: boolean;
     /** Text shown next to the button once `status === 'human_reviewed'` —
      * omit for no note (e.g. the Interactions panel, which shows only the
-     * pill/button, no explanatory sentence). */
+     * pill/button, no explanatory sentence). Ignored when `variant ===
+     * 'button'`. */
     reviewedNote?: string;
     /** Disables the button while a request for THIS control is in flight —
      * caller's own responsibility to track (same field-scoped
@@ -57,23 +78,45 @@ withDefaults(
     /** Interactions panel's own button/pill run a size step smaller
      * (inline with the section header) than the Facts/Scenarios tabs' —
      * same two literal class strings that existed before this extraction,
-     * just switched on a prop instead of duplicated per call site. */
+     * just switched on a prop instead of duplicated per call site. Ignored
+     * when `variant === 'button'` (that variant has its own single, bigger
+     * size — it's the table's primary action, not an inline aside). */
     size?: 'sm' | 'xs';
     /** Hides the confirm button (and `reviewedNote`) while still showing
      * the pill — the card page's Interactions panel only ever renders its
      * "Mark as reviewed" button in dev (see server/api/card/review-status
      * .ts's own dev-only 403 guard) but always shows the Draft pill itself,
      * dev or not. Default false — every other call site shows both
-     * together. */
+     * together. Under `variant === 'button'` this disables the button
+     * in place instead of hiding it (see that variant's own note above). */
     readonly?: boolean;
+    /** `'pill'` (default) — the original Draft-pill-plus-icon-button
+     * rendering every existing caller uses. `'button'` — one bigger text
+     * button per row, no separate pill; see the header comment above. */
+    variant?: 'pill' | 'button';
   }>(),
-  { badge: true, size: 'sm', readonly: false }
+  { badge: true, size: 'sm', readonly: false, variant: 'pill' }
 );
 defineEmits<{ confirm: [] }>();
 </script>
 
 <template>
-  <span v-if="status !== 'not_implemented'" class="inline-flex items-center gap-1.5">
+  <button
+    v-if="variant === 'button' && status !== 'not_implemented'"
+    type="button"
+    class="rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+    :class="
+      status === 'human_reviewed'
+        ? 'border border-border text-muted hover:bg-surface hover:text-text'
+        : 'border border-warn/40 bg-warn/15 text-warn hover:bg-warn/25'
+    "
+    :disabled="pending || readonly"
+    :title="status === 'human_reviewed' ? 'Mark as draft' : 'Mark as reviewed'"
+    @click="!readonly && $emit('confirm')"
+  >
+    {{ status === 'human_reviewed' ? 'Unconfirm' : 'Confirm' }}
+  </button>
+  <span v-else-if="status !== 'not_implemented'" class="inline-flex items-center gap-1.5">
     <!-- Draft pill — the confirm control now lives INSIDE it (an icon-only
          checkmark button embedded at the pill's own trailing edge) rather
          than as a separate labeled button beside it, per the user's own
