@@ -4,24 +4,28 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "damage",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ],
   "sink": [
@@ -34,7 +38,8 @@
           "Land"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

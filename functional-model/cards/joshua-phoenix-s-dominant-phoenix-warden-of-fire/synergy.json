@@ -4,7 +4,8 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Battlefield",
@@ -14,28 +15,33 @@
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "event": "damage",
       "controller": "you",
-      "value": 5
+      "value": 5,
+      "face": "back"
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 5
+      "value": 5,
+      "face": "back"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "dies",
       "target": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ],
   "sink": [
@@ -47,7 +53,8 @@
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

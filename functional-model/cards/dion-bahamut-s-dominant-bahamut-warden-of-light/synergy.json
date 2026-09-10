@@ -9,7 +9,8 @@
       "value": 1,
       "id": "etb-knight-token",
       "highlight": "create a 2/2 white Knight creature token",
-      "sourceText": "When Dion enters, create a 2/2 white Knight creature token."
+      "sourceText": "When Dion enters, create a 2/2 white Knight creature token.",
+      "face": "front"
     },
     {
       "event": "putCounter",
@@ -25,7 +26,8 @@
       "value": 1,
       "id": "wings-of-light-pump",
       "highlight": "put a +1/+1 counter on each other creature you control",
-      "sourceText": "Bahamut chapter I, II — Wings of Light: put a +1/+1 counter on each other creature you control."
+      "sourceText": "Bahamut chapter I, II — Wings of Light: put a +1/+1 counter on each other creature you control.",
+      "face": "back"
     },
     {
       "zone": "Graveyard",
@@ -33,7 +35,8 @@
       "value": 1,
       "id": "gigaflare-graveyard",
       "highlight": "Destroy target permanent",
-      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side; the destroyed permanent lands in its owner's graveyard)."
+      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side; the destroyed permanent lands in its owner's graveyard).",
+      "face": "back"
     },
     {
       "event": "dies",
@@ -41,7 +44,8 @@
       "value": 1,
       "id": "gigaflare-dies",
       "highlight": "Destroy target permanent",
-      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side, firing that permanent's own dies triggers)."
+      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side, firing that permanent's own dies triggers).",
+      "face": "back"
     }
   ],
   "sink": [
@@ -56,7 +60,8 @@
       "sourceText": "Wings of Light — put a +1/+1 counter on each OTHER creature you control; needs another creature you control to exist.",
       "id": "wants-other-creature",
       "highlight": "put a +1/+1 counter on each OTHER creature you control",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "zone": "Battlefield",
@@ -64,7 +69,8 @@
       "sourceText": "Gigaflare — Destroy target permanent, no controller restriction (real script: ValidTgts$ Permanent, no owner clause) — can target one of YOUR OWN permanents.",
       "id": "wants-own-permanent",
       "highlight": "Destroy target permanent",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "zone": "Battlefield",
@@ -72,7 +78,8 @@
       "sourceText": "Gigaflare — Destroy target permanent, no controller restriction — can equally target an OPPONENT'S permanent.",
       "id": "wants-opp-permanent",
       "highlight": "Destroy target permanent",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

@@ -6,7 +6,8 @@
       "controller": "you",
       "value": 1,
       "sourceText": "If it's an artifact or creature card, you may reveal it and put it into your hand.",
-      "highlight": "you may reveal it and put it into your hand"
+      "highlight": "you may reveal it and put it into your hand",
+      "face": "front"
     },
     {
       "id": "transform-food",
@@ -17,7 +18,8 @@
       },
       "value": 1,
       "sourceText": "If you put a card into your hand this way, create a Food token and transform this enchantment.",
-      "highlight": "create a Food token"
+      "highlight": "create a Food token",
+      "face": "front"
     },
     {
       "id": "cooking-campsite-counters",
@@ -33,7 +35,8 @@
       },
       "value": 1,
       "sourceText": "Cooking Campsite — {3}, {T}, Sacrifice an artifact: Put a +1/+1 counter on each creature you control.",
-      "highlight": "Put a +1/+1 counter on each creature you control"
+      "highlight": "Put a +1/+1 counter on each creature you control",
+      "face": "back"
     },
     {
       "id": "mana",
@@ -42,7 +45,8 @@
       "color": "W",
       "sourceText": "{T}: Add {W}.",
       "highlight": "{W}",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ],
   "sink": [
@@ -58,7 +62,8 @@
       },
       "sourceText": "At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card...",
       "highlight": "look at the top card of your library",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "id": "wants-creatures-for-counters",
@@ -71,7 +76,8 @@
       },
       "sourceText": "Cooking Campsite — Put a +1/+1 counter on each creature you control (needs creatures to benefit).",
       "highlight": "Put a +1/+1 counter on each creature you control",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

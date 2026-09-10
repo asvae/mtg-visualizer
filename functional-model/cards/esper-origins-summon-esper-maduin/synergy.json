@@ -3,25 +3,29 @@
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 4
+      "value": 4,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "grantKeyword",
       "keyword": "Trample",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ],
   "sink": [
@@ -33,7 +37,8 @@
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

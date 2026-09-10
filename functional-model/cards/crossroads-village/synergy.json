@@ -1,4 +1,42 @@
 {
-  "source": [],
+  "source": [
+    {
+      "id": "played",
+      "event": "playLand",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(CR 305.1 — an ordinary land with no restriction on being played can always be played from hand as a special action, once per turn; not printed oracle text on this specific card, a base game rule)",
+      "value": 1
+    },
+    {
+      "id": "battlefield-presence",
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(baseline — Crossroads Village is itself a permanent on your battlefield once played; tautologically true by construction, same as the `played` fact above — no scenario/trace evidence needed, see verify-synergy.mjs's own isSelfBattlefieldPresenceLand)",
+      "value": 1
+    },
+    {
+      "id": "enters-tapped",
+      "event": "entersBattlefield",
+      "controller": "you",
+      "subject": "self",
+      "tapped": true,
+      "sourceText": "Crossroads Village enters tapped.",
+      "highlight": "enters tapped",
+      "value": 1
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "hasAny": ["W", "U", "B", "R", "G"]
+      },
+      "sourceText": "As this land enters, choose a color. {T}: Add one mana of the chosen color.",
+      "highlight": "one mana of the chosen color",
+      "value": 1
+    }
+  ],
   "sink": []
 }

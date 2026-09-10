@@ -289,11 +289,29 @@ const DEATH_TRIGGER_NAMES = new Set(['onDies']);
  * — a choice-of-color ability contributes BOTH its colors, since the
  * prefill script declares one `addMana` fact per color for that shape (see
  * prefill-mana-facts.mjs's own header for why).
+ *
+ * Also recognizes crossroads-village's own unique real pair — "As this land
+ * enters, choose a color." (a real `K:ETBReplacement:Other:ChooseColor`)
+ * plus "{T}: Add one mana of the chosen color." — as the SAME "known
+ * statically, no trace needed" shape, just widened to all five colors since
+ * the choice is genuinely unconstrained (any of W/U/B/R/G) rather than a
+ * fixed pair; `manaAbilityColorsFromStaticText` itself deliberately doesn't
+ * parse this phrasing (it only recognizes an exact printed color symbol or
+ * pair, not "the chosen color"), so this stays a narrow addition here rather
+ * than widening that function's own documented WUBRG-symbol-only scope.
+ * Checked: this exact "chosen color" phrasing appears on no other card in
+ * the pool, so this is safely scoped to that one real card, not a general
+ * pattern that could misfire elsewhere.
  */
+const WUBRG = ['W', 'U', 'B', 'R', 'G'];
 function staticManaColorsFor(card) {
   const colors = new Set();
   for (const c of manaAbilityColorsFromStaticText(card?.staticAbilities)) colors.add(c);
   for (const c of manaAbilityColorsFromStaticText(card?.backFace?.staticAbilities)) colors.add(c);
+  const abilities = [...(card?.staticAbilities ?? []), ...(card?.backFace?.staticAbilities ?? [])];
+  if (abilities.some((t) => t === '{T}: Add one mana of the chosen color.')) {
+    for (const c of WUBRG) colors.add(c);
+  }
   return colors;
 }
 
@@ -431,6 +449,137 @@ function isSelfBattlefieldPresenceLand(p, card) {
   return p.zone === 'Battlefield' && p.subject === 'self' && (!p.controller || p.controller === 'you') && unconstrained && /\bLand\b/.test(card?.typeLine ?? '');
 }
 
+/**
+ * The-Gold-Saucer-shaped `{event:'coinFlip'}` produce fact — about the FLIP
+ * itself happening, never its win/lose OUTCOME (a real Treasure token only
+ * sometimes gets created, genuinely unmodeled here — no coin-flip mechanism
+ * exists anywhere in this model, see that card's own definition.ts comment
+ * — but the flip itself is a different, tautologically-guaranteed claim:
+ * activating an ability whose own printed text literally says "Flip a
+ * coin" always performs that flip, 100% of the time, same "known
+ * statically, no trace needed" treatment `isSelfPlayableLand`/
+ * `isLandEntersTappedSelfFact` already get for a different guaranteed-by-
+ * construction claim). Checked against the real pool: The Gold Saucer is
+ * the only card with a coin-flip ability at all (2026-09-09) — scoped this
+ * narrowly (an exact printed "Flip a coin" substring in the card's own
+ * `activationCost`+effects-bearing ability text or plain `staticAbilities`)
+ * on purpose, not a speculative general mechanism nobody has asked for yet.
+ */
+function hasCoinFlipAbility(card) {
+  const texts = [card?.activationCost, ...(card?.staticAbilities ?? [])].filter(Boolean);
+  return texts.some((t) => /Flip a coin/i.test(t));
+}
+function isCoinFlipFact(p, card) {
+  return p.event === 'coinFlip' && (!p.controller || p.controller === 'you') && hasCoinFlipAbility(card);
+}
+
+/**
+ * A produce fact (zone- or event-shaped, either one) about a TOKEN this
+ * card's own coin-flip ability can create — same "the connection is real
+ * regardless of whether any single activation actually lands" stance
+ * `isCoinFlipFact` above already gets, extended from the flip itself to the
+ * token it can produce (The Gold Saucer's own Treasure, e.g.): no
+ * coin-flip/random-outcome mechanism exists anywhere in this model, so no
+ * scenario could EVER log a real `createToken` for it — the harness never
+ * executes a coin-flip-gated effect at all, there's nothing to write a
+ * scenario against. Deliberately gated on `hasCoinFlipAbility` specifically
+ * — NOT a general "any token-creation ability text is exempt" rule, which
+ * would be far too broad (a card whose token creation IS a real, resolvable
+ * `effects`/`triggers` `createToken` call — zanarkand-ancient-metropolis-
+ * lasting-fayth's own Hero token, gysahl-greens' own Chocobo, etc. — still
+ * needs genuine scenario/trace evidence, same as always; only a
+ * genuinely un-mechanizable coin-flip outcome gets this pass). Checked: The
+ * Gold Saucer is the only coin-flip card in the whole pool, so this only
+ * ever applies to its own Treasure-token facts today.
+ */
+function isCoinFlipTokenSubjectFact(p, card) {
+  return !!(p.subject && typeof p.subject === 'object' && 'token' in p.subject && (!p.controller || p.controller === 'you') && hasCoinFlipAbility(card));
+}
+
+/**
+ * A "wants an artifact to sacrifice" sink fact for a card whose own printed
+ * `activationCost` requires sacrificing an artifact (Forge's own `Cost$ ...
+ * Sac<N/Artifact...>`), where — unlike ahriman/phantom-train/
+ * quina-qu-gourmet/sidequest-hunt-the-mark's own back face, which all model
+ * their matching sacrifice cost as a real `{kind:'sacrifice'}` effect (the
+ * "cost modeled as effect #1 for trace visibility" convention `engine.ts`'s
+ * own `unsupportedCostComponent` doc comment describes), giving real
+ * `read:isArtifact`/`sacrifice` trace evidence through harness.ts's own
+ * `actions.sacrifice` — this card's sacrifice is COST-ONLY: never modeled
+ * as a real effect at all, so the harness's scripted scenario runner never
+ * calls `actions.sacrifice` (or reads any artifact) for it, and no trace
+ * evidence for this want could ever exist. The WANT itself is still
+ * tautologically real regardless — paying the printed cost genuinely
+ * requires an artifact to exist, whether or not THIS engine can actually
+ * pay it — same "known statically, no trace needed" treatment
+ * `isLandTapSelfWant`/`hasStaticLandTapSelfTrigger` already get for a
+ * different structural cost requirement. Checked the real pool: The Gold
+ * Saucer and sidequest-catch-a-fish-cooking-campsite's own back face
+ * (Cooking Campsite) are the only two cards with this exact
+ * cost-only-sacrifice-an-artifact shape (cooking-campsite's own
+ * `knownGaps` already documents it as unmodeled, unresolved as of this
+ * writing) — scoped to an exact "Sacrifice a/an/two artifact(s)" cost
+ * substring (not "creature or artifact," not another card's differently-
+ * worded cost) since that's the only variant either of these two real
+ * cards actually has; checks both faces the same way `staticManaColorsFor`
+ * does, for the same reason (a transforming/Adventure card's real ability
+ * can live on either one).
+ */
+function hasCostOnlyArtifactSacrifice(card) {
+  const faces = [card, card?.backFace].filter(Boolean);
+  return faces.some((face) => {
+    const cost = face.activationCost ?? '';
+    if (!/Sacrifice (a|an|two) artifacts?\b/i.test(cost)) return false;
+    return !(face.effects ?? []).some((e) => e.kind === 'sacrifice');
+  });
+}
+function isCostOnlyArtifactSacrificeWant(w, card) {
+  return (
+    w.zone === 'Battlefield' &&
+    (!w.controller || w.controller === 'you') &&
+    w.types &&
+    Array.isArray(w.types.has) &&
+    w.types.has.length === 1 &&
+    w.types.has[0] === 'Artifact' &&
+    !w.types.hasAny &&
+    !w.types.not &&
+    hasCostOnlyArtifactSacrifice(card)
+  );
+}
+
+/**
+ * The PRODUCE-side sibling of `isCostOnlyArtifactSacrificeWant` above,
+ * added the same day for The Gold Saucer's own real `{event:'sacrifice',
+ * types:{has:['Artifact']}}` fact — the ACT of sacrificing (paying the
+ * cost) is just as tautologically real-by-construction as the sink fact
+ * already is: a card whose own printed `activationCost` requires
+ * sacrificing an artifact performs that sacrifice every time the ability
+ * resolves, whether or not THIS engine's `resolveCard` actually executes a
+ * real `{kind:'sacrifice'}` effect for it (see `hasCostOnlyArtifactSacrifice`'s
+ * own doc comment for why no trace evidence could ever exist for a
+ * cost-only sacrifice). Reuses the exact same `hasCostOnlyArtifactSacrifice`
+ * predicate — same two real cards qualify (The Gold Saucer,
+ * sidequest-catch-a-fish-cooking-campsite's own back face) — scoped the
+ * same narrow way: exactly `{event:'sacrifice', types:{has:['Artifact']}}`,
+ * not a broader "any sacrifice event is exempt" (a card whose sacrifice IS
+ * modeled as a real effect — ahriman/phantom-train/quina-qu-gourmet/
+ * sidequest-hunt-the-mark's own back face — still needs genuine
+ * scenario/trace evidence for its own `sacrifice` fact, same as always).
+ */
+function isCostOnlyArtifactSacrificeFact(p, card) {
+  return (
+    p.event === 'sacrifice' &&
+    (!p.controller || p.controller === 'you') &&
+    p.types &&
+    Array.isArray(p.types.has) &&
+    p.types.has.length === 1 &&
+    p.types.has[0] === 'Artifact' &&
+    !p.types.hasAny &&
+    !p.types.not &&
+    hasCostOnlyArtifactSacrifice(card)
+  );
+}
+
 function wantMatchesZoneRead(want, zone) {
   return want.zone === zone;
 }
@@ -465,6 +614,7 @@ async function verifyCard(slug) {
       if (p.zone === 'Graveyard' && p.subject === 'self' && [...triggerNames].some((n) => DEATH_TRIGGER_NAMES.has(n))) continue; // see DEATH_TRIGGER_NAMES
       if (p.zone === 'Battlefield' && p.subject === 'self' && (!p.controller || p.controller === 'you') && isStaticOnlyLand(card)) continue; // see isStaticOnlyLand
       if (isSelfBattlefieldPresenceLand(p, card)) continue; // any Land's own tautological battlefield presence — see isSelfBattlefieldPresenceLand
+      if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own presence — see isCoinFlipTokenSubjectFact
       const evidence = allEntries.some((e) => {
         const z = producedZone(e, cardName);
         return z && z.zone === p.zone && (!p.controller || z.side === p.controller);
@@ -475,6 +625,9 @@ async function verifyCard(slug) {
       if (p.event === 'addMana' && p.colors && [...(p.colors.has ?? []), ...(p.colors.hasAny ?? [])].every((c) => staticManaColors.has(c))) continue; // plain "{T}: Add X or Y." text, combined-fact shape — see staticManaColorsFor
       if (isLandEntersTappedSelfFact(p, card)) continue; // real "enters tapped" replacement — see isLandEntersTappedSelfFact
       if (isSelfPlayableLand(p, card)) continue; // a plain land's own self-play fact — see isSelfPlayableLand
+      if (isCoinFlipFact(p, card)) continue; // the flip itself, guaranteed by the ability's own printed text — see hasCoinFlipAbility/isCoinFlipFact
+      if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own ETB — see isCoinFlipTokenSubjectFact
+      if (isCostOnlyArtifactSacrificeFact(p, card)) continue; // the sacrifice ACT itself, cost-only, tautologically real — see isCostOnlyArtifactSacrificeFact
       const evidence = allEntries.some((e) => {
         const ev = producedEvent(e, cardName);
         return ev && ev.event === p.event && (!p.counterType || ev.counterType === p.counterType) && (!p.controller || !ev.side || ev.side === p.controller);
@@ -487,6 +640,7 @@ async function verifyCard(slug) {
   for (const w of sink) {
     if ('zone' in w) {
       if (isLandTapSelfWant(w) && hasStaticLandTapSelfTrigger(card)) continue; // see isLandTapSelfWant/hasStaticLandTapSelfTrigger
+      if (isCostOnlyArtifactSacrificeWant(w, card)) continue; // see hasCostOnlyArtifactSacrifice/isCostOnlyArtifactSacrificeWant
       const hasAggregateRead = allEntries.some((e) => aggregateReadZone(e) === w.zone);
       const hasTypedRead = allEntries.some((e) => LOW_LEVEL_READ_FNS.has(e.fn));
       if (!hasAggregateRead && !hasTypedRead) failures.push(`want {zone:${w.zone}} has no read:getCardsIn/getCreaturesInPlay/getLandsInPlay (or per-object type read) anywhere in the trace`);

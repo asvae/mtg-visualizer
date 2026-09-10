@@ -10,32 +10,50 @@
 // Explicit scope, matching this file's own header convention elsewhere in
 // functional-model/*.ts:
 //  - Generic ({N}) and the five colored pips ({W}{U}{B}{R}{G}) only. Hybrid
-//    ({W/U}), Phyrexian ({U/P}), colorless-specific ({C}), and X in a cost
-//    are NOT parsed — `parseManaCost` throws on one rather than silently
-//    mis-costing it.
+//    ({W/U}), Phyrexian ({U/P}), a colorless-specific PIP IN A COST ({C} —
+//    e.g. a spell printed as "{3}{C}"), and X in a cost are NOT parsed —
+//    `parseManaCost` throws on one rather than silently mis-costing it.
+//    This is a narrower gap than it used to be (see `ManaColor` below):
+//    only casting/activating something that ITSELF costs a {C} pip stays
+//    unmodeled — a source that PRODUCES {C} is now fully recognized (next
+//    bullet), and correctly counts toward paying a plain GENERIC cost, the
+//    same as any other color already did.
 //  - Basic lands (real subtype = color: Plains=W, Island=U, Swamp=B,
 //    Mountain=R, Forest=G), PLUS a narrow real slice of non-basic mana
 //    sources: any permanent whose `CardDefinition.staticAbilities`
 //    contains an EXACT, single-color, unrestricted "{T}: Add {X}." string
-//    (`manaAbilityColorFromStaticText` below) is recognized too — checked
-//    against the real pool: 10 real cards qualify (Druid of the Cowl,
-//    Goobbue Gardener, Llanowar Elves — all creatures, so 302.6
-//    summoning-sickness applies, handled in `engine.ts`; Midgar, Ishgard,
-//    Jidoor, Lindblum, Zanarkand — Adventure lands; White Auracite, an
-//    artifact; Willowrush Verge, a plain land). Still explicitly NOT
-//    recognized: a dual/choice-of-color ability ("{T}: Add {G} or {U}." —
-//    correctly affording a payable cost through this would mean a real
-//    bipartite-matching assignment problem, not just a bigger lookup
-//    table), a restricted one ("Activate only if...", "Spend this mana
-//    only to..."), a colorless one ({C} — `parseManaCost` itself doesn't
-//    parse {C} at all, see gap #6), or a variable one (Elvish Archdruid's
-//    own "Add {G} for each Elf you control" — not a fixed single symbol).
-//    A mana rock with one of THOSE shapes remains a real, separately
-//    tracked gap.
+//    (`manaAbilityColorFromStaticText` below, X one of W/U/B/R/G/C) is
+//    recognized too — checked against the real pool: 10 real WUBRG cards
+//    qualify (Druid of the Cowl, Goobbue Gardener, Llanowar Elves — all
+//    creatures, so 302.6 summoning-sickness applies, handled in
+//    `engine.ts`; Midgar, Ishgard, Jidoor, Lindblum, Zanarkand — Adventure
+//    lands; White Auracite, an artifact; Willowrush Verge, a plain land),
+//    plus 6 real "{T}: Add {C}." lands (capital-city, cavern-of-souls,
+//    starting-town, eclipsed-realms, clive-s-hideaway, the-gold-saucer —
+//    added 2026-09-09 alongside colorless `ManaColor` support). Still
+//    explicitly NOT recognized: a dual/choice-of-color ability ("{T}: Add
+//    {G} or {U}." — correctly affording a payable cost through this would
+//    mean a real bipartite-matching assignment problem, not just a bigger
+//    lookup table), a restricted one ("Activate only if...", "Spend this
+//    mana only to..."), or a variable one (Elvish Archdruid's own "Add {G}
+//    for each Elf you control" — not a fixed single symbol). A mana rock
+//    with one of THOSE shapes remains a real, separately tracked gap.
 
 import type { GameState, RealCard, RealPlayer } from './state';
 
-export type ManaColor = 'W' | 'U' | 'B' | 'R' | 'G';
+/**
+ * The five real colors, PLUS colorless (`C`) — added 2026-09-09 for The
+ * Gold Saucer's real "{T}: Add {C}." ability (a genuine mana-producing
+ * value, not a parallel mechanism bolted on beside this type: every
+ * function below that already enumerated the five colors now also
+ * recognizes `C` through the exact same code path, not a separate one).
+ * Deliberately NOT added to `COLORS` below (the narrower "payable colored
+ * PIP" list `parseManaCost`/`canAfford`/`payMana` validate a SPELL's own
+ * cost against) — a permanent's mana ABILITY producing `C` is a different
+ * question from a CAST cost containing a literal `{C}` pip, and only the
+ * former is in scope here (see this file's own header).
+ */
+export type ManaColor = 'W' | 'U' | 'B' | 'R' | 'G' | 'C';
 
 /** The five basic land names — shared here so callers (harness.ts's `PlayerState.basicLands`, e.g.) don't duplicate this union inline. */
 export type BasicLandName = 'Plains' | 'Island' | 'Swamp' | 'Mountain' | 'Forest';
@@ -53,9 +71,21 @@ const BASIC_LAND_COLOR: Record<string, ManaColor> = {
   Forest: 'G',
 };
 
+// The payable/spell-cost-pip colors — deliberately still WUBRG-only, NOT
+// widened to include `C` (see `ManaColor`'s own doc comment: a colorless
+// PRODUCE ability is now real, but a spell's own cost containing a literal
+// {C} pip stays unparsed, unchanged real gap). `parseManaCost`/`canAfford`/
+// `payMana`/`basicLandsFor` all key off this narrower list, not `ManaColor`
+// directly, so widening `ManaColor` doesn't silently change what a cost
+// STRING can contain.
 const COLORS: ManaColor[] = ['W', 'U', 'B', 'R', 'G'];
 
-const LAND_FOR_COLOR: Record<ManaColor, BasicLandName> = {
+// No basic land produces colorless in this pool (no Wastes card exists
+// here) — `Partial` rather than a `C: ...` entry that would just be dead
+// code; every real caller (`basicLandsFor`) only ever looks this up for a
+// color already filtered through `COLORS` above (still WUBRG-only), so a
+// `C` key is never actually requested at runtime.
+const LAND_FOR_COLOR: Partial<Record<ManaColor, BasicLandName>> = {
   W: 'Plains',
   U: 'Island',
   B: 'Swamp',
@@ -100,12 +130,16 @@ export function basicLandsFor(cost: string): BasicLandName[] {
   const neededColors = COLORS.filter((c) => (parsed.colors[c] ?? 0) > 0);
   const lands: BasicLandName[] = [];
   for (const color of neededColors) {
-    for (let i = 0; i < (parsed.colors[color] ?? 0); i++) lands.push(LAND_FOR_COLOR[color]);
+    // `color` only ever comes from `neededColors` (`COLORS.filter(...)`,
+    // still WUBRG-only — see `COLORS`'s own doc comment), so `LAND_FOR_COLOR`
+    // (now `Partial` to accommodate `ManaColor`'s new colorless value, which
+    // never reaches here) is guaranteed defined for it.
+    for (let i = 0; i < (parsed.colors[color] ?? 0); i++) lands.push(LAND_FOR_COLOR[color]!);
   }
   if (neededColors.length === 0) {
     for (let i = 0; i < parsed.generic + 1; i++) lands.push('Forest');
   } else {
-    for (let i = 0; i < parsed.generic; i++) lands.push(LAND_FOR_COLOR[neededColors[i % neededColors.length]!]);
+    for (let i = 0; i < parsed.generic; i++) lands.push(LAND_FOR_COLOR[neededColors[i % neededColors.length]!]!);
   }
   return lands;
 }
@@ -113,17 +147,19 @@ export function basicLandsFor(cost: string): BasicLandName[] {
 /**
  * Recognizes a real, narrow slice of non-basic "{T}: Add mana" static
  * abilities (see this file's own header) — the string must be EXACTLY
- * `{T}: Add {X}.` (X a single real color), with no restriction/"spend
- * only"/multi-symbol text attached, or it's correctly ignored (still a
- * real static ability text-wise — `staticAbilities` is unaffected either
- * way — just not modeled as a payable source). Returns the FIRST such
- * match across `staticAbilities` (Willowrush Verge has a second,
- * restricted `{T}: Add {G}` entry that's correctly skipped, while its
- * first, unrestricted `{T}: Add {U}` still qualifies).
+ * `{T}: Add {X}.` (X a single real color OR colorless — `[WUBRGC]`, widened
+ * 2026-09-09 for The Gold Saucer's real "{T}: Add {C}." ability, same real
+ * value as any other color here, not a separate check), with no
+ * restriction/"spend only"/multi-symbol text attached, or it's correctly
+ * ignored (still a real static ability text-wise — `staticAbilities` is
+ * unaffected either way — just not modeled as a payable source). Returns
+ * the FIRST such match across `staticAbilities` (Willowrush Verge has a
+ * second, restricted `{T}: Add {G}` entry that's correctly skipped, while
+ * its first, unrestricted `{T}: Add {U}` still qualifies).
  */
 export function manaAbilityColorFromStaticText(staticAbilities?: string[]): ManaColor | undefined {
   for (const text of staticAbilities ?? []) {
-    const match = /^\{T\}: Add \{([WUBRG])\}\.$/.exec(text);
+    const match = /^\{T\}: Add \{([WUBRGC])\}\.$/.exec(text);
     if (match) return match[1] as ManaColor;
   }
   return undefined;
@@ -149,12 +185,17 @@ export function manaAbilityColorFromStaticText(staticAbilities?: string[]): Mana
  * Returns every color the FIRST matching static-ability string names (in
  * printed order) — a single-color match short-circuits the same way the
  * function above does; a choice match returns both colors; neither shape
- * matching (restricted/hybrid/colorless/variable, same exclusions as above)
- * returns an empty array, not `undefined` (a caller iterates this one).
+ * matching (restricted/hybrid/variable, same exclusions as above) returns an
+ * empty array, not `undefined` (a caller iterates this one). Colorless
+ * (`{C}`) is now a recognized single-color match too (2026-09-09, same
+ * `[WUBRGC]` widening as `manaAbilityColorFromStaticText` above) — still
+ * only via the single-symbol branch; a `{T}: Add {C} or {X}.` choice-of-
+ * color-plus-colorless shape doesn't exist on any real card in this pool,
+ * so the choice branch stays WUBRG-only rather than speculatively widened.
  */
 export function manaAbilityColorsFromStaticText(staticAbilities?: string[]): ManaColor[] {
   for (const text of staticAbilities ?? []) {
-    const single = /^\{T\}: Add \{([WUBRG])\}\.$/.exec(text);
+    const single = /^\{T\}: Add \{([WUBRGC])\}\.$/.exec(text);
     if (single) return [single[1] as ManaColor];
     const choice = /^\{T\}: Add \{([WUBRG])\} or \{([WUBRG])\}\.$/.exec(text);
     if (choice) return [choice[1] as ManaColor, choice[2] as ManaColor];

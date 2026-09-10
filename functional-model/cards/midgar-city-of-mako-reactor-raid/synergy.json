@@ -3,12 +3,14 @@
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "event": "dies",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "id": "mana",
@@ -17,7 +19,8 @@
       "color": "B",
       "sourceText": "{T}: Add {B}.",
       "highlight": "{B}",
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ],
   "sink": [
@@ -30,7 +33,8 @@
           "Artifact"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

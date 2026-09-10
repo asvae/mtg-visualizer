@@ -6,7 +6,8 @@
       "subject": {
         "token": "g_2_2_bird_landfall"
       },
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Battlefield",
@@ -16,14 +17,16 @@
           "Land"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ],
   "sink": [
     {
       "event": "landfall",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "zone": "Battlefield",
@@ -34,7 +37,8 @@
           "Bird"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

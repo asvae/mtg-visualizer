@@ -4,31 +4,36 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": 5
+      "value": 5,
+      "face": "front"
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 5
+      "value": 5,
+      "face": "back"
     }
   ],
   "sink": [
     {
       "event": "dies",
       "controller": "opp",
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ]
 }

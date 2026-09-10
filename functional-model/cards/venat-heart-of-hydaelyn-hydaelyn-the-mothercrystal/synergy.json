@@ -7,7 +7,8 @@
       "subject": "self",
       "value": 1,
       "sourceText": "(baseline — front face's own text is \"Whenever you cast a legendary spell, draw a card\" plus Hero's Sundering, both of which only matter while Venat is on the battlefield)",
-      "highlight": "Whenever you cast a legendary spell, draw a card"
+      "highlight": "Whenever you cast a legendary spell, draw a card",
+      "face": "front"
     },
     {
       "id": "self-graveyard",
@@ -16,14 +17,16 @@
       "subject": "self",
       "value": 1,
       "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)",
-      "highlight": "goes to the graveyard like any creature that dies"
+      "highlight": "goes to the graveyard like any creature that dies",
+      "face": "front"
     },
     {
       "id": "heros-sundering-exile",
       "zone": "Exile",
       "value": 1,
       "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
-      "highlight": "Exile target nonland permanent"
+      "highlight": "Exile target nonland permanent",
+      "face": "front"
     },
     {
       "id": "self-dies",
@@ -31,7 +34,8 @@
       "target": "self",
       "value": 1,
       "sourceText": "(baseline — no printed removal/death text on either face; a generic possibility every creature has)",
-      "highlight": "a generic possibility every creature has"
+      "highlight": "a generic possibility every creature has",
+      "face": "front"
     },
     {
       "id": "blessing-of-light-counter",
@@ -47,7 +51,8 @@
       },
       "value": 1,
       "sourceText": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control.",
-      "highlight": "put a +1/+1 counter on another target creature you control"
+      "highlight": "put a +1/+1 counter on another target creature you control",
+      "face": "back"
     }
   ],
   "sink": [
@@ -61,7 +66,8 @@
       },
       "sourceText": "Hero's Sundering — Exile target nonland permanent. (no controller restriction — either side's permanent)",
       "highlight": "target nonland permanent",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "id": "blessing-of-light-target",
@@ -74,7 +80,8 @@
       },
       "sourceText": "Blessing of Light — ...another target creature you control...",
       "highlight": "another target creature you control",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

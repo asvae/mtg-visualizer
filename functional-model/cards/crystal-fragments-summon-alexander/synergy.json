@@ -12,7 +12,8 @@
       "sourceText": "Summon: Alexander III — Tap all creatures your opponents control.",
       "id": "wants-opp-creature",
       "highlight": "Tap all creatures your opponents control",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

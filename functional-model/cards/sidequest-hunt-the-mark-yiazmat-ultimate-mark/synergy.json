@@ -9,7 +9,8 @@
           ]
         }
       },
-      "value": 4
+      "value": 4,
+      "face": "front"
     },
     {
       "zone": "Battlefield",
@@ -17,23 +18,27 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "event": "dies",
       "controller": "you",
-      "value": 4
+      "value": 4,
+      "face": "back"
     },
     {
       "event": "grantKeyword",
       "keyword": "Indestructible",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ],
   "sink": [
@@ -44,7 +49,8 @@
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Battlefield",
@@ -54,7 +60,8 @@
           "Treasure"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Battlefield",
@@ -65,7 +72,8 @@
           "Artifact"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

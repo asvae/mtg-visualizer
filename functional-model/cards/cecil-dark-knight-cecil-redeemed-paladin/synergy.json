@@ -4,23 +4,27 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "lifeloss",
       "controller": "you",
-      "value": 5
+      "value": 5,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "dies",
       "target": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ],
   "sink": []

@@ -72,6 +72,34 @@ export interface ZoneFact extends Constraints {
   sourceText?: string;
   /** The exact substring of `sourceText` that names THIS fact specifically, for `annotateOracleText`'s inline card-text view — AI-authored per fact, same as `sourceText` itself, NOT derived by a generic per-event-kind regex (a regex like "draws? a card" can't tell which of several "draw a card" clauses on one card is this fact's own, especially once conditions/exceptions are in play; the author reading the real card text can). Must be a literal substring of `sourceText` — `annotateOracleText` verifies this and silently skips the fact (no inline link, still visible in the plain facts table) if it isn't. */
   highlight?: string;
+  /**
+   * Which face of a multi-face card (transform/Adventure/etc.) this fact's
+   * own ability actually lives on — `'front'` = the card's main
+   * `CardDefinition` (the object this same file's `resolveSubject`/
+   * `staticAttrsFor` already treat as `'self'`), `'back'` =
+   * `CardDefinition.backFace` (see card.ts; also reused as the structural
+   * vehicle for Adventure/Room/other two-named-half layouts, not just real
+   * transforms — see e.g. ishgard-the-holy-see-faith-grief's own
+   * definition.ts comment). Reuses the exact `'front'|'back'` vocabulary
+   * `Scenario.face`/`SequenceStep.face` (harness.ts) already established,
+   * rather than a numeric faces-array index, so a single `face` idea reads
+   * the same way whether it's naming which face a SCENARIO exercises or
+   * which face a FACT belongs to. AUTHOR-SET, like `sourceText`/`highlight`
+   * — deliberately NOT inferred from whether `sourceText` happens to appear
+   * in one face's oracle text or the other: that inference is exactly what
+   * broke for `sidequest-catch-a-fish-cooking-campsite`'s own front-face
+   * upkeep-trigger sink fact (2026-09-09) — its authored `sourceText` had a
+   * trailing "..." never in the real oracle text, so it silently matched
+   * NEITHER face. Omit only for a genuinely single-faced card — every fact
+   * on a card whose `CardDefinition` declares a `backFace` should set this
+   * explicitly (`'front'` included, not just `'back'`) so a consumer never
+   * has to fall back to inference at all. Not matched against anything by
+   * `factsInteract` — purely a rendering/grouping hint for a consumer
+   * presenting a multi-face card's own facts split by face (see
+   * `.claude/contracts/card-schema.md`), the same "documentary, not
+   * matched" treatment `sourceText`/`highlight` already get.
+   */
+  face?: 'front' | 'back';
 }
 
 /**
@@ -122,6 +150,8 @@ export interface EventFact extends Constraints {
   sourceText?: string;
   /** See `ZoneFact.highlight`. */
   highlight?: string;
+  /** See `ZoneFact.face`. */
+  face?: 'front' | 'back';
 }
 
 /** A fact has either `zone` (a persistent object) or `event` (an occurrence) — never both. The matcher branches on which is present; do not unify them. */
@@ -350,7 +380,7 @@ function describeSide(side: Side | undefined): string {
 /** Constraint words off any `Constraints`-shaped object — factored out so both a fact's own fields AND an event fact's `target` (a separate constraint holder, not the fact's own filter) can share it. */
 function constraintBits(c: Constraints): string[] {
   const bits: string[] = [];
-  if (c.types?.has) bits.push(c.types.has.join(' '));
+  if (c.types?.has) bits.push(c.types.has.join(' ').toLowerCase());
   if (c.types?.hasAny) bits.push(`(${c.types.hasAny.join('/')})`);
   if (c.cmc) bits.push(`mana value ${c.cmc.min ?? ''}${c.cmc.max !== undefined ? `-${c.cmc.max}` : ''}${c.cmc.eq !== undefined ? `=${c.cmc.eq}` : ''}`.trim());
   return bits;
@@ -410,8 +440,11 @@ export function describeFact(fact: Fact): string {
   if (event === 'dies') return fact.target === 'self' ? 'dying' : `${describeSide(fact.controller)} creature dying`;
   if (event === 'putCounter') return `${fact.counterType ?? ''} counters${fact.target === 'self' ? ' on itself' : ''}`.trim();
   if (event === 'drawCard' || event === 'drawCards') return 'card draw';
-  if (event === 'entersBattlefield') return fact.tapped ? 'enters the battlefield tapped' : 'enters the battlefield';
-  if (event === 'playLand') return 'Play a land.';
+  // Deliberately generic regardless of `fact.tapped` — same convention as
+  // `addMana` below: `tapped` is already one of CONDITION_KEYS, rendered in
+  // the card page's own details/JSON column, so the label doesn't repeat it.
+  if (event === 'entersBattlefield') return 'enters the battlefield';
+  if (event === 'playLand') return 'play a land';
   if (event === 'activateAbility') return 'activate ability';
   // Deliberately generic — no color breakdown in this label (`colors`/
   // `color` either way, whichever the fact carries) — that's the card
@@ -422,6 +455,29 @@ export function describeFact(fact: Fact): string {
   // superseded the legacy singular `color` — reverted per explicit
   // instruction, not a further engine-side vocabulary change.
   if (event === 'addMana') return `${describeSide(fact.controller)} mana production`;
+  // The Gold Saucer's own real "Flip a coin" activated ability (2026-09-09)
+  // — deliberately about the FLIP itself, not its win/lose outcome (no
+  // coin-flip/random-outcome mechanism exists anywhere in this model, and
+  // that outcome genuinely stays unmodeled — see this card's own
+  // definition.ts comment); the flip happening at all is guaranteed by the
+  // ability's own printed text the same way `playLand`/`entersBattlefield`
+  // above are guaranteed by construction, so this is a real, ordinary
+  // event fact, not a probabilistic one.
+  if (event === 'coinFlip') return 'flip a coin';
+  // The Gold Saucer's own real "Sacrifice two artifacts" COST, modeled as
+  // a real `{event:'sacrifice'}` produce fact (2026-09-09) — the ACT of
+  // sacrificing (a real, deterministic event a sacrifice-themed payoff
+  // elsewhere in the pool could care about — Aristocrats-style), distinct
+  // from the existing `Battlefield`/`types:{has:['Artifact']}` sink fact
+  // above (which only says this card WANTS artifacts, not that it
+  // performs a sacrifice). Deliberately reuses the shared `qualifier`
+  // (built off `types`/`cmc` the same way every zone-fact label above
+  // already does) rather than hardcoding "artifact" into this branch, so
+  // this stays correct for any future card sacrificing a different type —
+  // Gold Saucer's own `types:{has:['Artifact']}` renders as "artifact
+  // sacrifice"; an unconstrained sacrifice fact would render as bare
+  // "sacrifice".
+  if (event === 'sacrifice') return `${qualifier}sacrifice`.trim();
   return `${qualifier}${event}`;
 }
 

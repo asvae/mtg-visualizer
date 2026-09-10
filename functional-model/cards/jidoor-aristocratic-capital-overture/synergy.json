@@ -3,7 +3,8 @@
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "id": "mana",
@@ -12,14 +13,16 @@
       "color": "U",
       "sourceText": "{T}: Add {U}.",
       "highlight": "{U}",
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ],
   "sink": [
     {
       "zone": "Library",
       "controller": "opp",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

@@ -1,11 +1,12 @@
 {
   "enrichment": "ai",
-  "review": "ai",
+  "review": "human",
   "verifySynergy": "pass",
   "lastVerified": "2026-09-09",
-  "notes": "2026-09-09: removed the {zone:'Battlefield',controller:'you',types:{has:['Land']}} sink fact — an artifact of the shared ETB-tap-self trigger's tapTarget{validType:'land',owner:'you'} effect needing a valid pool candidate, not a real 'this card wants more lands' synergy claim (trivially self-satisfied by the card itself). Removed pool-wide for every Town-cycle card whose ONLY source for this fact was this trigger shape; zanarkand-ancient-metropolis-lasting-fayth kept it (its own back face genuinely counts lands you control for a token's +1/+1 counters — an independent real want, not from this trigger).",
+  "notes": "2026-09-09: removed the {zone:'Battlefield',controller:'you',types:{has:['Land']}} sink fact — an artifact of the shared ETB-tap-self trigger's tapTarget{validType:'land',owner:'you'} effect needing a valid pool candidate, not a real 'this card wants more lands' synergy claim (trivially self-satisfied by the card itself). Removed pool-wide for every Town-cycle card whose ONLY source for this fact was this trigger shape; zanarkand-ancient-metropolis-lasting-fayth kept it (its own back face genuinely counts lands you control for a token's +1/+1 counters — an independent real want, not from this trigger). Wrote the real played/battlefield-presence/enters-tapped/mana facts (vector-imperial-capital's own template).",
   "textCoverageAudited": false,
   "knownGaps": [
-    "same trigger-only-scenario gap as sharlayan-nation-of-scholars — no enters produce possible"
-  ]
+    "RESOLVED 2026-09-09 (differently than expected): the trigger-only-scenario gap this card's own knownGaps used to cite (no scenario ever logs a real 'enters' line, so no Battlefield produce fact seemed possible) is now closed via a static exemption instead (verify-synergy.mjs's isSelfBattlefieldPresenceLand/isSelfPlayableLand — a Land's own baseline battlefield-presence and playLand facts are tautologically true by construction, no trace needed) rather than an actual 'enters' trace line ever existing — same resolution vector-imperial-capital's own progress.json note already documents."
+  ],
+  "scenariosReview": "reviewed"
 }

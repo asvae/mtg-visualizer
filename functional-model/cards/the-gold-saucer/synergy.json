@@ -1,4 +1,87 @@
 {
-  "source": [],
-  "sink": []
+  "source": [
+    {
+      "id": "played",
+      "event": "playLand",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(CR 305.1 — an ordinary land with no restriction on being played can always be played from hand as a special action, once per turn; not printed oracle text on this specific card, a base game rule)",
+      "value": 1
+    },
+    {
+      "id": "battlefield-presence",
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "sourceText": "(baseline — The Gold Saucer is itself a permanent on your battlefield once played; tautologically true by construction, same as the `played` fact above — no scenario/trace evidence needed, see verify-synergy.mjs's own isSelfBattlefieldPresenceLand)",
+      "value": 1
+    },
+    {
+      "id": "mana",
+      "event": "addMana",
+      "controller": "you",
+      "color": "C",
+      "sourceText": "{T}: Add {C}.",
+      "highlight": "Add {C}",
+      "value": 1
+    },
+    {
+      "id": "coin-flip",
+      "event": "coinFlip",
+      "controller": "you",
+      "sourceText": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.",
+      "highlight": "Flip a coin",
+      "value": 1
+    },
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_treasure_sac"
+      },
+      "sourceText": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.",
+      "highlight": "create a Treasure token",
+      "value": 1
+    },
+    {
+      "event": "entersBattlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_treasure_sac"
+      },
+      "sourceText": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.",
+      "highlight": "create a Treasure token",
+      "value": 1
+    },
+    {
+      "event": "sacrifice",
+      "controller": "you",
+      "types": {
+        "has": ["Artifact"]
+      },
+      "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
+      "highlight": "Sacrifice two artifacts",
+      "value": 1
+    },
+    {
+      "id": "draws-a-card",
+      "event": "drawCard",
+      "controller": "you",
+      "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
+      "highlight": "Draw a card",
+      "value": 1
+    }
+  ],
+  "sink": [
+    {
+      "zone": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": ["Artifact"]
+      },
+      "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
+      "highlight": "two artifacts",
+      "value": 1
+    }
+  ]
 }

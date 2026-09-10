@@ -3,12 +3,14 @@
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "event": "dies",
       "controller": "opp",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ],
   "sink": []

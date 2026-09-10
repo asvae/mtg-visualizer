@@ -6,12 +6,14 @@
       "subject": {
         "token": "c_1_1_hero"
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
-      "value": 5
+      "value": 5,
+      "face": "back"
     },
     {
       "id": "mana",
@@ -20,7 +22,8 @@
       "color": "G",
       "sourceText": "{T}: Add {G}.",
       "highlight": "{G}",
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ],
   "sink": [
@@ -32,7 +35,8 @@
           "Land"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

@@ -4,18 +4,21 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 5
+      "value": 5,
+      "face": "front"
     }
   ],
   "sink": [
@@ -30,7 +33,8 @@
           "Land"
         ]
       },
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ]
 }

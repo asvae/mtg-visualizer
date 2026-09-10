@@ -4,25 +4,29 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "front"
     }
   ],
   "sink": [
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "face": "back"
     }
   ]
 }

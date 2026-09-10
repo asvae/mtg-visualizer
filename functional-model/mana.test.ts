@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GameState } from './state';
-import { parseManaCost, canAfford, payMana, untappedManaSources, basicLandsFor, manaAbilityColorFromStaticText } from './mana';
+import { parseManaCost, canAfford, payMana, untappedManaSources, basicLandsFor, manaAbilityColorFromStaticText, manaAbilityColorsFromStaticText } from './mana';
 
 describe('parseManaCost', () => {
   it('sums generic and counts colored pips separately', () => {
@@ -82,14 +82,27 @@ describe('manaAbilityColorFromStaticText (a narrow real slice of gap #5 — non-
     expect(manaAbilityColorFromStaticText(['{T}: Add {G} or {U}.'])).toBeUndefined();
   });
 
-  it('does not recognize a colorless or variable-amount ability', () => {
-    expect(manaAbilityColorFromStaticText(['{T}: Add {C}.'])).toBeUndefined();
+  it('recognizes an exact, single-colorless, unrestricted "{T}: Add {C}." string (2026-09-09 — The Gold Saucer)', () => {
+    expect(manaAbilityColorFromStaticText(['{T}: Add {C}.'])).toBe('C');
+  });
+
+  it('does not recognize a variable-amount ability', () => {
     expect(manaAbilityColorFromStaticText(['{T}: Add {G} for each Elf you control.'])).toBeUndefined();
   });
 
   it('returns undefined for no staticAbilities at all', () => {
     expect(manaAbilityColorFromStaticText(undefined)).toBeUndefined();
     expect(manaAbilityColorFromStaticText([])).toBeUndefined();
+  });
+});
+
+describe('manaAbilityColorsFromStaticText (the choice-of-color-widened counterpart above)', () => {
+  it('recognizes a single colorless "{T}: Add {C}." string the same way the single-value function does', () => {
+    expect(manaAbilityColorsFromStaticText(['{T}: Add {C}.'])).toEqual(['C']);
+  });
+
+  it('still does not widen the choice-of-color branch to include colorless (no real card mixes {C} into a choice)', () => {
+    expect(manaAbilityColorsFromStaticText(['{T}: Add {C} or {G}.'])).toEqual([]);
   });
 });
 

@@ -7,6 +7,359 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- **2026-09-09 (Gold Saucer, fourth follow-up): 3 annotation gaps + 1 new
+  fact, per user's own card-page review** — (1) `mana` fact's `highlight`
+  widened `"{C}"` → `"Add {C}"`. (2) both Treasure-token facts
+  (battlefield-presence, entersBattlefield) got `sourceText`/`highlight`
+  added (same `sourceText` as `coin-flip`, `highlight:"create a Treasure
+  token"`) — previously had neither. (3) new `source` fact:
+  `{event:'sacrifice', controller:'you', types:{has:['Artifact']}, ...}` —
+  the ACT of sacrificing, parallel to how `coinFlip` models the
+  deterministic flip separately from its outcome; distinct from the
+  existing `Battlefield`/`types:{has:['Artifact']}` sink fact (wants vs.
+  performs). Also gave the sink fact a `highlight:"two artifacts"` it
+  didn't have before.
+  - `describeFact` got a new `sacrifice` branch: `` `${qualifier}sacrifice`.trim() ``
+    — deliberately reuses the shared `constraintBits` qualifier machinery
+    instead of hardcoding "artifact," so it renders "artifact sacrifice"
+    for Gold Saucer's own `types:{has:['Artifact']}` and stays correct for
+    a differently-typed sacrifice on some future card. Verified directly
+    (real fact object → "artifact sacrifice") and via 2 new
+    `synergy.test.ts` assertions (with/without a `types` qualifier),
+    folded into the `describeFact` coverage added earlier this session.
+  - `verify-synergy.mjs` got `isCostOnlyArtifactSacrificeFact` — the
+    produce-side sibling of `isCostOnlyArtifactSacrificeWant`, reusing the
+    exact same `hasCostOnlyArtifactSacrifice` predicate, scoped identically
+    (only `{event:'sacrifice', types:{has:['Artifact']}}` on a card whose
+    sacrifice cost is genuinely unmodeled as a real effect — a card whose
+    sacrifice IS modeled, e.g. ahriman/phantom-train/quina-qu-gourmet,
+    still needs real trace evidence for its own `sacrifice` fact, no
+    change there).
+  - Re-verified: `the-gold-saucer` OK on its own, full `verify-synergy.mjs`
+    sweep unchanged (still 1 pre-existing unrelated hard failure,
+    auron-s-inspiration), `npx vitest run functional-model` 219/219 (218
+    prior + 1 new test), full `npm run test` unchanged (same 5
+    pre-existing unrelated `tagging/*` failures).
+
+- **2026-09-09: added real unit test coverage for `describeFact`
+  (`functional-model/synergy.ts`) to `functional-model/synergy.test.ts`** —
+  previously ZERO tests existed for it despite it being hand-fixed via
+  manual browser inspection 4 times this session (`playLand` trailing
+  period, `entersBattlefield` tapped-redundancy, `types.has`
+  capitalization, `coinFlip` label). Covers every branch: all 6 zones'
+  unconstrained "<zone> presence" phrasing (incl. the Exile
+  `ZONE_PRESENCE_PHRASE` override and confirming it does NOT apply once a
+  qualifier is present), the Battlefield-with-control-qualifier branch, the
+  non-Battlefield qualified branch, every named event (`lifegain`, `dies`
+  both target shapes, `putCounter` with/without `target:'self'`/
+  `counterType`, `drawCard`/`drawCards`, `entersBattlefield`, `playLand`,
+  `activateAbility`, `addMana`, `coinFlip`), the generic
+  `${qualifier}${event}` fallback, and `constraintBits` (`types.has`
+  lowercased, `types.hasAny` parenthesized-original-casing, `cmc` min/max/eq
+  variants). Also added a bulk "label convention" regression guard (every
+  representative fact's label matches `/^[a-z(]/` and never ends in
+  `.`/`!`/`?`) plus two explicit non-leak assertions (`addMana` never
+  contains its own color letters, `entersBattlefield` never contains
+  "tap") — this is what would have caught all 4 of this session's
+  hand-fixed bugs automatically. `zf`/`ef` are tiny local fixture builders
+  (id/role are irrelevant to `describeFact` itself). All 42 new
+  assertions passed on the FIRST run (confirms the derivations matched
+  the real implementation, not a rewrite-to-fit). Verified: `npx vitest
+  run functional-model` 218/218 (181 prior + 37 new test cases — the
+  existing 5 `EventFact.colors` tests were already in the 181), full
+  `npm run test` unchanged (same 5 pre-existing unrelated `tagging/*`
+  failures). Confirmed via `tsc --noEmit` that the new test block adds
+  zero NEW type errors (the file already had 7 pre-existing ones in the
+  untouched `EventFact.colors` block, unrelated to my new code, unchanged
+  before/after).
+
+- **2026-09-09 (later same day): added explicit, author-set `Fact.face?: 'front'
+  | 'back'` to `synergy.ts` and backfilled it on every real multi-face card's
+  synergy.json** — replaces the card page's own (peer `card`-agent-owned)
+  oracle-text-matching heuristic for grouping a multi-face card's Facts table
+  into "Main card"/"Other faces," which was confirmed WRONG for
+  `sidequest-catch-a-fish-cooking-campsite`'s own front-face upkeep-trigger
+  sink fact (its authored `sourceText` had a trailing "..." never in the real
+  Scryfall oracle text, so the fact silently matched NEITHER face and fell
+  into the fallback bucket despite genuinely belonging to the front face).
+  **Shape chosen: `'front'|'back'` string, not a numeric faces-array index**
+  — deliberately reused harness.ts's own pre-existing `Scenario.face`/
+  `SequenceStep.face` vocabulary (same field name, same two values) rather
+  than inventing a parallel numbering scheme, since `'front'` always maps to
+  a card's own top-level `CardDefinition` and `'back'` to `.backFace` (see
+  card.ts) — the same objects `resolveSubject('self', ...)` and
+  `Scenario`'s own face-selection already treat as canonical. A future
+  `card`-agent consumer maps `'front'`→`faces[0]`/`'back'`→`faces[1]`
+  trivially. Field is on BOTH `ZoneFact` and `EventFact` (documented once in
+  full on `ZoneFact`, `EventFact`'s copy is a `@see` shorthand, matching the
+  existing `sourceText`/`highlight` convention) — NOT matched against
+  anything by `factsInteract`/`themeOf` (purely documentary/rendering, same
+  treatment as `sourceText`), so this is a genuinely additive, non-breaking
+  schema change (confirmed: `npm run typecheck`, `vitest run functional-model`
+  181/181, full-pool `verify-synergy.mjs` sweep all unchanged except the
+  new-but-unenforced `face` field itself — same single pre-existing
+  `auron-s-inspiration` hard failure as before this pass).
+  **Discovery: 33 real multi-face cards exist in the pool** (every
+  `definition.ts` that declares a real `backFace`), not just the 6 named in
+  the task brief — found via `grep -rl backFace cards/*/definition.ts` (37
+  hits), then hand-verified 4 were false positives (`fang-fearless-l-cie`,
+  `summon-brynhildr`, `summon-fat-chocobo`, `summon-leviathan` — each only
+  MENTIONS `backFace` in a comment citing another card, or explicitly
+  documents NOT using it for its own real mechanic). Backfilled `face` on
+  every fact in all 33 real ones' `synergy.json`, hand-classified per card by
+  reading its own `definition.ts` (which effect/trigger actually produces or
+  wants each fact — front's own top-level `triggers`/`effects` vs.
+  `backFace`'s), not by re-running the same broken sourceText-matching
+  heuristic this task exists to replace. Full list: balamb-garden-seed-
+  academy-balamb-garden-airborne, cecil-dark-knight-cecil-redeemed-paladin,
+  clive-ifrit-s-dominant-ifrit-warden-of-inferno, crystal-fragments-summon-
+  alexander, dion-bahamut-s-dominant-bahamut-warden-of-light, emet-selch-
+  unsundered-hades-sorcerer-of-eld, esper-origins-summon-esper-maduin,
+  exdeath-void-warlock-neo-exdeath-dimension-s-end, garland-knight-of-
+  cornelia-chaos-the-endless, ishgard-the-holy-see-faith-grief, jecht-
+  reluctant-guardian-braska-s-final-aeon, jidoor-aristocratic-capital-
+  overture, jill-shiva-s-dominant-shiva-warden-of-ice, joshua-phoenix-s-
+  dominant-phoenix-warden-of-fire, kefka-court-mage-kefka-ruler-of-ruin,
+  kuja-genome-sorcerer-trance-kuja-fate-defied, lindblum-industrial-
+  regency-mage-siege, midgar-city-of-mako-reactor-raid, sephiroth-fabled-
+  soldier-sephiroth-one-winged-angel, serah-farron-crystallized-serah,
+  sidequest-card-collection-magicked-card, sidequest-catch-a-fish-cooking-
+  campsite, sidequest-hunt-the-mark-yiazmat-ultimate-mark, sidequest-play-
+  blitzball-world-champion-celestial-weapon, sidequest-raise-a-chocobo-
+  black-chocobo, terra-magical-adept-esper-terra, the-emperor-of-palamecia-
+  the-lord-master-of-hell, thranduil-sindarin-liege-silvan-rally, ultimecia-
+  time-sorceress-ultimecia-omnipotent, venat-heart-of-hydaelyn-hydaelyn-
+  the-mothercrystal, vincent-valentine-galian-beast, zanarkand-ancient-
+  metropolis-lasting-fayth, zenos-yae-galvus-shinryu-transcendent-rival.
+  **Generic "baseline" self facts (self-battlefield-presence/self-graveyard/
+  self-dies with no real ability text) were assigned `'front'` by
+  convention** — they're true regardless of which face is showing but
+  `resolveSubject('self', ...)`/every other "which identity is canonical"
+  convention in this file already treats the top-level `CardDefinition` as
+  the default, so `'front'` for a genuinely face-agnostic baseline fact is
+  consistent, not arbitrary.
+  **Two genuinely ambiguous cards, flagged rather than silently resolved**:
+  `sephiroth-fabled-soldier-sephiroth-one-winged-angel` and (one fact of)
+  `sidequest-play-blitzball-world-champion-celestial-weapon` have a real
+  mechanic DUPLICATED near-identically on both faces (Sephiroth: both front's
+  `onCreatureDies` and back's `onAnyCreatureDies` are the same "any creature
+  dies → opponents lose 1, you gain 1" shape; Blitzball: front's
+  `pumpTarget` and back's Equip both equally want "a creature you control").
+  A single `face` value can't represent "true of both" — picked `'front'`
+  for all of Sephiroth's shared facts and the one shared Blitzball sink,
+  consistent with the baseline-fact tie-break above, but this is a real
+  approximation, not a clean single-face fact — worth a second look if the
+  `card` page's own consumer ever needs to actually disambiguate these two
+  specifically.
+  **Contract file checked, not touched**: `.claude/contracts/card-schema.md`
+  documents `synergy.json` only at the "source/sink facts" level, never
+  enumerating `Fact`'s own internal field list — silent on this exactly the
+  way it's silent on `id`/`sourceText`/`highlight` too, so no edit was
+  needed; flagging per the task's own ask rather than assuming silence
+  meant "forgot to check."
+  **Explicitly did NOT touch** `app/pages/app/card/[set]/[number].vue` or
+  `app/components/ReviewStatusBadge.vue` — a peer `card`-agent task owns
+  wiring the page's grouping logic to read `fact.face` directly instead of
+  its current oracle-text-heuristic; this pass is schema+data only.
+  Open Forge-verification: none — this is a pure schema/authoring-metadata
+  change, no rules-engine behavior touched, so no new Forge citation
+  applies (every underlying `Effect`/`trigger` this pass read from was
+  already Forge-cited in its own `definition.ts` from earlier sessions).
+
+
+- **2026-09-09 (follow-up to the Town-cycle pass below): extended `mana.ts`'s
+  `ManaColor` to include colorless (`C`) as a real value through the SAME
+  WUBRG code path** (`manaAbilityColorFromStaticText`/
+  `manaAbilityColorsFromStaticText` regexes widened to `[WUBRGC]`), per
+  explicit user request — no longer deferred. Deliberately did NOT widen
+  `COLORS`/`parseManaCost` (still WUBRG-only) — a permanent's mana ABILITY
+  producing `C` is a different question from a SPELL's own cost containing
+  a literal `{C}` pip, and only the former was asked for; the latter stays
+  a real, separately-scoped, unchanged gap. `LAND_FOR_COLOR` had to become
+  `Partial<Record<ManaColor,...>>` (TS exhaustiveness) since no basic land
+  produces colorless here. Wrote the-gold-saucer's real `mana` fact
+  (`color:'C'`) off this — now covered by the PRE-EXISTING addMana static
+  exemption automatically, no new verify-synergy.mjs logic needed for this
+  part (unlike crossroads-village's separate "choose a color" exemption).
+  Updated mana.test.ts (1 pre-existing test asserted the OLD "not
+  recognized" behavior — updated it to the new expectation, added 2 more
+  cases). Checked blast radius before running full tests: none of the 6
+  real "{T}: Add {C}." lands (capital-city/cavern-of-souls/starting-town/
+  eclipsed-realms/clive-s-hideaway/the-gold-saucer) appear as filler in any
+  OTHER card's or keyword bundle's scenarios.ts, so the only place
+  `manaAbility='C'` newly flowing into `canAfford`'s generic-mana-coverage
+  check could matter is each such card's own scenario (none of which
+  invoke `canAfford`/`payMana` at all — confirmed). Verified broadly per
+  the user's own ask: `npx vitest run functional-model` 181/181, full
+  `npm run test` unchanged except the 3 new/updated mana tests (still the
+  same 5 pre-existing unrelated `tagging/*`-missing-file failures), full
+  `verify-synergy.mjs` sweep still exactly 1 pre-existing unrelated hard
+  failure (auron-s-inspiration).
+  - **Coin-flip/Treasure fact — proposed, NOT written, flagged back
+    unresolved** (genuinely two options, not silently decided): checked
+    for precedent — edgar-king-of-figaro's own "Two-Headed Coin" static
+    ability gets NO fact at all, and Gold Saucer is the only OTHER
+    coin/die-roll card in the whole pool, so there is zero precedent for a
+    probabilistic-only ability getting any fact, atypical/low-value or
+    otherwise. Structurally: `synergy.ts`'s `Fact`/`EventFact` has no field
+    for "conditional/probabilistic, not guaranteed" — `value` (1-5) is
+    explicitly documented as trace-computed MAGNITUDE only, not a
+    certainty dimension, so repurposing a low `value` to mean "50/50"
+    would conflate two different axes dishonestly. Mechanically: no
+    scenario could ever produce real trace evidence for a `createToken`
+    fact here without either (a) fabricating an unconditional Treasure-
+    creation effect in definition.ts (directly contradicting that file's
+    own explicit reasoning for why this stays static text, and going
+    beyond "already correct, don't rewrite"), or (b) hard-failing
+    verify-synergy.mjs (no exemption function of this shape exists, unlike
+    the "known statically TRUE" exemptions elsewhere, which are the
+    opposite justification). Two options laid out for the orchestrator/
+    user rather than picked solo: (A) no fact at all (matches every
+    existing precedent + the reconciliation design's own invariants,
+    recommended), or (B) add a genuinely NEW schema capability
+    (`probabilistic?: boolean` or similar on `EventFact`, PLUS a new
+    verify-synergy.mjs exemption for it) — a pool-wide design decision
+    that reaches beyond this one card, not something to introduce
+    unilaterally for one card's sake.
+  - **RESOLVED same day, per explicit user correction**: the ask was never
+    about the probabilistic Treasure OUTCOME — it's about the coin FLIP
+    itself, which the user correctly pointed out is NOT probabilistic at
+    all: activating the ability always performs a flip, guaranteed by its
+    own printed text, same class of claim as `playLand`/
+    `entersBattlefield`. Wrote a real `{id:'coin-flip', event:'coinFlip',
+    controller:'you', ...}` source fact (`EventFact.event` is already
+    plain `string`, zero synergy.ts type change needed for the field
+    itself). Two things this NEW event value needed, both added:
+    1. `synergy.ts`'s `describeFact` — added a real `'coin flip'` label
+       branch (would otherwise fall through to the generic `${event}`
+       fallback and render literally as "coinFlip").
+    2. `verify-synergy.mjs` — needed a NEW static exemption
+       (`hasCoinFlipAbility`/`isCoinFlipFact`, right after
+       `isSelfBattlefieldPresenceLand`, wired into the forward per-fact
+       check next to `isSelfPlayableLand`): the flip's own occurrence is
+       tautologically guaranteed by the ability's printed "Flip a coin"
+       text existing at all (same reasoning class as
+       `isSelfPlayableLand`/`isLandEntersTappedSelfFact`), so no
+       scenario/trace evidence should be required — none could ever exist
+       anyway (no coin-flip mechanism in this engine). Scoped to an exact
+       "Flip a coin" substring match, since Gold Saucer is the only
+       coin-flip card in the whole 313-card pool (checked) — no
+       speculative generality added for a mechanism nobody else needs yet.
+  - Re-verified after this closing round: `the-gold-saucer` OK on its own,
+    full `verify-synergy.mjs` sweep unchanged (still 1 pre-existing
+    unrelated hard failure, auron-s-inspiration), `npx vitest run
+    functional-model` 181/181, full `npm run test` unchanged (same 5
+    pre-existing unrelated `tagging/*` failures).
+  - **Label wording follow-up**: `describeFact`'s `coinFlip` branch was
+    initially `'coin flip'` (noun phrase) — corrected to `'flip a coin'`
+    (verb phrase) per explicit user request, matching the `playLand`→
+    `'play a land'` convention already established this session. Just the
+    string, no other change.
+  - **Third follow-up, same day — 3 more Gold Saucer facts requested from
+    the card page directly**: (1) self battlefield-presence — already
+    present, confirmed, untouched. (2) Treasure token's OWN battlefield
+    presence — added `{zone:'Battlefield', controller:'you',
+    subject:{token:'c_a_treasure_sac'}, value:1}`, mirroring
+    zanarkand-ancient-metropolis-lasting-fayth's own Hero-token fact shape
+    exactly (no id/sourceText) per the user's own explicit instruction —
+    tracked as real regardless of the coin flip's outcome uncertainty,
+    same "we don't care about probabilistic" stance as the coinFlip fact
+    itself. (3) Treasure's ETB — added `{event:'entersBattlefield',
+    controller:'you', subject:{token:'c_a_treasure_sac'}, value:1}` — a
+    genuinely NEW pattern (checked: no other card in the pool has an
+    `entersBattlefield` fact with a token subject, source OR sink side).
+    (4) artifact-sacrifice sink, the one I'd previously recommended
+    NOT adding — user explicitly overrode that; added
+    `{zone:'Battlefield', controller:'you', types:{has:['Artifact']},
+    value:1}`, matching ahriman/phantom-train/quina-qu-gourmet's own
+    precedent shape (no id/sourceText).
+  - New `verify-synergy.mjs` exemptions needed for (2)+(3)+(4), since none
+    could ever get real trace evidence (no coin-flip mechanism, and the
+    sacrifice cost is never modeled as a real effect — same reasoning as
+    before, now deliberately overridden by explicit user instruction, not
+    silently reversed):
+    - `isCoinFlipTokenSubjectFact` (covers both (2) and (3), zone- or
+      event-shaped either way) — gated specifically on
+      `hasCoinFlipAbility`, NOT a general "any token-creating ability text
+      is exempt" rule (that would wrongly also exempt real, resolvable
+      token-creators like zanarkand/gysahl-greens from needing genuine
+      scenario evidence — deliberately kept narrow).
+    - `hasCostOnlyArtifactSacrifice`/`isCostOnlyArtifactSacrificeWant` for
+      (4) — a card whose `activationCost` (checked both faces) matches
+      "Sacrifice a/an/two artifact(s)" AND has no real `{kind:'sacrifice'}`
+      effect gets the want for free, tautologically (same class as
+      `isLandTapSelfWant`/`hasStaticLandTapSelfTrigger`). **Scope check
+      done before writing**: `sidequest-catch-a-fish-cooking-campsite`'s
+      own back face (Cooking Campsite) has the EXACT same cost-only-
+      sacrifice-an-artifact shape (its own `knownGaps` already documents
+      it unmodeled) — this new exemption would cover a matching want fact
+      there too, but I did NOT touch that card (out of scope, not asked) —
+      flagged in the-gold-saucer's own progress.json notes as a loose end
+      worth revisiting if the user wants parity there.
+  - Re-verified after all 3 facts: `the-gold-saucer` OK, full
+    `verify-synergy.mjs` sweep unchanged (still 1 pre-existing unrelated
+    hard failure), `npx vitest run functional-model` 181/181, full
+    `npm run test` unchanged (same 5 pre-existing unrelated `tagging/*`
+    failures).
+
+- **2026-09-09: wrote real v2 `synergy.json` content for the 11 FIN Town-cycle
+  lands whose synergy.json was still the empty `{"source":[],"sink":[]}` stub
+  (baron-airship-kingdom, gohn-town-of-ruin, gongaga-reactor-town,
+  guadosalam-farplane-gateway, insomnia-crown-city, rabanastre-royal-city,
+  sharlayan-nation-of-scholars, windurst-federation-center, treno-dark-city,
+  crossroads-village, the-gold-saucer) — an interrupted prior session had
+  already written these 9 + crossroads-village's progress.json/scenarios.ts
+  with a "verifySynergy: pass" story but never actually wrote the synergy.json
+  itself. definition.ts was already correct for all 11, untouched.**
+  - The 9 plain "enters tapped, {T}: Add X or Y" lands + crossroads-village:
+    exact vector-imperial-capital template (played/battlefield-presence/
+    enters-tapped/mana, all static exemptions in verify-synergy.mjs, no
+    scenario needed). Cleared the 3 stale "no enters produce possible"
+    knownGaps entries (sharlayan/windurst/treno) the same way
+    vector-imperial-capital's own note already resolved it.
+  - **crossroads-village's mana ability is "choose a color, {T}: Add one
+    mana of the chosen color"** — no `any:true`-style field exists on
+    `Constraints`/`TypeConstraint`; modeled it as `colors:{hasAny:['W','U',
+    'B','R','G']}`, reusing the existing choice-of-color convention just
+    widened to all five. To make this pass, **extended
+    `verify-synergy.mjs`'s `staticManaColorsFor`** with a narrowly-scoped
+    exemption recognizing the exact unique "{T}: Add one mana of the chosen
+    color." text (checked: no other pool card uses this phrasing) as the
+    same "known statically" shape the fixed single/choice-of-two case
+    already gets — an engine-side script change, not just a synergy.json
+    fact; flagged back to orchestrator as a judgment call since it's new
+    exemption logic.
+  - **the-gold-saucer** (enters untapped, unlike the other 10): wrote
+    played/battlefield-presence + a real `event:drawCard` fact for the one
+    modeled ability ("{3},{T},Sacrifice two artifacts: Draw a card").
+    Deliberately did NOT write: (1) a mana fact for "{T}: Add {C}." — {C}
+    is never recognized by `mana.ts`'s `manaAbilityColorsFromStaticText`
+    (WUBRG-only, a documented gap) and no other static-mana-only land in
+    the pool (capital-city/cavern-of-souls/starting-town/eclipsed-realms/
+    clive-s-hideaway) has ever written this fact either; (2) a sink fact
+    for "wants artifacts to sacrifice" — `engine.ts`'s own
+    `unsupportedCostComponent` comment documents this exact cost as
+    deliberately NOT modeled as a real `{kind:'sacrifice'}` effect (unlike
+    ahriman/phantom-train/quina-qu-gourmet, which DO model theirs), so the
+    scripted scenario never calls `actions.sacrifice` or any artifact
+    zone/type read — no trace evidence could ever back this fact, and no
+    static exemption covers it; (3) any fact for the coin-flip/Treasure
+    ability, matching edgar-king-of-figaro's own "Two-Headed Coin" precedent
+    (no fact at all for a probabilistic-only ability anywhere in the pool).
+    All three flagged as judgment calls, not silently decided.
+  - Verified: all 11 pass `npx vite-node functional-model/scripts/verify-synergy.mjs
+    <slugs>`; full pool sweep (no args) still only has the ONE pre-existing
+    unrelated hard failure (auron-s-inspiration, untouched by this pass).
+    `npx vitest run functional-model` — 178/178 pass. Full `npm run test`
+    has 5 unrelated pre-existing failures (missing `tagging/*` files, the
+    separate historical-sets sweep project's data, confirmed pre-existing
+    via `git stash`).
+  - Open Forge-verification: none needed — all 11 cards' definition.ts was
+    already Forge-cited and untouched; the only new engine-side logic
+    (verify-synergy.mjs's crossroads-village exemption) is a reconciliation
+    script change, not a rules-engine behavior change, so no Forge citation
+    applies.
+
 - **2026-09-09: audited every `functional-model/keywords/<bundle>/scenarios.ts`
   for synthetic filler cards (project rule: scenario board content must be
   real Scryfall data, not invented placeholders) — 5 of the 12
