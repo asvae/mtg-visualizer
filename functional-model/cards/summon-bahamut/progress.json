@@ -1,12 +1,12 @@
 {
   "enrichment": "ai",
-  "review": "human",
+  "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-05",
+  "lastVerified": "2026-09-11",
   "notes": "User pushed back on the self-destroy scenario ('Why itself!? Not something you would ever attempt.'). Root cause: chapter I/II's destroy pool is [you-bucket, opp-bucket] in that fixed order, self is always in you-bucket with no exclusion, real text is unrestricted, chooseTarget always takes candidate[0] — self is unavoidably first. Fix: made `optional` (real TargetMin$0) genuinely functional instead of documentary-only — new `EffectContext.declineOptional` (card.ts) + `Scenario.declineTriggers` (harness.ts), set per-trigger, lets a scenario really decline a target instead of being forced onto whatever chooseTarget would deterministically pick. The common-line scenario now has chapters I/II BOTH decline (opponent still has a real legal artifact target on board, to prove it's a genuine decline, not 'nothing to hit') — matches user's own resolution ('it doesn't have to destroy anything... up to one, 0 is fine'). A second, minimal scenario (isolated `trigger:'chapterI'`, no decline) keeps the destroy-nonland produce fact backed by real trace evidence (self-target, same legal-if-pointless outcome Coeurl/Dion's own chapter III already documents) — without it verify-synergy.mjs would hard-fail the fact for having no supporting trace line at all.",
   "textCoverageAudited": true,
   "knownGaps": [
-    "Opponent's own artifact is never actually a reachable destroy target for chapter I/II in this engine: self is always the first candidate in the unrestricted 'each'-owner pool (you-bucket always precedes opponents-bucket, self has no notSelf exclusion on `destroy`). Declining avoids the self-destroy optic but doesn't let a scenario demonstrate hitting an opponent's permanent specifically — would need either a real notSelf on destroy (not rules-accurate here, real text has no restriction) or reordering the shared pool builder (touches Coeurl/Dion's own chapter III precedent too). Not done; flagged, not solved.",
+    "Resolved 2026-09-11 (previously listed here as an open gap, now stale): scenario A's `EffectContext.preferTarget` override does let a scenario demonstrate chapter I hitting an opponent's own permanent specifically (a real Coeurl, opponent-controlled) despite `self` always sorting first in the unrestricted destroy pool's default `chooseTarget` order — `preferTarget` overrides that default pick, it isn't blocked by the pool ordering the way plain `chooseTarget` would be.",
     "`sequence` fires named triggers back-to-back with no real lore-counter/turn-by-turn tracking — doesn't simulate 3 real turns passing, just 'these triggers really do all happen, in this order, over the game.'",
     "`declineOptional` is new and only wired into the `destroy` effect kind — other `optional`-bearing effects (move/sacrifice/dig) still don't support a real decline; extend only when a real card needs it."
   ]

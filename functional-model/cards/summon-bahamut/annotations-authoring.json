@@ -1,0 +1,48 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment Creature — Saga Dragon",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment Creature — Saga Dragon",
+      "highlight": "Enchantment Creature"
+    },
+    {
+      "sourceText": "I, II — Destroy up to one target nonland permanent.",
+      "highlight": "Destroy up to one target nonland permanent"
+    },
+    {
+      "sourceText": "I, II — Destroy up to one target nonland permanent.",
+      "highlight": "Destroy up to one target nonland permanent"
+    },
+    {
+      "sourceText": "III — Draw two cards.",
+      "highlight": "Draw two cards"
+    },
+    {
+      "sourceText": "IV — Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "highlight": "deals damage equal to the total mana value of other permanents you control to each opponent"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)",
+      "highlight": "add a lore counter"
+    },
+    {
+      "sourceText": "Sacrifice after IV.",
+      "highlight": "Sacrifice after IV"
+    },
+    {
+      "sourceText": "Sacrifice after IV.",
+      "highlight": "Sacrifice after IV"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "highlight": "deals damage equal to the total mana value of other permanents you control to each opponent"
+    }
+  ]
+}

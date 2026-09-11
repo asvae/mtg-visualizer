@@ -12,8 +12,15 @@ print/style catalog, price/marketplace tool, account/user-data service.
 
 Full detail: `README.md` (architecture/scope), `NEXT_STEPS.md` (near-term
 plan), `WISHLIST.md` (longer-term ideas), `SET_STATUS.md` (per-set tagging
-progress), `functional-model/ENGINE_DESIGN.md` + `ENGINE_GAPS.md` (engine
-internals — `engine` agent's own primer, don't duplicate here).
+progress), `functional-model/ENGINE_DESIGN.md` + `ENGINE_GAPS.md` +
+`SYNERGY_DESIGN.md` (engine internals — `engine` agent's own primer,
+don't duplicate here).
+
+**Orchestrator sessions**: read `.claude/ORCHESTRATOR_PRIMER.md` at the
+start of substantive work — cross-domain schema map, known landmines,
+external reference locations, so basic architecture questions don't
+require a specialist round-trip. Keep it updated; it's orchestrator-only,
+don't push its content into specialist files.
 
 Two standing side-processes, not this orchestrator's job (see below):
 card-review loop (`scripts/REVIEW_PROCESS.md`) and historical-sets tagging

@@ -17,7 +17,19 @@ import { fmBundle } from './fmBundle';
 
 function isV2Shaped(synergy: { source?: unknown[]; sink?: unknown[] }): boolean {
   const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
-  return all.length > 0 && all.every((f) => typeof f === 'object' && f !== null && ('zone' in f || 'event' in f));
+  // A SOURCE `ZoneFact` may now carry `to`/`from` instead of (or alongside)
+  // `zone` (2026-09-11 rework, functional-model/synergy.ts's `ZoneFact`) —
+  // this is a local duplicate of the same widening `engine` made to every
+  // other `isV2Shaped` copy in scripts/{verify-synergy,find-synergies,
+  // compute-weights}.mjs; this one lives here (not those scripts) since it
+  // gates the live card-page API route, and was missed by that pass. Without
+  // it, summon-bahamut's own two converted facts (no `zone`/`event` key at
+  // all) fail `.every()` and the WHOLE card falls back to "not yet migrated"
+  // — confirmed live via the Facts tab.
+  return (
+    all.length > 0 &&
+    all.every((f) => typeof f === 'object' && f !== null && ('zone' in f || 'event' in f || 'to' in f || 'from' in f))
+  );
 }
 
 export function loadCardSynergy(slug: string): { source: Fact[]; sink: Fact[] } | null {

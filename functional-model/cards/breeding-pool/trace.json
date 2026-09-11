@@ -2,7 +2,7 @@
   {
     "scenario": {
       "setup": "",
-      "action": "cast from hand",
+      "action": "played as a land (CR 305 special action)",
       "result": "enters the battlefield (its own ETB trigger fires separately below)",
       "raw": {
         "result": "enters the battlefield (its own ETB trigger fires separately below)"
@@ -10,11 +10,9 @@
     },
     "log": [
       {
-        "fn": "cast",
+        "fn": "playLand",
         "card": "Breeding Pool",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": ""
+        "instanceId": 1
       },
       {
         "fn": "enters",

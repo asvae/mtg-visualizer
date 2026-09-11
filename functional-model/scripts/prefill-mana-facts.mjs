@@ -64,23 +64,6 @@ const slugs = (await readdir(cardsDir, { withFileTypes: true }))
   .map((e) => e.name)
   .filter((s) => !onlySlug || s === onlySlug);
 
-// Generic, content-free id scheme (2026-09-09) — a fact's `id` is a stable
-// per-card identity (see synergy.ts's own ZoneFact.id doc comment), not a
-// place to bake in the fact's own mutable content: if this ability's colors
-// ever changed, an id derived from them (the old `mana-${color}` /
-// `mana-${c1}-${c2}` scheme) would need to change too, silently breaking
-// anything keying off it (factKey()/hover-linking). `"mana"` for a face's
-// first (usually only) addMana fact, `"mana-2"`, `"mana-3"`, ... for a face
-// that somehow has more than one distinct mana-producing ability worth
-// separate ids — never the color letters themselves.
-function freshManaId(synergy) {
-  const used = new Set(synergy.source.map((f) => f.id));
-  if (!used.has('mana')) return 'mana';
-  let n = 2;
-  while (used.has(`mana-${n}`)) n++;
-  return `mana-${n}`;
-}
-
 /** One real recognized mana source on one face — `colors` is always the full set this one ability can make (length 1 for a plain single-color ability or a structured `addMana` Effect, length 2 for a real choice-of-color ability); `staticText` present only for the plain-string shape (undefined for a structured `addMana` Effect, which has no single oracle-text line to cite here). */
 function manaSourcesOnFace(face) {
   const out = [];
@@ -146,7 +129,6 @@ for (const slug of slugs) {
         continue;
       }
       const fact = {
-        id: freshManaId(synergy),
         event: 'addMana',
         controller: 'you',
         color,
@@ -169,7 +151,6 @@ for (const slug of slugs) {
       continue;
     }
     const fact = {
-      id: freshManaId(synergy),
       event: 'addMana',
       controller: 'you',
       colors: { hasAny: colors },

@@ -1,11 +1,11 @@
 [
   {
     "scenario": {
-      "setup": "you: 10 Forest(s); opp0: a c_a_treasure_sac",
+      "setup": "you: 10 Forest(s)",
       "action": "real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice",
-      "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself — the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
+      "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Coeurl (a genuine choice between it and Bahamut itself — a real, non-token permanent, so it's a real 701.6 destroy, not a token ceasing to exist); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ahriman, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
       "raw": {
-        "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Treasure (a genuine choice between it and Bahamut itself — the token then ceases to exist, 704.5d); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ally Legend, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
+        "result": "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Coeurl (a genuine choice between it and Bahamut itself — a real, non-token permanent, so it's a real 701.6 destroy, not a token ceasing to exist); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ahriman, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.",
         "you": {
           "libraryCount": 15,
           "basicLands": [
@@ -23,9 +23,6 @@
         },
         "opponents": [
           {
-            "tokens": [
-              "c_a_treasure_sac"
-            ],
             "libraryCount": 10
           }
         ]
@@ -34,10 +31,19 @@
     "log": [
       {
         "fn": "enters",
-        "card": "Ally Legend",
+        "card": "Ahriman",
         "zone": "Battlefield",
         "power": 2,
-        "toughness": 2
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
       },
       {
         "fn": "cast",
@@ -121,7 +127,7 @@
         "player": "opp0",
         "zone": "Battlefield",
         "count": 1,
-        "creatureCount": 0
+        "creatureCount": 1
       },
       {
         "fn": "read:isLand",
@@ -175,7 +181,7 @@
       },
       {
         "fn": "read:isLand",
-        "target": "Ally Legend",
+        "target": "Ahriman",
         "result": false
       },
       {
@@ -185,13 +191,12 @@
       },
       {
         "fn": "read:isLand",
-        "target": "Treasure",
+        "target": "Coeurl",
         "result": false
       },
       {
-        "fn": "ceasesToExist",
-        "target": "Treasure",
-        "zone": "Graveyard",
+        "fn": "destroy",
+        "target": "Coeurl",
         "controller": "opp0"
       },
       {
@@ -413,7 +418,7 @@
       },
       {
         "fn": "read:getCMC",
-        "target": "Ally Legend",
+        "target": "Ahriman",
         "result": 3
       },
       {
@@ -441,216 +446,39 @@
       },
       {
         "label": "Cast Summon: Bahamut ({9})",
-        "from": 1
+        "from": 2
       },
       {
         "label": "Resolve",
-        "from": 11
+        "from": 12
       },
       {
         "label": "Pass turn (you)",
-        "from": 30
+        "from": 31
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 41
+        "from": 42
       },
       {
         "label": "Pass turn (you)",
-        "from": 46
+        "from": 47
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 48
+        "from": 49
       },
       {
         "label": "Pass turn (you)",
-        "from": 55
+        "from": 56
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 57
+        "from": 58
       },
       {
         "label": "Real 714.4 sacrifice — lore counters were never reset",
-        "from": 75
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 10 Forest(s)",
-      "action": "real engine playthrough: cast -> ETB Saga tick fires chapter I with no other target",
-      "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real — documenting the effect actually fires (the sane real line is scenario A above).",
-      "raw": {
-        "result": "Chapter I's unrestricted \"destroy up to one target nonland permanent\" has no target but Bahamut itself, so it legally destroys itself for real — documenting the effect actually fires (the sane real line is scenario A above).",
-        "you": {
-          "basicLands": [
-            "Forest",
-            "Forest",
-            "Forest",
-            "Forest",
-            "Forest",
-            "Forest",
-            "Forest",
-            "Forest",
-            "Forest",
-            "Forest"
-          ]
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Summon: Bahamut",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{9}"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "tapForMana",
-        "target": "Forest",
-        "for": "Summon: Bahamut"
-      },
-      {
-        "fn": "enters",
-        "card": "Summon: Bahamut",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "putCounter",
-        "target": "Summon: Bahamut",
-        "counterType": "LORE",
-        "amount": 1
-      },
-      {
-        "fn": "trigger",
-        "card": "Summon: Bahamut",
-        "instanceId": 1,
-        "name": "chapterI"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 11,
-        "creatureCount": 1
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Forest",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Summon: Bahamut",
-        "result": false
-      },
-      {
-        "fn": "destroy",
-        "target": "Summon: Bahamut",
-        "controller": "you"
-      }
-    ],
-    "actions": [
-      {
-        "label": "Start",
-        "from": 0
-      },
-      {
-        "label": "Cast Summon: Bahamut ({9})",
-        "from": 0
-      },
-      {
-        "label": "Resolve",
-        "from": 10
+        "from": 76
       }
     ]
   }

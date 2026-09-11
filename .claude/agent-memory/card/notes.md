@@ -1,11 +1,1291 @@
 # card agent notes
 
+- 2026-09-11 (latest, scenario replay real-art fix): Fixed the root cause of
+  fin/1's Scenarios tab showing blank placeholder boxes ("Ah"/"Co") for real
+  bystander cards Ahriman/Coeurl in summon-bahamut's own scenario, generally
+  (not a summon-bahamut-only patch).
+  - **Root cause confirmed**: `ScenarioReplayTrace.vue`'s `imagesFor(card)`
+    checks the `namedCardArt` prop (real art for any non-self real card,
+    keyed by name) before falling back to the singular `cardImages` prop
+    (self only) — but `namedCardArt` was, until now, ONLY ever populated by
+    `KeywordEntryCard.vue` (the keywords-coverage page, from its own
+    already-fetched `entry.cards` pool). The per-card page
+    (`app/pages/app/card/[set]/[number].vue`) never populated it at all, on
+    the now-false assumption (stated in the prop's own old doc comment) that
+    a per-card page's Scenarios tab only ever has the one tested "self" card
+    on the board. summon-bahamut's real scenario legitimately puts TWO real
+    non-self cards on the board (Ahriman stays the whole time; Coeurl gets
+    destroyed by chapter I) — added earlier the same day to replace
+    fabricated placeholder names, which is what surfaced this.
+  - **Fix, in `app/components/ScenarioReplay.vue`** (not the per-card page —
+    fixes it for every current/future caller in one place, including the
+    keywords page): added a new `autoNamedCardArt` ref, populated in the
+    SAME watcher that already resolves `fillerImages` for basic
+    lands/tokens. For every trace, runs `replayTrace(trace)` (imported from
+    `app/lib/scenarioReplay.ts`, previously only used inside
+    `ScenarioReplayTrace.vue`) and takes the LAST snapshot's `cards` array
+    (nothing is ever removed from it, only re-zoned — the last snapshot
+    alone reflects every card that ever appeared). Filters that list down to
+    genuine real bystanders: `!c.isSelf` (already covered by `cardImages`),
+    not a name already in the land-name set, not a name matching any
+    `TOKENS[key].name` (both already covered by `fillerImages`), and not
+    matching `/^(you|opp\d+)-/` (setupPlayer's own synthetic filler-name
+    prefix — a real Scryfall name never takes that shape, per
+    `scenarioReplay.ts`'s own `guessOwner`/`groupNameOf` doc comments).
+    Fetches the survivors via the SAME `/api/cards/by-names` endpoint
+    `fillerImages` already uses (one more parallel branch in the existing
+    `Promise.all`), building `{images: string[], keywords: string[]}` per
+    name (front-then-back image array, same convention `registry.ts`'s own
+    `cardArtFor` uses for the keywords page — note `/api/cards/by-names`'s
+    `minimalCard()` does NOT carry power/toughness at all, unlike the
+    keywords page's own richer `fin_scryfall.json` pool, so `autoNamedCardArt`
+    entries never set those two fields; harmless since no current consumer
+    of `namedCardArt` reads power/toughness for a non-self chip — `ptFor()`
+    in `ScenarioReplayTrace.vue` gets non-self P/T from the trace's own
+    `ReplayCard.power`/`toughness`, not from `namedCardArt`, at all). New
+    `mergedNamedCardArt` computed layers the CALLER-provided `namedCardArt`
+    prop (still present, still what `KeywordEntryCard.vue` passes) on top of
+    `autoNamedCardArt` — a caller's own entry for a name wins (keeps the
+    keywords page's richer power/toughness data for its own three
+    cardNames), but nothing requires a caller to pass anything anymore for a
+    real bystander to get real art. `ScenarioReplayTrace.vue`'s own `props`
+    doc comment and `imagesFor`'s doc comment updated to drop the
+    now-false "only ever set by the keywords-coverage page" claim.
+  - Verified live (Playwright, throwaway scripts run from the repo root —
+    module resolution needs `node_modules` on an ancestor path — deleted
+    after) against the already-running dev server: fin/1's Scenarios tab —
+    both Ahriman and Coeurl chips now render a real `<img>` (not the
+    placeholder `<div>` text box), correct Scryfall CDN URLs (confirmed via
+    `curl -I`, and via a real `waitForResponse` + `naturalWidth>0` check —
+    initial `naturalWidth:0`/`complete:false` reads were just this sandbox's
+    slow/contended concurrent-image-load speed for `cards.scryfall.io`, not
+    a real block: a plain `fetch()` from the same page context to the exact
+    same URL round-tripped in ~1.8s, and the image DID arrive within ~60s
+    when waited for explicitly); a cropped screenshot confirms real
+    Ahriman/Coeurl art. Keywords-coverage page (`/app/keywords/flying-reach`,
+    the exact bundle the old doc comment cited, `cardNames: ["Ahriman", "Iron
+    Giant", "Coeurl"]`) — unaffected, all three real-art chips still render
+    with `imgCount:1` each, real 200-status page load, heading present.
+  - `npm run typecheck`: exit 0. `npx vitest run app/lib`: 115/115 pass
+    (unaffected — no `app/lib` test file exercises `ScenarioReplay.vue`
+    itself, this is a template/script-only Vue component change).
+  - **Real, separate engine-owned bug found along the way, NOT fixed here
+    (out of lane — trace.json is generated output; this project's own
+    convention is engine regenerates it from `scenarios.ts`, card just reads
+    it) — flagging for `engine`**: summon-bahamut's own `trace.json` `enters`
+    log entries for both Ahriman (yours) and Coeurl (the OPPONENT'S) carry no
+    `controller` field, so `scenarioReplay.ts`'s own `ensure(cardName,
+    'Battlefield')` branch for a no-`instanceId` `enters` entry falls back to
+    `guessOwner`'s default ('you' — neither name has a role-prefix to guess
+    from), and BOTH chips render on YOUR board at the replay's Start step,
+    not opponent's, even though the scenario's own `result` prose and
+    `scenarios.ts` (`pilot.opponents[0]!` for Coeurl) are clear Coeurl
+    belongs to the opponent. Confirmed live via the same Playwright session
+    (Start-step screenshot shows both 2/2 chips under "YOU", none under
+    "OPP0"). Cosmetic (doesn't affect chapter I's own real destroy-target
+    logic, which reads real engine state, not this replay reconstruction),
+    but worth a real fix: either `scenarios.ts`'s own manual `enters` push
+    for a bystander needs a `controller` field threaded through to the
+    logged entry (mirroring what the `enters` case already reads via
+    `str(entry.controller)`), or whatever code path emits this log entry
+    from `pilot.state.addCard(pilot.opponents[0]!, ...)` needs to actually
+    log the real owner it was given instead of omitting it.
+  - No `.claude/contracts/*.md` mismatch to flag — this is a client-side
+    Vue-prop/display fix, no engine-served shape (`trace.json`/`synergy.json`)
+    changed or misdescribed by either contract.
+
+- 2026-09-11 (latest, real typecheck fix): Fixed the 24 real `npm run
+  typecheck` errors in `app/lib/factConditions.test.ts` flagged by a peer
+  agent (see the "Big process finding" entry below for how the broken
+  `vue-tsc --noEmit -p .` no-op was discovered in the first place) — every
+  fixture `Fact`/`ZoneFact`/`EventFact` object literal in that file predated
+  `Fact.annotations` becoming required (min 1 entry) earlier the same day,
+  and none had been updated. Added `annotations: [{ target: 'oracle', line:
+  0, start: 0, end: 1 }]` (a placeholder — these are synthetic unit fixtures
+  with no real card text behind them, and `factConditions()` itself never
+  reads `annotations`) to all 24 literals missing it, single-line and the 3
+  multi-line ones alike. Also grepped for lingering removed `id`/
+  `sourceText`/`highlight` fields per the task's own "verify, may be
+  nothing left" framing — confirmed genuinely clean, a prior pass already
+  got them all.
+  - **Policy correction, stated plainly for any future reader of this
+    file**: `npx vue-tsc --noEmit -p .` is a **silent no-op** on this repo
+    (root `tsconfig.json` is `{ files: [], references: [...] }`; without
+    `-b`/`--build` the references aren't picked up, so literally nothing
+    gets checked — verified by a peer agent injecting a deliberate type
+    error and still getting exit 0). Every "vue-tsc exit 0 / clean"
+    confirmation logged anywhere below this line in this file, across many
+    past entries, was false confidence, not a real clean bill of health.
+    **The correct, only-trustworthy command is `npm run typecheck`** (→
+    `nuxt typecheck`, real build-mode project-reference checking) — use
+    this exclusively from now on, in this and every future task, instead of
+    any `vue-tsc` invocation.
+  - Verified: `npm run typecheck` → 0 errors anywhere in the codebase (this
+    file's 24 were the only ones surfacing). `npx vitest run
+    app/lib/factConditions.test.ts app/lib/factOrder.test.ts`: 30/30 pass
+    (unchanged assertions — adding a required-but-unread field doesn't
+    change any test's behavior). `npx vitest run app/lib`: 115/115 pass
+    (full suite).
+  - Scope: touched only `app/lib/factConditions.test.ts` plus this notes
+    file, per explicit task constraint (`functional-model/*` untouched).
+  - No `.claude/contracts/*.md` mismatch to flag — this was a stale test
+    fixture catching up to an already-correctly-documented required field,
+    not a contract shape problem.
+
+- 2026-09-11 (latest): Type-line highlighting for `target: 'typeLine'`
+  annotations (fin/1's `self-cast`/`self-enters`), plus a coordinator-flagged
+  modal-sizing correction and two real pre-existing bugs found along the way.
+  - **`app/components/FunctionalModelText.vue`**: the type line
+    (`<span>{{ face.typeLine }}</span>`) now gets the exact same
+    dashed-underline/hover-tooltip/cross-highlight treatment oracle-text
+    lines already have. Refactored the old `buildLineSegments`'s inline
+    overlap logic into a shared `buildSegments(text, ranges)` core (target-
+    agnostic — just "given `{start,end,facts}` ranges over a string, build
+    runs") called by both `buildLineSegments` (oracle: filters
+    `ann.target === 'oracle' && ann.line === lineIndex`) and the new
+    `buildTypeLineSegments` (typeLine: filters `ann.target === 'typeLine'`,
+    no line filter — a typeLine `AnnotationRef` has no `line` field at all,
+    slices `face.typeLine` directly by `start`/`end`). New `faceTypeLine`
+    computed (one `Segment[]` per face) feeds a new template block mirroring
+    the oracle-line segment span markup exactly (same `segColor`/
+    `isRowHighlighted`/`show`/`hide` reuse, no new logic needed there since
+    `Segment`/`factKey` were already target-agnostic).
+  - **Real bug found in the byte-for-byte-ported merge algorithm, fixed as
+    part of this task (not a pure refactor-only change)**: the OLD
+    `buildLineSegments` overlap tolerance (ported from the deprecated
+    `annotateOracleText`) treated any non-identical overlapping range pair as
+    "ambiguous — keep whichever sorts first," silently DROPPING the loser's
+    facts entirely. Fine for oracle text (no current fact data has a true
+    partial/nested overlap there), but wrong for the type line: fin/1's real
+    data has `self-enters` spanning the WHOLE typeLine phrase "Enchantment
+    Creature" (0-20) and `self-cast` nested entirely inside it, "Creature"
+    only (12-20) — a real, common nesting case, not a rare edge case. Under
+    the old algorithm this silently dropped `self-cast` from ever rendering
+    at all (confirmed via a live Playwright check before the fix: only 1
+    typeLine span, "Enchantment Creature," backing self-enters alone).
+    Rewrote `buildSegments` as a proper interval partition — every distinct
+    boundary point across all ranges becomes a cut, each minimal slice
+    carries the union of every range fully covering it, adjacent slices with
+    identical fact-sets (by reference) rejoin into one visual run. Verified
+    this preserves the old exact-duplicate-merge behavior (two identical
+    ranges still produce one multi-fact segment, confirmed live: fin/1's
+    Mega Flare damage clause still merges its 3 facts into one span) while
+    fixing the nesting case (now renders as TWO segments, "Enchantment " →
+    self-enters only, "Creature" → both self-enters+self-cast — confirmed
+    live via Playwright: 7 total `cursor-help` spans post-fix vs 6 before
+    this task started, tooltip on the bare "Creature" span shows BOTH "cast a
+    spell" and "enters the battlefield," and hovering the Facts tab's "Cast a
+    spell" row correctly highlights ONLY the "Creature" span, not
+    "Enchantment ", proving the per-fact cross-highlight resolves to the
+    exact right sub-span under nesting).
+  - **Real, unrelated `AnnotationRef`-narrowing type bug found and fixed in
+    the same class, in-lane**: `app/lib/factOrder.ts`'s `orderByTextPosition`
+    read `ann.line`/`ann.start` directly off a raw `AnnotationRef` union
+    without narrowing on `target` first — a real TS2339 (`Property 'line'
+    does not exist on type '{ target: "typeLine"; ... }'`), same class of bug
+    my own refactor above had to guard against. Added a small
+    `annotationPosition(ann: AnnotationRef)` helper: a `typeLine` annotation
+    (no real `line`) gets a synthetic `line: -1` for this function's OWN sort
+    purposes only (never served/read as a real line number elsewhere) —
+    ranks it before every real oracle-text line, matching where a type line
+    actually sits visually on the rendered card (above line 0 of the oracle
+    text), tie-broken by its own `start`. No behavior change for any
+    currently-authored oracle-only fact (this file's own `.test.ts` has zero
+    `typeLine` fixtures, confirmed via grep — purely additive, all 6 existing
+    cases still pass unchanged).
+  - **Big process finding, flagging with real urgency**: `npx vue-tsc
+    --noEmit -p .` — the exact command this agent's own notes have cited as
+    "exit 0, clean" after nearly every task for the past several
+    sessions — **does not actually type-check anything**. The root
+    `tsconfig.json` is `{ "files": [], "references": [...] }`; run as a
+    plain (non-build-mode) `-p .` invocation, `files: []` means zero root
+    files and project references are NOT auto-included without `-b`/
+    `--build`, so the whole invocation silently no-ops (verified directly:
+    injected a deliberately-nonexistent-property access into
+    `FunctionalModelText.vue`, ran the exact command, still got exit 0).
+    Confirmed the CORRECT command is `npm run typecheck` (→ `nuxt
+    typecheck`, real build-mode project-reference checking) — this single
+    run surfaced BOTH real bugs fixed above (they'd been sitting
+    unnoticed) plus 24 pre-existing, unrelated `factConditions.test.ts`
+    fixture errors (`Property 'annotations' is missing` — those test
+    fixtures predate `annotations` becoming required and were never updated;
+    NOT touched here, out of this task's scope, flagging only). This means
+    every past "vue-tsc -p . exit 0" confirmation in this agent's own prior
+    notes entries was false confidence, not a real clean bill of health —
+    worth the orchestrator/other specialists knowing too, this isn't
+    card-specific (the same broken root tsconfig affects any specialist
+    running the same command). Going forward this agent uses `npm run
+    typecheck` exclusively.
+  - **Coordinator mid-task correction, addressed**: the shared debug/JSON
+    `UModal` (`app/pages/app/card/[set]/[number].vue`) had just been changed
+    to `:fullscreen="true"` in a concurrent edit — dialed back per explicit
+    ask to a normal centered/sized box (`:ui="{ content: 'max-w-3xl' }"`,
+    `JsonHighlight` capped at `max-h-[70vh]` again) while keeping it
+    header-less (`:close="false"`, no `title` prop — unchanged). Verified
+    live: modal renders as a 768px-wide centered box (not edge-to-edge),
+    confirmed no header/title bar renders (Reka UI's own a11y-only hidden
+    title/description spans are the only thing before the body slot).
+  - Verified live (Playwright, throwaway scripts, deleted after) against the
+    already-running dev server: fin/1 — type line now shows real highlighted
+    spans as described above; fin/9 (no `typeLine` annotations at all) —
+    type line renders as fully plain text, zero `cursor-help` spans on it
+    (only the pre-existing unrelated header self-fact span on the card
+    name), confirming zero regression for every not-yet-annotated card.
+  - `npm run typecheck`: 24 errors, ALL in `app/lib/factConditions.test.ts`
+    (pre-existing, confirmed via `git status` that file was already dirty
+    before this task started — not caused by this task). Zero errors in
+    every file this task touched. `npx vitest run app/lib`: 115/115 pass
+    (test fixtures aren't type-checked by vitest itself, only by `nuxt
+    typecheck`, which is why the 24 fixture-shape errors don't fail the
+    actual test run).
+  - **Contract note**: no mismatch in `.claude/contracts/card-schema.md`'s
+    `AnnotationRef` description — the two-variant shape (`oracle` w/ `line`,
+    `typeLine` w/o) matched exactly what's on disk in
+    `summon-bahamut/synergy.json`. Nothing to flag there. The only thing
+    worth a future contract note (not added there, out of this agent's own
+    contract-editing scope) is that a `typeLine` annotation's real-world data
+    is NOT guaranteed disjoint from another fact's `typeLine` annotation on
+    the same face — nesting is the norm for a baseline claim like
+    "self-cast" nested inside "self-enters," not an edge case — any future
+    consumer of raw `Fact.annotations` ranges should assume overlap/nesting
+    is possible, not just exact-duplicate sharing.
+
+- 2026-09-11 (latest): Finished card-side cleanup after engine's `Fact.id`
+  removal + required-`annotations` rework, plus two small independent UI
+  tweaks. Scoped to summon-bahamut (fin/1) per task constraint; didn't touch
+  anything under `functional-model/` or `app/lib/factOrder.ts` (both
+  explicitly off-limits, and both were already being modified live by a
+  concurrent session during this task — confirmed via `git diff` that my own
+  changes never touched either).
+  1. **Dropped `fact.id` everywhere** — `app/components/FunctionalModelText.vue`'s
+     and the card page's own `factKey()` now both mirror engine's own
+     `factIdentity()` (`functional-model/synergy.ts`) exactly: `` `${fact.role}::${describeFact(fact)}::${JSON.stringify(fact.annotations[0])}` ``
+     (no more `fact.id ??`/`sourceText` fallback — `annotations[0]` is always
+     safe since the field is now required with a minimum of one entry).
+     `openFactDebugModal`'s modal title dropped its `fact.id ??` branch too
+     (now just `` `Fact JSON — ${factKey(fact)}` ``). `server/api/graph-links.ts`'s
+     `sourceKey` dropped its `group.fact.id ??` branch, now just
+     `` `${name}::${group.description}` `` (that's the only field it had
+     available there — no other identity source needed, `description` alone
+     was already the established fallback). `app/lib/graphRenderer.ts`'s
+     stale doc-comment citing `${producer}::${fact.id}` updated to
+     `${producer}::${group.description}` (comment-only, no code change).
+     `app/lib/factConditions.ts`'s dead `'sourceText'`/`'id'` allowlist
+     entries removed from `HANDLED_OR_LABEL_KEYS`.
+  2. **Replaced the `sourceText` hover tooltip** — `sourceText`/`highlight`
+     are no longer served on `Fact` at all (moved engine-side to a separate,
+     non-served `annotations-authoring.json`). New `factSourceText(fact)`
+     helper (`app/pages/app/card/[set]/[number].vue`, right after
+     `factFaceIndex`): reads `fact.annotations[0]` against the real served
+     `annotatedCard` face (via the existing `annotatedFaces`/`factFaceIndex`)
+     — `target: 'oracle'` shows the WHOLE line the span lives on
+     (`face.oracleText.split('\n')[ann.line]`, a full sentence reads better
+     than a bare phrase, matching the old `sourceText` tooltip's own feel);
+     `target: 'typeLine'` slices `face.typeLine` directly at `start`/`end`
+     (no line-splitting — a type line has no paragraph structure). Falls
+     back to `describeFact(fact)` if ever empty (shouldn't happen given
+     `annotations` is required, but doesn't crash if it does). The Facts
+     table's label-cell `<td>` `:title` binding now calls
+     `factSourceText(row.fact)` instead of reading `row.fact.sourceText`
+     directly. Also updated two nearby doc comments (around
+     `isHeaderLinkedFact`) that referenced a "real `sourceText`/`highlight`
+     pair" as still-current vocabulary — reworded to describe the pointer
+     model instead, no behavior change.
+  3. **JSON/debug modal styling** — the shared `UModal` (Facts-tab per-fact
+     debug cells only; the JSON tab itself renders `JsonHighlight` directly
+     inline, no modal, per an earlier same-day correction — see the entry
+     below) now uses `:fullscreen="true" :close="false"` and no `title` prop
+     at all, dropping `:ui="{ content: 'max-w-3xl' }"`. Confirmed via reading
+     Nuxt UI 4.11's own `Modal.vue` source
+     (`node_modules/@nuxt/ui/dist/runtime/components/Modal.vue` +
+     `.nuxt/ui/modal.ts` theme) that the header `<div>` only renders when
+     `slots.header || props.title || slots.title || props.description ||
+     slots.description || props.close || slots.close` — with none of those
+     set, the header block doesn't render at all (a `#header` slot override
+     rendering nothing would still leave an empty bordered bar, since
+     `slots.header` itself would still be truthy — omitting the prop
+     entirely is the clean way to get zero header). `fullscreen` is a real,
+     documented boolean prop whose own theme variant sets `content` to
+     `inset-0` (no `max-w`/centered-transform/`max-h` compound variants,
+     which only apply when `fullscreen: false`) — gives the near-full-
+     viewport sizing the task asked for natively, no custom `:ui` override
+     needed. `JsonHighlight`'s own passed-in class changed from
+     `max-h-[70vh]` to `h-full` to fill the now much taller container.
+     `debugModalTitle` ref is kept (still assigned by `openDebugModal`) but
+     is now write-only — no longer read by the template since the header
+     that would have shown it is gone; documented as such in the ref's own
+     header comment for a future reader (kept for a potential future
+     accessible-name use, not dead code by mistake).
+  - **Real regression found and fixed along the way, in my own lane**:
+     `app/lib/factConditions.ts`'s generic `formatUnknown` fallback loop
+     iterates every own-enumerable key on a `Fact` not in
+     `HANDLED_OR_LABEL_KEYS` — `annotations` (an array, now required on every
+     fact) was never in that allowlist, so EVERY fact's notes column was
+     leaking a garbled `annotations: 0 [object Object]` bit (confirmed via a
+     quick `vite-node` repro before fixing, then again after — output went
+     from `'self · annotations: 0 [object Object]'` to `'self'`). Added
+     `'annotations'` to `HANDLED_OR_LABEL_KEYS` with a comment explaining
+     why (positional oracle-text-pointer metadata, not a human-facing
+     condition — same treatment `sourceText`/`id`/`highlight` got before
+     they were dropped from `Fact` entirely). This predates this task (any
+     card with real `annotations` would have hit it) but wasn't caught until
+     now since summon-bahamut is the only card that has `annotations` at
+     all.
+  - **Test fixtures fixed**: `app/lib/factConditions.test.ts`'s ~25 fixture
+     facts all still had a literal `id: '...'` field (a artifact of pre-
+     `Fact.id`-removal fixtures) — harmless while `'id'` was in the
+     allowlist, but once removed per this task's own instruction, every one
+     of those facts started leaking `id: <value>` into the notes column via
+     the same fallback loop above, breaking 23/23 of that file's tests at
+     runtime (types didn't catch it — test files aren't covered by
+     `vue-tsc -p .`'s project references, confirmed by checking
+     `tsconfig.json`'s `references`). Stripped every `id: '...',`
+     (single-line and multi-line literal forms) and one stray
+     `sourceText: undefined,` line via a small Python regex pass, re-ran:
+     115/115 pass across the full `app/lib` suite.
+  - **Critical, unrelated, engine-owned bug found — flagged, NOT fixed
+     here** (out of this task's own explicit "don't touch
+     `functional-model/`" constraint): `functional-model/synergy.ts`'s own
+     `factIdentity(fact)` (the exact function this task's `factKey()` rework
+     was told to mirror) does `` `...${JSON.stringify(fact.annotations[0])}` ``
+     with NO optional chaining, and `findInteractionsForCard`'s `matchOne`
+     calls it unconditionally on `theirs` for every OTHER card's facts in
+     the whole pool during cross-card matching — not just the calling
+     card's own facts. Since `annotations` is only actually backfilled
+     on-disk for summon-bahamut (confirmed: `grep -l annotations
+     functional-model/cards/*/synergy.json` → exactly 1 of 320 cards), this
+     throws `TypeError: Cannot read properties of undefined (reading '0')`
+     for literally any card whose interactions touch an un-backfilled card
+     — which is effectively every card in the pool right now. Confirmed
+     live: `curl localhost:3000/api/card/fin/1` AND `.../fin/9` both 500
+     with this exact stack trace, on a freshly restarted dev server, with
+     none of my own changes able to cause it (I never touched
+     `functional-model/synergy.ts` this task, confirmed via `git diff`
+     showing my diff scoped elsewhere). This is uncommitted, in-flight work
+     already sitting in the working tree (confirmed via `git diff --
+     functional-model/synergy.ts` — the `factIdentity` function and its
+     unguarded `.annotations[0]` read are part of the SAME uncommitted
+     engine change this task's own brief describes), almost certainly
+     already known to whoever's mid-editing it live in a concurrent
+     session, not something introduced by this task. **This currently
+     breaks EVERY card page and the graph-links endpoint app-wide**, not
+     just fin/1 — flagging with real urgency for the orchestrator to route
+     to `engine` immediately (trivial fix: `fact.annotations?.[0]`, or gate
+     the whole call behind an "is this card annotation-opted-in" check
+     until the pool-wide backfill lands). Because of this, I could NOT get
+     a live browser/Playwright confirmation of fin/1's Facts tab this
+     round — verified my own logic instead via a standalone `vite-node`
+     script that replayed the real summon-bahamut `synergy.json` facts (12
+     facts, matches the expected count post `self-battlefield` removal)
+     against the real Scryfall oracle text/type line for a hand-built
+     `factKey`/`factSourceText`, confirming: unique non-crashing keys for
+     all 12 facts, sensible full-line tooltips for `oracle`-targeted facts
+     (e.g. "IV — Mega Flare — This creature deals damage..."), and correct
+     substring tooltips for `typeLine`-targeted ones ("Creature",
+     "Enchantment Creature").
+  - `npx vue-tsc --noEmit -p .`: exit 0 (checked after every edit round).
+    `npx vitest run app/lib`: 115/115 pass (full suite, includes the fixed
+    `factConditions.test.ts`).
+  - **Contract note**: `.claude/contracts/card-schema.md`'s own "Fact-to-
+    oracle-text pointers" section already fully and correctly described
+    everything this task needed (the `Fact.id` removal, the new
+    `factIdentity` tuple, the `sourceText`/`highlight` removal, the exact
+    hover-tooltip derivation) — no mismatch found, it was accurate and
+    complete going in. Worth the orchestrator knowing the `factIdentity`
+    crash above isn't a contract-description problem — it's a real runtime
+    gap in the engine's own generic matching code that the contract
+    (correctly) doesn't get into that level of implementation detail on.
+
+- 2026-09-11 (later still): Finished the `Fact.annotations` pointer-based
+  migration engine handed off (`.claude/contracts/card-schema.md`'s
+  "Fact-to-oracle-text pointers" section) — card side is now fully off the
+  old live-recomputed `annotateOracleText`/`AnnotatedSegment`/
+  `AnnotatedFactRef` segment-tree design, scoped/verified against
+  summon-bahamut (fin/1) per the task's own constraint.
+  - `server/api/card/[set]/[number].ts`: `buildAnnotatedCard` no longer
+    calls `annotateOracleText` — each face now serves raw `oracleText:
+    string` (real `\n`s, untouched) instead of `oracleLines:
+    AnnotatedSegment[][]`. Dropped the `annotateOracleText` import entirely.
+  - `app/types.ts`: `AnnotatedFace.oracleLines` → `oracleText: string`;
+    dropped the now-unused `AnnotatedSegment` import.
+  - `app/components/FunctionalModelText.vue` — the real rewrite. New props:
+    `facts?: Fact[]` (every visible source+sink fact, same list the Facts
+    tab itself is built from) alongside the existing `card`/`highlightKey`/
+    `selfFacts`/`headerHighlightIndex`. `selfFacts` type changed from
+    `Map<number, AnnotatedFactRef[]>` to `Map<number, Fact[]>` — the
+    component now carries real `Fact` objects throughout instead of the
+    deprecated slim ref shape, computing `describeFact(fact)` at render
+    time (imported from `functional-model/synergy.ts` — already an
+    established, if backwards-per-the-contract's-own-note, import the card
+    page itself already makes; not a NEW engine-owned function added to
+    that boundary, same `describeFact` both sides already shared). New
+    local `Segment { text: string; facts?: Fact[] }` type replaces
+    `AnnotatedSegment`. New `buildLineSegments(lineText, lineIndex, facts)`
+    ports `annotateOracleText`'s own overlap/merge algorithm BYTE-FOR-BYTE
+    (sort by `(start, end)`, exact-duplicate ranges merge their facts
+    together, overlapping-but-different ranges keep whichever sorted
+    first) — the only change is reading pre-baked `fact.annotations[].{line,
+    start,end}` per fact instead of re-deriving whole-text ranges from live
+    `sourceText`/`highlight` `indexOf` search. New `faceLines` computed
+    (one entry per face, one entry per line) replaces the server-served
+    `face.oracleLines` as the template's iteration source. New
+    `factFaceIndexFor(fact, faceCount)` — `faceCount<=1` always 0, else
+    `fact.face==='back'?1:0` — matches a fact to its owning face (needed to
+    scope which facts feed a given face's own line-segment build); no
+    fallback heuristic needed since annotation `line` numbers are already
+    computed relative to whichever face `Fact.face` names. `factKey`,
+    `isRowHighlighted`, `segColor`, `show`/`hide`, `scrollToFace` all kept
+    their EXACT prior behavior/signatures conceptually, just operating on
+    `Fact`/`Segment` instead of `AnnotatedFactRef`/`AnnotatedSegment`.
+  - `app/lib/factOrder.ts` — `orderByTextPosition` DROPPED its second
+    `faces: AnnotatedFace[]` parameter entirely (no longer needed: each
+    row's own `fact.annotations[0]` already carries its real `(line,
+    start)` position directly, no server-built segment tree left to walk
+    to derive one) — new signature `orderByTextPosition(rows: FactRow[])`.
+    Also deleted the now-pointless `annotatedFactRefKey` export (existed
+    solely to key an `AnnotatedFactRef` pulled from a segment tree; nothing
+    needs that anymore). Same tie-break/inherit-from-predecessor/
+    sink-before-source semantics ported over unchanged, now built off
+    `(line, start)` tuples read straight off each fact instead of
+    integer positions assigned by walking a segment array.
+    `factOrder.test.ts` fixtures rewritten to build `Fact.annotations`
+    directly (a `row(id, { line, start, role })` helper) instead of the old
+    `faceWithAnchors(...ids)` segment-tree builder — all 6 cases kept their
+    original assertions/semantics, just re-expressed against the new
+    pointer shape.
+  - `app/pages/app/card/[set]/[number].vue`: new `allSynergyFacts` computed
+    (`[...synergy.source, ...synergy.sink]`, shared by `factRows`,
+    `headerFaceFacts`, and now passed to `<FunctionalModelText :facts=.../>`
+    as its own prop). `isFactAnnotated(fact)` simplified from "walk every
+    face's `oracleLines` looking for this fact's key" to a direct
+    `!!fact.annotations?.length` check — deleted `factKeysInFaces`/
+    `mainFaceFactKeys`/`annotatedFactKeys` entirely (no segment tree left to
+    walk). `factFaceIndex(fact)` simplified similarly: the old fallback
+    heuristic (infer front/back from a real oracle-text match on face 0,
+    for a fact with no `face` set) is GONE — under the pointer model a
+    fact's own `annotations` are only ever computed relative to whichever
+    face `Fact.face` already names, so an unset `face` just defaults to
+    front (0) directly, matching the contract's own "omitted-for-
+    single-faced" convention; `annotatedFaces.value.length<=1` still
+    short-circuits to 0 first, unchanged. `headerFaceFacts`'s `Map` value
+    type changed from `AnnotatedFactRef[]` to plain `Fact[]` — no longer
+    builds a slim ref via `describeFact`, just pushes the real fact.
+    `headerLinkedFactKeys` now keys off `factKey(f)` (not raw `f.id`) for
+    consistency with `isHeaderLinkedFact`'s own lookup — strictly more
+    correct for a fact without a real `id` (latent gap in the old code,
+    doesn't change fin/1 since all its facts have real ids). Both
+    `orderByTextPosition(...)` call sites in `factRowGroups` dropped their
+    second `faces` argument. Dropped the now-unused `AnnotatedFactRef`/
+    `AnnotatedFace` type imports and `annotatedFactRefKey` import.
+  - Verified live against the ALREADY-RUNNING dev server for fin/1 (no
+    restart needed — this is a client+API-route change, not the
+    functional-model-source-tree dev cache the project's documented
+    stale-HMR gotcha is about; confirmed via a direct `/api/card/fin/1`
+    fetch that `annotatedCard.faces[0]` already has `oracleText` not
+    `oracleLines`): exactly 5 underlined `cursor-help` spans total — 4 body
+    spans (`Sacrifice after IV` merging self-sacrifice-graveyard+
+    self-sacrifice's identical range; `Destroy up to one target nonland
+    permanent` merging destroy-act+destroy-nonland; `Draw two cards` alone;
+    the Mega Flare damage clause merging chapter-iv-damage+mega-flare-you+
+    mega-flare-opp's identical range) + 1 header span (`Summon: Bahamut`,
+    the 5 real still-unannotated self facts: self-cast/self-enters/
+    self-battlefield/self-counters/self-dies — one more than the task
+    brief's own worked example of "3 don't" because `self-counters` also
+    has no `highlight` on disk, confirmed via the raw synergy.json read,
+    not a regression introduced here). Hovering each span pops the correct
+    tooltip content (checked via `.fixed.z-20` tooltip row text against
+    each span, matches `describeFact` output for the exact facts on that
+    span). Cross-highlight confirmed BOTH directions: hovering the Facts
+    tab's "Cast a spell" row label adds `bg-blue-400/20` to the header
+    span (header-linked fact); hovering the "Card draw" row label adds
+    `bg-surface/60` to the "Draw two cards" body span (body-linked fact) —
+    both via throwaway Playwright scripts (repo-root temp files, deleted
+    after). `npx vue-tsc --noEmit -p .`: exit 0. `npx vitest run
+    app/lib/factConditions.test.ts app/lib/factOrder.test.ts`: 30/30 pass
+    (6 factOrder cases rewritten for the new fixture shape, same
+    assertions); `npx vitest run app/lib`: 115/115 pass (full app/lib
+    suite, nothing else touched).
+  - Confirmed fully off `AnnotatedSegment`/`AnnotatedFactRef`/
+    `annotateOracleText` — grepped the whole `app/`+`server/` tree, zero
+    remaining imports/type-usages/call-sites; the only hits left are
+    historical/explanatory prose comments (a few left deliberately, e.g.
+    FunctionalModelText.vue's own doc comment naming the algorithm it
+    ported from) that don't reference the actual exports. **Safe for
+    `engine` to delete `annotateOracleText`/`AnnotatedSegment`/
+    `AnnotatedFactRef` from `functional-model/synergy.ts` outright.**
+  - No `.claude/contracts/card-schema.md` mismatch found — the "Fact-to-
+    oracle-text pointers" section's own description of the handoff (shapes,
+    file-by-file plan) matched what was actually on disk exactly. Only
+    flag: that section is still headed "IN PROGRESS" and ends with "card
+    side is not [done]" — now stale, worth the orchestrator updating it to
+    reflect this task's completion (not done here — out of this agent's
+    own edit scope for a contract file).
+  - Scope reminder for whoever does the pool-wide `annotations` backfill
+    next (engine-side): every card OTHER than summon-bahamut currently has
+    `annotatedCard.faces` but zero `Fact.annotations` anywhere, so
+    `FunctionalModelText.vue` will render them with zero inline-highlighted
+    spans (graceful degrade, same tolerance the old code had for an
+    unmatched `sourceText`/`highlight`) until that backfill lands — not a
+    bug, per this task's own explicit scope constraint, just flagging so
+    it isn't mistaken for one later.
+
+
+- 2026-09-11 (even later): Facts-review-confirm now snapshots real oracle
+  text into `progress.json`, for a future (not-yet-built) staleness check —
+  baked `Fact.annotations` (line/char pointers into oracle text, see
+  card-schema.md's "Fact-to-oracle-text pointers" section) are never
+  re-validated live anymore, so if Scryfall's own text for a reviewed card's
+  printing is ever corrected after review, nothing currently catches it.
+  - `server/api/card/review-status.ts`: when `field === 'review'` and
+    `reviewed === true`, resolves the real Scryfall card for `body.set`/
+    `body.number` (new optional request fields) — local `data/cards.db` by
+    `set_code`+`collector_number` first, live
+    `https://api.scryfall.com/cards/:set/:number` fallback (small deliberate
+    duplicate of `server/api/card/[set]/[number].ts`'s own
+    `lookupCardBySetNumber`, not an import of it — that file's own helpers
+    aren't exported, and this route only needs the single-card read case,
+    not its token/interaction machinery) — then writes `oracleTextSnapshot`
+    (bare `string` for a single-faced card, `{front, back?}` for a DFC —
+    matches `Fact.face`'s own `'front'|'back'` vocabulary,
+    `functional-model/synergy.ts`) + `reviewedAt` (`YYYY-MM-DD`, same format
+    `lastVerified` already uses) into `progress.json` alongside the existing
+    `review` field write. Un-reviewing (`reviewed === false`) deliberately
+    leaves a prior snapshot untouched (no code path touches it) — flagged
+    per task instruction rather than silently deciding to clear it; no
+    strong reason found either way, "keep evidence of what was last
+    reviewed" seemed the safer default.
+  - Re-snapshots on every confirm, not just the first — re-reviewing after a
+    content fix re-baselines the staleness check too (matches this
+    project's existing "review flag resets on content change" convention in
+    spirit — the artifact backing the review gets refreshed, not left
+    pointing at stale text).
+  - `app/pages/app/card/[set]/[number].vue`'s `toggleReviewStatus`: POST
+    body now also sends `set: String(route.params.set), number:
+    String(route.params.number)` unconditionally (harmless/ignored
+    server-side for the `scenariosReview`/`interactionsReview` fields) —
+    the page is always at that exact `/app/card/:set/:number` route, so it
+    already has both without a new fetch; simpler and more precise (exact
+    printing) than reconstructing a by-name cross-set search purely for
+    this.
+  - Explicitly did NOT build any staleness-comparison/drift-warning UI —
+    out of scope per task, snapshot-writing only.
+  - Verified end-to-end against summon-bahamut (fin/1) via direct
+    `curl -X POST /api/card/review-status` against the running dev server:
+    flipping `review: 'ai' -> 'human'` (with `set:'fin', number:'1'`) wrote
+    a real, correct `oracleTextSnapshot` (matches Summon: Bahamut's actual
+    Saga oracle text exactly, including the reminder-text parenthetical and
+    all 4 chapters + Flying) and `reviewedAt: '2026-09-11'`; fast response
+    confirmed it resolved via the local `cards.db` path, not a live network
+    call. Flipping back to `'ai'` confirmed the snapshot fields survive
+    untouched, per design. Left the repo in its EXACT pre-test state
+    afterward: `functional-model/cards/summon-bahamut/progress.json`'s
+    `review` was already `'ai'` before this task (a parallel engine-agent
+    session had it mid-edit, unrelated to this task — visible in
+    `git diff` as `lastVerified`/`notes`/`knownGaps` changes that predate
+    this task), so after testing I manually stripped just the two keys my
+    test round-trip added (`oracleTextSnapshot`/`reviewedAt`) rather than
+    `git checkout`ing the file (would have destroyed that other session's
+    legitimate uncommitted work) — confirmed via `git diff` afterward that
+    the only remaining diff on that file is the pre-existing engine-agent
+    edit, zero trace of my own test left.
+  - `npx vue-tsc --noEmit -p .`: exit 0, clean.
+  - Did not touch anything under `functional-model/` (engine-owned) besides
+    the transient test round-trip on `progress.json`, fully reverted. Did
+    not touch `FunctionalModelText.vue`/`app/types.ts`/`app/lib/factOrder.ts`
+    (parallel in-flight annotated-text rewrite) — confirmed by grep, this
+    task's diff is scoped to exactly `review-status.ts` +
+    `[number].vue`'s one `toggleReviewStatus` body-literal edit.
+  - No `.claude/contracts/card-schema.md` mismatch to flag — this task
+    doesn't touch the `annotations`/`AnnotationRef` rework itself, just adds
+    a sibling `progress.json` field the contract's existing "progress.json —
+    review/tagging progress state" line already covers generically (didn't
+    itemize progress.json's own field list, so no update needed there).
+
+- 2026-09-11 (later): Two small additive changes to
+  `app/pages/app/card/[set]/[number].vue`, dispatched together (same file,
+  sequenced to avoid a race with a separate in-flight engine edit to
+  `summon-bahamut/synergy.json` — that file was NOT touched here).
+  1. **Facts tab debug column**: user spotted a real duplicate-labeling bug
+     on fin/1 (two rows both "Enters the battlefield / self" — flagged
+     separately for the `engine` agent, not fixed here) and asked for a
+     standing way to inspect a row's raw `Fact` JSON without switching to
+     the JSON tab/devtools. Added a new trailing `<td>` per Facts row:
+     compact single-line `JSON.stringify(fact)` in small muted monospace
+     (`text-[10px] text-muted/50`, matches the JSON tab's own `<pre>`
+     styling), full pretty-printed (`JSON.stringify(fact, null, 2)`) as the
+     `title` attribute for hover — same "compact in-cell, detail on hover"
+     convention the label cell already uses for `sourceText`. New
+     `SHOW_FACT_DEBUG_COLUMN = true` const (default ON — standing debug aid,
+     not the value/weight column's existing default-OFF convention) plus
+     `factDebugJson`/`factDebugJsonPretty` helpers next to `factLabel`/
+     `factLinkTitle`. Group-header colspan updated to
+     `(SHOW_FACT_VALUE_COLUMN ? 4 : 3) + (SHOW_FACT_DEBUG_COLUMN ? 1 : 0)`
+     so a multi-face card's section header still spans the true visible
+     column count with both toggles independent. Purely additive — didn't
+     touch the value bar/role icon/label/conditions columns.
+  2. **JSON tab → modal**, same-session follow-up ask (user found the
+     inline `<pre>` "very hard to read" squeezed into the tab's small
+     fixed-height box): replaced that inline `<pre>` with a
+     `<UButton>View JSON</UButton>`; content unchanged (same
+     `functionalModelJson` computed, already pretty-printed) now renders in
+     a `UModal` (`v-model:open="jsonModalOpen"`, `title="Functional model
+     JSON"`, `:ui="{ content: 'max-w-3xl' }"`) opened on click, placed at
+     the template's top level as a sibling of the page's root `<div>` —
+     mirrors `AppHeader.vue`'s own only pre-existing `UModal` usage in this
+     codebase exactly (same `v-model:open`/`title`/`#body` slot shape; that
+     was the only other call site, checked via grep first). No new
+     import needed — `UModal`/`UButton` are Nuxt UI auto-imports, confirmed
+     by `AppHeader.vue` itself importing neither explicitly.
+  - Verified live (Playwright, throwaway scripts copied into the repo root
+    then deleted after — module resolution needs `node_modules` on an
+    ancestor path, per this project's own established convention) against
+    the already-running dev server: fin/1 (migrated, 13 facts) — debug
+    column present on all 13 rows, one screenshot confirms readable compact
+    JSON per row with existing columns (icon/label/conditions) visually
+    unaffected; fin/196 (still-unmigrated legacy bare-`zone` shape) — debug
+    column correctly shows that different shape (`{"zone":...,"subject":
+    "self",...}` vs. fin/1's `to`/`from` rework shape), confirming the
+    column is a raw passthrough with zero shape assumptions, not a
+    v2-only feature. JSON-tab modal: clicking "View JSON" pops a real
+    modal titled "Functional model JSON" containing the full pretty JSON
+    (screenshot confirms), page dims behind it (standard UModal overlay).
+  - `npx vue-tsc --noEmit -p .`: exit 0 (checked after each of the two
+    changes). `npx vitest run app/lib/factConditions.test.ts
+    app/lib/factOrder.test.ts`: 30/30 pass, unaffected (this task touched
+    only the page template/script, not either lib file).
+  - No `.claude/contracts/card-schema.md` mismatch — both changes are
+    pure app/-side display/interaction changes, no engine-owned `Fact`
+    shape read differently than before (the debug column deliberately
+    passes the whole object through verbatim via `JSON.stringify`, so it
+    can't itself drift from whatever shape `Fact` actually is).
+  - Did NOT touch `functional-model/cards/summon-bahamut/synergy.json` or
+    `scenarios.ts` per explicit instruction (another agent mid-edit there);
+    the real duplicate-label bug that prompted this task is that agent's
+    fix, not addressed here.
+  - **Same-session correction/follow-up**: the "hard to read, make it a
+    modal" ask was actually about the debug column's own inline
+    hover-title (item 1 above), not the separate JSON tab (item 2) — I'd
+    misread it as the latter first. Fixed by generalizing: renamed
+    `jsonModalOpen` to a reusable `debugModalOpen`/`debugModalTitle`/
+    `debugModalContent` trio plus one `openDebugModal(title, content)`
+    setter, backing a SINGLE shared `UModal` used by both callers rather
+    than two near-identical modals. The JSON-tab button now calls
+    `openDebugModal('Functional model JSON', functionalModelJson ?? '')`;
+    each Facts-row debug cell's text is now wrapped in a `cursor-pointer
+    hover:text-text hover:underline` `<span>` (same interactive-label
+    convention `factLabel`'s own cursor-pointer already uses) with
+    `@click="openFactDebugModal(row.fact)"` — a new small helper that calls
+    `openDebugModal` with a per-fact title (`` `Fact JSON — ${fact.id ??
+    factKey(fact)}` ``) and `factDebugJsonPretty(fact)` as the body. The
+    cell's native `:title` attribute (the original, still-hard-to-read
+    hover tooltip) is REMOVED entirely — click-to-modal fully replaces it,
+    not layered alongside it. `factDebugJson`/`factDebugJsonPretty`
+    themselves are unchanged; only how the pretty version surfaces
+    changed. Label/notes columns untouched, scoped purely to the debug
+    column per instruction.
+  - Verified live: clicking a Facts-row debug cell (fin/1's "Cast a spell"
+    row) opens a modal titled "Fact JSON — self-cast" with that one fact's
+    full pretty JSON (screenshot confirms); the JSON tab's "View JSON"
+    button still opens the same shared modal with the whole-model JSON
+    under its own title — both reuse one `UModal` instance correctly, no
+    stale `jsonModalOpen` references left (grepped clean).
+    `npx vue-tsc --noEmit -p .` exit 0; `npx vitest run
+    app/lib/factConditions.test.ts app/lib/factOrder.test.ts` 30/30 pass
+    (unaffected, no lib file touched by this round either).
+  - **Third same-session addendum**: added JSON syntax color-highlighting to
+    both of these modals. Checked for an existing `highlight.js` usage
+    first (`grep`) — found one already-established pattern,
+    `FunctionalModelScript.vue` (highlights the Card Definition tab's
+    TypeScript source): `highlight.js/lib/core` + registering only the one
+    needed language module (avoids bundling every language hljs knows),
+    `v-html`-bound `<code>` inside a `<pre>`, and — deliberately, per that
+    file's own comment — NO stock hljs theme stylesheet; instead a small
+    scoped `<style>` block hand-maps hljs's token classes onto this app's
+    OWN existing palette (the same hex values `ForgeCardScript.vue`'s
+    `FORGE_LINE_COLORS`/the card page's `SYNERGY_ROLE_COLORS` already use),
+    with every selector wrapped in `:global(...)` since `v-html` content
+    never receives Vue's scoped `data-v-xxxx` attribute. Followed this
+    exact pattern rather than pulling in a `highlight.js/styles/*.css`
+    theme (would fight the app's own dark theme, and there's already a
+    from-scratch precedent one file away).
+  - New shared `app/components/JsonHighlight.vue` (`props: { json: string
+    }`, `hljs.registerLanguage('json', ...)`, single-root `<pre><code
+    v-html=.../></code></pre>`) — one small component reused by BOTH
+    modals rather than duplicating the `hljs.highlight()` call twice, per
+    the coordinator's explicit ask. JSON's own hljs token set (confirmed by
+    reading `node_modules/highlight.js/lib/languages/json.js` directly):
+    `.hljs-attr` (keys), `.hljs-string`, `.hljs-number`, `.hljs-literal`
+    (true/false/null), `.hljs-punctuation` (braces/colons/commas — JSON has
+    no keyword/built_in/title tokens, so those `FunctionalModelScript.vue`
+    mappings don't apply here). Mapped: attr → cyan `#9dcacf` (matches
+    `FunctionalModelScript.vue`'s keyword color), string → green `#9ecfa0`
+    (matches its string color), number/literal → purple `#cfa9d8` (matches
+    its number/literal/type color), punctuation → `var(--color-muted)`.
+    Component's own root `<pre>` only carries font/text-size classes
+    (`font-mono text-[10px] leading-relaxed text-text/80`); layout classes
+    (`max-h-[70vh] overflow-auto rounded border border-border bg-panel
+    p-2`) are passed in as a plain `class` attr from each call site and
+    land on that same root via Vue's normal single-root attrs fallthrough
+    — no `inheritAttrs: false`/explicit passthrough plumbing needed.
+  - Card page's shared debug-modal body (`<template #body>`) now renders
+    `<JsonHighlight :json="debugModalContent" class="max-h-[70vh]
+    overflow-auto rounded border border-border bg-panel p-2" />` in place
+    of the old plain `<pre>{{ debugModalContent }}</pre>` — no other change
+    to `debugModalOpen`/`debugModalTitle`/`openDebugModal`/
+    `openFactDebugModal` wiring from the prior addendum; this was purely a
+    "how does the body render" swap. No explicit import needed —
+    `JsonHighlight` auto-imports from `app/components/` same as
+    `FunctionalModelScript`/`ForgeCardScript` already do in this same file
+    (confirmed via grep: neither has an explicit import statement either).
+  - Verified live (Playwright): both modals — the Facts-row "Fact JSON —
+    self-cast" modal and the JSON tab's "Functional model JSON" modal —
+    render real `.hljs-attr`/`.hljs-string`/`.hljs-number`/`.hljs-literal`
+    spans (12 tokens on the single-fact modal, 291 on the whole-model one)
+    with the colors described above; screenshots confirm cyan keys, green
+    string values, purple `-1`/`1` numeric values, muted punctuation,
+    matching `FunctionalModelScript.vue`'s established look exactly.
+    `npx vue-tsc --noEmit -p .` exit 0; `npx vitest run
+    app/lib/factConditions.test.ts app/lib/factOrder.test.ts` 30/30 pass.
+  - No contract mismatch — pure app/-side display component, no
+    engine-owned shape touched.
+  - **Fourth same-session correction (partial revert)**: the JSON tab
+    itself should NOT go through the button/modal — that indirection was
+    only ever meant for the Facts-tab per-fact debug cells. Reverted the
+    JSON tab back to rendering directly inline, but keeping the new
+    `JsonHighlight` coloring (not the old plain `<pre>`): `<template
+    v-else-if="store.functionalModelTab.value === 'json'">` now renders
+    `<JsonHighlight :json="functionalModelJson ?? ''" class="max-h-[32rem]
+    overflow-auto rounded border border-border bg-panel p-2" />` directly
+    — no button, no click required. Sized `max-h-[32rem]` (matches
+    `FunctionalModelScript.vue`'s own Card Definition tab box, a fair
+    "how big should the non-modal one be" default) instead of the old
+    modal's `max-h-[70vh]` (kept only on the Facts-cell modal, where the
+    extra room is still warranted). The shared `debugModalOpen`/
+    `debugModalTitle`/`debugModalContent`/`openDebugModal` machinery and
+    its `UModal` are UNCHANGED and left in place — still exactly what the
+    Facts-tab debug cells use, per instruction. Updated the stale
+    doc-comment above `debugModalOpen` (previously described BOTH the JSON
+    tab and Facts-cell as modal callers) to describe it as
+    Facts-debug-cell-only now.
+  - **Fifth same-session correction (debug column → icon-only)**: the
+    Facts-tab debug cell itself should show ONLY a trigger, no raw JSON
+    text at all. Replaced the clickable compact-JSON `<span>` with a plain
+    `<Icon name="lucide:braces" class="h-3.5 w-3.5 cursor-pointer
+    text-muted/50 hover:text-text" title="View this fact's raw JSON"
+    @click="openFactDebugModal(row.fact)" />` — same `h-3.5 w-3.5` sizing
+    convention the row's own role icon (source/sink `lucide:log-out`/
+    `lucide:log-in`) already uses. Deleted the now-fully-unused
+    `factDebugJson()` compact-string helper entirely (only
+    `factDebugJsonPretty()` remains, still used by `openFactDebugModal`)
+    — nothing else referenced it.
+  - Verified live (Playwright) after both corrections together: Facts tab
+    — 13 icon-only debug cells on fin/1 (confirmed via the icon's own
+    `title` attribute, `[title="View this fact's raw JSON"]`, count 13);
+    a debug cell's own `<td>` `textContent` is empty string (no visible
+    JSON anywhere in the cell, just the icon); clicking the icon still
+    opens the correct per-fact modal (`Fact JSON — self-cast` for the
+    first row, full pretty+highlighted content, screenshot confirms).
+    JSON tab — zero "View JSON" buttons found; `.json-highlight-root`
+    renders directly in the tab body (count 1) with real highlighted
+    tokens (162 `.hljs-attr` matches on fin/1's full model JSON);
+    screenshot confirms colored JSON visible immediately, no click
+    needed, roomier than the pre-this-whole-task original box.
+    `npx vue-tsc --noEmit -p .` exit 0; `npx vitest run
+    app/lib/factConditions.test.ts app/lib/factOrder.test.ts` 30/30 pass.
+  - Net state after all five rounds this session: Facts-tab debug column =
+    icon-button-only, opens a per-fact modal with highlighted JSON. JSON
+    tab = highlighted JSON rendered directly inline, no modal. Both share
+    `JsonHighlight.vue`; only the Facts-tab side uses the `UModal`/
+    `debugModal*` machinery.
+
+- 2026-09-11: Wired the Facts tab's notes/conditions column to engine's new
+  SOURCE `ZoneFact.to`/`from` zone-CHANGE shape (2026-09-11 rework,
+  `functional-model/synergy.ts`). **`describeFact()` already fully handled
+  the LABEL side with zero card-agent changes needed** — it calls
+  `zoneMovementName(fact.from, to)` internally and falls back to the
+  unchanged bare "<zone> presence" phrasing when the (from,to) pair isn't
+  catalogued, so the Facts tab's `factLabel`/`factKey` (both call
+  `describeFact` directly, `app/pages/app/card/[set]/[number].vue`) needed
+  NO changes at all — confirmed live, fin/1's `self-battlefield` renders
+  "Enters the battlefield" and `self-sacrifice-graveyard` renders "Dies"
+  purely from the existing import.
+  - **Real change was the notes column** (`app/lib/factConditions.ts`):
+    added `movementOriginPhrase(fact: ZoneFact)` — shows `from <zone>` in
+    the notes column ONLY when the movement's origin is real, declared data
+    NOT already implied by a named movement (checked via
+    `zoneMovementName(fact.from, to)` returning truthy = redundant, skip).
+    E.g. "Dies" already means battlefield→graveyard per CR 700.4 regardless
+    of cause (per `ZONE_MOVEMENT_NAMES`'s own doc comment) — repeating "from
+    battlefield" in the notes column for `self-sacrifice-graveyard` would be
+    pure noise, so it's suppressed; a hypothetical future `(from:'Library',
+    to:'Exile')` fact (no catalogued name) WOULD show "from library" since
+    the fallback "<zone> presence" label says nothing about origin. Never
+    shows `to` itself (always redundant with either the movement name or the
+    zone the fallback label already names). Added `to`/`from` to
+    `HANDLED_OR_LABEL_KEYS` so they never leak raw via the generic
+    `formatUnknown` fallback loop (would have rendered "to: Battlefield" as
+    a bit otherwise, since that loop is exclusion- not allowlist-based).
+  - **Real bug found and fixed in the same file**: the `constraintPhrases`
+    call site picking a zone's plural noun (`ZONE_NOUN[fact.zone] ??
+    'permanents'`) read `fact.zone` directly — for a rework-shaped fact
+    with only `to` set, `fact.zone` is `undefined`, so it always fell back
+    to generic `'permanents'` regardless of the real destination zone (e.g.
+    a hypothetical `to:'Graveyard', types:{has:['Creature']}}` fact would
+    render "creature permanents" instead of "creature cards"). No currently-
+    authored fact exercises this (both of summon-bahamut's converted facts
+    have no `types`/`cmc` constraint), so it wasn't visibly broken yet, but
+    would have silently misrendered the first migrated fact that does carry
+    one. Fixed by adding a local `effectiveZone(fact: ZoneFact)` — a small
+    stable duplicate of `synergy.ts`'s own (unexported) private
+    `effectiveZone`, same "small duplicate rather than widen the engine
+    import" trade this file already uses for `typeBits`/`ZONE_NOUN` — and
+    using it at that call site instead of raw `fact.zone`. Added a
+    dedicated test (`to`-only fact with `types.has` → asserts "creature
+    cards", would have been "creature permanents" pre-fix).
+  - **Real regression found and fixed, NOT part of this file at all**:
+    `server/utils/functionalModelPool.ts`'s own `isV2Shaped()` — a 4th, until
+    now unknown-to-engine local copy of the same predicate `engine`'s own
+    notes document fixing in 3 places (`scripts/{verify-synergy,
+    find-synergies,compute-weights}.mjs`) — still only checked `'zone' in f
+    || 'event' in f`. Since summon-bahamut's two converted facts have
+    neither key anymore (only `to`/`from`), the pool's `.every()` check
+    failed for the WHOLE card, `loadCardSynergy` returned `null`, and the
+    live Facts tab regressed to "Not yet migrated to v2 synergy.json." —
+    confirmed via a real Playwright screenshot before the fix. This is the
+    file `server/api/card/[set]/[number].ts` (in-lane) actually calls for
+    both its prod and dev code paths, so it's what the browser really sees,
+    not just an internal helper. Fixed by widening the same `.every()`
+    predicate to also accept `'to' in f || 'from' in f`, mirroring exactly
+    what `engine` already did to its own 3 copies. Restarted the dev server
+    fresh (server-side file — same documented stale-HMR gotcha as
+    always) and reconfirmed live: fin/1's Facts tab now shows "Facts 13"
+    (was "Not yet migrated...") with all 13 rows rendering correctly.
+  - Verified live via throwaway Playwright scripts (repo-root temp files,
+    deleted after — module resolution needs `node_modules` on an ancestor
+    path): fin/1's 13-row Facts table — `self-battlefield` → label "Enters
+    the battlefield", notes "self" (no redundant to/from noise);
+    `self-sacrifice-graveyard` → label "Dies", notes "self" (same); the two
+    `mega-flare-you`/`mega-flare-opp` SINK facts unaffected, still "Battlefield
+    presence" / "yours"/"other" (sinks never get `to`/`from`, untouched by
+    design). fin/196 (A Realm Reborn) — a genuinely still-unmigrated card
+    with a bare-`zone` source fact — renders unchanged ("Battlefield
+    presence" / "self"), confirming no regression pool-wide.
+    `npx vitest run app/lib/factConditions.test.ts app/lib/factOrder.test.ts`
+    30/30 pass (6 new: 2 updated stale fixtures for the real current
+    `self-battlefield`/`self-sacrifice-graveyard` on-disk shape — the old
+    tests still asserted the pre-rework bare-`zone` shape and stale id — plus
+    4 new cases covering non-redundant `from`, sink-untouched,
+    legacy-bare-`zone`-untouched, and the `effectiveZone` noun fix).
+    `npx vue-tsc --noEmit -p .` exit 0.
+  - **Contract gap to flag for orchestrator**: `synergy.ts`'s own private
+    `effectiveZone` is NOT exported (confirmed via grep — no `export`
+    keyword) despite the task brief's phrasing implying it might be
+    ("...(if exported)"). Not blocking — this file already had an
+    established "small stable local duplicate" convention for exactly this
+    kind of single small engine-internal helper (`typeBits`/`ZONE_NOUN`), so
+    a local `effectiveZone` mirror here was the right call either way — but
+    worth `engine` knowing a second consumer (this file) now depends on the
+    exact same `zone ?? to` derivation staying in sync if that private
+    function's own logic ever changes shape.
+  - **Not a `card-schema.md` mismatch** — the contract's existing "generated
+    output" framing (`synergy.json`/`trace.json` shapes) was accurate
+    throughout; the regression was a local, un-flagged 4th duplicate of a
+    predicate `engine`'s own rework already knew to widen elsewhere, not a
+    stale contract description.
+
+- 2026-09-10 (even later): `app/lib/factConditions.ts`'s omitted-`controller`
+  case ("either player") now emits NOTHING in the notes column, matching
+  `recipientPhrase`'s existing omitted-`recipient` treatment fixed earlier
+  the same day — was previously the literal phrase "either player's".
+  `controllerPhrase(side: Side)` narrowed to take a real `Side` only (no
+  more `undefined` branch); the call site in `factConditions()` changed
+  from unconditional `bits.push(controllerPhrase(fact.controller))` to an
+  `else if (fact.controller)` guard alongside the existing `isSelfReferencing`
+  branch — so a genuinely either-player fact contributes zero bits for this
+  dimension instead of a neutral placeholder. Updated the 5 test
+  expectations in `factConditions.test.ts` that depended on the old
+  "either player's · ..." prefix (destroy-nonland, types.hasAny, counterType
+  weird-case, cmc/power/toughness/amount/name stat-check) to drop that
+  prefix entirely; all 19 tests still pass. Verified live via Playwright
+  against the running dev server (`/app/card/fin/1` Summon: Bahamut's
+  "Dying → nonland permanent" row, and a second real-pool example,
+  `/app/card/fin/9` Battle Menu — its `destroy`/pump/token sink+source facts
+  that never set `controller` — both render with the controller dimension
+  fully absent now; "yours"/"other" still show correctly wherever
+  `controller` actually is set). No contract mismatch found — this was
+  purely a card-owned presentation file, `card-schema.md` wasn't implicated.
+
+- 2026-09-10 (later still): Removed the Facts tab's small link-icon glyph
+  entirely per explicit instruction — coverage is now complete (every fact
+  links to either a body oracle-text span via `isFactAnnotated` or the
+  header name via `isHeaderLinkedFact`), so the icon was on every row and no
+  longer distinguished anything. Kept the underlying link BEHAVIOR, moved
+  onto the row's own label `<span>` instead of a dedicated icon element.
+  - `app/pages/app/card/[set]/[number].vue`: deleted the icon-slot `<span>`
+    + two conditional `<Icon name="lucide:link-2">` elements from each Facts
+    row. New helpers next to `factLabel`: `factLinkTitle(fact)` (returns
+    'Linked to card text' for `isFactAnnotated`, 'Linked to the card name
+    above — click to jump to it' for `isHeaderLinkedFact`, else
+    `undefined`), `onFactLabelEnter`/`onFactLabelLeave` (set/clear
+    `headerHighlightIndex` — only when `isHeaderLinkedFact`, no-op
+    otherwise) and `onFactLabelClick` (calls the existing
+    `scrollToHeaderName(factFaceIndex(fact))` — only when
+    `isHeaderLinkedFact`). The label `<span>` itself now carries
+    `:title="factLinkTitle(...)"`, `:class="{ 'cursor-pointer':
+    isHeaderLinkedFact(...) }"`, and the three handlers above wired to
+    `@mouseenter`/`@mouseleave`/`@click`. A body-linked fact's own
+    cross-highlight (hovering it highlights its oracle-text span, and vice
+    versa) needed NO new wiring at all — it already came from the row's own
+    pre-existing `<tr>` `@mouseenter="hoveredFactKey = factKey(row.fact)"`/
+    `@mouseleave` handlers, untouched; only the header-linked case's EXTRA
+    behavior (flash+scroll+tooltip on the header name, not just the row
+    background) needed to move off the deleted icon onto the label.
+  - `isFactAnnotated`/`isHeaderLinkedFact`/`headerHighlightIndex`/
+    `scrollToHeaderName`/`factFaceIndex` themselves are all UNCHANGED —
+    this was purely a "where does the interaction attach in the DOM"
+    change, not a logic change.
+  - Verified live: killed the already-running dev server and started a
+    fresh one (per this project's own documented stale-HMR gotcha), then
+    ran throwaway Playwright scripts (repo-root temp files, deleted after —
+    `node_modules` resolution needs them inside the tree) against
+    localhost:3000. fin/1: zero `lucide:link-2` icons found anywhere in the
+    DOM (explicit locator + full DOM scan, both 0); every one of its 12
+    fact rows now carries a real `title` on its label span (7 "Linked to
+    card text", 5 "Linked to the card name above..." — matches
+    `isFactAnnotated`/`isHeaderLinkedFact` exactly, no untitled/unlinked
+    row). Hovering a header-linked label ("Cast a spell") flashes "Summon:
+    Bahamut" with `bg-blue-400/20`; clicking it pops the real header
+    tooltip (confirmed via `.fixed.z-20` element text: "cast a spell—enters
+    the battlefield—battlefield presence—counters—dying"). Hovering a
+    body-linked label ("Graveyard presence") highlights the matching oracle
+    span ("Sacrifice after IV") with `bg-surface/60`. fin/221 (Garland,
+    Knight of Cornelia // Chaos, the Endless): front-face self fact
+    ("Battlefield presence") hover highlights "Garland, Knight of
+    Cornelia"; back-face self fact ("Library presence") hover highlights
+    "Chaos, the Endless" independently, and clicking it pops a tooltip
+    scoped to just that back-face fact ("library presence") — confirmed the
+    icon removal didn't disturb per-face routing.
+  - `npx vue-tsc --noEmit -p .`: exit 0, clean.
+  - No contract mismatch found against `.claude/contracts/card-schema.md` —
+    pure app/-side display simplification, no engine-owned shape touched.
+
+- 2026-09-10 (later): Hidden the Facts tab's value/weight column (`ValueBar`
+  1-5 dots) per explicit request — display-only toggle, data/component both
+  kept. `app/pages/app/card/[set]/[number].vue`: new top-level
+  `const SHOW_FACT_VALUE_COLUMN = false` (script setup, near the top);
+  the `<td><ValueBar :value="row.fact.value" /></td>` cell now has
+  `v-if="SHOW_FACT_VALUE_COLUMN"` and the group-header row's `colspan`
+  became `:colspan="SHOW_FACT_VALUE_COLUMN ? 4 : 3"` so a multi-face card's
+  section header still spans exactly the visible column count. Flip the
+  const back to `true` to restore — no other change needed, nothing deleted.
+  - Context: a parallel `engine` task is introducing `-1` as a valid
+    `Weight` meaning "not yet reviewed" (distinct from a real 1-5 magnitude)
+    on some hand-authored self facts. Checked every other `ValueBar` call
+    site (`grep -rn ValueBar app/`): exactly one other exists,
+    `FunctionalModelText.vue`'s own hover tooltip (shown on hovering an
+    annotated oracle-text phrase, AND — since the header-name self-fact
+    feature landed earlier the same day — on hovering a self-linked face
+    heading). That usage is NOT hidden by this task, so it needed its own
+    -1 safety: fixed `ValueBar.vue` itself (not the call site) with a small
+    `isRealValue = (v) => typeof v === 'number' && v > 0` guard, used in all
+    three places the raw `value` prop was read (title, per-dot fill class,
+    text overlay) — a `-1` (or `0`) now renders as a neutral empty bar +
+    "—" text/title, same as the existing "no value at all" (`undefined`)
+    case, instead of a nonsensical "value -1/5" title with 0 dots filled by
+    coincidence of the `n <= value` comparison (which happened to already
+    produce 0 filled dots for -1, but the title/text overlay would have
+    shown the literal "-1"). This is a real behavior change to the shared
+    component, not just the hidden column — deliberate per the task's own
+    instruction to fix it at whichever call site makes sense.
+  - Verified live: restarted the dev server (was not running at task start;
+    started fresh rather than risk stale HMR per this project's own
+    documented gotcha — see the 2026-09-09 part 5 entry below). Screenshot
+    of fin/1's Facts tab: table rows now show only 3 columns (role icon,
+    label, conditions) — confirmed via a throwaway Playwright DOM query too
+    (`tbody tr td` count 4 → 3, the `ValueBar` `<td>` renders as a
+    `<!--v-if-->` comment). Screenshot of the header self-fact tooltip
+    (hovering "Summon: Bahamut") still shows real ValueBar dots correctly
+    (4-5 filled) for its existing real 1-5 values — that surface is
+    deliberately untouched/still visible, confirmed working. No card in
+    the corpus currently carries a real `-1` yet (checked
+    `summon-bahamut/synergy.json`, the card the parallel engine task is
+    actively editing — all `value` fields still 1-5 as of this check), so
+    the -1 fallback itself couldn't be exercised end-to-end live; verified
+    by direct code reading instead (`isRealValue(-1)` is `false` by
+    construction).
+  - `npx vue-tsc --noEmit -p .`: exit 0, clean.
+  - No contract mismatch found against `.claude/contracts/card-schema.md`
+    — pure app/-side display change, `Fact.value`'s own shape/range
+    (including the new `-1` sentinel) is engine-owned and untouched here.
+
+
 Scoped working memory for the `card` specialist. Update before finishing
 any task: decisions made, open questions, current state worth resuming
 from. This is what makes a fresh respawn cheap — don't rely on transcript
 resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
+
+- 2026-09-10 (layout fix, follow-up to the self-fact-header-linking work
+  below): removed the page-level `<h1>{{ card.name }}</h1>` from
+  `app/pages/app/card/[set]/[number].vue` entirely (it duplicated the name
+  already shown right above the mana cost/type line/oracle text, inside
+  `FunctionalModelText.vue`'s own per-face heading) — per explicit
+  correction, the self-fact underline+tooltip feature (`headerFaceFacts`)
+  moved to anchor on THAT lower heading instead of the removed one.
+  - `FunctionalModelText.vue`: new optional props `selfFacts?: Map<number,
+    AnnotatedFactRef[]>` (keyed 0 front/only, 1 back — same `factFaceIndex`
+    convention the page already used) and `headerHighlightIndex?: number |
+    null`. Each face's own `<span>{{ face.name }}</span>` heading, when that
+    face has any entries in `selfFacts`, now gets the identical dashed blue
+    underline + `bg-blue-400/20` highlight class + hover behavior — reusing
+    this component's OWN existing `show()`/`hide()` tooltip machinery (same
+    floating Teleport already rendering the body-phrase tooltips) rather
+    than duplicating a second copy, by constructing a synthetic
+    `AnnotatedSegment` (`{ text: face.name, facts: selfFacts.get(fi) }`) and
+    passing it to `show()` on `@mouseenter`. This also means hovering a
+    self-fact-linked face name now naturally emits the same `hover` event
+    body-phrase hovers already do, cross-highlighting the matching Facts
+    table row too — a bonus consistency win, not separately requested but
+    matches the existing "same tooltip content/behavior" convention.
+    New `faceNameEls` template-ref array + `defineExpose({ scrollToFace
+    (index) {...} })` (`scrollIntoView` + pop the tooltip + auto-hide after
+    1600ms) replaces the page's own former `headerNameEls`/
+    `setHeaderNameEl`/`scrollToHeaderName` DOM-reaching — the page now calls
+    `functionalModelTextRef.value?.scrollToFace(faceIndex)` via a plain
+    template ref onto the component instance instead.
+  - `app/pages/app/card/[set]/[number].vue`: deleted the `<h1>` block, its
+    dedicated Teleport tooltip, and all its now-dead backing state
+    (`headerHovered`, `headerTooltipEl`, `headerTipX`/`headerTipY`,
+    `showHeaderTooltip`/`hideHeaderTooltip`, `headerPositionRequestId`,
+    `headerNameEls`/`setHeaderNameEl`, `headerNameParts`) — along with the
+    now-unused `nextTick`/`computePosition`/`offset`/`flip`/`shift`/`size`/
+    `ComponentPublicInstance` imports. Kept `headerFaceFacts` (the actual
+    per-face self-fact data, now passed to `FunctionalModelText` as
+    `:self-facts`) and `headerHighlightIndex` (now passed down as
+    `:header-highlight-index`) unchanged — both are still shared with the
+    Facts table's own header-linked row icon
+    (`isHeaderLinkedFact`/`scrollToHeaderName`), just re-plumbed to the new
+    location. `deckQty`'s "×N copies in your deck" badge (previously
+    sitting next to the name in the removed `<h1>`) moved to the top
+    nav row instead, beside "← Back to graph" — a plain `<div class="flex
+    items-center gap-3">` wrapper keeps the row's existing `justify-between`
+    (Back to graph+qty on the left, Previous/#N/Next on the right) intact.
+  - Verified live (Playwright, throwaway scripts run from inside the repo
+    root — `node_modules` resolution — deleted after) against the already-
+    running dev server: fin/1 — only one `<h1>` left on the page at all
+    (the app-shell's own "MtG Synergy Map", unrelated), "Summon: Bahamut"
+    directly above the oracle text now carries the underline, hover pops
+    the same 5-fact tooltip (Cast a spell/Enters the battlefield/Battlefield
+    presence/LORE counters on itself/Dying — same set `headerFaceFacts`
+    already produced before this move; see the entry below for why this is
+    5, not the task's originally-quoted 7, an unrelated pre-existing/
+    upstream-data reason, not a regression from this move). Facts table's
+    header-linked row icon still correctly flashes (`bg-blue-400/20`) the
+    heading on hover and, on click, scrolls to it + pops its tooltip.
+    fin/221 (Garland, Knight of Cornelia // Chaos, the Endless): both face
+    headings render independently — front face's own heading shows its 2
+    front self facts (Battlefield/Graveyard presence), back face's own
+    heading shows its 1 back self fact (Library presence) — never the
+    combined/front title, confirming the per-face anchor survived the move
+    to the new component.
+  - `npx vue-tsc --noEmit -p .`: exit 0, clean.
+  - No contract mismatch found against `.claude/contracts/card-schema.md` —
+    pure app/-side (card page + `FunctionalModelText.vue`) change, no
+    engine-owned shape touched.
+
+- 2026-09-10 (correction to the immediately-preceding "(Card Name) in notes
+  column" entry below — same-day misunderstanding, now reverted+replaced):
+  the user actually wanted a self-referencing baseline fact (no natural
+  oracle-text span — `isSelfReferencing`, e.g. fin/1's "Cast a spell") to
+  get the SAME underline+hover-tooltip annotation treatment
+  `annotateOracleText`/`FunctionalModelText.vue` already give a real
+  produce/consume fact, just anchored to the CARD'S OWN NAME in the page
+  header instead of a body phrase — not a parenthetical string in the notes
+  column. Implemented:
+  - Reverted `factConditions.ts`'s `cardName` param entirely — self-branch
+    is back to pushing the literal `'self'` unconditionally, matching its
+    state before that prior entry's task. `isSelfReferencing` is now
+    `export`ed (the page needs the same test). Reverted the 3 affected
+    `factConditions.test.ts` cases back to asserting `'self'`, dropped the
+    now-nonexistent "with a cardName given" case.
+  - Page (`app/pages/app/card/[set]/[number].vue`): notes-column call site
+    back to `factConditions(row.fact)` (no second arg). Replaced the old
+    `factCardName(row)` helper (deleted) with a lower-level `factFaceIndex
+    (fact: Fact): number` (0 front/only, 1 back) that `isMainFaceFact` now
+    also builds on — same rule, refactored to be usable off a raw `Fact`,
+    not just a `FactRow`. New `headerFaceFacts` computed: every
+    self-referencing fact that has NO real annotation anywhere
+    (`!isFactAnnotated`, i.e. `annotateOracleText` never matched its
+    `sourceText`/`highlight` against any face) grouped by `factFaceIndex`
+    into `AnnotatedFactRef[]` (same shape `annotateOracleText` itself
+    produces, built the identical way: `describeFact` for `description`,
+    fact's own `id`/`role`/`value`/`sourceText`). `headerNameParts` maps
+    that onto each real `annotatedFaces` entry (falls back to one plain
+    unannotated entry off `card.value.name` when there's no synergy data at
+    all). Header `<h1>` now renders `headerNameParts` per-face instead of
+    the raw `card.name` string, with a real dashed-underline span (same
+    Tailwind classes `FunctionalModelText.vue` uses) + a small self-
+    contained floating-ui tooltip (own `computePosition`/`offset`/`flip`/
+    `shift`/`size` copy, not a shared component — deliberate, see the code
+    comment: single header phrase vs. a whole paragraph of segments, only
+    the VISUAL result needs to match, which it does — same role-icon +
+    bare-description + `ValueBar` tooltip content as the oracle-text one).
+  - **Bug found and fixed along the way**: `factFaceIndex`'s pre-existing
+    fallback heuristic (`mainFaceFactKeys.has(...)` — "does this fact have a
+    real oracle-text match on face 0") was previously only ever consulted
+    when `isMultiFace` was already true (`factRowGroups`'s single-face
+    branch short-circuits before calling `isMainFaceFact` at all) — so this
+    path had never actually been exercised on a single-face card. Reusing
+    it unconditionally for `headerFaceFacts` exposed it: for a fact with NO
+    match anywhere (exactly `headerFaceFacts`'s target population), the
+    heuristic returns "not front" → index 1 → silently dropped on a
+    single-faced card (`annotatedFaces` has no index 1 at all, its own
+    self-cast/self-enters/etc. facts rendered zero underline). Fixed by
+    short-circuiting `factFaceIndex` to always return 0 when
+    `annotatedFaces.value.length <= 1`, before consulting `face`/the
+    heuristic — multi-face behavior (only path this function previously
+    ran on) is bit-for-bit unchanged.
+  - Verified live (Playwright, throwaway script run from a temp copy INSIDE
+    the repo root — module resolution needs `node_modules` on an ancestor
+    path, deleted after) against the already-running dev server: fin/1's
+    header "Summon: Bahamut" is now underlined, tooltip lists all 5 real
+    unmatched self facts (Cast a spell, Enters the battlefield, Battlefield
+    presence, LORE counters on itself, Dying — the concurrent engine-agent
+    session had added 2 more self facts than existed when this was scoped;
+    the generic `isSelfReferencing`+`isFactAnnotated` logic picked them up
+    with no hardcoding either way) with none of them double-linked (the 2
+    self facts that DO have a real inline body link — sacrifice-graveyard/
+    sacrifice, both anchored to "Sacrifice after IV" — correctly excluded
+    from the header tooltip). Notes column back to literal "self" for all 7
+    self-referencing rows, zero "(Card Name)" strings anywhere. fin/221
+    (Garland, Knight of Cornelia // Chaos, the Endless): front face's own
+    name gets the underline+tooltip for its 2 front self facts (Battlefield/
+    Graveyard presence), the BACK face's own name independently gets it for
+    its 1 back-face self fact (Library presence) — never the front name or
+    a combined title, confirming the face-index fix didn't disturb the
+    already-correct multi-face `fact.face`-driven path.
+  - Flag for whoever authors self-baseline facts next (engine-side,
+    `functional-model/cards/summon-bahamut/synergy.json` currently, not
+    this agent's file to edit): `self-battlefield`'s `sourceText` is
+    `"Flying (Summon: Bahamut is itself a flying creature permanent on your
+    battlefield)."` — the parenthetical explanation is baked INTO
+    `sourceText` itself, so `annotateOracleText`'s own `oracleText.indexOf
+    (sourceText)` never matches (only the bare `"Flying"` is real printed
+    text) even though `highlight: "Flying"` looks like it should link. Net
+    effect observed live: that fact falls through to the header annotation
+    instead of getends its own real "Flying" inline link — not wrong
+    exactly (the header treatment is a strict superset fallback, so nothing
+    is lost), but likely not what that fact's own author intended; probably
+    wants its `sourceText` trimmed to just `"Flying"` (or the parenthetical
+    moved to a separate field) so it gets the tighter, more precise inline
+    link like `self-sacrifice`/`self-sacrifice-graveyard` (whose `sourceText`
+    is the plain, literal `"Sacrifice after IV."`, no parenthetical, and
+    DOES match) already do.
+  - `npx vitest run app/lib/factConditions.test.ts app/lib/factOrder.test.ts`
+    (25/25 pass), `npm run typecheck` (exit 0, no errors). No contract
+    mismatch found against `.claude/contracts/card-schema.md` — pure
+    app/-side (card page + its own lib) change, no engine-owned shape
+    touched (`AnnotatedFactRef`/`annotateOracleText` themselves untouched,
+    just consumed the same way `FunctionalModelText.vue` already does).
+
+- 2026-09-10 (follow-up refinement to the "self" notes behavior from the
+  `factConditions.ts` rewrite): self-referencing facts (`subject`/`target`
+  literally `'self'`) now show the card's OWN name in parens in the Facts
+  tab notes column instead of the literal word "self" — e.g. fin/1's "Cast
+  a spell" reads "(Summon: Bahamut)". Implementation: `factConditions()`
+  (`app/lib/factConditions.ts`) gained an optional second param
+  `cardName?: string`; the self-branch pushes `` `(${cardName})` `` when
+  given, else still falls back to the literal word "self" (kept so
+  existing/future tests that don't care about this branch don't all need a
+  second arg). The actual name resolution lives in the PAGE
+  (`app/pages/app/card/[set]/[number].vue`'s new `factCardName(row)`
+  helper), not in `factConditions.ts` itself — that file stays free of any
+  `AnnotatedFace`/face-grouping concept, matching its own "dependency-free
+  of Vue/page-level state" design note. `factCardName` reuses the
+  page's existing `isMainFaceFact(row)` (same per-row main/other decision
+  the Facts table's own multi-face grouping already makes) to pick
+  `annotatedFaces[0]` vs `annotatedFaces[1]`'s own `.name` — falls back to
+  `card.value.name` if a face is missing. This matters for a real
+  multi-face card: `card.value.name` on a DFC is the COMBINED name (both
+  faces joined by " // "), which would misleadingly show e.g.
+  "(Zanarkand, Ancient Metropolis // Lasting Fayth)" on a fact that's only
+  about the adventure-spell half — verified live this actually happens
+  correctly on fin/221 (Garland, Knight of Cornelia // Chaos, the Endless):
+  its two front-face self facts show "(Garland, Knight of Cornelia)", its
+  one back-face self fact (found by scanning every `synergy.json` for a
+  `face:'back'` fact with `subject`/`target: 'self'` — fin/293 Zanarkand
+  turned out to have no self-referencing facts at all, so couldn't be used
+  for this half of the check) correctly shows "(Chaos, the Endless)", not
+  the combined name or the front face's name. Also verified live on fin/1
+  exactly per the task's own worked example: "Cast a spell", "Battlefield
+  presence" (self one), "Graveyard presence", "Dying" (self one) all show
+  "(Summon: Bahamut)"; the OTHER "Dying"/"Battlefield presence" rows (real,
+  non-self `controller`/`target` data) are unaffected ("either player's ·
+  nonland permanent", "yours", "opponent's"). Updated
+  `factConditions.test.ts`'s 3 self-referencing cases: one kept as
+  no-`cardName`-given -> literal "self" (documents the fallback), the
+  other two now pass a `cardName` and assert the parenthesized-name output.
+  `npx vitest run app/lib/factConditions.test.ts app/lib/factOrder.test.ts`:
+  26/26 pass. `npx vue-tsc --noEmit`: exit 0, no output.
+  No contract mismatch found against `.claude/contracts/card-schema.md`
+  this round — this stayed a pure app/-side (card-page + its own lib)
+  change, no engine-side shape touched.
+
+- 2026-09-10 (small follow-up to the `factConditions.ts` rewrite earlier
+  today): self-referencing facts (`subject`/`target` literally `'self'`)
+  now render the literal word `'self'` in the Facts tab's notes column
+  instead of being hidden/blank. `factConditions()`'s
+  `if (!isSelfReferencing(fact)) bits.push(controllerPhrase(...))` became an
+  if/else that pushes `'self'` in the self-referencing branch — everything
+  else (yours/opponent's/either player's for non-self facts, recipient/
+  type-constraint phrases) untouched. Updated both doc comments that used
+  to describe self-referencing as "omitted"/"nothing to add" (top-of-file
+  block + `isSelfReferencing`'s own comment) to say it renders literal
+  "self" instead. Updated the 3 affected `factConditions.test.ts` cases
+  (self-battlefield/self-sacrifice/self-dies) from expecting `'—'` to
+  expecting `'self'` — `npx vitest run app/lib/factConditions.test.ts`
+  (19/19 passed) and `npx vue-tsc --noEmit` (exit 0) both clean.
+  Verified live via a throwaway Playwright script (repo-root temp file,
+  deleted after) against the already-running dev server (localhost:3000):
+  fin/1 Summon: Bahamut's Facts tab now shows "self" for Cast a spell,
+  Battlefield presence, Graveyard presence, and Dying (self-referencing
+  facts) — confirms the parallel engine-agent self-cast fact had already
+  landed and renders correctly through this change too — while non-self
+  rows (Dying → "either player's · nonland permanent", Card draw →
+  "yours", Damage → "yours · to the opponent", the two Battlefield
+  presence sink rows → "yours"/"opponent's") are unaffected. No contract
+  mismatch found against `.claude/contracts/card-schema.md`.
+
+- 2026-09-10: Fixed Facts tab capitalization bug in
+  `app/pages/app/card/[set]/[number].vue` — label cell relied on CSS
+  `first-letter:uppercase`, which only affects the first TEXT NODE; rows
+  whose label is preceded by the "linked to card text" icon (a sibling
+  `<Icon>` element, not part of the text node) silently didn't get
+  capitalized, while icon-less rows did. Confirmed live on fin/1: exactly
+  the rows with the link icon (Graveyard presence, A creature dying, Card
+  draw, Damage, 2nd Battlefield presence, Opponent's battlefield presence)
+  were lowercase; icon-less rows (Battlefield presence, Dying) were fine —
+  matches the bug report exactly. Root cause was flagged as a known risk in
+  an earlier note; this confirms it as a real bug, not just theoretical.
+  Fix: added `factLabel(fact)` helper (capitalizes `describeFact(fact)`'s
+  string directly, `charAt(0).toUpperCase() + slice(1)`), used it in the
+  template instead of raw `describeFact(fact)`, and dropped the
+  `first-letter:uppercase` class entirely. Did NOT touch `describeFact()`
+  itself (`functional-model/synergy.ts`, engine-owned — stays lowercase
+  there per task instructions).
+  Same task also fixed a related alignment bug (icon presence shifting
+  label start position): wrapped icon + label in an `inline-flex` row with
+  a fixed-width icon slot (`h-2 w-2` span, `v-if` only on the `<Icon>`
+  inside it, not the slot) so every row's label starts at the same x
+  regardless of whether that row has the link icon.
+  Verified via a throwaway Playwright script (`playwright-core`, already a
+  local devDependency) against the running dev server (localhost:3000,
+  already up) — screenshotted fin/1 and extracted all 8 fact rows' label
+  text + icon presence: every row capitalized correctly regardless of
+  icon, and labels visually aligned in the screenshot. `npx vue-tsc
+  --noEmit` clean. No contract mismatch found — this was a card-page-only
+  rendering bug, `card-schema.md` wasn't implicated.
 
 - 2026-09-09: Reverted the mana-producer grouping feature's two UI choices
   in `app/pages/app/card/[set]/[number].vue`'s Facts table, per direct user
@@ -1170,6 +2450,430 @@ resume alone (session transcripts are swept after ~30 days).
     `functional-model/synergy.test.ts` shows as modified in `git status`
     but that's session-2's own concurrent engine-side work, not mine.
 
+- 2026-09-10: Facts tab top-level grouping switched from face-only
+  ("Main card"/"Other faces/functions", part 9-12 above) to a new
+  role-first, two-level split, per explicit user request — "Source" and
+  "Sink" (each fact's existing `role: 'source'|'sink'` field, already on
+  every generated `synergy.json` fact per `.claude/contracts/card-schema.md`
+  — no new data needed) are now the OUTERMOST groups; the pre-existing
+  face-based grouping is now nested one level inside each role section
+  instead of being the outermost split.
+  - `app/pages/app/card/[set]/[number].vue`: renamed/refactored
+    `factRowGroups` → `faceGroupsFor(rows)` (same face-split-then-
+    `orderByTextPosition` logic as before, now a plain function taking an
+    already-role-filtered row list instead of a computed over the full
+    list; also now filters an empty `rows` input to `[]` up front, fixing a
+    latent bug where a single-faced card with e.g. zero sink facts would
+    have rendered one spurious empty-rows group). New `sourceRows`/
+    `sinkRows` computeds (filter `factRows` by `row.fact.role`), and new
+    `factRoleGroups` computed — `[{role:'source',label:'Source',groups:...},
+    {role:'sink',label:'Sink',groups:...}]`, filtered to drop a role with
+    zero groups (e.g. a card with no sink facts shows only a Source
+    section, no empty Sink header).
+  - Template: outer `<tbody v-for="roleGroup in factRoleGroups">` renders
+    one role header row per section (reuses the existing per-row role
+    icon/color convention — `lucide:log-out` blue for Source, `lucide:log-in`
+    emerald for Sink — at slightly larger size, `text-[10px]` uppercase,
+    matching the page's other section-header styling, e.g. "Interactions").
+    Inside each role's `<tbody>`, a `<template v-for="group in
+    roleGroup.groups">` renders the pre-existing face sub-header (unchanged
+    "Main card"/"Other faces/functions" text, now visually subordinate —
+    smaller `text-[9px]`, `pl-4` indent, `text-muted/70` — nested under its
+    role) only when `group.label` is set, then that group's rows. Individual
+    fact `<tr>` markup (ValueBar/role-icon/`describeFact`/conditions column,
+    hover-highlight wiring) is byte-for-byte unchanged — only which
+    `<tbody>`/group a row lands in changed, per the task's own constraint.
+  - `app/lib/factOrder.ts`: doc-comment-only change — updated the stale
+    `factRowGroups` reference to `faceGroupsFor`, and added a note that the
+    sink-before-source same-position tiebreak (still present, unchanged
+    code) is now effectively inert in practice since a single
+    `orderByTextPosition` call only ever sees one role's rows post-refactor
+    — harmless dead capability, not removed, in case a future caller merges
+    roles back into one call.
+  - Verified live (Playwright, already-running dev server on :3000):
+    fin/1 Summon: Bahamut (single-faced, this task's own verification
+    target) — Facts tab now shows a "SOURCE" header (blue log-out icon) with
+    its 6 rows (Battlefield presence, graveyard presence, Dying, a creature
+    dying, card draw, damage), then a "SINK" header (emerald log-in icon)
+    with its 2 rows (battlefield presence, opponent's battlefield presence)
+    below — confirmed via both a raw DOM structure dump (tbody/header/row
+    breakdown) and a screenshot. fin/293 Zanarkand (multi-face, regression
+    check for the nested nesting) — Source section shows its own "Main
+    card" (1 mana row) then "Other faces/functions" (2 rows) sub-groups;
+    Sink section shows only "Other faces/functions" (1 row, no empty "Main
+    card" sub-header since Zanarkand's front face has no sink facts) —
+    confirms both the two-level nesting and the new empty-group filtering
+    work correctly together.
+  - `npm run typecheck` clean (exit 0). `npx vitest run
+    app/lib/factOrder.test.ts app/lib/factConditions.test.ts` — 22/22 pass
+    (factOrder's own tests never exercised cross-role tiebreak-vs-grouping
+    interaction with the page component, so no test file needed updating).
+  - Repo has substantial unrelated concurrent work in flight this session
+    (CLAUDE.md/.claude/agents/engine.md edits, and `engine` actively
+    regenerating `functional-model/cards/summon-bahamut/scenarios.ts` +
+    `trace.json` — the Scenarios tab's own data for the SAME card I used to
+    verify this — while I was working). Confirmed via `git diff` that
+    `summon-bahamut/synergy.json` itself (the file the Facts tab reads) was
+    untouched by that concurrent work, and that my own diff stayed isolated
+    to `app/pages/app/card/[set]/[number].vue` + `app/lib/factOrder.ts` (no
+    edits to any `functional-model/` file, no reverting of the concurrent
+    scenarios/trace changes).
+  - No contract mismatch found against `.claude/contracts/card-schema.md`
+    this round — `role` was already documented as present on every
+    generated `Fact`; this was purely a card-owned display-grouping change.
+
+- 2026-09-10 (later same day): Reverted the above role-first split
+  entirely, per direct user correction — Facts must stay a single flat
+  list ordered by card-text position (`orderByTextPosition`, unchanged
+  logic) across ALL facts regardless of role, with the pre-existing
+  face-based grouping ("Main card"/"Other faces/functions") as the only
+  top-level split; `Fact.role` stays a per-row icon only (unchanged
+  `lucide:log-out`/`lucide:log-in` convention), never promoted to a
+  SOURCE/SINK section header.
+  - Confirmed via `git diff` that the entire diff on both
+    `app/pages/app/card/[set]/[number].vue` and `app/lib/factOrder.ts` was
+    self-contained to this same-day role-split change (no interleaving
+    with the session's other concurrent unrelated work — engine's
+    `synergy.ts`/`synergy.test.ts`, `summon-bahamut/scenarios.ts`+
+    `trace.json`, `CLAUDE.md`/`.claude/agents/engine.md`), so reverted both
+    files wholesale with `git checkout --` rather than hand-editing —
+    restores byte-for-byte the pre-role-split committed state (commit
+    `21c670d`'s own `factRowGroups`/`isMainFaceFact` grouping, `FactRow`
+    icon-per-row markup unchanged throughout both the add and the
+    revert). Confirmed those other files' diffs untouched afterward.
+  - Verified live: killed and restarted the dev server fresh (this
+    session's own recurring stale-HMR gotcha), then a throwaway
+    Playwright DOM dump (script written to repo root for `node_modules`
+    resolution, deleted before finishing) against fin/1 Summon: Bahamut
+    and fin/293 Zanarkand. fin/1: single `<tbody>` with facts rendered
+    (no header row at all — single-faced, matches pre-split behavior),
+    all 8 facts in one text-ordered list, 6 with the blue
+    "Source — this card provides this" icon title then 2 with the emerald
+    "Sink — this card wants this" icon title (mixed-by-text-position, not
+    role-grouped) — confirms both (a) single flat list and (b) per-row
+    icon intact. fin/293: exactly two header rows, "Main card" and "Other
+    faces/functions" — the face-only top-level grouping — no SOURCE/SINK
+    headers anywhere on either page.
+  - `npm run typecheck`: exit 0. `npx vitest run app/lib/factOrder.test.ts
+    app/lib/factConditions.test.ts`: 22/22 pass.
+  - No contract mismatch found against `.claude/contracts/card-schema.md`
+    this round.
+
+- 2026-09-10: Interactions panel now follows the Facts tab's own rendered
+  order instead of its independent sort. Root cause: `findInteractionsForCard`
+  (engine-owned, `functional-model/synergy.ts`) ships interaction groups in
+  plain sink-then-source AUTHORED order — that was also the Facts tab's own
+  order once, but the Facts tab moved to `orderByTextPosition`
+  (`app/lib/factOrder.ts`, printed-oracle-text order) a while back and
+  Interactions was never updated to match, so the two silently diverged.
+  Fixed entirely client-side in `app/pages/app/card/[set]/[number].vue`
+  (not by touching the engine's matcher — display order is a card/UI
+  concern per `.claude/contracts/card-schema.md`, not the matcher's):
+  - `factOrderIndex`: a `Map<factKey, position>` built by flattening
+    `factRowGroups` (the Facts tab's own FINAL per-group post-
+    `orderByTextPosition` output) in display order.
+  - `orderedInteractions`: `data.interactions` sorted by
+    `factOrderIndex.get(factKey(group.fact))` (a fact with no match in the
+    map — shouldn't happen, every interaction fact comes from this same
+    card's own facts — sorts last rather than throwing).
+  - Template's Interactions `v-if`/`v-for` now read `orderedInteractions`
+    instead of `data.interactions` directly.
+  - Chose "derive from Facts tab's own computed output" over reimplementing
+    `orderByTextPosition`'s main/other-face split a second time for
+    Interactions — single source of truth, can't drift from Facts again.
+  - Verified live via a throwaway Playwright script (temp `data-debug-
+    fact-id` attributes added to both the Facts `<tr>` and Interactions
+    `<li>` for the check, reverted before finishing — confirmed via
+    `git diff` the reverted lines are gone): fin/1 Summon: Bahamut —
+    Interactions order `[self-battlefield, self-sacrifice, self-dies,
+    destroy-nonland, mega-flare-you]` is an exact, order-preserving
+    subsequence of the Facts order `[self-battlefield, self-sacrifice,
+    self-dies, destroy-nonland, chapter-iii-draw, chapter-iv-damage,
+    mega-flare-you, mega-flare-opp]` — and confirmed this WASN'T true
+    before the fix (raw server-side order was `[mega-flare-you,
+    self-battlefield, destroy-nonland, self-sacrifice, self-dies]`).
+    fin/293 Zanarkand (the multi-face regression card): `/api/card/fin/293`
+    genuinely returns zero interactions in the current pool (no other
+    modeled card matches its facts) — Interactions panel doesn't render at
+    all there (`v-if="orderedInteractions.length"` false), so there's
+    nothing to visibly demonstrate reordering on; confirmed only that nothing
+    crashes and the (unrelated, empty) Facts-tab multi-face grouping stays
+    intact. `npm run typecheck`: exit 0 both before and after the revert of
+    the debug attributes.
+  - No contract mismatch found against `.claude/contracts/card-schema.md`
+    this round — confirms the existing note there ("`card` must not assume
+    `Effect`/matcher internals beyond generated output") already covers
+    keeping this fix client-side rather than reaching into the engine.
+
+- 2026-09-10 (later same day): Rewrote `app/lib/factConditions.ts`'s notes
+  column entirely — trigger was the parallel `engine` task making
+  `describeFact()` (`functional-model/synergy.ts`) render a fully BARE
+  category label always ("Battlefield presence", "Dying", "Damage", ...),
+  with zero controller/recipient/type-constraint folding into any branch
+  (confirmed by reading the landed diff mid-task — the one deliberate,
+  engine-flagged exception is a QUALIFIED zone fact, e.g. `types.has` on a
+  Battlefield want, which still renders "artifact permanents you control on
+  the battlefield" with both the type AND control phrase — engine's own doc
+  comment flags this as a real, open, NOT-yet-resolved inconsistency, out of
+  their pass's scope; my notes column doesn't special-case around it, so a
+  fact of that shape will show some real duplication between label and
+  notes today — flagged here, not fixed, matches this file's own documented
+  risk tolerance: over-showing is the acceptable failure direction, never
+  hiding).
+  - Old design mirrored `describeFact`'s own per-branch folding rules by
+    hand (`EVENTS_WITH_HAND_WRITTEN_LABEL`/`EVENTS_ALWAYS_CONSUMING_
+    CONTROLLER`/`typesRemainder`) — necessary because different branches
+    folded different fields. That's now moot: since NO branch folds
+    controller/recipient/target-constraint data anymore, this file no
+    longer needs to know anything about `describeFact`'s branches at all.
+  - New design, uniform regardless of zone/event: `controller` always
+    renders as `"yours"`/`"opponent's"`/`"either player's"` (you/opp/
+    undefined) UNLESS the fact is self-referencing (`subject === 'self'` or,
+    on an event fact, `target === 'self'` — tautologically "yours",
+    matches `effectiveController()`'s own convention in synergy.ts).
+    `recipient` (currently damage-only, written generically) renders
+    distinctly ("to you"/"to the opponent"/"to either player") so a fact
+    with BOTH (Bahamut's Mega Flare: `controller:'you', recipient:'opp'`)
+    reads as two clear halves: "yours · to the opponent". `subject` shows
+    as `token: <slug>` when it's a real token (unchanged: real info, was
+    already shown before). The fact's own top-level `Constraints` fields
+    (types/cmc/power/toughness/amount/name) AND an event fact's separate
+    `target` (when a real `Constraints` object, not `'self'`) both render
+    via a small local `constraintPhrases()` — `types.not:['Land']` on
+    `target` → "nonland permanent" (noun picked by zone for a zone fact,
+    generic "permanent" for an event's own top-level constraint or its
+    `target`). `counterType` stays folded/hidden ONLY when
+    `event === 'putCounter'` (matches engine's own kept exception — a
+    counter's own kind IS its bare category, per engine's doc comment,
+    confirmed by reading it, not just assumed). `color`/`colors`/`tapped`/
+    `oncePerTurn` get their own short phrases ("G mana", "tapped", "once
+    per turn"). A truly unknown future field still surfaces via a generic
+    `key: value`/`key`-only fallback (never raw `{}`/`"` JSON) — kept the
+    file's own "exclusion-based, not allowlist" principle alive (the
+    original motivating bug, `subject` silently dropped by a hand-maintained
+    allowlist, doesn't get reintroduced by this rewrite).
+  - Deliberately did NOT import `constraintBits` from
+    `functional-model/synergy.ts` despite the task explicitly asking me to
+    consider it — `.claude/contracts/card-schema.md` already flags this
+    file's existing `describeFact`/`isZoneFact` import as a standing
+    engine/card boundary violation and explicitly says "don't add more
+    engine-owned functions to that import going forward." Wrote a small
+    local `typeBits()`/`ZONE_NOUN` mirror instead (documented inline as a
+    deliberate duplicate, same trade already made elsewhere in this
+    codebase). Flagging this choice explicitly since the task text read as
+    open to either answer — if a future task wants the opposite call (grow
+    the import instead of duplicating), that's a deliberate reversal of this
+    decision, not an oversight.
+  - `app/pages/app/card/[set]/[number].vue`: only change was dropping
+    `font-mono` off the conditions `<td>` (was styled as code for raw JSON;
+    now it's prose). Did NOT touch `factLabel`/`describeFact` call sites,
+    label capitalization, or anything else on that file — confirmed via
+    `git diff` that the rest of the file's large uncommitted diff (fact
+    label capitalization, Interactions-panel reordering) predates this task
+    entirely (verified against my own prior-session notes above), not
+    something I added.
+  - Rewrote `app/lib/factConditions.test.ts` from scratch (old tests
+    asserted the old per-branch-hiding/raw-JSON behavior, now false) — new
+    suite includes all 8 real `fin/1` facts verbatim off
+    `functional-model/cards/summon-bahamut/synergy.json` (hand-computed
+    against the new logic BEFORE running, then verified — all 19 passed on
+    the first run with zero fixes needed, cross-checked against the two
+    concrete examples in the task brief) plus coverage for cmc/power/
+    toughness/amount/name, legacy `color` vs. new `colors`, `tapped`/
+    `oncePerTurn`, the unknown-future-field fallback, and an explicit
+    "never emits `{`/`}`/`"`" regression check.
+  - Verified live: killed and restarted the dev server first (hit the
+    documented stale-HMR-module-graph gotcha again — a first Playwright pass
+    showed a stale "A creature dying"/"Opponent's battlefield presence"
+    label that didn't match the current bare-label source at all; a fresh
+    `npm run dev` restart fixed it immediately, no code change needed —
+    matches the exact failure mode my own 2026-09-09 note already
+    documented). Post-restart, fin/1's Facts tab showed all 8 rows with
+    bare labels ("Battlefield presence" ×2, "Graveyard presence", "Dying"
+    ×2, "Card draw", "Damage") and readable notes with zero JSON:
+    `—` (self-battlefield/self-sacrifice/self-dies), `"either player's ·
+    nonland permanent"` (destroy-nonland — exact match to the task's own
+    worked example), `"yours"` (chapter-iii-draw), `"yours · to the
+    opponent"` (chapter-iv-damage), `"yours"`/`"opponent's"` (mega-flare-
+    you/mega-flare-opp — the second is the task's OTHER worked example,
+    exact match). `npx vue-tsc --noEmit`: exit 0. `npx vitest run
+    app/lib/factConditions.test.ts app/lib/factOrder.test.ts`: 25/25 pass.
+  - Contract note: `.claude/contracts/card-schema.md`'s existing flagged
+    violation note ("describeFact/constraintBits ... imported and called
+    directly by the card page ... don't add more") is still accurate and,
+    per this task, now actively load-bearing (it's the reason I duplicated
+    `constraintBits` rather than exporting/importing it) — no change needed
+    to the contract text itself, just confirming it's not stale.
+
 ## Open questions
 
-(none yet)
+- 2026-09-10: Investigated a report of a card on `/app/card/fin/N` rendering
+  with no image plus stray "Al" text nearby. Could NOT reproduce or find a
+  code-level bug despite exhaustive checking:
+  - Data shape: wrote a throwaway check of `cardImages()`'s logic
+    (`app/lib/buildGraph.ts:76-79` — `card.image_uris` first, else
+    `card_faces[].image_uris`) against every entry in both
+    `data/fin/fin_scryfall.json` (312 cards) AND `data/cards.db`'s own
+    `set_code='fin'` rows (598 rows — more than 312 because the bulk DB also
+    carries extra treatments/promos under the fin set code, not a bug, just
+    a bigger pool) — zero missing/undefined images in either, across all 5
+    FIN layouts (normal 262, transform 27, saga 15, adventure 5, meld 3).
+    Manually confirmed each layout's real Scryfall shape: adventure/meld
+    have top-level `image_uris` only (no per-face images — `cardImages()`'s
+    first branch correctly returns that single image); transform has NO
+    top-level `image_uris`, only per-face (`cardImages()`'s second branch
+    correctly returns both faces' images).
+  - Live rendering: ran a headless-Chromium (Playwright, already a
+    devDependency) pass over all 50 non-normal-layout FIN cards' real
+    `/app/card/fin/<num>` pages against the running dev server, reading
+    every `<img>`'s `naturalWidth`/`complete` after load — zero broken
+    images found (including meld's own back-half page, `fin/99b` Ragnarok,
+    Divine Deliverance, and every transform/adventure/saga card's main
+    image(s)).
+  - Interactions-panel thumbnails (a separate image-resolution path —
+    `resolveFunctionalModelCardMeta`/`resolveFinCardMeta`/`dbLookupByName`/
+    `resolveLiveCardMeta` in `server/api/card/[set]/[number].ts`, not
+    `cardImages()`): scanned the REAL `/api/card/fin/<num>` JSON response
+    for all 312 FIN cards, looking for any `EnrichedInteractionMatch` with
+    `image: null` — zero found across the whole corpus.
+  - Tokens (`cardTokens()` in `buildGraph.ts`): a token missing its own
+    image is silently DROPPED from the array (`t?.image` truthy check),
+    never rendered as a broken `<img>` — by design, not a bug, but worth
+    knowing this path can't produce a visibly-broken image either way.
+  - No literal "Al" string exists anywhere in `app/` source
+    (`grep -rn "\bAl\b"` came up empty) — it's not a hardcoded label/badge.
+    The only FIN card whose name starts with "Al" is fin/88 "Al Bhed
+    Salvagers" (normal layout, own image confirmed fine, never appears with
+    a null-image interaction match anywhere in the corpus either) — flagged
+    as the closest lead but unconfirmed; could easily be coincidence.
+  - Working theory, unconfirmed: given every code path checked out clean
+    end-to-end (data shape + live render + interactions thumbnails, all 312
+    cards), the reported sighting is more likely a one-off transient
+    Scryfall CDN hiccup or a caught-mid-load frame than a reproducible app
+    bug. `(・_・?)` for the orchestrator: if this resurfaces, get the exact
+    set/collector-number from the user directly — that's the one thing
+    static/automated checking can't substitute for once every code path
+    it depends on has already been verified clean.
+  - No contract mismatch found against `.claude/contracts/card-schema.md`
+    this round.
+  - Cleanup: two scratch scripts (`.tmp-check-images.mjs`,
+    `.tmp-check-interactions.mjs`) written to the repo root (needed
+    `node_modules` resolution for `playwright`) were deleted before
+    finishing — confirmed absent from `git status`. Made no edits to any
+    source file this task (`app/pages/app/card/[set]/[number].vue` already
+    had a substantial unrelated uncommitted diff from a concurrent
+    session/agent when I started — confirmed via `git diff --stat` that I
+    never touched it, only `Read` it).
+
+- 2026-09-10: Facts tab fact-label casing task, net no-op after a mid-task
+  correction. Original ask was "make every fact label render ALL CAPS via
+  CSS `text-transform`, not by touching `describeFact()`'s lowercase
+  string data" — did this first (swapped the fact-label `<td>`'s
+  `first-letter:uppercase` Tailwind class for plain `uppercase`), verified
+  live on fin/1 (Playwright screenshot: "YOUR BATTLEFIELD PRESENCE" etc.,
+  no wrapping/overlap issues). Mid-task correction arrived: the user
+  actually wanted only the first letter capitalized ("Your battlefield
+  presence"), not full caps and not title-case — i.e. exactly the
+  pre-existing `first-letter:uppercase` behavior. Reverted the edit;
+  `git diff` on `app/pages/app/card/[set]/[number].vue` is empty, so this
+  task landed as a no-op on that file (confirmed live again on fin/1 —
+  top-level fact rows like "Your battlefield presence"/"Dying" read
+  first-letter-capitalized as before).
+  - Noted but NOT fixed (pre-existing, outside this task's scope): nested/
+    grouped fact rows whose label is preceded by an inline icon (the "="-
+    style link icon `isFactAnnotated` renders, e.g. "your graveyard
+    presence" under a top-level "Your battlefield presence" row) do NOT
+    get capitalized by `first-letter:uppercase` — CSS `::first-letter`
+    only applies when the text is the actual first inline content of the
+    block; a preceding icon element as an inline sibling defeats it. This
+    predates my involvement (unrelated to either the uppercase attempt or
+    the revert) and is cosmetically minor (indented rows already read as
+    subordinate), so left alone — flag if a future task touches fact-row
+    label casing again, since fixing it would need either restructuring
+    the icon out of `::first-letter`'s way or switching to a JS-computed
+    capitalized string instead of a CSS pseudo-element.
+  - No contract mismatch found this round.
+
+- 2026-09-10 (later same day): controller-phrase wording fix in
+  `app/lib/factConditions.ts`. `controllerPhrase()`'s `'opp'` branch
+  changed from `"opponent's"` to the bare word `'other'` per explicit user
+  correction ("strictly yours and other — has nothing to do with
+  opponent"). `'you'` (`'yours'`) and omitted (`"either player's"`)
+  branches left untouched — task scoped the fix to the exact `'opp'`
+  string only. Updated the two doc-comment lines in the same file that
+  quoted the old `"yours"/"opponent's"/"either player's"` triad for
+  accuracy; left the historical doc-comment block (lines ~8-16) describing
+  `describeFact`'s OLD pre-rework label wording alone since it's genuinely
+  historical context about a different function, not a live claim about
+  this file's current output. Updated the two test expectations in
+  `factConditions.test.ts` that asserted `"opponent's"` (`mega-flare-opp`,
+  `stun`/putCounter case) to `'other'`; `npx vitest run
+  app/lib/factConditions.test.ts` passes (19/19).
+  - Deliberately did NOT touch `recipientPhrase()` (the `recipient` field
+    — "to the opponent"/"to you"/"to either player", used for e.g.
+    damage's own who-does-this-go-to) — scoped out per the task as a
+    separate concept (who receives something vs. who controls something).
+    Flag for a future task/orchestrator: if the same "no 'opponent'
+    wording" principle is meant to extend there too, `recipientPhrase`'s
+    `'opp'` branch (`'the opponent'`) would need the same treatment, but
+    that wasn't asked for this round and the grammar is less trivial
+    there (`to other`/`to the other player`?) — worth an explicit ask
+    before changing it.
+  - Verified live via a throwaway Playwright script (deleted before
+    finishing, confirmed via `git status`): navigated to
+    `/app/card/fin/70` (Sage's Nouliths — has a real, unconstrained
+    `zone:'Battlefield', controller:'opp'` fact, the exact "Battlefield
+    presence"/`controller:'opp'` case named in the task) and confirmed the
+    Facts tab notes column renders `"other"`, and that the string
+    `"opponent's"` appears nowhere on the rendered page.
+  - No contract mismatch found this round (`.claude/contracts/card-schema.md`
+    wasn't implicated — this is purely `factConditions.ts`'s own phrasing,
+    not a `Fact` shape question).
+
+- 2026-09-10 (later still): completed the reciprocal half of the
+  self-referencing-fact header link (earlier this session's task only wired
+  header -> tooltip; user correctly pointed out the Facts tab ROW itself
+  still looked unlinked). In `app/pages/app/card/[set]/[number].vue`:
+  - New `headerLinkedFactKeys`/`isHeaderLinkedFact(fact)` — the reciprocal
+    of `headerFaceFacts` (every fact-key that ended up annotating the
+    header name rather than a body span). Facts tab row's link-icon slot
+    now renders the SAME `lucide:link-2`/`text-emerald-500/40`/`h-2 w-2`
+    icon `isFactAnnotated` already used for body-annotated facts, just as an
+    `v-else-if` branch for `isHeaderLinkedFact` — no new visual language,
+    exactly the convention the task asked to reuse. Title text differs
+    ("Linked to the card name above — click to jump to it" vs "Linked to
+    card text") since the target differs, but everything else matches.
+  - Bonus interactivity (not just cosmetic parity): new
+    `headerHighlightIndex`/`headerNameEls`/`setHeaderNameEl`/
+    `scrollToHeaderName` — hovering a header-linked row's icon flashes a
+    `bg-blue-400/20` highlight on the matching header-name span (keyed by
+    the existing `factFaceIndex`, so a back-face-only self fact on a
+    multi-face card highlights the right half); clicking it
+    `scrollIntoView`s that span and pops the exact same floating tooltip
+    the header's own hover shows (auto-hidden after 1.6s via
+    `showHeaderTooltip`/`hideHeaderTooltip`, reused as-is, fed a synthetic
+    `{ currentTarget: el }` in place of a real MouseEvent).
+  - Verified live via a throwaway Playwright script (written to repo root
+    for node_modules resolution, deleted before finishing, confirmed absent
+    via `git status`) against the already-running dev server on
+    `/app/card/fin/1`: all 12 fact rows now carry SOME link icon (none bare
+    "self" text anymore) — the self ones with no real oracle-text anchor
+    ("Cast a spell", "Enters the battlefield", "Battlefield presence"
+    (self), "Dying" (self), "LORE counters on itself") show the new
+    header-pointing icon/title; two rows the task ALSO named as expected-
+    self ("Sacrifice", "Graveyard presence") correctly kept the ORIGINAL
+    "Linked to card text" icon instead — confirmed via the notes column
+    they genuinely are self facts, but `headerFaceFacts`'s own pre-existing
+    skip-if-`isFactAnnotated` guard (see that computed's doc comment) is
+    right to exclude them: fin/1's "Sacrifice after IV" self-graveyard fact
+    really does have a `highlight` match in the printed text, so it's
+    already linked there, not unlinked — a fact never ends up double-linked.
+    Confirmed hover (via proper Playwright `locator.hover()`, not raw
+    `mouse.move` coordinates which kept missing the tiny 8px icon and
+    produced a false negative first try) adds `bg-blue-400/20` to the
+    header span, and click removes the tooltip's `pointer-events-none
+    opacity-0` classes (i.e. shows it).
+  - `npx vue-tsc --noEmit` clean on this file both before and after.
+  - No contract mismatch found this round
+    (`.claude/contracts/card-schema.md` not implicated — purely a card-page
+    presentation change, no `Fact`/engine shape touched).

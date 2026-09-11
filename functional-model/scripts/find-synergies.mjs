@@ -25,7 +25,10 @@ const slugs = (await readdir(cardsDir, { withFileTypes: true })).filter((e) => e
 function isV2Shaped(synergy) {
   const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
   if (all.length === 0) return false;
-  return all.every((f) => 'zone' in f || 'event' in f);
+  // `'to' in f` / `'from' in f` — a SOURCE zone-change fact (2026-09-11
+  // rework, synergy.ts's own `ZoneFact` doc comment) may declare `to`/`from`
+  // instead of a bare `zone` — still a v2-shaped fact either way.
+  return all.every((f) => 'zone' in f || 'to' in f || 'from' in f || 'event' in f);
 }
 
 const pool = [];

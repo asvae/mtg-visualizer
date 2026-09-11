@@ -18,11 +18,74 @@
 // `NODE_ENV === 'production'` check this same route family already uses
 // (server/api/card/[set]/[number].ts's own `loadJsonFresh`).
 //
-// POST /api/card/review-status, body { name: string, field: 'review' | 'scenariosReview' | 'interactionsReview', reviewed: boolean }
+// POST /api/card/review-status, body { name: string, field: 'review' | 'scenariosReview' | 'interactionsReview', reviewed: boolean, set?: string, number?: string }
+//
+// `set`/`number` are only used for the `review` axis (FACTS review — see
+// below) — the calling UI is always the card page at that exact
+// /app/card/:set/:number route, so it already has both to hand
+// (route.params) rather than this route needing its own by-name search
+// across every set.
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { slugify } from '../../../app/lib/buildGraph';
+
+// Snapshotting real oracle text at the moment a human confirms the FACTS
+// review (`field === 'review'`, `reviewed === true`) — baked
+// `Fact.annotations` (see .claude/contracts/card-schema.md's "Fact-to-oracle-
+// text pointers" section) point at line/char offsets into a card's real
+// Scryfall oracle text, computed once, offline. Nothing re-validates those
+// offsets live anymore, so if Scryfall's own text for this printing is ever
+// corrected after a human reviewed it (errata, a re-scrape fixing a typo),
+// the baked offsets could silently drift. This snapshot is the baseline a
+// later (not-yet-built) staleness check can diff the live text against.
+//
+// Same local-DB-first, then live-Scryfall lookup convention
+// server/api/card/[set]/[number].ts's own lookupCardBySetNumber already
+// uses — a small, deliberate duplicate here (this route only needs the
+// read-only single-card case, not that route's token/interaction/relations
+// machinery) rather than importing an unexported helper out of that file.
+const CARDS_DB_PATH = join(process.cwd(), 'data', 'cards.db');
+const cardsDb = existsSync(CARDS_DB_PATH) ? new DatabaseSync(CARDS_DB_PATH, { readOnly: true }) : null;
+const dbBySetNumberStmt = cardsDb?.prepare('SELECT raw_json FROM cards WHERE set_code = ? AND collector_number = ?') ?? null;
+
+interface OracleScryfallCard {
+  oracle_text?: string;
+  card_faces?: { oracle_text?: string }[];
+}
+
+async function lookupOracleCard(set: string, number: string): Promise<OracleScryfallCard | null> {
+  if (dbBySetNumberStmt) {
+    const row = dbBySetNumberStmt.get(set, number) as { raw_json: string } | undefined;
+    if (row) return JSON.parse(row.raw_json);
+  }
+  try {
+    const res = await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(set)}/${encodeURIComponent(number)}`, {
+      headers: { 'User-Agent': 'mtg-visualizer/0.1', Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as OracleScryfallCard;
+  } catch {
+    return null;
+  }
+}
+
+// Matches Fact.face's own 'front'|'back' vocabulary
+// (functional-model/synergy.ts) — a single-faced card's snapshot is a bare
+// string, a DFC's is this shape. Only ever written, never read back by this
+// route (the staleness-diff itself is a separate, not-yet-built feature).
+type OracleTextSnapshot = string | { front: string; back?: string };
+
+function oracleTextSnapshotFor(card: OracleScryfallCard): OracleTextSnapshot | null {
+  if (card.card_faces && card.card_faces.length > 0) {
+    const front = card.card_faces[0]?.oracle_text;
+    if (!front) return null;
+    const back = card.card_faces[1]?.oracle_text;
+    return back ? { front, back } : { front };
+  }
+  return card.oracle_text ?? null;
+}
 
 // Each field's own two on-disk values — `review` predates the other two and
 // kept its original 'ai'/'human' vocabulary rather than being migrated to
@@ -72,6 +135,24 @@ export default defineEventHandler(async (event) => {
   }
   const [unreviewedValue, reviewedValue] = REVIEW_FIELD_VALUES[field]!;
   progress[field] = reviewed ? reviewedValue : unreviewedValue;
+
+  // Snapshot on every confirm (not just the first), so re-reviewing after a
+  // fix re-baselines the staleness check too. Un-reviewing (`reviewed ===
+  // false`) deliberately leaves a prior snapshot in place untouched — there's
+  // no clear reason a flip back to 'ai' should erase evidence of what was
+  // last actually reviewed.
+  if (field === 'review' && reviewed) {
+    const set: string | undefined = body?.set;
+    const number: string | undefined = body?.number;
+    if (set && number) {
+      const oracleCard = await lookupOracleCard(set, number);
+      const snapshot = oracleCard ? oracleTextSnapshotFor(oracleCard) : null;
+      if (snapshot) {
+        progress.oracleTextSnapshot = snapshot;
+        progress.reviewedAt = new Date().toISOString().slice(0, 10);
+      }
+    }
+  }
 
   mkdirSync(dir, { recursive: true });
   writeFileSync(progressPath, JSON.stringify(progress, null, 2) + '\n', 'utf8');

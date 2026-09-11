@@ -42,8 +42,11 @@
 
 import { readdir, readFile } from 'node:fs/promises';
 import { manaAbilityColorsFromStaticText } from '../mana.ts';
+import { findFabricatedScenarioCardNames } from './scenario-card-names.mjs';
+import { findMissingAnnotations, ANNOTATED_CARD_SLUGS } from './annotation-coverage.mjs';
 
 const cardsDir = new URL('../cards/', import.meta.url);
+const dataDir = new URL('../../data/', import.meta.url);
 const requested = process.argv.slice(2);
 const slugs = requested.length ? requested : (await readdir(cardsDir, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
 
@@ -58,7 +61,21 @@ const slugs = requested.length ? requested : (await readdir(cardsDir, { withFile
 function isV2Shaped(synergy) {
   const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
   if (all.length === 0) return false;
-  return all.every((f) => 'zone' in f || 'event' in f);
+  // `'to' in f` / `'from' in f` — a SOURCE zone-change fact (2026-09-11
+  // rework, synergy.ts's own `ZoneFact` doc comment) may declare `to`/`from`
+  // instead of a bare `zone` — still a v2-shaped fact either way.
+  return all.every((f) => 'zone' in f || 'to' in f || 'from' in f || 'event' in f);
+}
+
+/** `synergy.ts`'s own `effectiveZone` — the zone a `ZoneFact`-shaped JSON
+ * entry is really "about," regardless of which shape authored it: a sink's
+ * (or a pre-rework source's) plain `zone`, or a rework-shaped source's own
+ * `to`. Kept as a small local mirror rather than importing synergy.ts's
+ * (TypeScript, not directly importable from this plain-.mjs script without
+ * a build step) — same "small stable duplicate" trade this script already
+ * accepts elsewhere (see e.g. `ZONE_NOUN` duplicated in app/lib/factConditions.ts). */
+function effectiveZone(f) {
+  return f.zone ?? f.to;
 }
 
 // fn -> zone this action produces into, and how to read WHICH side off the
@@ -94,52 +111,84 @@ function producedZone(entry, cardName) {
       return null;
   }
 }
-// fn -> event this action produces, plus its own extra fields (counterType, etc).
-// `sacrifice`/`destroy`/`legendRule` produce BOTH a zone fact (Graveyard —
-// see producedZone above) and an event fact (`dies`) — the same underlying
+// fn -> event(s) this action produces, plus its own extra fields (counterType,
+// etc). `sacrifice`/`destroy`/`legendRule` produce BOTH a zone fact (Graveyard
+// — see producedZone above) and an event fact (`dies`) — the same underlying
 // action described two ways, exactly like SYNERGY_DESIGN.md's own "legend
 // rule ... counts as a source for a {event:'dies', target:'self'} sink."
-function producedEvent(entry, cardName) {
+// Returns an ARRAY (2026-09-10, Summon: Bahamut's own literal `sacrifice`
+// and `destroy` event facts) — `sacrifice`/`destroy` are the fns that
+// genuinely back TWO distinct event facts at once (the object dying, AND
+// the sacrifice/destroy act itself — CR 701.20a "sacrificing" IS dying by a
+// specific cause; CR 701.6 "destroying" likewise), so a single `{event,...}`
+// return can no longer represent every fn's real evidence. Every other case
+// still returns exactly one, same values as before.
+function producedEvents(entry, cardName) {
   switch (entry.fn) {
     case 'gainLife':
-      return { event: 'lifegain', side: entry.player === 'you' ? 'you' : 'opp' };
+      return [{ event: 'lifegain', side: entry.player === 'you' ? 'you' : 'opp' }];
     case 'addMana':
       // Promoted the same way drawCard was (2026-09-05) — see card.ts's
       // own `Effect` doc comment on `addMana` for why this exists as a
       // deliberately inert observation point (no real mana pool).
-      return { event: 'addMana', side: entry.player === 'you' ? 'you' : 'opp' };
+      return [{ event: 'addMana', side: entry.player === 'you' ? 'you' : 'opp' }];
     case 'loseLife':
-      return { event: 'lifeloss', side: entry.player === 'you' ? 'you' : 'opp' };
+      return [{ event: 'lifeloss', side: entry.player === 'you' ? 'you' : 'opp' }];
     case 'putCounter':
-      return { event: 'putCounter', counterType: entry.counterType, side: undefined };
+      return [{ event: 'putCounter', counterType: entry.counterType, side: undefined }];
     case 'dealDamage':
-      return { event: 'damage', side: 'you' };
+      return [{ event: 'damage', side: 'you' }];
     case 'grantKeyword':
-      return { event: 'grantKeyword', keyword: entry.keyword, side: undefined };
+      return [{ event: 'grantKeyword', keyword: entry.keyword, side: undefined }];
     case 'counter':
       // Log-only (see interfaces.ts's own `counter` doc comment — no real
       // stack/object model exists), but still a real, checkable produce —
       // same "promoted off the parked list" treatment addMana/drawCard got.
-      return { event: 'counter', side: undefined };
+      return [{ event: 'counter', side: undefined }];
     case 'sacrifice':
-      return { event: 'dies', side: entry.player === 'you' ? 'you' : 'opp' };
+      // BOTH the resulting `dies` (pre-existing) AND the literal `sacrifice`
+      // event itself (2026-09-10, Summon: Bahamut's own `self-sacrifice`
+      // fact — real Saga "Sacrifice after IV," distinct from the OTHER,
+      // already-existing `self-graveyard` zone-change fact on that same
+      // card, which is about the DYING consequence, not the sacrifice act —
+      // "dying" and "sacrifice" are deliberately kept as separate concepts,
+      // 2026-09-11, same distinction `destroy-act`/the dies-consequence
+      // fact already keep for the destroy case).
+      return [
+        { event: 'dies', side: entry.player === 'you' ? 'you' : 'opp' },
+        { event: 'sacrifice', side: entry.player === 'you' ? 'you' : 'opp' },
+      ];
     case 'destroy':
-      return { event: 'dies', side: sideOf(entry, cardName) };
+      // BOTH the resulting `dies` (pre-existing) AND the literal `destroy`
+      // event itself (2026-09-10, Summon: Bahamut's own `destroy-act` fact
+      // — CR 701.6, the act of destroying, distinct from the `dies`
+      // consequence the SAME log line already backs) — same "one action,
+      // two simultaneously-true event facts" shape `sacrifice` got above,
+      // not a new pattern. Only the literal `fn:'destroy'` line counts as
+      // `destroy` evidence — a TOKEN target instead logs `ceasesToExist`
+      // (case below), which stays `dies`-only: that log shape is genuinely
+      // ambiguous (a `moveTo`-driven token loss to Graveyard, e.g. "put
+      // into graveyard," logs identically but isn't a destroy at all), so
+      // it's not safe to also credit it as `destroy` evidence.
+      return [
+        { event: 'dies', side: sideOf(entry, cardName) },
+        { event: 'destroy', side: sideOf(entry, cardName) },
+      ];
     // A destroyed TOKEN logs `ceasesToExist` instead of `destroy` (harness.ts's
     // own `destroy` — real 700.4/704.5d, it genuinely dies on the way to
     // ceasing to exist) — only when `zone` is 'Graveyard' (a destroy), not
     // when it's some other zone (a BOUNCED token, e.g. Jill's own ETB —
     // that's not a death, 700.4 requires battlefield -> graveyard).
     case 'ceasesToExist':
-      return entry.zone === 'Graveyard' ? { event: 'dies', side: sideOf(entry, cardName) } : null;
+      return entry.zone === 'Graveyard' ? [{ event: 'dies', side: sideOf(entry, cardName) }] : [];
     case 'legendRule':
-      return { event: 'dies', side: 'you' };
+      return [{ event: 'dies', side: 'you' }];
     case 'drawCard':
     case 'drawCards':
       // Promoted off SYNERGY_DESIGN.md's own "parked" list (2026-09-05,
       // Elrond, Moon-Reader's own real "draw a card" trigger) — a real,
       // checkable produce now, not just a soft note.
-      return { event: 'drawCard', side: entry.player === 'you' ? 'you' : 'opp' };
+      return [{ event: 'drawCard', side: entry.player === 'you' ? 'you' : 'opp' }];
     case 'playLand':
       // CR 305.1 — harness.ts's own `lifecycleBefore` only emits this for a
       // Land typeLine going through the ordinary (non-trigger/non-ability/
@@ -150,7 +199,7 @@ function producedEvent(entry, cardName) {
       // instead of an assumed label (synergy.ts's own `EventFact` doc
       // comment). Always the scenario's own controller — no FIN scenario
       // plays an opponent's land through this path.
-      return { event: 'playLand', side: 'you' };
+      return [{ event: 'playLand', side: 'you' }];
     case 'moveTo':
       // A real MTG rule, not card-specific: landing on the battlefield always
       // triggers "enters" replacement/triggered abilities (any other zone
@@ -159,9 +208,40 @@ function producedEvent(entry, cardName) {
       // `entersBattlefield` sink facts (loporrit-scout, woodland-weavemaster)
       // can now match against, but the case applies pool-wide to any card whose
       // effect moves something onto the battlefield.
-      return entry.zone === 'Battlefield' ? { event: 'entersBattlefield', side: sideOf(entry, cardName) } : null;
+      return entry.zone === 'Battlefield' ? [{ event: 'entersBattlefield', side: sideOf(entry, cardName) }] : [];
+    // A permanent (any card, not just a moveTo-driven blink) actually
+    // ENTERING the battlefield — harness.ts's own `lifecycleBefore` and
+    // engine-trace.ts's own `pilotCast`/`pilotResolveTop` already log a real
+    // `{fn:'enters', zone:'Battlefield', ...}` entry for every permanent
+    // that resolves onto the battlefield (producedZone above already reads
+    // this fn for the zone-presence side; this is the missing event-fact
+    // sibling), same "small missing forward-evidence link" as `cast` below
+    // — needed for Summon: Bahamut's own bare `{event:'entersBattlefield',
+    // target:'self'}` fact (2026-09-10), the same "this permanent enters,
+    // full stop" baseline `self-cast`/`self-dies` already establish for
+    // their own events.
+    case 'enters':
+      return [{ event: 'entersBattlefield', side: 'you' }];
+    // A card's own bare "this card itself was cast" source fact (`{event:
+    // 'cast', target:'self'}`, added 2026-09-10 for Summon: Bahamut,
+    // fin/1 — synergy.ts's own `describeFact` comment on `event === 'cast'`)
+    // — harness.ts's own `lifecycleBefore` (and engine-trace.ts's own
+    // `pilotCast`) already log a real `{fn:'cast', ...}` entry for every
+    // non-Land cast with no `controller`/`player` field at all (it's always
+    // the scenario's own 'you' pilot casting the card under test, same as
+    // `playLand`'s own unconditional `side:'you'` immediately above), so
+    // this is the small missing forward-evidence link, not a new want-side
+    // `TRIGGER_EVENT_MAP` entry — this is a PRODUCE fact, not a trigger-
+    // backed want, and no trigger name is involved at all. `IGNORED_FNS`
+    // already has `cast` (it's mechanical, never itself a produce ACTION
+    // worth a reverse "explain every action" soft-note — see that set's own
+    // comment), but that only gates the REVERSE check below, not this
+    // forward one; a declared `{event:'cast'}` source fact still needs its
+    // own evidence path here same as any other event fact.
+    case 'cast':
+      return [{ event: 'cast', side: 'you' }];
     default:
-      return null;
+      return [];
   }
 }
 // Best-effort side-of-a-target-NAME heuristic (destroy/putCounter/pump/tap/
@@ -581,7 +661,15 @@ function isCostOnlyArtifactSacrificeFact(p, card) {
 }
 
 function wantMatchesZoneRead(want, zone) {
-  return want.zone === zone;
+  // `effectiveZone`, not a bare `want.zone` (fixed 2026-09-11 alongside
+  // synergy.ts's ZoneFact/EventFact merge — a SINK fact can now
+  // legitimately author `to` instead of `zone` too, e.g. summon-bahamut's
+  // own `mega-flare-you`; a bare `want.zone` read silently stopped
+  // recognizing it, since the source-side checks in this same file already
+  // widened to `'zone' in p || 'to' in p` but this sink-side pair (here and
+  // its own caller below) was missed in that same pass — real, live bug,
+  // caught by this exact card's own re-verification, not by inspection).
+  return effectiveZone(want) === zone;
 }
 
 async function verifyCard(slug) {
@@ -610,16 +698,24 @@ async function verifyCard(slug) {
 
   // --- Forward: every declared PRODUCE needs supporting trace evidence ---
   for (const p of source) {
-    if ('zone' in p) {
-      if (p.zone === 'Graveyard' && p.subject === 'self' && [...triggerNames].some((n) => DEATH_TRIGGER_NAMES.has(n))) continue; // see DEATH_TRIGGER_NAMES
-      if (p.zone === 'Battlefield' && p.subject === 'self' && (!p.controller || p.controller === 'you') && isStaticOnlyLand(card)) continue; // see isStaticOnlyLand
+    // `'to' in p` — a rework-shaped (2026-09-11) SOURCE zone-change fact
+    // (synergy.ts's own `ZoneFact` doc comment) declares `to`/`from`
+    // instead of a bare `zone`; `effectiveZone` reads either shape. `from`
+    // itself isn't independently re-verified against the trace below —
+    // same "verify the destination, not the documented origin" scope every
+    // other exemption/evidence check here already has (e.g. `controller`
+    // is checked, `subject` beyond `self`-exemptions is not).
+    if ('zone' in p || 'to' in p) {
+      const zone = effectiveZone(p);
+      if (zone === 'Graveyard' && p.subject === 'self' && [...triggerNames].some((n) => DEATH_TRIGGER_NAMES.has(n))) continue; // see DEATH_TRIGGER_NAMES
+      if (zone === 'Battlefield' && p.subject === 'self' && (!p.controller || p.controller === 'you') && isStaticOnlyLand(card)) continue; // see isStaticOnlyLand
       if (isSelfBattlefieldPresenceLand(p, card)) continue; // any Land's own tautological battlefield presence — see isSelfBattlefieldPresenceLand
       if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own presence — see isCoinFlipTokenSubjectFact
       const evidence = allEntries.some((e) => {
         const z = producedZone(e, cardName);
-        return z && z.zone === p.zone && (!p.controller || z.side === p.controller);
+        return z && z.zone === zone && (!p.controller || z.side === p.controller);
       });
-      if (!evidence) failures.push(`produce {zone:${p.zone}${p.controller ? `,controller:${p.controller}` : ''}} has no supporting trace line (enters/move/moveTo/ceasesToExist/createToken/sacrifice/discard/destroy/legendRule)`);
+      if (!evidence) failures.push(`produce {zone:${zone}${p.controller ? `,controller:${p.controller}` : ''}} has no supporting trace line (enters/move/moveTo/ceasesToExist/createToken/sacrifice/discard/destroy/legendRule)`);
     } else {
       if (p.event === 'addMana' && p.color && staticManaColors.has(p.color)) continue; // plain "{T}: Add X." text — see staticManaColorsFor
       if (p.event === 'addMana' && p.colors && [...(p.colors.has ?? []), ...(p.colors.hasAny ?? [])].every((c) => staticManaColors.has(c))) continue; // plain "{T}: Add X or Y." text, combined-fact shape — see staticManaColorsFor
@@ -628,22 +724,27 @@ async function verifyCard(slug) {
       if (isCoinFlipFact(p, card)) continue; // the flip itself, guaranteed by the ability's own printed text — see hasCoinFlipAbility/isCoinFlipFact
       if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own ETB — see isCoinFlipTokenSubjectFact
       if (isCostOnlyArtifactSacrificeFact(p, card)) continue; // the sacrifice ACT itself, cost-only, tautologically real — see isCostOnlyArtifactSacrificeFact
-      const evidence = allEntries.some((e) => {
-        const ev = producedEvent(e, cardName);
-        return ev && ev.event === p.event && (!p.counterType || ev.counterType === p.counterType) && (!p.controller || !ev.side || ev.side === p.controller);
-      });
+      const evidence = allEntries.some((e) =>
+        producedEvents(e, cardName).some(
+          (ev) => ev.event === p.event && (!p.counterType || ev.counterType === p.counterType) && (!p.controller || !ev.side || ev.side === p.controller),
+        ),
+      );
       if (!evidence) failures.push(`produce {event:${p.event}${p.counterType ? `,counterType:${p.counterType}` : ''}} has no supporting trace line`);
     }
   }
 
   // --- Forward: every declared WANT needs supporting trace evidence ---
   for (const w of sink) {
-    if ('zone' in w) {
+    // `'zone' in w || 'to' in w`, not a bare `'zone' in w` (fixed
+    // 2026-09-11, same real bug as `wantMatchesZoneRead`'s own fix above —
+    // a SINK fact can now legitimately author `to` instead of `zone`).
+    if ('zone' in w || 'to' in w) {
+      const zone = effectiveZone(w);
       if (isLandTapSelfWant(w) && hasStaticLandTapSelfTrigger(card)) continue; // see isLandTapSelfWant/hasStaticLandTapSelfTrigger
       if (isCostOnlyArtifactSacrificeWant(w, card)) continue; // see hasCostOnlyArtifactSacrifice/isCostOnlyArtifactSacrificeWant
-      const hasAggregateRead = allEntries.some((e) => aggregateReadZone(e) === w.zone);
+      const hasAggregateRead = allEntries.some((e) => aggregateReadZone(e) === zone);
       const hasTypedRead = allEntries.some((e) => LOW_LEVEL_READ_FNS.has(e.fn));
-      if (!hasAggregateRead && !hasTypedRead) failures.push(`want {zone:${w.zone}} has no read:getCardsIn/getCreaturesInPlay/getLandsInPlay (or per-object type read) anywhere in the trace`);
+      if (!hasAggregateRead && !hasTypedRead) failures.push(`want {zone:${zone}} has no read:getCardsIn/getCreaturesInPlay/getLandsInPlay (or per-object type read) anywhere in the trace`);
     } else {
       const triggerEvidence = [...triggerNames].some((n) => TRIGGER_EVENT_MAP[n] === w.event);
       // A real `read:getCounters` line is direct evidence for a
@@ -674,7 +775,9 @@ async function verifyCard(slug) {
   for (const e of allEntries) {
     const zone = aggregateReadZone(e);
     if (!zone) continue;
-    if (!sink.some((w) => 'zone' in w && wantMatchesZoneRead(w, zone))) failures.push(`trace has ${e.fn} on zone ${zone} with no matching declared want`);
+    // `'zone' in w || 'to' in w`, not a bare `'zone' in w` — same real fix
+    // as this file's own forward-direction want check above.
+    if (!sink.some((w) => ('zone' in w || 'to' in w) && wantMatchesZoneRead(w, zone))) failures.push(`trace has ${e.fn} on zone ${zone} with no matching declared want`);
   }
 
   // --- Reverse: every produce-relevant ACTION must be explained (soft) ---
@@ -686,9 +789,9 @@ async function verifyCard(slug) {
       continue;
     }
     const z = producedZone(e, cardName);
-    const ev = producedEvent(e, cardName);
-    const zoneOk = z && source.some((p) => 'zone' in p && p.zone === z.zone && (!p.controller || p.controller === z.side));
-    const eventOk = ev && source.some((p) => 'event' in p && p.event === ev.event);
+    const evs = producedEvents(e, cardName);
+    const zoneOk = z && source.some((p) => ('zone' in p || 'to' in p) && effectiveZone(p) === z.zone && (!p.controller || p.controller === z.side));
+    const eventOk = evs.length > 0 && source.some((p) => 'event' in p && evs.some((ev) => ev.event === p.event));
     if (!zoneOk && !eventOk) notes.push(`trace has ${e.fn} (${JSON.stringify(e)}) with no matching declared produce`);
   }
 
@@ -716,4 +819,34 @@ for (const slug of slugs) {
 }
 
 console.log(`\n${checked} v2 card(s) checked, ${skipped} skipped (no synergy.json/trace.json, or still v1-shaped), ${hardFailures} with hard failures.`);
-if (hardFailures > 0) process.exit(1);
+
+// --- Scenario board-filler names: every addCard(...) literal name must be a
+// real, non-token Scryfall card (see scenario-card-names.mjs's own header —
+// `functional-model/scenario-card-names.test.ts` also runs this in
+// `npm run test`; wired here too so a manual `verify-synergy.mjs` sweep,
+// scoped to specific slug(s) or not, catches it in the same pass instead of
+// requiring a separate command). A fabricated name here is a HARD failure,
+// same convention as this file's own per-card checks above — this is a
+// straight authoring-rule violation, not a "the engine can't represent this
+// yet" gap that would warrant a soft note instead. ---
+const allScenarioViolations = await findFabricatedScenarioCardNames({ cardsDir, dataDir });
+const scenarioViolations = requested.length ? allScenarioViolations.filter((v) => requested.includes(v.slug)) : allScenarioViolations;
+if (scenarioViolations.length > 0) {
+  console.log(`\n${scenarioViolations.length} fabricated scenario card name(s) (see scripts/verify-scenario-card-names.mjs for a standalone report):`);
+  for (const v of scenarioViolations) console.log(`  ✗ ${v.file}:${v.line} — name: '${v.name}' is not a real Scryfall card`);
+}
+
+// --- Annotation coverage: every fact on a card that opted into the
+// `Fact.annotations` model (`ANNOTATED_CARD_SLUGS`) must carry at least one
+// real annotation (see annotation-coverage.mjs's own header — 2026-09-11
+// hard invariant). Same standalone-pool-sweep-appended-to-the-same-exit-code
+// shape as the scenario-name check just above, scoped by `requested` the
+// same way. ---
+const allAnnotationSlugs = requested.length ? [...ANNOTATED_CARD_SLUGS].filter((s) => requested.includes(s)) : [...ANNOTATED_CARD_SLUGS];
+const annotationViolations = await findMissingAnnotations({ cardsDir, slugs: allAnnotationSlugs });
+if (annotationViolations.length > 0) {
+  console.log(`\n${annotationViolations.length} fact(s) with zero annotations (see scripts/verify-annotation-coverage.mjs for a standalone report):`);
+  for (const v of annotationViolations) console.log(`  ✗ ${v.slug} [${v.role}][${v.index}] — ${v.description}`);
+}
+
+if (hardFailures > 0 || scenarioViolations.length > 0 || annotationViolations.length > 0) process.exit(1);

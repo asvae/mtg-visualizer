@@ -78,11 +78,12 @@ interface KeywordLinkDatum {
 // physically (one real forceLink entry per target, same simulation cost as
 // any other edge). Grouping key is (sourceId, reason.description) — the
 // closest client-visible proxy for server/api/graph-links.ts's own
-// `sourceKey` (`${producer}::${fact.id}`), which isn't itself shipped to the
-// client (see GraphReason's own fields) — two distinct facts on the same
-// card landing on an identical description string would incorrectly merge
-// under this proxy, a known, accepted approximation for a prototype, not
-// re-derived from a raw fact id since none crosses the API boundary today.
+// `sourceKey` (`${producer}::${group.description}`), which isn't itself
+// shipped to the client (see GraphReason's own fields) — two distinct facts
+// on the same card landing on an identical description string would
+// incorrectly merge under this proxy, a known, accepted approximation for a
+// prototype, not re-derived from a raw fact id since none crosses the API
+// boundary today (Fact.id was removed engine-side entirely).
 // A group whose target-id count crosses `relationHubThreshold` (see
 // RenderOptions below) auto-collapses: those reasons are pulled OUT of the
 // normal active-link set entirely (see render()'s own hub-collapse step) and

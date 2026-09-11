@@ -529,7 +529,7 @@ export function useGraphStore() {
   // store outlives the page component; see graph.vue's layout-level provide),
   // AND persisted to localStorage, same sanitize-against-a-stale-value
   // reasoning as gravityMode above.
-  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'definition'] as const;
+  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition'] as const;
   type FunctionalModelTab = (typeof FUNCTIONAL_MODEL_TABS)[number];
   let savedFunctionalModelTab: FunctionalModelTab = 'facts';
   try {

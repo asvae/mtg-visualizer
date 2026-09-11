@@ -22,7 +22,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { cardArtCrop, cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
 import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
-import { findInteractionsForCard, annotateOracleText } from '../../../../functional-model/synergy';
+import { findInteractionsForCard } from '../../../../functional-model/synergy';
 import type { InteractionGroup, Fact } from '../../../../functional-model/synergy';
 import type { AnnotatedCard } from '../../../../app/types';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
@@ -97,15 +97,16 @@ interface FunctionalModelData {
   // exactly what one specific scenario actually did.
   traces: TraceResult[];
   // Real structured per-face data (name/manaCost/colorIndicator/typeLine/
-  // oracleLines/power/toughness), one entry per face — a single-faced card is
-  // a one-entry array. Oracle text is pre-split into plain/fact-linked runs
-  // (functional-model/synergy.ts's annotateOracleText) here, in the card data
-  // extraction flow, rather than client-side, so the card page just renders
-  // fields/segments and never re-parses card text itself; everything else
-  // (dividers, color-indicator swatches, layout) is a client-only decision
-  // now — no server round-trip needed to change how faces are presented.
-  // `null` when there's no synergy data to annotate against (a synergy-less
-  // card).
+  // oracleText/power/toughness), one entry per face — a single-faced card is
+  // a one-entry array. As of the 2026-09-11 `Fact.annotations` pointer
+  // rework, `oracleText` is served RAW/UNTOUCHED (real `\n`s, not pre-split)
+  // — a fact's own `annotations` (baked into synergy.json, see
+  // functional-model/synergy.ts's `AnnotationRef`) carry the (line, start,
+  // end) pointers a client needs to slice out highlighted spans itself; this
+  // route no longer does any live string-search/segment-tree building
+  // (the old `annotateOracleText`, now deprecated engine-side) on every
+  // request. `null` when there's no synergy data to serve alongside the text
+  // (a synergy-less card).
   annotatedCard: AnnotatedCard | null;
   // cards/<slug>/progress.json's own `review` field — 'ai' (the common case,
   // never human-checked against the real card) vs 'human' (someone actually
@@ -137,7 +138,7 @@ interface FunctionalModelData {
 // request, so a hand-edit (definition.ts, scenarios.ts, progress.json,
 // synergy.json) shows up on the very next load with no server restart and
 // no run-scenarios.mjs step, while a request for a card nobody's touched
-// skips the readFileSync/dynamic-import/runScenarios/annotateOracleText work
+// skips the readFileSync/dynamic-import/runScenarios/buildAnnotatedCard work
 // entirely. Keyed on the faces' own JSON too (not just slug) since
 // annotatedCard depends on them and they come from data/cards.db, outside
 // this folder's own signature — cheap insurance against a stale annotation
@@ -204,9 +205,11 @@ async function computeTracesLive(slug: string): Promise<TraceResult[]> {
 }
 
 // One face's raw Scryfall-derived fields, extracted by the route's own card-
-// data flow (below) with no string formatting — annotateOracleText only ever
-// needs `oracleText` itself; the rest ride along unannotated straight onto
-// the matching AnnotatedFace field.
+// data flow (below) with no string formatting — `oracleText` rides straight
+// onto the matching `AnnotatedFace` field untouched (real `\n`s, not
+// pre-split); a client that wants fact-linked spans builds them itself from
+// each visible fact's own baked `Fact.annotations`, see
+// FunctionalModelText.vue.
 export interface FaceInput {
   name: string;
   manaCost: string;
@@ -219,12 +222,15 @@ export interface FaceInput {
 
 // Shared between the live-recompute (dev) and bundle-read (prod) branches
 // below — building `annotatedCard` only needs this request's own real
-// Scryfall-derived `faces` plus the card's synergy facts, neither of which
-// depends on which branch produced them.
+// Scryfall-derived `faces`; `synergy` itself is no longer read here at all
+// (kept as a parameter purely so a synergy-less card still serves `null`,
+// matching every other consumer's "no functional-model entry" contract) —
+// the annotation pointers a client needs now live on each `Fact` itself
+// (`Fact.annotations`, baked once into synergy.json by
+// functional-model/scripts/compute-annotations.mjs), not computed here.
 function buildAnnotatedCard(faces: FaceInput[], synergy: { source: Fact[]; sink: Fact[] } | null): AnnotatedCard | null {
   if (!synergy) return null;
-  const allFacts = [...synergy.source, ...synergy.sink];
-  return { faces: faces.map((f) => ({ name: f.name, manaCost: f.manaCost, colorIndicator: f.colorIndicator, typeLine: f.typeLine, oracleLines: annotateOracleText(f.oracleText, allFacts), power: f.power, toughness: f.toughness })) };
+  return { faces: faces.map((f) => ({ name: f.name, manaCost: f.manaCost, colorIndicator: f.colorIndicator, typeLine: f.typeLine, oracleText: f.oracleText, power: f.power, toughness: f.toughness })) };
 }
 
 const functionalModelCache = new Map<string, { signature: string; facesKey: string; data: FunctionalModelData | null }>();
@@ -630,10 +636,11 @@ export default defineEventHandler(async (event) => {
   // Shiva, Warden of Ice's own real card the reference case), oracle text,
   // and P/T. Real structured data (`FaceInput[]`), not a formatted string —
   // per the user's own framing ("parse everything into json... decide on
-  // frontend how to format"), `annotateOracleText` (functional-model/synergy.ts)
-  // never sees anything but one face's own plain oracle text at a time; all
-  // the "how does a whole card's worth of faces stack together" shaping
-  // lives client-side now (FunctionalModelText.vue), not baked in here.
+  // frontend how to format"), each face's `oracleText` rides through raw
+  // and untouched; all the "how does a whole card's worth of faces stack
+  // together" shaping — including building fact-linked spans off each
+  // fact's own baked `Fact.annotations` — lives client-side now
+  // (FunctionalModelText.vue), not baked in here.
   const faces: FaceInput[] = (card.card_faces?.length ? card.card_faces : [card]).map((f) => ({
     name: f.name ?? card.name,
     manaCost: f.mana_cost ?? '',

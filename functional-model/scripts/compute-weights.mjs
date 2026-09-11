@@ -1,5 +1,13 @@
 // Recomputes `value` on every cards/<slug>/synergy.json fact — see
-// synergy.ts's `Weight` doc comment for what it means. One pass, both roles:
+// synergy.ts's `Weight` doc comment for what it means. Unconditional: this
+// never reads a fact's OWN existing `value` before overwriting it (see the
+// write-back step below, which only ever takes `it.value`, freshly computed
+// here), so a manually-authored `-1` placeholder (synergy.ts's `Weight` doc
+// comment — "pending a real compute-weights.mjs pass") needs no special
+// skip-if-negative handling to get resolved: it's already treated exactly
+// like every other fact's value, stale or not, and gets clobbered with a
+// real number the next time this script runs over that card. One pass, both
+// roles:
 //  - `source`: real magnitude read off trace.json log entries, steeply
 //    bucketed (1 -> 1, 2 -> 4, 3+ -> 5) per the user's own calibration ("2
 //    cards for one mana is not even close to 1 card").
@@ -26,7 +34,10 @@ const slugs = readdirSync(cardsDirPath, { withFileTypes: true }).filter((e) => e
 
 function isV2Shaped(synergy) {
   const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
-  return all.length > 0 && all.every((f) => typeof f === 'object' && f !== null && ('zone' in f || 'event' in f));
+  // `'to' in f` / `'from' in f` — a SOURCE zone-change fact (2026-09-11
+  // rework, synergy.ts's own `ZoneFact` doc comment) may declare `to`/`from`
+  // instead of a bare `zone` — still a v2-shaped fact either way.
+  return all.length > 0 && all.every((f) => typeof f === 'object' && f !== null && ('zone' in f || 'to' in f || 'from' in f || 'event' in f));
 }
 
 // --- Load the pool: entries[i] = { slug, raw, poolCard, trace } -----------
@@ -76,7 +87,11 @@ function valueFromMagnitude(mag) {
   return 1;
 }
 function sourceMagnitude(fact, log) {
-  if ('zone' in fact) {
+  // `'to' in fact` / `'from' in fact` — a rework-shaped (2026-09-11) SOURCE
+  // zone-change fact declares `to`/`from` instead of a bare `zone`; still a
+  // zone fact for magnitude purposes (a single-object presence/movement has
+  // no inherent count either way, same as the bare-`zone` case below).
+  if ('zone' in fact || 'to' in fact || 'from' in fact) {
     if (fact.subject && typeof fact.subject === 'object' && 'token' in fact.subject) {
       return Math.max(1, maxAmount(log, 'createToken', 'qty'));
     }

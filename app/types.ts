@@ -1,5 +1,3 @@
-import type { AnnotatedSegment } from '../functional-model/synergy';
-
 // Every relation type is a flat, independent role — a card gets a separate edge
 // per relation type that applies (same as produce/consume have always coexisted
 // as two edges), rather than a role plus an orthogonal "modifiers" array on it.
@@ -16,7 +14,7 @@ export type Role = 'produce' | 'consume' | 'atypical' | 'grant' | 'magnifier';
 // progress.json (see server/api/card/review-status.ts, untouched).
 export type ReviewStatus = 'not_implemented' | 'ai_reviewed' | 'human_reviewed';
 
-/** One face of a card, real structured data (server/api/card/[set]/[number].ts) — a single-faced card is a one-entry `AnnotatedCard.faces`. Oracle text is pre-split into lines of fact-annotated segments (functional-model/synergy.ts's `annotateOracleText`); nothing else here needs client-side parsing — a consumer just renders these fields however it wants (a different layout is a client-only change, no server round-trip). */
+/** One face of a card, real structured data (server/api/card/[set]/[number].ts) — a single-faced card is a one-entry `AnnotatedCard.faces`. `oracleText` is served RAW/UNTOUCHED (real `\n`s, not pre-split) as of the 2026-09-11 `Fact.annotations` pointer rework (see `.claude/contracts/card-schema.md`'s "Fact-to-oracle-text pointers" section) — a consumer that wants inline fact-linked spans (FunctionalModelText.vue) builds them itself at render time from each visible `Fact`'s own `annotations` (`functional-model/synergy.ts`'s `AnnotationRef`: `{ line, start, end }`, line-relative offsets into `oracleText.split('\n')`), rather than receiving a pre-built segment tree. */
 export interface AnnotatedFace {
   name: string;
   /** '' for a back face with none of its own. */
@@ -24,7 +22,7 @@ export interface AnnotatedFace {
   /** Real color letters (`['U']`, `['W','U']`, ...) — only set for a face that prints "Color Indicator: ..." instead of its own mana cost (a transform DFC's back face, e.g.). Empty array (not omitted) for a genuinely colorless indicator. */
   colorIndicator?: string[];
   typeLine: string;
-  oracleLines: AnnotatedSegment[][];
+  oracleText: string;
   power?: string;
   toughness?: string;
 }

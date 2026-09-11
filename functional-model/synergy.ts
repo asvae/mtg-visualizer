@@ -52,66 +52,116 @@ export interface Constraints {
 /** 1-5, computed mechanically (not authored by hand) — real game-mechanical magnitude of a fact, steeply bucketed from the actual number involved (NOT linear: a 1-for-1 effect and a 2-for-1 effect are not "close" in power, so the bucketing jumps hard past 1 — magnitude 1 → 1, magnitude 2 → 4-5, magnitude 3+ → 5 — rather than spreading evenly):
  *  - on a `source` fact: the real number from `trace.json` (tokens/counters/damage/life/cards — whatever the source's own action carries).
  *  - on a `sink` fact: the fact's own declared `amount` constraint (e.g. "wants 3+ creatures" → 3) — no trace involved, it's a static requirement, not an action. A sink with no numeric constraint (most bare event hooks — "wants lifegain," no minimum) has no magnitude concept and stays unset (`factTotal` treats missing as neutral 1, same as a source with no measurable magnitude).
- * Previously paired with a second `ease` (rarity) dimension; dropped in favor of `value` alone on both sides — see git history for the retired rationale. A crude stand-in for real weighting (see SYNERGY_DESIGN.md's parked rarity-weighting note) — recompute if the pool changes meaningfully rather than trusting these to stay accurate. Renamed from `strength` (2026-09-05) — collided with d3-force's own unrelated `.strength()` API/graphRenderer.ts's physics terminology; `power` was tried next but collides with `Constraints.power` (a creature's real power stat), so this landed on `value` instead. */
-export type Weight = 1 | 2 | 3 | 4 | 5;
+ * Previously paired with a second `ease` (rarity) dimension; dropped in favor of `value` alone on both sides — see git history for the retired rationale. A crude stand-in for real weighting (see SYNERGY_DESIGN.md's parked rarity-weighting note) — recompute if the pool changes meaningfully rather than trusting these to stay accurate. Renamed from `strength` (2026-09-05) — collided with d3-force's own unrelated `.strength()` API/graphRenderer.ts's physics terminology; `power` was tried next but collides with `Constraints.power` (a creature's real power stat), so this landed on `value` instead.
+ *
+ * `-1` is a distinct sentinel, NOT a real magnitude: "this fact has a value
+ * field at all (so it's not merely predating the weight fields — see
+ * `factTotal`'s own doc comment for that other, `undefined` case), but it's
+ * a manual placeholder authored alongside the fact itself, pending a real
+ * `compute-weights.mjs` pass" — e.g. a newly-authored self-referencing fact
+ * with no trace magnitude to derive from yet. Stays visible as `-1` in
+ * `synergy.json` (a human or a future `compute-weights.mjs` run should be
+ * able to find it and replace it for real) but `factTotal` treats it exactly
+ * like "unset" for any actual weighting/combination arithmetic — never
+ * multiplied in as if it were real. */
+export type Weight = -1 | 1 | 2 | 3 | 4 | 5;
 
 /** `'self'` = the card this synergy.json belongs to; `{token}` = a token, resolved from token-cards/<slug>/definition.ts's own definition the same way. */
 export type Subject = 'self' | { token: string };
 
-/** A persistent object in a zone. */
-export interface ZoneFact extends Constraints {
-  role: 'source' | 'sink';
-  /** Stable per-card identity — unique among THIS card's own facts only (not pool-wide), author-chosen (e.g. `"exile"`, `"return-enters"`). Required going forward; older cards authored before this field existed won't actually have it on disk despite the type (a plain JSON cast, not runtime-validated) — a caller keying off `id` should still tolerate `undefined` in practice. Lets a caller (the card page's Functional model table, `annotateOracleText`'s own hover wiring) key off something stable instead of re-deriving an identity from `role`/`sourceText`/`description`, which breaks the moment two facts share all three. */
-  id: string;
-  zone: string;
-  controller?: Side;
-  /** Only meaningful on a `source` fact — "the thing appearing in that zone is THIS." A `sink` fact instead uses the `Constraints` fields above directly to describe what it's looking for. */
-  subject?: Subject;
-  value?: Weight;
-  /** A short verbatim (or near-verbatim) snippet of the card's own oracle text this fact was derived from — purely documentary, read by nobody but a human looking at the Functional model table wondering "why does this card want that?" (FIN #16's "wants permanents on your battlefield" was the case that prompted this: unreadable without the source line). Not authored for every card — see progress.json's own textCoverageAudited flag for which cards have it. */
-  sourceText?: string;
-  /** The exact substring of `sourceText` that names THIS fact specifically, for `annotateOracleText`'s inline card-text view — AI-authored per fact, same as `sourceText` itself, NOT derived by a generic per-event-kind regex (a regex like "draws? a card" can't tell which of several "draw a card" clauses on one card is this fact's own, especially once conditions/exceptions are in play; the author reading the real card text can). Must be a literal substring of `sourceText` — `annotateOracleText` verifies this and silently skips the fact (no inline link, still visible in the plain facts table) if it isn't. */
-  highlight?: string;
-  /**
-   * Which face of a multi-face card (transform/Adventure/etc.) this fact's
-   * own ability actually lives on — `'front'` = the card's main
-   * `CardDefinition` (the object this same file's `resolveSubject`/
-   * `staticAttrsFor` already treat as `'self'`), `'back'` =
-   * `CardDefinition.backFace` (see card.ts; also reused as the structural
-   * vehicle for Adventure/Room/other two-named-half layouts, not just real
-   * transforms — see e.g. ishgard-the-holy-see-faith-grief's own
-   * definition.ts comment). Reuses the exact `'front'|'back'` vocabulary
-   * `Scenario.face`/`SequenceStep.face` (harness.ts) already established,
-   * rather than a numeric faces-array index, so a single `face` idea reads
-   * the same way whether it's naming which face a SCENARIO exercises or
-   * which face a FACT belongs to. AUTHOR-SET, like `sourceText`/`highlight`
-   * — deliberately NOT inferred from whether `sourceText` happens to appear
-   * in one face's oracle text or the other: that inference is exactly what
-   * broke for `sidequest-catch-a-fish-cooking-campsite`'s own front-face
-   * upkeep-trigger sink fact (2026-09-09) — its authored `sourceText` had a
-   * trailing "..." never in the real oracle text, so it silently matched
-   * NEITHER face. Omit only for a genuinely single-faced card — every fact
-   * on a card whose `CardDefinition` declares a `backFace` should set this
-   * explicitly (`'front'` included, not just `'back'`) so a consumer never
-   * has to fall back to inference at all. Not matched against anything by
-   * `factsInteract` — purely a rendering/grouping hint for a consumer
-   * presenting a multi-face card's own facts split by face (see
-   * `.claude/contracts/card-schema.md`), the same "documentary, not
-   * matched" treatment `sourceText`/`highlight` already get.
-   */
-  face?: 'front' | 'back';
-}
-
 /**
- * An occurrence.
+ * One fact — a persistent state, an occurrence, or (very commonly, for a
+ * real zone movement) both at once.
  *
- * `event: 'playLand'` vs. `event: 'entersBattlefield'` — DELIBERATELY two
- * separate events, not one derived from the other. CR 305's land-drop
- * special action ("play a land" — hand to battlefield, no stack, no mana
- * cost, once per turn) is genuinely NOT the same fact as "a permanent
- * entered the battlefield" — the latter fires no matter HOW a permanent
- * got there (cast, a land drop, or an effect that puts it there directly,
- * e.g. Elven Passage's own library-search-to-battlefield). A land found by
+ * **Unified 2026-09-11, superseding the earlier `ZoneFact`/`EventFact`
+ * split** (see SYNERGY_DESIGN.md's "The fact model" for the full
+ * before/after reasoning trail — the old two-interface design's own doc
+ * comments, preserved there as dated/superseded history via git blame,
+ * explain why it existed in the first place; not repeated in full here).
+ * The old design used a real TypeScript union (`Fact = ZoneFact |
+ * EventFact`) with a structural discriminator (`isZoneFact`/`isEventFact`)
+ * — a fact was either a persistent-object movement (`zone`/`to`/`from`) or
+ * a named occurrence (`event`), never both, by construction. That split
+ * forced an awkward workaround the moment a single real fact legitimately
+ * needed BOTH an `event` name AND real zone data at once — CR 700.4's
+ * "dying IS moving from the battlefield to a graveyard" is exactly ONE
+ * real occurrence, not two — `EventFact` had to invent differently-named
+ * `zoneFrom`/`zoneTo` fields (purely descriptive, never matched)
+ * specifically so they wouldn't trip `isZoneFact`'s structural check and
+ * misclassify the fact as the other shape.
+ *
+ * Now there is exactly one `Fact` interface. `event`/`to`/`from` (and
+ * every other field below) are independent optional fields that can
+ * freely co-occur on the same object:
+ * - A pure location/presence fact: `{ to: 'Graveyard', ... }` — no
+ *   `event`, no `from`.
+ * - A pure named-action fact with no fixed zone consequence worth
+ *   asserting inline (see the ACT-vs-CONSEQUENCE standing rule below):
+ *   `{ event: 'destroy', ... }` — no `to`/`from`.
+ * - Both at once, now ONE object instead of two: `{ event: 'dies', from:
+ *   'Battlefield', to: 'Graveyard', ... }`.
+ *
+ * `to`/`from`/`zone` — which zone(s) a real movement or presence check is
+ * INTO/OUT OF:
+ * - `to` — the destination, or (with no `event`/`from`) a SINK's plain,
+ *   timeless presence check: "the consumer wants something present in
+ *   this zone right now," no movement implied. **Supersedes the legacy
+ *   `zone` field below** (2026-09-11, same day as this merge) — `zone`
+ *   was always conceptually "a `to` with no `from`, no `event`," so
+ *   keeping both spellings was two names for one idea. Every NEW fact
+ *   (source AND sink alike) should use `to`, not `zone` —
+ *   `effectiveZone` below still resolves `zone ?? to` for the rest of the
+ *   pool, which hasn't been migrated off the legacy field (a full
+ *   pool-wide migration is a separate, larger sweep, out of scope for
+ *   this pass; only this card's own data was migrated — see
+ *   SYNERGY_DESIGN.md).
+ * - `from` — optional, the origin of a real movement. Omit when
+ *   unknown/unspecified/could-be-anywhere (e.g. a generic ETB: cast from
+ *   hand, fetched from a library, blinked back from exile — CR doesn't
+ *   care); set it when the movement has one well-defined origin (e.g.
+ *   `'Battlefield'` for something that dies/is sacrificed/destroyed — CR
+ *   700.4). `from`/`to` are the AUTHORITATIVE data — a friendly movement
+ *   name ("dies", "enters the battlefield") is a DERIVED display label on
+ *   top (`describeFact`, via `ZONE_MOVEMENT_NAMES`/`zoneMovementName`
+ *   below), never the reverse: a consumer that only cares about the `to`
+ *   side (e.g. "this card cares about things being put into a graveyard,
+ *   regardless of where they came from") matches on `to` alone, ignoring
+ *   `from` entirely — exactly what `factsInteract` itself does below.
+ *   Real, valid fact shape this merge introduces that never existed
+ *   before: `from` with NO `to` at all (`self-cast`'s own `from:'Hand'` —
+ *   the real destination is the Stack, which this model deliberately
+ *   never assigns as a value on either side, see `ZONE_MOVEMENT_NAMES`'s
+ *   own doc comment) — `effectiveZone`/`describeFact` both handle this
+ *   without crashing, see their own doc comments.
+ *
+ * `event` — a named CR-recognizable occurrence (`'dies'`, `'destroy'`,
+ * `'cast'`, `'entersBattlefield'`, `'damage'`, `'drawCard'`,
+ * `'putCounter'`, `'sacrifice'`, ...), independent of whether `to`/`from`
+ * are also present.
+ *
+ * **When does an ACT-type fact (`cast`/`destroy`/`sacrifice` — something a
+ * player/effect DOES) get `to`/`from` inline on itself, vs. stay a bare
+ * `event` tag deferring to a separate consequence fact?** Standing rule
+ * (see SYNERGY_DESIGN.md's own named section for the full worked-examples
+ * table): inline only when the movement is a guaranteed, DEFINING part of
+ * the act (`cast` — CR 601.2a, no "cast but the card didn't move" case);
+ * bare otherwise, when the movement is conditional/preventable (`destroy`
+ * — indestructible/regeneration) or the consequence is already
+ * independently matched by a separate fact (`sacrifice` used to defer to
+ * a dedicated `self-graveyard` ZoneFact, now itself folded into the
+ * merged `dies` fact by this same pass — see this card's own
+ * `synergy.json`). A CONSEQUENCE-type fact (`dies`, `entersBattlefield` —
+ * something that has ALREADY happened by the time it fires) always gets
+ * the treatment for whichever end is actually fixed, since the movement
+ * is no longer conditional on anything by that point.
+ *
+ * `playLand` vs. `entersBattlefield` — DELIBERATELY two separate events,
+ * not one derived from the other. CR 305's land-drop special action
+ * ("play a land" — hand to battlefield, no stack, no mana cost, once per
+ * turn) is genuinely NOT the same fact as "a permanent entered the
+ * battlefield" — the latter fires no matter HOW a permanent got there
+ * (cast, a land drop, or an effect that puts it there directly, e.g.
+ * Elven Passage's own library-search-to-battlefield). A land found by
  * Elven Passage's own effect really does trigger `entersBattlefield` (its
  * own landfall/ETB triggers see it) but was never PLAYED — no `playLand`
  * fact for it. Conversely a land played normally always gets BOTH: a
@@ -125,16 +175,142 @@ export interface ZoneFact extends Constraints {
  * `moveTo`/`custom` effect, e.g.) never emits it, so `scripts/
  * verify-synergy.mjs` can actually tell the two apart instead of trusting
  * an author's label.
+ *
+ * **Matching is UNCHANGED by this merge — deliberately deferred, not
+ * redesigned here.** `factsInteract` still hard-partitions on
+ * `isZoneFact(fact)` (now a plain structural classifier over this ONE
+ * `Fact` type, not a type-narrowing union guard) before attempting a
+ * match — a fact with any of `to`/`from`/`zone` present is still treated
+ * as "zone-shaped," an `event`-only fact as "event-shaped," and the two
+ * families still never match each other. A merged fact that now carries
+ * BOTH `event` and `to`/`from` is classified into the zone-shaped family
+ * ONLY — it no longer also satisfies an `event`-shaped want for the same
+ * real-world concept the way its old separate EventFact half used to.
+ * This is a real, accepted, DOCUMENTED regression for the specific facts
+ * it hits (see this merge's own dated entry in SYNERGY_DESIGN.md and this
+ * session's real pool-wide interactions diff) — not fixed here on
+ * purpose; a real matcher redesign letting one fact satisfy both
+ * shape-families' wants at once is tracked there as open future work.
  */
-export interface EventFact extends Constraints {
+export interface Fact extends Constraints {
   role: 'source' | 'sink';
-  /** See `ZoneFact.id`. */
-  id: string;
-  event: string;
+  /**
+   * A named CR-recognizable occurrence — see this interface's own doc
+   * comment. Independent of `to`/`from`; the two can freely co-occur.
+   *
+   * **Can be fully inert for matching/rendering on a fact that's ALSO
+   * zone-shaped, and that's fine, not a bug** (2026-09-11, confirmed by
+   * tracing every real consumer, not assumed): once `isZoneFact(fact)` is
+   * `true` (any of `zone`/`to`/`from` present), `factsInteract`'s
+   * shape-partition gate (`isZoneFact(p) !== isZoneFact(w)`) means the
+   * `event` string is never even reached for comparison against an
+   * event-shaped want, and `describeFact`'s own zone branch
+   * (`zoneMovementName(from, to)`, a lookup by the `(from,to)` PAIR) never
+   * reaches its own `event`-keyed label dispatch either — `self-enters`
+   * (`{event:'entersBattlefield', to:'Battlefield', ...}`) is the real
+   * example: its label "enters the battlefield" comes entirely from the
+   * `(from,to)` lookup, not from this field, and its `event` string
+   * currently produces zero real matches (confirmed: the 2 real
+   * `event:'entersBattlefield'` sinks it used to match, Loporrit Scout and
+   * Woodland Weavemaster, are lost via the shape-partition gate above,
+   * before `event` string equality is ever checked — see
+   * SYNERGY_DESIGN.md's "Fact unification" section).
+   *
+   * Kept anyway, deliberately, not dead weight to clean up: it's real,
+   * accurate documentation of what the movement fundamentally IS (a CR-
+   * recognizable named occurrence, not just an anonymous zone arrival),
+   * and it's the exact field a future matcher-unification pass (tracked
+   * as open work in SYNERGY_DESIGN.md) would read to recover those 2 lost
+   * matches — removing it now would mean re-deriving "this is an
+   * entersBattlefield occurrence" from scratch later, for zero savings
+   * today.
+   */
+  event?: string;
+  /** Legacy spelling of `to` (see this interface's own doc comment) — a SINK's plain state-presence check, or a pre-merge SOURCE fact's own destination. New facts should use `to` instead; `effectiveZone` still resolves either. */
+  zone?: string;
+  /** The zone a real movement or presence-check is INTO — see this interface's own doc comment. */
+  to?: string;
+  /** The zone a real movement is OUT OF, optional — see this interface's own doc comment (including the real `from`-with-no-`to` case). */
+  from?: string;
+  /**
+   * On (almost) every event, the DOER — whoever's controller performs/causes
+   * the event ("your damage" = damage YOU deal, "your sacrifice" = a
+   * permanent YOU sacrifice). `lifeloss` is a real, documented EXCEPTION,
+   * not covered by `recipient` below: it predates `recipient` (added
+   * 2026-09-05 for kain-traitorous-dragoon/namazu-trader's own life
+   * payments) and already uses `controller` to name who LOSES the life —
+   * "each opponent loses life" is `lifeloss` + `controller:'opp'`, "you lose
+   * 2 life" is `lifeloss` + `controller:'you'` — because a life payment has
+   * no separate "doer" worth naming (the loser IS the one paying). Left
+   * as-is deliberately (real cards — summon-primal-odin's own two facts —
+   * already rely on this reading; migrating it to `recipient` is a real
+   * re-authoring pass across the whole pool's existing `lifeloss` facts, out
+   * of scope for the fix `recipient` itself was added for). Do not assume
+   * this convention generalizes to any OTHER event without checking first.
+   */
   controller?: Side;
+  /** "The thing appearing in the `to` zone is THIS" — a legacy pairing with `zone`/`to` predating `target` below, but NOT superseded by it the way `zone` is superseded by `to`: `subject` is still the ONLY field `factsInteract`'s zone-matching branch (`resolveSubject(p.subject, ...)`) ever reads to resolve a producer's real static attributes for a type-constrained zone-shaped want — `target` is never consulted there. A merged fact that's genuinely self-referencing (see this card's own merged `dies` fact — folded from a `subject:'self'`-only ZoneFact half and a `target:'self'`-only EventFact half) needs BOTH, not either/or: `subject:'self'` so a real TYPE-CONSTRAINED zone-shaped want (e.g. "creature in graveyard") still resolves this card's own real types the way the old standalone ZoneFact did, and `target:'self'` for the EventFact-side self-reference `effectiveController`/an event-shaped consumer would otherwise read. Dropping `subject` on a fact merged from a `subject`-carrying half is a real, measurable regression (confirmed via this merge's own real `find-synergies.mjs` diff — see SYNERGY_DESIGN.md — 17 real type-constrained zone-shaped matches silently lost the first time this was tried without `subject`), not a harmless simplification; fixed by keeping both. A `sink` fact instead uses the `Constraints` fields above directly to describe what it's looking for. */
   subject?: Subject;
   /** `'self'` = this same object; a bare `Constraints` = "whatever this effect's own filter is" (a produce) or "whatever the consumer itself must satisfy" (a want, always paired with `target: 'self'` — see matcher). */
   target?: 'self' | Constraints;
+  /**
+   * Who RECEIVES this event, independent of `controller` (the dealer/doer)
+   * — added because `event: 'damage'` had exactly one side named
+   * (`controller`, always `'you'` across every real fact in the pool: "your
+   * damage") with no way to say WHO that damage actually goes to. Bahamut's
+   * own Mega Flare ("deals damage ... to each opponent") is the case that
+   * surfaced this: before `recipient` existed the fact read as bare "your
+   * damage," dropping the "to each opponent" half of the ability entirely.
+   * Distinct from `target` on purpose — `target` is a `Constraints`-shaped
+   * TYPE/CMC/etc. filter over PERMANENTS (`dies`/`putCounter`'s own use), not
+   * a plain `Side` naming a PLAYER; damage-to-a-player has no type/cmc to
+   * filter on, just a side. Optional — omitting it keeps the original
+   * dealer-only reading ("your damage", direction unstated) for every
+   * existing fact that predates this field; only newly-authored facts
+   * (Bahamut's own, so far — this is fin/1-only, not a pool-wide migration)
+   * set it. NOT the same convention as `lifeloss`'s own `controller`-as-
+   * recipient special case above — keep the two separate, don't conflate
+   * them into one "sometimes controller means recipient" rule.
+   */
+  recipient?: Side;
+  /**
+   * Purely descriptive (2026-09-11) — real CR 601.2c "target" language
+   * (including "up to one target...", where real targeting rules like
+   * hexproof/protection/shroud can matter and 0-or-1 is a real legal
+   * outcome) vs. an unconditional broadcast to everyone/everything a
+   * `target`/`recipient` bucket names, with no choice involved at all.
+   * Motivating contrast, both real fin/1 (Summon: Bahamut) facts:
+   * - `destroy-act`/`destroy-nonland` — oracle text: "Destroy up to one
+   *   target nonland permanent." A real choice among legal candidates;
+   *   `targeted: true`.
+   * - `chapter-iv-damage` — oracle text: "...deals damage... to each
+   *   opponent." No choice — it unconditionally hits every member of the
+   *   `recipient: 'opp'` bucket; `targeted: false`.
+   *
+   * **Convention: only ever written when the axis is actually meaningful
+   * for the fact — i.e. when `target`/`recipient` names a real bucket of
+   * potential candidates (other permanents via a `Constraints` filter, or
+   * a `Side` that can plurally include more than one player/permanent).**
+   * `true` or explicit `false` both mean "this was reviewed against the
+   * real oracle text." Omitted (not `false`) for a fact whose `target` is
+   * simply `'self'`/whose only real "recipient" is the singular `you` —
+   * `self-cast`, `self-enters`, `self-dies`, `self-sacrifice`,
+   * `self-counters`, `chapter-iii-draw` — there is no bucket of candidates
+   * to have chosen among OR broadcast to in the first place (the event
+   * only ever happens to/for exactly one fixed thing), so "targeted" isn't
+   * a real question for them, not an unreviewed one. Don't default this
+   * to `false` for every fact that isn't `true` — that would misrepresent
+   * "not applicable" as "reviewed and confirmed broadcast."
+   *
+   * **Purely informational — NOT consulted by `factsInteract`.** No sink
+   * in the pool wants "only a targeted producer" or "only a broadcast
+   * producer" today, so this adds self-explaining data to the JSON, not a
+   * new matching dimension. If a real future card needs "must be a
+   * targeted removal effect" as an actual want, that's a reason to wire
+   * this into `factsInteract` deliberately then, not a reason to pretend
+   * it's already load-bearing.
+   */
+  targeted?: boolean;
   /** Free-form event-specific fields a real card's own effect carries (Aerith's own `counterType: '+1/+1'`, e.g.) — not part of the fixed constraint vocabulary, matched by plain equality when both sides declare it. */
   counterType?: string;
   /** `event: 'addMana'`'s own free-form detail — the color produced (card.ts's `Effect` `kind: 'addMana'`'s own `color` field, or the single symbol `mana.ts`'s `manaAbilityColorFromStaticText` recognizes off a plain `"{T}: Add {X}."` static-ability string). Superseded by `colors` below for anything NEW (a plain string can't express a real choice-of-color ability as one matchable fact, only as display-equality) — kept only because 11 real single-color cards (Druid of the Cowl, Goobbue Gardener, Llanowar Elves, Midgar, Ishgard, Jidoor, Lindblum, Zanarkand, White Auracite, Willowrush Verge, Elvish Archdruid) already declare this field and migrating them is out of scope for the pass that added `colors` (2026-09-09) — still matched (by plain equality, same as `counterType`) for backward compatibility, and `factsInteract` also treats it as an implicit single-element `colors` set so it stays comparable against a `colors`-shaped want on the other side. */
@@ -146,21 +322,163 @@ export interface EventFact extends Constraints {
   /** Documentary only — this event's own trigger/activation is capped to once per turn on the real card (e.g. Elrond's draw-per-activation), but nothing in state.ts/turn.ts enforces that cap yet (see progress.json's knownGaps). Not matched against anything. */
   oncePerTurn?: boolean;
   value?: Weight;
-  /** See `ZoneFact.sourceText`. */
-  sourceText?: string;
-  /** See `ZoneFact.highlight`. */
-  highlight?: string;
-  /** See `ZoneFact.face`. */
+  /**
+   * See `AnnotationRef` — a real pointer into this fact's own owning face's
+   * real printed text (oracle text body or type line). Computed ONCE,
+   * offline, by `scripts/compute-annotations.mjs` from that card's own
+   * `annotations-authoring.json` (NOT stored on the fact itself — see that
+   * file's own header and `FactAnnotationAuthoring`'s doc comment below for
+   * why: 2026-09-11, same day this field became required — once
+   * `annotations` exists, the literal `sourceText`/`highlight` strings used
+   * to compute it are pure duplication on the SERVED object, since the real
+   * text is always re-derivable by slicing `oracleText`/`typeLine` at
+   * `annotations[].line`/`.start`/`.end`; the authored strings still need
+   * to live SOMEWHERE for regen/review, just not on this served shape).
+   * Baked into the checked-in `synergy.json`; never hand-authored on this
+   * object, never recomputed live server-side.
+   *
+   * **Required, minimum one entry** (hard invariant, not just true by
+   * convention: every fact must carry at least one real annotation, i.e.
+   * genuinely point at something the card's own owner actually prints,
+   * whether that's the oracle text or the type line). A fact with literally
+   * nothing real to anchor to (pure inferred game-rules knowledge with zero
+   * card-specific textual basis, not even the type line) doesn't belong in
+   * this model as a `Fact` at all — fold its signal into a fact that DOES
+   * have real backing, or drop it, rather than inventing a synthetic/
+   * decorative annotation just to satisfy this field's shape. Enforced for
+   * real by `scripts/annotation-coverage.mjs` (`ANNOTATED_CARD_SLUGS` —
+   * scoped to cards that have actually opted into the annotations model;
+   * the rest of the pool hasn't been migrated yet and isn't held to this by
+   * the runtime check, only by this type's own aspirational shape for any
+   * NEW fact authored anywhere).
+   */
+  annotations: [AnnotationRef, ...AnnotationRef[]];
+  /**
+   * Which face of a multi-face card (transform/Adventure/etc.) this fact's
+   * own ability actually lives on — `'front'` = the card's main
+   * `CardDefinition` (the object this same file's `resolveSubject`/
+   * `staticAttrsFor` already treat as `'self'`), `'back'` =
+   * `CardDefinition.backFace` (see card.ts; also reused as the structural
+   * vehicle for Adventure/Room/other two-named-half layouts, not just real
+   * transforms — see e.g. ishgard-the-holy-see-faith-grief's own
+   * definition.ts comment). Reuses the exact `'front'|'back'` vocabulary
+   * `Scenario.face`/`SequenceStep.face` (harness.ts) already established,
+   * rather than a numeric faces-array index, so a single `face` idea reads
+   * the same way whether it's naming which face a SCENARIO exercises or
+   * which face a FACT belongs to. AUTHOR-SET, like `annotations-authoring
+   * .json`'s own `anchor` — deliberately NOT inferred from whether the
+   * authored text happens to appear in one face's oracle text or the
+   * other: that inference is exactly what broke for
+   * `sidequest-catch-a-fish-cooking-campsite`'s own front-face upkeep-
+   * trigger sink fact (2026-09-09) — its authored `sourceText` had a
+   * trailing "..." never in the real oracle text, so it silently matched
+   * NEITHER face. Omit only for a genuinely single-faced card — every fact
+   * on a card whose `CardDefinition` declares a `backFace` should set this
+   * explicitly (`'front'` included, not just `'back'`) so a consumer never
+   * has to fall back to inference at all. Not matched against anything by
+   * `factsInteract` — purely a rendering/grouping hint for a consumer
+   * presenting a multi-face card's own facts split by face (see
+   * `.claude/contracts/card-schema.md`).
+   */
   face?: 'front' | 'back';
 }
 
-/** A fact has either `zone` (a persistent object) or `event` (an occurrence) — never both. The matcher branches on which is present; do not unify them. */
-export type Fact = ZoneFact | EventFact;
+/**
+ * Deprecated back-compat ALIASES for the pre-merge `ZoneFact`/`EventFact`
+ * interfaces (removed 2026-09-11, folded into the one `Fact` interface
+ * above) — kept as plain type synonyms, NOT separate shapes, purely so
+ * other files that still import/annotate with these two names
+ * (`app/lib/factConditions.ts` — card-owned, flagged rather than edited
+ * here per this task's own "pool-wide-safe plumbing, don't need to touch
+ * other files" scoping) keep compiling unchanged. Both are now literally
+ * `Fact` — there is no narrower shape left to alias. New code should just
+ * write `Fact`; these two names exist only to avoid an unrelated-file
+ * edit sweep this specific task didn't need to make. A future
+ * terminology-cleanup pass can retire them once every remaining
+ * `ZoneFact`/`EventFact` reference elsewhere in the repo is updated to
+ * `Fact` directly.
+ */
+export type ZoneFact = Fact;
+export type EventFact = Fact;
 
-export function isZoneFact(fact: Fact): fact is ZoneFact {
-  return 'zone' in fact;
+/**
+ * A pointer into a card's own real printed text, precise enough for a
+ * renderer to slice the exact highlighted phrase without re-doing any
+ * string search at render time (2026-09-11 — replaces the old
+ * `annotateOracleText` design, which rebuilt a whole segment tree on
+ * every server request; see SYNERGY_DESIGN.md's fact-model section and
+ * `.claude/contracts/card-schema.md` for the full rationale — that
+ * function and its `AnnotatedSegment`/`AnnotatedFactRef` shape have since
+ * been deleted from this file, migration complete on both sides).
+ *
+ * Two variants, discriminated by `target` — a real, non-speculative second
+ * kind added 2026-09-11 alongside `annotations` becoming required (see
+ * `Fact.annotations`'s own doc comment): some facts genuinely have nothing
+ * in the oracle text body to point at at all (a baseline "this creature was
+ * cast"/"this permanent enters" claim licensed by the card's own printed
+ * TYPE, not its ability text) — forcing those through the oracle-only
+ * shape would mean either a fabricated oracle-text match or leaving
+ * `annotations` empty, both of which the required-annotations invariant
+ * now forbids. `target: 'name'` or other speculative targets are still NOT
+ * added — `'typeLine'` is the one real case the pool has needed so far.
+ *
+ * - `{ target: 'oracle', line, start, end }` — `line` is 0-INDEXED within
+ *   the OWNING FACE's own real `oracleText` string, split on `\n`
+ *   (Scryfall's own paragraph breaks — one entry per printed line/ability).
+ *   Which face is "owning" is `Fact.face` (`'front'`/`'back'`/omitted = the
+ *   only face on a single-faced card). `start`/`end` are character offsets
+ *   WITHIN THAT LINE ONLY (not the whole oracle text), half-open (`end`
+ *   exclusive) — a consumer gets the exact phrase via
+ *   `oracleText.split('\n')[line]!.slice(start, end)`. Chosen over
+ *   whole-text offsets specifically so a consumer never has to also carry
+ *   the line-splitting logic just to use these numbers.
+ * - `{ target: 'typeLine', start, end }` — character offsets into the
+ *   OWNING FACE's own real, single-line `typeLine` string (`CardDefinition
+ *   .typeLine`/`.backFace.typeLine`, card.ts) directly — no `line` field at
+ *   all, since a type line has no paragraph structure to index into (unlike
+ *   `'oracle'`, there is exactly one "line," so naming it would be dead
+ *   weight on every entry of this kind). A consumer slices via
+ *   `typeLine.slice(start, end)`.
+ *
+ * An array, not a single ref, because one fact can legitimately annotate
+ * more than one span (the same phrase appearing more than once in the
+ * text, or several spans tied to different keywords in one ability) —
+ * though the current computation (`computeFactAnnotations` below) only
+ * ever produces zero or one, since it's derived from a single `highlight`
+ * string against a single chosen target text. `annotations` itself is
+ * REQUIRED with a minimum of one entry (`Fact.annotations`) — a fact whose
+ * `sourceText`/`highlight` doesn't verifiably match its own real text (per
+ * `anchor`) is now a hard authoring failure, not a silently-tolerated gap;
+ * see `scripts/annotation-coverage.mjs`.
+ */
+export type AnnotationRef = { target: 'oracle'; line: number; start: number; end: number } | { target: 'typeLine'; start: number; end: number };
+
+/**
+ * Structural classifier — checks for the exact key names `zone`/`to`/`from`
+ * presence, nothing more. Pre-merge (2026-09-11) this was a real
+ * type-narrowing guard (`fact is ZoneFact`) over a `Fact = ZoneFact |
+ * EventFact` union where the two shapes were mutually exclusive by
+ * construction; now that `ZoneFact`/`EventFact` are both just aliases for
+ * `Fact` itself (see `Fact`'s own doc comment), this is a plain boolean
+ * classifier `factsInteract` uses to decide which matching family a fact
+ * belongs to — a fact CAN satisfy both `isZoneFact` and `isEventFact` at
+ * once now (e.g. a merged `dies` fact with real `to`/`from` AND an
+ * `event` key), which was structurally impossible before the merge.
+ * Plain `boolean` return (not a type predicate) since there's no longer a
+ * narrower type to narrow TO — every caller already has `fact: Fact`,
+ * which already has every field this checks.
+ */
+export function isZoneFact(fact: Fact): boolean {
+  return 'zone' in fact || 'to' in fact || 'from' in fact;
 }
-export function isEventFact(fact: Fact): fact is EventFact {
+
+/** The zone a fact is actually "about," regardless of which field name authored it — a sink's (or a legacy source's) `zone`, or a rework-shaped source's own `to`. `factsInteract`/`describeFact`/`themeOf` all resolve through this single choke point rather than each re-deriving the `zone ?? to` fallback separately. Can be `undefined` for a real, valid fact now (2026-09-11 merge) — a `from`-only fact (e.g. `self-cast`'s own `from:'Hand'`, no `to` since the real destination is the deliberately-invisible Stack — see `Fact`'s own doc comment) is genuinely zone-shaped (has `from`) but has no actual "current zone" to name; every caller below already guards for this rather than assuming a non-`undefined` result. */
+function effectiveZone(fact: Fact): string | undefined {
+  return fact.zone ?? fact.to;
+}
+
+/** See `isZoneFact`'s own doc comment — same "no longer a narrowing guard, plain boolean, kept for other files' back-compat naming" treatment, now over the same one `Fact` type. */
+export function isEventFact(fact: Fact): boolean {
   return 'event' in fact;
 }
 
@@ -168,6 +486,71 @@ export function isEventFact(fact: Fact): fact is EventFact {
 export interface SynergyFile {
   source: Omit<Fact, 'role'>[];
   sink: Omit<Fact, 'role'>[];
+}
+
+/**
+ * One fact's worth of human/AI-authored intent for `scripts/
+ * compute-annotations.mjs` to turn into a real `Fact.annotations` entry —
+ * `sourceText`/`highlight`/`anchor` used to live directly on the `Fact`
+ * object itself; moved out here 2026-09-11 alongside `annotations` becoming
+ * required, per explicit user ask: once a fact has a real baked
+ * `annotations` pointer, the literal text is fully re-derivable by slicing
+ * `oracleText`/`typeLine` at that pointer, so storing the string TOO on the
+ * served object is pure duplication (this session's running "facts should
+ * be as short as possible" theme). This shape is the input to that
+ * derivation, not itself served anywhere.
+ *
+ * - `sourceText` — a short verbatim (or near-verbatim) snippet of the
+ *   card's own real text (which text depends on `anchor`) this fact was
+ *   derived from. Must be a genuinely verbatim substring of that real text
+ *   — `computeFactAnnotations` verifies this and, since `Fact.annotations`
+ *   is required, a `sourceText`/`highlight` pair that doesn't verifiably
+ *   match is a HARD FAILURE for an opted-in card (see
+ *   `scripts/annotation-coverage.mjs`), not silently tolerated.
+ * - `highlight` — the exact substring of `sourceText` that names THIS fact
+ *   specifically (AI-authored per fact, NOT derived by a generic
+ *   per-event-kind regex — see the pre-2026-09-11 `Fact.highlight` doc
+ *   comment in git history for the full "why not a regex" rationale, still
+ *   accurate here, just relocated).
+ * - `anchor` — which of the card's own real printed text fields to match
+ *   against: `'oracle'` (default, omit for this case) = this face's own
+ *   oracle text body; `'typeLine'` = the face's own printed type line
+ *   (e.g. `"Enchantment Creature — Saga Dragon"`) — for a fact whose real
+ *   textual basis genuinely isn't in the ability text at all (Summon:
+ *   Bahamut's own `self-cast`/`self-enters` are the cards that forced
+ *   this: a baseline "this creature was cast as a creature spell"/"this
+ *   permanent enters the battlefield" claim is true because of what's
+ *   PRINTED ON THE TYPE LINE, not the oracle-text body).
+ */
+export interface FactAnnotationAuthoring {
+  anchor?: 'oracle' | 'typeLine';
+  sourceText: string;
+  highlight: string;
+}
+
+/**
+ * On-disk shape of `cards/<slug>/annotations-authoring.json` — checked in
+ * (so the authored intent survives, reviewable in git history, re-runnable
+ * if oracle text or `compute-annotations.mjs`'s own matching logic ever
+ * changes) but never read by `loadCardSynergy`/served in the API response,
+ * and never read by `find-synergies.mjs`/`verify-synergy.mjs`'s own
+ * matching/reconciliation logic — its ONLY reader is `scripts/
+ * compute-annotations.mjs`. POSITIONALLY aligned with that same card's
+ * `synergy.json` `source`/`sink` arrays (index i here authors index i
+ * there) — index-based, not a stable id-keyed map, because facts no longer
+ * carry a stable `id` to key off (removed 2026-09-11, same day) — reordering
+ * facts in `synergy.json` without also reordering this file will silently
+ * misalign the two, so keep them in lockstep when editing either. `null` at
+ * a given index = "no sourceText/highlight authored for this fact" (the
+ * same tolerance the old inline optional fields had — not every fact needs
+ * one, though every OPTED-IN card's fact does still need a resulting
+ * `annotations` entry one way or another, per that field's own required-
+ * ness — see `Fact.annotations`'s doc comment for the "fold it or drop it"
+ * alternative when a fact truly has nothing to anchor to).
+ */
+export interface AnnotationAuthoringFile {
+  source: (FactAnnotationAuthoring | null)[];
+  sink: (FactAnnotationAuthoring | null)[];
 }
 
 // ---------------------------------------------------------------------------
@@ -305,8 +688,20 @@ function sidesCompatible(a: Side | undefined, b: Side | undefined): boolean {
  */
 function effectiveController(fact: Fact): Side | undefined {
   if (fact.controller) return fact.controller;
-  if (isZoneFact(fact)) return fact.subject === 'self' ? 'you' : undefined;
-  return (fact as EventFact).target === 'self' ? 'you' : undefined;
+  // Checks BOTH `subject`/`target` unconditionally (2026-09-11, once
+  // ZoneFact/EventFact merged into one `Fact`) — these two fields used to
+  // be mutually exclusive by construction (a ZoneFact only ever declared
+  // `subject`, an EventFact only ever `target`), so branching on
+  // `isZoneFact` picked the right one for free. Now that a merged fact can
+  // carry either, or only one for its own reasons (e.g. `self-cast` has
+  // `target:'self'` but no `subject` at all, despite ALSO being classified
+  // zone-shaped by `isZoneFact` once it carries a real `from`), gating on
+  // `isZoneFact` would silently stop recognizing a real self-reference —
+  // checking both unconditionally is the correct fix for that, not a
+  // `factsInteract` matching-semantics redesign (this helper only ever
+  // decided "is this fact implicitly about the caster's own side," never
+  // which zone/event branch to run).
+  return fact.subject === 'self' || fact.target === 'self' ? 'you' : undefined;
 }
 
 function constraintsOf(fact: Constraints): Constraints {
@@ -329,9 +724,9 @@ export interface PoolCard {
 
 export type SelfInteractionKind = 'same-instance' | 'second-copy' | 'second-copy-legendary';
 
-/** `fact.value` (1-5) — `compute-weights.mjs` writes an explicit value on EVERY fact it processes, source and sink alike, `1` (neutral) when the fact has no measurable magnitude (a bare event hook, an unquantified want) rather than leaving it unset. So `undefined` here only means "this fact predates the weight fields entirely" (never run through `compute-weights.mjs`) — genuinely unknown, not neutral — and stays `null` rather than being coerced to 1. A caller wanting a match's full two-sided value combines both sides' `factTotal` (see `server/api/graph-links.ts`'s `combinedWeight` — plain product, per-side range 1-5, combined range 1-25). */
+/** `fact.value` (1-5) — `compute-weights.mjs` writes an explicit value on EVERY fact it processes, source and sink alike, `1` (neutral) when the fact has no measurable magnitude (a bare event hook, an unquantified want) rather than leaving it unset. So `undefined` here only means "this fact predates the weight fields entirely" (never run through `compute-weights.mjs`) — genuinely unknown, not neutral — and stays `null` rather than being coerced to 1. `-1` (see `Weight`'s own doc comment) is a different kind of not-real-yet — a manual placeholder pending computation, not a predates-the-fields gap — but for arithmetic purposes it collapses to the same `null` here too: nothing downstream should ever multiply a placeholder in as if it were a real magnitude. A caller wanting a match's full two-sided value combines both sides' `factTotal` (see `server/api/graph-links.ts` — each side floors a `null` to 1 before use, per-side range 1-5, combined range 1-25). */
 export function factTotal(fact: Fact): number | null {
-  return fact.value ?? null;
+  return fact.value != null && fact.value > 0 ? fact.value : null;
 }
 
 export interface InteractionMatch {
@@ -340,7 +735,7 @@ export interface InteractionMatch {
   selfInteraction?: SelfInteractionKind;
   /** `factTotal` of the OTHER side's specific fact that satisfied this match (the group's own `fact` is `mine`'s side — see `InteractionGroup`) — a caller wanting this match's full two-sided value combines both (e.g. `Math.sqrt(mine * theirs)`), not just `mine` alone. `null` if that fact predates the weight fields. */
   theirTotal: number | null;
-  /** `theirs.id` — identifies exactly which fact on `card` this match satisfied, distinct from `mine`'s own `fact.id` on `InteractionGroup`. Used by `server/api/graph-links.ts` to group every match pointing at the SAME sink fact (possibly from many different producer cards) for its own supply-side normalization — same tolerate-`undefined` convention as every other fact id here (a fact authored before per-fact ids won't have one). */
+  /** Identifies exactly which fact on `card` this match satisfied, distinct from `mine`'s own fact on `InteractionGroup`. Used by `server/api/graph-links.ts` to group every match pointing at the SAME sink fact (possibly from many different producer cards) for its own supply-side normalization. Computed via `factIdentity` (below) — there is no longer a per-fact `id` field (removed 2026-09-11, facts are short enough now that stable identity across regen/diffing isn't needed; see `SYNERGY_DESIGN.md`), so this is always derivable and never `undefined` in practice, but stays optional in the type since nothing requires it. */
   theirFactId?: string;
 }
 
@@ -354,8 +749,34 @@ export interface InteractionGroup {
   matches: InteractionMatch[];
 }
 
+/** The ONLY fact-identity convention now that `Fact.id` is gone (removed
+ * 2026-09-11 — see `ZoneFact`/`EventFact`'s own former doc comments in git
+ * history and `SYNERGY_DESIGN.md`'s fact-model section): `role` + this
+ * fact's own rendered `describeFact` label + its first real `annotations`
+ * entry (stringified) — NOT `sourceText` (also removed from the served
+ * `Fact` shape the same day, once `annotations` itself became the required,
+ * real anchor — see `Fact.annotations`'s own doc comment). `annotations[0]`
+ * is a strictly BETTER disambiguator than `sourceText` ever was: it's
+ * guaranteed present (the field is required, minimum one entry) and
+ * exact-position-precise, where `sourceText` was only ever a same-string
+ * coincidence check. Two facts sharing `role`+label+the exact same
+ * annotation position would also look identical to a human reading the
+ * Facts table anyway, so nothing is lost by treating them as the same
+ * identity. Mirrors the card page's own `factKey`
+ * (`app/pages/app/card/[set]/[number].vue`) — keep the two in sync if
+ * either changes. */
+function factIdentity(fact: Fact): string {
+  // `annotations` is required by the TYPE, but only summon-bahamut's
+  // on-disk synergy.json actually carries it so far (pool-wide migration
+  // is separate, later work) — every other card's real JSON simply lacks
+  // the field despite what the type promises, so this must tolerate
+  // `undefined` at runtime or every cross-card interaction lookup
+  // 500s (confirmed live, 2026-09-11).
+  return `${fact.role}::${describeFact(fact)}::${JSON.stringify(fact.annotations?.[0])}`;
+}
+
 function factKind(fact: Fact): string {
-  return isZoneFact(fact) ? `zone:${fact.zone}` : `event:${(fact as EventFact).event}`;
+  return isZoneFact(fact) ? `zone:${effectiveZone(fact)}` : `event:${fact.event}`;
 }
 
 /** Theme = the set of attributes a want (or a produce's own filter) actually constrains — no separate label vocabulary, just which fields are present. */
@@ -373,72 +794,158 @@ export function themeOf(fact: Fact): string[] {
   return theme;
 }
 
-function describeSide(side: Side | undefined): string {
-  return side === 'you' ? 'your' : side === 'opp' ? "an opponent's" : 'a';
-}
-
-/** Constraint words off any `Constraints`-shaped object — factored out so both a fact's own fields AND an event fact's `target` (a separate constraint holder, not the fact's own filter) can share it. */
-function constraintBits(c: Constraints): string[] {
-  const bits: string[] = [];
-  if (c.types?.has) bits.push(c.types.has.join(' ').toLowerCase());
-  if (c.types?.hasAny) bits.push(`(${c.types.hasAny.join('/')})`);
-  if (c.cmc) bits.push(`mana value ${c.cmc.min ?? ''}${c.cmc.max !== undefined ? `-${c.cmc.max}` : ''}${c.cmc.eq !== undefined ? `=${c.cmc.eq}` : ''}`.trim());
-  return bits;
-}
-
-/** Zone-appropriate noun for an unconstrained zone fact — "permanents on your battlefield," not "things on your battlefield." */
-const ZONE_NOUN: Record<string, string> = {
-  Battlefield: 'permanents',
-  Graveyard: 'cards',
-  Hand: 'cards',
-  Library: 'cards',
-  Exile: 'cards',
-  Stack: 'spells',
-};
-
-/** Override for the bare "<zone> presence" phrase on an unqualified zone fact — Exile's own default reads as "exile presence" otherwise, which says nothing about where the thing came from; in this pool an Exile fact is always something leaving the battlefield, so name that instead. */
+/** Override for the bare "<zone> presence" phrase on a zone fact — Exile's own default reads as "exile presence" otherwise, which says nothing about where the thing came from; in this pool an Exile fact is always something leaving the battlefield, so name that instead. Applies regardless of `controller` or a `types`/`cmc` qualifier — see `describeFact`'s own doc comment. */
 const ZONE_PRESENCE_PHRASE: Record<string, string> = {
   Exile: 'exile from battlefield',
 };
+
+/**
+ * The friendly, human-readable name for a SOURCE `ZoneFact`'s own real
+ * `(from, to)` movement — a pure DISPLAY/derivation layer on top of the
+ * authoritative `from`/`to` data (`ZoneFact`'s own doc comment, 2026-09-11
+ * rework), never the reverse: nothing here is read by `factsInteract` or
+ * any other matching code, only by `describeFact` (and, per this rework's
+ * own task brief, directly consumable by the `card` agent's Facts-tab
+ * rendering too, without needing to re-derive it independently — exported
+ * as plain data rather than folded silently into `describeFact`'s own
+ * control flow).
+ *
+ * Deliberately narrow — grow only when a real card's own fact needs a
+ * movement this table doesn't already name, same "grow only when a real
+ * card forces it" discipline `TypeConstraint`/the constraint vocabulary
+ * above already follows. The two entries here are exactly what Summon:
+ * Bahamut's own facts need:
+ *  - `from: undefined, to: 'Battlefield'` → "enters the battlefield" — any
+ *    origin (cast from hand, fetched, blinked back — CR doesn't
+ *    distinguish for this purpose).
+ *  - `from: 'Battlefield', to: 'Graveyard'` → "dies" — CR 700.4: an object
+ *    that's put into a graveyard from the battlefield is CONSIDERED to
+ *    have died, regardless of what caused it (destruction, sacrifice, -X/-X,
+ *    state-based action, ...) — since a `ZoneFact` always describes a
+ *    persistent OBJECT (never a player), anything real moving
+ *    battlefield → graveyard already satisfies "permanent," so no separate
+ *    type/target constraint is needed to disambiguate this one from, say,
+ *    a nonpermanent card merely being put into a graveyard some other way
+ *    (that would never have `from: 'Battlefield'` in the first place).
+ *
+ * Any `(from, to)` pair not listed here falls back to the same bare
+ * "<to> presence" phrasing an unconverted/legacy source fact (or a real
+ * sink fact) already uses — still fully real, matchable data via `to`
+ * alone even before it has a friendly name of its own.
+ */
+export const ZONE_MOVEMENT_NAMES: ReadonlyArray<{ from?: string; to: string; name: string }> = [
+  { to: 'Battlefield', name: 'enters the battlefield' },
+  { from: 'Battlefield', to: 'Graveyard', name: 'dies' },
+];
+
+/** Looks up `ZONE_MOVEMENT_NAMES` for a specific `(from, to)` pair — `from: undefined` in a table entry means "matches any origin, including a real declared one" only when the fact ITSELF also omits `from` (an entry that only cares about `to` would be a different, broader kind of rule this table doesn't need yet — see its own doc comment's "grow only when forced" discipline). Returns `undefined` (not a fallback string) when nothing matches, so callers can tell "no friendly name yet" apart from "the name is itself falsy." */
+export function zoneMovementName(from: string | undefined, to: string): string | undefined {
+  return ZONE_MOVEMENT_NAMES.find((m) => m.to === to && m.from === from)?.name;
+}
 
 /**
  * Human-readable text for a fact — the Interactions panel's own `description`
  * field, parsed straight off the same structured fields the matcher itself
  * reads (no separate hand-written label table to keep in sync).
  *
- * Deliberately terse: an unconstrained zone fact reads as plain "<zone>
- * presence" ("battlefield presence," not "permanents on your battlefield" or
- * "permanents you control") — 'you' is the default and stays unstated,
- * 'opp' gets an explicit "opponent's" prefix since that's the notable case.
- * A `target` constraint (activateAbility's own "target Creature," e.g.) is
- * deliberately NOT rendered into the text either, even though the data still
- * carries it — that nuance now lives in `value`'s own hand-authored score
- * (a conditional want scores lower) rather than cluttering the label.
+ * Deliberately BARE, single-dimensional: a label is just the fixed category
+ * noun/phrase for the fact's own zone/event kind — "battlefield presence",
+ * "dying", "damage", "graveyard presence" — and nothing else. Neither WHO
+ * (`controller`/`recipient` — you/an opponent/either player) NOR WHAT KIND
+ * (a `types`/`cmc` constraint on the fact's own fields, or on an event
+ * fact's own `target` filter — e.g. a `dies` fact with
+ * `target:{types:{not:['Land']}}}`) is rendered into this string, even
+ * though both stay real, intact, readable data ON the fact object. A
+ * consumer wanting that detail (the card page's own conditions/notes
+ * column, `app/lib/factConditions.ts`) reads `controller`/`recipient`/
+ * `target` directly instead of parsing this label. (2026-09-10: reverts an
+ * earlier same-day pass that briefly baked "your"/"opponent's"/"either
+ * player's" prefixes and type-derived nouns like "nonland permanent" into
+ * these same labels — see git history for that intermediate shape; user
+ * decision was that ALL such detail belongs in the notes column, not the
+ * label, full stop.)
+ *
+ * Formerly-deliberate exception, now closed (2026-09-10, same pass as the
+ * rest of this file's bare conversion): a QUALIFIED zone fact (a `types`/
+ * `cmc` constraint on the fact's own top-level fields, as opposed to an
+ * EVENT fact's separate `target` filter) used to render its type and
+ * control the way real oracle text does ("creature cards in your
+ * graveyard", "creature permanents you control on the battlefield"). That
+ * was flagged as inconsistent with every other branch's bare treatment and
+ * is now collapsed the same way: a qualified zone fact renders the exact
+ * same bare "<zone> presence" as an unqualified one. `constraintBits`/
+ * `ZONE_NOUN` (the helpers this used) are dead now that no branch consumes
+ * them — left removed rather than kept around unused. The `types`/`cmc`
+ * constraint stays real, intact data on the fact; `app/lib/factConditions.ts`
+ * (card-owned) already renders it generically via its own
+ * `constraintPhrases`, independent of which `describeFact` branch produced
+ * the label.
+ *
+ * **2026-09-11 exception, deliberately real (not a wording nicety):** a
+ * SOURCE zone-change fact (`ZoneFact.to`/`from` — see its own doc comment)
+ * DOES get a distinct, named label ("dies", "enters the battlefield")
+ * instead of the generic bare "<zone> presence" every other zone fact
+ * still gets — this isn't the same kind of qualifier this function
+ * otherwise refuses to fold in (WHO/WHAT-KIND), it's naming WHICH EVENT
+ * the fact IS, which the bare zone/event vocabulary genuinely has no other
+ * way to say (a zone fact has no `event` field to speak through). See
+ * `zoneMovementName`/`ZONE_MOVEMENT_NAMES` immediately above.
  */
 export function describeFact(fact: Fact): string {
-  const bits = constraintBits(fact);
-  const qualifier = bits.length ? `${bits.join(' ')} ` : '';
   if (isZoneFact(fact)) {
-    if (!qualifier) {
-      const presence = ZONE_PRESENCE_PHRASE[fact.zone] ?? `${fact.zone.toLowerCase()} presence`;
-      return fact.controller === 'opp' ? `opponent's ${presence}` : presence;
+    // A SOURCE fact with a real (from,to) movement (2026-09-11 rework —
+    // see `Fact`'s own doc comment): name the movement itself when
+    // `zoneMovementName` recognizes it ("dies", "enters the battlefield").
+    // A pre-rework source fact (bare `zone`, no `to`/`from` at all) and any
+    // SINK fact both fall through to the unchanged bare "<zone> presence"
+    // phrasing below — `controller`/`from`/a `types`/`cmc` qualifier are
+    // all real, intact data, surfaced in the notes/conditions column
+    // instead of this label (see this function's own doc comment).
+    if (fact.role === 'source' && (fact.to !== undefined || fact.from !== undefined)) {
+      const to = fact.to ?? fact.zone;
+      const name = to !== undefined ? zoneMovementName(fact.from, to) : undefined;
+      if (name) return name;
     }
-    const noun = ZONE_NOUN[fact.zone] ?? 'things';
-    // Battlefield is a shared zone, not a per-player one like Hand/Graveyard/
-    // Library/Exile — "in your battlefield" is not real MTG terminology (there
-    // is no possessive "your battlefield," CR 400.2), so a qualified Battlefield
-    // fact phrases control the same way real oracle text does ("Lands you
-    // control"), not as a zone possessive.
-    if (fact.zone === 'Battlefield') {
-      const control = fact.controller === 'opp' ? 'an opponent controls' : fact.controller === 'you' ? 'you control' : undefined;
-      return control ? `${qualifier}${noun} ${control} on the battlefield` : `${qualifier}${noun} on the battlefield`;
-    }
-    return `${qualifier}${noun} in ${describeSide(fact.controller)} ${fact.zone.toLowerCase()}`;
+    const zone = effectiveZone(fact);
+    // A `from`-only fact with no real `to`/`zone` at all (2026-09-11, a new
+    // real case once ZoneFact/EventFact merged into one `Fact` — e.g.
+    // `self-cast`'s own `from:'Hand'`, no `to` since its real destination
+    // is the deliberately-invisible Stack, see `Fact`'s own doc comment)
+    // has no "current zone" to render as a presence phrase — rather than
+    // crash on an undefined zone string, fall through to the `event`-named
+    // branches below (still real, readable data for a fact like this,
+    // which typically does carry one) instead of returning from this
+    // branch at all.
+    if (zone !== undefined) return ZONE_PRESENCE_PHRASE[zone] ?? `${zone.toLowerCase()} presence`;
   }
   const event = fact.event;
-  if (event === 'lifegain') return `${describeSide(fact.controller)} life gain`;
-  if (event === 'dies') return fact.target === 'self' ? 'dying' : `${describeSide(fact.controller)} creature dying`;
-  if (event === 'putCounter') return `${fact.counterType ?? ''} counters${fact.target === 'self' ? ' on itself' : ''}`.trim();
+  // Bare "life gain" always (2026-09-10) — `controller` (whose life total
+  // goes up) stays real, intact data, surfaced in the notes/conditions
+  // column instead of a "your"/"opponent's" prefix.
+  if (event === 'lifegain') return 'life gain';
+  // Bare "dying" always (2026-09-10) — regardless of `target: 'self'` vs. a
+  // real `Constraints` object, regardless of what that constraint says
+  // (Summon: Bahamut's own `target:{types:{not:['Land']}}}`, e.g., destroys
+  // any NONLAND permanent, not specifically a creature — an earlier same-day
+  // version of this branch derived a "nonland permanent"-style noun from
+  // that constraint via `constraintBits`, then a WHO prefix on top of it;
+  // both are real, intact `target`/`controller` data, surfaced in the
+  // notes/conditions column instead — this label stays single-dimensional).
+  if (event === 'dies') return 'dying';
+  // Bare "counters" always (2026-09-10) — `counterType` (e.g. "+1/+1",
+  // "LORE", "stun") was rendered into this label until later the same day;
+  // overridden to match every other qualifier on this fact (`controller`,
+  // `target === 'self'`) per the single-dimensional label design applied
+  // pool-wide this session: WHICH counter type, like WHO controls the
+  // recipient permanent, is real, intact data surfaced in the notes/
+  // conditions column instead, not the label itself.
+  if (event === 'putCounter') return 'counters';
+  // Bare "damage" always (2026-09-10) — `controller` (the dealer) and
+  // `recipient` (added alongside Bahamut's own Mega Flare fact, same day —
+  // who the damage goes to, independent of `controller`) are both real,
+  // intact data on the fact; neither renders into this label anymore. See
+  // `EventFact.recipient`'s own doc comment for the field itself.
+  if (event === 'damage') return 'damage';
   if (event === 'drawCard' || event === 'drawCards') return 'card draw';
   // Deliberately generic regardless of `fact.tapped` — same convention as
   // `addMana` below: `tapped` is already one of CONDITION_KEYS, rendered in
@@ -446,6 +953,20 @@ export function describeFact(fact: Fact): string {
   if (event === 'entersBattlefield') return 'enters the battlefield';
   if (event === 'playLand') return 'play a land';
   if (event === 'activateAbility') return 'activate ability';
+  // A generic "a spell was cast" event (2026-09-10) — deliberately flat, no
+  // creature/noncreature/legendary wording variation ever: type-specificity
+  // for a want (e.g. "wants specifically a creature spell cast") lives in
+  // the fact's own `Constraints.types`/`target` data for MATCHING purposes
+  // only, never in a separate `cast`-shaped event string or separate label
+  // text — same reason `addMana` above stays color-generic even though the
+  // fact itself carries real color data. A source fact for "this card
+  // itself was cast" uses `target: 'self'` (`dies`'s own self/general split
+  // above is the existing mechanism this reuses, not a new one); this
+  // pre-existing `castCreatureSpell`/`castNoncreatureSpell`-shaped camelCase
+  // event strings elsewhere in the pool are UNRELATED and untouched by this
+  // — `cast` is a new, separate, plain vocabulary entry for future/`fin/1`
+  // (Summon: Bahamut) use, not a rename or migration of those.
+  if (event === 'cast') return 'cast a spell';
   // Deliberately generic — no color breakdown in this label (`colors`/
   // `color` either way, whichever the fact carries) — that's the card
   // page's own "details"/JSON column's job (see `CONDITION_KEYS` in
@@ -454,7 +975,11 @@ export function describeFact(fact: Fact): string {
   // color-specific ("(B/R)") right after `colors` (added 2026-09-09)
   // superseded the legacy singular `color` — reverted per explicit
   // instruction, not a further engine-side vocabulary change.
-  if (event === 'addMana') return `${describeSide(fact.controller)} mana production`;
+  // Bare "mana production" always (2026-09-10) — `controller` (whose mana
+  // pool this fills) stays real, intact data, surfaced in the notes/
+  // conditions column instead of a "your"/"opponent's" prefix, same
+  // treatment as every other branch this pass touched.
+  if (event === 'addMana') return 'mana production';
   // The Gold Saucer's own real "Flip a coin" activated ability (2026-09-09)
   // — deliberately about the FLIP itself, not its win/lose outcome (no
   // coin-flip/random-outcome mechanism exists anywhere in this model, and
@@ -470,99 +995,119 @@ export function describeFact(fact: Fact): string {
   // elsewhere in the pool could care about — Aristocrats-style), distinct
   // from the existing `Battlefield`/`types:{has:['Artifact']}` sink fact
   // above (which only says this card WANTS artifacts, not that it
-  // performs a sacrifice). Deliberately reuses the shared `qualifier`
-  // (built off `types`/`cmc` the same way every zone-fact label above
-  // already does) rather than hardcoding "artifact" into this branch, so
-  // this stays correct for any future card sacrificing a different type —
-  // Gold Saucer's own `types:{has:['Artifact']}` renders as "artifact
-  // sacrifice"; an unconstrained sacrifice fact would render as bare
-  // "sacrifice".
-  if (event === 'sacrifice') return `${qualifier}sacrifice`.trim();
-  return `${qualifier}${event}`;
-}
-
-/** Everything a hover needs about one fact behind a linked phrase — see `AnnotatedSegment`. */
-export interface AnnotatedFactRef {
-  /** See `ZoneFact.id` — required by the type, but a fact predating per-fact ids won't actually carry one at runtime; a caller matching against this should still tolerate `undefined` and fall back to `role`/`sourceText`/`description`. */
-  id: string;
-  role: 'source' | 'sink';
-  value?: Weight;
-  description: string;
-  sourceText: string;
-}
-
-/** One run of a face's oracle text — either plain prose, or a phrase with one or more real facts behind it (rare: two facts sharing the same anchor phrase). Real structured data, not a string marker — a consumer never parses anything out of `text`, it just renders `facts?.length` differently. */
-export interface AnnotatedSegment {
-  text: string;
-  facts?: AnnotatedFactRef[];
+  // performs a sacrifice). Bare "sacrifice" always (2026-09-10) — neither
+  // the `types`/`cmc` qualifier (Gold Saucer's own `types:{has:['Artifact']}`
+  // used to render "artifact sacrifice") nor `controller` (used to render
+  // "your"/"opponent's" prefixed) renders into this label anymore; both stay
+  // real, intact data on the fact.
+  if (event === 'sacrifice') return 'sacrifice';
+  // Generic fallback for every event this function doesn't special-case
+  // above (`lifeloss`, `grantKeyword`, `landfall`, `castCreatureSpell`,
+  // `scry`, `surveil`, `graveyardLeaves`, `counter`, etc. — `damage` got its
+  // own bare branch above). Bare `event` string only (2026-09-10) — neither
+  // `controller` (who — briefly rendered as a "your"/"opponent's" prefix
+  // earlier the same day) nor the `types`/`cmc` qualifier (what kind —
+  // e.g. "land landfall") renders into this label anymore; both stay real,
+  // intact data on the fact, surfaced in the notes/conditions column
+  // instead. `?? '(unknown fact)'` is a real, reachable defensive fallback
+  // now (2026-09-11 merge) — `event` used to be a REQUIRED `EventFact`
+  // field, so TS itself guaranteed this line's `fact.event` was always a
+  // real string; now that `Fact.event` is optional (independent of
+  // `to`/`from`), a fact reaching this line with no `event` AND no real
+  // `to`/`zone` (isZoneFact's own branch above already returns for any
+  // fact with a real zone) would be a genuinely malformed/unauthored fact
+  // — this never happens for any real authored fact today, but the
+  // fallback keeps the return type honest instead of asserting it away.
+  return event ?? '(unknown fact)';
 }
 
 /**
- * Splits one face's oracle text into LINES (Scryfall's own `\n`-separated
- * printed paragraphs — one per triggered/activated ability, e.g.) of
- * `AnnotatedSegment`s, with fact-linked phrases carrying their own real
- * `AnnotatedFactRef[]` directly — no markdown-link-style `[phrase](N)`
- * string marker and no side-array-of-groups a client has to index into
- * (an earlier version of this worked that way; real structured JSON per the
- * user's own framing: "parse everything into json, then add annotations
- * there... decide on frontend how to format... not worry about recompiling
- * every annotated text" — a client that wants a DIFFERENT layout never
- * touches this function again).
- *
- * Deliberately conservative: a fact only gets a linked phrase when it
- * declares its own `highlight` (AI-authored, same as `sourceText`) AND that
- * `highlight` is actually a substring of the fact's own `sourceText` AND
- * `sourceText` itself appears verbatim in `oracleText`. A fact that fails
- * any of these just isn't clickable inline — it's still visible in the
- * plain facts table below, this is additive, not a replacement.
+ * The one place a `FactAnnotationAuthoring` entry's `sourceText`/`highlight`
+ * get turned into a real character range against a face's own real text —
+ * the same indexOf-based matching the now-deleted `annotateOracleText` used
+ * to do live, kept as a single private helper so `computeFactAnnotations`
+ * below has exactly one place this logic lives. Generic over WHICH real
+ * text is passed in (`text`) — the oracle text body, or (2026-09-11) a type
+ * line — `computeFactAnnotations` decides which one via `authoring.anchor`
+ * before calling this. Same "first match, best effort" tolerance the
+ * original had: `text.indexOf` and `sourceText.indexOf` both return the
+ * FIRST occurrence — a `sourceText`/`highlight` pair repeated verbatim
+ * elsewhere in the same text (not observed anywhere in the pool as of
+ * 2026-09-11) is a real ambiguity this silently resolves by picking the
+ * earliest. Returns `undefined` (not a hard failure by itself) when there's
+ * no authoring entry at all, or the match fails — `computeFactAnnotations`'s
+ * caller decides what a failed match means (a hard authoring failure for an
+ * opted-in card, per `Fact.annotations`'s own required-field doc comment).
  */
-export function annotateOracleText(oracleText: string, facts: Fact[]): AnnotatedSegment[][] {
-  interface Range {
-    start: number;
-    end: number;
-    facts: Fact[];
-  }
-  const ranges: Range[] = [];
-  for (const f of facts) {
-    if (!f.sourceText || !f.highlight) continue;
-    const sourceIdx = oracleText.indexOf(f.sourceText);
-    if (sourceIdx === -1) continue;
-    const highlightIdx = f.sourceText.indexOf(f.highlight);
-    if (highlightIdx === -1) continue;
-    ranges.push({ start: sourceIdx + highlightIdx, end: sourceIdx + highlightIdx + f.highlight.length, facts: [f] });
-  }
-  ranges.sort((a, b) => a.start - b.start || a.end - b.end);
+function rawHighlightRange(text: string, authoring: FactAnnotationAuthoring | null | undefined): { start: number; end: number } | undefined {
+  if (!authoring?.sourceText || !authoring.highlight) return undefined;
+  const sourceIdx = text.indexOf(authoring.sourceText);
+  if (sourceIdx === -1) return undefined;
+  const highlightIdx = authoring.sourceText.indexOf(authoring.highlight);
+  if (highlightIdx === -1) return undefined;
+  return { start: sourceIdx + highlightIdx, end: sourceIdx + highlightIdx + authoring.highlight.length };
+}
 
-  const accepted: Range[] = [];
-  for (const r of ranges) {
-    const last = accepted[accepted.length - 1];
-    if (last && r.start === last.start && r.end === last.end) {
-      last.facts.push(...r.facts);
-      continue;
+/**
+ * Converts a whole-text absolute `[start, end)` character range into the
+ * line-relative shape `AnnotationRef` stores on disk — see that interface's
+ * own doc comment for the indexing convention. Returns `undefined` (rather
+ * than guessing) when the range spans more than one line — a `highlight`
+ * phrase crossing a `\n` would mean "line" alone can't describe it, and no
+ * real fact in the pool needs that today; flag rather than silently pick a
+ * line if one ever does.
+ */
+function toLineOffset(oracleText: string, start: number, end: number): AnnotationRef | undefined {
+  const lines = oracleText.split('\n');
+  let offset = 0;
+  for (let line = 0; line < lines.length; line++) {
+    const lineLen = lines[line]!.length;
+    const lineEnd = offset + lineLen;
+    if (start >= offset && end <= lineEnd) {
+      return { target: 'oracle', line, start: start - offset, end: end - offset };
     }
-    if (last && r.start < last.end) continue; // overlapping, ambiguous — keep whichever sorted first
-    accepted.push(r);
+    offset = lineEnd + 1; // + 1 for the '\n' this split() consumed
   }
+  return undefined;
+}
 
-  const lines: AnnotatedSegment[][] = [[]];
-  const pushText = (text: string, factRefs?: AnnotatedFactRef[]) => {
-    const parts = text.split('\n');
-    parts.forEach((part, i) => {
-      if (i > 0) lines.push([]);
-      if (part.length > 0 || factRefs) lines[lines.length - 1]!.push({ text: part, facts: factRefs });
-    });
-  };
-  let cursor = 0;
-  for (const r of accepted) {
-    pushText(oracleText.slice(cursor, r.start));
-    pushText(
-      oracleText.slice(r.start, r.end),
-      r.facts.map((f) => ({ id: f.id, role: f.role, value: f.value, description: describeFact(f), sourceText: f.sourceText! })),
-    );
-    cursor = r.end;
+/**
+ * Computes one fact's baked `AnnotationRef[]` against the real text of the
+ * face it belongs to, from that fact's own `FactAnnotationAuthoring` entry
+ * (`cards/<slug>/annotations-authoring.json`, positionally aligned with
+ * `synergy.json` — see that type's own doc comment; the caller is
+ * responsible for passing the matching authoring entry AND the right
+ * face's text, this function doesn't know about multi-face cards or
+ * position-matching itself). `authoring.anchor` (default `'oracle'`) picks
+ * which of `texts.oracle`/`texts.typeLine` is actually searched — see
+ * `AnnotationRef`'s own doc comment for the two resulting shapes. The ONE
+ * place this computation happens end-to-end — `scripts/
+ * compute-annotations.mjs` calls this once per card, per fact, and bakes
+ * the result into the checked-in `synergy.json`; no other caller should
+ * ever run this live (see `AnnotationRef`'s own doc comment on why: "card
+ * text won't ever change, so we can attach to it specifically" — the whole
+ * reason this replaced the old live `annotateOracleText` segment-tree
+ * rebuild, since deleted, that used to run on every server request).
+ * Currently always zero-or-one-element (derived from a single `highlight`
+ * string) — the array shape exists for a future fact that legitimately
+ * needs to point at more than one span, not exercised yet. Returns
+ * `undefined` when there's no authoring entry at all (`null`/missing) for
+ * this fact, or its `sourceText`/`highlight` don't verifiably match.
+ */
+export function computeFactAnnotations(
+  texts: { oracle?: string; typeLine?: string },
+  authoring: FactAnnotationAuthoring | null | undefined,
+): AnnotationRef[] | undefined {
+  if ((authoring?.anchor ?? 'oracle') === 'typeLine') {
+    if (!texts.typeLine) return undefined;
+    const range = rawHighlightRange(texts.typeLine, authoring);
+    return range ? [{ target: 'typeLine', start: range.start, end: range.end }] : undefined;
   }
-  pushText(oracleText.slice(cursor));
-  return lines;
+  if (!texts.oracle) return undefined;
+  const range = rawHighlightRange(texts.oracle, authoring);
+  if (!range) return undefined;
+  const loc = toLineOffset(texts.oracle, range.start, range.end);
+  return loc ? [loc] : undefined;
 }
 
 function selfInteractionKind(fact: Fact, card: PoolCard): SelfInteractionKind {
@@ -580,15 +1125,36 @@ function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sin
   if (!sidesCompatible(effectiveController(p), effectiveController(w))) return false;
 
   if (isZoneFact(p) && isZoneFact(w)) {
-    if (p.zone !== w.zone) return false;
+    // `p` (the producer) is always the SOURCE-role fact in this branch —
+    // compare its own `to` (or legacy bare `zone`, same thing) against the
+    // sink's plain presence `to`/`zone` (`effectiveZone(w)`, NOT a bare
+    // `w.zone` read — fixed 2026-09-11 alongside the `Fact` merge: a sink
+    // fact can now legitimately author `to` instead of `zone` too, e.g.
+    // this card's own `mega-flare-you`, and a bare `w.zone` read would
+    // silently stop matching a sink migrated to `to`). `p.from` is
+    // deliberately NOT part of this comparison — a sink only ever
+    // declares a plain state-presence want, never "and it must have
+    // arrived from X," so a downstream consumer caring only about the
+    // `to` side matches regardless of origin (this rework's own explicit
+    // design goal — see `Fact`'s own doc comment).
+    if (effectiveZone(p) === undefined || effectiveZone(p) !== effectiveZone(w)) return false;
     const wantConstraints = constraintsOf(w);
     if (!hasAnyConstraint(wantConstraints)) return true;
     const attrs = resolveSubject(p.subject, pCard.card, tokens);
     return !!attrs && satisfiesConstraints(attrs, wantConstraints);
   }
 
-  const pe = p as EventFact;
-  const we = w as EventFact;
+  // Plain aliases, not a real cast (`p`/`w` are already `Fact`, which
+  // already has every field read below — `EventFact` is now just an alias
+  // for `Fact`, see its own doc comment) — kept only so the rest of this
+  // branch's existing `pe`/`we` naming didn't need a rename for this pass.
+  const pe = p;
+  const we = w;
+  // Event-to-event matching stays pure `event` string equality — `to`/
+  // `from`, when a merged fact also carries them (2026-09-11), are
+  // deliberately NOT compared here, same as `targeted`/`tapped`-adjacent
+  // fields below; they exist so the fact's own JSON is self-explaining
+  // data, not to add a new matching dimension.
   if (pe.event !== we.event) return false;
   if (pe.counterType && we.counterType && pe.counterType !== we.counterType) return false;
   // Reuses `satisfiesType` (the exact `TypeConstraint` matcher `Constraints.types`
@@ -639,7 +1205,7 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
             card: other.name,
             selfInteraction: isSelf ? selfInteractionKind(mine, mineCard) : undefined,
             theirTotal: factTotal(theirs),
-            theirFactId: theirs.id,
+            theirFactId: factIdentity(theirs),
           });
         }
       }

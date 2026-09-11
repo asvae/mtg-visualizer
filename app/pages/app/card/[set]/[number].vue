@@ -1,17 +1,29 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { describeRelation, groupChipsByVerb } from '../../../../lib/relations';
-import { factConditions } from '../../../../lib/factConditions';
-import { annotatedFactRefKey, orderByTextPosition } from '../../../../lib/factOrder';
+import { factConditions, isSelfReferencing } from '../../../../lib/factConditions';
+import { orderByTextPosition } from '../../../../lib/factOrder';
 import type { FactRow } from '../../../../lib/factOrder';
 import { describeFact } from '../../../../../functional-model/synergy';
 import type { Fact } from '../../../../../functional-model/synergy';
 import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
-import type { CardData, EdgeData, ThemeData, AnnotatedCard, AnnotatedFace, ReviewStatus } from '../../../../types';
+import type { CardData, EdgeData, ThemeData, AnnotatedCard, ReviewStatus } from '../../../../types';
 import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
 import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
 
 definePageMeta({ layout: 'graph' });
+
+// Facts tab's value/weight column (ValueBar 1-5 dots) — hidden for now per
+// explicit request, display-only toggle. Underlying `Fact.value` data and
+// the `ValueBar` component itself are untouched; flip this back to true to
+// re-enable the column, no other change needed.
+const SHOW_FACT_VALUE_COLUMN = false;
+
+// Debug column showing each row's raw `Fact` JSON, so it's inspectable
+// without switching to the separate JSON tab or opening devtools. On by
+// default (standing debug aid, not a one-off) — flip to false to hide it
+// without deleting anything.
+const SHOW_FACT_DEBUG_COLUMN = true;
 
 const route = useRoute();
 const store = inject(StoreKey)!;
@@ -228,25 +240,96 @@ const synergy = computed(() => data.value?.functionalModel?.synergy ?? null);
 // redundant, not informative — one array, same order the Facts tab's own
 // table already uses (sink then source), is the more honest "what does one
 // fact actually look like" view.
-const functionalModelJson = computed(() =>
-  synergy.value ? JSON.stringify([...synergy.value.sink, ...synergy.value.source], null, 2) : null
-);
+// A single Facts-tab row's debug cell shows only a compact single-line JSON
+// summary inline (see factDebugJson below) — click opens the full
+// pretty-printed fact JSON in this modal instead of relying on a native
+// title-attribute hover tooltip, which stays exactly as hard to read as the
+// inline text itself. (The JSON tab itself renders its own full JSON
+// directly inline via JsonHighlight now — no modal indirection there, this
+// modal is Facts-debug-cell-only.) `debugModalOpen`/`debugModalTitle`/
+// `debugModalContent` follow AppHeader.vue's own `UModal v-model:open`
+// convention. The modal itself is header-less (no `title` prop,
+// `:close="false"`) so the JSON content is the sole visible thing, but a
+// normal centered/sized box — NOT `fullscreen` (tried once, was too much
+// per explicit correction) — `:ui="{ content: 'max-w-3xl' }"` caps its
+// width the same way the very first (pre-fullscreen) version of this modal
+// did. `debugModalTitle` is kept (write-only now) for a future
+// accessible-name/breadcrumb use, not read by the template.
+const debugModalOpen = ref(false);
+const debugModalTitle = ref('');
+const debugModalContent = ref('');
+function openDebugModal(title: string, content: string) {
+  debugModalTitle.value = title;
+  debugModalContent.value = content;
+  debugModalOpen.value = true;
+}
+const functionalModelJson = computed(() => (synergy.value ? JSON.stringify([...synergy.value.sink, ...synergy.value.source], null, 2) : null));
+const cardJson = computed(() => (data.value?.functionalModel?.annotatedCard ? JSON.stringify(data.value.functionalModel.annotatedCard, null, 2) : null));
 
 // `factConditions` itself now lives in app/lib/factConditions.ts (extracted
 // for real unit coverage — see that file's own header for why, and its
 // sibling factConditions.test.ts) — imported above, not defined here.
 
-// Same shape as FunctionalModelText.vue's own `factKey` — matches a table
-// row's raw `Fact` to the `AnnotatedFactRef`(s) behind a linked phrase there,
-// so hovering a row can highlight its own phrase in the annotated text.
-// Prefers the fact's own author-assigned `id` (stable, unambiguous); falls
-// back to role+sourceText+description for a fact that predates `id` (two
-// such facts sharing all three would also render identically in the table,
-// so nothing is lost by treating them as the same key).
+// Same formula as FunctionalModelText.vue's own `factKey`, mirroring
+// engine's own `factIdentity()` (functional-model/synergy.ts) — matches a
+// table row's raw `Fact` to the fact(s) behind a linked phrase there, so
+// hovering a row can highlight its own phrase in the annotated text.
+// `Fact.id` was removed 2026-09-11; identity is now role + rendered label +
+// the fact's own first real `annotations` entry (stringified). `annotations`
+// is required by the TYPE, but only summon-bahamut's on-disk synergy.json
+// actually carries it so far (pool-wide migration is separate, later work)
+// — every other card's real facts lack the field despite the type, so this
+// must tolerate `undefined` at runtime (confirmed live 500s otherwise,
+// 2026-09-11).
 function factKey(fact: Fact): string {
-  return fact.id ?? `${fact.role}::${fact.sourceText}::${describeFact(fact)}`;
+  return `${fact.role}::${describeFact(fact)}::${JSON.stringify(fact.annotations?.[0])}`;
 }
 const hoveredFactKey = ref<string | null>(null);
+
+// `describeFact()` (functional-model/synergy.ts, engine-owned) always
+// returns its label lowercase. Capitalizing via CSS `::first-letter` on the
+// label cell is fragile: it only targets the first TEXT NODE, so rows whose
+// label is preceded by the "linked to card text" icon (a sibling element,
+// not part of the text node) silently don't get capitalized. Capitalize the
+// string itself instead, uniformly, regardless of what markup precedes it.
+function factLabel(fact: Fact): string {
+  const text = describeFact(fact);
+  return text.length ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
+// Every fact now links to something real — a body oracle-text span
+// (isFactAnnotated) or, failing that, the header name (isHeaderLinkedFact) —
+// so a dedicated icon glyph no longer distinguishes anything (it was on
+// every row). The underlying link behavior is unchanged, just moved onto the
+// row's own label span instead of a separate icon element: a body-linked
+// label's hover-highlight already comes free from the row's own
+// hoveredFactKey handlers on <tr> (unchanged, see the template); a
+// header-linked label additionally flashes the header name on hover and
+// scrolls to it + pops its tooltip on click, via the three helpers below.
+function factLinkTitle(fact: Fact): string | undefined {
+  if (isFactAnnotated(fact)) return 'Linked to card text';
+  if (isHeaderLinkedFact(fact)) return 'Linked to the card name above — click to jump to it';
+  return undefined;
+}
+function onFactLabelEnter(fact: Fact) {
+  if (isHeaderLinkedFact(fact)) headerHighlightIndex.value = factFaceIndex(fact);
+}
+function onFactLabelLeave(fact: Fact) {
+  if (isHeaderLinkedFact(fact)) headerHighlightIndex.value = null;
+}
+function onFactLabelClick(fact: Fact) {
+  if (isHeaderLinkedFact(fact)) scrollToHeaderName(factFaceIndex(fact));
+}
+
+// Debug column: a small icon button only (no raw JSON text rendered in the
+// cell itself) — click opens the full pretty-printed JSON in the shared
+// debug modal (see `openDebugModal` above).
+function factDebugJsonPretty(fact: Fact): string {
+  return JSON.stringify(fact, null, 2);
+}
+function openFactDebugModal(fact: Fact) {
+  openDebugModal(`Fact JSON — ${factKey(fact)}`, factDebugJsonPretty(fact));
+}
 
 // Every fact — including `addMana` events — renders as its own plain row,
 // same convention as any other fact (no card-owned grouping/collapsing;
@@ -259,10 +342,12 @@ const hoveredFactKey = ref<string | null>(null);
 // predecessor-lookup/tiebreak sequence for a fact with no textual anchor
 // of its own. `FactRow` itself is defined there too (shared with
 // `orderByTextPosition`'s own signature) rather than redeclared here.
-const factRows = computed<FactRow[]>(() => {
-  if (!synergy.value) return [];
-  return [...synergy.value.source, ...synergy.value.sink].map((fact) => ({ fact, key: factKey(fact) }));
-});
+// Every visible fact (source + sink), synergy.json's own authored order —
+// shared by `factRows` below, `headerFaceFacts`, and passed straight down
+// to FunctionalModelText.vue (its own `facts` prop) so it can build its
+// per-line highlighted segments off each fact's own baked `annotations`.
+const allSynergyFacts = computed<Fact[]>(() => (synergy.value ? [...synergy.value.source, ...synergy.value.sink] : []));
+const factRows = computed<FactRow[]>(() => allSynergyFacts.value.map((fact) => ({ fact, key: factKey(fact) })));
 
 // Multi-face Facts split (Adventure-layout Town lands, e.g. fin/293
 // Zanarkand, Ancient Metropolis // Lasting Fayth) — the user wants the
@@ -273,7 +358,7 @@ const factRows = computed<FactRow[]>(() => {
 // vast majority of cards are single-faced and keep today's flat,
 // ungrouped table exactly as before.
 //
-// Placement signal: primarily the fact's own author-set `Fact.face`
+// Placement signal: the fact's own author-set `Fact.face`
 // (functional-model/synergy.ts) — `'front'` -> Main card, `'back'` -> Other
 // faces/functions, see `isMainFaceFact` below, defined alongside
 // `factRowGroups` since it's the actual per-row grouping decision. This
@@ -284,58 +369,142 @@ const factRows = computed<FactRow[]>(() => {
 // sidequest-catch-a-fish-cooking-campsite's own front-face
 // `wants-artifact-or-creature-on-top` sink fact (no `sourceText`/`highlight`
 // match at all) into "Other faces/functions" despite it genuinely being a
-// front-face effect — exactly the gap `Fact.face` was added to close. The
-// heuristic below (`mainFaceFactKeys`) is now ONLY the fallback for a fact
-// with no `face` set at all (shouldn't happen on any of today's 33
-// backfilled multi-face cards, but kept rather than deleted in case a
-// future card lands before its own `face` values are authored).
-// `annotatedFactRefKey` itself now lives in app/lib/factOrder.ts (shared
-// with `orderByTextPosition`'s own oracleLines walk) — imported above.
+// front-face effect — exactly the gap `Fact.face` was added to close.
+//
+// 2026-09-11 `Fact.annotations` pointer rework (see `.claude/contracts/
+// card-schema.md`): the old face-0-oracleLines-match fallback heuristic
+// (for a fact with no `face` set at all) is gone — under the new pointer
+// model, a fact's own `annotations` are computed relative to whichever
+// face `Fact.face` already names (omitted = the single face on a
+// single-faced card), so there's no longer an independent signal to infer
+// "front" from a text match; `factFaceIndex` below just defaults an unset
+// `face` to front (0) directly, same as the pointer contract's own
+// "omitted-for-single-faced" convention already implies.
 const annotatedFaces = computed(() => data.value?.functionalModel?.annotatedCard?.faces ?? []);
 const isMultiFace = computed(() => annotatedFaces.value.length > 1);
-// Every fact-key `annotateOracleText` (functional-model/synergy.ts) actually
-// linked into SOME face's oracleLines — i.e. the fact declared a
-// `sourceText`/`highlight` pair that really matched that face's own oracle
-// text, not just "has the fields set". Shared by the multi-face grouping
-// below (face 0 only) and the Facts table's own per-row annotation icon
-// (any face — a back-face-only link still counts as "this fact has a real
-// textual anchor somewhere on the card", which is the icon's own, narrower
-// question).
-function factKeysInFaces(faces: AnnotatedFace[]): Set<string> {
-  const keys = new Set<string>();
-  for (const face of faces) for (const seg of face.oracleLines.flat()) for (const ref of seg.facts ?? []) keys.add(annotatedFactRefKey(ref));
-  return keys;
-}
-// Set of every fact-key linked anywhere in face 0's own oracleLines — the
-// ONLY set actually consulted (a 2+-face card's "main" is always exactly
-// face 0; every other face collapses into the one "Other faces/functions"
-// bucket, matching the user's own "Main card / Other faces" two-way split,
-// not a per-face breakdown).
-const mainFaceFactKeys = computed(() => factKeysInFaces(annotatedFaces.value.slice(0, 1)));
-// Every fact-key linked on ANY face — drives the Facts table's small
-// per-row annotation icon (does this fact have a real textual anchor at
-// all, regardless of which face). A fact with no `sourceText`/`highlight`,
-// or one whose `highlight` never actually matched that face's oracle text,
-// is absent from every face's `oracleLines` and therefore reads as
-// unannotated here — same "no textual anchor" facts that fall into the
-// "Other faces/functions" fallback bucket above.
-const annotatedFactKeys = computed(() => factKeysInFaces(annotatedFaces.value));
+// A fact has a real textual anchor SOMEWHERE (any face) iff it carries at
+// least one baked `Fact.annotations` entry (`AnnotationRef[]`,
+// functional-model/synergy.ts, computed once by
+// functional-model/scripts/compute-annotations.mjs from its own
+// `sourceText`/`highlight`) — drives the Facts table's small per-row
+// annotation icon. Replaces the old "walk every face's oracleLines segment
+// tree looking for this fact's key" computation entirely; no server-built
+// segment tree exists to walk anymore.
 function isFactAnnotated(fact: Fact): boolean {
-  return annotatedFactKeys.value.has(factKey(fact));
+  return !!fact.annotations?.length;
 }
-// Which bucket a single row belongs in — prefers the fact's own
+// Reciprocal of `headerFaceFacts` below — every fact-key that ended up
+// annotating the HEADER name (self-referencing, no real oracle-text anchor
+// of its own) rather than a body phrase. Drives the Facts table's own row
+// icon for exactly these facts: before this, a self-referencing fact (e.g.
+// fin/1's "Cast a spell") rendered with no icon at all even though the
+// header now underlines/tooltips it — the row looked like plain unlinked
+// text while the header quietly carried the other half of the link. Same
+// icon, same convention as `isFactAnnotated`'s body-link icon (see the
+// Facts tab template) — the fact IS linked, just to the header instead of a
+// body span, and the row should read that way too.
+const headerLinkedFactKeys = computed(() => {
+  const keys = new Set<string>();
+  for (const facts of headerFaceFacts.value.values()) for (const f of facts) keys.add(factKey(f));
+  return keys;
+});
+function isHeaderLinkedFact(fact: Fact): boolean {
+  return headerLinkedFactKeys.value.has(factKey(fact));
+}
+// 0 ("front"/only face) or 1 ("back") for a raw `Fact` — the fact's own
 // author-set `face` field (functional-model/synergy.ts's `Fact.face`,
-// backfilled across every multi-face card in the pool) since that's a
-// real, explicit declaration rather than an inference. Only falls back to
-// the old oracleLines-linking heuristic (see `mainFaceFactKeys` above) for
-// a fact that has no `face` set at all — shouldn't happen on any of
-// today's multi-face cards, but a future card might land before its own
-// `face` values are authored, so the heuristic stays as a safety net
-// rather than being deleted outright.
+// backfilled across every multi-face card in the pool) is the only signal
+// now (see `annotatedFaces`'s own doc comment above for why the old
+// text-match fallback heuristic is gone post-`Fact.annotations`-rework); an
+// unset `face` defaults to front, matching the pointer contract's own
+// "omitted-for-single-faced" convention. A genuinely single-faced card (the
+// vast majority) always resolves to 0 regardless of `face` — there's no
+// second face for anything to belong to. Shared by `isMainFaceFact` below
+// (Facts table row grouping) and `headerFaceFacts` (the page header's own
+// self-fact annotation, see below) so the two never disagree about which
+// face a given fact belongs to.
+function factFaceIndex(fact: Fact): number {
+  if (annotatedFaces.value.length <= 1) return 0;
+  return fact.face === 'back' ? 1 : 0;
+}
+// Replaces the old `row.fact.sourceText` hover tooltip — `sourceText`/
+// `highlight` are no longer served on a `Fact` at all (moved engine-side to
+// a separate, non-served `annotations-authoring.json`; see
+// `.claude/contracts/card-schema.md`'s "Fact-to-oracle-text pointers"
+// section) — so this derives equivalent full-sentence text straight off the
+// fact's own first baked `annotations` entry against the real served
+// `annotatedCard`. `target: 'oracle'` shows the WHOLE line the span lives
+// on (not just the exact highlighted substring — a full sentence reads
+// better as a tooltip than a bare phrase, matching what the old
+// `sourceText` tooltip used to show); `target: 'typeLine'` has no line
+// structure to speak of, so it's just the exact `start`/`end` slice of the
+// face's own single-line `typeLine`. Falls back to `describeFact(fact)` if
+// this ever comes up empty (shouldn't happen — `annotations` is required
+// with a minimum of one entry — but a raw pointer into a face that doesn't
+// exist should never crash the row).
+function factSourceText(fact: Fact): string {
+  const ann = fact.annotations?.[0];
+  const face = annotatedFaces.value[factFaceIndex(fact)];
+  if (!ann || !face) return describeFact(fact);
+  if (ann.target === 'typeLine') {
+    return face.typeLine.slice(ann.start, ann.end) || describeFact(fact);
+  }
+  const line = face.oracleText.split('\n')[ann.line];
+  return line ?? describeFact(fact);
+}
 function isMainFaceFact(row: FactRow): boolean {
-  if (row.fact.face === 'front') return true;
-  if (row.fact.face === 'back') return false;
-  return mainFaceFactKeys.value.has(row.key);
+  return factFaceIndex(row.fact) === 0;
+}
+// A self-referencing fact (`isSelfReferencing`, app/lib/factConditions.ts —
+// `subject`/`target` literally `'self'`, e.g. fin/1's own "cast a spell"/
+// "dies" baseline facts) describes an implicit RULES action, not something
+// literally printed on the card — there's no real oracle-text span for it
+// to have a baked `Fact.annotations` entry, unlike a produce/consume fact
+// whose annotation points at a real printed phrase. Rather
+// than leaving it entirely unlinked, it gets the exact same underline+hover
+// treatment as any other annotated fact, just anchored to the CARD'S OWN
+// NAME in the page header instead of a body phrase — the card itself is
+// the one thing a self-referencing fact is always, unambiguously "about".
+// Skips a self fact that DOES have a real match somewhere (`isFactAnnotated`
+// — e.g. fin/1's own "Sacrifice after IV" self-graveyard fact, whose
+// annotation genuinely points at printed text) so a fact never ends
+// up double-linked (its real span AND the header) — the header is strictly
+// the fallback for a fact with no textual anchor at all.
+// Keyed by `factFaceIndex` (shared with `isMainFaceFact` above) so a
+// back-face-only self fact (e.g. an Adventure/DFC's own back-face-only
+// zone-presence fact) annotates that face's own name in the header, never
+// the front/combined title.
+const headerFaceFacts = computed<Map<number, Fact[]>>(() => {
+  const map = new Map<number, Fact[]>();
+  if (!synergy.value) return map;
+  for (const fact of allSynergyFacts.value) {
+    if (!isSelfReferencing(fact) || isFactAnnotated(fact)) continue;
+    const idx = factFaceIndex(fact);
+    const list = map.get(idx);
+    if (list) list.push(fact);
+    else map.set(idx, [fact]);
+  }
+  return map;
+});
+// Reciprocal direction of the header<->row link: which face name (by
+// `factFaceIndex`) to visually flash while the user's hovering a
+// header-linked fact row's icon in the Facts tab — passed down to
+// FunctionalModelText.vue (which now owns the heading itself, and its own
+// underline+hover tooltip recipe) as `headerHighlightIndex`.
+const headerHighlightIndex = ref<number | null>(null);
+// Template ref onto FunctionalModelText.vue's own instance — lets
+// `scrollToHeaderName` below delegate into its exposed `scrollToFace`
+// (see that component's own header-name markup/`defineExpose`) rather than
+// this page reaching into that component's DOM/tooltip state directly.
+const functionalModelTextRef = ref<{ scrollToFace: (index: number) => void } | null>(null);
+// Bonus half of the reciprocal link: clicking a header-linked fact row's own
+// icon (Facts tab) scrolls the face name it annotates back into view and
+// pops the exact same tooltip that name's own hover shows (auto-hidden
+// shortly after) — so the row's icon doesn't just look linked, clicking it
+// visibly answers "linked to what" without the user hunting for the heading
+// themselves.
+function scrollToHeaderName(faceIndex: number) {
+  functionalModelTextRef.value?.scrollToFace(faceIndex);
 }
 // Grouped view for the Facts tab template — a flat single group (no
 // header rendered) when `!isMultiFace`, so a single-faced card's markup is
@@ -343,19 +512,63 @@ function isMainFaceFact(row: FactRow): boolean {
 // up empty) otherwise. Each group's own rows are further reordered by
 // `orderByTextPosition` (app/lib/factOrder.ts) to follow the card's own
 // printed oracle-text order (user's own request against fin/279 The Gold
-// Saucer) — applied PER GROUP, each against only ITS OWN relevant face(s)
-// (front face alone for "Main card"; every other face for "Other
-// faces/functions"), never one global cross-face position, per that
-// module's own doc comment.
+// Saucer) — applied PER GROUP (front-face rows for "Main card"; every other
+// face's rows for "Other faces/functions"), never one global cross-face
+// position. `orderByTextPosition` no longer takes a `faces` argument
+// (2026-09-11 `Fact.annotations` pointer rework) — each row's own fact
+// already carries its own (line, start) position directly, no server-built
+// segment tree left to walk; see that function's own doc comment.
 const factRowGroups = computed<{ label: string | null; rows: FactRow[] }[]>(() => {
-  if (!isMultiFace.value) return [{ label: null, rows: orderByTextPosition(factRows.value, annotatedFaces.value.slice(0, 1)) }];
+  if (!isMultiFace.value) return [{ label: null, rows: orderByTextPosition(factRows.value) }];
   const main: FactRow[] = [];
   const other: FactRow[] = [];
   for (const row of factRows.value) (isMainFaceFact(row) ? main : other).push(row);
   return [
-    { label: 'Main card', rows: orderByTextPosition(main, annotatedFaces.value.slice(0, 1)) },
-    { label: 'Other faces/functions', rows: orderByTextPosition(other, annotatedFaces.value.slice(1)) },
+    { label: 'Main card', rows: orderByTextPosition(main) },
+    { label: 'Other faces/functions', rows: orderByTextPosition(other) },
   ].filter((g) => g.rows.length > 0);
+});
+
+// Every displayed fact-row key's position in the Facts tab's own FINAL
+// rendered order (factRowGroups, flattened across whichever group(s) it
+// has — "Main card" then "Other faces/functions") — the single source of
+// truth the Interactions panel below now sorts against too (see
+// `orderedInteractions`), rather than maintaining its own independent sort.
+// Previously `findInteractionsForCard` (functional-model/synergy.ts) shipped
+// interaction groups in plain sink-then-source authored order — the same
+// order the Facts tab ITSELF used before `orderByTextPosition` was
+// introduced (see that module's own header comment for why authored order
+// stopped being the final word there) — so the two panels had quietly
+// diverged since. Sorting here client-side (not by changing the engine's
+// own `findInteractionsForCard` output — that's engine-owned per
+// .claude/contracts/card-schema.md, and "which order the UI displays
+// things in" is a card/UI presentation concern, not the matcher's) keeps
+// the fix entirely on this side of that boundary.
+const factOrderIndex = computed(() => {
+  const map = new Map<string, number>();
+  let i = 0;
+  for (const group of factRowGroups.value) for (const row of group.rows) map.set(row.key, i++);
+  return map;
+});
+
+// Interactions panel's own groups, one per fact — reordered to match the
+// Facts tab's rendered order above (each group's own `fact` is a `Fact`
+// straight off this card's synergy.json, so its `factKey` always matches a
+// `factRowGroups` row's own key). A group whose fact has no match at all in
+// `factOrderIndex` (shouldn't happen — every interaction group's fact comes
+// from this same card's own source/sink facts, all of which appear in
+// `factRows`) sorts last rather than crashing or silently reordering
+// unpredictably.
+const orderedInteractions = computed<EnrichedInteractionGroup[]>(() => {
+  const groups = data.value?.interactions ?? [];
+  return [...groups].sort((a, b) => {
+    const ai = factOrderIndex.value.get(factKey(a.fact));
+    const bi = factOrderIndex.value.get(factKey(b.fact));
+    if (ai === undefined && bi === undefined) return 0;
+    if (ai === undefined) return 1;
+    if (bi === undefined) return -1;
+    return ai - bi;
+  });
 });
 
 // Functional model's own four views, tabbed instead of stacked
@@ -422,7 +635,8 @@ const scenariosCount = computed(() => data.value?.functionalModel?.traces?.lengt
 const functionalModelTabs = computed(() => [
   { label: 'Facts', value: 'facts' as const, badge: factsCount.value || undefined },
   { label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined },
-  { label: 'Json', value: 'json' as const },
+  { label: 'Facts Json', value: 'json' as const },
+  { label: 'Card Json', value: 'cardJson' as const },
   { label: 'Card Definition', value: 'definition' as const },
 ]);
 
@@ -472,7 +686,12 @@ async function toggleReviewStatus(field: 'review' | 'scenariosReview' | 'interac
     const res = await fetch('/api/card/review-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: card.value!.name, field, reviewed }),
+      // `set`/`number`: only actually used server-side for `field ===
+      // 'review'` (see review-status.ts's own oracle-text snapshot comment)
+      // — sent unconditionally since this page always has them to hand
+      // (its own route params) and the server ignores them for the other
+      // two fields.
+      body: JSON.stringify({ name: card.value!.name, field, reviewed, set: String(route.params.set), number: String(route.params.number) }),
     });
     if (res.ok) {
       // Reconcile with the server's own authoritative value (expected to
@@ -537,8 +756,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     </div>
     <div v-else-if="error || !card" class="text-muted">Card not found.</div>
     <template v-else>
+      <!-- No page-level name heading anymore — the card's name now renders
+           exactly once, as FunctionalModelText.vue's own per-face heading
+           directly above the mana cost/type line/oracle text (see that
+           component's own self-fact annotation, `headerFaceFacts` below).
+           `deckQty` (this row's own concern, not that component's) keeps its
+           spot up here rather than following the heading down. -->
       <div class="mb-4 flex items-center justify-between gap-4">
-        <NuxtLink to="/app" class="inline-block text-sm text-muted hover:text-text">&larr; Back to graph</NuxtLink>
+        <div class="flex items-center gap-3">
+          <NuxtLink to="/app" class="inline-block text-sm text-muted hover:text-text">&larr; Back to graph</NuxtLink>
+          <span v-if="deckQty" class="rounded-full bg-bg px-2 py-0.5 text-xs font-bold text-muted" title="Copies in your imported deck">
+            ×{{ deckQty }}
+          </span>
+        </div>
         <div class="flex items-center gap-3 text-sm">
           <NuxtLink v-if="prevTarget" :to="`/app/card/${prevTarget.set}/${prevTarget.collectorNumber}`" class="text-muted hover:text-text">
             &larr; Previous
@@ -550,12 +780,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
           </NuxtLink>
         </div>
       </div>
-      <h1 class="mb-2 flex items-center gap-2 text-lg font-semibold">
-        {{ card.name }}
-        <span v-if="deckQty" class="rounded-full bg-bg px-2 py-0.5 text-xs font-bold text-muted" title="Copies in your imported deck">
-          ×{{ deckQty }}
-        </span>
-      </h1>
       <!-- CardMedia + the review-status table side by side once there's
            room (md and up); stacked (table below the images) on narrow/
            mobile viewports, same "stack on narrow, row on wide" shape as
@@ -650,18 +874,26 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            anymore) — synergy-model/forge-model are deprecated (see their
            own README/SCHEMA.md banners), this is the current direction. -->
       <div v-if="data?.functionalModel" class="mt-2">
-        <!-- Real structured per-face card data, pre-split server-side
-             (functional-model/synergy.ts's annotateOracleText, see
-             server/api/card/[set]/[number].ts) into plain runs and
-             fact-linked runs — hover a dotted-underline phrase to see the
-             same role/value info the Facts tab's own table shows per row,
-             anchored to the exact words that fact came from. Sits above the
-             tabs (not inside the Facts one) since it's a separate thing — the
-             card's own annotated text, not one of the four data views below. -->
+        <!-- Real structured per-face card data (server/api/card/[set]/
+             [number].ts) — `oracleText` served raw/untouched; the component
+             itself builds plain-run/fact-linked-run segments client-side
+             from each visible fact's own baked `Fact.annotations`
+             (functional-model/synergy.ts's `AnnotationRef`, the 2026-09-11
+             pointer rework — see `.claude/contracts/card-schema.md`) rather
+             than receiving a pre-built segment tree. Hover a
+             dotted-underline phrase to see the same role/value info the
+             Facts tab's own table shows per row, anchored to the exact
+             words that fact came from. Sits above the tabs (not inside the
+             Facts one) since it's a separate thing — the card's own
+             annotated text, not one of the four data views below. -->
         <div v-if="data.functionalModel.annotatedCard" class="mb-2">
           <FunctionalModelText
+            ref="functionalModelTextRef"
             :card="data.functionalModel.annotatedCard"
+            :facts="allSynergyFacts"
             :highlight-key="hoveredFactKey"
+            :self-facts="headerFaceFacts"
+            :header-highlight-index="headerHighlightIndex"
             @hover="hoveredFactKey = $event"
           />
         </div>
@@ -684,7 +916,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                      `label` is always null here, so nothing changes for the
                      vast majority of cards. -->
                 <tr v-if="group.label">
-                  <td colspan="4" class="pt-2 pb-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase">
+                  <td
+                    :colspan="(SHOW_FACT_VALUE_COLUMN ? 4 : 3) + (SHOW_FACT_DEBUG_COLUMN ? 1 : 0)"
+                    class="pt-2 pb-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
+                  >
                     {{ group.label }}
                   </td>
                 </tr>
@@ -696,7 +931,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                   @mouseenter="hoveredFactKey = factKey(row.fact)"
                   @mouseleave="hoveredFactKey = null"
                 >
-                  <td class="py-1 px-2"><ValueBar :value="row.fact.value" /></td>
+                  <td v-if="SHOW_FACT_VALUE_COLUMN" class="py-1 px-2"><ValueBar :value="row.fact.value" /></td>
                   <td class="py-1 px-2">
                     <Icon
                       :name="row.fact.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
@@ -706,17 +941,35 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                     />
                   </td>
                   <td
-                    class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted first-letter:uppercase"
-                    :title="row.fact.sourceText"
+                    class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted"
+                    :title="factSourceText(row.fact)"
                   >
-                    <Icon
-                      v-if="isFactAnnotated(row.fact)"
-                      name="lucide:link-2"
-                      class="mr-1 inline-block h-2 w-2 shrink-0 align-[1px] text-emerald-500/40"
-                      title="Linked to card text"
-                    />{{ describeFact(row.fact) }}
+                    <!-- No separate link icon anymore — every fact links to
+                         something now (a real oracle-text span or, failing
+                         that, the header name), so a dedicated glyph no
+                         longer distinguishes anything. The label itself is
+                         the hover/click target instead: a body-linked fact's
+                         cross-highlight already comes free from this row's
+                         own hover handlers above; a header-linked fact
+                         additionally flashes + scrolls-to the header name via
+                         the handlers below (see factLinkTitle/onFactLabel*). -->
+                    <span
+                      :class="{ 'cursor-pointer': isHeaderLinkedFact(row.fact) }"
+                      :title="factLinkTitle(row.fact)"
+                      @mouseenter="onFactLabelEnter(row.fact)"
+                      @mouseleave="onFactLabelLeave(row.fact)"
+                      @click="onFactLabelClick(row.fact)"
+                    >{{ factLabel(row.fact) }}</span>
                   </td>
-                  <td class="py-1 px-2 whitespace-pre-wrap font-mono text-muted/60">{{ factConditions(row.fact) }}</td>
+                  <td class="py-1 px-2 whitespace-pre-wrap text-muted/60">{{ factConditions(row.fact) }}</td>
+                  <td v-if="SHOW_FACT_DEBUG_COLUMN" class="py-1 px-2">
+                    <Icon
+                      name="lucide:braces"
+                      class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
+                      title="View this fact's raw JSON"
+                      @click="openFactDebugModal(row.fact)"
+                    />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -739,9 +992,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         </template>
 
         <template v-else-if="store.functionalModelTab.value === 'json'">
-          <pre class="max-h-96 overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] text-text/80">{{
-            functionalModelJson
-          }}</pre>
+          <JsonHighlight
+            :json="functionalModelJson ?? ''"
+            class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2"
+          />
+        </template>
+
+        <template v-else-if="store.functionalModelTab.value === 'cardJson'">
+          <JsonHighlight
+            :json="cardJson ?? ''"
+            class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2"
+          />
         </template>
 
         <template v-else>
@@ -757,13 +1018,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            (hand-authored or Forge-translated, see the two columns above),
            not pre-baked; only wired for the small worked-example pool in
            server/api/card/[set]/[number].ts (no full-corpus join yet). -->
-      <div v-if="data?.interactions?.length" class="mt-4 w-full max-w-full">
+      <div v-if="orderedInteractions.length" class="mt-4 w-full max-w-full">
         <div class="mb-1 flex items-center gap-2">
           <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</span>
         </div>
         <ul class="flex flex-col gap-1.5">
           <li
-            v-for="(group, gi) in data.interactions"
+            v-for="(group, gi) in orderedInteractions"
             :key="gi"
             class="rounded-md border border-border px-2.5 py-1.5 text-xs text-text"
             :class="hoveredFactKey === factKey(group.fact) ? 'bg-surface/60' : 'bg-panel'"
@@ -806,4 +1067,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
       </a>
     </template>
   </div>
+
+  <UModal v-model:open="debugModalOpen" :close="false" :ui="{ content: 'max-w-3xl' }">
+    <template #body>
+      <JsonHighlight :json="debugModalContent" class="max-h-[70vh] overflow-auto rounded border border-border bg-panel p-2" />
+    </template>
+  </UModal>
 </template>

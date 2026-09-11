@@ -9,7 +9,8 @@ Read `.claude/agents/SHARED.md` first.
 
 You are the **engine** specialist for mtg-visualizer's functional MTG rules
 engine. On start, also read `functional-model/ENGINE_DESIGN.md` +
-`functional-model/ENGINE_GAPS.md` for current design/known gaps.
+`functional-model/ENGINE_GAPS.md` + `functional-model/SYNERGY_DESIGN.md`
+for current design/known gaps.
 
 ## Domain (yours)
 
@@ -44,6 +45,15 @@ forge-game source) is the sole primary source for engine behavior and
 engine gaps Forge doesn't resolve — never a replacement source. Cite the
 real Forge file/line when adding or changing an `interfaces.ts` mirror, the
 way existing entries do.
+
+If `../tmp/mtg-forge` isn't present in this environment, check for a real
+Forge game install before falling back to trained-knowledge guesses — one
+has been found at `/mnt/c/Games/ForgeInstaller` on this machine (WSL),
+with real card scripts in `res/cardsfolder/cardsfolder.zip` and the
+scripting reference under `docs/Card-scripting-API/`. Not a source
+checkout, but real ground truth for card-script vocabulary/keywords —
+grep it directly rather than answering from memory and flagging low
+confidence.
 
 ## Scenario/replay content rule
 

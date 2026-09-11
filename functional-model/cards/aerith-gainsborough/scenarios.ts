@@ -38,10 +38,15 @@ export function runEngineScenarios(): TraceResult[] {
     basePower: 1,
     baseToughness: 3,
   });
+  // Freya Crescent (data/fin/fin_scryfall.json: {R} Legendary Creature — Rat
+  // Knight, 1/1) — onDies below needs a real OTHER legendary creature you
+  // control for its "spread X counters onto each legendary creature you
+  // control" effect (definition.ts's own onDies, `hasSubtype('Legendary')`)
+  // to have something real to land on.
   const otherLegend = pilot.state.addCard(pilot.you, 'Battlefield', {
-    name: 'Bystander Legend',
+    name: 'Freya Crescent',
     types: ['Creature'],
-    subtypes: ['Legendary', 'Human'],
+    subtypes: ['Legendary', 'Rat', 'Knight'],
     basePower: 1,
     baseToughness: 1,
   });
@@ -50,13 +55,19 @@ export function runEngineScenarios(): TraceResult[] {
   // to reference it by name, appearing out of nowhere at that point instead
   // of having been visibly present since setup.
   pilot.log.push({ fn: 'enters', card: otherLegend.name, zone: 'Battlefield', power: otherLegend.basePower, toughness: otherLegend.baseToughness });
+  // Gigantoad (data/fin/fin_scryfall.json: {3}{G} Creature — Frog, 4/4) — its
+  // own "control seven or more lands" static buff is inert here (it's placed
+  // directly via addCard, never cast, so it isn't wired to any
+  // CardDefinition/continuous-effect registration the engine would evaluate;
+  // only its printed base 4/4 matters).
   const bigBlocker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', {
-    name: 'Lethal Blocker',
+    name: 'Gigantoad',
     types: ['Creature'],
+    subtypes: ['Frog'],
     // 4 power — Aerith is already 2/4 by the time this blocks (her earlier
     // onLifeGained put a real +1/+1 counter on her), so 3 wouldn't be real lethal.
     basePower: 4,
-    baseToughness: 1,
+    baseToughness: 4,
   });
   pilot.log.push({
     fn: 'enters',
@@ -116,11 +127,13 @@ export function runEngineScenarios(): TraceResult[] {
   // has real 603.10 last-known-information to restore, not an already-zeroed count.
   const lastKnownCounters = aerithReal.counters['+1/+1'] ?? 0;
   const sbaResult = checkStateBasedActions(pilot.state, pilot.engine.players);
-  // `destroyed`'s own real controller (704.5g can kill EITHER combatant) —
-  // hardcoding `pilot.you.name` here was wrong for Lethal Blocker (opp0's
-  // own creature), and verify-synergy.mjs's own `sideOf` trusts a present
-  // `controller` field over any name-based guessing, so a wrong one here
-  // would misattribute which SIDE this destroy fact supports.
+  // `destroyed`'s own real controller (704.5g can kill EITHER combatant,
+  // even though Gigantoad's 4 toughness happens to survive this particular
+  // exchange) — hardcoding `pilot.you.name` here would be wrong whenever the
+  // destroyed permanent is the OPPONENT's own creature, and
+  // verify-synergy.mjs's own `sideOf` trusts a present `controller` field
+  // over any name-based guessing, so a wrong one here would misattribute
+  // which SIDE this destroy fact supports.
   for (const destroyed of sbaResult.destroyed) {
     const controllerName = pilot.state.players.get(destroyed.controllerId)!.name;
     pilot.log.push({ fn: 'destroy', target: destroyed.name, controller: controllerName });

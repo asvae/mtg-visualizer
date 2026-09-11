@@ -24,17 +24,17 @@
     "log": [
       {
         "fn": "enters",
-        "card": "Bystander Legend",
+        "card": "Freya Crescent",
         "zone": "Battlefield",
         "power": 1,
         "toughness": 1
       },
       {
         "fn": "enters",
-        "card": "Lethal Blocker",
+        "card": "Gigantoad",
         "zone": "Battlefield",
         "power": 4,
-        "toughness": 1,
+        "toughness": 4,
         "controller": "opp0"
       },
       {
@@ -204,18 +204,18 @@
       },
       {
         "fn": "block",
-        "blocker": "Lethal Blocker",
+        "blocker": "Gigantoad",
         "attacker": "Aerith Gainsborough"
       },
       {
         "fn": "dealDamage",
         "source": "Aerith Gainsborough",
-        "target": "Lethal Blocker",
+        "target": "Gigantoad",
         "amount": 2
       },
       {
         "fn": "dealDamage",
-        "source": "Lethal Blocker",
+        "source": "Gigantoad",
         "target": "Aerith Gainsborough",
         "amount": 4
       },
@@ -223,11 +223,6 @@
         "fn": "destroy",
         "target": "Aerith Gainsborough",
         "controller": "you"
-      },
-      {
-        "fn": "destroy",
-        "target": "Lethal Blocker",
-        "controller": "opp0"
       },
       {
         "fn": "trigger",
@@ -248,13 +243,13 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Bystander Legend",
+        "target": "Freya Crescent",
         "subtype": "Legendary",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "Bystander Legend",
+        "target": "Freya Crescent",
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -326,7 +321,7 @@
         "from": 32
       },
       {
-        "label": "Declare Lethal Blocker as blocker",
+        "label": "Declare Gigantoad as blocker",
         "from": 33
       },
       {
@@ -335,7 +330,7 @@
       },
       {
         "label": "Fire onDies",
-        "from": 38
+        "from": 37
       }
     ]
   }

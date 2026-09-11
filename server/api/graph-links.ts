@@ -90,7 +90,7 @@ export default defineEventHandler(async () => {
       // still gets a real (if minimal) share rather than a zero/undefined
       // that would poison the ratio math below.
       const mineValue = factTotal(group.fact) ?? 1;
-      const sourceKey = `${name}::${group.fact.id ?? group.description}`;
+      const sourceKey = `${name}::${group.description}`;
       for (const match of group.matches) {
         if (match.card === name) continue; // self-interaction — not a graph edge
         const [a, b] = [name, match.card].sort();

@@ -147,9 +147,9 @@
     "scenario": {
       "setup": "you: 2 Plains(s)",
       "action": "real engine playthrough: cast -> mode 2 (Magic)",
-      "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
+      "result": "Magic — destroys Coliseum Behemoth, a real creature with power 4 or greater.",
       "raw": {
-        "result": "Magic — destroys Behemoth, a real creature with power 4 or greater.",
+        "result": "Magic — destroys Coliseum Behemoth, a real creature with power 4 or greater.",
         "you": {
           "basicLands": [
             "Plains",
@@ -164,10 +164,10 @@
     "log": [
       {
         "fn": "enters",
-        "card": "Behemoth",
+        "card": "Coliseum Behemoth",
         "zone": "Battlefield",
-        "power": 4,
-        "toughness": 4,
+        "power": 7,
+        "toughness": 7,
         "controller": "opp0"
       },
       {
@@ -213,17 +213,17 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "Behemoth",
+        "target": "Coliseum Behemoth",
         "result": true
       },
       {
         "fn": "read:getNetPower",
-        "target": "Behemoth",
-        "result": 4
+        "target": "Coliseum Behemoth",
+        "result": 7
       },
       {
         "fn": "destroy",
-        "target": "Behemoth",
+        "target": "Coliseum Behemoth",
         "controller": "opp0"
       },
       {

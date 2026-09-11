@@ -35,8 +35,13 @@ function magicMode(): TraceResult {
   const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{1}{W}') }, opponents: [{}] };
   const pilot = setupEnginePilot(setup);
   const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: battleMenu.name, types: [] });
-  // A real power>=4 target — no `tokens`/count field produces one, so it's added directly
-  const bigCreature = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Behemoth', types: ['Creature'], basePower: 4, baseToughness: 4 });
+  // A real power>=4 target — no `tokens`/count field produces one, so it's
+  // added directly. Coliseum Behemoth (data/fin/fin_scryfall.json: {5}{G}{G}
+  // Creature — Beast, 7/7) — its own ETB "choose one" trigger is inert here
+  // (placed directly via addCard, never cast, so it isn't wired to any
+  // CardDefinition the engine would fire); only its printed 7/7 (well over
+  // the mode's power>=4 threshold) matters.
+  const bigCreature = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Coliseum Behemoth', types: ['Creature'], subtypes: ['Beast'], basePower: 7, baseToughness: 7 });
   // A real `enters` entry — without one, it only ever appears in the replay
   // the instant `destroy` (below) first names it, straight in the
   // Graveyard, as if it had never actually been on the battlefield at all.

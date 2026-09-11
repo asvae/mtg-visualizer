@@ -9,20 +9,26 @@
 // Constraints.power's real creature-power constraint), see synergy.ts's
 // own `Weight` doc comment for the naming history.
 defineProps<{ value?: number }>();
+
+// `value` is normally a 1-5 Weight, but engine may hand-author a placeholder
+// -1 ("not yet reviewed", distinct from a real computed magnitude — see
+// synergy.ts's own Weight doc comment). Treat anything <= 0 as "no value
+// to show" rather than rendering a nonsensical dot count/label.
+const isRealValue = (v: number | undefined): v is number => typeof v === 'number' && v > 0;
 </script>
 
 <template>
-  <span class="relative inline-flex items-center gap-0.5" :title="value ? `value ${value}/5` : 'value —'">
+  <span class="relative inline-flex items-center gap-0.5" :title="isRealValue(value) ? `value ${value}/5` : 'value —'">
     <span
       v-for="n in 5"
       :key="n"
       class="h-2 w-1.5 rounded-sm"
-      :class="value && n <= value ? 'bg-warn/70' : 'bg-border'"
+      :class="isRealValue(value) && n <= value ? 'bg-warn/70' : 'bg-border'"
     ></span>
     <!-- Bars alone carry no text node, so selecting/copying a table row
          selected nothing for this column. This overlay reproduces the
          number as real, selectable text — text-transparent keeps it
          invisible so the bars still read as bars. -->
-    <span class="absolute inset-0 select-text text-[10px] text-transparent">{{ value ?? '—' }}</span>
+    <span class="absolute inset-0 select-text text-[10px] text-transparent">{{ isRealValue(value) ? value : '—' }}</span>
   </span>
 </template>
