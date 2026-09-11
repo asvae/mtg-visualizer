@@ -1,15 +1,177 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onOtherPermanentsDie\" trigger fires",
-      "result": "draws a card",
+      "setup": "you: 5 Plains(s)",
+      "action": "real engine playthrough: cast -> real other-creature combat death -> onOtherPermanentsDie",
+      "result": "G'raha Tia is cast and enters the battlefield; a real separate creature you control (Town Greeter) attacks, is blocked by a real 2/2 (Coeurl) and dies in genuine lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires for real, drawing a card.",
       "raw": {
-        "result": "draws a card",
-        "trigger": "onOtherPermanentsDie"
+        "result": "G'raha Tia is cast and enters the battlefield; a real separate creature you control (Town Greeter) attacks, is blocked by a real 2/2 (Coeurl) and dies in genuine lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires for real, drawing a card.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "G'raha Tia",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "G'raha Tia"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "G'raha Tia"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "G'raha Tia"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "G'raha Tia"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "G'raha Tia"
+      },
+      {
+        "fn": "enters",
+        "card": "G'raha Tia",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "enters",
+        "card": "Town Greeter",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Town Greeter",
+        "id": 905
+      },
+      {
+        "fn": "attack",
+        "card": "Town Greeter",
+        "id": 905
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Coeurl",
+        "blockerId": 906,
+        "attacker": "Town Greeter",
+        "attackerId": 905
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Town Greeter",
+        "target": "Coeurl",
+        "amount": 1
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Coeurl",
+        "target": "Town Greeter",
+        "amount": 2
+      },
+      {
+        "fn": "destroy",
+        "target": "Town Greeter",
+        "controller": "you"
+      },
       {
         "fn": "trigger",
         "card": "G'raha Tia",
@@ -18,7 +180,54 @@
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast G'raha Tia ({4}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 6
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 9
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 16
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 19
+      },
+      {
+        "label": "Declare Town Greeter as attacker",
+        "from": 20
+      },
+      {
+        "label": "Advance one step",
+        "from": 22
+      },
+      {
+        "label": "Declare Coeurl as blocker",
+        "from": 23
+      },
+      {
+        "label": "Resolve lethal combat damage (704.5g SBA) — Town Greeter dies, Coeurl survives",
+        "from": 24
+      },
+      {
+        "label": "Fire onOtherPermanentsDie",
+        "from": 27
       }
     ]
   }

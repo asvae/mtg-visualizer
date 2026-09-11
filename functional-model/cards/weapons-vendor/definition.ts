@@ -8,7 +8,11 @@ export const weaponsVendor: CardDefinition = {
   pt: [2, 2],
 
   triggers: [
-    { name: 'onEnter', effects: [{ kind: 'drawCard' } satisfies Effect] },
+    // Real 603.6b auto-fire (matching Cloud, Midgar Mercenary's/Jill,
+    // Shiva's Dominant's own convention) — needed so an engine-piloted
+    // `pilotResolveTop` fires this for real rather than requiring a
+    // scenario to name it explicitly.
+    { name: 'onEnter', on: 'enter', effects: [{ kind: 'drawCard' } satisfies Effect] },
     {
       // "At the beginning of combat on your turn, if you control an
       // Equipment, you may pay {1}. When you do, attach target Equipment
@@ -30,7 +34,12 @@ export const weaponsVendor: CardDefinition = {
             const equipment = ctx.you.getCardsIn('Battlefield').filter((c) => c.hasSubtype('Equipment'));
             const creatures = ctx.you.getCreaturesInPlay();
             if (equipment.length === 0 || creatures.length === 0) return;
-            actions.equip(actions.chooseTarget(equipment), actions.chooseTarget(creatures));
+            // `ctx.preferTarget` routed through both real CR 601.2c target
+            // choices (Equipment, then creature) — same convention every
+            // OTHER `chooseTarget` call site in card.ts's own declarative
+            // dispatch already uses; this `custom` effect just has to wire
+            // it manually since it calls `actions.equip` directly.
+            actions.equip(actions.chooseTarget(equipment, ctx.preferTarget), actions.chooseTarget(creatures, ctx.preferTarget));
           },
         } satisfies Effect,
       ],

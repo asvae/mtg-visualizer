@@ -66,17 +66,20 @@
       },
       {
         "fn": "untap",
-        "target": "Cecil, Dark Knight"
+        "target": "Cecil, Dark Knight",
+        "id": 323
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
+        "id": 323,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
+        "id": 323,
         "zone": "Battlefield",
         "controller": "you"
       }

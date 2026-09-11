@@ -1,37 +1,76 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — Aerith Gainsborough is itself a permanent on your battlefield, no special ability text)",
-      "id": "self-battlefield"
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
       "value": 1,
-      "sourceText": "(baseline — Aerith Gainsborough can die and go to your graveyard like any creature)",
-      "id": "self-graveyard"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 5,
+          "end": 29
+        }
+      ]
     },
     {
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Lifelink",
-      "id": "lifelink",
-      "highlight": "Lifelink"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 8
+        }
+      ]
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
       "value": 4,
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.",
-      "id": "lifegain-counter-produce",
-      "highlight": "put a +1/+1 counter on Aerith Gainsborough"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 66
+        }
+      ]
     },
     {
       "event": "putCounter",
@@ -45,38 +84,61 @@
           ]
         }
       },
+      "targeted": false,
       "value": 4,
-      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
-      "id": "dies-counter-spread",
-      "highlight": "put X +1/+1 counters on each legendary creature you control"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 31,
+          "end": 90
+        }
+      ]
     }
   ],
   "sink": [
     {
       "event": "lifegain",
       "controller": "you",
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.",
       "value": 1,
-      "id": "wants-lifegain",
-      "highlight": "Whenever you gain life"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 22
+        }
+      ]
     },
     {
       "event": "dies",
       "target": "self",
-      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control...",
       "value": 1,
-      "id": "wants-self-dies"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 5,
+          "end": 29
+        }
+      ]
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "sourceText": "...where X is the number of +1/+1 counters on Aerith Gainsborough.",
       "value": 1,
-      "id": "wants-own-counters"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 92,
+          "end": 154
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
@@ -84,9 +146,15 @@
           "Legendary"
         ]
       },
-      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control...",
       "value": 1,
-      "id": "wants-legendary-creatures"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 55,
+          "end": 90
+        }
+      ]
     }
   ]
 }

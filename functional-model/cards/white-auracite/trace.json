@@ -30,12 +30,13 @@
       },
       {
         "fn": "read:isLand",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2860,
         "zone": "Exile",
         "controller": "opp0"
       }

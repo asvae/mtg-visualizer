@@ -1,0 +1,44 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment Creature — Saga Harpy",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment Creature — Saga Harpy",
+      "highlight": "Enchantment Creature"
+    },
+    {
+      "sourceText": "I — Aerial Blast — This creature deals 4 damage to target tapped creature an opponent controls.",
+      "highlight": "deals 4 damage to target tapped creature an opponent controls"
+    },
+    {
+      "sourceText": "II, III — Slipstream — Another target creature you control gets +1/+0 and gains flying until end of turn.",
+      "highlight": "gets +1/+0"
+    },
+    {
+      "sourceText": "II, III — Slipstream — Another target creature you control gets +1/+0 and gains flying until end of turn.",
+      "highlight": "gains flying until end of turn"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "Sacrifice after III"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "Sacrifice after III"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "I — Aerial Blast — This creature deals 4 damage to target tapped creature an opponent controls.",
+      "highlight": "target tapped creature an opponent controls"
+    },
+    {
+      "sourceText": "II, III — Slipstream — Another target creature you control gets +1/+0 and gains flying until end of turn.",
+      "highlight": "Another target creature you control"
+    }
+  ]
+}

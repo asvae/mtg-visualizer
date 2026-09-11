@@ -46,7 +46,7 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Equipment",
         "result": false
       },
@@ -59,12 +59,15 @@
       {
         "fn": "gainControl",
         "controller": "you",
-        "target": "opp0-equipment-0"
+        "target": "opp0-equipment-0",
+        "id": 2173
       },
       {
         "fn": "equip",
         "equipment": "opp0-equipment-0",
-        "target": "you-creature-token-0"
+        "equipmentId": 2173,
+        "target": "Grizzly Bears",
+        "id": 2171
       },
       {
         "fn": "move",

@@ -141,6 +141,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 1007,
         "zone": "Hand",
         "controller": "you"
       }
@@ -242,6 +243,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 1018,
         "zone": "Hand",
         "controller": "you"
       },

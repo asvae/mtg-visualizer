@@ -66,6 +66,7 @@
       {
         "fn": "putCounter",
         "target": "Robot Warrior",
+        "id": 1849,
         "counterType": "+1/+1",
         "amount": 2,
         "controller": "you"

@@ -1,14 +1,67 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "subject": "self",
-      "value": 1,
-      "sourceText": "Flying, vigilance. As long as you control two or more artifacts, this creature gets +2/+0.",
-      "id": "self-battlefield",
-      "highlight": "As long as you control two or more artifacts, this creature gets +2/+0"
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 60,
+          "end": 70
+        }
+      ]
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "amount": {
+        "min": 2
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 44
+        }
+      ]
+    }
+  ]
 }

@@ -1,30 +1,117 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "id": "job-select-token",
-      "highlight": "create a 1/1 colorless Hero creature token",
-      "sourceText": "Job select — When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 40,
+          "end": 82
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "power": 1,
+      "toughness": 0,
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 28
+        }
+      ]
+    },
+    {
+      "event": "grantType",
+      "type": "Knight",
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 33,
+          "end": 75
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Flying",
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 18,
+          "end": 46
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Gae Bolg — Equip {4} (attach to target creature you control).",
-      "id": "wants-creature-equip-target",
-      "highlight": "attach to target creature you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 11,
+          "end": 20
+        }
+      ]
     }
   ]
 }

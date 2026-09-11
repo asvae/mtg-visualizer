@@ -60,6 +60,7 @@
       {
         "fn": "dealDamage",
         "source": "Garnet, Princess of Alexandria",
+        "sourceId": 959,
         "target": "opp0",
         "amount": 3
       },

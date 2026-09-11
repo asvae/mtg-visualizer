@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Destroy target nonland permanent.",
+      "highlight": "Destroy target nonland permanent"
+    },
+    {
+      "sourceText": "Destroy target nonland permanent.",
+      "highlight": "Destroy target nonland permanent"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Destroy target nonland permanent.",
+      "highlight": "target nonland permanent"
+    },
+    {
+      "sourceText": "This spell costs {2} less to cast if it targets a tapped creature.",
+      "highlight": "a tapped creature"
+    }
+  ]
+}

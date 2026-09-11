@@ -82,6 +82,7 @@
       {
         "fn": "destroy",
         "target": "you-artifact-0",
+        "id": 1369,
         "controller": "you"
       }
     ]

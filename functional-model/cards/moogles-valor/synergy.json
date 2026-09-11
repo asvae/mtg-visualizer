@@ -1,38 +1,89 @@
 {
   "source": [
     {
-      "id": "moogles-per-creature",
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "event": "entersBattlefield",
       "controller": "you",
       "subject": {
         "token": "w_1_2_moogle_lifelink"
       },
-      "value": 5,
-      "sourceText": "For each creature you control, create a 1/2 white Moogle creature token with lifelink.",
-      "highlight": "create a 1/2 white Moogle creature token with lifelink"
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 31,
+          "end": 85
+        }
+      ]
     },
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
+      "event": "grantKeyword",
+      "keyword": "Indestructible",
       "controller": "you",
-      "subject": "self",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": false,
       "value": 1,
-      "sourceText": "Instant (goes to the graveyard after resolving, like any instant)."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 92,
+          "end": 151
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-creatures-to-scale",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "For each creature you control, create a 1/2 white Moogle creature token with lifelink (scales with existing creature count).",
-      "highlight": "For each creature you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 29
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,48 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Cleric",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Cleric",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
+      "highlight": "Aerith Gainsborough dies"
+    },
+    {
+      "sourceText": "Lifelink",
+      "highlight": "Lifelink"
+    },
+    {
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.",
+      "highlight": "put a +1/+1 counter on Aerith Gainsborough"
+    },
+    {
+      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
+      "highlight": "put X +1/+1 counters on each legendary creature you control"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.",
+      "highlight": "Whenever you gain life"
+    },
+    {
+      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
+      "highlight": "Aerith Gainsborough dies"
+    },
+    {
+      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
+      "highlight": "where X is the number of +1/+1 counters on Aerith Gainsborough"
+    },
+    {
+      "sourceText": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
+      "highlight": "each legendary creature you control"
+    }
+  ]
+}

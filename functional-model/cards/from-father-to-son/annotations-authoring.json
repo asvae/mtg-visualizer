@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Sorcery",
+      "highlight": "Sorcery"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Sorcery",
+      "highlight": "Sorcery"
+    },
+    {
+      "sourceText": "Flashback {4}{W}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "highlight": "cast this card from your graveyard for its flashback cost"
+    },
+    {
+      "sourceText": "Flashback {4}{W}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "highlight": "Then exile it"
+    },
+    {
+      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand. If this spell was cast from a graveyard, put that card onto the battlefield instead. Then shuffle.",
+      "highlight": "Search your library for a Vehicle card, reveal it, and put it into your hand"
+    },
+    {
+      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand. If this spell was cast from a graveyard, put that card onto the battlefield instead. Then shuffle.",
+      "highlight": "put that card onto the battlefield instead"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand. If this spell was cast from a graveyard, put that card onto the battlefield instead. Then shuffle.",
+      "highlight": "Search your library for a Vehicle card"
+    }
+  ]
+}

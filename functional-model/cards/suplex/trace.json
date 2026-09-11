@@ -36,7 +36,9 @@
       {
         "fn": "dealDamage",
         "source": "Suplex",
-        "target": "opp0-creature-token-0",
+        "sourceId": 2383,
+        "target": "Grizzly Bears",
+        "id": 2382,
         "amount": 3
       },
       {
@@ -95,6 +97,7 @@
       {
         "fn": "moveTo",
         "target": "opp0-artifact-0",
+        "id": 2386,
         "zone": "Exile",
         "controller": "opp0"
       },

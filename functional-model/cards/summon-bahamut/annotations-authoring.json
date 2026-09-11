@@ -2,28 +2,28 @@
   "source": [
     {
       "anchor": "typeLine",
-      "sourceText": "Enchantment Creature — Saga Dragon",
+      "sourceText": "Enchantment Creature \u2014 Saga Dragon",
       "highlight": "Creature"
     },
     {
       "anchor": "typeLine",
-      "sourceText": "Enchantment Creature — Saga Dragon",
+      "sourceText": "Enchantment Creature \u2014 Saga Dragon",
       "highlight": "Enchantment Creature"
     },
     {
-      "sourceText": "I, II — Destroy up to one target nonland permanent.",
+      "sourceText": "I, II \u2014 Destroy up to one target nonland permanent.",
       "highlight": "Destroy up to one target nonland permanent"
     },
     {
-      "sourceText": "I, II — Destroy up to one target nonland permanent.",
+      "sourceText": "I, II \u2014 Destroy up to one target nonland permanent.",
       "highlight": "Destroy up to one target nonland permanent"
     },
     {
-      "sourceText": "III — Draw two cards.",
+      "sourceText": "III \u2014 Draw two cards.",
       "highlight": "Draw two cards"
     },
     {
-      "sourceText": "IV — Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "sourceText": "IV \u2014 Mega Flare \u2014 This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
       "highlight": "deals damage equal to the total mana value of other permanents you control to each opponent"
     },
     {
@@ -41,7 +41,7 @@
   ],
   "sink": [
     {
-      "sourceText": "Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+      "sourceText": "Mega Flare \u2014 This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
       "highlight": "deals damage equal to the total mana value of other permanents you control to each opponent"
     }
   ]

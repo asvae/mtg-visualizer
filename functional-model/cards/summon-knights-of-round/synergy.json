@@ -1,18 +1,70 @@
 {
   "source": [
     {
-      "id": "create-knights",
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 12,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "w_2_2_knight"
       },
-      "value": 5,
-      "sourceText": "I, II, III, IV — Create three 2/2 white Knight creature tokens.",
-      "highlight": "Create three 2/2 white Knight creature tokens"
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 17,
+          "end": 62
+        }
+      ]
     },
     {
-      "id": "ultimate-end-indestructible",
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": false,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 19,
+          "end": 74
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "Indestructible",
       "controller": "you",
@@ -23,24 +75,66 @@
           ]
         }
       },
-      "value": 1,
-      "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them.",
-      "highlight": "Put an indestructible counter on each of them"
+      "targeted": false,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 76,
+          "end": 121
+        }
+      ]
+    },
+    {
+      "event": "sacrifice",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 84
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 84
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "ultimate-end-pump-target",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn.",
-      "highlight": "Other creatures you control get +2/+2 until end of turn",
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 19,
+          "end": 74
+        }
+      ]
     }
   ]
 }

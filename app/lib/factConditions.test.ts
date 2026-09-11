@@ -159,6 +159,28 @@ describe('factConditions', () => {
       const fact: Fact = { role: 'source', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], to: 'Graveyard', types: { has: ['Creature'] }, value: 1 };
       expect(factConditions(fact)).toBe('creature cards');
     });
+
+    it('a `from`+`to` movement fact with its own type constraint picks the noun for the ORIGIN zone (`constraintNounZone`), not the destination — a Library-to-Battlefield tutor is searching artifact CARDS, not "artifact permanents" (the real fin/20 From Father to Son case; `from library` is separately shown by `movementOriginPhrase` since this exact (from,to) pair has no `zoneMovementName` entry — unrelated to, and unaffected by, this noun fix)', () => {
+      const fact: Fact = { role: 'source', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], from: 'Library', to: 'Battlefield', controller: 'you', types: { has: ['Artifact'] }, value: 1 };
+      expect(factConditions(fact)).toBe('yours · from library · artifact cards');
+    });
+
+    it('a plain `to`-only sink with a type constraint and no `from` at all still says "permanents" — it genuinely IS describing something already on the battlefield, unaffected by the origin-first noun change above', () => {
+      const fact: Fact = { role: 'sink', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], to: 'Battlefield', types: { has: ['Artifact'] }, value: 1 };
+      expect(factConditions(fact)).toBe('artifact permanents');
+    });
+  });
+
+  describe('cast-event `from` origin (Flashback etc., 2026-09-11)', () => {
+    it('shows nothing extra for the common `from: \'Hand\'` normal-cast case — no redundant "from hand" noise', () => {
+      const fact: Fact = { role: 'source', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], event: 'cast', from: 'Hand', target: 'self', value: 1 };
+      expect(factConditions(fact)).toBe('self');
+    });
+
+    it('shows "from graveyard" for a Flashback-style `from: \'Graveyard\'` cast — genuinely new info the bare "cast a spell" label doesn\'t carry', () => {
+      const fact: Fact = { role: 'source', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], event: 'cast', from: 'Graveyard', target: 'self', value: 1 };
+      expect(factConditions(fact)).toBe('self · from graveyard');
+    });
   });
 
   it('never emits raw JSON syntax for any of the cases above', () => {

@@ -21,7 +21,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -45,6 +45,7 @@
       {
         "fn": "putCounter",
         "target": "Phantom Train",
+        "id": 1689,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -52,6 +53,7 @@
       {
         "fn": "animate",
         "target": "Phantom Train",
+        "id": 1689,
         "types": [
           "Artifact",
           "Creature",

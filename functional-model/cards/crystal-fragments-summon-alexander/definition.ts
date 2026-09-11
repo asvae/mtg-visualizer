@@ -37,6 +37,11 @@ export const crystalFragmentsSummonAlexander: CardDefinition = {
     name: 'Summon: Alexander',
     manaCost: '',
     typeLine: 'Enchantment Creature — Saga Construct',
+    // Real printed 4/3 (Scryfall card_faces[1].power/toughness) — omitted
+    // before this pass, which would have silently defaulted this creature
+    // face to a fake 1/1 via state.ts's own addCard (see card.ts's own `pt`
+    // doc comment for that exact documented gap).
+    pt: [4, 3],
     keywords: ['Flying'],
     triggers: [
       {

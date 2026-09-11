@@ -19,6 +19,7 @@
       {
         "fn": "pump",
         "target": "Loporrit Scout",
+        "id": 1360,
         "power": 1,
         "toughness": 1
       }

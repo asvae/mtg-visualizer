@@ -42,12 +42,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2076,
         "zone": "Graveyard",
         "controller": "opp0"
       }
@@ -163,7 +164,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -177,6 +178,7 @@
       {
         "fn": "grantKeyword",
         "target": "Yiazmat, Ultimate Mark",
+        "id": 2086,
         "keyword": "Indestructible"
       },
       {
@@ -193,7 +195,9 @@
       },
       {
         "fn": "tap",
-        "target": "Yiazmat, Ultimate Mark"
+        "target": "Yiazmat, Ultimate Mark",
+        "id": 2086,
+        "controller": "you"
       }
     ]
   },
@@ -226,6 +230,7 @@
       {
         "fn": "grantKeyword",
         "target": "Yiazmat, Ultimate Mark",
+        "id": 2088,
         "keyword": "Indestructible"
       },
       {
@@ -242,7 +247,9 @@
       },
       {
         "fn": "tap",
-        "target": "Yiazmat, Ultimate Mark"
+        "target": "Yiazmat, Ultimate Mark",
+        "id": 2088,
+        "controller": "you"
       },
       {
         "fn": "legendRule",

@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+      "highlight": "create a 1/1 colorless Hero creature token"
+    },
+    {
+      "sourceText": "Equipped creature gets +2/+2 for each artifact you control and is an Artificer in addition to its other types.",
+      "highlight": "Equipped creature gets +2/+2 for each artifact you control"
+    },
+    {
+      "sourceText": "Equipped creature gets +2/+2 for each artifact you control and is an Artificer in addition to its other types.",
+      "highlight": "is an Artificer in addition to its other types"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Machina — Equip {4} ({4}: Attach to target creature you control. Equip only as a sorcery.)",
+      "highlight": "Equip {4}"
+    }
+  ]
+}

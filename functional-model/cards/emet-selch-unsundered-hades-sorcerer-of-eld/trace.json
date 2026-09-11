@@ -101,12 +101,14 @@
       {
         "fn": "moveTo",
         "target": "Emet-Selch, Unsundered",
+        "id": 744,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Emet-Selch, Unsundered",
+        "id": 744,
         "zone": "Battlefield",
         "controller": "you"
       }

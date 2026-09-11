@@ -96,6 +96,7 @@
       {
         "fn": "dealDamage",
         "source": "Hope Estheim",
+        "sourceId": 1082,
         "target": "opp0",
         "amount": 3
       },

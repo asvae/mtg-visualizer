@@ -1,0 +1,14 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Knight", "highlight": "Creature" },
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Knight", "highlight": "Enchantment Creature" },
+    { "sourceText": "I, II, III, IV — Create three 2/2 white Knight creature tokens.", "highlight": "Create three 2/2 white Knight creature tokens" },
+    { "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them.", "highlight": "Other creatures you control get +2/+2 until end of turn" },
+    { "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them.", "highlight": "Put an indestructible counter on each of them" },
+    { "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after V.)", "highlight": "Sacrifice after V" },
+    { "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after V.)", "highlight": "Sacrifice after V" }
+  ],
+  "sink": [
+    { "sourceText": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them.", "highlight": "Other creatures you control get +2/+2 until end of turn" }
+  ]
+}

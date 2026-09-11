@@ -1,16 +1,121 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Flying",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Knight"
+          ]
+        }
+      },
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 36,
+          "end": 82
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "event": "entersBattlefield",
       "controller": "you",
       "subject": {
         "token": "w_2_2_knight"
       },
-      "value": 1,
-      "id": "etb-knight-token",
-      "highlight": "create a 2/2 white Knight creature token",
-      "sourceText": "When Dion enters, create a 2/2 white Knight creature token.",
-      "face": "front"
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 18,
+          "end": 58
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "from": "Battlefield",
+      "subject": "self",
+      "controller": "you",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 16,
+          "end": 99
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "from": "Exile",
+      "event": "entersBattlefield",
+      "subject": "self",
+      "target": "self",
+      "controller": "you",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 16,
+          "end": 99
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 11,
+          "end": 14
+        }
+      ]
     },
     {
       "event": "putCounter",
@@ -23,63 +128,136 @@
           ]
         }
       },
-      "value": 1,
-      "id": "wings-of-light-pump",
-      "highlight": "put a +1/+1 counter on each other creature you control",
-      "sourceText": "Bahamut chapter I, II — Wings of Light: put a +1/+1 counter on each other creature you control.",
-      "face": "back"
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 25,
+          "end": 79
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "event": "grantKeyword",
+      "keyword": "Flying",
       "controller": "you",
-      "value": 1,
-      "id": "gigaflare-graveyard",
-      "highlight": "Destroy target permanent",
-      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side; the destroyed permanent lands in its owner's graveyard).",
-      "face": "back"
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 81,
+          "end": 126
+        }
+      ]
+    },
+    {
+      "event": "destroy",
+      "targeted": true,
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 18,
+          "end": 42
+        }
+      ]
     },
     {
       "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "targeted": true,
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 18,
+          "end": 42
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "from": "Battlefield",
+      "subject": "self",
       "controller": "you",
-      "value": 1,
-      "id": "gigaflare-dies",
-      "highlight": "Destroy target permanent",
-      "sourceText": "Bahamut chapter III — Gigaflare: Destroy target permanent (unrestricted — can hit your own side, firing that permanent's own dies triggers).",
-      "face": "back"
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 44,
+          "end": 108
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "from": "Exile",
+      "event": "entersBattlefield",
+      "subject": "self",
+      "target": "self",
+      "controller": "you",
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 44,
+          "end": 108
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Wings of Light — put a +1/+1 counter on each OTHER creature you control; needs another creature you control to exist.",
-      "id": "wants-other-creature",
-      "highlight": "put a +1/+1 counter on each OTHER creature you control",
-      "value": 1,
-      "face": "back"
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 25,
+          "end": 79
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
-      "controller": "you",
-      "sourceText": "Gigaflare — Destroy target permanent, no controller restriction (real script: ValidTgts$ Permanent, no owner clause) — can target one of YOUR OWN permanents.",
-      "id": "wants-own-permanent",
-      "highlight": "Destroy target permanent",
-      "value": 1,
-      "face": "back"
-    },
-    {
-      "zone": "Battlefield",
-      "controller": "opp",
-      "sourceText": "Gigaflare — Destroy target permanent, no controller restriction — can equally target an OPPONENT'S permanent.",
-      "id": "wants-opp-permanent",
-      "highlight": "Destroy target permanent",
-      "value": 1,
-      "face": "back"
+      "to": "Battlefield",
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 18,
+          "end": 42
+        }
+      ]
     }
   ]
 }

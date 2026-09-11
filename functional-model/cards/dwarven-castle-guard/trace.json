@@ -1,15 +1,144 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onDies\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token",
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> real lethal combat (SBA) -> onDies",
+      "result": "Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in real blocked combat against a real 2/2 (a genuine mutual 704.5g state-based destruction) — it actually leaves the battlefield for the graveyard, then its onDies trigger fires for real, creating a 1/1 colorless Hero creature token.",
       "raw": {
-        "result": "creates a 1/1 colorless Hero creature token",
-        "trigger": "onDies"
+        "result": "Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in real blocked combat against a real 2/2 (a genuine mutual 704.5g state-based destruction) — it actually leaves the battlefield for the graveyard, then its onDies trigger fires for real, creating a 1/1 colorless Hero creature token.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Dwarven Castle Guard",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dwarven Castle Guard"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dwarven Castle Guard"
+      },
+      {
+        "fn": "enters",
+        "card": "Dwarven Castle Guard",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Dwarven Castle Guard",
+        "id": 657
+      },
+      {
+        "fn": "attack",
+        "card": "Dwarven Castle Guard",
+        "id": 657
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Coeurl",
+        "blockerId": 656,
+        "attacker": "Dwarven Castle Guard",
+        "attackerId": 657
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Dwarven Castle Guard",
+        "target": "Coeurl",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Coeurl",
+        "target": "Dwarven Castle Guard",
+        "amount": 2
+      },
+      {
+        "fn": "destroy",
+        "target": "Dwarven Castle Guard",
+        "controller": "you"
+      },
+      {
+        "fn": "destroy",
+        "target": "Coeurl",
+        "controller": "opp0"
+      },
       {
         "fn": "trigger",
         "card": "Dwarven Castle Guard",
@@ -24,6 +153,52 @@
         "tapped": false,
         "power": 1,
         "toughness": 1
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Dwarven Castle Guard ({1}{W})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 5
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 9
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 12
+      },
+      {
+        "label": "Declare Guard as attacker",
+        "from": 13
+      },
+      {
+        "label": "Advance one step",
+        "from": 15
+      },
+      {
+        "label": "Declare Coeurl as blocker",
+        "from": 16
+      },
+      {
+        "label": "Resolve lethal combat damage (704.5g SBA)",
+        "from": 17
+      },
+      {
+        "label": "Fire onDies",
+        "from": 21
       }
     ]
   }

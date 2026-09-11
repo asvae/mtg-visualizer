@@ -131,7 +131,7 @@ plumbing over what this file computes.
     whole log — a 13+ step scenario would otherwise push the board itself
     off-screen.
 
-## Keyword-ability icons (`lib/keywordIcons.ts`, `components/KeywordIcon.vue`)
+## Keyword-ability icons (`lib/abilityIconPaths.ts`, `components/AbilityIcon.vue`)
 
 A card chip shows small badge icons for keyword abilities (Flying, Trample,
 Unblockable, ...) — both a card's own printed keywords (`cardKeywords` prop,
@@ -161,19 +161,55 @@ MTG client already draws these — was tried first and specifically rejected:
   kind of thing just because both are technically "MTG-related and someone
   owns the copyright."
 
-Given no legitimately reusable source existed, `keywordIcons.ts` is a small
+Given no legitimately reusable source existed, `abilityIconPaths.ts` is a small
 (~17 keyword) set of original generic pictograms (a shield, a lightning
 bolt, an eye, ...) — deliberately generic shapes, not a copy of any specific
-product's glyph. `KeywordIcon.vue` just looks up a keyword's path data and
-renders it as an inline `<svg>`; `KEYWORD_ICON_NAMES` lets a caller check "do
+product's glyph. `AbilityIcon.vue` just looks up a keyword's path data and
+renders it as an inline `<svg>`; `ABILITY_ICON_NAMES` lets a caller check "do
 we have an icon for this" before rendering a badge (an icon-less keyword,
 e.g. `Legendary`, is silently skipped rather than showing an empty badge).
 
-Reviewed in Storybook first (`KeywordIcon.stories.ts` — `AllKeywords` grid,
+Reviewed in Storybook first (`AbilityIcon.stories.ts` — `AllKeywords` grid,
 `AtBadgeSize` at the actual 10px-in-a-corner render size, `UnknownKeyword` to
 confirm the no-icon case is silent) before being wired into the real replay
 chips, per explicit request ("first implement it in storybook... let me take
 a look" → approved → "Add to these replay cards").
+
+### Real, QUERY-TIME continuous keyword grants (2026-09-12, ENGINE_GAPS.md gap #14)
+
+A printed keyword and a `grantKeyword` log entry are both DISCRETE — some
+event/mutation genuinely happened, real trace.json evidence exists for it.
+A continuous grant (613 — "Dion, Bahamut's Dominant and other Knights you
+control have flying, during your turn"; `functional-model/card.ts`'s own
+`CardDefinition.continuousKeywordGrants`) is different: it's a live,
+QUERY-TIME fact re-evaluated off current board/turn state
+(`functional-model/state.ts`'s `effectiveKeywords`), true or false depending
+on the moment, never an event. There is no `fn:'grantKeyword'`-shaped log
+entry to represent "the grant is active right now" — a scenario can only
+prove it fired with a one-off manual `read:hasKeyword` query at a single
+instant (see e.g. `dion-bahamut-s-dominant-.../scenarios.ts`'s own comment),
+and even that only ever names the granting permanent itself, never every
+OTHER permanent (a Knight token) it might also cover.
+
+So this can't be shown the way every other keyword source is — `card`
+(server-side) serves the granting card's own real `continuousKeywordGrants`
+(front, then back face) as declarative data (`functionalModel.continuousKeywordGrants`,
+`server/api/card/[set]/[number].ts`), and `ScenarioReplayTrace.vue`'s own
+`continuousGrantedKeywords(card)` recalculates it FRESH, per board chip, per
+snapshot, at render time — cross-referencing the grant's own
+`onlyDuringYourTurn`/`includeSelf`/`subtype` fields against that snapshot's
+real `activePlayer` and each chip's own `owner`/subtype (subtype resolved via
+`functional-model/tokens.ts`'s `TOKENS` registry for a named token creature —
+see that function's own doc comment for what a real bystander creature still
+can't match, and why `equippedBySelf` isn't wired up yet either). This is
+what makes the icon genuinely toggle on/off as the pilot steps through turns
+(present on your turn, gone on an opponent's), rather than being baked in
+permanently either way — the same "recalculated on read, never cached"
+treatment `state.ts`'s own `effectivePT`/`effectiveKeywords` already give
+this class of ability engine-side, just re-derived independently here since
+engine has no connection to this rendering layer at all (see
+`.claude/contracts/card-schema.md`'s "Engine has no connection to card/UI"
+rule).
 
 ## Known bugs fixed here (worth knowing if something looks similar again)
 

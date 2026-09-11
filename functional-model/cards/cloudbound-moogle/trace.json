@@ -2,17 +2,32 @@
   {
     "scenario": {
       "setup": "you: 1 creature(s)",
-      "action": "\"onEnter\" trigger fires",
-      "result": "puts a +1/+1 counter on the other creature",
+      "action": "cast from hand",
+      "result": "is cast from hand, enters the battlefield, then puts a +1/+1 counter on the other creature",
       "raw": {
-        "result": "puts a +1/+1 counter on the other creature",
-        "trigger": "onEnter",
+        "result": "is cast from hand, enters the battlefield, then puts a +1/+1 counter on the other creature",
         "you": {
           "creaturesCount": 1
-        }
+        },
+        "sequence": [
+          "onEnter"
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Cloudbound Moogle",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cloudbound Moogle",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Cloudbound Moogle",
@@ -28,7 +43,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -38,7 +53,8 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 417,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -48,17 +64,32 @@
   {
     "scenario": {
       "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "no other creature present, so it puts the +1/+1 counter on itself",
+      "action": "cast from hand",
+      "result": "is cast from hand, enters the battlefield; no other creature present, so it puts the +1/+1 counter on itself",
       "raw": {
-        "result": "no other creature present, so it puts the +1/+1 counter on itself",
-        "trigger": "onEnter",
+        "result": "is cast from hand, enters the battlefield; no other creature present, so it puts the +1/+1 counter on itself",
         "you": {
           "creaturesCount": 0
-        }
+        },
+        "sequence": [
+          "onEnter"
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Cloudbound Moogle",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Cloudbound Moogle",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Cloudbound Moogle",
@@ -80,6 +111,7 @@
       {
         "fn": "putCounter",
         "target": "Cloudbound Moogle",
+        "id": 420,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

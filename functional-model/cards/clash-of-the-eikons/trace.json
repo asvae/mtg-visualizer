@@ -39,24 +39,28 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 3
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-0",
-        "target": "opp0-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 373,
+        "target": "Grizzly Bears",
+        "id": 375,
         "amount": 3
       },
       {
         "fn": "read:getNetPower",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
         "fn": "dealDamage",
-        "source": "opp0-creature-token-0",
-        "target": "you-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 375,
+        "target": "Grizzly Bears",
+        "id": 373,
         "amount": 2
       },
       {
@@ -100,6 +104,7 @@
       {
         "fn": "putCounter",
         "target": "you-enchantment-0",
+        "id": 378,
         "counterType": "LORE",
         "amount": -1,
         "controller": "you"
@@ -145,6 +150,7 @@
       {
         "fn": "putCounter",
         "target": "you-enchantment-0",
+        "id": 381,
         "counterType": "LORE",
         "amount": 1,
         "controller": "you"

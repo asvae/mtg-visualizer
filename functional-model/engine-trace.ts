@@ -35,7 +35,7 @@
 // one card's trace.json instead of the harness path. Every other card is
 // unaffected.
 
-import type { CardDefinition, EffectContext, Actions } from './card';
+import type { CardDefinition, EffectContext, Actions, AlternateCost } from './card';
 import type { Card } from './interfaces';
 import { resolveCard } from './card';
 import { GameState, wrapCard } from './state';
@@ -48,6 +48,8 @@ import {
   playLand,
   canActivateAbility,
   activateAbility,
+  costRequiresTap,
+  activationCostFor,
   resolveTop,
   advance,
   declareAttackers,
@@ -77,6 +79,25 @@ export interface EnginePilotCtxOpts {
   declineOptional?: boolean;
   triggerInput?: Record<string, unknown>;
   mode?: number;
+  /**
+   * Same real, player-visible "fixed by the game event, not computed" fact
+   * `card.ts`'s own `EffectContext.castFrom` doc comment describes —
+   * `harness.ts`'s own scenario runner already reads this off
+   * `Scenario.castFrom` (defaulting to `'hand'`); `ctxFor` below used to
+   * hardcode `'hand'` unconditionally with no way to override it, a real gap
+   * that only surfaced once a card's own effect actually branches on
+   * `ctx.castFrom` under THIS pilot path (From Father to Son, fin/20 —
+   * "If this spell was cast from a graveyard, put that card onto the
+   * battlefield instead"; every earlier engine-piloted alternate-cost card,
+   * Auron's Inspiration, never reads `castFrom` in its own effect, so the
+   * hardcoding was invisible until now). Defaults to `'hand'`, unchanged for
+   * every existing caller; a pilot script casting via an `AlternateCost`
+   * whose own effect needs to see that should pass the matching `alt.from`
+   * here explicitly (`ctxFor` does not infer it from a later `pilotCast`
+   * call — cause and effect run in the order the pilot script itself calls
+   * them).
+   */
+  castFrom?: 'hand' | 'graveyard' | 'exile';
   /** A real player's own manual target pick (`EffectContext.preferTarget` — see card.ts's own doc comment on it) — NOT automated/weighed selection, just an explicit override of `chooseTarget`'s old unconditional `pool[0]` default. */
   preferTarget?: (c: Card) => boolean;
 }
@@ -146,7 +167,7 @@ export function setupEnginePilot(setup: EnginePilotSetup): EnginePilot {
       self: loggingCard(state, self, log),
       you: youLogging,
       opponents: opponentsLogging,
-      castFrom: 'hand',
+      castFrom: opts?.castFrom ?? 'hand',
       declineOptional: opts?.declineOptional,
       triggerInput: opts?.triggerInput,
       mode: opts?.mode,
@@ -357,8 +378,16 @@ export function pilotDeclareAttackers(pilot: EnginePilot, attackers: RealCard[],
   const result = declareAttackers(pilot.engine, attackers);
   if (!result.ok) throw new Error(`pilotDeclareAttackers: illegal — ${result.reason}`);
   for (const a of attackers) {
-    if (!a.keywords.includes('Vigilance')) pilot.log.push({ fn: 'tap', target: a.name });
-    pilot.log.push({ fn: 'attack', card: a.name });
+    // `id`/`cardId` added 2026-09-12 alongside `harness.ts`'s own
+    // `loggingActions` per-instance-id fix (real regression: multiple
+    // real, distinct board instances sharing a name broke a trace
+    // consumer's own name-only target resolution) — this pilot-script tap/
+    // attack log site was a second, independently-missed instance of the
+    // exact same collision class (any engine-piloted scenario with 2
+    // same-named attackers), additive-only per `.claude/contracts/state-
+    // event-format.md`'s own non-breaking-field rule.
+    if (!a.keywords.includes('Vigilance')) pilot.log.push({ fn: 'tap', target: a.name, id: a.id });
+    pilot.log.push({ fn: 'attack', card: a.name, id: a.id });
   }
 }
 
@@ -367,7 +396,7 @@ export function pilotDeclareBlockers(pilot: EnginePilot, assignments: Array<{ bl
   pilot.beginStep(label ?? (assignments.length ? `Declare ${assignments.map((a) => a.blocker.name).join(', ')} as blocker${assignments.length > 1 ? 's' : ''}` : 'Declare no blockers'));
   const result = declareBlockers(pilot.engine, assignments);
   if (!result.ok) throw new Error(`pilotDeclareBlockers: illegal — ${result.reason}`);
-  for (const { blocker, attacker } of assignments) pilot.log.push({ fn: 'block', blocker: blocker.name, attacker: attacker.name });
+  for (const { blocker, attacker } of assignments) pilot.log.push({ fn: 'block', blocker: blocker.name, blockerId: blocker.id, attacker: attacker.name, attackerId: attacker.id });
 }
 
 /** Logs one real `tapForMana` entry per real source `mana.ts`'s own `payMana` actually tapped (its return value — see that function's own doc comment) — a DIFFERENT fn than plain `tap` (same reasoning this used to log a single summary `payMana` entry instead: a mana-source tap must not be misread as a card EFFECT tapping something by `verify-synergy.mjs`), but now naming exactly which real land/source paid, not just that some real cost was paid (a user's own real question this answers: "which specific lands got tapped for mana?"). A no-op for an empty/undefined list (a `{T}`-only ability's activation cost, e.g. — nothing needed tapping for mana). */
@@ -375,13 +404,32 @@ function logTappedForMana(pilot: EnginePilot, forCard: CardDefinition, tapped: R
   for (const source of tapped ?? []) pilot.log.push({ fn: 'tapForMana', target: source.name, for: forCard.name });
 }
 
-/** Real cast (601) — legality-checks via `canCastSpell`, throws with the real reason on an illegal pilot script (a bug in the pilot, not a legitimate "declined" case — this file always drives a KNOWN-legal line), else pays real mana and pushes to the real stack, logging a `cast` entry (matching `harness.ts`'s own `lifecycleBefore` shape) plus one real `tapForMana` entry per real land/source `castSpell`'s own `payMana` call actually tapped (see `logTappedForMana`'s own doc comment). */
-export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
-  pilot.beginStep(label ?? `Cast ${card.name} (${card.manaCost})`);
-  const check = canCastSpell(pilot.engine, pilot.you, card);
+/**
+ * Real cast (601) — legality-checks via `canCastSpell`, throws with the real
+ * reason on an illegal pilot script (a bug in the pilot, not a legitimate
+ * "declined" case — this file always drives a KNOWN-legal line), else pays
+ * real mana and pushes to the real stack, logging a `cast` entry (matching
+ * `harness.ts`'s own `lifecycleBefore` shape) plus one real `tapForMana`
+ * entry per real land/source `castSpell`'s own `payMana` call actually
+ * tapped (see `logTappedForMana`'s own doc comment).
+ *
+ * `alt` (optional, one of `card.alternateCosts`) pilots a real Flashback/
+ * Jump-start-shaped alternate-cost cast (CR 702.32/702.67, `engine.ts`'s
+ * own `canCastSpell`/`castSpell` doc comments) instead of the ordinary
+ * hand-cast — the logged `cast` entry's own `from`/`cost` name `alt.from`/
+ * `alt.cost` (matching `harness.ts`'s own `lifecycleBefore` shape for a
+ * `scenario.castFrom` cast) rather than the hardcoded `'hand'`/
+ * `card.manaCost`. Does NOT itself move `cardReal` into `alt.from`'s zone
+ * first — the pilot script is responsible for having put it there (e.g. via
+ * `pilot.state.addCard(pilot.you, 'Graveyard', ...)`), same as `engine.ts`'s
+ * own "trust the caller" contract for this.
+ */
+export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string, alt?: AlternateCost): void {
+  pilot.beginStep(label ?? (alt ? `Cast ${card.name} via ${alt.name} (${alt.cost})` : `Cast ${card.name} (${card.manaCost})`));
+  const check = canCastSpell(pilot.engine, pilot.you, card, alt);
   if (!check.ok) throw new Error(`pilotCast("${card.name}"): illegal — ${check.reason}`);
-  pilot.log.push({ fn: 'cast', card: card.name, instanceId: SELF_INSTANCE_ID, from: 'hand', cost: card.manaCost });
-  const result = castSpell(pilot.engine, pilot.you, cardReal, card, ctx, actions);
+  pilot.log.push({ fn: 'cast', card: card.name, instanceId: SELF_INSTANCE_ID, from: alt?.from ?? 'hand', cost: alt?.cost ?? card.manaCost });
+  const result = castSpell(pilot.engine, pilot.you, cardReal, card, ctx, actions, undefined, alt);
   if (!result.ok) throw new Error(`pilotCast("${card.name}"): ${result.reason}`);
   logTappedForMana(pilot, card, result.tappedForMana);
 }
@@ -475,8 +523,12 @@ export function pilotResolveTop(pilot: EnginePilot, label?: string): void {
     if (enterTrigger) pilot.log.push({ fn: 'trigger', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
     resolveTop(pilot.engine);
   } else {
+    // Real 702.32/702.67: a Flashback/Jump-start-cast spell (`peeked.thenExile`
+    // — set by `pilotCast`'s own `alt` param via `castSpell`, see `engine.ts`'s
+    // `resolveTop`) resolves to Exile instead of the Graveyard.
+    const to = peeked.thenExile ? 'Exile' : 'Graveyard';
     resolveTop(pilot.engine);
-    pilot.log.push({ fn: 'move', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, from: 'stack', to: 'Graveyard' });
+    pilot.log.push({ fn: 'move', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, from: 'stack', to });
   }
 }
 
@@ -539,14 +591,49 @@ export function pilotExpectIllegalCast(pilot: EnginePilot, caster: RealPlayer, c
   pilot.log.push({ fn: 'illegalAttempt', card: card.name, reason: check.reason });
 }
 
-/** Real activated ability (602.1) — same shape as `pilotCast` above: legality-checks, pays real mana + taps the permanent if the cost requires it, pushes to the stack, logs `activate`+`payMana`. */
+/**
+ * Real activated ability (602.1) — same shape as `pilotCast` above:
+ * legality-checks, pays real mana + taps the permanent if the cost requires
+ * it, pushes to the stack, logs `activate`+`payMana`.
+ *
+ * Also logs a real, standalone `tap` entry for a `{T}` COST payment
+ * (2026-09-12, venat-heart-of-hydaelyn-hydaelyn-the-mothercrystal's own
+ * Hero's Sundering, `{7}, {T}`) — `engine.ts`'s own `activateAbility` pays
+ * that cost via a bare `engine.state.tap(permanent)` call with NO log line
+ * of its own (`engine.ts` is log-agnostic by design, same as `turn.ts`), so
+ * without this, a real, visible state mutation (the permanent becomes
+ * tapped) was invisible to both the trace and the replay UI. Same root
+ * cause, same fix shape as `pilotDeclareAttackers`'s own real 508.1f
+ * attack-tap fix above ("previously bypassed logging entirely ... confirmed
+ * the hard way"). Checked the real blast radius before adding this: 3 other
+ * pool cards already call `pilotActivate` with a `{T}`-costed ability (Dion
+ * Bahamut's Dominant, Stiltzkin Moogle Merchant, Jill Shiva's Dominant) —
+ * none currently have a HARD failure that would flip to passing or
+ * regress from this (Dion/Jill are already failing/noting for unrelated
+ * stale-trace reasons; Stiltzkin's synergy.json is still v1-shaped and
+ * skipped by verify-synergy.mjs entirely); a NEW unexplained `tap` soft
+ * note on those is the same accepted, documented side-effect shape the
+ * `pump`/`tap` vocabulary promotions already established pool-wide
+ * (SYNERGY_DESIGN.md), not a fresh regression class. Venat, Heart of
+ * Hydaelyn is the first card whose ONLY tap is its own cost payment with no
+ * OTHER tap-shaped effect to coincidentally back a `{event:'tap',
+ * subject:'self', target:'self'}` fact's trace evidence the way Coeurl's
+ * own self-tap-cost fact happens to (Coeurl's own ability separately,
+ * genuinely taps a TARGET creature, which its own scenario's chooseTarget
+ * pool-order limitation happens to retarget onto itself — see that card's
+ * own scenarios.ts comment) — without this fix there is no scenario that
+ * could ever produce real evidence for such a fact on a card like this one.
+ */
 export function pilotActivate(pilot: EnginePilot, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
   pilot.beginStep(label ?? `Activate ${card.name}`);
   const check = canActivateAbility(pilot.engine, controller, permanent, card);
   if (!check.ok) throw new Error(`pilotActivate("${card.name}"): illegal — ${check.reason}`);
   pilot.log.push({ fn: 'activate', card: card.name, instanceId: SELF_INSTANCE_ID, cost: card.activationCost ?? '' });
+  const cost = activationCostFor(card);
+  const requiresTap = !!cost && costRequiresTap(cost);
   const result = activateAbility(pilot.engine, controller, permanent, card, ctx, actions);
   if (!result.ok) throw new Error(`pilotActivate("${card.name}"): ${result.reason}`);
+  if (requiresTap) pilot.log.push({ fn: 'tap', target: permanent.name, id: permanent.id, controller: controller.name });
   logTappedForMana(pilot, card, result.tappedForMana);
 }
 

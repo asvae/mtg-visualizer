@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Soldier Mercenary",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Soldier Mercenary",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle.",
+      "highlight": "search your library for an Equipment card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle.",
+      "highlight": "Cloud enters"
+    },
+    {
+      "sourceText": "As long as Cloud is equipped, if a triggered ability of Cloud or an Equipment attached to it triggers, that ability triggers an additional time.",
+      "highlight": "a triggered ability of Cloud"
+    },
+    {
+      "sourceText": "As long as Cloud is equipped, if a triggered ability of Cloud or an Equipment attached to it triggers, that ability triggers an additional time.",
+      "highlight": "an Equipment attached to it"
+    },
+    {
+      "sourceText": "When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle.",
+      "highlight": "search your library for an Equipment card"
+    }
+  ]
+}

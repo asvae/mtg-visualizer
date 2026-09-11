@@ -30,6 +30,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1826,
         "zone": "Hand",
         "controller": "you"
       },
@@ -81,6 +82,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1833,
         "zone": "Hand",
         "controller": "you"
       },

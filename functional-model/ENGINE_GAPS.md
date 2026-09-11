@@ -231,10 +231,52 @@ so a future pass doesn't mistake them for missing work:
 7. **Alternate costs, modal/split costs, casting from anywhere but hand.**
    `AlternativeCost.java`/`StaticAbilityAlternativeCost.java` (real Forge
    classes) cover flashback, foretell, alternative-cost-reduction effects,
-   etc. — none of that exists in `castSpell` today; `card.ts`'s own
-   pre-existing modal-effect support (used by Louisoix's Sacrifice, e.g.) is
-   a resolution-time concept, unrelated to a cast-time alternate-cost
-   legality check.
+   etc. **Narrowed (2026-09-11, `auron-s-inspiration`'s migration): plain
+   Flashback/Jump-start-shaped alternate costs — a fixed replacement mana
+   cost, paid from graveyard or exile instead of hand, CR 702.32/702.67 —
+   are now real**, not a no-op: `canCastSpell`/`castSpell` (`engine.ts`) take
+   an optional `alt?: AlternateCost` (`card.ts`'s pre-existing
+   `{name, cost, from, thenExile}` shape) — when given, `alt.cost` REPLACES
+   `card.manaCost` for affordability/payment (timing is still checked
+   against the card's own type, per 702.32's "following the normal rules
+   for casting that card" — Flashback doesn't change instant vs. sorcery
+   speed), and a `thenExile` alt cost tags the pushed `StackObject`
+   (`stack.ts`) so `resolveTop` sends the resolved spell to Exile instead of
+   the Graveyard. `engine-trace.ts`'s `pilotCast` takes the same optional
+   `alt` and logs the real `from`/`cost` it names instead of hardcoded
+   `from:'hand'`/`card.manaCost`. **Still real, explicitly NOT modeled**:
+   modal/split costs (choose-a-mode-then-pay), Foretell (a two-step
+   exile-then-cast-later sequence, not a same-turn alternate cost), any
+   alternative-cost-REDUCTION effect (layering a discount on top of a cost
+   rather than replacing it outright), and the engine does not itself verify
+   the caller's `cardReal` is actually sitting in `alt.from`'s zone before
+   casting it from there (same pre-existing "trust the caller" contract
+   `canCastSpell`/`castSpell` already have for an ordinary hand-cast, which
+   also isn't zone-checked).
+
+   **Real, textually-precise cost-reduction example confirmed still open
+   (2026-09-11, `fate-of-the-sun-cryst`/fin-19's migration):** "This spell
+   costs {2} less to cast if it targets a tapped creature." (real Scryfall
+   oracle text, `data/fin/fin_scryfall.json` collector_number 19) — a real
+   Forge `SVar:X:Count$..." / "S:Mode$ ReduceCost` style dynamic reduction
+   keyed on the CHOSEN TARGET's state at cast time (not a fixed discount,
+   and not a cost REPLACEMENT the way Flashback's `AlternateCost` is), i.e.
+   exactly the case this bullet already calls out as unmodeled. No
+   `Constraints`/`Fact`/engine vocabulary exists for "this spell's own mana
+   cost varies with a targeting choice" — `CardDefinition.manaCost` is a
+   fixed printed string, never recomputed per-cast, and `canCastSpell`/
+   `castSpell` have no discount hook at all (only the `alt` REPLACEMENT
+   param above). `cards/fate-of-the-sun-cryst/definition.ts` documents this
+   as real, un-executed `staticAbilities` text (consistent with every other
+   continuous/cost-affecting static ability in the pool) rather than
+   fabricating a `Fact`/effect with no engine backing behind it — no
+   fact was authored for this clause; only the "Destroy target nonland
+   permanent" half of the card is modeled as facts. Revisit only if a
+   future task specifically asks for cost-reduction modeling to actually
+   work (would need: (a) a real `chooseTarget`-time state check like
+   `isTapped`, (b) a `manaCost`-discount hook parallel to but distinct from
+   `alt`, (c) `Fact`/`Constraints` vocabulary to describe "this spell's own
+   cost is conditional on a targeting choice" — none of which exist today).
 8. **Damage-prevention shields — a narrow `dealDamage` hook, NOT full 614.**
    Checked the real pool: only 2 of 312 FIN cards need a replacement effect
    at all — Crystal Fragments/Summon: Alexander ("Prevent all damage that
@@ -468,6 +510,110 @@ so a future pass doesn't mistake them for missing work:
     the same pass, not a separate follow-up — leaving the dormant mis-cast
     path reachable once a real `playLand` action exists alongside it would
     reintroduce exactly the ambiguity this whole gap is about.
+
+13. **Trigger-doubling ("Panharmonicon effect") — no general machinery for
+    "a triggered ability triggers an additional time" under a condition.**
+    Surfaced by Cloud, Midgar Mercenary (fin/10)'s own second static ability:
+    "As long as Cloud is equipped, if a triggered ability of Cloud or an
+    Equipment attached to it triggers, that ability triggers an additional
+    time." Real Forge citation (`res/cardsfolder/cardsfolder.zip`'s
+    `c/cloud_midgar_mercenary.txt`, the actual card script — a source
+    checkout wasn't available, this is the real shipped script, grepped
+    directly): `S:Mode$ Panharmonicon | ValidCard$ Card.Self+equipped,
+    Equipment.Attached | Description$ ...` — Forge names this static-ability
+    mode `Panharmonicon` after the card that originated the effect, and
+    implements it as a general condition any card's own script can opt into
+    (`ValidCard$` gates which permanents it applies to), not a one-off.
+    This engine has no equivalent: `resolveCard()` dispatches a named
+    trigger exactly once per scenario call, full stop — no conditional
+    "fire this again" hook anywhere in the trigger-dispatch path
+    (`card.ts`/`engine.ts`), and adding one is NOT a narrow, single-card
+    fix the way Ultima, Origin of Oblivion's `onTapLandForC` gap was (a
+    single new named trigger with a self-contained effect) — it requires
+    teaching the general dispatch mechanism itself to conditionally re-fire
+    ANY triggered ability, checked against a real "is this permanent
+    equipped" condition, for BOTH the permanent itself and anything
+    attached to it. Left as descriptive `staticAbilities` text only
+    (`cards/cloud-midgar-mercenary/definition.ts`'s own comment already
+    documents this — not new information, just now cross-referenced from
+    here with the real Forge citation), no fact authored for it (would have
+    zero real trace evidence to verify against — the same "genuinely empty,
+    not missed authoring" treatment the pool's own already-audited
+    parked-action-only cards get, per `SYNERGY_DESIGN.md`'s "Implementation
+    notes"). Cloud's OWN ETB tutor ability (the card's other, fully
+    real/traced/verified ability) is unaffected by this gap.
+
+14. **Continuous, turn-conditional static keyword grants.** **Closed
+    (2026-09-12), same "narrow rather than delete" treatment gap #7's
+    Flashback narrowing established.** Real FIN cards: Dion, Bahamut's
+    Dominant's own "Dragonfire Dive — During your turn, Dion and other
+    Knights you control have flying" (fin/16), and Ardyn, the Usurper's own
+    "Demons you control have menace, lifelink, and haste" (checked fresh
+    against real oracle text: genuinely unconditional, no "during your
+    turn" restriction, unlike Dion's). Real machinery now exists:
+    `CardDefinition.continuousKeywordGrants?: {keywords, includeSelf,
+    subtype?, onlyDuringYourTurn?}[]` (`card.ts`) — copied onto the live
+    `RealCard` only at the moment a permanent actually resolves onto the
+    battlefield (`engine.ts`'s `resolveTop`, same pre-existing pattern
+    `manaAbility`'s own resolve-time derivation already established, not a
+    new one). `state.ts`'s new `effectiveKeywords(state, card)` is the real
+    QUERY-TIME read path (mirrors `effectivePT`'s "recalculated on read"
+    CDA pattern) — unions a card's own printed `keywords` with every
+    currently-qualifying grant from any battlefield permanent, checking
+    `includeSelf`/`subtype`+same-controller and (if `onlyDuringYourTurn`) a
+    new `GameState.activePlayerId` field kept in sync by `engine.ts`'s
+    `doAdvance()` on every real phase/turn change (`isActiveOrDefault`
+    treats `undefined` as "yes," so a plain harness.ts `Scenario` with no
+    turn concept still reads as "your turn," matching its own documented
+    baseline). This is now the REAL read path, not cosmetic: `wrapCard`'s
+    `hasKeyword`, `state.dealDamage`'s Deathtouch/Lifelink checks, and
+    `engine.ts`'s Haste/Defender sickness/attack-legality checks all route
+    through it — a granted keyword genuinely exempts summoning sickness,
+    triggers lifegain, and blocks attacking, not just a label. Both cards
+    have real `grantKeyword` SOURCE facts backed by this
+    (`dion-bahamut-s-dominant-bahamut-warden-of-light`'s front face,
+    `ardyn-the-usurper`). **Real, still-open sub-gap**: a continuous grant
+    is derived/query-time and never produces a discrete `fn:'grantKeyword'`
+    trace-log ACTION line (nothing ever calls `actions.grantKeyword` for
+    it) — the only possible trace evidence is a deliberate `read:hasKeyword`
+    query against real board state (new `verify-synergy.mjs` evidence
+    branch, same "manual CDA read" pattern `adelbert-steiner`'s own
+    `read:getNetPower` line already established); Dion's own
+    `engine-trace.ts` pilot-script scenario can inject this, but Ardyn's
+    plain `harness.ts` `Scenario[]` style structurally cannot (no field
+    lets a pilot script push an arbitrary custom log line mid-scenario), so
+    Ardyn's own 3 grant facts are covered by a narrow, documented
+    `isArdynDemonGrantFact` exemption instead of real trace evidence — real
+    fact, real mechanism, zero possible evidence given this one card's
+    scenario-authoring style. **Also still open**: nothing in this engine
+    ever logs a discrete action for a continuous grant, so the app's replay
+    UI (`app/SCENARIO_REPLAY.md`'s own documented keyword-icon rendering,
+    keyed off either a card's static `cardKeywords` prop or a discrete
+    `grantKeyword` log entry) currently has no way to visually show a
+    query-time grant turning on/off across turns — a `card`-agent-side
+    change to consult `CardDefinition.continuousKeywordGrants` directly
+    against the replay's own per-step turn state, not a further engine
+    change.
+    **Generalized further (2026-09-12, Dragoon's Lance/fin/17):** a third
+    real recipient mode, `equippedBySelf` — the grant follows whatever
+    real, LIVE creature THIS permanent is currently attached to
+    (`RealCard.attachedToId`, re-checked fresh on every read, so it
+    genuinely moves with the Equipment if re-equipped) — covers "During
+    your turn, equipped creature has flying." Functionally verified both
+    directions (on while equipped+your turn, off unequipped, off on the
+    opponent's turn). Same real evidence wall as Ardyn's own facts:
+    Dragoon's Lance's plain `harness.ts` Scenario style can't inject a
+    `read:hasKeyword` line either, covered by a new SHAPE-scoped (not
+    card-name-scoped) `isEquippedKeywordGrantFact` exemption — reusable by
+    any future Equipment-broadcast turn-conditional grant. That same card's
+    OTHER static clause ("+1/+0 and is a Knight in addition to its other
+    types") stays a real, separate, still-open gap — no continuous-effect
+    pipeline anywhere in this model for a static P/T bonus OR a dynamic
+    type grant flowing from an Equipment to whatever it's attached to
+    (checked `card.ts`'s `animate` dispatch: self-only today) — real facts
+    exist for both halves (`event:'pump'`, new `event:'grantType'`
+    vocabulary) but are honest-but-structurally-inert, same treatment as
+    Crystal Fragments' own equivalent pump clause.
 
 ## What's already solid (don't re-litigate)
 

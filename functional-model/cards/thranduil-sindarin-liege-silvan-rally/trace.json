@@ -117,12 +117,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-land-0",
+        "id": 2559,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-library-land-1",
+        "id": 2560,
         "zone": "Hand",
         "controller": "you"
       },
@@ -194,12 +196,14 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 2565,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 2566,
         "zone": "Hand",
         "controller": "you"
       },

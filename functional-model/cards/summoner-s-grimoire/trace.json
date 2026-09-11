@@ -28,7 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Summoner's Grimoire",
-        "target": "Hero"
+        "equipmentId": 2374,
+        "target": "Hero",
+        "id": 2375
       }
     ]
   },
@@ -59,7 +61,9 @@
       {
         "fn": "equip",
         "equipment": "Summoner's Grimoire",
-        "target": "you-creature-token-0"
+        "equipmentId": 2379,
+        "target": "Grizzly Bears",
+        "id": 2377
       }
     ]
   }

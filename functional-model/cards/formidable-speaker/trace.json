@@ -49,6 +49,7 @@
       {
         "fn": "moveTo",
         "target": "you-library-subtype-0",
+        "id": 849,
         "zone": "Hand",
         "controller": "you"
       }
@@ -131,7 +132,8 @@
       },
       {
         "fn": "untap",
-        "target": "you-creature-nontoken-0"
+        "target": "Grizzly Bears",
+        "id": 858
       }
     ]
   }

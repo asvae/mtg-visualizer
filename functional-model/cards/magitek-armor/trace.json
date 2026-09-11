@@ -49,6 +49,7 @@
       {
         "fn": "animate",
         "target": "Magitek Armor",
+        "id": 1404,
         "types": [
           "Artifact",
           "Creature"

@@ -1,9 +1,9 @@
 {
   "enrichment": "ai",
   "review": "ai",
-  "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has dealDamage ({\"fn\":\"dealDamage\",\"source\":\"Minwu, White Mage\",\"target\":\"opp0\",\"amount\":3}) with no matching declared produce",
-  "textCoverageAudited": false,
+  "verifySynergy": "ok",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the unified Fact model (fin/1-20 rollout continuation). Real oracle text confirmed against data/fin/fin_scryfall.json #26: {3}{W}{W}, Legendary Creature — Human Cleric, 3/3, \"Vigilance, lifelink\\nWhenever you gain life, put a +1/+1 counter on each Cleric you control.\" Vigilance/Lifelink are bare printed keywords (self-only, no grant/broadcast) — no Fact per the 2026-09-12 standing rule; dropped the old lifegain SOURCE fact that used to represent the card's own lifelink. Dropped the old self-dies/self-graveyard baseline facts too — this card has no real death-related oracle text to anchor them to (same precedent as adelbert-steiner/ambrosia-whiteheart/cloud-midgar-mercenary, all plain creatures with no death text of their own). New putCounter broadcast (SOURCE) mirrors the-crystal-s-chosen's own unconditional +1/+1 broadcast shape, narrowed to types:{has:['Cleric']} instead of all creatures (oracle says \"each Cleric you control\", not creature). New wants-lifegain SINK (event:'lifegain', controller:'you') mirrors aerith-gainsborough's identical sink verbatim (same oracle phrase, same span). New wants-cleric-presence SINK (to:'Battlefield', types:{has:['Cleric']}) mirrors aerith-gainsborough's own legendary-creature presence sink, narrowed to Cleric. All 5 facts annotated via annotations-authoring.json + compute-annotations.mjs; slug added to ANNOTATED_CARD_SLUGS.",
+  "textCoverageAudited": true,
   "knownGaps": []
 }

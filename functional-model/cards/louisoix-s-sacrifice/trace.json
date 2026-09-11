@@ -26,7 +26,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {

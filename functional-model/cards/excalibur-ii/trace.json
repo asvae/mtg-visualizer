@@ -19,6 +19,7 @@
       {
         "fn": "putCounter",
         "target": "Excalibur II",
+        "id": 778,
         "counterType": "CHARGE",
         "amount": 1,
         "controller": "you"
@@ -52,7 +53,9 @@
       {
         "fn": "equip",
         "equipment": "Excalibur II",
-        "target": "you-creature-token-0"
+        "equipmentId": 782,
+        "target": "Grizzly Bears",
+        "id": 780
       }
     ]
   },

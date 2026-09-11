@@ -28,7 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Warrior's Sword",
-        "target": "Hero"
+        "equipmentId": 2844,
+        "target": "Hero",
+        "id": 2845
       }
     ]
   },
@@ -59,7 +61,9 @@
       {
         "fn": "equip",
         "equipment": "Warrior's Sword",
-        "target": "you-creature-token-0"
+        "equipmentId": 2848,
+        "target": "Grizzly Bears",
+        "id": 2847
       }
     ]
   }

@@ -124,6 +124,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Treasure",
+        "id": 1201,
         "zone": "Hand",
         "controller": "opp0"
       },
@@ -174,6 +175,12 @@
         "cost": "{3}{U}{U}, {T} (activate only as a sorcery)"
       },
       {
+        "fn": "tap",
+        "target": "Jill, Shiva's Dominant",
+        "id": 1213,
+        "controller": "you"
+      },
+      {
         "fn": "tapForMana",
         "target": "Island",
         "for": "Jill, Shiva's Dominant"
@@ -201,12 +208,14 @@
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
+        "id": 1213,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
+        "id": 1213,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -228,18 +237,63 @@
         "name": "chapterI"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 2
+        "zone": "Battlefield",
+        "count": 7,
+        "creatureCount": 2
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "opp0",
-        "count": 0
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hero",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Jill, Shiva's Dominant",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Forest",
+        "result": false
       },
       {
         "fn": "grantKeyword",
         "target": "Hero",
+        "id": 1179,
         "keyword": "Unblockable"
       },
       {
@@ -297,18 +351,63 @@
         "name": "chapterII"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 2
+        "zone": "Battlefield",
+        "count": 7,
+        "creatureCount": 2
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "opp0",
-        "count": 0
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hero",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Jill, Shiva's Dominant",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Forest",
+        "result": false
       },
       {
         "fn": "grantKeyword",
         "target": "Hero",
+        "id": 1179,
         "keyword": "Unblockable"
       },
       {
@@ -358,17 +457,21 @@
       },
       {
         "fn": "tap",
-        "target": "Forest"
+        "target": "Forest",
+        "id": 1202,
+        "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
+        "id": 1213,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
+        "id": 1213,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -411,23 +514,23 @@
       },
       {
         "label": "Resolve",
-        "from": 31
+        "from": 32
       },
       {
         "label": "Pass turn (you)",
-        "from": 39
+        "from": 48
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 46
+        "from": 55
       },
       {
         "label": "Pass turn (you)",
-        "from": 54
+        "from": 71
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 56
+        "from": 73
       }
     ]
   }

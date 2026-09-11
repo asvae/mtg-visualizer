@@ -34,7 +34,7 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
@@ -67,12 +67,16 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "target": "you-creature-token-0"
+        "equipmentId": 247,
+        "target": "Grizzly Bears",
+        "id": 246
       },
       {
         "fn": "equip",
         "equipment": "you-equipment-1",
-        "target": "you-creature-token-0"
+        "equipmentId": 248,
+        "target": "Grizzly Bears",
+        "id": 246
       }
     ]
   },
@@ -138,12 +142,16 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "target": "Beatrix, Loyal General"
+        "equipmentId": 251,
+        "target": "Beatrix, Loyal General",
+        "id": 253
       },
       {
         "fn": "equip",
         "equipment": "you-equipment-1",
-        "target": "Beatrix, Loyal General"
+        "equipmentId": 252,
+        "target": "Beatrix, Loyal General",
+        "id": 253
       }
     ]
   },

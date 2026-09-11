@@ -6,7 +6,7 @@ import { orderByTextPosition } from '../../../../lib/factOrder';
 import type { FactRow } from '../../../../lib/factOrder';
 import { describeFact } from '../../../../../functional-model/synergy';
 import type { Fact } from '../../../../../functional-model/synergy';
-import type { EnrichedInteractionGroup } from '../../../../../server/api/card/[set]/[number]';
+import type { EnrichedInteractionGroup, ContinuousKeywordGrant } from '../../../../../server/api/card/[set]/[number]';
 import type { CardData, EdgeData, ThemeData, AnnotatedCard, ReviewStatus } from '../../../../types';
 import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
 import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
@@ -44,6 +44,7 @@ interface CardResponse {
     review: 'ai' | 'human' | null;
     scenariosReview: 'draft' | 'reviewed';
     interactionsReview: 'draft' | 'reviewed';
+    continuousKeywordGrants: { front?: ContinuousKeywordGrant[]; back?: ContinuousKeywordGrant[] } | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
 }
@@ -1014,6 +1015,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             :card-toughness="card.toughness"
             :card-back-power="card.backPower"
             :card-back-toughness="card.backToughness"
+            :continuous-keyword-grants="data.functionalModel.continuousKeywordGrants"
           />
           <div v-else class="text-xs text-muted italic">No scenarios recorded.</div>
         </template>

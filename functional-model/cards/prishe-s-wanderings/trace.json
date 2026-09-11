@@ -43,7 +43,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -53,7 +53,8 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1708,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

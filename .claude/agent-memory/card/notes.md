@@ -1,5 +1,261 @@
 # card agent notes
 
+- 2026-09-12 (latest, continuous keyword grants in scenario replay —
+  fin/16 Dion, Bahamut's Dominant / ENGINE_GAPS.md gap #14 UI side):
+  `engine` built real query-time machinery (`CardDefinition.
+  continuousKeywordGrants`, `state.ts`'s `effectiveKeywords`/
+  `isActiveOrDefault`/`GameState.activePlayerId`) for a continuous keyword
+  grant like Dion's "Dragonfire Dive" ("during your turn, Dion and other
+  Knights you control have flying") and correctly flagged that nothing on
+  the replay-rendering side could show it — there's no discrete
+  `fn:'grantKeyword'` log entry for a query-time fact, only a one-off manual
+  `read:hasKeyword` proof-of-concept line naming Dion himself, never the
+  Knight token. Live bug reported: the ETB'd Knight token showed no flying
+  icon at all.
+  - **Approach**: serve the grant as plain declarative data, then
+    recalculate it at RENDER time per snapshot, generically (no Dion-
+    specific code):
+    - `server/api/card/[set]/[number].ts`: new `FunctionalModelData.
+      continuousKeywordGrants: { front?; back? } | null` (type derived from
+      `CardDefinition['continuousKeywordGrants']`, exported as
+      `ContinuousKeywordGrant` for reuse). Dev path: a NEW, independent
+      per-slug dynamic `import()` of `definition.ts` by absolute `file://`
+      URL (same technique `functionalModelPool.ts` already established for
+      the same Nitro-relative-import-resolution reason) — deliberately NOT
+      reusing `loadFunctionalModelPool()`/`computeTracesLive`'s
+      run-one-card.mjs subprocess, since the pool skips any card with no
+      (or not-yet-v2) synergy.json (irrelevant to whether a card's own
+      CardDefinition carries a grant) and the subprocess only ever prints a
+      `TraceResult[]`, never the raw parsed module. Prod path: extended
+      `scripts/build-fm-bundle.mjs`'s existing `poolFacts` (already a
+      hand-picked CardDefinition-field subset for the SAME reason
+      `synergy.ts`'s matcher needs it) to also carry
+      `continuousKeywordGrants` + a minimal `backFace` mirror of the same
+      field; regenerated and left `data/functional-model/fm-bundle.json`
+      un-committed in the working tree (320 cards, re-run again after this
+      task to pick up a concurrent engine session's own synergy.json
+      changes — see below).
+    - `app/pages/app/card/[set]/[number].vue` → `ScenarioReplay.vue` →
+      `ScenarioReplayTrace.vue`: new `continuousKeywordGrants` prop threaded
+      straight through, no transformation.
+    - `ScenarioReplayTrace.vue`'s own new `continuousGrantedKeywords(card)`
+      is the real logic, called per rendered chip from `iconKeywords`
+      (unioned with `printedKeywords`/`card.keywords`, same badge filtering
+      as before): finds the snapshot's own self chip, picks front vs. back
+      grants off `self.faceName` (unset = front), skips a grant when
+      `onlyDuringYourTurn` and the snapshot's real `activePlayer` isn't
+      self's own owner (mirrors `state.ts`'s `isActiveOrDefault` default of
+      "yes" when `activePlayer` is undefined — a flat harness.ts scenario),
+      then matches `includeSelf` (this chip IS self) or `subtype` (this
+      chip is a DIFFERENT permanent, same owner as self, whose subtype list
+      includes the grant's subtype). A new small `TOKEN_SUBTYPES_BY_NAME`
+      map (module scope, built off `functional-model/tokens.ts`'s `TOKENS`
+      registry — same "plain data" import `ScenarioReplay.vue`'s own
+      `tokenNameToKeys` map already established) is the ONLY subtype source
+      for a non-self chip — resolves Dion's own Knight token correctly
+      (`createToken` log entries name a token by its bare printed name,
+      which is always a `TOKENS[key].name`).
+    - **Two accepted, documented (not fixed) gaps**, both because
+      `ReplayCard` doesn't track the field a grant would need: a subtype
+      grant can't match a real BYSTANDER creature (no token, no served
+      subtype data anywhere in this pipeline) — not hit by any current
+      scenario; `grant.equippedBySelf` (Dragoon's Lance's "equipped
+      creature has flying") never matches — `scenarioReplay.ts`'s own
+      `equip` case doesn't record WHICH creature an Equipment is attached
+      to. Both documented inline in `continuousGrantedKeywords`'s own doc
+      comment and in `app/SCENARIO_REPLAY.md`'s new section.
+  - **Verified live** (Playwright, throwaway scripts at repo root, deleted
+    after) against the already-running dev server, fin/16's real
+    engine-piloted trace, stepping through with the Forward button: Knight
+    token chip doesn't exist yet at steps 0-1 (before Dion's ETB), gains a
+    real flying icon at steps 2-3 (turn 1, "Your turn" — the query-time
+    front-face grant), LOSES it at step 4 (turn 2, "opp0's turn" —
+    correctly toggles OFF, the exact behavior the bug report asked for),
+    regains it from step 5 onward and keeps it through every later
+    opponent turn too (turn 3 onward — Bahamut's own REAL chapter I
+    `grantKeywordAll` discrete log entry has fired by then, a permanent
+    grant per this model's own accepted "duration not tracked"
+    simplification, correctly independent of turn from that point on).
+    Confirmed via `svg` count inside the Knight chip's own DOM node at each
+    step (0 vs 1), not just eyeballing a screenshot.
+  - **Separate, pre-existing, OUT-OF-SCOPE cosmetic finding, not fixed**:
+    Dion's own self chip shows a flying icon at EVERY step, including
+    before the ETB/transform and during an opponent's turn — but this isn't
+    my new code; `printedKeywords()`'s `cardKeywords` prop is Scryfall's own
+    top-level `card.keywords` for the WHOLE two-faced card, which already
+    combines both faces' keywords (`curl /api/card/fin/16` →
+    `card.keywords: ["Flying"]`, sourced from the BACK face Bahamut's real
+    printed Flying, not Dion's own front-face text) — a pre-existing "self
+    chip's printed-keyword badge doesn't know which face is currently
+    showing" gap for any DFC whose two faces' printed keywords differ, not
+    something `continuousKeywordGrants` introduced or something this task
+    was scoped to fix. Flagging for a future pass (`printedKeywords` would
+    need to pick per-face keywords the same way `ptFor` already picks
+    per-face power/toughness off `faceName`).
+  - **Real-world concurrent-session note**: mid-task, a DIFFERENT live
+    session was actively editing `functional-model/harness.ts` +
+    `app/lib/scenarioReplay.ts` (the per-instance `id`-consumption entry
+    logged just below this one) — briefly left the whole dev server 500ing
+    site-wide (`harness.ts` not yet exporting `GENERIC_FILLER_CREATURE`
+    that `scenarioReplay.ts`'s own new import already expected mid-edit).
+    Did not touch either file myself; waited it out (~2 min) rather than
+    working around/reverting someone else's in-flight uncommitted work,
+    per this project's own safety rules. Resolved on its own once that
+    session's edit landed.
+  - `npm run typecheck`: exit 0 (re-checked twice, before and after the
+    concurrent session's own edits landed). `npx vitest run app/lib
+    functional-model`: 302/302 pass.
+  - **Contract note**: none of `.claude/contracts/card-schema.md`/
+    `state-event-format.md` needed a correction for this — both already
+    accurately describe the engine↔card boundary this task worked within
+    (`card-schema.md`'s "must not assume Effect kinds/resolveCard()
+    internals" line was the one I checked most carefully against;
+    `continuousKeywordGrants` is plain declarative CardDefinition data, not
+    an `Effect`/interpreter internal, so serving it doesn't cross that
+    line — noted explicitly in the new code's own comments for a future
+    reader who might wonder the same thing). `app/SCENARIO_REPLAY.md`
+    (this domain's own maintained primer) got a new section for this
+    mechanism, plus an unrelated small cleanup: it still named the
+    `KeywordIcon.vue`/`lib/keywordIcons.ts`/`KEYWORD_ICON_NAMES` component
+    trio by an old name — renamed to `AbilityIcon.vue`/
+    `lib/abilityIconPaths.ts`/`ABILITY_ICON_NAMES` (the real current names)
+    while I was already in that section, not a new task of its own.
+
+- 2026-09-12 (latest, per-instance `id` consumption in scenarioReplay.ts):
+  Consumed the new additive per-instance `id` field `engine` added to
+  `trace.json` log entries (`.claude/contracts/state-event-format.md`'s
+  "Per-instance `id` fields" section, 2026-09-12) to fix the real reported
+  bug: `putCounter`/`pump`/`tap`/etc. targeting multiple same-name,
+  same-owner real board instances (2 Grizzly Bears, 4 dynamically-created
+  Hero tokens, ...) all resolved to the SAME first-matched instance instead
+  of the actual distinct one each real action targeted (The Crystal's
+  Chosen, fin/14: "put a +1/+1 counter on each creature you control"
+  visibly piled all 6 counters onto one creature). `ensureForZone`/
+  `ensureForTap`'s own pre-existing `owner`-scoping (latest+29 era) only
+  disambiguates by controller — same-owner multiple-same-name instances
+  still collided.
+  - **Fix, `app/lib/scenarioReplay.ts`**: `ensure`/`ensureForZone`/
+    `ensureForTap` each gained an optional trailing `exclude?:
+    ReadonlySet<ReplayCard>` param — when given, their own `cards.find(...)`
+    match skips anything in that set (falling through to `ensure`'s
+    create-new path only if literally nothing else matches). New
+    `resolveInstance(id, resolve)` helper (a running `Map<number,
+    ReplayCard>` keyed by the real `id`): an id-less entry (older trace
+    shapes, or an fn that never carries one) calls `resolve` with NO
+    exclusion — byte-identical to pre-fix behavior. An id-carrying entry
+    NOT seen before calls `resolve` with the set of cards already pinned to
+    some OTHER id (steers it onto a genuinely different same-named sibling
+    instead of re-picking the first alias), then PINS the result to that id
+    going forward — every later entry sharing the id skips straight to the
+    pinned object, no re-resolution at all. Every switch case for a fn the
+    contract lists as now carrying `id` (`pump`, `moveTo`, `ceasesToExist`,
+    `putCounter`, `equip` +`equipmentId`, `animate`, `gainControl`,
+    `destroy`, `tap`, `untap`, `grantKeyword`, engine-trace's `tap`/`attack`/
+    `block` +`blockerId`/`attackerId`) now routes through `resolveInstance`.
+    `dealDamage` (also listed as carrying `id`+`sourceId`) deliberately left
+    alone — it doesn't mutate any `ReplayCard` today (only player life
+    loss), so there's no per-instance resolution there yet to fix.
+    `ReplayCard` gained an optional `id?: number` field (recorded once an
+    id-carrying entry resolves to it) — deliberately NOT added to
+    `groupKey`, so genuinely-identical-looking distinct instances still
+    visually collapse into one "×N" chip same as any other fungible group;
+    it only disambiguates which object a later same-id entry mutates, not
+    display grouping.
+  - **Verified**: direct `replayTrace()` calls (via `tsx`, no browser) against
+    the real on-disk `trace.json` for `the-crystal-s-chosen` (fin/14) — all
+    6 creatures (2 Grizzly Bears ids 2424/2425, 4 Hero tokens ids
+    2427-2430) end with exactly `{"+1/+1":1}`, not piled/uneven. Also spot-
+    checked 2 more of the ~50 pool cards `engine`'s own notes flagged for
+    this collision class: `summon-knights-of-round` scenario 4 (3 distinct
+    Grizzly Bears, ids 2299/2300/2301, each independently gets its own
+    `pump` +2/+2 AND its own Indestructible counter — previously would have
+    piled onto one) and `craterhoof-behemoth` scenario 1 (2 distinct Grizzly
+    Bears, ids 464/465, each independently gets +3/+3 and Trample).
+    `summon-esper-ramuh` scenario 1 also spot-checked (2 distinct Grizzly
+    Bears each get their own +1/+0 pump). Live browser confirmation
+    (Playwright, throwaway scripts at repo root, deleted after) against the
+    already-running dev server, fin/14's Scenarios tab stepped to the final
+    step: board shows a "Grizzly Bears ×2" chip and a "Hero ×4" chip, EACH
+    with a single `[+1/+1]` counter badge (not `×2` on the badge, not split
+    unevenly) — screenshot-confirmed groupKey correctly collapses all 6 into
+    2 chips specifically BECAUSE their post-replay state is now identical
+    (1 counter each), which is itself further proof of even distribution
+    (an uneven 2/0 split would have produced 2 UNGROUPED Grizzly Bears
+    chips with different counter badges).
+  - `npm run typecheck`: exit 0. `npx vitest run app/lib`: 64/64 pass (full
+    suite as it stands today).
+  - No `.claude/contracts/*.md` mismatch found — `state-event-format.md`'s
+    already-updated "Per-instance `id` fields" section (engine's own edit)
+    matched the real on-disk field names (`id`/`equipmentId`/`sourceId`/
+    `blockerId`/`attackerId`) exactly; nothing to flag.
+  - Scope: touched only `app/lib/scenarioReplay.ts` per this handoff's own
+    file-ownership note; did not touch `functional-model/` (engine's
+    already-landed fix) or any `.vue` component.
+
+- 2026-09-11 (latest, dynamic-token art bug fix): Fixed a real bug in
+  `app/components/ScenarioReplay.vue`: a token created DURING scenario
+  execution (a real `createToken` log entry firing mid-replay, e.g.
+  `the-crystal-s-chosen`'s "Create four 1/1 colorless Hero creature tokens")
+  wasn't recognized as a token at all, because the old `tokenKeys`/
+  `tokenNameSet` only read names pre-declared in a scenario's static
+  `ps.tokens` setup config. A dynamically-created token's bare name ("Hero")
+  fell through to the generic real-bystander path (`extraNames` →
+  `POST /api/cards/by-names`, a plain `name = ?` DB lookup with no
+  disambiguation) — and multiple real cards across different sets are
+  literally named "Hero" in the local DB (`tfin/2`..`/33` = the correct
+  plain vanilla FIN 1/1 token, but also `tmsh/2` = an unrelated
+  Vigilance 3/2 from a different game/set), so the wrong art rendered.
+  - **Fix**: built a reverse name→keys map across the FULL
+    `functional-model/tokens.ts` `TOKENS` registry (not just this
+    scenario's own `ps.tokens`) — a board snapshot showing a name already
+    proves a token by that name exists, regardless of whether the
+    scenario's static setup declared it upfront. Computed `boardCards` once
+    (last snapshot of every trace's `replayTrace(...)`, same "nothing ever
+    removed, only re-zoned" property already relied on elsewhere in this
+    file) and derived `dynamicTokenKeySet`: for every non-self, non-land,
+    not-already-pre-seeded-token board name, look up `tokenNameToKeys`;
+    only keep it if it resolves to EXACTLY ONE key. Those keys get folded
+    into the same `/api/tokens/by-key` fetch (`allTokenKeys = [...tokenKeys,
+    ...dynamicTokenKeySet]`) pre-seeded tokens already used, and matching
+    names are excluded from `extraNames` so they never take the ambiguous
+    by-name path at all.
+  - **Cat tie-break decision (documented in the new code comment)**:
+    `TOKENS.w_1_1_cat` and `TOKENS.w_1_1_cat_lifelink` both have `.name ===
+    'Cat'` — genuinely ambiguous, no scenario-level signal available at
+    replay time to pick the right variant. Chose to NOT apply the new
+    TOKENS-name fallback for an ambiguous name at all — it falls back to
+    the OLD behavior exactly (pre-seeded `ps.tokens` still resolves it
+    correctly if declared; otherwise it's treated as a generic real-
+    bystander lookup, same as before this fix). Deliberate, not an
+    accidental `Object.values`/insertion-order pick — ambiguous names are
+    rare and already handled correctly today via the pre-seeded path;
+    only the unambiguous dynamic-token case needed fixing. Checked live:
+    no currently-authored scenario actually creates a dynamic "Cat" token
+    (grepped every `trace.json` for `"token": "Cat"` — zero hits), so this
+    tie-break isn't exercised by any real card today, just guarded against.
+  - **Verified live** (Playwright, throwaway script at repo root, deleted
+    after) against the already-running dev server, all three flagged
+    cards, stepped to each scenario board's "End" step: fin/14 (The
+    Crystal's Chosen), fin/18 (Dwarven Castle Guard), fin/17 (Dragoon's
+    Lance) — every "Hero" chip now renders `imgSrc` ending in
+    `d0657ce1-bf75-4007-ac1b-0623eb263357.jpg`, confirmed via a direct
+    `cards.db` query to be `tfin/2` (Hero, 1/1, the correct plain vanilla
+    FIN token) — NOT `tmsh/2` (the unrelated Vigilance 3/2 Hero that the
+    old plain-name-lookup sort order was picking). `dion-bahamut...`'s own
+    Knight token untouched/unaffected (only one `TOKENS` key has that name,
+    so it was never ambiguous and this fix is purely additive for it).
+  - `npm run typecheck`: exit 0. `npx vitest run app/lib`: 64/64 pass (full
+    suite as of today — down from a previously-logged 115 in older entries
+    below, likely reflecting file changes since; not investigated further,
+    out of this task's scope, all passing is what matters here).
+  - No `.claude/contracts/*.md` mismatch to flag — pure client-side
+    display/token-art-resolution fix, no engine-served shape (`trace.json`/
+    `synergy.json`) touched or misdescribed by either contract. The bug
+    itself was real engine-log-consumption logic living in card's own lane
+    (`ScenarioReplay.vue`), not an engine-side defect — `trace.json`'s
+    `createToken` entries are already correctly shaped per
+    `state-event-format.md`.
+
 - 2026-09-11 (follow-up): Reverted the hidden-text-behind-icon "SO"/"SI"
   select-to-copy trick from the Facts tab's role cell (user tried it live:
   "very hard to select, I pretty much have to go from previous row") —
@@ -3005,3 +3261,75 @@ resume alone (session transcripts are swept after ~30 days).
     edits + this notes.md entry only) — left the large set of unrelated
     pre-existing `functional-model/*` and other agents' in-flight modified
     files untouched in the working tree.
+
+- 2026-09-11 (later still): Two Facts-tab notes-column wording fixes spotted
+  by the user live on fin/20 (From Father to Son,
+  `functional-model/cards/from-father-to-son/`), both in
+  `app/lib/factConditions.ts`.
+  1. **Flashback cast now distinguished from a normal cast, in the notes
+     column only (label stays bare, per this project's own standing
+     single-dimensional-label rule)**: `movementOriginPhrase`'s early
+     `!to` bailout meant a `from`-only fact (a `cast` event, whose real
+     destination is the deliberately-invisible Stack) NEVER got its
+     origin surfaced at all, even when `from` genuinely differed from the
+     common case — the fact `{event:'cast', from:'Graveyard',
+     target:'self'}` (real oracle-backed Flashback) rendered identically
+     to `{event:'cast', from:'Hand', target:'self'}` (normal cast), both
+     bare "self". Fixed by handling the `to === undefined` case explicitly
+     instead of bailing: new `EVENT_DEFAULT_FROM: Record<string, string>`
+     map (`{ cast: 'Hand' }`) — an event's own established default origin
+     is suppressed (no note), any other real `from` on that event shows
+     `from ${zone.toLowerCase()}`. Normal cast (`from:'Hand'`) still
+     renders bare "self"; Flashback (`from:'Graveyard'`) now renders
+     "self · from graveyard".
+  2. **Fixed "artifact permanents" → "artifact cards" on a Library→
+     Battlefield tutor/search fact** (From Father to Son's own Flashback
+     mode: `{from:'Library', to:'Battlefield', types:{has:['Artifact']}}`,
+     now actually authored as `Vehicle` on disk as of this check, same
+     shape). Root cause: the noun lookup
+     (`ZONE_NOUN[effectiveZone(fact) ?? '']`) was keyed off the
+     DESTINATION zone (`to`/`zone`) always, even for a real `from`+`to`
+     movement — happened to read right on every existing Library→Hand
+     tutor variant only because Hand's own noun ALSO happens to be
+     "cards", coincidence not correctness. New `constraintNounZone(fact)`
+     helper (right next to `effectiveZone`): `fact.from ?? effectiveZone(fact)`
+     — prefers the ORIGIN zone when a real movement `from` exists (the
+     type constraint is checking the object as it sits in its origin zone
+     at search/trigger time, not what it becomes at the destination),
+     falls back to `effectiveZone` (still the destination) when there's no
+     `from` at all — a plain `{to:'Battlefield', types:{...}}` sink with no
+     origin genuinely IS describing something already on the battlefield,
+     unaffected. Confirmed this generalizes sensibly beyond the one
+     reported case too (e.g. a hypothetical typed `dies`
+     `{from:'Battlefield', to:'Graveyard', types:{...}}` would now read
+     "permanents," matching real oracle phrasing like "nonland permanent
+     ... dies," not "cards" — previously would have been wrong the same
+     way, just never surfaced since no currently-authored fact hits that
+     combination).
+  - Note the origin-first noun fix does NOT remove the separately-existing
+    "from library" bit `movementOriginPhrase` already adds for this same
+    fact (that `(from:'Library', to:'Battlefield')` pair has no
+    `zoneMovementName` entry, so both the label — "Moves to battlefield
+    (from library)" — and this column repeat the origin; pre-existing,
+    harmless duplication, not something either fix touched or was asked
+    to touch).
+  - Added 4 new fixture tests to `app/lib/factConditions.test.ts` (normal
+    vs. Flashback cast; from+to movement w/ type constraint picks origin
+    noun; plain to-only sink w/ type constraint still says "permanents",
+    unaffected) — 28/28 pass in that file, 64/64 across the full `app/lib`
+    suite.
+  - Verified live (Playwright, throwaway script at repo root, deleted
+    after) against the already-running dev server, fin/20: Facts tab rows
+    read exactly `Cast a spell | self` (normal), `Cast a spell | self ·
+    from graveyard` (Flashback), `Moves to battlefield (from library) |
+    yours · from library · vehicle cards` (tutor-to-battlefield, correct
+    "cards" noun), `Library presence | yours · vehicle cards` and `Tutor |
+    yours · vehicle cards` (unaffected Library-sourced facts, already
+    correct before this fix, confirmed still correct after).
+  - `npm run typecheck`: exit 0, clean (confirmed via the correct
+    build-mode command per this file's own standing policy correction
+    above — not the no-op `vue-tsc -p .`).
+  - No `.claude/contracts/*.md` mismatch to flag — pure card-owned
+    presentation logic over already-correctly-documented `Fact.from`/`.to`/
+    `.event` fields; nothing served differently than the contract
+    describes.

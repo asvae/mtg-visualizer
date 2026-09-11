@@ -19,6 +19,7 @@
       {
         "fn": "moveTo",
         "target": "Cactuar",
+        "id": 294,
         "zone": "Hand",
         "controller": "you"
       }

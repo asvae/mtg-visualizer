@@ -30,7 +30,9 @@
       },
       {
         "fn": "tap",
-        "target": "Elixir"
+        "target": "Elixir",
+        "id": 690,
+        "controller": "you"
       }
     ]
   },
@@ -73,12 +75,14 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 692,
         "zone": "Library",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
+        "id": 693,
         "zone": "Library",
         "controller": "you"
       },

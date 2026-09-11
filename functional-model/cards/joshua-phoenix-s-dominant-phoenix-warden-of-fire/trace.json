@@ -60,12 +60,14 @@
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
+        "id": 1221,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
+        "id": 1221,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -95,6 +97,7 @@
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
+        "sourceId": 1224,
         "target": "opp0",
         "amount": 2
       },
@@ -130,6 +133,7 @@
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
+        "sourceId": 1227,
         "target": "opp0",
         "amount": 2
       },
@@ -182,24 +186,28 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 1229,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
+        "id": 1230,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
+        "id": 1231,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
+        "id": 1231,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -235,6 +243,7 @@
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
+        "sourceId": 1233,
         "target": "opp0",
         "amount": 3
       },
@@ -266,12 +275,14 @@
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
+        "id": 1236,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
+        "id": 1236,
         "zone": "Battlefield",
         "controller": "you"
       },

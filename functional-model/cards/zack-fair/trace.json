@@ -19,6 +19,7 @@
       {
         "fn": "putCounter",
         "target": "Zack Fair",
+        "id": 2917,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -60,7 +61,8 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2919,
         "counterType": "+1/+1",
         "amount": 2,
         "controller": "you"

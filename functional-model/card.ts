@@ -379,9 +379,20 @@ export type Effect =
       notSelf?: boolean;
     }
   | {
-      /** Grants a keyword to every creature matching `predicate` (Ardyn's own "Demons you control have menace," a real static grant to a GROUP) — same `predicate`/`notSelf`/`subtype` shape `pumpAll`/`putCounterAll` already use. Same duration caveat as `grantKeywordTarget` above. */
+      /**
+       * Grants a keyword to every creature matching `predicate` (Ardyn's own "Demons you control have menace," a real static grant to a GROUP) — same `predicate`/`notSelf`/`subtype` shape `pumpAll`/`putCounterAll` already use. Same duration caveat as `grantKeywordTarget` above.
+       *
+       * `'permanents-you-control'` (Restoration Magic's own Curaga mode —
+       * "Permanents you control gain hexproof and indestructible until end
+       * of turn," CR: no creature-only restriction, every permanent) added
+       * alongside the original creature-only predicate rather than widening
+       * it, since `'creatures-you-control'` is real, separately-matched
+       * pool vocabulary elsewhere (`subtype` filtering only makes sense for
+       * a creature-typed pool) — `subtype` is a no-op under
+       * `'permanents-you-control'` and should not be set alongside it.
+       */
       kind: 'grantKeywordAll';
-      predicate: 'creatures-you-control';
+      predicate: 'creatures-you-control' | 'permanents-you-control';
       keyword: Keyword;
       notSelf?: boolean;
       subtype?: string;
@@ -661,14 +672,54 @@ export interface CardDefinition {
    */
   readonly ptFormula?: { kind: 'addPerEquipmentControlled'; power: number; toughness: number } | { kind: 'setToCreaturesControlled' };
   /**
-   * Continuous rules text that ISN'T a recognized `keywords` entry or
-   * `ptFormula` (Kain's own "Jump — during your turn, NICKNAME has flying,"
-   * a granted static buff, a conditional CDA) — plain description, NEVER
+   * A real, QUERY-TIME continuous keyword grant (613, ENGINE_GAPS.md gap
+   * #14, closed 2026-09-12) — "Dion and other Knights you control have
+   * flying" (Dion, Bahamut's Dominant's own "Dragonfire Dive," turn-
+   * conditional), "Demons you control have menace, lifelink, and haste"
+   * (Ardyn, the Usurper, unconditional). Same "recalculated live from
+   * current board state on every read, never a fixed/timestamped delta"
+   * treatment `ptFormula`/`state.ts`'s own `effectivePT` already establish
+   * for a layer-7a CDA — `state.ts`'s own `effectiveKeywords` is this
+   * field's read-time counterpart, consulted by `hasKeyword` (and every
+   * OTHER real place this engine checks a keyword — combat/sickness/
+   * Deathtouch/Lifelink — not a decorative, UI-only label). Copied onto
+   * the real `RealCard` at `addCard` time (`RealCard.continuousKeyword
+   * Grants`), same as `ptFormula`. No duration tracking beyond the
+   * `onlyDuringYourTurn` condition itself (real per-object timestamped
+   * layers, 613.6, are still out of scope — see `layers.ts`'s own header)
+   * — this is a narrow, real mechanism for exactly this shape ("if
+   * <condition>, <permanents matching filter> have <keyword>", not a
+   * general replacement/continuous-effect engine. `subtype`-matched
+   * recipients are always scoped to the SAME controller as the granting
+   * permanent (both real cards' own text: "... you control") — no
+   * cross-controller grant shape exists yet, not needed until a real card
+   * forces it.
+   */
+  readonly continuousKeywordGrants?: {
+    keywords: Keyword[];
+    /** Whether the granting permanent itself is also a recipient (Dion's own "Dion AND other Knights" — true; Ardyn's own "Demons you control," Ardyn himself isn't a Demon — false). */
+    includeSelf: boolean;
+    /** Real subtype filter for OTHER permanents you control this ALSO applies to (Dion's own 'Knight', Ardyn's own 'Demon') — omit for a self-only grant. */
+    subtype?: string;
+    /** Real 508/CR "during your turn" gating (`state.ts`'s own `activePlayerId`, kept in sync by `engine.ts`'s `advance()`) — omit for an unconditional, always-on grant (Ardyn's own). */
+    onlyDuringYourTurn?: boolean;
+    /** Real Equipment-broadcast shape (2026-09-12, Dragoon's Lance's own "During your turn, equipped creature has flying") — the recipient is whatever real, LIVE creature THIS permanent is currently attached to (`RealCard.attachedToId`, already tracked by `state.equip`/`getEquippedBy`), re-checked fresh on every read same as every other condition here — the grant genuinely moves with the Equipment if it's later re-equipped, and turns off if unattached. Mutually exclusive with `subtype` in every real card checked so far (an Equipment's own broadcast targets its equipped creature, not a controller-wide subtype), but not enforced as exclusive — a future card could plausibly want both. */
+    equippedBySelf?: boolean;
+  }[];
+  /**
+   * Continuous rules text that ISN'T a recognized `keywords` entry,
+   * `ptFormula`, or `continuousKeywordGrants` — plain description, NEVER
    * executed by `resolveCard()` or read by it. A static rule is a continuous
    * fact about the game state, not a resolvable step; putting it in
    * `effects` would misrepresent it as something that "happens" once. Still
    * surfaced in `synergyTags()` as a `static:...` tag so it isn't invisible
-   * to a synergy search.
+   * to a synergy search. Kain, Traitorous Dragoon's own "Jump — during your
+   * turn, NICKNAME has flying" (and tonberry's/yuna-hope-of-spira's own
+   * identical "during your turn, has KEYWORD" shape) are real, checked
+   * candidates for `continuousKeywordGrants` above once a future pass
+   * migrates them — left as text-only here, not touched by this gap's
+   * own closure (explicitly scoped to Dion/Ardyn, the two cards the gap
+   * was reported against).
    */
   readonly staticAbilities?: string[];
   /**
@@ -918,18 +969,25 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       actions.pump(ctx.self, resolve(effect.power, ctx), resolve(effect.toughness, ctx));
       return;
     case 'grantKeywordTarget': {
-      const pool = playersFor(effect.owner ?? 'each', ctx)
-        .flatMap((p) => p.getCreaturesInPlay())
-        .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
+      // `validType` defaults to 'creature' (the original, only-ever-used
+      // behavior before Restoration Magic's own "target permanent" mode
+      // forced a real 'any' pool) — see `battlefieldPool`'s own
+      // `matchesValidType` for why an explicit default is required here
+      // rather than passing `effect.validType` straight through: an
+      // *omitted* validType must still mean "creature only" for every
+      // existing caller (seifer-almasy, gladiolus-amicitia, etc.), not
+      // `matchesValidType`'s own "undefined = match everything" default.
+      const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType ?? 'creature').filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
       const target = actions.chooseTarget(pool, ctx.preferTarget);
       if (target) actions.grantKeyword(target, effect.keyword);
       return;
     }
     case 'grantKeywordAll': {
-      for (const creature of ctx.you.getCreaturesInPlay()) {
-        if (effect.notSelf && creature.getId() === ctx.self.getId()) continue;
-        if (effect.subtype && !creature.hasSubtype(effect.subtype)) continue;
-        actions.grantKeyword(creature, effect.keyword);
+      const pool = effect.predicate === 'permanents-you-control' ? ctx.you.getCardsIn('Battlefield') : ctx.you.getCreaturesInPlay();
+      for (const card of pool) {
+        if (effect.notSelf && card.getId() === ctx.self.getId()) continue;
+        if (effect.subtype && !card.hasSubtype(effect.subtype)) continue;
+        actions.grantKeyword(card, effect.keyword);
       }
       return;
     }

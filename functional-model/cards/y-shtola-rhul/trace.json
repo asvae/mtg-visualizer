@@ -24,12 +24,14 @@
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
+        "id": 2892,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
+        "id": 2892,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -63,13 +65,15 @@
       },
       {
         "fn": "moveTo",
-        "target": "you-creature-nontoken-0",
+        "target": "Grizzly Bears",
+        "id": 2894,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
-        "target": "you-creature-nontoken-0",
+        "target": "Grizzly Bears",
+        "id": 2894,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -102,7 +106,8 @@
       },
       {
         "fn": "ceasesToExist",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2897,
         "zone": "Exile",
         "controller": "you"
       }

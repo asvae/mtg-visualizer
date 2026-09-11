@@ -1,0 +1,24 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Cat",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Cat",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "As long as you control two or more artifacts, this creature gets +2/+0.",
+      "highlight": "gets +2/+0"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "As long as you control two or more artifacts, this creature gets +2/+0.",
+      "highlight": "As long as you control two or more artifacts"
+    }
+  ]
+}

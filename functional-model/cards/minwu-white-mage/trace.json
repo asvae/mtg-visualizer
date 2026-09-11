@@ -29,26 +29,28 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Cleric",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1583,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Cleric",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 1584,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -62,6 +64,7 @@
       {
         "fn": "putCounter",
         "target": "Minwu, White Mage",
+        "id": 1585,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -95,13 +98,13 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Cleric",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Cleric",
         "result": false
       },
@@ -114,6 +117,7 @@
       {
         "fn": "putCounter",
         "target": "Minwu, White Mage",
+        "id": 1589,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -149,6 +153,7 @@
       {
         "fn": "dealDamage",
         "source": "Minwu, White Mage",
+        "sourceId": 1591,
         "target": "opp0",
         "amount": 3
       },

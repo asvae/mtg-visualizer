@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Cat Beast",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Cat Beast",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature.",
+      "highlight": "Tap target nonenchantment creature"
+    },
+    {
+      "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature.",
+      "highlight": "{T}"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature.",
+      "highlight": "target nonenchantment creature"
+    }
+  ]
+}

@@ -43,12 +43,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "destroy",
         "target": "Qutrub Forayer",
+        "id": 1749,
         "controller": "you"
       }
     ]
@@ -84,12 +85,14 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 1751,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
+        "id": 1752,
         "zone": "Exile",
         "controller": "you"
       }
@@ -126,6 +129,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 1755,
         "zone": "Exile",
         "controller": "you"
       }

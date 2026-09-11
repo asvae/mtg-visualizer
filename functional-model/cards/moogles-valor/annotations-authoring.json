@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "For each creature you control, create a 1/2 white Moogle creature token with lifelink.",
+      "highlight": "create a 1/2 white Moogle creature token with lifelink"
+    },
+    {
+      "sourceText": "Then creatures you control gain indestructible until end of turn.",
+      "highlight": "creatures you control gain indestructible until end of turn"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "For each creature you control, create a 1/2 white Moogle creature token with lifelink.",
+      "highlight": "For each creature you control"
+    }
+  ]
+}

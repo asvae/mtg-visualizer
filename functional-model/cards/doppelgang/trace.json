@@ -30,22 +30,22 @@
       },
       {
         "fn": "copyPermanent",
-        "source": "you-creature-nontoken-0",
+        "source": "Grizzly Bears",
         "controller": "you"
       },
       {
         "fn": "copyPermanent",
-        "source": "you-creature-nontoken-0",
+        "source": "Grizzly Bears",
         "controller": "you"
       },
       {
         "fn": "copyPermanent",
-        "source": "you-creature-nontoken-1",
+        "source": "Grizzly Bears",
         "controller": "you"
       },
       {
         "fn": "copyPermanent",
-        "source": "you-creature-nontoken-1",
+        "source": "Grizzly Bears",
         "controller": "you"
       },
       {

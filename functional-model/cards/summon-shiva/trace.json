@@ -28,11 +28,14 @@
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2342,
+        "controller": "opp0"
       },
       {
         "fn": "putCounter",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2342,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -68,11 +71,14 @@
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2346,
+        "controller": "opp0"
       },
       {
         "fn": "putCounter",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2346,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"

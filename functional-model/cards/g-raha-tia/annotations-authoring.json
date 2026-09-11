@@ -1,0 +1,24 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Cat Archer",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Cat Archer",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "The Allagan Eye — Whenever one or more other creatures and/or artifacts you control die, draw a card. This ability triggers only once each turn.",
+      "highlight": "draw a card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "The Allagan Eye — Whenever one or more other creatures and/or artifacts you control die, draw a card. This ability triggers only once each turn.",
+      "highlight": "one or more other creatures and/or artifacts you control die"
+    }
+  ]
+}

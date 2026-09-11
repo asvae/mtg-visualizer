@@ -23,7 +23,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -37,6 +37,7 @@
       {
         "fn": "putCounter",
         "target": "Quina, Qu Gourmet",
+        "id": 1742,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -71,6 +72,7 @@
       {
         "fn": "putCounter",
         "target": "Quina, Qu Gourmet",
+        "id": 1744,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

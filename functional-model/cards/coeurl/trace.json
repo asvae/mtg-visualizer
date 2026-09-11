@@ -41,7 +41,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -51,12 +51,14 @@
       },
       {
         "fn": "read:isEnchantment",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "tap",
-        "target": "Coeurl"
+        "target": "Coeurl",
+        "id": 424,
+        "controller": "you"
       }
     ]
   },
@@ -107,7 +109,9 @@
       },
       {
         "fn": "tap",
-        "target": "Coeurl"
+        "target": "Coeurl",
+        "id": 427,
+        "controller": "you"
       }
     ]
   }

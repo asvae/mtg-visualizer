@@ -49,7 +49,9 @@
       {
         "fn": "equip",
         "equipment": "Ultima Weapon",
-        "target": "you-creature-token-0"
+        "equipmentId": 2686,
+        "target": "Grizzly Bears",
+        "id": 2685
       }
     ]
   },
@@ -84,12 +86,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2689,
         "zone": "Graveyard",
         "controller": "opp0"
       }

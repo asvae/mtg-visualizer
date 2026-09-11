@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect, EffectContext } from '../../card';
+import { TOKENS } from '../../tokens.ts';
 
 export const mooglesValor: CardDefinition = {
   name: "Moogles' Valor",
@@ -7,37 +8,27 @@ export const mooglesValor: CardDefinition = {
 
   // "For each creature you control, create a 1/2 white Moogle creature
   // token with lifelink. Then creatures you control gain indestructible
-  // until end of turn." Two real gaps, both `custom`:
-  //  - `createToken`'s own `TokenInfo` (interfaces.ts) has no `keywords`
-  //    field at all, and `state.createToken` doesn't copy any onto the
-  //    made `RealCard` even if it did — a made token's own Lifelink is
-  //    real printed text (kept in this effect's `describe`) but isn't a
-  //    structured, checkable fact on the token object today.
-  //  - `pumpAll` (the real Effect kind this SAME ability's own
-  //    `DB$ PumpAll | KW$ Indestructible` SVar would otherwise map to) only
-  //    carries `power`/`toughness` deltas — no keyword-grant field, so a
-  //    board-wide temporary-keyword grant has no declarative shape to use.
-  // Both flagged to the parent session as a real, recurring gap (this
-  // batch also hits it on Restoration Magic) — `createToken` is still used
-  // for the real token-count/token-object part of this effect, since that
-  // part IS fully declarative.
+  // until end of turn." Both real gaps this used to need `custom` for are
+  // now closed: `TOKENS.w_1_2_moogle_lifelink` (this pass) gives the made
+  // token a real, structurally-tracked `keywords: ['Lifelink']` (TokenInfo
+  // DOES carry a `keywords` field, and `state.createToken` DOES copy it
+  // onto the made RealCard — an earlier version of this file's own comment
+  // claimed neither existed; both are real and already wired, just not
+  // previously checked against), and `grantKeywordAll` (added since,
+  // Ardyn/Circle of Power precedent) gives the board-wide "creatures you
+  // control gain indestructible" a real, mechanically-enforced grant.
   effects: [
     {
-      kind: 'custom',
-      describe:
-        'for each creature you control, create a 1/2 white Moogle creature token with lifelink (token Lifelink not structurally tracked — see this file\'s own comment); then creatures you control gain indestructible until end of turn (no keyword-grant Effect shape exists yet — not mechanically enforced)',
-      run: (ctx: EffectContext, actions: Actions) => {
-        const amount = ctx.you.getCreaturesInPlay().length;
-        if (amount > 0) {
-          actions.createToken(ctx.you, { name: 'Moogle', manaCost: '0', types: ['Creature', 'Moogle'], basePower: 1, baseToughness: 2 }, amount);
-        }
-        // "creatures you control gain indestructible until end of turn" —
-        // no-op beyond the token creation above: no keyword-grant action
-        // exists (`pump` only ever moves P/T, never keywords). Real text
-        // only, via `describe` above, same honest treatment
-        // crystal-fragments-summon-alexander's own damage-prevention
-        // chapters get for a mechanic this model has no machinery for.
-      },
+      kind: 'createToken',
+      token: TOKENS.w_1_2_moogle_lifelink,
+      amount: (ctx: EffectContext) => ctx.you.getCreaturesInPlay().length,
     } satisfies Effect,
+    // Runs AFTER the tokens above are actually created (real state.ts
+    // mutation, not a snapshot) — `getCreaturesInPlay()` inside
+    // `grantKeywordAll` sees the just-made Moogle tokens too, matching the
+    // real card's own "then" sequencing (same ordering the-crystal-s-
+    // chosen's own "then put a +1/+1 counter on each creature you control"
+    // comment documents).
+    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Indestructible' } satisfies Effect,
   ],
 };

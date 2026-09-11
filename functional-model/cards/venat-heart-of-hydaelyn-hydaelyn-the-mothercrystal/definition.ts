@@ -40,11 +40,15 @@ export const venatHeartOfHydaelyn: CardDefinition = {
   // stand-in described above, models both halves with only existing
   // primitives. Excludes `ctx.self` from the exile-target pool: the real
   // printed text has no "another" restriction (Venat COULD legally target
-  // itself), but `chooseTarget` always takes the FIRST pool candidate, and
-  // self is already on the battlefield for this activated-ability scenario
-  // — without the exclusion it would always self-target ahead of any real
-  // opponent permanent, an uninteresting degenerate case this scenario
-  // isn't meant to exercise.
+  // itself), but `chooseTarget` always takes the FIRST pool candidate
+  // absent a real choice, and self is already on the battlefield for this
+  // activated-ability scenario — without the exclusion it would always
+  // self-target ahead of any real opponent permanent, an uninteresting
+  // degenerate case this scenario isn't meant to exercise. `ctx.preferTarget`
+  // threaded through `chooseTarget` (2026-09-12, same technique weapons-
+  // vendor's/summon-primal-garuda's own `custom` effects already use) so a
+  // piloting scenario can deterministically choose a specific real
+  // opponent permanent instead of relying on pool order.
   activationCost: '{7}, {T}',
   effects: [
     {
@@ -54,7 +58,7 @@ export const venatHeartOfHydaelyn: CardDefinition = {
         const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))].filter(
           (c) => !c.isLand() && c.getId() !== ctx.self.getId()
         );
-        if (pool.length > 0) actions.moveTo(actions.chooseTarget(pool), 'Exile');
+        if (pool.length > 0) actions.moveTo(actions.chooseTarget(pool, ctx.preferTarget), 'Exile');
         actions.moveTo(ctx.self, 'Exile');
         actions.moveTo(ctx.self, 'Battlefield');
       },
@@ -79,20 +83,37 @@ export const venatHeartOfHydaelyn: CardDefinition = {
         // target was chosen for the conditional draw that follows —
         // `custom`, choosing from the real filtered pool once and reusing
         // that same reference for both the counter and the conditional
-        // draw, models the real shape. "Gains indestructible until your
-        // next turn" has no keyword-grant Effect shape (same already-
-        // flagged gap this whole batch keeps hitting) — real text only.
+        // draw, models the real shape. `ctx.preferTarget` threaded through
+        // `chooseTarget` (2026-09-12, same technique the front face's own
+        // Hero's Sundering above now uses) so a piloting scenario can
+        // deterministically choose a specific real creature instead of
+        // relying on pool order. `actions.grantKeyword(target,
+        // 'Indestructible')` (2026-09-12) makes the keyword grant real and
+        // mechanical — `card.ts`'s own `grantKeywordTarget` Effect kind
+        // genuinely exists for exactly this ("target creature gains X"),
+        // but this card needs the SAME chosen target as the counter and the
+        // conditional draw share, which only a `custom` effect's own single
+        // `chooseTarget` call can guarantee — so this calls `actions
+        // .grantKeyword` directly rather than a separate declarative
+        // effect. "Until your next turn" (a duration distinct from "until
+        // end of turn") is still NOT tracked — same accepted `state
+        // .grantKeyword`/`layers.ts` duration-agnostic simplification every
+        // other keyword grant in this pool already accepts; the grant is
+        // mechanically real (a later `hasKeyword`/`effectiveKeywords`
+        // check on the target genuinely sees it) but persists for the rest
+        // of a scenario rather than expiring on cue.
         name: 'onBeginCombat',
         effects: [
           {
             kind: 'custom',
             describe:
-              'Blessing of Light — put a +1/+1 counter on another target creature you control; until your next turn it gains indestructible (not mechanically enforced); if that creature is legendary, draw a card',
+              "Blessing of Light — put a +1/+1 counter on another target creature you control; until your next turn it gains indestructible; if that creature is legendary, draw a card",
             run: (ctx: EffectContext, actions: Actions) => {
               const pool = ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId());
               if (pool.length === 0) return;
-              const target = actions.chooseTarget(pool);
+              const target = actions.chooseTarget(pool, ctx.preferTarget);
               actions.putCounter(target, '+1/+1', 1);
+              actions.grantKeyword(target, 'Indestructible');
               if (target.hasSubtype('Legendary')) ctx.you.drawCard();
             },
           } satisfies Effect,

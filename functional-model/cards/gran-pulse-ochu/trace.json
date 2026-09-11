@@ -65,6 +65,7 @@
       {
         "fn": "pump",
         "target": "Gran Pulse Ochu",
+        "id": 1030,
         "power": 3,
         "toughness": 3
       }
@@ -106,6 +107,7 @@
       {
         "fn": "pump",
         "target": "Gran Pulse Ochu",
+        "id": 1032,
         "power": 0,
         "toughness": 0
       }

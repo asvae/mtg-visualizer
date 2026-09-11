@@ -22,12 +22,14 @@
       {
         "fn": "moveTo",
         "target": "Jecht, Reluctant Guardian",
+        "id": 1138,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jecht, Reluctant Guardian",
+        "id": 1138,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -95,17 +97,17 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {

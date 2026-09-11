@@ -86,19 +86,19 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Wizard",
         "result": true
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Wizard",
         "result": true
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-2",
+        "target": "Grizzly Bears",
         "subtype": "Wizard",
         "result": true
       },
@@ -117,12 +117,14 @@
       {
         "fn": "moveTo",
         "target": "Kuja, Genome Sorcerer",
+        "id": 1303,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Kuja, Genome Sorcerer",
+        "id": 1303,
         "zone": "Battlefield",
         "controller": "you"
       }

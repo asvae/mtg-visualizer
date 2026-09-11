@@ -1,53 +1,106 @@
 {
   "source": [
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — Slash of Light is a sorcery/instant-shaped spell; it goes to its owner's graveyard after resolving, no recursion text of its own)",
-      "highlight": "goes to its owner's graveyard after resolving"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "damage",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 5,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 15,
+          "end": 27
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "damage-creatures-count",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
-      "highlight": "the number of creatures you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 37,
+          "end": 72
+        }
+      ]
     },
     {
-      "id": "damage-equipment-count",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Equipment"
         ]
       },
-      "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
-      "highlight": "the number of Equipment you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 78,
+          "end": 113
+        }
+      ]
     },
     {
-      "id": "damage-target-creature",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "...to target creature.",
-      "highlight": "target creature",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 117,
+          "end": 132
+        }
+      ]
     }
   ]
 }

@@ -61,18 +61,32 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 990,
         "power": 2,
         "toughness": 2
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 2
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Gladiolus Amicitia",
+        "result": true
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 990,
         "keyword": "Trample"
       }
     ]

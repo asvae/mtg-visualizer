@@ -16,6 +16,7 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
@@ -26,6 +27,7 @@ import { findInteractionsForCard } from '../../../../functional-model/synergy';
 import type { InteractionGroup, Fact } from '../../../../functional-model/synergy';
 import type { AnnotatedCard } from '../../../../app/types';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
+import type { CardDefinition } from '../../../../functional-model/card';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import { fmBundle } from '../../../utils/fmBundle';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
@@ -89,6 +91,16 @@ function loadJsonFresh<T>(relativePath: string, bundled: T): T {
 // loadCardSynergy (v2 SYNERGY_DESIGN.md attribute-bag facts) and
 // loadFunctionalModelPool are shared with server/api/graph-links.ts — see
 // server/utils/functionalModelPool.ts.
+
+// One entry of `CardDefinition.continuousKeywordGrants` — derived off that
+// type (not hand-duplicated) so this file can't silently drift from
+// engine's own real shape (functional-model/card.ts). Exported for the card
+// page (app/pages/app/card/[set]/[number].vue) to type its own
+// `CardResponse.functionalModel.continuousKeywordGrants`, same convention
+// `EnrichedInteractionGroup` below already establishes for this file's
+// other served shapes.
+export type ContinuousKeywordGrant = NonNullable<CardDefinition['continuousKeywordGrants']>[number];
+
 interface FunctionalModelData {
   source: string;
   synergy: { source: Fact[]; sink: Fact[] } | null;
@@ -132,6 +144,22 @@ interface FunctionalModelData {
   // at the top level of this route's own response) instead of its
   // Scenarios tab.
   interactionsReview: 'draft' | 'reviewed';
+  // Real, query-time continuous keyword grant(s) off this card's own
+  // CardDefinition (613, ENGINE_GAPS.md gap #14, closed 2026-09-12 — see
+  // `functional-model/card.ts`'s own `continuousKeywordGrants` doc comment
+  // for the two real Forge shapes this covers, Dion/Ardyn) — front face,
+  // then back face for a transforming DFC whose back face ALSO carries a
+  // grant (none currently do, but this stays symmetric with `traces`/
+  // `annotatedCard`'s own front-then-back convention rather than assuming).
+  // `null` when neither face has one (the common case). This is a plain
+  // DECLARATIVE CardDefinition field, not an `Effect`/`resolveCard()`
+  // internal — serving it doesn't cross card-schema.md's "don't assume
+  // Effect kinds" line. Consumed by `ScenarioReplayTrace.vue`, which
+  // cross-references it against each replay snapshot's own live
+  // `activePlayer`/owner/subtype at RENDER time — there is no discrete
+  // trace.json log entry for a continuous (non-event-triggered) grant to
+  // read instead, see that component's own doc comment.
+  continuousKeywordGrants: { front?: ContinuousKeywordGrant[]; back?: ContinuousKeywordGrant[] } | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -233,6 +261,37 @@ function buildAnnotatedCard(faces: FaceInput[], synergy: { source: Fact[]; sink:
   return { faces: faces.map((f) => ({ name: f.name, manaCost: f.manaCost, colorIndicator: f.colorIndicator, typeLine: f.typeLine, oracleText: f.oracleText, power: f.power, toughness: f.toughness })) };
 }
 
+// Dev-only: a direct, per-slug dynamic import of `definition.ts` by ABSOLUTE
+// file:// URL — the exact same technique server/utils/functionalModelPool.ts
+// already uses for the same reason (a relative specifier here resolves
+// against Nitro's own bundled dev output directory, not this source file's —
+// confirmed there the hard way). Deliberately NOT the `run-one-card.mjs`
+// vite-node-subprocess path `computeTracesLive` uses below: that path only
+// ever prints a `TraceResult[]`, never the raw `CardDefinition` object, and
+// `continuousKeywordGrants` is plain declarative data (no engine execution
+// needed to read it) — a subprocess round-trip would be pure overhead for a
+// field that's just sitting on the already-parsed module. Independent of
+// `loadFunctionalModelPool()` on purpose: that pool skips any card with no
+// (or not-yet-v2-shaped) synergy.json, which has nothing to do with whether
+// a card's OWN CardDefinition carries a keyword grant. Same known,
+// documented, accepted limitation `loadFunctionalModelPool` already has for
+// this import style: a `definition.ts` with an extensionless `from
+// '../../tokens'` import throws "Directory import ... not supported" under
+// plain Node ESM resolution (unlike vite-node) — caught below, degrades to
+// `null` same as a card with no grant at all, not a route-wide failure.
+async function loadContinuousKeywordGrantsDev(slug: string): Promise<{ front?: ContinuousKeywordGrant[]; back?: ContinuousKeywordGrant[] } | null> {
+  try {
+    const definitionUrl = pathToFileURL(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`)).href;
+    const cardModule = (await import(definitionUrl)) as Record<string, unknown>;
+    const card = Object.values(cardModule)[0] as CardDefinition | undefined;
+    const front = card?.continuousKeywordGrants;
+    const back = card?.backFace?.continuousKeywordGrants;
+    return front || back ? { front, back } : null;
+  } catch {
+    return null;
+  }
+}
+
 const functionalModelCache = new Map<string, { signature: string; facesKey: string; data: FunctionalModelData | null }>();
 async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
   const slug = slugify(name);
@@ -246,6 +305,8 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
   if (process.env.NODE_ENV === 'production') {
     const entry = fmBundle[slug];
     if (!entry) return null;
+    const front = entry.poolFacts.continuousKeywordGrants;
+    const back = entry.poolFacts.backFace?.continuousKeywordGrants;
     return {
       source: entry.source,
       synergy: entry.synergy,
@@ -254,6 +315,7 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
       review: entry.review,
       scenariosReview: entry.scenariosReview,
       interactionsReview: entry.interactionsReview,
+      continuousKeywordGrants: front || back ? { front, back } : null,
     };
   }
 
@@ -283,6 +345,7 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
     const traces = await computeTracesLive(slug);
     const synergy = loadCardSynergy(slug);
     const annotatedCard = buildAnnotatedCard(faces, synergy);
+    const continuousKeywordGrants = await loadContinuousKeywordGrantsDev(slug);
     let review: 'ai' | 'human' | null = null;
     let scenariosReview: 'draft' | 'reviewed' = 'draft';
     let interactionsReview: 'draft' | 'reviewed' = 'draft';
@@ -294,7 +357,7 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
     } catch {
       // progress.json is optional — a card can exist without one
     }
-    data = { source, synergy, traces, annotatedCard, review, scenariosReview, interactionsReview };
+    data = { source, synergy, traces, annotatedCard, review, scenariosReview, interactionsReview, continuousKeywordGrants };
   } catch {
     data = null;
   }

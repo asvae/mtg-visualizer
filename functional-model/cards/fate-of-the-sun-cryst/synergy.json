@@ -1,24 +1,33 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "id": "self-graveyard",
-      "sourceText": "a sorcery — goes to its owner's graveyard after resolving (rule 608.2m)"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
-      "controller": "opp",
-      "value": 1,
-      "id": "destroy-opp-graveyard",
-      "highlight": "Destroy target nonland permanent",
-      "sourceText": "Destroy target nonland permanent — the destroyed permanent lands in its owner's graveyard, here an opponent's."
-    },
-    {
-      "event": "dies",
-      "controller": "opp",
+      "event": "destroy",
       "target": {
         "types": {
           "not": [
@@ -26,38 +35,75 @@
           ]
         }
       },
+      "targeted": true,
       "value": 1,
-      "id": "destroy-opp-dies",
-      "highlight": "Destroy target nonland permanent",
-      "sourceText": "Destroy target nonland permanent — fires that permanent's own dies trigger, here an opponent's."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "target": {
+        "types": {
+          "not": [
+            "Land"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 32
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
+      "to": "Battlefield",
       "types": {
         "not": [
           "Land"
         ]
       },
-      "sourceText": "Destroy target nonland permanent, no controller restriction — can target one of YOUR OWN permanents.",
-      "id": "wants-own-permanent",
-      "highlight": "Destroy target nonland permanent",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 8,
+          "end": 32
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
-      "controller": "opp",
+      "to": "Battlefield",
       "types": {
-        "not": [
-          "Land"
+        "has": [
+          "Creature"
         ]
       },
-      "sourceText": "Destroy target nonland permanent, no controller restriction — can equally target an OPPONENT'S permanent.",
-      "id": "wants-opp-permanent",
-      "highlight": "Destroy target nonland permanent",
-      "value": 1
+      "tapped": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 48,
+          "end": 65
+        }
+      ]
     }
   ]
 }

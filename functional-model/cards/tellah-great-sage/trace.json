@@ -122,12 +122,14 @@
       {
         "fn": "moveTo",
         "target": "Tellah, Great Sage",
+        "id": 2400,
         "zone": "Graveyard",
         "controller": "you"
       },
       {
         "fn": "dealDamage",
         "source": "Tellah, Great Sage",
+        "sourceId": 2400,
         "target": "opp0",
         "amount": 8
       }

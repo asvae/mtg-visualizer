@@ -1,42 +1,86 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — Ambrosia Whiteheart is itself a permanent on your battlefield, no special ability text)",
-      "id": "self-battlefield"
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "zone": "Hand",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Battlefield",
       "controller": "you",
       "value": 1,
-      "sourceText": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand.",
-      "id": "bounce-produce",
-      "highlight": "return another permanent you control to its owner's hand"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 41,
+          "end": 97
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 67,
+          "end": 77
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
-      "types": {
-        "has": [
-          "Creature"
-        ]
-      },
-      "sourceText": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand. (NOTE: real text has no Creature-type restriction on the bounce target — this fact's type constraint looks broader than the printed ability; flagged, not corrected here.)",
       "value": 1,
-      "id": "wants-permanent-you-control"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 48,
+          "end": 77
+        }
+      ]
     },
     {
       "event": "landfall",
       "controller": "you",
-      "sourceText": "Landfall — Whenever a land you control enters, Ambrosia Whiteheart gets +1/+0 until end of turn.",
       "value": 1,
-      "id": "wants-landfall",
-      "highlight": "Whenever a land you control enters"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 11,
+          "end": 45
+        }
+      ]
     }
   ]
 }

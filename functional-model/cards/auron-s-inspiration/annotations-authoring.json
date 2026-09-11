@@ -1,0 +1,27 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Attacking creatures get +2/+0 until end of turn.",
+      "highlight": "get +2/+0"
+    },
+    {
+      "sourceText": "Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "highlight": "cast this card from your graveyard for its flashback cost"
+    },
+    {
+      "sourceText": "Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "highlight": "Then exile it"
+    }
+  ],
+  "sink": []
+}

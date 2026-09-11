@@ -1,13 +1,23 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 card(s) in library; you: 1 artifact(s) in library",
-      "action": "cast from hand",
-      "result": "finds the Vehicle (modeled as an artifact) and puts it into hand",
+      "setup": "you: 9 Plains(s)",
+      "action": "real engine playthrough: cast from hand -> search to hand -> graveyard -> Flashback cast -> search to battlefield -> exile",
+      "result": "From Father to Son is cast from hand for {1}{W} and resolves for real: searches the real library for a real Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the real library for another real Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
       "raw": {
-        "result": "finds the Vehicle (modeled as an artifact) and puts it into hand",
+        "result": "From Father to Son is cast from hand for {1}{W} and resolves for real: searches the real library for a real Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the real library for another real Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
         "you": {
-          "libraryArtifactCount": 1,
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
           "libraryCount": 3
         }
       }
@@ -21,30 +31,46 @@
         "cost": "{1}{W}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Library",
-        "count": 3,
+        "count": 4,
         "creatureCount": 0
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-library-artifact-0",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Magitek Armor",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "Forest",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "Forest",
-        "result": false
+        "target": "Cargo Ship",
+        "result": true
       },
       {
         "fn": "moveTo",
-        "target": "you-library-artifact-0",
+        "target": "Magitek Armor",
+        "id": 878,
         "zone": "Hand",
         "controller": "you"
       },
@@ -53,32 +79,49 @@
         "card": "From Father to Son",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Sorcery"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 card(s) in library; you: 1 artifact(s) in library",
-      "action": "cast from graveyard",
-      "result": "finds the Vehicle (modeled as an artifact) and puts it directly onto the battlefield",
-      "raw": {
-        "result": "finds the Vehicle (modeled as an artifact) and puts it directly onto the battlefield",
-        "castFrom": "graveyard",
-        "you": {
-          "libraryArtifactCount": 1,
-          "libraryCount": 3
-        }
-      }
-    },
-    "log": [
+        "to": "Graveyard"
+      },
       {
         "fn": "cast",
         "card": "From Father to Son",
         "instanceId": 1,
         "from": "graveyard",
         "cost": "{4}{W}{W}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "From Father to Son"
       },
       {
         "fn": "read:getCardsIn",
@@ -89,22 +132,23 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-library-artifact-0",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Cargo Ship",
         "result": true
       },
       {
-        "fn": "read:isArtifact",
-        "target": "Forest",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "Forest",
-        "result": false
-      },
-      {
         "fn": "moveTo",
-        "target": "you-library-artifact-0",
+        "target": "Cargo Ship",
+        "id": 879,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -113,8 +157,29 @@
         "card": "From Father to Son",
         "instanceId": 1,
         "from": "stack",
-        "to": "Exile",
-        "cardType": "Sorcery"
+        "to": "Exile"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast From Father to Son ({1}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      },
+      {
+        "label": "Cast From Father to Son via Flashback ({4}{W}{W}{W})",
+        "from": 10
+      },
+      {
+        "label": "Resolve",
+        "from": 18
       }
     ]
   }

@@ -37,7 +37,8 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2903,
         "power": 2,
         "toughness": 2
       },
@@ -89,7 +90,8 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2906,
         "power": 4,
         "toughness": 4
       },

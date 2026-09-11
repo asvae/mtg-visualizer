@@ -1,18 +1,103 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 12,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": false,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 29,
+          "end": 84
+        }
+      ]
+    },
+    {
+      "event": "sacrifice",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 85
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 85
+        }
+      ]
+    }
+  ],
   "sink": [
     {
-      "id": "stampede-anthem",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn.",
-      "highlight": "Other creatures you control get +1/+0 until end of turn",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 29,
+          "end": 84
+        }
+      ]
     }
   ]
 }

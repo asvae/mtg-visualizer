@@ -26,7 +26,9 @@
       {
         "fn": "equip",
         "equipment": "The Masamune",
-        "target": "you-creature-token-0"
+        "equipmentId": 2485,
+        "target": "Grizzly Bears",
+        "id": 2484
       }
     ]
   },

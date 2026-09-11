@@ -27,16 +27,31 @@
       {
         "fn": "equip",
         "equipment": "Magitek Scythe",
-        "target": "you-creature-token-0"
+        "equipmentId": 1425,
+        "target": "Grizzly Bears",
+        "id": 1424
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 1
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Magitek Scythe",
+        "result": false
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1424,
         "keyword": "FirstStrike"
       }
     ]
@@ -68,7 +83,9 @@
       {
         "fn": "equip",
         "equipment": "Magitek Scythe",
-        "target": "you-creature-token-0"
+        "equipmentId": 1428,
+        "target": "Grizzly Bears",
+        "id": 1427
       }
     ]
   }

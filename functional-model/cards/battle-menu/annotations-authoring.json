@@ -1,0 +1,44 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Attack — Create a 2/2 white Knight creature token.",
+      "highlight": "Create a 2/2 white Knight creature token"
+    },
+    {
+      "sourceText": "Ability — Target creature gets +0/+4 until end of turn.",
+      "highlight": "gets +0/+4"
+    },
+    {
+      "sourceText": "Magic — Destroy target creature with power 4 or greater.",
+      "highlight": "Destroy target creature with power 4 or greater"
+    },
+    {
+      "sourceText": "Magic — Destroy target creature with power 4 or greater.",
+      "highlight": "Destroy target creature with power 4 or greater"
+    },
+    {
+      "sourceText": "Item — You gain 4 life.",
+      "highlight": "You gain 4 life"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Ability — Target creature gets +0/+4 until end of turn.",
+      "highlight": "Target creature gets +0/+4 until end of turn"
+    },
+    {
+      "sourceText": "Magic — Destroy target creature with power 4 or greater.",
+      "highlight": "target creature with power 4 or greater"
+    }
+  ]
+}

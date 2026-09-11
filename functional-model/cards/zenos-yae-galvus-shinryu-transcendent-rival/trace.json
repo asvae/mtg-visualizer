@@ -41,13 +41,15 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2942,
         "power": -2,
         "toughness": -2
       },
       {
         "fn": "pump",
-        "target": "opp0-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2945,
         "power": -2,
         "toughness": -2
       }
@@ -102,12 +104,14 @@
       {
         "fn": "moveTo",
         "target": "Zenos yae Galvus",
+        "id": 2951,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Zenos yae Galvus",
+        "id": 2951,
         "zone": "Battlefield",
         "controller": "you"
       }

@@ -1,17 +1,90 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ],
+          "not": [
+            "Enchantment"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 13,
+          "end": 47
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 8,
+          "end": 11
+        }
+      ]
+    }
+  ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Creature"
+        ],
+        "not": [
+          "Enchantment"
         ]
       },
-      "sourceText": "{1}{W}, {T}: Tap target nonenchantment creature.",
-      "id": "wants-tap-target",
-      "highlight": "Tap target nonenchantment creature",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 17,
+          "end": 47
+        }
+      ]
     }
   ]
 }

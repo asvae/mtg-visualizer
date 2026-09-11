@@ -53,6 +53,7 @@
       {
         "fn": "dealDamage",
         "source": "Noctis, Prince of Lucis",
+        "sourceId": 1649,
         "target": "opp0",
         "amount": 3
       },

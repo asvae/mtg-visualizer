@@ -1,0 +1,27 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — God",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Whenever Ultima attacks, put a blight counter on target land.",
+      "highlight": "put a blight counter on target land"
+    },
+    {
+      "sourceText": "Whenever you tap a land for {C}, add an additional {C}.",
+      "highlight": "add an additional {C}"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever Ultima attacks, put a blight counter on target land.",
+      "highlight": "target land"
+    },
+    {
+      "sourceText": "Whenever you tap a land for {C}, add an additional {C}.",
+      "highlight": "tap a land for {C}"
+    }
+  ]
+}

@@ -25,18 +25,18 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 1
       },
       {
         "fn": "read:getNetToughness",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 1
       },
       {
         "fn": "createToken",
         "controller": "you",
-        "token": "you-creature-token-0",
+        "token": "Grizzly Bears",
         "qty": 1,
         "tapped": false,
         "power": 1,

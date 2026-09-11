@@ -44,6 +44,7 @@
       {
         "fn": "pump",
         "target": "Woodland Weavemaster",
+        "id": 2877,
         "power": 1,
         "toughness": 1
       }

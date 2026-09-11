@@ -113,25 +113,27 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Bird",
         "result": true
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2108,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Bird",
         "result": true
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2109,
         "power": 1,
         "toughness": 0
       },
@@ -144,6 +146,7 @@
       {
         "fn": "pump",
         "target": "Black Chocobo",
+        "id": 2110,
         "power": 1,
         "toughness": 0
       }
@@ -177,13 +180,13 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Bird",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Bird",
         "result": false
       },
@@ -196,6 +199,7 @@
       {
         "fn": "pump",
         "target": "Black Chocobo",
+        "id": 2114,
         "power": 1,
         "toughness": 0
       }

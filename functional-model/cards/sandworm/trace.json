@@ -49,17 +49,21 @@
       {
         "fn": "destroy",
         "target": "opp0-land-0",
+        "id": 1942,
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1943,
         "zone": "Battlefield",
         "controller": "opp0"
       },
       {
         "fn": "tap",
-        "target": "Forest"
+        "target": "Forest",
+        "id": 1943,
+        "controller": "opp0"
       }
     ]
   },
@@ -112,6 +116,7 @@
       {
         "fn": "destroy",
         "target": "opp0-land-0",
+        "id": 1949,
         "controller": "opp0"
       }
     ]

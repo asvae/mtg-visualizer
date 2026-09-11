@@ -26,7 +26,8 @@
       {
         "fn": "gainControl",
         "controller": "opp0",
-        "target": "Kain, Traitorous Dragoon"
+        "target": "Kain, Traitorous Dragoon",
+        "id": 1257
       },
       {
         "fn": "drawCard",
@@ -77,7 +78,8 @@
       {
         "fn": "gainControl",
         "controller": "opp0",
-        "target": "Kain, Traitorous Dragoon"
+        "target": "Kain, Traitorous Dragoon",
+        "id": 1262
       },
       {
         "fn": "drawCard",

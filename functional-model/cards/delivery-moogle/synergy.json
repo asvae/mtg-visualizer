@@ -1,45 +1,120 @@
 {
   "source": [
     {
-      "zone": "Hand",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Library",
       "controller": "you",
       "types": {
         "has": [
           "Artifact"
         ]
       },
+      "cmc": {
+        "max": 2
+      },
       "value": 1,
-      "id": "find-artifact-to-hand",
-      "highlight": "put it into your hand",
-      "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less... put it into your hand"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 34,
+          "end": 46
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Graveyard",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "cmc": {
+        "max": 2
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 54,
+          "end": 63
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Library",
+      "to": "Library",
       "controller": "you",
       "types": {
         "has": [
           "Artifact"
         ]
       },
-      "sourceText": "search your library ... for an artifact card with mana value 2 or less",
-      "id": "wants-artifact-in-library",
-      "highlight": "for an artifact card with mana value 2 or less",
-      "value": 1
+      "cmc": {
+        "max": 2
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 34,
+          "end": 46
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "to": "Graveyard",
       "controller": "you",
       "types": {
         "has": [
           "Artifact"
         ]
       },
-      "sourceText": "search ... your ... graveyard for an artifact card with mana value 2 or less",
-      "id": "wants-artifact-in-graveyard",
-      "highlight": "for an artifact card with mana value 2 or less",
-      "value": 1
+      "cmc": {
+        "max": 2
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 54,
+          "end": 63
+        }
+      ]
     }
   ]
 }

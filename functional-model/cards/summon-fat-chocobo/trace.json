@@ -54,12 +54,14 @@
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2259,
         "keyword": "Trample"
       },
       {
         "fn": "grantKeyword",
         "target": "Summon: Fat Chocobo",
+        "id": 2260,
         "keyword": "Trample"
       }
     ]

@@ -5,6 +5,14 @@ export const magitekInfantry: CardDefinition = {
   manaCost: '{W}',
   typeLine: 'Artifact Creature — Robot Soldier',
 
+  // Real printed base P/T (data/fin/fin_scryfall.json, collector_number 25)
+  // — without this, state.ts's own addCard silently defaults every creature
+  // to a fake 1/1 (same real gap adelbert-steiner's own `pt` field closes;
+  // happens to coincide with the real printed 1/1 here, but the field is
+  // still the honest, explicit source of truth rather than an accidental
+  // default).
+  pt: [1, 1],
+
   // Conditional continuous P/T ability, presence-gated on ANOTHER artifact
   // (IsPresent$ Artifact.Other+YouCtrl) — same shape gaelicat's own comment
   // already documents (a fixed on/off threshold, not a count-scaling

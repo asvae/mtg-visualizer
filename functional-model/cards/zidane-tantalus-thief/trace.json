@@ -29,20 +29,24 @@
       {
         "fn": "gainControl",
         "controller": "you",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2959
       },
       {
         "fn": "untap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2959
       },
       {
         "fn": "grantKeyword",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2959,
         "keyword": "Lifelink"
       },
       {
         "fn": "grantKeyword",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2959,
         "keyword": "Haste"
       }
     ]

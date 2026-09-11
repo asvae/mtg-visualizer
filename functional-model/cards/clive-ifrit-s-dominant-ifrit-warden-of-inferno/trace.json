@@ -18,12 +18,14 @@
       {
         "fn": "moveTo",
         "target": "Clive, Ifrit's Dominant",
+        "id": 384,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Clive, Ifrit's Dominant",
+        "id": 384,
         "zone": "Battlefield",
         "controller": "you"
       }

@@ -1,50 +1,77 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — Adelbert Steiner is itself a permanent on your battlefield, no special ability text)",
-      "id": "self-battlefield"
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Lifelink",
-      "id": "lifelink",
-      "highlight": "Lifelink"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 8
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — Adelbert Steiner can die and go to your graveyard like any creature, no special ability text)",
-      "id": "self-graveyard"
-    },
-    {
-      "event": "dies",
+      "event": "pump",
       "target": "self",
       "value": 1,
-      "sourceText": "(baseline — Adelbert Steiner dying, no special ability text)",
-      "id": "self-dies"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 17,
+          "end": 27
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Equipment"
         ]
       },
-      "sourceText": "Adelbert Steiner gets +1/+1 for each Equipment you control.",
       "value": 1,
-      "id": "wants-equipment",
-      "highlight": "gets +1/+1 for each Equipment you control"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 17,
+          "end": 58
+        }
+      ]
     }
   ]
 }

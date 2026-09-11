@@ -128,10 +128,10 @@
 //    unchanged from priority.ts's own explicit scope: every round's choices
 //    are supplied by the caller, never simulated here.
 
-import type { CardDefinition, EffectContext, Actions } from './card';
+import type { CardDefinition, EffectContext, Actions, AlternateCost } from './card';
 import { resolveCard } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
-import { effectivePT, effectiveTypes, isLethallyDamaged } from './state';
+import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged } from './state';
 import { Stack, type StackObject } from './stack';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
 import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn as turnQueueExtraTurn, type TurnState } from './turn';
@@ -233,7 +233,11 @@ function payableManaSources(engine: GameEngine, player: RealPlayer): RealCard[] 
   return untappedManaSources(player).filter((c) => {
     if (!effectiveTypes(c).includes('Creature')) return true;
     const enteredTurn = engine.enteredThisTurn.get(c.id);
-    const sick = enteredTurn === engine.turn.turnNumber && !c.keywords.includes('Haste');
+    // `effectiveKeywords`, not raw `c.keywords` (2026-09-12, ENGINE_GAPS.md
+    // gap #14) — a GRANTED Haste (Ardyn's own "Demons... have haste") needs
+    // to genuinely exempt sickness, same reasoning `canAttack`/
+    // `canActivateAbility`'s own identical checks below get.
+    const sick = enteredTurn === engine.turn.turnNumber && !effectiveKeywords(engine.state, c).includes('Haste');
     return !sick;
   });
 }
@@ -242,8 +246,26 @@ function isLandTypeLine(typeLine: string): boolean {
   return /\bLand\b/.test(typeLine);
 }
 
-/** Read-only legality check — same checks `castSpell` performs before it mutates anything, exposed separately so a caller (or a test asserting "this SHOULD be illegal") doesn't have to attempt-and-undo. */
-export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardDefinition): ActionResult {
+/**
+ * Read-only legality check — same checks `castSpell` performs before it
+ * mutates anything, exposed separately so a caller (or a test asserting
+ * "this SHOULD be illegal") doesn't have to attempt-and-undo.
+ *
+ * `alt` (optional) is one of `card.alternateCosts` — Flashback (CR
+ * 702.32), Jump-start, casting from exile, etc. When given, the AFFORDABLE
+ * cost checked is `alt.cost` instead of `card.manaCost` (real Forge:
+ * `AlternativeCost.java` — the alternate cost REPLACES the mana cost, it
+ * doesn't add to it). Timing is unaffected: CR 702.32 explicitly casts a
+ * flashback spell "following the normal rules for casting that card" — an
+ * Instant is still instant-speed, a Sorcery is still sorcery-speed,
+ * regardless of which cost paid for it — so `isInstantSpeed(card)`/
+ * `sorcerySpeedTimingOk` are still evaluated against `card` itself, not
+ * `alt`. This function does NOT check that the caller actually holds the
+ * card in `alt.from`'s zone — same "trust the caller" contract this
+ * function already has for a normal hand-cast (no RealCard reference is
+ * even passed here to check against).
+ */
+export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardDefinition, alt?: AlternateCost): ActionResult {
   // Real CR 305.1: playing a land is a special action, NEVER a spell —
   // it has no mana cost to pay, never uses the stack, and isn't subject to
   // 601's casting process at all. Before this guard, neither this function
@@ -261,25 +283,37 @@ export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardD
   if (!isInstantSpeed(card) && !sorcerySpeedTimingOk(engine, caster)) {
     return { ok: false, reason: `sorcery-speed timing violated (307.1a/117.1a): "${card.name}" can only be cast during your own main phase with an empty stack` };
   }
-  const cost = parseManaCost(card.manaCost);
+  const costString = alt?.cost ?? card.manaCost;
+  const cost = parseManaCost(costString);
   if (!canAfford(payableManaSources(engine, caster), cost)) {
-    return { ok: false, reason: `cannot afford "${card.name}"'s cost ${card.manaCost} (601.2g/602.2c) — not enough untapped mana sources` };
+    return { ok: false, reason: `cannot afford "${card.name}"'s ${alt ? `${alt.name} cost` : 'cost'} ${costString} (601.2g/602.2c) — not enough untapped mana sources` };
   }
   return { ok: true };
 }
 
 /**
  * Legality-checks, then (if legal) pays the real cost and pushes the spell
- * onto the real stack — `cardReal` is the actual `RealCard` in `caster`'s
- * hand (moved to the Stack zone here, real 405.2), `ctx`/`actions` are the
- * same `EffectContext`/`Actions` `resolveCard` will eventually run against
- * (build them the same way `harness.ts`'s own `runScenario` does). Returns
- * `{ok:false, reason}` and mutates NOTHING if illegal.
+ * onto the real stack — `cardReal` is the actual `RealCard` being cast
+ * (moved to the Stack zone here, real 405.2 — normally in `caster`'s hand,
+ * or wherever `alt.from` names for an alternate-cost cast, see below),
+ * `ctx`/`actions` are the same `EffectContext`/`Actions` `resolveCard` will
+ * eventually run against (build them the same way `harness.ts`'s own
+ * `runScenario` does). Returns `{ok:false, reason}` and mutates NOTHING if
+ * illegal.
+ *
+ * `alt` (optional, one of `card.alternateCosts`) pays `alt.cost` instead of
+ * `card.manaCost` (see `canCastSpell`'s own doc comment) and, if
+ * `alt.thenExile` is set (Flashback/Jump-start, CR 702.32/702.67), tags
+ * the pushed `StackObject` so `resolveTop` sends it to Exile instead of the
+ * Graveyard once it resolves. Does NOT itself move `cardReal` out of
+ * `alt.from`'s zone first — same "trust the caller already has it there"
+ * contract `canCastSpell` documents; `engine.state.move(cardReal, 'Stack')`
+ * below splices it out of whatever zone it's actually in.
  */
-export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName?: string): CastResult {
-  const check = canCastSpell(engine, caster, card);
+export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName?: string, alt?: AlternateCost): CastResult {
+  const check = canCastSpell(engine, caster, card, alt);
   if (!check.ok) return check;
-  const cost = parseManaCost(card.manaCost);
+  const cost = parseManaCost(alt?.cost ?? card.manaCost);
   const tappedForMana = payMana(engine.state, payableManaSources(engine, caster), cost);
   engine.state.move(cardReal, 'Stack');
   // A permanent with its OWN `activationCost` reserves `card.effects` for
@@ -301,7 +335,7 @@ export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: Real
   // auto-fire of a `Trigger.on === 'enter'` entry below. See
   // ENGINE_GAPS.md for the fuller writeup of why this collision exists.
   const pushedCard = isPermanentTypeLine(card.typeLine) && card.activationCost ? { ...card, effects: undefined } : card;
-  engine.stack.push({ card: pushedCard, ctx, actions, triggerName });
+  engine.stack.push({ card: pushedCard, ctx, actions, triggerName, thenExile: alt?.thenExile });
   return { ok: true, tappedForMana };
 }
 
@@ -376,8 +410,8 @@ export function playLand(engine: GameEngine, caster: RealPlayer, cardReal: RealC
   return { ok: true };
 }
 
-/** Whether `cost`'s own free text requires tapping the permanent itself ({T}) as part of paying (602.1). `CardDefinition.activationCost` is a plain string — no structured cost grammar exists — so this, like the helpers below, is real but narrow text-pattern detection, not a parser. */
-function costRequiresTap(cost: string): boolean {
+/** Whether `cost`'s own free text requires tapping the permanent itself ({T}) as part of paying (602.1). `CardDefinition.activationCost` is a plain string — no structured cost grammar exists — so this, like the helpers below, is real but narrow text-pattern detection, not a parser. Exported (2026-09-12, venat-heart-of-hydaelyn-hydaelyn-the-mothercrystal) so `engine-trace.ts`'s own `pilotActivate` can log a real self-tap-for-cost trace line — see that call site's own doc comment for why. */
+export function costRequiresTap(cost: string): boolean {
   return /\{T\}/.test(cost);
 }
 
@@ -445,8 +479,8 @@ function isEquipment(card: CardDefinition): boolean {
   return /\bEquipment\b/.test(card.typeLine);
 }
 
-/** The activationCost/`Ability.cost` string for one of `card`'s activated abilities — the single default one (`card.activationCost`) when `abilityName` is omitted, matching `resolveCard`'s own default-branch convention, or a named entry from `card.abilities` (Qiqirn Merchant's own pair, e.g.) when given. `undefined` if no such ability exists at all. */
-function activationCostFor(card: CardDefinition, abilityName?: string): string | undefined {
+/** The activationCost/`Ability.cost` string for one of `card`'s activated abilities — the single default one (`card.activationCost`) when `abilityName` is omitted, matching `resolveCard`'s own default-branch convention, or a named entry from `card.abilities` (Qiqirn Merchant's own pair, e.g.) when given. `undefined` if no such ability exists at all. Exported alongside `costRequiresTap` above, same reason. */
+export function activationCostFor(card: CardDefinition, abilityName?: string): string | undefined {
   if (abilityName) return card.abilities?.find((a) => a.name === abilityName)?.cost;
   return card.activationCost;
 }
@@ -514,7 +548,7 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
     // attacking AND activating a {T}/{Q}-cost ability, not just attacking
     // (see `canAttack`'s own identical check) — Haste exempts either.
     const enteredTurn = engine.enteredThisTurn.get(permanent.id);
-    const sick = enteredTurn === engine.turn.turnNumber && !permanent.keywords.includes('Haste');
+    const sick = enteredTurn === engine.turn.turnNumber && !effectiveKeywords(engine.state, permanent).includes('Haste');
     if (sick) return { ok: false, reason: "summoning sickness (302.6): hasn't been under its controller's control continuously since their most recent turn began, so its {T} cost can't be paid" };
   }
   const unsupported = unsupportedCostComponent(cost, card);
@@ -595,13 +629,29 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       // resolving CardDefinition's own text, since `RealCard` keeps no
       // live CardDefinition reference to re-derive it from later.
       real.manaAbility = manaAbilityColorFromStaticText(resolved.card.staticAbilities);
+      // Same "copy once at resolve time, RealCard keeps no live
+      // CardDefinition reference" treatment for `continuousKeywordGrants`
+      // (2026-09-12, ENGINE_GAPS.md gap #14) — a pilot script that builds
+      // its own `RealCard` via a hand-picked `addCard` field subset (every
+      // engine-trace.ts scenario does) never otherwise gets this real,
+      // structured field onto the object `effectiveKeywords` actually
+      // reads; real printed `keywords` get the same treatment for the same
+      // reason (a scenario-built RealCard's own `keywords` array starts
+      // empty regardless of what `addCard`'s caller passed, unless it
+      // happens to be resolved through here).
+      real.continuousKeywordGrants = resolved.card.continuousKeywordGrants;
+      if (resolved.card.keywords) real.keywords = [...resolved.card.keywords];
       // Real 714.2b: a Saga enters with no lore counters, then immediately
       // gets its first (see saga.ts's own header for the full 714 writeup).
       advanceSaga(engine, real, engine.resolvedPermanents.get(real.id)!);
       const enterTrigger = resolved.card.triggers?.find((t) => t.on === 'enter');
       if (enterTrigger) resolveCard(resolved.card, resolved.ctx, resolved.actions, enterTrigger.name);
     } else {
-      engine.state.move(real, 'Graveyard');
+      // Real 702.32/702.67: a Flashback/Jump-start spell (or any future
+      // alternate-cost `thenExile` case) goes to exile instead of its
+      // owner's graveyard once it resolves — `castSpell` tagged this
+      // `StackObject` from the `AlternateCost` it was cast with.
+      engine.state.move(real, resolved.thenExile ? 'Exile' : 'Graveyard');
     }
   }
   return resolved;
@@ -632,6 +682,13 @@ function fireOnPhaseEnterTriggers(engine: GameEngine): void {
 
 function doAdvance(engine: GameEngine): void {
   engine.turn = advancePhase(engine.state, engine.turn, engine.players);
+  // Real, live "whose turn is it" (`state.ts`'s own `activePlayerId`/
+  // `effectiveKeywords` doc comments, ENGINE_GAPS.md gap #14) — kept in
+  // sync here, right after every real phase/turn change, so a turn-
+  // conditional continuous keyword grant (Dion's own Dragonfire Dive)
+  // genuinely turns on/off as turns actually pass in an engine-piloted
+  // playthrough.
+  engine.state.activePlayerId = activePlayer(engine.turn, engine.players).id;
   fireOnPhaseEnterTriggers(engine);
   // Real 714.2c: "after each of its controller's draw steps." Entering
   // Main1 always means the Draw step just ended in this engine's fixed
@@ -690,9 +747,9 @@ export function queueExtraTurn(engine: GameEngine, player: RealPlayer): void {
 /** Real 302.6 (summoning sickness) + 508.1a (a tapped creature can't attack) + 302.6's own Defender clause (302.6's "can't attack" companion rule, 302.6a). Read-only — same "check separately from the mutating action" shape as `canCastSpell`. */
 export function canAttack(engine: GameEngine, creature: RealCard): ActionResult {
   if (creature.tapped) return { ok: false, reason: 'tapped creatures cannot attack (508.1a)' };
-  if (creature.keywords.includes('Defender')) return { ok: false, reason: "creatures with Defender can't attack (302.6)" };
+  if (effectiveKeywords(engine.state, creature).includes('Defender')) return { ok: false, reason: "creatures with Defender can't attack (302.6)" };
   const enteredTurn = engine.enteredThisTurn.get(creature.id);
-  const sick = enteredTurn === engine.turn.turnNumber && !creature.keywords.includes('Haste');
+  const sick = enteredTurn === engine.turn.turnNumber && !effectiveKeywords(engine.state, creature).includes('Haste');
   if (sick) return { ok: false, reason: "summoning sickness (302.6): hasn't been under its controller's control continuously since their most recent turn began" };
   return { ok: true };
 }

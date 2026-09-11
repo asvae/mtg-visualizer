@@ -5,6 +5,9 @@ export const stiltzkinMoogleMerchant: CardDefinition = {
   manaCost: '{W}',
   typeLine: 'Legendary Creature — Moogle',
 
+  // Real printed 1/2 (Scryfall fin/34) — missing before this migration.
+  pt: [1, 2],
+
   keywords: ['Lifelink'],
 
   // {2}, {T}: Target opponent gains control of another target permanent

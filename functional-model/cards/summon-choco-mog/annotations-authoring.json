@@ -1,0 +1,12 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Bird Moogle", "highlight": "Creature" },
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Bird Moogle", "highlight": "Enchantment Creature" },
+    { "sourceText": "I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn.", "highlight": "Other creatures you control get +1/+0 until end of turn" },
+    { "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)", "highlight": "Sacrifice after IV" },
+    { "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)", "highlight": "Sacrifice after IV" }
+  ],
+  "sink": [
+    { "sourceText": "I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn.", "highlight": "Other creatures you control get +1/+0 until end of turn" }
+  ]
+}

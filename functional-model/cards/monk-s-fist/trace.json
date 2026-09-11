@@ -28,7 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Monk's Fist",
-        "target": "Hero"
+        "equipmentId": 1597,
+        "target": "Hero",
+        "id": 1598
       }
     ]
   },
@@ -59,7 +61,9 @@
       {
         "fn": "equip",
         "equipment": "Monk's Fist",
-        "target": "you-creature-token-0"
+        "equipmentId": 1601,
+        "target": "Grizzly Bears",
+        "id": 1600
       }
     ]
   }

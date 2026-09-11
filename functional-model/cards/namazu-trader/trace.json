@@ -56,12 +56,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {

@@ -28,18 +28,27 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1040,
         "power": 3,
         "toughness": 1
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 1
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1040,
         "keyword": "Haste"
       },
       {
@@ -52,6 +61,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1041,
         "zone": "Exile",
         "controller": "you"
       },
@@ -93,9 +103,11 @@
         "count": 0
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 0
+        "zone": "Battlefield",
+        "count": 0,
+        "creatureCount": 0
       },
       {
         "fn": "read:getCardsIn",

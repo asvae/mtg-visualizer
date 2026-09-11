@@ -28,11 +28,15 @@
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2693,
+        "controller": "opp0"
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-1"
+        "target": "Grizzly Bears",
+        "id": 2694,
+        "controller": "opp0"
       }
     ]
   },

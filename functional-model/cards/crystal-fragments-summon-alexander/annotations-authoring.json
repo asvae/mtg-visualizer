@@ -1,0 +1,17 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Artifact — Equipment", "highlight": "Equipment" },
+    { "anchor": "typeLine", "sourceText": "Artifact — Equipment", "highlight": "Artifact — Equipment" },
+    { "sourceText": "Equipped creature gets +1/+1.", "highlight": "gets +1/+1" },
+    { "sourceText": "Exile this Equipment, then return it to the battlefield transformed under its owner's control.", "highlight": "Exile this Equipment" },
+    { "sourceText": "Exile this Equipment, then return it to the battlefield transformed under its owner's control.", "highlight": "return it to the battlefield transformed" },
+    { "sourceText": "I, II — Prevent all damage that would be dealt to creatures you control this turn.", "highlight": "Prevent all damage that would be dealt to creatures you control this turn" },
+    { "sourceText": "III — Tap all creatures your opponents control.", "highlight": "Tap all creatures your opponents control" },
+    { "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)", "highlight": "Sacrifice after III" },
+    { "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)", "highlight": "Sacrifice after III" }
+  ],
+  "sink": [
+    { "sourceText": "Equip {1}", "highlight": "Equip {1}" },
+    { "sourceText": "III — Tap all creatures your opponents control.", "highlight": "Tap all creatures your opponents control" }
+  ]
+}

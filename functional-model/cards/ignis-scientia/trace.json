@@ -68,6 +68,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 1115,
         "zone": "Exile",
         "controller": "you"
       },

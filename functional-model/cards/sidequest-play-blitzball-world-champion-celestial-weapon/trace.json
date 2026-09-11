@@ -26,7 +26,8 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2091,
         "power": 2,
         "toughness": 0
       }
@@ -60,7 +61,9 @@
       {
         "fn": "equip",
         "equipment": "Sidequest: Play Blitzball",
-        "target": "you-creature-token-0"
+        "equipmentId": 2095,
+        "target": "Grizzly Bears",
+        "id": 2094
       }
     ]
   },
@@ -93,7 +96,9 @@
       {
         "fn": "equip",
         "equipment": "World Champion, Celestial Weapon",
-        "target": "you-creature-token-0"
+        "equipmentId": 2098,
+        "target": "Grizzly Bears",
+        "id": 2097
       }
     ]
   }

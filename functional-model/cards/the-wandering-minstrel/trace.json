@@ -103,12 +103,12 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
@@ -125,12 +125,12 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
@@ -145,13 +145,15 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2508,
         "power": 0,
         "toughness": 0
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2509,
         "power": 0,
         "toughness": 0
       }

@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "cast from hand",
-      "result": "creates 3 Moogle tokens (indestructible grant not mechanically enforced)",
+      "result": "creates 3 Moogle tokens; all creatures you control (Grizzly Bears x3 and the new Moogles) gain indestructible",
       "raw": {
-        "result": "creates 3 Moogle tokens (indestructible grant not mechanically enforced)",
+        "result": "creates 3 Moogle tokens; all creatures you control (Grizzly Bears x3 and the new Moogles) gain indestructible",
         "castFrom": "hand",
         "you": {
           "creaturesCount": 3
@@ -35,6 +35,47 @@
         "toughness": 2
       },
       {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 6
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 1603,
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 1604,
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 1605,
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Moogle",
+        "id": 1607,
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Moogle",
+        "id": 1608,
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Moogle",
+        "id": 1609,
+        "keyword": "Indestructible"
+      },
+      {
         "fn": "move",
         "card": "Moogles' Valor",
         "instanceId": 1,
@@ -48,9 +89,9 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creates no tokens — no creatures to count",
+      "result": "creates no tokens — no creatures to count; grant still fires with no creatures to affect",
       "raw": {
-        "result": "creates no tokens — no creatures to count",
+        "result": "creates no tokens — no creatures to count; grant still fires with no creatures to affect",
         "castFrom": "hand",
         "you": {
           "creaturesCount": 0
@@ -64,6 +105,20 @@
         "instanceId": 1,
         "from": "hand",
         "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "createToken",
+        "controller": "you",
+        "token": "Moogle",
+        "qty": 0,
+        "tapped": false,
+        "power": 1,
+        "toughness": 2
       },
       {
         "fn": "read:getCreaturesInPlay",

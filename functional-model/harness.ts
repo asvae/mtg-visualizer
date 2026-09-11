@@ -1,7 +1,7 @@
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { resolveCard } from './card';
 import type { Card, Player, ZoneType } from './interfaces';
-import { GameState, wrapPlayer, wrapCard, effectiveTypes, effectivePT, type RealCard, type RealPlayer } from './state';
+import { GameState, wrapPlayer, wrapCard, effectivePT, type RealCard, type RealPlayer } from './state';
 import { PHASES, currentPhase, advancePhase, type Phase, type TurnState } from './turn';
 import { TOKENS } from './tokens';
 import type { BasicLandName } from './mana';
@@ -171,6 +171,8 @@ export interface PlayerState {
   enchantmentsCount?: number;
   handCount?: number;
   graveyardCreatureCount?: number;
+  /** Artifact graveyard cards specifically — same "real typed candidate to find" convention `libraryArtifactCount` already establishes for the Library zone, added for Delivery Moogle's own real "search your library and/or graveyard for an artifact card" (the graveyard half of a genuine two-zone search — `graveyardCreatureCount` alone can't seed a candidate that `isArtifact()` actually recognizes). NOT included in `graveyardCreatureCount` (the two are independent candidate pools, unlike `libraryArtifactCount`'s "included in libraryCount" convention — a graveyard has no single combined "how many cards" count field to be included IN). */
+  graveyardArtifactCount?: number;
   libraryCount?: number;
   /** Subtypes to tag every generated creature with (Aerith Gainsborough's own "each LEGENDARY creature you control" needs a generated creature that `hasSubtype('Legendary')` actually matches) — applies uniformly to both the nontoken- and token-creature loops below. Omit for a generic, subtype-less creature (the common case). */
   creatureSubtypes?: string[];
@@ -183,6 +185,20 @@ export interface PlayerState {
   /** Creature library cards of one specific subtype, INCLUDED in `libraryCount` (same convention as `libraryArtifactCount`/`libraryLandCount` above) — Cantankerous Keepers' own "put all Elf cards from among them into hand" needs a real Elf-typed candidate among milled cards. Paired fields (not a bare count) since, unlike Artifact/Land, the subtype varies per card. */
   librarySubtypeCount?: number;
   librarySubtype?: string;
+  /**
+   * A specific-NAMED library card, INCLUDED in `libraryCount` (same
+   * convention as `libraryArtifactCount`/`libraryLandCount`/
+   * `librarySubtypeCount` above) — added for Magitek Infantry's own real
+   * "Search your library for a card named Magitek Infantry" (CR 702's
+   * genuinely NAME-based tutor, not type/subtype-based — none of the
+   * existing typed/subtyped fields above can be individually addressed by
+   * exact NAME the way this effect's own `getName() === ...` filter needs).
+   * Paired fields since, unlike a fixed type, the name varies per card —
+   * same "paired, not a bare count" shape `librarySubtypeCount`/
+   * `librarySubtype` already establish for the identical reason.
+   */
+  libraryNamedCount?: number;
+  libraryNamedCard?: string;
   /** Equipment cards on the battlefield specifically, INCLUDED in `artifactsCount` (same convention) — Adelbert Steiner's own live-recalculated `ptFormula` (state.ts's own real layer-7a CDA) needs real Equipment permanents on the controller's battlefield to count. */
   equipmentCount?: number;
   /**
@@ -277,11 +293,13 @@ function describePlayerState(ps: PlayerState | undefined, whose: string): string
   if (ps.enchantmentsCount) parts.push(`${whose} ${ps.enchantmentsCount} enchantment(s)`);
   if (ps.handCount) parts.push(`${whose} ${ps.handCount} card(s) in hand`);
   if (ps.graveyardCreatureCount) parts.push(`${whose} ${ps.graveyardCreatureCount} creature card(s) in graveyard`);
-  const plainLibrary = (ps.libraryCount ?? 0) - (ps.libraryArtifactCount ?? 0) - (ps.libraryLandCount ?? 0) - (ps.librarySubtypeCount ?? 0);
+  if (ps.graveyardArtifactCount) parts.push(`${whose} ${ps.graveyardArtifactCount} artifact(s) in graveyard`);
+  const plainLibrary = (ps.libraryCount ?? 0) - (ps.libraryArtifactCount ?? 0) - (ps.libraryLandCount ?? 0) - (ps.librarySubtypeCount ?? 0) - (ps.libraryNamedCount ?? 0);
   if (plainLibrary > 0) parts.push(`${whose} ${plainLibrary} card(s) in library`);
   if (ps.libraryArtifactCount) parts.push(`${whose} ${ps.libraryArtifactCount} artifact(s) in library`);
   if (ps.libraryLandCount) parts.push(`${whose} ${ps.libraryLandCount} land(s) in library`);
   if (ps.librarySubtypeCount) parts.push(`${whose} ${ps.librarySubtypeCount} ${ps.librarySubtype ?? 'subtype'}(s) in library`);
+  if (ps.libraryNamedCount) parts.push(`${whose} ${ps.libraryNamedCount} card(s) named "${ps.libraryNamedCard ?? '?'}" in library`);
   if (ps.tokens?.length) parts.push(`${whose} a ${ps.tokens.map((k) => TOKENS[k]!.name).join(', ')}`);
   if (ps.basicLands?.length) parts.push(`${whose} a ${ps.basicLands.join(', ')}`);
   return parts;
@@ -343,6 +361,27 @@ function describeAction(card: CardDefinition, scenario: Scenario): string {
  */
 export const GENERIC_FILLER_LAND = 'Forest';
 
+/**
+ * Same "give it a real Scryfall identity" upgrade as `GENERIC_FILLER_LAND`
+ * above, for the OTHER numeric filler bucket that used to have none at
+ * all: `PlayerState.creaturesCount`/`nontokenCreaturesCount`'s own
+ * battlefield fillers, previously named a bare, imageless
+ * `${owner}-creature-token-${i}`/`${owner}-creature-nontoken-${i}`. A real,
+ * plain vanilla 2/2 green Bear with no rules text of its own to
+ * accidentally imply — nothing in this pool ever addresses one of these by
+ * exact name either (same "no card singles one out individually" reasoning
+ * GENERIC_FILLER_LAND's own doc comment gives; every effect that needs to
+ * find ONE SPECIFIC filler among many already uses a typed/subtyped
+ * category instead, same as there). One fixed creature (not a
+ * per-index/per-bucket rotation, and the SAME one for both the token and
+ * nontoken loops below) so N of them still collapse onto one grouped "×N"
+ * display chip — `isTokenCard` (state.ts), not the name, is what a real
+ * effect like Gaius van Baelsar's own `tokenFilter:'nontoken'` actually
+ * keys off, so sharing one name across both loops doesn't blur that
+ * distinction anywhere real logic reads it.
+ */
+export const GENERIC_FILLER_CREATURE = 'Grizzly Bears';
+
 /** Exported (visibility only, same behavior) so `engine-trace.ts` can build a real engine-piloted trace off the SAME board-setup logic instead of re-deriving it — see that file's own header. */
 export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState = {}): void {
   real.life = ps.life ?? 20;
@@ -358,7 +397,9 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
   const nontoken = ps.nontokenCreaturesCount ?? 0;
   for (let i = 0; i < nontoken; i++) {
     state.addCard(real, 'Battlefield', {
-      name: `${n}-creature-nontoken-${i}`,
+      // A real Scryfall identity, not a synthetic imageless placeholder —
+      // see GENERIC_FILLER_CREATURE's own doc comment.
+      name: GENERIC_FILLER_CREATURE,
       isTokenCard: false,
       types: ['Creature'],
       subtypes: ps.creatureSubtypes,
@@ -369,7 +410,7 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
   const tokenCreatures = Math.max(0, (ps.creaturesCount ?? 0) - nontoken);
   for (let i = 0; i < tokenCreatures; i++) {
     state.addCard(real, 'Battlefield', {
-      name: `${n}-creature-token-${i}`,
+      name: GENERIC_FILLER_CREATURE,
       isTokenCard: true,
       types: ['Creature'],
       subtypes: ps.creatureSubtypes,
@@ -398,6 +439,9 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
   for (let i = 0; i < (ps.graveyardCreatureCount ?? 0); i++) {
     state.addCard(real, 'Graveyard', { name: `${n}-gy-creature-${i}`, types: ['Creature'] });
   }
+  for (let i = 0; i < (ps.graveyardArtifactCount ?? 0); i++) {
+    state.addCard(real, 'Graveyard', { name: `${n}-gy-artifact-${i}`, types: ['Artifact'] });
+  }
   for (let i = 0; i < (ps.landsCount ?? 0); i++) {
     state.addCard(real, 'Battlefield', { name: `${n}-land-${i}`, types: ['Land'] });
   }
@@ -422,7 +466,17 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
       subtypes: ps.librarySubtype ? [ps.librarySubtype] : [],
     });
   }
-  const libraryPlain = Math.max(0, (ps.libraryCount ?? 0) - libraryArtifacts - libraryLands - librarySubtyped);
+  const libraryNamed = ps.libraryNamedCount ?? 0;
+  for (let i = 0; i < libraryNamed; i++) {
+    // No fixed type — a genuine name-based search (Magitek Infantry's own
+    // "a card named Magitek Infantry") filters by `getName()` alone, so an
+    // untyped card is honest here; a card whose own effect ALSO needs a
+    // real type on the found card can layer that on later, same as the
+    // typed fields above each grew independently when a real card needed
+    // them.
+    state.addCard(real, 'Library', { name: ps.libraryNamedCard ?? `${n}-library-named-${i}`, types: [] });
+  }
+  const libraryPlain = Math.max(0, (ps.libraryCount ?? 0) - libraryArtifacts - libraryLands - librarySubtyped - libraryNamed);
   for (let i = 0; i < libraryPlain; i++) {
     // Real basic land, not a synthetic placeholder — see the `handCount`
     // loop above's own doc comment (same reasoning applies here).
@@ -636,8 +690,11 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
     },
     pump: (target, power, toughness) => {
       const name = 'getName' in target ? target.getName() : String(target);
-      if ('getId' in target && !('getLife' in target)) state.pump(cardOf(target as Card), power, toughness);
-      log.push({ fn: 'pump', target: name, power, toughness });
+      const isCard = 'getId' in target && !('getLife' in target);
+      if (isCard) state.pump(cardOf(target as Card), power, toughness);
+      // `id` — real per-instance identity (2026-09-12, real regression fix:
+      // see `putCounter`'s own doc comment below for the full incident).
+      log.push({ fn: 'pump', target: name, id: isCard ? (target as Card).getId() : undefined, power, toughness });
     },
     moveTo: (target, zone) => {
       const real = cardOf(target);
@@ -661,7 +718,7 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
         // produce fact (the effect really did try to move it there; 111.7
         // ceasing to exist is a downstream consequence of THIS target being
         // a token, not evidence the effect didn't attempt the move).
-        log.push({ fn: 'ceasesToExist', target: target.getName(), zone, controller });
+        log.push({ fn: 'ceasesToExist', target: target.getName(), id: real.id, zone, controller });
         return;
       }
       // Real controller, not a name-string guess — needed now that a target
@@ -669,7 +726,7 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       // own doc comment): verify-synergy.mjs's own `sideOfName` heuristic
       // only works when a filler's name carries its owner as a string
       // prefix, which a real Scryfall identity never does.
-      log.push({ fn: 'moveTo', target: target.getName(), zone, controller });
+      log.push({ fn: 'moveTo', target: target.getName(), id: real.id, zone, controller });
     },
     // Quiet, same reasoning as mockCreature's predicate methods used to be:
     // WHICH specific object got picked is pure targeting mechanics, not a
@@ -755,19 +812,42 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       // now that GENERIC_FILLER_LAND (33bfbaa) gives BOTH players' fungible
       // filler/basic lands the same bare name, so a replay can't otherwise
       // tell which player's same-named permanent this counter landed on.
-      log.push({ fn: 'putCounter', target: target.getName(), counterType, amount, controller: state.players.get(real.controllerId)!.name });
+      //
+      // `id` — real, stable per-instance identity (`RealCard.id`), added
+      // 2026-09-12 alongside every other per-instance action below: a real
+      // regression, caught live on The Crystal's Chosen's own scenario
+      // replay ("counters look incorrect" — one Grizzly Bears got 2
+      // counters, the other 0, instead of 1 each). Root cause: once
+      // GENERIC_FILLER_CREATURE/dynamically-created tokens gave MULTIPLE
+      // real, distinct board instances the exact same `name` (this card's
+      // own 4 Hero tokens, e.g.), `target.getName()` alone stopped being
+      // enough for a consumer (`app/lib/scenarioReplay.ts`'s own
+      // `ensureForZone`/`ensureForTap`) to tell WHICH of the same-named
+      // instances a given log entry is about — before that name-sharing
+      // existed, each filler had its own synthetic unique name
+      // (`you-creature-token-0`/`-1`), so name alone happened to be a
+      // real disambiguator; it silently stopped being one the moment names
+      // stopped being unique, with no producer-side field to fall back on.
+      // Additive-only fix (not a breaking shape change — see this file's
+      // own state-event-format contract): `id` is a NEW field alongside
+      // the existing `target` name string, never a replacement — a
+      // consumer that only reads `target` (older code, or a log entry from
+      // before this fix) still works exactly as before; `id`, when
+      // present, lets a consumer pick the REAL matching instance instead
+      // of guessing "first same-named match."
+      log.push({ fn: 'putCounter', target: target.getName(), id: real.id, counterType, amount, controller: state.players.get(real.controllerId)!.name });
     },
     equip: (equipment, target) => {
       state.equip(cardOf(equipment), cardOf(target));
-      log.push({ fn: 'equip', equipment: equipment.getName(), target: target.getName() });
+      log.push({ fn: 'equip', equipment: equipment.getName(), equipmentId: equipment.getId(), target: target.getName(), id: target.getId() });
     },
     animate: (target, types) => {
       state.animate(cardOf(target), types);
-      log.push({ fn: 'animate', target: target.getName(), types });
+      log.push({ fn: 'animate', target: target.getName(), id: target.getId(), types });
     },
     gainControl: (controller, target) => {
       state.gainControl(playerOf(controller), cardOf(target));
-      log.push({ fn: 'gainControl', controller: controller.getName(), target: target.getName() });
+      log.push({ fn: 'gainControl', controller: controller.getName(), target: target.getName(), id: target.getId() });
     },
     // No real card-drafting/library-reordering model for surveil (nothing
     // in the current 12 cards checks post-surveil library contents) — kept
@@ -796,28 +876,40 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       // show sitting in the graveyard forever.
       const ceasesToExist = real.zone === 'Battlefield' && real.isTokenCard;
       const destroyed = state.destroy(real);
-      if (!destroyed) log.push({ fn: 'destroyPrevented', target: target.getName(), cause: 'Indestructible' });
-      else if (ceasesToExist) log.push({ fn: 'ceasesToExist', target: target.getName(), zone: 'Graveyard', controller });
+      if (!destroyed) log.push({ fn: 'destroyPrevented', target: target.getName(), id: real.id, cause: 'Indestructible' });
+      else if (ceasesToExist) log.push({ fn: 'ceasesToExist', target: target.getName(), id: real.id, zone: 'Graveyard', controller });
       // Real controller, same reasoning as `moveTo` above.
-      else log.push({ fn: 'destroy', target: target.getName(), controller });
+      else log.push({ fn: 'destroy', target: target.getName(), id: real.id, controller });
     },
     dealDamage: (source, target, amount) => {
       const sourceReal = cardOf(source);
-      const lifeGained = 'getLife' in target ? state.dealDamage(playerOf(target as Player), amount, sourceReal) : state.dealDamage(cardOf(target as Card), amount, sourceReal);
-      log.push({ fn: 'dealDamage', source: source.getName(), target: target.getName(), amount });
+      const targetIsCard = !('getLife' in target);
+      const lifeGained = !targetIsCard ? state.dealDamage(playerOf(target as Player), amount, sourceReal) : state.dealDamage(cardOf(target as Card), amount, sourceReal);
+      log.push({ fn: 'dealDamage', source: source.getName(), sourceId: sourceReal.id, target: target.getName(), id: targetIsCard ? (target as Card).getId() : undefined, amount });
       if (lifeGained > 0) log.push({ fn: 'gainLife', player: state.players.get(sourceReal.controllerId)!.name, amount: lifeGained, cause: 'Lifelink' });
     },
     tap: (target) => {
-      state.tap(cardOf(target));
-      log.push({ fn: 'tap', target: target.getName() });
+      const real = cardOf(target);
+      // Real controller, same reasoning `moveTo`/`destroy`/`putCounter`
+      // already log one — `sideOf` (verify-synergy.mjs) prefers this real
+      // field over its own name-prefix guess, which broke the instant
+      // `GENERIC_FILLER_CREATURE` gave an opponent's own filler creature a
+      // real, unprefixed name to tap (Crystal Fragments' own chapter III
+      // "tap all creatures your opponents control" — confirmed the hard way:
+      // its `{event:'tap', controller:'opp', ...}` produce fact lost its
+      // only real trace evidence once the tapped target's name stopped
+      // starting with "opp0-").
+      const controller = state.players.get(real.controllerId)!.name;
+      state.tap(real);
+      log.push({ fn: 'tap', target: target.getName(), id: real.id, controller });
     },
     untap: (target) => {
       state.untap(cardOf(target));
-      log.push({ fn: 'untap', target: target.getName() });
+      log.push({ fn: 'untap', target: target.getName(), id: target.getId() });
     },
     grantKeyword: (target, keyword) => {
       state.grantKeyword(cardOf(target), keyword);
-      log.push({ fn: 'grantKeyword', target: target.getName(), keyword });
+      log.push({ fn: 'grantKeyword', target: target.getName(), id: target.getId(), keyword });
     },
     copyPermanent: (source, controller) => {
       const copy = state.copyPermanent(cardOf(source), playerOf(controller));
@@ -825,7 +917,19 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       return loggingCard(state, copy, log);
     },
     dig: (player, qty, take, validType) => {
-      const matches = (c: RealCard) => !validType || validType === 'any' || (validType === 'artifact' && effectiveTypes(c).includes('Artifact'));
+      // Type-checked via `loggingCard` (not raw `effectiveTypes(c)`) — same
+      // fix `move`/`sacrifice`'s own `matches` already got (2026-09-05), for
+      // the same reason: this used to bypass the logged Card interface
+      // entirely, leaving a declarative `dig`-effect want (Ashe, Princess of
+      // Dalmasca's own "reveal an artifact card from among them" library
+      // search, e.g.) with zero trace evidence for verify-synergy.mjs to
+      // check against — same bug class, just never hit until this card
+      // actually declared a want against it.
+      const matches = (c: RealCard) => {
+        if (!validType || validType === 'any') return true;
+        const wrapped = loggingCard(state, c, log);
+        return validType === 'artifact' ? wrapped.isArtifact() : true;
+      };
       const found = state.dig(playerOf(player), qty, take, matches);
       log.push({ fn: 'dig', player: player.getName(), qty, take, validType, found: found.length });
       // Real per-card evidence — WHICH specific card(s) actually got taken to
@@ -833,7 +937,7 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       // putCounter already got (the summary entry above only ever said HOW
       // MANY). Reuses `moveTo`'s existing shape/replay case for free —
       // `state.dig` already really moved each of these to Hand.
-      for (const c of found) log.push({ fn: 'moveTo', target: c.name, zone: 'Hand', controller: player.getName() });
+      for (const c of found) log.push({ fn: 'moveTo', target: c.name, id: c.id, zone: 'Hand', controller: player.getName() });
       return found.map((c) => loggingCard(state, c, log));
     },
     delayUntil: (phase, run) => {

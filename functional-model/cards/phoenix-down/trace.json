@@ -39,41 +39,15 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 1691,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
-        "target": "you-gy-creature-0"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({1}{W}, {T}, Exile this artifact), mode 0 chosen",
-      "result": "no creature card in graveyard, no-op",
-      "raw": {
-        "result": "no creature card in graveyard, no-op",
-        "mode": 0,
-        "you": {
-          "graveyardCreatureCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Phoenix Down",
-        "instanceId": 1,
-        "cost": "{1}{W}, {T}, Exile this artifact"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Graveyard",
-        "count": 0,
-        "creatureCount": 0
+        "target": "you-gy-creature-0",
+        "id": 1691,
+        "controller": "you"
       }
     ]
   },
@@ -114,79 +88,28 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Skeleton",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Spirit",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Zombie",
         "result": true
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1696,
         "zone": "Exile",
         "controller": "opp0"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "activated ({1}{W}, {T}, Exile this artifact), mode 1 chosen",
-      "result": "no legal Skeleton/Spirit/Zombie target, no-op",
-      "raw": {
-        "result": "no legal Skeleton/Spirit/Zombie target, no-op",
-        "mode": 1,
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Phoenix Down",
-        "instanceId": 1,
-        "cost": "{1}{W}, {T}, Exile this artifact"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 0
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "opp0",
-        "count": 1
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
-        "subtype": "Skeleton",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
-        "subtype": "Spirit",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
-        "subtype": "Zombie",
-        "result": false
       }
     ]
   }

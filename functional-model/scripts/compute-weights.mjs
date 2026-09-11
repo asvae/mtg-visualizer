@@ -24,13 +24,27 @@
 // sides' `value` multiplied directly (see server/api/graph-links.ts's
 // `combinedWeight`), not `ease * value` combined per side.
 //
-// Usage: npx vite-node functional-model/scripts/compute-weights.mjs
+// Usage: npx vite-node functional-model/scripts/compute-weights.mjs [--slug=<slug>]
+// `--slug` scopes both the read AND the write-back to exactly one card
+// folder (same flag/shape as run-scenarios.mjs's own `--slug`) — only that
+// card's synergy.json is touched, every other file on disk left alone.
+// WARNING: a bare, unscoped invocation (no `--slug`) recomputes AND
+// OVERWRITES `value` on every card in the pool at once. Real incident
+// (2026-09-11): two concurrent migration agents had their own hand-set/
+// just-corrected `value`s silently clobbered by a sibling agent's unscoped
+// run mid-edit, twice in one day — each requiring a forensic git-diff/
+// HEAD-restore repair. Don't run this bare mid-migration-batch; only when a
+// deliberate, reviewed pool-wide weight recompute is actually intended. To
+// fix up one card's own `-1` placeholders, always pass `--slug=<slug>`.
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const cardsDir = new URL('../cards/', import.meta.url);
 const cardsDirPath = join(process.cwd(), 'functional-model/cards');
-const slugs = readdirSync(cardsDirPath, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+const onlySlug = process.argv.find((a) => a.startsWith('--slug='))?.split('=')[1];
+const slugs = onlySlug
+  ? [onlySlug]
+  : readdirSync(cardsDirPath, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
 
 function isV2Shaped(synergy) {
   const all = [...(synergy.source ?? []), ...(synergy.sink ?? [])];
@@ -87,16 +101,30 @@ function valueFromMagnitude(mag) {
   return 1;
 }
 function sourceMagnitude(fact, log) {
-  // `'to' in fact` / `'from' in fact` — a rework-shaped (2026-09-11) SOURCE
-  // zone-change fact declares `to`/`from` instead of a bare `zone`; still a
-  // zone fact for magnitude purposes (a single-object presence/movement has
-  // no inherent count either way, same as the bare-`zone` case below).
-  if ('zone' in fact || 'to' in fact || 'from' in fact) {
-    if (fact.subject && typeof fact.subject === 'object' && 'token' in fact.subject) {
-      return Math.max(1, maxAmount(log, 'createToken', 'qty'));
-    }
-    return 1; // self/no-subject zone source — one object, no inherent count
-  }
+  // Event-specific magnitude branches are checked FIRST, regardless of
+  // whether the fact ALSO carries zone data (`zone`/`to`/`from`) — a real
+  // bug found+fixed 2026-09-11 during aerith-gainsborough's fact-model
+  // migration: since the 2026-09-11 `Fact` unification
+  // (synergy.ts/SYNERGY_DESIGN.md's "Fact unification" section) let a single
+  // fact legitimately carry BOTH `event` and `to`/`from` at once (e.g. a
+  // merged `{event:'dies', from:'Battlefield', to:'Graveyard', ...}`), the
+  // OLD ordering here checked `'to' in fact || 'from' in fact` first and
+  // returned the zone branch's flat magnitude (1, or a token's `createToken`
+  // count) WITHOUT EVER reaching the `event === 'dies'` branch below —
+  // silently losing the real destroy/sacrifice-count magnitude for every
+  // merged `dies` fact pool-wide (confirmed via a real grep: this already
+  // affected `adelbert-steiner`'s and `summon-bahamut`'s own merged `dies`
+  // facts before this fix, not just aerith-gainsborough's new one — none of
+  // those had been run back through this script since their own merge, so
+  // the bug was latent/unobserved, not previously "silently accepted").
+  // Checking `event` first restores the real `dies`/`putCounter`/etc.
+  // magnitude for a merged fact while leaving every fact that has ONLY zone
+  // data (no `event` at all) on the exact same zone-branch behavior as
+  // before — verified no other real pool fact combines `event` with an
+  // event name THIS function doesn't already special-case AND zone data in
+  // a way this reordering could regress (a token-subject zone fact with an
+  // unhandled `event`, e.g. `entersBattlefield`+token, still falls through
+  // to the zone/token branch below exactly as before).
   const event = fact.event;
   if (event === 'putCounter') return Math.max(1, maxAmount(log, 'putCounter', 'amount'));
   if (event === 'damage') return Math.max(1, maxAmount(log, 'dealDamage', 'amount'));
@@ -109,6 +137,20 @@ function sourceMagnitude(fact, log) {
   // real amount, same as any other magnitude-bearing event.
   if (event === 'addMana') return Math.max(1, maxAmount(log, 'addMana', 'amount'));
   if (event === 'dies') return Math.max(1, countOf(log, 'destroy'), countOf(log, 'sacrifice'));
+  // `'to' in fact` / `'from' in fact` — a rework-shaped (2026-09-11) SOURCE
+  // zone-change fact declares `to`/`from` instead of a bare `zone`; still a
+  // zone fact for magnitude purposes (a single-object presence/movement has
+  // no inherent count either way, same as the bare-`zone` case below) —
+  // reached only when `event` is absent, or present but not one of the
+  // magnitude-bearing names above (e.g. `cast`/`entersBattlefield`/
+  // `destroy`/`sacrifice` ACT tags, which have no magnitude concept of
+  // their own regardless of zone data).
+  if ('zone' in fact || 'to' in fact || 'from' in fact) {
+    if (fact.subject && typeof fact.subject === 'object' && 'token' in fact.subject) {
+      return Math.max(1, maxAmount(log, 'createToken', 'qty'));
+    }
+    return 1; // self/no-subject zone source — one object, no inherent count
+  }
   return 1; // grantKeyword, e.g. — no magnitude concept
 }
 // A sink's own declared amount is a static requirement, not something a

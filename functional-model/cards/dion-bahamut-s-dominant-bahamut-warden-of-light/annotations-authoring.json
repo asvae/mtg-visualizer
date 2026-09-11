@@ -1,0 +1,68 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "Dragonfire Dive — During your turn, Dion and other Knights you control have flying.",
+      "highlight": "Dion and other Knights you control have flying"
+    },
+    {
+      "sourceText": "create a 2/2 white Knight creature token",
+      "highlight": "create a 2/2 white Knight creature token"
+    },
+    {
+      "sourceText": "Exile Dion, then return it to the battlefield transformed under its owner's control",
+      "highlight": "Exile Dion, then return it to the battlefield transformed under its owner's control"
+    },
+    {
+      "sourceText": "Exile Dion, then return it to the battlefield transformed under its owner's control",
+      "highlight": "Exile Dion, then return it to the battlefield transformed under its owner's control"
+    },
+    {
+      "sourceText": "{4}{W}{W}, {T}: Exile Dion, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.",
+      "highlight": "{T}"
+    },
+    {
+      "sourceText": "Put a +1/+1 counter on each other creature you control",
+      "highlight": "Put a +1/+1 counter on each other creature you control"
+    },
+    {
+      "sourceText": "Those creatures gain flying until end of turn",
+      "highlight": "Those creatures gain flying until end of turn"
+    },
+    {
+      "sourceText": "Destroy target permanent",
+      "highlight": "Destroy target permanent"
+    },
+    {
+      "sourceText": "Destroy target permanent",
+      "highlight": "Destroy target permanent"
+    },
+    {
+      "sourceText": "Exile Bahamut, then return it to the battlefield (front face up)",
+      "highlight": "Exile Bahamut, then return it to the battlefield (front face up)"
+    },
+    {
+      "sourceText": "Exile Bahamut, then return it to the battlefield (front face up)",
+      "highlight": "Exile Bahamut, then return it to the battlefield (front face up)"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Put a +1/+1 counter on each other creature you control",
+      "highlight": "Put a +1/+1 counter on each other creature you control"
+    },
+    {
+      "sourceText": "Destroy target permanent",
+      "highlight": "Destroy target permanent"
+    }
+  ]
+}

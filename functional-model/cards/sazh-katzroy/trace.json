@@ -86,20 +86,22 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1957,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "read:getCounters",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "counterType": "+1/+1",
         "result": 1
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1957,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -131,6 +133,7 @@
       {
         "fn": "putCounter",
         "target": "Sazh Katzroy",
+        "id": 1960,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -144,6 +147,7 @@
       {
         "fn": "putCounter",
         "target": "Sazh Katzroy",
+        "id": 1960,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

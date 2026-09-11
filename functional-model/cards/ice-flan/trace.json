@@ -30,12 +30,14 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 1089,
+        "controller": "opp0"
       },
       {
         "fn": "read:getCardsIn",
@@ -46,12 +48,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1089,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -130,12 +133,14 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 1097,
+        "controller": "opp0"
       },
       {
         "fn": "read:getCardsIn",
@@ -146,12 +151,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1097,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"

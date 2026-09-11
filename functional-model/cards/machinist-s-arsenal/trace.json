@@ -28,7 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Machinist's Arsenal",
-        "target": "Hero"
+        "equipmentId": 1377,
+        "target": "Hero",
+        "id": 1378
       }
     ]
   },
@@ -60,7 +62,9 @@
       {
         "fn": "equip",
         "equipment": "Machinist's Arsenal",
-        "target": "you-creature-token-0"
+        "equipmentId": 1383,
+        "target": "Grizzly Bears",
+        "id": 1380
       }
     ]
   }

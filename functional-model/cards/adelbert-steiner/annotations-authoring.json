@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Knight",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Knight",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Lifelink",
+      "highlight": "Lifelink"
+    },
+    {
+      "sourceText": "Adelbert Steiner gets +1/+1 for each Equipment you control.",
+      "highlight": "gets +1/+1"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Adelbert Steiner gets +1/+1 for each Equipment you control.",
+      "highlight": "gets +1/+1 for each Equipment you control"
+    }
+  ]
+}

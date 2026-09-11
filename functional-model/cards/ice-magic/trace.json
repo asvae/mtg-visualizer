@@ -39,12 +39,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1101,
         "zone": "Hand",
         "controller": "opp0"
       },
@@ -98,12 +99,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1105,
         "zone": "Library",
         "controller": "opp0"
       },
@@ -157,12 +159,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1109,
         "zone": "Library",
         "controller": "opp0"
       },

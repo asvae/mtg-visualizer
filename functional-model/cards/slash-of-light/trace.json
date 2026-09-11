@@ -1,31 +1,69 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 creature(s); you: 1 Equipment; opp0: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "deals 3 damage to target creature",
+      "setup": "you: 2 Plains(s)",
+      "action": "real engine playthrough: cast -> resolve (damage = creatures you control + Equipment you control) -> target creature",
+      "result": "Slash of Light is cast for {1}{W} targeting the opponent's real Ahriman — its damage (equal to the 2 real creatures plus 1 real Equipment you control, a total of 3) is dealt for real to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).",
       "raw": {
-        "result": "deals 3 damage to target creature",
-        "castFrom": "hand",
+        "result": "Slash of Light is cast for {1}{W} targeting the opponent's real Ahriman — its damage (equal to the 2 real creatures plus 1 real Equipment you control, a total of 3) is dealt for real to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).",
         "you": {
-          "creaturesCount": 2,
-          "equipmentCount": 1,
-          "artifactsCount": 1
+          "basicLands": [
+            "Plains",
+            "Plains"
+          ]
         },
         "opponents": [
-          {
-            "creaturesCount": 1
-          }
+          {}
         ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Dwarven Castle Guard",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "White Mage's Staff",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Ahriman",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
       {
         "fn": "cast",
         "card": "Slash of Light",
         "instanceId": 1,
         "from": "hand",
         "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Slash of Light"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Slash of Light"
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -46,31 +84,45 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 3,
+        "count": 5,
         "creatureCount": 2
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Plains",
         "subtype": "Equipment",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Plains",
         "subtype": "Equipment",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-equipment-0",
+        "target": "Coeurl",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Dwarven Castle Guard",
+        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "White Mage's Staff",
         "subtype": "Equipment",
         "result": true
       },
       {
         "fn": "dealDamage",
         "source": "Slash of Light",
-        "target": "you-creature-token-0",
+        "sourceId": 2129,
+        "target": "Ahriman",
+        "id": 2128,
         "amount": 3
       },
       {
@@ -78,69 +130,21 @@
         "card": "Slash of Light",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
+        "to": "Graveyard"
       }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "deals 0 damage to target creature",
-      "raw": {
-        "result": "deals 0 damage to target creature",
-        "castFrom": "hand",
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ]
-      }
-    },
-    "log": [
+    ],
+    "actions": [
       {
-        "fn": "cast",
-        "card": "Slash of Light",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{W}"
+        "label": "Start",
+        "from": 0
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 0
+        "label": "Cast Slash of Light ({1}{W})",
+        "from": 4
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "opp0",
-        "count": 1
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 0
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "dealDamage",
-        "source": "Slash of Light",
-        "target": "opp0-creature-token-0",
-        "amount": 0
-      },
-      {
-        "fn": "move",
-        "card": "Slash of Light",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
+        "label": "Resolve",
+        "from": 7
       }
     ]
   }

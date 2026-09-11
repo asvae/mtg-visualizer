@@ -76,7 +76,9 @@
       },
       {
         "fn": "tap",
-        "target": "you-artifact-0"
+        "target": "you-artifact-0",
+        "id": 1858,
+        "controller": "you"
       }
     ]
   },

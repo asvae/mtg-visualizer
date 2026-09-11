@@ -26,18 +26,27 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 281,
         "power": 3,
         "toughness": 3
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 1
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 281,
         "keyword": "Trample"
       },
       {

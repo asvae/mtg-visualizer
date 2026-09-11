@@ -26,7 +26,9 @@
       {
         "fn": "equip",
         "equipment": "Buster Sword",
-        "target": "you-creature-token-0"
+        "equipmentId": 290,
+        "target": "Grizzly Bears",
+        "id": 288
       }
     ]
   },

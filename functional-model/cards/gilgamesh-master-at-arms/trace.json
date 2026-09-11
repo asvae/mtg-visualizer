@@ -73,7 +73,9 @@
       {
         "fn": "equip",
         "equipment": "you-library-artifact-0",
-        "target": "Gilgamesh, Master-at-Arms"
+        "equipmentId": 972,
+        "target": "Gilgamesh, Master-at-Arms",
+        "id": 974
       }
     ]
   },

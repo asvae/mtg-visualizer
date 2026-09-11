@@ -15,6 +15,39 @@
       "event": "dies",
       "target": "self",
       "value": 1
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Menace",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": ["Demon"]
+        }
+      },
+      "value": -1
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Lifelink",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": ["Demon"]
+        }
+      },
+      "value": -1
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Haste",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": ["Demon"]
+        }
+      },
+      "value": -1
     }
   ],
   "sink": [

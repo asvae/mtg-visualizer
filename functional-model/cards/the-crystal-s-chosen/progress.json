@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
-  "textCoverageAudited": false,
+  "lastVerified": "2026-09-11",
+  "notes": "Migrated to unified Fact model (SYNERGY_DESIGN.md, 2026-09-11): self-cast (typeLine-anchored, value:-1 sentinel), token creation (to:'Battlefield'+event:'entersBattlefield', subject:{token:'c_1_1_hero'}, matches aerith-rescue-mission's own token shape), putCounter broadcast (targeted:false, target:{types:{has:['Creature']}}), self-graveyard baseline (to:'Graveyard', subject:'self'). Sink: wants a creature already on the battlefield (to:'Battlefield', types:{has:['Creature']}). Annotated via compute-annotations.mjs, slug added to ANNOTATED_CARD_SLUGS.",
+  "textCoverageAudited": true,
   "knownGaps": []
 }

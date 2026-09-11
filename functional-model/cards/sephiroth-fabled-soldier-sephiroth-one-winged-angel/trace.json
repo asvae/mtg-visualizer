@@ -21,7 +21,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -143,12 +143,14 @@
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
+        "id": 1996,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
+        "id": 1996,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -213,12 +215,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -265,12 +267,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {

@@ -1,14 +1,24 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 artifact(s)",
-      "action": "cast from hand",
-      "result": "creature enters, no other effect (the +2/+0 threshold bonus is continuous, not a resolvable effect)",
+      "setup": "you: 3 Plains(s)",
+      "action": "real engine playthrough: 2 real artifacts present -> cast -> real condition/CDA reads (gap documented)",
+      "result": "Gaelicat enters with 2 real Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but real layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a real, documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
       "raw": {
-        "result": "creature enters, no other effect (the +2/+0 threshold bonus is continuous, not a resolvable effect)",
+        "result": "Gaelicat enters with 2 real Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but real layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a real, documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
         "you": {
-          "artifactsCount": 2
-        }
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
@@ -20,10 +30,67 @@
         "cost": "{2}{W}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Gaelicat"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Gaelicat"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Gaelicat"
+      },
+      {
         "fn": "enters",
         "card": "Gaelicat",
         "instanceId": 1,
         "zone": "Battlefield"
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Phoenix Down",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Elixir",
+        "result": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Gaelicat",
+        "power": 1,
+        "toughness": 3
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Real artifacts already on the battlefield (2, meets the printed threshold)",
+        "from": 0
+      },
+      {
+        "label": "Cast Gaelicat ({2}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Real condition check — 'you control two or more artifacts'",
+        "from": 5
+      },
+      {
+        "label": "Real layer-7a read — no threshold-CDA machinery, so the +2/+0 does not apply",
+        "from": 7
       }
     ]
   }

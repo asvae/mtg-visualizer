@@ -30,43 +30,43 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 4
       },
       {
         "fn": "read:getNetToughness",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 4
       },
       {
         "fn": "createToken",
         "controller": "you",
-        "token": "you-creature-token-0",
+        "token": "Grizzly Bears",
         "qty": 1,
         "tapped": false,
         "power": 4,

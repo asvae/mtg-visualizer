@@ -1,15 +1,34 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "event": "entersBattlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 5,
-      "id": "create-hero-tokens",
-      "highlight": "Create four 1/1 colorless Hero creature tokens",
-      "sourceText": "Create four 1/1 colorless Hero creature tokens."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 46
+        }
+      ]
     },
     {
       "event": "putCounter",
@@ -22,33 +41,49 @@
           ]
         }
       },
+      "targeted": false,
       "value": 1,
-      "id": "pump-your-creatures",
-      "highlight": "put a +1/+1 counter on each creature you control",
-      "sourceText": "Then put a +1/+1 counter on each creature you control."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 48,
+          "end": 101
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "id": "self-graveyard",
-      "sourceText": "a sorcery — goes to its owner's graveyard after resolving (rule 608.2m)"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "put a +1/+1 counter on EACH creature you control — needs a creature already on the battlefield beyond the tokens it just made",
-      "id": "wants-creature-you-control",
-      "highlight": "put a +1/+1 counter on EACH creature you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 76,
+          "end": 101
+        }
+      ]
     }
   ]
 }

@@ -31,7 +31,48 @@
 
 import { readFile } from 'node:fs/promises';
 
-export const ANNOTATED_CARD_SLUGS = new Set(['summon-bahamut']);
+export const ANNOTATED_CARD_SLUGS = new Set([
+  'summon-bahamut',
+  'ultima-origin-of-oblivion',
+  'adelbert-steiner',
+  'aerith-rescue-mission',
+  'aerith-gainsborough',
+  'battle-menu',
+  'cloud-midgar-mercenary',
+  'ambrosia-whiteheart',
+  'ashe-princess-of-dalmasca',
+  'auron-s-inspiration',
+  'the-crystal-s-chosen',
+  'coeurl',
+  'cloudbound-moogle',
+  'from-father-to-son',
+  'dwarven-castle-guard',
+  'delivery-moogle',
+  'fate-of-the-sun-cryst',
+  'dragoon-s-lance',
+  'dion-bahamut-s-dominant-bahamut-warden-of-light',
+  'crystal-fragments-summon-alexander',
+  'gaelicat',
+  'machinist-s-arsenal',
+  'minwu-white-mage',
+  'paladin-s-arms',
+  'moogles-valor',
+  'g-raha-tia',
+  'snow-villiers',
+  'slash-of-light',
+  'sidequest-catch-a-fish-cooking-campsite',
+  'ultima',
+  'magitek-armor',
+  'summon-choco-mog',
+  'restoration-magic',
+  'magitek-infantry',
+  'summon-primal-garuda',
+  'stiltzkin-moogle-merchant',
+  'phoenix-down',
+  'weapons-vendor',
+  'summon-knights-of-round',
+  'venat-heart-of-hydaelyn-hydaelyn-the-mothercrystal',
+]);
 
 /**
  * Pure — no file I/O — so a test can hand it a synthetic, in-memory

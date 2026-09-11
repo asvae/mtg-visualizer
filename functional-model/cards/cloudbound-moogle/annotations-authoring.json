@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Moogle",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Moogle",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "When this creature enters, put a +1/+1 counter on target creature.",
+      "highlight": "put a +1/+1 counter on target creature"
+    },
+    {
+      "sourceText": "Plainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)",
+      "highlight": "Search your library for a Plains card, reveal it, put it into your hand"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "When this creature enters, put a +1/+1 counter on target creature.",
+      "highlight": "target creature"
+    },
+    {
+      "sourceText": "Plainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)",
+      "highlight": "Discard this card"
+    }
+  ]
+}

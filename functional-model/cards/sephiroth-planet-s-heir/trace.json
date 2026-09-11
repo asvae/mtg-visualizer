@@ -28,13 +28,15 @@
       },
       {
         "fn": "pump",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2013,
         "power": -2,
         "toughness": -2
       },
       {
         "fn": "pump",
-        "target": "opp0-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2014,
         "power": -2,
         "toughness": -2
       }
@@ -60,6 +62,7 @@
       {
         "fn": "putCounter",
         "target": "Sephiroth, Planet's Heir",
+        "id": 2017,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

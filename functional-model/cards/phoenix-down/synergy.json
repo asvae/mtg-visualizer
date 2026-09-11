@@ -1,38 +1,134 @@
 {
   "source": [
     {
-      "id": "reanimate",
-      "zone": "Battlefield",
-      "controller": "you",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
       "value": 1,
-      "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.",
-      "highlight": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
     },
     {
-      "id": "exile-skeleton-spirit-zombie",
-      "zone": "Exile",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
+      "target": "self",
       "value": 1,
-      "sourceText": "Exile target Skeleton, Spirit, or Zombie.",
-      "highlight": "Exile target Skeleton, Spirit, or Zombie"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 8,
+          "end": 11
+        }
+      ]
+    },
+    {
+      "event": "exile",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 13,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "from": "Graveyard",
+      "to": "Battlefield",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "cmc": {
+          "max": 4
+        }
+      },
+      "targeted": true,
+      "tapped": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 2,
+          "end": 102
+        }
+      ]
+    },
+    {
+      "event": "exile",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Skeleton",
+            "Spirit",
+            "Zombie"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 2,
+          "end": 43
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-cheap-creature-in-graveyard",
-      "zone": "Graveyard",
+      "to": "Graveyard",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.",
-      "highlight": "creature card with mana value 4 or less from your graveyard",
-      "value": 1
+      "cmc": {
+        "max": 4
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 16,
+          "end": 75
+        }
+      ]
     },
     {
-      "id": "wants-skeleton-spirit-zombie",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "hasAny": [
           "Skeleton",
@@ -40,9 +136,15 @@
           "Zombie"
         ]
       },
-      "sourceText": "Exile target Skeleton, Spirit, or Zombie.",
-      "highlight": "Exile target Skeleton, Spirit, or Zombie",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 15,
+          "end": 42
+        }
+      ]
     }
   ]
 }

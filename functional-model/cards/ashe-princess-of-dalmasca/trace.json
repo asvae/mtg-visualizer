@@ -101,17 +101,39 @@
       },
       {
         "fn": "tap",
-        "target": "Ashe, Princess of Dalmasca"
+        "target": "Ashe, Princess of Dalmasca",
+        "id": 159
       },
       {
         "fn": "attack",
-        "card": "Ashe, Princess of Dalmasca"
+        "card": "Ashe, Princess of Dalmasca",
+        "id": 159
       },
       {
         "fn": "trigger",
         "card": "Ashe, Princess of Dalmasca",
         "instanceId": 1,
         "name": "onAttack"
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Phoenix Down",
+        "result": true
       },
       {
         "fn": "dig",
@@ -124,6 +146,7 @@
       {
         "fn": "moveTo",
         "target": "Phoenix Down",
+        "id": 158,
         "zone": "Hand",
         "controller": "you"
       }

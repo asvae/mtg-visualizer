@@ -29,7 +29,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -42,7 +42,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -85,7 +85,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-nontoken-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -103,7 +103,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-nontoken-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {

@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Moogle",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Moogle",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less, reveal it, and put it into your hand",
+      "highlight": "your library"
+    },
+    {
+      "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less, reveal it, and put it into your hand",
+      "highlight": "graveyard"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less, reveal it, and put it into your hand",
+      "highlight": "your library"
+    },
+    {
+      "sourceText": "search your library and/or graveyard for an artifact card with mana value 2 or less, reveal it, and put it into your hand",
+      "highlight": "graveyard"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Sorcery",
+      "highlight": "Sorcery"
+    },
+    {
+      "sourceText": "Take the Elevator — Create three 1/1 colorless Hero creature tokens.",
+      "highlight": "Create three 1/1 colorless Hero creature tokens"
+    },
+    {
+      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them.",
+      "highlight": "Put a stun counter on one of them"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Sorcery",
+      "highlight": "Sorcery"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them.",
+      "highlight": "Tap up to three target creatures"
+    }
+  ]
+}

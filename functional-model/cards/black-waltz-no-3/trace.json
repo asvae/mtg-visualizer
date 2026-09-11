@@ -23,12 +23,14 @@
       {
         "fn": "dealDamage",
         "source": "Black Waltz No. 3",
+        "sourceId": 267,
         "target": "opp0",
         "amount": 2
       },
       {
         "fn": "dealDamage",
         "source": "Black Waltz No. 3",
+        "sourceId": 267,
         "target": "opp1",
         "amount": 2
       }

@@ -47,6 +47,116 @@ export interface Constraints {
   toughness?: NumConstraint;
   amount?: NumConstraint;
   name?: NameConstraint;
+  /**
+   * True only for a candidate that is CURRENTLY ATTACKING (508.1) at the
+   * moment the fact's own effect applies — Auron's Inspiration's own real
+   * "Attacking creatures get +2/+0 until end of turn" is the card that
+   * forced this (2026-09-11, same "grow only when a real card forces it"
+   * discipline every other field here already follows). Real, per-instance
+   * COMBAT state, not a printed/static card property the way `types`/
+   * `power`/`toughness`/`cmc` are — deliberately NOT added to `StaticAttrs`
+   * (this file's own header: "Static card properties ... are NOT stored in
+   * facts," and `StaticAttrs`/`resolveSubject`/`staticAttrsFor` resolve
+   * purely off a `CardDefinition`/`TokenLike`, which has no notion of "is
+   * this instance attacking right now" at all — that's `engine.ts`'s own
+   * `GameEngine.attackers`, never reachable from here).
+   *
+   * `attacking` here IS orthogonal to WHO controls the creature — Auron's
+   * own real text has no controller restriction at all (either player's
+   * attacking creatures), so `controller`/`recipient` stay unset on that
+   * fact, same as any other genuinely unrestricted-side fact in the pool;
+   * don't invent a controller restriction the printed text doesn't have
+   * just because this field exists.
+   *
+   * **Known, deliberate limitation, same class as `Fact.event` staying
+   * inert on an already-zone-shaped fact**: `satisfiesConstraints` does
+   * NOT check this field — there is no live-combat-state pipeline reaching
+   * it (only `StaticAttrs`), so a `target: {attacking: true}` constraint is
+   * currently real, honest, self-documenting DATA, not yet a real matching
+   * filter. A future card wanting this to actually gate a match (a sink
+   * with `target: {attacking: true}`, say) would need genuine engine-state
+   * wiring first — filed under the same "future full matcher unification"
+   * bucket the `Fact` merge's own caveat already opened, not faked here.
+   */
+  attacking?: boolean;
+  /**
+   * True only for a candidate that is CURRENTLY ATTACHED to the fact's own
+   * card (301.5c) — Cloud, Midgar Mercenary's own real "...or an Equipment
+   * attached to it" is the card that forced this (2026-09-11, same
+   * "grow only when a real card forces it" discipline as `attacking`
+   * right above, added the same day for the same reason). Real, per-
+   * instance ATTACHMENT state (`state.ts`'s own `RealCard.attachedToId`/
+   * `getAttachedTo`/`getEquippedBy` — real, live, checked before adding
+   * this field rather than assumed), not a printed/static card property —
+   * WHICH Equipment (if any) is attached to a given permanent varies by
+   * game, so `types:{has:['Equipment']}` alone would mean "any Equipment
+   * card anywhere," not "the one actually attached here"; this field is
+   * what narrows it to the latter, real, intended meaning.
+   *
+   * **Same known, deliberate limitation as `attacking`**: NOT consulted by
+   * `satisfiesConstraints` — `StaticAttrs`/`resolveSubject` resolve purely
+   * off a `CardDefinition`/`TokenLike`, never live board-state, so there is
+   * no pipeline that could check this today. Real, honest, self-documenting
+   * DATA on the fact; a future matcher extension wanting this to actually
+   * gate a match needs genuine engine-state wiring first — same "future
+   * full matcher unification" bucket as `attacking`.
+   */
+  attachedToSelf?: boolean;
+  /**
+   * The exact REVERSE relation of `attachedToSelf` right above — true only
+   * for the candidate that the fact's own card (`self`) is CURRENTLY
+   * ATTACHED TO (301.5c), i.e. `self.attachedToId === candidate.id` rather
+   * than `candidate.attachedToId === self.id`. Crystal Fragments' own real
+   * "Equipped creature gets +1/+1" is the card that forced this
+   * (2026-09-11, same "grow only when a real card forces it" discipline as
+   * `attachedToSelf`/`attacking` above) — the pump target here is the
+   * creature THIS Equipment is attached to, not (as `attachedToSelf` would
+   * mean) some other card attached to this one. `state.ts`'s own real
+   * `equip()`/`attachedToId` model (checked before adding this field, same
+   * as `attachedToSelf` was) only ever sets `attachedToId` on the
+   * EQUIPMENT side pointing at the creature, so this direction genuinely
+   * needed its own field rather than a boolean flip of the existing one —
+   * `attachedToSelf` and this field describe two different real permanents
+   * relative to `self` and are never interchangeable.
+   *
+   * **Same known, deliberate limitation as `attachedToSelf`/`attacking`**:
+   * NOT consulted by `satisfiesConstraints` — no pipeline resolves live
+   * board-state attachment for a produce's own filter today. Real, honest,
+   * self-documenting DATA; a future matcher extension wanting this to
+   * actually gate a match needs genuine engine-state wiring first, same
+   * "future full matcher unification" bucket as the other two.
+   */
+  equippedBySelf?: boolean;
+  /**
+   * True only for a candidate that is CURRENTLY TAPPED (302.6/deals-with-
+   * tapped-permanents rules generally) — Fate of the Sun-Cryst's own real
+   * "This spell costs {2} less to cast if it targets a tapped creature" is
+   * the card that forced this (2026-09-12, same "grow only when a real
+   * card forces it" discipline as `attacking`/`attachedToSelf`/
+   * `equippedBySelf` above). Real, per-instance state (`RealCard.tapped`),
+   * not a printed/static card property — deliberately a NEW field here
+   * rather than reusing the existing top-level `Fact.tapped` (that one
+   * describes the fact's own SUBJECT entering/being tapped as part of the
+   * occurrence itself, e.g. Vector, Imperial Capital's "enters tapped" —
+   * a different, unrelated meaning from "is the CANDIDATE this constraint
+   * filters currently tapped," which is what a presence-SINK filtering for
+   * "a tapped creature on the battlefield" needs).
+   *
+   * **Same known, deliberate limitation as `attacking`/`attachedToSelf`/
+   * `equippedBySelf`**: NOT consulted by `satisfiesConstraints` —
+   * `StaticAttrs`/`resolveSubject` resolve purely off a `CardDefinition`/
+   * `TokenLike`, never live board-state, so there is no pipeline that
+   * could check this today (checked `state.ts`: `RealCard.tapped` is real,
+   * live, per-instance state, but nothing routes it into the constraint
+   * matcher). Real, honest, self-documenting DATA representing the real
+   * condition this card's cost reduction depends on — NOT a claim that the
+   * reduction itself is executable (ENGINE_GAPS.md gap #7's own cost-
+   * reduction sub-gap stays open, unrelated to and unresolved by this
+   * field); a future matcher extension wanting this to actually gate a
+   * match needs genuine engine-state wiring first, same "future full
+   * matcher unification" bucket as the other three.
+   */
+  tapped?: boolean;
 }
 
 /** 1-5, computed mechanically (not authored by hand) — real game-mechanical magnitude of a fact, steeply bucketed from the actual number involved (NOT linear: a 1-for-1 effect and a 2-for-1 effect are not "close" in power, so the bucketing jumps hard past 1 — magnitude 1 → 1, magnitude 2 → 4-5, magnitude 3+ → 5 — rather than spreading evenly):
@@ -313,6 +423,24 @@ export interface Fact extends Constraints {
   targeted?: boolean;
   /** Free-form event-specific fields a real card's own effect carries (Aerith's own `counterType: '+1/+1'`, e.g.) — not part of the fixed constraint vocabulary, matched by plain equality when both sides declare it. */
   counterType?: string;
+  /**
+   * `event: 'grantType'`'s own free-form detail — the type name being
+   * granted (Dragoon's Lance's own "is a Knight in addition to its other
+   * types" → `type: 'Knight'`; Magitek Armor's own Crew-triggered "becomes
+   * an artifact creature" → `type: 'Creature'`, the ARTIFACT half omitted
+   * since the Vehicle already is one — granting it again would be a
+   * presence restatement, not a real new type). Matched by plain equality
+   * (same treatment as `counterType`) — 2026-09-12, `scripts/verify-
+   * synergy.mjs`'s own forward-evidence check for `grantType` now compares
+   * this against the real `types` array a logged `fn:'animate'` trace line
+   * carries, once a self-targeted `animate` effect backs the fact for
+   * real (see that script's own `producedEvents`'s `case 'animate'`) —
+   * Dragoon's Lance's own `grantType` facts predate this and stay
+   * genuinely inert regardless (no execution path exists for a type grant
+   * to ANOTHER permanent, only to `self`), still exempted by name in that
+   * script.
+   */
+  type?: string;
   /** `event: 'addMana'`'s own free-form detail — the color produced (card.ts's `Effect` `kind: 'addMana'`'s own `color` field, or the single symbol `mana.ts`'s `manaAbilityColorFromStaticText` recognizes off a plain `"{T}: Add {X}."` static-ability string). Superseded by `colors` below for anything NEW (a plain string can't express a real choice-of-color ability as one matchable fact, only as display-equality) — kept only because 11 real single-color cards (Druid of the Cowl, Goobbue Gardener, Llanowar Elves, Midgar, Ishgard, Jidoor, Lindblum, Zanarkand, White Auracite, Willowrush Verge, Elvish Archdruid) already declare this field and migrating them is out of scope for the pass that added `colors` (2026-09-09) — still matched (by plain equality, same as `counterType`) for backward compatibility, and `factsInteract` also treats it as an implicit single-element `colors` set so it stays comparable against a `colors`-shaped want on the other side. */
   color?: string;
   /** `event: 'addMana'`'s own color-SET detail, added 2026-09-09 alongside `playLand` — reuses `TypeConstraint`'s exact `has`/`hasAny`/`not` vocabulary/matching (`satisfiesType`) rather than inventing a fourth constraint pattern, since "does the producer's color set satisfy the consumer's color need" is structurally the identical question `Constraints.types` already answers for card types. On a PRODUCE fact: which color(s) this ability can actually make — `hasAny` for a genuine choice-of-color ability (Vector, Imperial Capital's own "{T}: Add {B} or {R}." → `{hasAny:['B','R']}`, ONE fact instead of two `color:'B'`/`color:'R'` facts — it makes one of these per activation, never both at once, so `has` would misstate it as "makes both simultaneously"; a fixed single-color ability would use `{has:['G']}` if migrated). On a WANT fact: what color(s) the consumer needs — `has:['R']` for "needs R specifically," `hasAny:['W','U']` for "needs any of W or U," `not:['B']` for "needs any non-black source" — matched against the producer's own declared set (see `factsInteract`'s `colorSetOf`/`satisfiesType` reuse below), no separate matching code written for color. Coexists with `color` above (a legacy single-color fact) via the same `colorSetOf` helper, so a `colors`-shaped want still matches a `color`-shaped produce and vice versa. */
@@ -828,14 +956,63 @@ const ZONE_PRESENCE_PHRASE: Record<string, string> = {
  *    a nonpermanent card merely being put into a graveyard some other way
  *    (that would never have `from: 'Battlefield'` in the first place).
  *
- * Any `(from, to)` pair not listed here falls back to the same bare
- * "<to> presence" phrasing an unconverted/legacy source fact (or a real
- * sink fact) already uses — still fully real, matchable data via `to`
- * alone even before it has a friendly name of its own.
+ * Any `(from, to)` pair not listed here NEVER falls back to bare "<to>
+ * presence" phrasing either (real bug, fixed 2026-09-11: `describeFact`
+ * used to let an unnamed movement fall through to the generic sink-style
+ * presence phrase even when the fact had a real `from` — caught live on
+ * Ambrosia Whiteheart's own `{to:'Hand', from:'Battlefield'}` bounce fact
+ * rendering as "Hand presence"). The user's own standing rule: "there
+ * should be no presence in sources (only in sinks), sources — only zone
+ * movements." `describeFact` itself now enforces this structurally for
+ * any SOURCE fact with a real `to` — an unnamed pair gets a generic-but-
+ * honest "moves to X (from Y)" phrase instead, never presence wording.
+ * This table's own job stays exactly what its doc comment already says:
+ * grow it with a real, specific, friendlier name as real cards need one —
+ * `bounce` (Ambrosia Whiteheart's Battlefield→Hand) and `tutor` (Cloud,
+ * Midgar Mercenary's real full-library search AND Ashe, Princess of
+ * Dalmasca's real look-top-5-take-1 dig — genuinely different mechanisms,
+ * see each card's own real oracle text, but this table only keys on
+ * `(from, to)`, not the effect kind, so one honest shared word that
+ * doesn't overclaim "searched the whole library" for Ashe's own
+ * top-5-only dig is the correct shared choice here (user's own naming
+ * call, 2026-09-11 — renamed from an earlier "found," same reasoning,
+ * different word), not a missed distinction) are exactly this: real names
+ * added because real cards needed them, not a speculative full mapping of
+ * every possible zone pair.
+ *
+ * `regrowth` (Graveyard→Hand) added 2026-09-11, later still, for Delivery
+ * Moogle's own real "search your library and/or graveyard for an artifact
+ * card ... put it into your hand" — a genuine "and/or" choice between TWO
+ * distinct origins, modeled as two separate source facts (`Library→Hand`,
+ * already named `tutor`, and this new `Graveyard→Hand` pair), not one fact
+ * with an ambiguous/omitted `from`, since the real oracle text names both
+ * zones explicitly rather than leaving the origin unspecified. Named after
+ * the classic reprinted sorcery Regrowth ("Return target card from your
+ * graveyard to your hand") — same "borrow the short, common MTG term for
+ * the effect archetype" convention `tutor` (Demonic Tutor) already
+ * established, not an invented word; this project's own `card.ts` already
+ * uses the broader neighboring term `graveyard-recursion` for a DIFFERENT
+ * concept (casting FROM the graveyard via an alternate cost, not returning
+ * a card TO hand), so `regrowth` — the narrower, standard term for
+ * specifically a graveyard-to-hand return — was picked instead of
+ * reusing/overloading that existing, differently-scoped term.
+ *
+ * `reanimate` (Graveyard→Battlefield) added 2026-09-12 for Phoenix Down's
+ * own real "Return target creature card ... from your graveyard to the
+ * battlefield tapped" — the first pool card to put a card FROM the
+ * graveyard directly onto the battlefield (checked: zero prior `(from:
+ * 'Graveyard', to: 'Battlefield')` facts anywhere in the pool before this
+ * one). Named after the classic MTG effect archetype (Reanimate, Animate
+ * Dead, etc.), same "borrow the short, common term" convention `tutor`/
+ * `regrowth` already established, not an invented word.
  */
 export const ZONE_MOVEMENT_NAMES: ReadonlyArray<{ from?: string; to: string; name: string }> = [
   { to: 'Battlefield', name: 'enters the battlefield' },
   { from: 'Battlefield', to: 'Graveyard', name: 'dies' },
+  { from: 'Battlefield', to: 'Hand', name: 'bounce' },
+  { from: 'Library', to: 'Hand', name: 'tutor' },
+  { from: 'Graveyard', to: 'Hand', name: 'regrowth' },
+  { from: 'Graveyard', to: 'Battlefield', name: 'reanimate' },
 ];
 
 /** Looks up `ZONE_MOVEMENT_NAMES` for a specific `(from, to)` pair — `from: undefined` in a table entry means "matches any origin, including a real declared one" only when the fact ITSELF also omits `from` (an entry that only cares about `to` would be a different, broader kind of rule this table doesn't need yet — see its own doc comment's "grow only when forced" discipline). Returns `undefined` (not a fallback string) when nothing matches, so callers can tell "no friendly name yet" apart from "the name is itself falsy." */
@@ -890,21 +1067,47 @@ export function zoneMovementName(from: string | undefined, to: string): string |
  * the fact IS, which the bare zone/event vocabulary genuinely has no other
  * way to say (a zone fact has no `event` field to speak through). See
  * `zoneMovementName`/`ZONE_MOVEMENT_NAMES` immediately above.
+ *
+ * **Real bug fixed 2026-09-11, same day:** this SOURCE branch used to fall
+ * all the way through to the generic "<zone> presence" phrasing below
+ * whenever `zoneMovementName` didn't recognize the `(from, to)` pair yet —
+ * even when the fact had a real `from` populated, i.e. was structurally a
+ * genuine movement, not presence (caught live on Ambrosia Whiteheart's own
+ * `{to:'Hand', from:'Battlefield'}` bounce fact rendering as "Hand
+ * presence"). Per the user's own standing rule ("sources are only zone
+ * movements, never presence — that's a sink-only concept"), a SOURCE fact
+ * with a real `to` now NEVER reaches the presence line below, structurally,
+ * not just for the pairs `ZONE_MOVEMENT_NAMES` happens to name today — an
+ * unnamed real movement gets a generic-but-honest "moves to X (from Y)"
+ * (or bare "moves to X" with no known origin) instead, so this holds for
+ * any FUTURE unnamed pair too, not just the ones patched case-by-case here.
  */
 export function describeFact(fact: Fact): string {
   if (isZoneFact(fact)) {
     // A SOURCE fact with a real (from,to) movement (2026-09-11 rework —
-    // see `Fact`'s own doc comment): name the movement itself when
-    // `zoneMovementName` recognizes it ("dies", "enters the battlefield").
-    // A pre-rework source fact (bare `zone`, no `to`/`from` at all) and any
-    // SINK fact both fall through to the unchanged bare "<zone> presence"
-    // phrasing below — `controller`/`from`/a `types`/`cmc` qualifier are
-    // all real, intact data, surfaced in the notes/conditions column
-    // instead of this label (see this function's own doc comment).
+    // see `Fact`'s own doc comment) is ALWAYS a movement, never presence
+    // (this branch's own doc comment above) — name it via `zoneMovementName`
+    // when a friendly name exists ("dies", "enters the battlefield",
+    // "bounce", "tutor"), else fall back to a generic-but-still-honest
+    // movement phrase, NEVER the bare "<zone> presence" phrasing below
+    // (that stays reserved for a pre-rework source fact authored with a
+    // bare `zone` and no `to`/`from` at all, and for every real SINK fact —
+    // see this function's own doc comment). Same `fact.to !== undefined ||
+    // fact.from !== undefined` gate as before the bugfix — a legacy
+    // bare-`zone`-only source fact still deliberately skips this branch
+    // entirely (unchanged presence phrasing below), only a genuinely
+    // rework-shaped fact (real `to` and/or `from`) is in scope here.
     if (fact.role === 'source' && (fact.to !== undefined || fact.from !== undefined)) {
       const to = fact.to ?? fact.zone;
-      const name = to !== undefined ? zoneMovementName(fact.from, to) : undefined;
-      if (name) return name;
+      if (to !== undefined) {
+        const name = zoneMovementName(fact.from, to);
+        if (name) return name;
+        return fact.from !== undefined ? `moves to ${to.toLowerCase()} (from ${fact.from.toLowerCase()})` : `moves to ${to.toLowerCase()}`;
+      }
+      // `to === undefined` — a `from`-only fact (self-cast's own real
+      // destination is the deliberately-invisible Stack) — falls through to
+      // the shared logic below exactly as before (still real, readable data
+      // via the `event`-named branches, not a zone-presence phrase either).
     }
     const zone = effectiveZone(fact);
     // A `from`-only fact with no real `to`/`zone` at all (2026-09-11, a new
@@ -967,6 +1170,37 @@ export function describeFact(fact: Fact): string {
   // — `cast` is a new, separate, plain vocabulary entry for future/`fin/1`
   // (Summon: Bahamut) use, not a rename or migration of those.
   if (event === 'cast') return 'cast a spell';
+  // Real, pre-existing camelCase event strings (champions-of-the-perfect/
+  // fang-fearless-l-cie's own "cast a creature spell" wants, predating the
+  // `cast` vocabulary entry above) — explicit bare labels, same real-bug
+  // fix `preventDamage` gets right below (2026-09-12, user: "PreventDamage
+  // - is camel case"). Without this, the generic fallback below returns
+  // the raw `event` string verbatim, which the card page's own
+  // `first-letter:uppercase` CSS only capitalizes the FIRST letter of —
+  // "castCreatureSpell" rendered literally as "CastCreatureSpell", no
+  // spaces, same bug class. `castNoncreatureSpell` has no real pool
+  // instance yet (checked) — not added preemptively.
+  if (event === 'castCreatureSpell') return 'cast a creature spell';
+  // Summon: Alexander's own real chapter I/II "Prevent all damage that
+  // would be dealt to creatures you control this turn" (2026-09-12,
+  // user's own live catch) — a deliberately generic catch-all category,
+  // same spirit as `pump`'s own promotion (no amount/duration/scope
+  // vocabulary beyond the bare label): "unlikely to be synergistic, but
+  // good to highlight this effect regardless."
+  if (event === 'preventDamage') return 'prevent damage';
+  // Same real camelCase-display bug class as `preventDamage`/
+  // `castCreatureSpell` above, caught 2026-09-12 while adding Dragoon's
+  // Lance's own new `grantType` vocabulary — `grantKeyword` itself was
+  // ALREADY real, live pool vocabulary (Dion/Ardyn/Dragoon's Lance/
+  // haste-magic/circle-of-power) but had never hit an explicit branch,
+  // so it was ALSO rendering raw ("GrantKeyword") this whole time; fixed
+  // alongside its new sibling rather than left for a future report.
+  // `grantType` — Dragoon's Lance's own "is a Knight in addition to its
+  // other types" — genuinely new vocabulary (see that card's own
+  // `definition.ts` comment for why it stays honest-but-structurally-
+  // inert, no execution behind it yet).
+  if (event === 'grantKeyword') return 'grant keyword';
+  if (event === 'grantType') return 'grant type';
   // Deliberately generic — no color breakdown in this label (`colors`/
   // `color` either way, whichever the fact carries) — that's the card
   // page's own "details"/JSON column's job (see `CONDITION_KEYS` in
@@ -1002,9 +1236,12 @@ export function describeFact(fact: Fact): string {
   // real, intact data on the fact.
   if (event === 'sacrifice') return 'sacrifice';
   // Generic fallback for every event this function doesn't special-case
-  // above (`lifeloss`, `grantKeyword`, `landfall`, `castCreatureSpell`,
-  // `scry`, `surveil`, `graveyardLeaves`, `counter`, etc. — `damage` got its
-  // own bare branch above). Bare `event` string only (2026-09-10) — neither
+  // above (`lifeloss`, `grantKeyword`, `landfall`, `scry`, `surveil`,
+  // `graveyardLeaves`, `counter`, etc. — `damage` got its own bare branch
+  // above; `castCreatureSpell`/`preventDamage` got theirs above too,
+  // 2026-09-12, once real camelCase pool instances of each surfaced this
+  // fallback's own raw-string display bug — see those branches' own doc
+  // comments). Bare `event` string only (2026-09-10) — neither
   // `controller` (who — briefly rendered as a "your"/"opponent's" prefix
   // earlier the same day) nor the `types`/`cmc` qualifier (what kind —
   // e.g. "land landfall") renders into this label anymore; both stay real,
@@ -1110,9 +1347,40 @@ export function computeFactAnnotations(
   return loc ? [loc] : undefined;
 }
 
+/**
+ * Real bug found+fixed 2026-09-11 during aerith-gainsborough's fact-model
+ * migration (same "Fact unification broke an old mutual-exclusivity
+ * assumption" class as the `effectiveController`/`factsInteract` zone-read
+ * bugs found during summon-bahamut's own migration — see
+ * SYNERGY_DESIGN.md's "Fact unification" section). Pre-merge, `isZoneFact`/
+ * `isEventFact` were mutually exclusive by construction (a `ZoneFact` vs
+ * `EventFact` union), so checking `isEventFact(fact)` here was equivalent
+ * to checking `!isZoneFact(fact)` — either told you which of
+ * `factsInteract`'s two branches actually produced a given match. Post-merge
+ * a single fact can be BOTH (e.g. Aerith's own merged
+ * `{event:'entersBattlefield', to:'Battlefield', ...}`), and
+ * `factsInteract` ALWAYS takes the zone branch first whenever `isZoneFact`
+ * is true on both sides (its zone check `return`s before the event
+ * comparison is ever reached) — so `isEventFact(fact)` being true no longer
+ * implies the match was actually resolved via event semantics. The old code
+ * mislabeled every such zone-branch self-match as `'same-instance'`
+ * (implying "the same object experiencing its own event," a same-instance
+ * reason) when the real reason is the zone/legend-rule one ("would need a
+ * SECOND copy of this card to occupy the wanted zone at the same time as
+ * this instance already does" — CR 704.5j for the legendary case). Checking
+ * `isZoneFact` first fixes this: `factsInteract`'s own shape gate
+ * (`isZoneFact(p) === isZoneFact(w)`, required for any match at all) means
+ * `isZoneFact(fact)` being true for a matched self-pair GUARANTEES the zone
+ * branch is what fired, regardless of whether `fact` also happens to carry
+ * an `event` name. A fact with NEITHER `to`/`from`/`zone` falls through to
+ * `same-instance` exactly as before (unaffected — pure event facts, e.g.
+ * `lifegain`, were never ambiguous).
+ */
 function selfInteractionKind(fact: Fact, card: PoolCard): SelfInteractionKind {
-  if (isEventFact(fact)) return 'same-instance';
-  return typeWordsFromTypeLine(card.card.typeLine).includes('Legendary') ? 'second-copy-legendary' : 'second-copy';
+  if (isZoneFact(fact)) {
+    return typeWordsFromTypeLine(card.card.typeLine).includes('Legendary') ? 'second-copy-legendary' : 'second-copy';
+  }
+  return 'same-instance';
 }
 
 /** Does producer fact `p` (belonging to `pCard`) satisfy wanter fact `w` (belonging to `wCard`)? Symmetric to how it's invoked — `mine`/`mineRole` decide which side `p`/`w` actually is. Module-level (not nested in `findInteractionsForCard`) so `matchCountForFact` below can reuse the exact same real matching logic rather than a re-derived approximation. */

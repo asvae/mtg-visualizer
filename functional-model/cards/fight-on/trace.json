@@ -40,12 +40,14 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 818,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-gy-creature-1",
+        "id": 819,
         "zone": "Hand",
         "controller": "you"
       },
@@ -95,6 +97,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 822,
         "zone": "Hand",
         "controller": "you"
       },

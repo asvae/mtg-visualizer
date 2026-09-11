@@ -1,16 +1,103 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 9,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 9,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 14,
+          "end": 24
+        }
+      ]
+    },
+    {
+      "from": "Library",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "name": {
+        "eq": "Magitek Infantry"
+      },
+      "tapped": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 8,
+          "end": 97
+        }
+      ]
+    }
+  ],
   "sink": [
     {
-      "zone": "Library",
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "amount": {
+        "min": 1
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 36,
+          "end": 64
+        }
+      ]
+    },
+    {
+      "to": "Library",
       "controller": "you",
       "name": {
         "eq": "Magitek Infantry"
       },
-      "sourceText": "{2}{W}: Search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle.",
-      "id": "search-namesake",
-      "highlight": "Search your library for a card named Magitek Infantry",
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 61
+        }
+      ]
     }
   ]
 }

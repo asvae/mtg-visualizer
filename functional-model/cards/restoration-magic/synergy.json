@@ -1,29 +1,117 @@
 {
   "source": [
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "Instant (goes to the graveyard after resolving, like any instant)."
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "id": "cura-curaga-lifegain",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Hexproof",
+      "target": {},
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 38,
+          "end": 46
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Indestructible",
+      "target": {},
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 51,
+          "end": 65
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Hexproof",
+      "controller": "you",
+      "target": {},
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 48,
+          "end": 56
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Indestructible",
+      "controller": "you",
+      "target": {},
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 61,
+          "end": 75
+        }
+      ]
+    },
+    {
       "event": "lifegain",
       "controller": "you",
-      "value": 5,
-      "sourceText": "Cura — {1} — ...You gain 3 life. / Curaga — {3}{W} — ...You gain 6 life.",
-      "highlight": "You gain 6 life"
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 95,
+          "end": 111
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-permanent-to-protect",
-      "zone": "Battlefield",
-      "sourceText": "Cure — {0} — Target permanent gains hexproof and indestructible until end of turn (any permanent, either side).",
-      "highlight": "gains hexproof and indestructible until end of turn",
-      "value": 1
+      "to": "Battlefield",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 15,
+          "end": 31
+        }
+      ]
     }
   ]
 }

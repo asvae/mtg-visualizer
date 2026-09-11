@@ -1,44 +1,122 @@
 {
   "source": [
     {
-      "id": "self-battlefield",
-      "zone": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — front face's own text is \"Whenever you cast a legendary spell, draw a card\" plus Hero's Sundering, both of which only matter while Venat is on the battlefield)",
-      "highlight": "Whenever you cast a legendary spell, draw a card",
-      "face": "front"
-    },
-    {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)",
-      "highlight": "goes to the graveyard like any creature that dies",
-      "face": "front"
-    },
-    {
-      "id": "heros-sundering-exile",
-      "zone": "Exile",
-      "value": 1,
-      "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
-      "highlight": "Exile target nonland permanent",
-      "face": "front"
-    },
-    {
-      "id": "self-dies",
-      "event": "dies",
+      "event": "cast",
+      "from": "Hand",
       "target": "self",
-      "value": 1,
-      "sourceText": "(baseline — no printed removal/death text on either face; a generic possibility every creature has)",
-      "highlight": "a generic possibility every creature has",
-      "face": "front"
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
     },
     {
-      "id": "blessing-of-light-counter",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "oncePerTurn": true,
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 37,
+          "end": 48
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "from": "Battlefield",
+      "target": {
+        "types": {
+          "not": [
+            "Land"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 29,
+          "end": 59
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "from": "Battlefield",
+      "subject": "self",
+      "controller": "you",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 61,
+          "end": 76
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "from": "Exile",
+      "event": "entersBattlefield",
+      "subject": "self",
+      "target": "self",
+      "controller": "you",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 61,
+          "end": 76
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 27
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "+1/+1",
       "controller": "you",
@@ -49,39 +127,115 @@
           ]
         }
       },
-      "value": 1,
-      "sourceText": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control.",
-      "highlight": "put a +1/+1 counter on another target creature you control",
-      "face": "back"
+      "targeted": true,
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 61,
+          "end": 119
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Indestructible",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 121,
+          "end": 166
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 168,
+          "end": 210
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "heros-sundering-target",
-      "zone": "Battlefield",
+      "event": "cast",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Legendary"
+          ]
+        }
+      },
+      "oncePerTurn": true,
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 9,
+          "end": 35
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
       "types": {
         "not": [
           "Land"
         ]
       },
-      "sourceText": "Hero's Sundering — Exile target nonland permanent. (no controller restriction — either side's permanent)",
-      "highlight": "target nonland permanent",
-      "value": 1,
-      "face": "front"
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 35,
+          "end": 59
+        }
+      ]
     },
     {
-      "id": "blessing-of-light-target",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Blessing of Light — ...another target creature you control...",
-      "highlight": "another target creature you control",
-      "value": 1,
-      "face": "back"
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 84,
+          "end": 119
+        }
+      ]
     }
   ]
 }

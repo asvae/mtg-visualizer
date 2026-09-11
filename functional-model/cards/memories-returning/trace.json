@@ -30,18 +30,21 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1564,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1565,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1566,
         "zone": "Hand",
         "controller": "you"
       },
@@ -86,18 +89,21 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1571,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1572,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 1573,
         "zone": "Hand",
         "controller": "you"
       },

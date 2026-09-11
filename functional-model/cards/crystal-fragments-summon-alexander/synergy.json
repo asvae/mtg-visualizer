@@ -1,19 +1,204 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 11,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 18,
+          "end": 28
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "from": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 11,
+          "end": 31
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "from": "Exile",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 38,
+          "end": 78
+        }
+      ]
+    },
+    {
+      "event": "preventDamage",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "controller": "you",
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 8,
+          "end": 81
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "controller": "opp",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": false,
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 6,
+          "end": 46
+        }
+      ]
+    },
+    {
+      "event": "sacrifice",
+      "target": "self",
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 86
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 86
+        }
+      ]
+    }
+  ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 9
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
       "controller": "opp",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Summon: Alexander III — Tap all creatures your opponents control.",
-      "id": "wants-opp-creature",
-      "highlight": "Tap all creatures your opponents control",
-      "value": 1,
-      "face": "back"
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 6,
+          "end": 46
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+      "highlight": "create a 1/1 colorless Hero creature token"
+    },
+    {
+      "sourceText": "Equipped creature gets +2/+1, has ward {1}, and is a Knight in addition to its other types.",
+      "highlight": "Equipped creature gets +2/+1"
+    },
+    {
+      "sourceText": "Equipped creature gets +2/+1, has ward {1}, and is a Knight in addition to its other types.",
+      "highlight": "has ward {1}"
+    },
+    {
+      "sourceText": "Equipped creature gets +2/+1, has ward {1}, and is a Knight in addition to its other types.",
+      "highlight": "is a Knight in addition to its other types"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Lightbringer and Hero's Shield — Equip {4} ({4}: Attach to target creature you control. Equip only as a sorcery.)",
+      "highlight": "Equip {4}"
+    }
+  ]
+}

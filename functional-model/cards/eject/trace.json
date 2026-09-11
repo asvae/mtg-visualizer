@@ -38,12 +38,13 @@
       },
       {
         "fn": "read:isLand",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 680,
         "zone": "Hand",
         "controller": "opp0"
       },
@@ -106,6 +107,7 @@
       {
         "fn": "moveTo",
         "target": "opp0-artifact-0",
+        "id": 684,
         "zone": "Hand",
         "controller": "opp0"
       },

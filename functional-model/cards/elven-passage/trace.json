@@ -27,6 +27,7 @@
       {
         "fn": "moveTo",
         "target": "Elven Passage",
+        "id": 708,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -50,12 +51,15 @@
       {
         "fn": "moveTo",
         "target": "you-library-land-0",
+        "id": 706,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
-        "target": "you-library-land-0"
+        "target": "you-library-land-0",
+        "id": 706,
+        "controller": "you"
       }
     ]
   },
@@ -86,6 +90,7 @@
       {
         "fn": "moveTo",
         "target": "Elven Passage",
+        "id": 712,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -109,12 +114,15 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 710,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
-        "target": "Forest"
+        "target": "Forest",
+        "id": 710,
+        "controller": "you"
       }
     ]
   }

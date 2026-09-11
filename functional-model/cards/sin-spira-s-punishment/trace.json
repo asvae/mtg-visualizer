@@ -34,6 +34,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 2116,
         "zone": "Exile",
         "controller": "you"
       },
@@ -44,7 +45,9 @@
       },
       {
         "fn": "tap",
-        "target": "you-gy-creature-0"
+        "target": "you-gy-creature-0",
+        "id": 2118,
+        "controller": "you"
       },
       {
         "fn": "read:isLand",

@@ -73,12 +73,14 @@
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
+        "id": 2413,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
+        "id": 2413,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -130,12 +132,14 @@
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
+        "id": 2417,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
+        "id": 2417,
         "zone": "Battlefield",
         "controller": "you"
       },

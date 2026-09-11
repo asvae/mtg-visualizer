@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
+      "highlight": "deals damage"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
+      "highlight": "the number of creatures you control"
+    },
+    {
+      "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
+      "highlight": "the number of Equipment you control"
+    },
+    {
+      "sourceText": "Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature.",
+      "highlight": "target creature"
+    }
+  ]
+}

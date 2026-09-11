@@ -26,6 +26,7 @@
       {
         "fn": "pump",
         "target": "Warren Elder",
+        "id": 2837,
         "power": 1,
         "toughness": 1
       }
@@ -57,25 +58,29 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2839,
         "power": 1,
         "toughness": 1
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2840,
         "power": 1,
         "toughness": 1
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-2",
+        "target": "Grizzly Bears",
+        "id": 2841,
         "power": 1,
         "toughness": 1
       },
       {
         "fn": "pump",
         "target": "Warren Elder",
+        "id": 2842,
         "power": 1,
         "toughness": 1
       }

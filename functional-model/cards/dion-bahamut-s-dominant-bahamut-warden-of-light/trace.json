@@ -1,15 +1,74 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "creates a 2/2 white Knight creature token",
+      "setup": "you: 6 Plains(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns",
+      "result": "Dion enters; real ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — real 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's real Coeurl, then exiles Bahamut and returns it as Dion) — all through the real turn-based engine.",
       "raw": {
-        "result": "creates a 2/2 white Knight creature token",
-        "trigger": "onEnter"
+        "result": "Dion enters; real ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — real 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's real Coeurl, then exiles Bahamut and returns it as Dion) — all through the real turn-based engine.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 15
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 10
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Dion, Bahamut's Dominant",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "enters",
+        "card": "Dion, Bahamut's Dominant",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Dion, Bahamut's Dominant",
@@ -24,19 +83,57 @@
         "tapped": false,
         "power": 2,
         "toughness": 2
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({4}{W}{W}, {T})",
-      "result": "exiles Dion and returns it transformed into Bahamut, Warden of Light",
-      "raw": {
-        "result": "exiles Dion and returns it transformed into Bahamut, Warden of Light"
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "read:hasKeyword",
+        "target": "Dion, Bahamut's Dominant",
+        "keyword": "Flying",
+        "result": true
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
       {
         "fn": "activate",
         "card": "Dion, Bahamut's Dominant",
@@ -44,34 +141,66 @@
         "cost": "{4}{W}{W}, {T}"
       },
       {
+        "fn": "tap",
+        "target": "Dion, Bahamut's Dominant",
+        "id": 608,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Dion, Bahamut's Dominant"
+      },
+      {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
+        "id": 608,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
+        "id": 608,
         "zone": "Battlefield",
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterI\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on each of the other two creatures it controls",
-      "raw": {
-        "result": "puts a +1/+1 counter on each of the other two creatures it controls",
-        "face": "back",
-        "trigger": "chapterI",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "transform",
+        "card": "Dion, Bahamut's Dominant",
+        "into": "Bahamut, Warden of Light"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Dion, Bahamut's Dominant",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Bahamut, Warden of Light",
@@ -81,39 +210,79 @@
       {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 3
+        "count": 2
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Knight",
+        "id": 609,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Knight",
+        "id": 609,
+        "keyword": "Flying"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterII\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on each of the other two creatures it controls",
-      "raw": {
-        "result": "puts a +1/+1 counter on each of the other two creatures it controls",
-        "face": "back",
-        "trigger": "chapterII",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "target": "Dion, Bahamut's Dominant",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Bahamut, Warden of Light",
@@ -123,41 +292,61 @@
       {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 3
+        "count": 2
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Knight",
+        "id": 609,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Knight",
+        "id": 609,
+        "keyword": "Flying"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 6,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 7,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "\"chapterIII\" trigger fires, back face",
-      "result": "destroys itself (the only permanent set up for its own controller, and so still the first candidate the destroy pool offers, even with an opponent's creature also on the battlefield), then exiles and returns transformed back into Dion, Bahamut's Dominant",
-      "raw": {
-        "result": "destroys itself (the only permanent set up for its own controller, and so still the first candidate the destroy pool offers, even with an opponent's creature also on the battlefield), then exiles and returns transformed back into Dion, Bahamut's Dominant",
-        "face": "back",
-        "trigger": "chapterIII",
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ]
-      }
-    },
-    "log": [
+        "target": "Dion, Bahamut's Dominant",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Bahamut, Warden of Light",
@@ -168,32 +357,96 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "count": 8,
+        "creatureCount": 2
       },
       {
         "fn": "read:getCardsIn",
         "player": "opp0",
         "zone": "Battlefield",
-        "count": 1,
+        "count": 2,
         "creatureCount": 1
       },
       {
         "fn": "destroy",
-        "target": "Bahamut, Warden of Light",
-        "controller": "you"
+        "target": "Coeurl",
+        "id": 607,
+        "controller": "opp0"
       },
       {
         "fn": "moveTo",
-        "target": "Bahamut, Warden of Light",
+        "target": "Dion, Bahamut's Dominant",
+        "id": 608,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
-        "target": "Bahamut, Warden of Light",
+        "target": "Dion, Bahamut's Dominant",
+        "id": 608,
         "zone": "Battlefield",
         "controller": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 7,
+        "player": "you"
+      },
+      {
+        "fn": "transform",
+        "card": "Dion, Bahamut's Dominant",
+        "into": "Dion, Bahamut's Dominant"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Dion, Bahamut's Dominant ({3}{W})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 6
+      },
+      {
+        "label": "Real query: Dragonfire Dive's own grant, during your turn",
+        "from": 9
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 10
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 16
+      },
+      {
+        "label": "Activate Dion, Bahamut's Dominant",
+        "from": 19
+      },
+      {
+        "label": "Resolve",
+        "from": 27
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 36
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 44
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 53
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 55
       }
     ]
   }

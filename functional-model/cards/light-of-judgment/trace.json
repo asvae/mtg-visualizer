@@ -35,7 +35,9 @@
       {
         "fn": "dealDamage",
         "source": "Light of Judgment",
-        "target": "opp0-creature-token-0",
+        "sourceId": 1315,
+        "target": "Grizzly Bears",
+        "id": 1314,
         "amount": 6
       },
       {
@@ -77,7 +79,9 @@
       {
         "fn": "dealDamage",
         "source": "Light of Judgment",
-        "target": "you-creature-token-0",
+        "sourceId": 1318,
+        "target": "Grizzly Bears",
+        "id": 1317,
         "amount": 6
       },
       {

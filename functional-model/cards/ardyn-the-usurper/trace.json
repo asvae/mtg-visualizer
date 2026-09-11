@@ -43,6 +43,7 @@
       {
         "fn": "moveTo",
         "target": "opp0-gy-creature-0",
+        "id": 134,
         "zone": "Exile",
         "controller": "opp0"
       },

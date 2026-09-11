@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card.",
+      "highlight": "{T}"
+    },
+    {
+      "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card.",
+      "highlight": "Target opponent gains control of another target permanent you control"
+    },
+    {
+      "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card.",
+      "highlight": "you draw a card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card.",
+      "highlight": "another target permanent you control"
+    }
+  ]
+}

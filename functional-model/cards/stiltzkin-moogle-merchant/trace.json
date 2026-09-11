@@ -1,20 +1,78 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 artifact(s)",
-      "action": "activated ({2}, {T})",
-      "result": "gives the opponent control of the artifact, draws a card",
+      "setup": "you: 4 Plains(s)",
+      "action": "real engine playthrough: cast -> turn passage -> real {2},{T} activation -> real gainControl -> real drawCard",
+      "result": "Stiltzkin, Moogle Merchant is cast, real turn passage clears summoning sickness, then its real {2},{T} ability activates: the opponent genuinely gains control of another real permanent you control (one of the same real Plains that helped pay for casting/activation), and because that real control change happened, you draw a real card.",
       "raw": {
-        "result": "gives the opponent control of the artifact, draws a card",
+        "result": "Stiltzkin, Moogle Merchant is cast, real turn passage clears summoning sickness, then its real {2},{T} ability activates: the opponent genuinely gains control of another real permanent you control (one of the same real Plains that helped pay for casting/activation), and because that real control change happened, you draw a real card.",
         "you": {
-          "artifactsCount": 1
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 5
         },
         "opponents": [
-          {}
+          {
+            "libraryCount": 5
+          }
         ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Stiltzkin, Moogle Merchant",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Stiltzkin, Moogle Merchant"
+      },
+      {
+        "fn": "enters",
+        "card": "Stiltzkin, Moogle Merchant",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
       {
         "fn": "activate",
         "card": "Stiltzkin, Moogle Merchant",
@@ -22,119 +80,68 @@
         "cost": "{2}, {T}"
       },
       {
+        "fn": "tap",
+        "target": "Stiltzkin, Moogle Merchant",
+        "id": 2169,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Stiltzkin, Moogle Merchant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Stiltzkin, Moogle Merchant"
+      },
+      {
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 2,
+        "count": 5,
         "creatureCount": 1
       },
       {
         "fn": "gainControl",
         "controller": "opp0",
-        "target": "you-artifact-0"
+        "target": "Plains",
+        "id": 2154
       },
       {
         "fn": "drawCard",
-        "player": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({2}, {T})",
-      "result": "no other permanent to give away, no-op",
-      "raw": {
-        "result": "no other permanent to give away, no-op",
-        "opponents": [
-          {}
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Stiltzkin, Moogle Merchant",
-        "instanceId": 1,
-        "cost": "{2}, {T}"
-      },
-      {
-        "fn": "read:getCardsIn",
         "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "card": "Forest"
       }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({2}, {T}), deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent",
-      "raw": {
-        "label": "Lifelink: deals 3 combat damage to an opponent",
-        "dealsCombatDamage": {
-          "amount": 3
-        }
-      }
-    },
-    "log": [
+    ],
+    "actions": [
       {
-        "fn": "activate",
-        "card": "Stiltzkin, Moogle Merchant",
-        "instanceId": 1,
-        "cost": "{2}, {T}"
+        "label": "Start",
+        "from": 0
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "label": "Cast Stiltzkin, Moogle Merchant ({W})",
+        "from": 0
       },
       {
-        "fn": "dealDamage",
-        "source": "Stiltzkin, Moogle Merchant",
-        "target": "opp0",
-        "amount": 3
+        "label": "Resolve",
+        "from": 2
       },
       {
-        "fn": "gainLife",
-        "player": "you",
-        "amount": 3,
-        "cause": "Lifelink"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({2}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Stiltzkin, Moogle Merchant",
-        "instanceId": 1,
-        "cost": "{2}, {T}"
+        "label": "Pass turn (you)",
+        "from": 3
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "label": "Pass turn (opp0)",
+        "from": 6
       },
       {
-        "fn": "legendRule",
-        "card": "Stiltzkin, Moogle Merchant",
-        "player": "you"
+        "label": "Activate {2}, {T}: give the opponent control of another permanent; draw a card",
+        "from": 9
+      },
+      {
+        "label": "Resolve",
+        "from": 13
       }
     ]
   }

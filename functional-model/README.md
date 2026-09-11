@@ -15,7 +15,15 @@
 > `tagging/card-enrichment-status.json`). The rest of this file (translator
 > internals, `interfaces.ts`/`tokens.ts` grounding, the Beza insight) is kept
 > as historical context for the ideas that carried over, not as a
-> description of what runs today.
+> description of what runs today. **Also gone as of the GPL-3.0 exposure
+> cleanup (commit `970e163`):** `forge-model/` (the verbatim-copied
+> Card-Forge cardsfolder scripts) and `app/lib/forgeTranslate.ts`/
+> `forgeScript.ts` (the parser/renderer that only existed to read them) were
+> deleted outright, not merely superseded — every mention of them below is
+> pure historical narrative about a translator that read them at the time,
+> not a pointer to files that still exist. `functional-model/` itself was
+> untouched by that cleanup; it never copied Forge source, only reads it
+> live from the gitignored `../mtg-forge` checkout.
 
 A real, compiling TypeScript reconstruction of card abilities — a comparison
 view on the card detail page, alongside `synergy-model/` (a node/flow

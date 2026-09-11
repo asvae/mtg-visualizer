@@ -28,7 +28,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -38,7 +38,9 @@
       },
       {
         "fn": "tap",
-        "target": "you-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2131,
+        "controller": "you"
       }
     ]
   },

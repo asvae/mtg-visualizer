@@ -22,6 +22,7 @@
       {
         "fn": "putCounter",
         "target": "Vivi Ornitier",
+        "id": 2832,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -29,6 +30,7 @@
       {
         "fn": "dealDamage",
         "source": "Vivi Ornitier",
+        "sourceId": 2832,
         "target": "opp0",
         "amount": 1
       }

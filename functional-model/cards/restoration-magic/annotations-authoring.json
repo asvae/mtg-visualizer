@@ -1,0 +1,14 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    { "sourceText": "Target permanent gains hexproof and indestructible until end of turn", "highlight": "hexproof" },
+    { "sourceText": "Target permanent gains hexproof and indestructible until end of turn", "highlight": "indestructible" },
+    { "sourceText": "Permanents you control gain hexproof and indestructible until end of turn", "highlight": "hexproof" },
+    { "sourceText": "Permanents you control gain hexproof and indestructible until end of turn", "highlight": "indestructible" },
+    { "sourceText": "You gain 6 life.", "highlight": "You gain 6 life." }
+  ],
+  "sink": [
+    { "sourceText": "Target permanent gains hexproof and indestructible until end of turn", "highlight": "Target permanent" }
+  ]
+}

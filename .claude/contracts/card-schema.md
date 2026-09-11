@@ -165,6 +165,29 @@ under `app/`/`server/` and have been deleted outright from `synergy.ts`.
     `event:'entersBattlefield'` sinks — both now match real ZONE-shaped
     Graveyard/Battlefield-presence sinks instead. This is accepted,
     tracked, user-approved; not a bug to fix on the card side.
+- **New `event:'pump'` vocabulary + new `Constraints.attacking?: boolean`
+  field** (2026-09-11, later same day again) — `pump` is a deliberately
+  GENERIC catch-all for a real P/T-boost effect (no amount/duration/
+  permanence sub-fields), applied to 4 real fin/1-10 cards: Adelbert
+  Steiner (self), Ambrosia Whiteheart (self), Auron's Inspiration (real
+  `target: {types:{has:['Creature']}, attacking:true}` — "Attacking
+  creatures get +2/+0," symmetric across both players, no controller
+  restriction), Battle Menu (`target:{types:{has:['Creature']}}`,
+  `targeted:true`). `describeFact` needed no new branch — its existing
+  generic event fallback already renders `event:'pump'` as bare `pump`.
+  `Constraints.attacking` is REAL, honest, self-documenting data but is
+  **NOT yet consulted by `satisfiesConstraints`** — it's genuine live
+  combat state (508.1), not a static `CardDefinition` property, and
+  `StaticAttrs`/`resolveSubject` only ever resolve off a `CardDefinition`/
+  `TokenLike`, never live engine state — same class of "documented but
+  currently inert for matching" field as `targeted`/the `types`-on-event-
+  facts limitation already noted above. `card` agent action item: `app/lib/
+  factConditions.ts`'s `constraintPhrases` is a hardcoded field list
+  (`types`/`cmc`/`power`/`toughness`/`amount`/`name`) — does NOT render
+  `attacking` yet. Not a required fix (this field isn't wired to matching
+  either, so it's low-priority), but if the card page's own notes/
+  conditions column should ever surface "attacking creatures" for Auron's
+  Inspiration's own pump fact, that's the function to extend.
 - **`buildAnnotatedCard`'s served shape must change** (`server/api/card/
   [set]/[number].ts`, card-owned — engine did not touch this file): drop
   the `annotateOracleText(f.oracleText, allFacts)` call and its

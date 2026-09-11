@@ -37,7 +37,12 @@ export interface FmBundleEntry {
   // optional) — never `effects`/`triggers`/etc, which functional-model/
   // synergy.ts's matcher (staticAttrsFor/resolveSubject, the only readers of
   // `PoolCard.card`) never reads; see build-fm-bundle.mjs's own comment for
-  // the exact `.card.` access audit this relies on.
+  // the exact `.card.` access audit this relies on. Also carries
+  // `continuousKeywordGrants` (+ a minimal `backFace` mirror of the same
+  // field) — 2026-09-12, ENGINE_GAPS.md gap #14 — read by
+  // server/api/card/[set]/[number].ts's own `loadFunctionalModel` to serve
+  // `FunctionalModelData.continuousKeywordGrants`, NOT by the synergy
+  // matcher.
   poolFacts: CardDefinition;
   synergy: { source: Fact[]; sink: Fact[] } | null;
   traces: TraceResult[];

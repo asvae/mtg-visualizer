@@ -1,12 +1,20 @@
 [
   {
     "scenario": {
-      "setup": "",
+      "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 Hero token and attaches itself to it",
+      "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then a real Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
       "raw": {
-        "result": "creates a 1/1 Hero token and attaches itself to it",
-        "trigger": "onEnter"
+        "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then a real Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        },
+        "sequence": [
+          {
+            "activate": true
+          }
+        ]
       }
     },
     "log": [
@@ -28,23 +36,10 @@
       {
         "fn": "equip",
         "equipment": "Paladin's Arms",
-        "target": "Hero"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "activated ({4})",
-      "result": "attaches to a creature you control",
-      "raw": {
-        "result": "attaches to a creature you control",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "equipmentId": 3,
+        "target": "Hero",
+        "id": 4
+      },
       {
         "fn": "activate",
         "card": "Paladin's Arms",
@@ -59,7 +54,9 @@
       {
         "fn": "equip",
         "equipment": "Paladin's Arms",
-        "target": "you-creature-token-0"
+        "equipmentId": 3,
+        "target": "Grizzly Bears",
+        "id": 2
       }
     ]
   }

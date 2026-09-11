@@ -68,26 +68,28 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Scout",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2749,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Scout",
         "result": true
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2750,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -101,6 +103,7 @@
       {
         "fn": "putCounter",
         "target": "Vaan, Street Thief",
+        "id": 2751,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -134,37 +137,37 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Scout",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Pirate",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Rogue",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Scout",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Pirate",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Rogue",
         "result": false
       },
@@ -177,6 +180,7 @@
       {
         "fn": "putCounter",
         "target": "Vaan, Street Thief",
+        "id": 2755,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

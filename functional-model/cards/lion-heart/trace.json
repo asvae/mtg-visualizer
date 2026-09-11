@@ -34,7 +34,9 @@
       {
         "fn": "dealDamage",
         "source": "Lion Heart",
-        "target": "opp0-creature-token-0",
+        "sourceId": 1340,
+        "target": "Grizzly Bears",
+        "id": 1339,
         "amount": 2
       }
     ]
@@ -64,6 +66,7 @@
       {
         "fn": "dealDamage",
         "source": "Lion Heart",
+        "sourceId": 1342,
         "target": "you",
         "amount": 2
       }
@@ -96,7 +99,9 @@
       {
         "fn": "equip",
         "equipment": "Lion Heart",
-        "target": "you-creature-token-0"
+        "equipmentId": 1345,
+        "target": "Grizzly Bears",
+        "id": 1344
       }
     ]
   }

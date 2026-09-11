@@ -38,7 +38,9 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
-        "target": "opp0-creature-token-0",
+        "sourceId": 1248,
+        "target": "Grizzly Bears",
+        "id": 1247,
         "amount": 5
       },
       {
@@ -73,6 +75,7 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
+        "sourceId": 1248,
         "target": "opp0",
         "amount": 2
       },
@@ -122,7 +125,9 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
-        "target": "opp0-creature-token-0",
+        "sourceId": 1252,
+        "target": "Grizzly Bears",
+        "id": 1251,
         "amount": 5
       },
       {
@@ -135,6 +140,7 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
+        "sourceId": 1252,
         "target": "opp0",
         "amount": 0
       },

@@ -139,12 +139,14 @@
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
+        "id": 1285,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
+        "id": 1285,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -221,12 +223,14 @@
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
+        "id": 1294,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
+        "id": 1294,
         "zone": "Battlefield",
         "controller": "you"
       },

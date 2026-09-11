@@ -28,7 +28,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -38,19 +38,33 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1879,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 2
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Rosa, Resolute White Mage",
+        "result": true
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1879,
         "keyword": "Lifelink"
       }
     ]

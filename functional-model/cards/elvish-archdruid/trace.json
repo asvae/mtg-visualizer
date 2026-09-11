@@ -101,13 +101,13 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Elf",
         "result": true
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Elf",
         "result": true
       },

@@ -87,12 +87,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-Elf-0",
+        "id": 307,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-library-Elf-1",
+        "id": 308,
         "zone": "Hand",
         "controller": "you"
       }

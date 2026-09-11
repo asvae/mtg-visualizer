@@ -10,12 +10,28 @@ export const dionBahamutsDominant: CardDefinition = {
   name: "Dion, Bahamut's Dominant",
   manaCost: '{3}{W}',
   typeLine: 'Legendary Creature — Human Noble Knight',
+  pt: [3, 3],
 
-  staticAbilities: ['Dragonfire Dive — During your turn, Dion and other Knights you control have flying.'],
+  // "Dragonfire Dive — During your turn, Dion and other Knights you
+  // control have flying" — real, QUERY-TIME continuous keyword grant
+  // (ENGINE_GAPS.md gap #14, closed 2026-09-12): `state.ts`'s own
+  // `effectiveKeywords` re-evaluates this live off `state.activePlayerId`
+  // every time Dion's (or a Knight's) keywords are read, so it genuinely
+  // turns on/off as turns pass in a real engine-piloted playthrough —
+  // `includeSelf: true` (Dion himself), `subtype: 'Knight'` (every OTHER
+  // Knight you control), `onlyDuringYourTurn: true`.
+  continuousKeywordGrants: [{ keywords: ['Flying'], includeSelf: true, subtype: 'Knight', onlyDuringYourTurn: true }],
 
   triggers: [
     {
       name: 'onEnter',
+      // Real 603.6b "enters the battlefield" trigger — `on: 'enter'` wires
+      // this to `engine.ts`'s own real auto-fire on `resolveTop` (same
+      // convention Jill, Shiva's Dominant/Cloud, Midgar Mercenary's own
+      // onEnter both use), needed for the real engine-piloted scenario
+      // below (2026-09-11 consolidation) to demonstrate this token ETB for
+      // real rather than a scenario naming the trigger explicitly.
+      on: 'enter',
       effects: [{ kind: 'createToken', token: TOKENS.w_2_2_knight, amount: 1 } satisfies Effect],
     },
   ],
@@ -36,6 +52,7 @@ export const dionBahamutsDominant: CardDefinition = {
     name: 'Bahamut, Warden of Light',
     manaCost: '',
     typeLine: 'Legendary Enchantment Creature — Saga Dragon',
+    pt: [5, 5],
     keywords: ['Flying'],
     triggers: [
       {
@@ -46,17 +63,29 @@ export const dionBahamutsDominant: CardDefinition = {
             // (StrictlyOther) is a board-wide broadcast excluding self —
             // `putCounter` is self-only, `putCounterTarget` is a CHOSEN
             // pool, and `pumpAll` (the closest board-wide shape) has no
-            // notSelf exclusion either. "Those creatures gain flying until
-            // end of turn" has no keyword-grant action at all (`pump`'s own
-            // real signature carries no `KW$`-equivalent field — see
-            // interfaces.ts's own doc comment on `pump` acknowledging real
-            // Forge's PumpAll can grant a keyword but this shim's signature
-            // doesn't expose one) — real text carried only in `describe`.
+            // notSelf exclusion either.
             kind: 'custom',
-            describe: 'Wings of Light — put a +1/+1 counter on each other creature you control; those creatures gain flying until end of turn',
+            describe: 'Wings of Light — put a +1/+1 counter on each other creature you control',
             run: (ctx: EffectContext, actions: Actions) => {
               for (const creature of ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId())) actions.putCounter(creature, '+1/+1', 1);
             },
+          } satisfies Effect,
+          {
+            // "Those creatures gain flying until end of turn" — the SAME
+            // "each other creature you control" pool as the counters above,
+            // now real and executable via `grantKeywordAll` (card.ts,
+            // added 2026-09-09 — genuinely wasn't available when the
+            // comment this replaces was first written). `notSelf: true`
+            // matches the counters effect's own `.filter` exclusion.
+            // Duration ("until end of turn") isn't tracked — same
+            // documented `layers.ts`/`state.grantKeyword` simplification
+            // every other keyword grant in this pool already accepts (the
+            // grant persists for the rest of the scenario, not just until
+            // end of turn).
+            kind: 'grantKeywordAll',
+            predicate: 'creatures-you-control',
+            keyword: 'Flying',
+            notSelf: true,
           } satisfies Effect,
         ],
       },
@@ -65,10 +94,16 @@ export const dionBahamutsDominant: CardDefinition = {
         effects: [
           {
             kind: 'custom',
-            describe: 'Wings of Light — put a +1/+1 counter on each other creature you control; those creatures gain flying until end of turn',
+            describe: 'Wings of Light — put a +1/+1 counter on each other creature you control',
             run: (ctx: EffectContext, actions: Actions) => {
               for (const creature of ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId())) actions.putCounter(creature, '+1/+1', 1);
             },
+          } satisfies Effect,
+          {
+            kind: 'grantKeywordAll',
+            predicate: 'creatures-you-control',
+            keyword: 'Flying',
+            notSelf: true,
           } satisfies Effect,
         ],
       },

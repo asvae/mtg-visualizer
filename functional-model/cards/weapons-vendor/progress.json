@@ -2,8 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the unified Fact model (2026-09-12): baseline self-cast/self-enters SOURCE facts added (previously none at all), real drawCard SOURCE fact for the ETB, and the two real SINK facts (Equipment presence, Creature presence) re-authored from the old zone/id/sourceText schema to to/annotations. Annotated (ANNOTATED_CARD_SLUGS). Deliberately did NOT add a source `event:'equip'` fact for the attach action itself, nor promote `equip` off verify-synergy.mjs's PARKED_ACTION_FNS — checked real precedent first (Beatrix, Loyal General and Raubahn, Bull of Ala Mhigo both have an identical real \"attach Equipment to target creature\" ability as their own primary/sole effect, and Dragoon's Lance's own real Job-select ETB also calls actions.equip for real — none of the three declares an equip produce fact), so omission here matches a real, consistent 3-card pool convention rather than an oversight. Collapsed the old 4-scenario flat harness.ts Scenario[] into one real engine-piloted playthrough (engine-trace.ts): cast -> real ETB draw -> real turn passage (one step, Main1 -> CombatBegin) -> manually fired onBeginCombat (engine.ts's fireOnPhaseEnterTriggers only auto-fires upkeep/end-step, not beginning-of-combat — a real, documented engine gap) -> real actions.equip call attaches a real Dragoon's Lance to a real second creature (Coeurl), both placed as real board-state filler. Found and fixed two real bugs uncovered while building the scenario: definition.ts's own onEnter trigger was missing on:'enter' (needed for pilotResolveTop's 603.6b auto-fire) and its custom onBeginCombat effect never routed ctx.preferTarget through either chooseTarget call (both fixed).",
   "textCoverageAudited": false,
-  "knownGaps": []
+  "knownGaps": [
+    "The {1} payment for the optional 'you may pay {1}. When you do, ...' clause is not modeled as a cost at all (same documented simplification as namazu-trader's own 'if you do' gate) — the attach always happens once a legal Equipment/creature target exists.",
+    "engine.ts's fireOnPhaseEnterTriggers has no auto-fire for 'beginning of combat' (only upkeep/endStep) — this card's own scenario pilots onBeginCombat manually via pilotFireTrigger; a future engine change generalizing phase-entry auto-fire would let this (and Ardyn's/Beatrix's/Raubahn's own onBeginCombat/onAttack triggers) fire automatically instead."
+  ]
 }

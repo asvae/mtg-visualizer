@@ -656,6 +656,522 @@ feature wants to visually flag "this removal is a real choice" vs. "this
 just happens to everyone," this is the field to read; nothing needs to
 change on the card side today.
 
+### `event:'pump'` promoted to real vocabulary (2026-09-11, later same day) — a generic, deliberate catch-all for stat-boost effects
+
+User's own framing: "Could be sort of a catch all for all similar effects
+without much detail. But we need it. Otherwise fin8 [Auron's Inspiration]
+pretty much does nothing." Before this, `pump` sat in `verify-synergy.mjs`'s
+own `PARKED_ACTION_FNS` — the trace tooling recognized a real `fn:'pump'`
+action but explicitly refused to let any `Fact` claim it as evidence, same
+"acknowledged but no vocabulary yet" status `drawCard`/`addMana`/`counter`
+each used to have before their own promotions.
+
+**The real engine machinery underneath was already fully built** —
+`Effect kind:'pumpAll'|'pumpTarget'|'pumpSelf'`, all wired to a real
+`actions.pump`/`state.pump` call (real Forge-cited Layer 7 continuous
+effect, `layers.ts`) — this was purely a Fact-vocabulary gap, not an
+engine gap, for 3 of the 4 cards below. `event:'pump'` itself is
+deliberately GENERIC, per the user's own explicit instruction — a bare
+`{event:'pump', target/controller/targeted: <whatever applies>, value}`,
+no attempt to encode amount/duration/permanence as sub-fields. `describeFact`
+needed no new branch — its existing generic event fallback already renders
+a bare `event` string for anything unlisted, so `'pump'` renders as `pump`
+for free, exactly the "bare, without much detail" shape asked for.
+
+**Promotion, `verify-synergy.mjs`**:
+- Removed `'pump'` from `PARKED_ACTION_FNS`.
+- Added `producedEvents`' own `case 'pump': return [{event:'pump', side:
+  sideOf(entry, cardName)}]` (same bare-object-name `sideOf` heuristic
+  `sacrifice`/`destroy` already use, since `harness.ts`'s own
+  `loggingActions.pump` logs a `target` name, not a `player`/`controller`
+  field).
+- Added `case 'read:getNetPower': return [{event:'pump', side: undefined}]`
+  — Adelbert Steiner's own real, LIVE-recalculated layer-7a CDA
+  (`effectivePT`/`ptFormula`) has no discrete `pump` ACTION to log at all (a
+  CDA is a pure read, recomputed every time P/T is checked, never a
+  timestamped delta `state.pump` would create) — its own scenario already
+  logs a real `read:getNetPower` line specifically to demonstrate the
+  recalculation; treated as equivalent produce evidence, same "a real
+  low-level read backs a produce/want it corroborates" reasoning this file
+  already establishes for zone/type reads.
+- Added `'pump'` to the reverse-check `explainableFns` set (NOT
+  `'read:getNetPower'` — every `read:`-prefixed fn is already skipped by
+  that loop's own guard, so adding it there would be dead code).
+- Added a narrowly-scoped `isAuronsInspirationBroadcastPumpFact` exemption
+  (see the Auron writeup below) — the one real "documented engine gap
+  blocks ALL possible trace evidence" case this promotion needed to
+  tolerate, same class of exemption `isStaticOnlyLand`/`isCoinFlipFact`
+  already are, just scoped to one specific card/fact shape rather than a
+  structural pattern (matches this file's own `crossroads-village`-scoped
+  precedent for a genuinely one-card situation).
+
+**Applied to all 4 real pump-shaped cards found in fin/1-10** (checked all
+10 real oracle texts specifically for a stat-boost clause; the other 6 —
+Summon: Bahamut, Ultima Origin of Oblivion, Aerith Gainsborough, Aerith
+Rescue Mission, Ashe Princess of Dalmasca, Cloud Midgar Mercenary — have
+none; Aerith Gainsborough's own `+1/+1 counter` effects are permanent
+state via `putCounter`, not pump, confirmed not conflated):
+
+- **Adelbert Steiner** (fin/3) — SOURCE `{event:'pump', target:'self'}`,
+  oracle-anchored ("gets +1/+1"). Real evidence: the `read:getNetPower`
+  case above (already logged by this card's own scenario).
+- **Ambrosia Whiteheart** (fin/6) — SOURCE `{event:'pump', target:'self'}`,
+  oracle-anchored ("gets +1/+0", the Landfall reminder-text line). Real
+  evidence: a genuine `fn:'pump'` line already in this card's own trace
+  (its `onLandfall` trigger's real `kind:'pumpSelf'` effect).
+- **Auron's Inspiration** (fin/8) — SOURCE `{event:'pump', target:
+  {types:{has:['Creature']}, attacking:true}}`. **CORRECTED same day, later
+  still** — the first pass left this deliberately bare (no `target` at
+  all), reasoning that no "attacking" predicate/constraint vocabulary
+  existed to name that bucket honestly. User's own live spot-check on the
+  Facts tab rejected that: the fact must actually SAY "attacking
+  creatures," not stay silent about scope — silence isn't the same as
+  "correctly unconstrained." Fixed by adding a real, forced
+  `Constraints.attacking?: boolean` field (see `synergy.ts`'s own doc
+  comment on it — the real, full explanation, not repeated here) —
+  `attacking` is
+  orthogonal to WHO controls the creature, so `controller`/`recipient`
+  correctly stay unset (the real text has no controller restriction,
+  applies to BOTH players' attackers); `types:{has:['Creature']}` is ALSO
+  included alongside `attacking` because `engine.ts`'s own
+  `canAttack`/`declareAttackers` never actually enforce a Creature-type
+  check on `GameEngine.attackers` — nothing in this engine's own data
+  model guarantees "attacking" implies "typed Creature," so the type
+  constraint is real, checked-against-`state.ts` narrowing, not a
+  redundant restatement. Oracle-anchored ("get +2/+0", unchanged — same
+  sentence, no re-anchor needed). **No real trace evidence is achievable
+  at all** — `definition.ts`'s own extensive comment documents why (no
+  live attacker-state reaches `card.ts`'s engine-agnostic `Effect`/
+  `EffectContext` surface, no cross-player `pumpAll` predicate exists), so
+  the effect is an honest, intentional no-op; UNCHANGED by the `attacking`
+  addition, since `Constraints.attacking` isn't consulted by
+  `satisfiesConstraints` either (same underlying limitation — see its own
+  doc comment). Exempted via `isAuronsInspirationBroadcastPumpFact` (doc
+  comment updated to reflect the real `attacking` target, not stale
+  "generically bare" reasoning) — real fact, real documented gap, tolerated
+  exactly the way the user asked.
+- **Battle Menu** (fin/9) — SOURCE `{event:'pump', target:{types:{has:
+  ['Creature']}}, targeted:true}` (its "Ability" mode, "target creature
+  gets +0/+4"), oracle-anchored ("gets +0/+4"). Real evidence: a genuine
+  `fn:'pump'` line already in this card's own `abilityMode` scenario
+  (targets the opponent's real `w_1_1_cat` token).
+
+**Verified**: `verify-synergy.mjs` on all 4 (scoped) and the full pool — 0
+hard failures either way (unchanged from before this task). `find-synergies
+.mjs` before/after (isolated to just these 4 facts, not a stale git-HEAD
+diff — today's working tree has diverged too far from HEAD across several
+concurrent sessions' own migrations for a HEAD-based diff to isolate just
+this change cleanly): **zero interaction lines gained or lost** — expected
+and correct, since NO sink anywhere in the pool currently wants
+`event:'pump'` yet (confirmed, grepped the whole pool). This promotion
+makes the vocabulary real and matchable for a FUTURE payoff card to key
+off, it doesn't itself create a new match today. `vitest run
+functional-model` → 238/238 (unchanged). `tsc --noEmit` → unchanged (45
+pre-existing baseline errors).
+
+**Known, expected, LARGE side effect of this promotion, not a regression**:
+removing `pump` from `PARKED_ACTION_FNS` means `verify-synergy.mjs`'s own
+reverse "explain every action" soft-note check now surfaces a real
+`fn:'pump'` trace line with no matching declared fact on roughly 90 other,
+still-unmigrated (v1-schema) pool cards that already have a real, wired
+`pumpAll`/`pumpTarget`/`pumpSelf` effect (Craterhoof Behemoth, Rinoa
+Heartilly, Tifa Lockhart, Gladiolus Amicitia, many more) — these were
+previously silently parked/invisible, now they're real, visible, correctly
+categorized SOFT notes (never hard failures), same "note, not fail"
+treatment every other promotion (`drawCard`, `addMana`) already produced
+pool-wide. Not fixed here — genuinely out of scope for this task (scoped
+to fin/1-10) — flagged as a real, sizeable future sweep opportunity, same
+bucket as the already-noted mana-fact pool-authoring gap.
+
+### Real bug, shared plumbing: `describeFact` let an unnamed real movement fall through to presence phrasing (2026-09-11, later same day)
+
+Standing rule (user's own words): **"there should be no presence in
+sources (only in sinks), sources — only zone movements."** The DATA was
+already right — a real, migrated SOURCE fact like Ambrosia Whiteheart's
+own `{to:'Hand', from:'Battlefield'}` bounce fact genuinely has both a
+real `from` and `to` — but `describeFact`'s own rendering had a real bug:
+when `zoneMovementName(fact.from, to)` didn't recognize the `(from, to)`
+pair (only `{to:'Battlefield'}`/`{from:'Battlefield',to:'Graveyard'}`
+existed until now), the code fell all the way through the `if` block to
+the generic bare `ZONE_PRESENCE_PHRASE[zone] ?? "${zone} presence"` line
+below — presenting a real movement as if it were a bare presence claim
+("Hand presence / yours · from battlefield"). Caught live by the user on
+that exact fact; almost certainly also affected Cloud, Midgar Mercenary's
+and Ashe, Princess of Dalmasca's own Library→Hand facts (confirmed — both
+were rendering "hand presence" before this fix).
+
+**Fixed both parts, per the user's own explicit two-part ask:**
+1. **New named `ZONE_MOVEMENT_NAMES` entries**, added only because real
+   cards need them (same "grow only when forced" discipline the table's
+   own doc comment already states) — grepped every migrated card's
+   `synergy.json` for real `(from, to)` pairs and checked each against the
+   table (see the table's own doc comment for the full list checked):
+   - `{from:'Battlefield', to:'Hand', name:'bounce'}` — Ambrosia
+     Whiteheart's own fact. (User's own naming call, not my first
+     suggestion — "returns to hand" was considered and rejected in favor
+     of the shorter, common MTG term.)
+   - `{from:'Library', to:'Hand', name:'tutor'}` — shared by BOTH Cloud,
+     Midgar Mercenary's real "search your library for an Equipment card...
+     put it into your hand" (a genuine full-library tutor) AND Ashe,
+     Princess of Dalmasca's real "look at the top five cards of your
+     library... put it into your hand" (a genuine top-5 dig, NOT a full
+     search — real, meaningfully different mechanisms, checked both
+     cards' own real oracle text). `ZONE_MOVEMENT_NAMES` only keys on
+     `(from, to)`, not the effect kind, so it structurally can't give
+     these two cards distinct names without a bigger table-shape change
+     (out of scope here). **Renamed same day, later still, per the user's
+     own direct call on fin/7's Facts tab**: originally landed as `found`
+     (the honest word chosen at the time specifically to avoid overclaiming
+     "searched the whole library" for Ashe's own dig) — user reviewed it
+     live and asked for `tutor` instead, so this is now the shared label;
+     same underlying reasoning (one honest word covering both real
+     mechanisms without over-claiming either one's precision), just a
+     different word.
+2. **Structural fix to the fallback itself**, not a per-pair patch: inside
+   the already-existing "a real (from,to) movement" gate (`fact.role ===
+   'source' && (fact.to !== undefined || fact.from !== undefined)`), an
+   unnamed pair no longer falls through past the `if` block at all — it
+   returns a generic-but-honest `"moves to ${to} (from ${from})"` (or bare
+   `"moves to ${to}"` with no known origin) directly, so this holds for any
+   FUTURE unnamed movement too, not just the ones given real names today.
+   The only fallthrough case within this gate that's still deliberately
+   real and unchanged: a `from`-only fact with no `to` at all (self-cast's
+   own real destination is the deliberately-invisible Stack) — that still
+   falls to the `event`-named branches below, same as before this fix, not
+   a presence phrase either.
+
+**Verified pool-wide, not just the 3 named cards**: wrote a scratch check
+rendering every SOURCE fact across the whole pool with a real `from`
+populated (18 real facts, full pool) — zero render presence-style
+("...presence") labels, confirmed clean. Spot-checked the specific labels:
+Ambrosia Whiteheart → `bounce`; Cloud, Midgar Mercenary/Ashe, Princess of
+Dalmasca → `found` (both); Summon: Bahamut/Aerith Gainsborough/Battle Menu
+→ `dies`/`enters the battlefield`/`cast a spell` all unchanged. One
+incidental correctness improvement outside the 3 named cards: Battle
+Menu's own `{to:'Graveyard', subject:'self'}` fact (no `from` — an
+any-origin "ends up in the graveyard" baseline, same shape as `self-cast`/
+`self-enters`) used to render "graveyard presence" (a real violation of
+the same standing rule) and now correctly renders "moves to graveyard" —
+the same structural fix, not a separate patch.
+
+Also fixed `synergy.test.ts`'s own test that had codified the bug
+(`describeFact({from:'Hand',to:'Graveyard'})` asserted to equal `'graveyard
+presence'`) — rewritten to assert the corrected `'moves to graveyard (from
+hand)'`, plus new tests for the `bounce`/`found` named entries.
+
+`vitest run functional-model` → 238/238 (was 236; +2 new tests, 0 broken).
+`tsc --noEmit` unchanged (45 pre-existing baseline errors, none touching
+this file). `verify-synergy.mjs` unaffected (this is a pure rendering-layer
+fix — `describeFact` isn't read by any matching/verification code).
+
+### Real gap: Ultima, Origin of Oblivion's mana-doubling ability had NO facts at all (2026-09-11, later same day)
+
+fin/2's own third oracle-text line — "Whenever you tap a land for {C}, add
+an additional {C}." — was migrated (annotations/`to`-shaped sink, etc.)
+alongside the rest of this card's ability but this one ability itself was
+simply never authored: `synergy.json` had exactly 2 facts, both for the
+unrelated Flying-attack/blight-counter ability. Confirmed end-to-end, not
+just a fact-authoring gap: `definition.ts` had this ability as pure
+descriptive `staticAbilities` text with no `Trigger` at all, and
+`scenarios.ts` exercised nothing related to it (its own result string said
+so explicitly).
+
+**Fixed for real, not just in `synergy.json`:**
+- `definition.ts` gained a real, named `onTapLandForC` trigger —
+  `effects: [{ kind: 'addMana', color: 'C', amount: 1 }]` — same
+  already-proven-executable `addMana` Effect shape Elvish Archdruid's own
+  activated mana ability uses. Like every other named trigger pool-wide
+  (`Trigger.on` only ever recognizes `'enter'|'upkeep'|'endStep'` — no card
+  in the whole 312-card pool has an auto-firing hook for anything else, per
+  that field's own doc comment), this fires manually, not automatically off
+  a real "land tapped" event (no such hook exists anywhere in this engine).
+- `scenarios.ts` now pilots a real land tap for {C} — a real, already-in-
+  project FIN Town land, Adventurer's Inn (its OWN and ONLY static ability
+  is the exact "{T}: Add {C}." text this needed, cleanest real fit among
+  the pool's several {C}-producing Town lands) — via a throwaway,
+  scenario-local `CardDefinition` pairing that one real printed line with
+  a real `activationCost`/`effects` (same `permanent`/`card` decoupling
+  `activateAbility` already supports), scoped entirely to this file;
+  `adventurer-s-inn`'s own `definition.ts` is untouched. `pilotActivate` +
+  `pilotResolveTop` logs a real `addMana` line for the land's own {C}, then
+  `pilotFireTrigger(..., 'onTapLandForC')` logs a second real `addMana`
+  line for Ultima's own additional {C}.
+- Two new real facts:
+  - **SOURCE** — `{ "event": "addMana", "colors": { "has": ["C"] },
+    "controller": "you" }` (Ultima's own additional {C}), oracle-anchored
+    at "add an additional {C}".
+  - **SINK** — `{ "event": "addMana", "colors": { "has": ["C"] },
+    "controller": "you", "types": { "has": ["Land"] } }` (wants a land you
+    control that produces {C}), oracle-anchored at "tap a land for {C}".
+    The `types` constraint is honest documentation of the real condition
+    but is presently **inert for matching** — `factsInteract`'s event-to-
+    event branch never reads `types` on either side (only zone-shaped facts
+    resolve `types` via `resolveSubject`/`constraintsOf`; see "matching
+    deliberately unchanged" caveat on the `Fact` unification above). Same
+    self-documenting-only treatment `targeted`/`tapped` already get in that
+    branch — flagged here explicitly rather than silently pretending it's a
+    real filter.
+  - Also added, per a same-day follow-up ask: a `self-cast`
+    `{ "event": "cast", "from": "Hand", "target": "self" }` baseline fact
+    (Ultima has no alternate-cost text — plain `{5}`, checked — so
+    `from: 'Hand'` stands unmodified, same reasoning as Bahamut's own
+    `self-cast`), typeLine-anchored at "Creature" (no real oracle-text line
+    backs a baseline "cast as a creature spell" claim, same as Bahamut's).
+- `verify-synergy.mjs`'s `TRIGGER_EVENT_MAP` gained `onTapLandForC:
+  'addMana'` — the first entry mapping a NAMED trigger to the `addMana`
+  event shape (every other pool-wide `addMana` fact is the plain
+  unrestricted "{T}: Add X." static-text shape `staticManaColorsFor`
+  already exempts from evidence entirely; this is the first card whose
+  `addMana` fact sits behind an actual triggered ability). Both new facts
+  verify clean off the SAME trigger fire (the SOURCE fact via
+  `producedEvents`' real `addMana` log-line evidence, the SINK fact via
+  this new trigger-evidence mapping) — `verify-synergy ultima-origin-of-
+  oblivion`: 0 hard failures, all 5 facts (2 pre-existing + 3 new) now
+  carry real annotations.
+
+**Real interactions diff** (`find-synergies.mjs`, full pool, before vs.
+after — before = the git-committed old-schema `id`/`sourceText`/`highlight`
+2-fact version, after = this fix): **+2 lines**, both new, nothing lost:
+- `The Gold Saucer --[mana production]--> Ultima, Origin of Oblivion` — a
+  genuinely real, new synergy: The Gold Saucer is the only OTHER card in
+  the pool whose own plain "{T}: Add {C}." text was ever turned into a
+  real `addMana` fact (Eden Seat of the Sanctum/Capital City/Starting Town/
+  Adventurer's Inn's own identical "{T}: Add {C}." lines never got their
+  own fact authored at all — a separate, pre-existing, pool-wide authoring
+  gap on THOSE cards, out of scope here, not something this task touched).
+- `Ultima, Origin of Oblivion (self-interaction: same-instance)` — a KNOWN,
+  not-fully-precise side effect of the `types`-inertness limitation just
+  above: Ultima's own SOURCE `addMana` fact structurally satisfies its own
+  SINK `addMana` fact (same `event`/`colors`/`controller`), because the
+  matcher has no way to check "and the thing producing it is a land" for
+  an event-shaped fact — Ultima itself isn't a land, so this self-match is
+  a real, acknowledged imprecision, not a data error to chase down. Fixing
+  it for real means teaching `factsInteract`'s event branch to consult
+  `types` the way its zone branch already does — a genuine, non-trivial,
+  pool-wide matcher extension (not a single-card fix), so it's documented
+  here and left for the same future "full matcher unification" bucket the
+  `Fact` merge's own caveat already opened, not patched around ad hoc for
+  this one card.
+
+### Known, deliberately parked gap: pump/stat-scaling SOURCE effects have no `Fact` representation (2026-09-11, later same day — doc-only, no data change)
+
+**Partially addressed, later the same day, by `event:'pump'`'s own
+promotion (see the dedicated section above) — but that closes a DIFFERENT,
+narrower gap than this one.** `event:'pump'` makes "this card's own ability
+PERFORMS a stat-boost" a real, matchable ACT (Adelbert Steiner now has one,
+via its own `read:getNetPower`-backed evidence). It does NOT touch the gap
+this section is actually about, which is still fully open: a `power`/
+`toughness` CONSTRAINT elsewhere in the pool (a hypothetical "wants a
+creature with power 4+" sink checking Steiner as a candidate) still only
+ever reads `CardDefinition.pt` (the printed BASE stat) via
+`staticAttrsFor`, never `state.ts`'s own live-recalculated `effectivePT`.
+These are two independent claims — "I perform a pump" vs. "my current,
+post-pump stats satisfy your numeric filter" — and only the first one has
+real vocabulary today. Everything below this note is unchanged/still
+accurate.
+
+Surfaced by adelbert-steiner (fin/3)'s own migration, but this is a
+**general category gap, not a Steiner-specific one** — flagged broadly per
+the user's own framing, not fixed here or scheduled: "the effect is
+totally uncovered in facts, which is ok for now... probably at some point
+we have to account for that, as some effects require specific
+power/toughness and that's also a synergistic direction."
+
+Steiner's own oracle text — "Adelbert Steiner gets +1/+1 for each
+Equipment you control" — is a real layer-7a CDA (`ptFormula:
+{kind:'addPerEquipmentControlled', ...}`, `card.ts`/`state.ts`'s own
+`effectivePT`, live-recalculated from current board state every time P/T
+is read, CR 613.1/613.3 — same citations `state.ts`'s own `effectivePT`
+doc comment already uses). The SINK half is covered (`wants-equipment` —
+Steiner *wanting* Equipment on the battlefield). The SOURCE half —
+Steiner's OWN power/toughness varying because of this ability — has no
+fact at all, and
+**there is no vocabulary in `Constraints`/`Fact` today that could express
+one**: an effect like this isn't a zone movement, an event, or a static
+type/cmc/name filter — it's "this permanent's own P/T is a live function
+of board state," a fourth kind of claim the fact model has never needed
+before.
+
+**Checked, not assumed: is base P/T tracked as a fact anywhere today?**
+Yes, but only the FIXED PRINTED value, and only implicitly, never
+authored on a `Fact` directly — `Constraints.power`/`.toughness`
+(`NumConstraint`) already exist and are already matchable (a real, if
+rare, sink could declare `power: {min: 4}`), resolved against a
+producer's `subject:'self'` via `resolveSubject` →
+`staticAttrsFor(card).power`/`.toughness`, which reads straight off
+`CardDefinition.pt` (the card's own printed base P/T, e.g. Steiner's own
+`[2, 1]`). **This is the base printed stat ONLY — it never consults
+`state.ts`'s own `effectivePT` (the live, layer-7a-recalculated number
+`ptFormula` produces).** So today, a hypothetical sink like "creature
+with power 4+" or "your biggest creature" checking Steiner would only
+ever see his printed base power (2), never his real, live, board-
+state-dependent power once Equipment is actually attached (3, 4, ...) —
+the fact model is blind to the exact thing this card's own ability does.
+This isn't unique to CDA formulas either: the same blindness applies to
+any other pump source the pool might have (anthem effects, +1/+1-counter
+accumulation via `putCounter` facts that already exist as EVENTS but
+aren't reflected back into a re-computed P/T for constraint-matching
+purposes, etc.) — none of it feeds back into what a `power`/`toughness`
+constraint sees.
+
+**Deliberately deferred, not scheduled — same "write it down, don't act"
+treatment as `Fact.value`'s own deprioritization note above.** No new
+`Constraints`/`Fact` vocabulary was designed or attempted here (e.g. a
+hypothetical `producesStatScaling` or `pt: {formula: ...}` fact shape is
+NOT proposed, just flagged as the eventual real design question). Revisit
+only if a real future task specifically asks for stat-scaling/dynamic-P/T
+matching to actually work — until then, a sink filtering on `power`/
+`toughness` against any pump-affected creature (Steiner included) should
+be understood as reading base printed stats only, a known, accepted
+blind spot, not a bug to rediscover.
+
+### `event:'attacks'` and `event:'trigger'` — two brand-new event strings, plus the first-ever use of `entersBattlefield` as a SINK (2026-09-11, later same day)
+
+Confirmed via a whole-pool grep before starting: `attacks`/`trigger` had ZERO
+precedent anywhere (neither role), and `entersBattlefield` — a common
+SOURCE event — had NEVER once been declared as a SINK. All three landed
+across 2 cards, same "grow only when a real card forces it" discipline as
+`event:'pump'`'s own promotion.
+
+- **Ashe, Princess of Dalmasca (fin/7)** — SINK `{event:'attacks',
+  target:'self'}` for her own "Whenever Ashe attacks" trigger condition.
+  Real trace evidence, no scenario change needed: `pilotDeclareAttackers`
+  (engine-trace.ts) already logs a real `{fn:'attack', card}` line per
+  real declared attacker (508.1); `producedEvents` gained `case 'attack'`
+  (scoped to `entry.card === cardName`, stricter than the usual `sideOf`
+  heuristic, since this fact is self-referencing) and `'attack'` was added
+  to `explainableFns`. `TRIGGER_EVENT_MAP` gained `onAttack: 'attacks'` —
+  Ashe's own trace already has a real `{fn:'trigger', name:'onAttack'}`
+  bracket right after the real attack, so `verify-synergy.mjs` passes
+  clean with zero scenario work. Oracle-anchored ("Ashe attacks").
+- **Cloud, Midgar Mercenary (fin/10)** — SINK `{event:'entersBattlefield',
+  target:'self'}` for its own "When Cloud enters" trigger condition. Real
+  evidence: `TRIGGER_EVENT_MAP` gained `onEnter: 'entersBattlefield'` —
+  Cloud's own trace already has a real `{fn:'trigger', name:'onEnter'}`
+  bracket (`pilotResolveTop`'s own real 603.6b auto-fire log). Oracle-
+  anchored ("Cloud enters").
+- **Cloud's own Panharmonicon-style static** ("As long as Cloud is
+  equipped, if a triggered ability of Cloud or an Equipment attached to it
+  triggers, that ability triggers an additional time" — ENGINE_GAPS.md gap
+  #13). User's own explicit split, quoted verbatim: SOURCE (the doubling
+  effect itself) — **skipped, "we don't need that I think"**; gap #13
+  stays exactly as documented, open, un-actioned. SINK — **added, but only
+  the self half**: "a triggered ability of Cloud" — Cloud's own new
+  `{event:'trigger', target:'self'}` fact, oracle-anchored to exactly that
+  clause. The equipment-attached half ("...or an Equipment attached to
+  it") was explicitly scoped OUT by the user's own call ("probably too
+  specific, we can probably omit it") — not modeled, not a fact. New
+  event name `trigger` chosen to mirror the 1:1 fn-name convention
+  `cast`/`sacrifice`/`destroy`/`counter`/`pump` already establish (matches
+  the real underlying `{fn:'trigger', ...}` log action directly). Real
+  evidence: a NEW, dedicated `readEvidence` branch in `verify-synergy.mjs`
+  (not `TRIGGER_EVENT_MAP` — that dictionary maps ONE trigger NAME to ONE
+  event, and `'onEnter'` already needs to map to `entersBattlefield` for
+  Cloud's OTHER new sink above; "one of THIS card's own triggers fired,
+  whichever one" is a different, per-CARD-scoped question, not a
+  per-NAME one) — `allEntries.some(e => e.fn === 'trigger' && e.card ===
+  cardName)`. Cloud's own real `{fn:'trigger', name:'onEnter', card:'Cloud,
+  Midgar Mercenary'}` bracket already satisfies this with zero scenario
+  work.
+
+**Verified**: `verify-synergy.mjs` scoped (both cards) and full pool — 0
+hard failures either way. One new, expected, honest SOFT note on Ashe
+(`trace has attack {...} with no matching declared produce`) — correct:
+only the SINK was added for `attacks`, no SOURCE, so the reverse "explain
+every action" check correctly flags the real attack action as still
+unexplained on the produce side; not a regression, an accurate reflection
+of what was (and wasn't) asked for. `vitest run functional-model` →
+238/238 unchanged. `tsc --noEmit` → 45 unchanged.
+
+**Real, surprising, IMPORTANT result from the required `find-synergies.mjs`
+diff — reported plainly, not silently resolved either way:**
+- Ashe's `attacks` sink and Cloud's `trigger` sink: **zero interaction
+  lines gained**, exactly as expected — brand-new event strings, nothing
+  else in the pool produces either one yet.
+- Cloud's `entersBattlefield` sink: **13 new interaction lines gained —
+  but NOT the one the fact is actually FOR.** The new sink does not
+  self-match Cloud's own `entersBattlefield` SOURCE fact at all — that
+  fact is zone-shaped (`to:'Battlefield'`), the new sink is event-shaped
+  only (no `to`/`from`), and `factsInteract`'s own shape-family gate
+  (`isZoneFact(p) !== isZoneFact(w)`, the same gate documented in the
+  `Fact` unification section above) blocks the match outright before the
+  event-branch's own same-instance/target logic is ever reached. Instead,
+  it spuriously matches 13 UNRELATED, still-v1-schema pool cards whose own
+  `entersBattlefield` SOURCE fact has no `target` field at all (Baron
+  Airship Kingdom/Crossroads Village/Elrond Moon-Reader/Gohn Town of
+  Ruin/Gongaga Reactor Town/Guadosalam Farplane Gateway/Insomnia Crown
+  City/Rabanastre Royal City/Sharlayan Nation of Scholars/The Gold
+  Saucer/Treno Dark City/Vector Imperial Capital/Windurst Federation
+  Center) — `factsInteract`'s own event branch has `if (pe.target ===
+  undefined) return true;` for a `we.target === 'self'` want, meaning an
+  UNCONSTRAINED producer vacuously satisfies ANY self-referencing want,
+  regardless of whose card it actually is. Net effect: this sink currently
+  behaves the OPPOSITE of its intended framing — it doesn't recognize
+  Cloud's own real entering, but DOES claim 13 unrelated lands'/cards'
+  own entering as relevant to Cloud's trigger condition. This is NOT a bug
+  introduced by this task — both halves of this behavior are pre-existing,
+  already-documented matcher semantics (the shape-family gate from the
+  `Fact` unification pass; the `pe.target === undefined` vacuous-match rule
+  from the original self-referencing-want design) — but this is the FIRST
+  real card to actually exercise `entersBattlefield` as a SINK, so it's the
+  first time this particular interaction between the two rules has ever
+  produced a visibly wrong result. **Left as-is, not patched ad hoc** —
+  flagged here explicitly for a real decision (accept as a known
+  imprecision same as `Constraints.attacking`'s own inertness, or invest in
+  a real matcher fix) rather than silently working around it or reverting
+  the fact.
+
+### CORRECTION, same day, later still: `event:'trigger'` renamed to `event:'triggeredAbility'`, and Cloud's equipment-attached half added back
+
+User reviewed the new Cloud (fin/10) "Trigger · self" row live and reversed
+the earlier scoping call from the section above, plus asked for a naming
+fix. Two real changes:
+
+1. **The equipment-attached half is back in.** User: "should be 2 rows
+   like this (one for self, one for equipment)." Checked `state.ts`'s own
+   real attachment tracking first (`RealCard.attachedToId`/
+   `getAttachedTo`/`getEquippedBy`, all real, live) before inventing a
+   shape — confirmed WHICH Equipment (if any) is attached to a permanent
+   is genuinely per-instance runtime state, not a static `CardDefinition`
+   property, so a bare `types:{has:['Equipment']}` constraint alone would
+   mean "any Equipment card anywhere," not "the one actually attached
+   here." Added a new `Constraints.attachedToSelf?: boolean` field
+   (`synergy.ts`) — same class/treatment as `Constraints.attacking`: real,
+   honest, self-documenting data, NOT consulted by `satisfiesConstraints`
+   (no live-state pipeline reaches it). Cloud's new equipment-half fact:
+   `{event:'triggeredAbility', target:{types:{has:['Equipment']},
+   attachedToSelf:true}}`, oracle-anchored ("an Equipment attached to
+   it"). **No possible trace evidence** — even further from evidence than
+   the self half, since demonstrating it would need a real attached
+   Equipment card that ALSO has its own independent triggered ability
+   firing, which no scenario in this pool exercises (and shouldn't be
+   fabricated just to manufacture evidence) — same real, documented
+   ENGINE_GAPS.md gap #13 as the self half, tolerated via a new, narrowly-
+   scoped `isCloudEquipmentTriggeredAbilityFact` exemption in
+   `verify-synergy.mjs` (same class as `isAuronsInspirationBroadcastPumpFact`).
+2. **`event:'trigger'` renamed to `event:'triggeredAbility'`.** User: "it's
+   not just any trigger... maybe makes sense to use Ability instead of
+   Trigger." Went with the more specific `triggeredAbility` rather than
+   the shorter `ability` — `ability` alone would read as (or collide in
+   spirit with) the already-real, DIFFERENT `event:'activateAbility'`
+   (602 activated abilities — a genuinely distinct MTG concept from 603
+   triggered abilities the way this fact means it). Renamed everywhere:
+   both Cloud facts, `verify-synergy.mjs`'s own dedicated `readEvidence`
+   branch (now ALSO scoped to `w.target === 'self'` specifically — see
+   point 1, the equipment half needed its own separate, evidence-free
+   treatment once it existed again), `SYNERGY_DESIGN.md` (this section)
+   and agent-memory notes.
+
+**Verified**: both facts re-annotated via `compute-annotations.mjs` (real
+spans, no manual placement). `verify-synergy.mjs` scoped (Cloud) + full
+pool — 0 hard failures. `find-synergies.mjs` diff, isolated to just the
+rename + new fact: **zero interaction lines gained or lost** — expected,
+both `triggeredAbility` and `attachedToSelf` are brand-new strings/fields
+with nothing else in the pool to match against yet. `vitest run
+functional-model` → 238/238 unchanged. `tsc --noEmit` → 45 unchanged. The
+`entersBattlefield`-as-sink finding documented in the section above is
+UNCHANGED by this correction (unrelated fact, untouched here).
+
 ### Aerith's complete fact set
 
 ```jsonc
@@ -914,6 +1430,24 @@ sink) carries two mechanically-computed `1|2|3|4|5` fields (`Weight` type,
   real value" until a `compute-weights.mjs` run resolves it (which it does
   unconditionally, with no special-casing needed — see that script's own
   header comment).
+- **`Fact.value` accuracy is a KNOWN, DELIBERATELY DEPRIORITIZED
+  non-priority right now (2026-09-11, user's own call) — not a bug to
+  rediscover.** The Aerith Gainsborough migration + this same day's
+  `ZoneFact`/`EventFact` merge left some already-migrated facts'
+  `value`s stale/imprecise — most visibly `destroy-nonland` and the
+  merged `dies` fact on summon-bahamut (fin/1), whose real magnitude
+  changed shape (a merged fact, a reclassified match set) without a
+  matching `compute-weights.mjs` re-run. Explicit decision: **don't
+  recompute, don't audit `compute-weights.mjs`'s own accuracy, don't
+  schedule a scoped fix for this** — "value we don't care for now
+  (everything should be -1), we don't also care how it's being
+  processed, write it down." No `compute-weights.mjs` run happened as
+  part of this note, and none is scheduled. A future task that notices
+  `value` looking off on a migrated fact should treat it as this
+  already-known, already-accepted gap — re-flagging it as a fresh
+  discovery, or unilaterally "fixing" it with a scoped recompute, is
+  redundant work this decision already closed off. Revisit only if a
+  real future task specifically asks for `value` accuracy work.
 
 ## Tokens
 
@@ -1430,3 +1964,452 @@ history / PR this file ships with for the concrete diff.
     `trace.json` untouched — it's generated purely from `scenarios.ts`
     execution, independent of `synergy.json`, so no regen was needed for
     a `synergy.json`-only fix.
+- **Cloudbound Moogle's Plainscycling, two specific facts (2026-09-11,
+  later)**: user reversed the earlier "no fact for Plainscycling" call
+  after seeing it live. Added a SINK `{event:'discard', target:'self'}`
+  for the discard-as-COST act itself (user's own literal words: "sink for
+  discard self") — bare-event self-reference, same shape as `dies`/
+  `sacrifice`'s own self-facts, deliberately NOT a zone fact (`to:
+  'Graveyard'`) since this is about the payment ACT, not a plain
+  Graveyard-presence want. Added a SOURCE `{to:'Hand', from:'Library',
+  types:{has:['Plains']}}` tutor fact, same shape/`tutor`
+  `ZONE_MOVEMENT_NAMES` label already used by Ashe's/Cloud's own tutor
+  facts, scoped precisely to `Plains` (a real basic land subtype), not
+  broadened to `Land`. Neither half gets generic TypeCycling engine
+  machinery — still a real, documented, unmodeled gap shared with 5+
+  other pool cards' own `*cycling` abilities; this is two specific,
+  textually-backed facts on one card, not a new keyword system. Zero
+  possible trace evidence for either (Plainscycling lives only as
+  `staticAbilities` text, never a resolvable `Effect`) — covered by two
+  new narrow `verify-synergy.mjs` exemptions
+  (`isCloudboundMoogleDiscardSelfWant`/`isCloudboundMoogleTutorFact`),
+  same documented-gap-exemption pattern as Auron's Inspiration/Cloud's
+  equipment half. `find-synergies.mjs` before/after: 0 lost, +2 gained
+  (tutor fact matches Nibelheim Aflame, The Water Crystal); discard-self
+  sink gained 0 matches (real gap, no other pool card sources a literal
+  `discard` event yet — same "reported, not fabricated" treatment as
+  every other zero-evidence want in this file).
+- **Self-tap activation-cost fact, generalized (2026-09-11, later)**: any
+  activated ability whose own COST includes `{T}` gets a real
+  `{event:'tap', subject:'self', target:'self'}` SOURCE fact, kept
+  deliberately separate from that same card's own tap-TARGET EFFECT fact
+  (Coeurl's `{event:'tap', target:{types:...}}` taps some OTHER creature —
+  a distinct occurrence, not conflated). Checked every fin/1-20 card fresh
+  against real oracle text: only Coeurl (fin/12, `{1}{W}, {T}: Tap target
+  nonenchantment creature.`) and Dion, Bahamut's Dominant (fin/16 front
+  face, `{4}{W}{W}, {T}: Exile Dion...`) have a real `{T}` in their own
+  activation cost. Direction (SOURCE, not SINK) chosen by analogy to the
+  pre-existing `isCostOnlyArtifactSacrificeFact` precedent (a sacrifice-
+  as-cost ACT is already modeled as a SOURCE `event:'sacrifice'` fact, not
+  a sink) — the cost-PAYMENT act itself is a SOURCE, same as that
+  established pattern, in contrast to Cloudbound Moogle's own
+  discard-as-cost fact (modeled as a SINK per the user's own direct,
+  explicit instruction there). Flagging the real inconsistency between
+  the two rather than silently resolving it: discard-as-cost SINK vs.
+  sacrifice/tap-as-cost SOURCE are NOT the same shape for the same kind
+  of occurrence (both are "this ability's own cost consumes/alters this
+  permanent's state") — worth a real decision on which framing is the
+  house style going forward, not something this pass unilaterally
+  reconciled. Found and fixed a genuine, separate `verify-synergy.mjs`
+  false-pass risk while wiring this up: the forward SOURCE-evidence check
+  only compares `event` names, with no `subject`/`target`-shape
+  distinction, so Coeurl's own tap-TARGET effect's real `fn:'tap'` trace
+  line would have silently, WRONGLY also "satisfied" the new self-tap-cost
+  fact by bare event-name equality — added a general (not per-card)
+  `isSelfTapActivationCostFact` exemption scoped to the exact
+  `subject:'self'`/`target:'self'` shape, per `producedEvents`'s own
+  `case 'tap'` doc comment confirming `engine.ts`'s `activateAbility` pays
+  a `{T}` cost with no log line at all (a real, general engine limitation,
+  not per-card — future `{T}`-cost cards get this exemption for free).
+  `find-synergies.mjs` before/after (isolated swap, both cards): 0 diff —
+  real, documented zero-match gap, no pool card wants `event:'tap',
+  target:'self'` yet.
+- **Library-presence tutor-precondition sinks restored/added for
+  consistency; From Father to Son's Vehicle-vs-Artifact bug fixed
+  (2026-09-11, later)**: `ashe-princess-of-dalmasca`'s own "wants an
+  artifact card in library" sink (`{to:'Library', controller:'you',
+  types:{has:['Artifact']}}`), removed earlier the same day per a direct
+  user instruction, was RESTORED after the user saw the fuller
+  from-father-to-son/delivery-moogle pattern live and changed their mind —
+  a real, deliberate reversal, not relitigated. `cloud-midgar-mercenary`
+  got the equivalent new sink for its own tutor, typed `Equipment` (not
+  generic `Artifact`) to match both its real oracle text ("search your
+  library for an Equipment card") and its own existing tutor SOURCE
+  fact's identical filter. Separately, a real correctness bug: From
+  Father to Son's real oracle text searches for a Vehicle card
+  specifically, but all 3 of its facts used `types:{has:['Artifact']}` —
+  Vehicle is a real, distinct Scryfall type-line subtype ("Artifact —
+  Vehicle"), not a synonym for generic Artifact; narrowed to
+  `types:{has:['Vehicle']}`. `find-synergies.mjs` before/after (isolated
+  swap, all 3 cards together): 0 diff — none of these Library-presence
+  sinks, nor the overbroad Artifact constraint, had ever produced a real
+  match (no pool card sources a card INTO Library at all yet), so this is
+  a pure correctness fix with no visible graph-edge change today.
+- **Scenario consolidation: `Scenario.sequence` can chain a real cast onto
+  a trigger fired mid-scenario, eliminating a redundant boilerplate
+  scenario (2026-09-11, later, `dwarven-castle-guard`/`cloudbound-moogle`)**:
+  user's own live call on the Scenarios tab, "either one realistic
+  scenario, or 0 scenarios" — don't show a separate generic cast/enter
+  board next to the card's own real, distinctive scenario. Investigated
+  `harness.ts`'s `Scenario` shape rather than assuming the two shapes were
+  stuck being separate: `selfZone` only skips straight to "already on the
+  battlefield" when a top-level `trigger`/`ability`/`activationCost` is
+  set; a scenario with NONE of those runs the real Stack -> cast ->
+  resolve -> enters lifecycle, and `sequence` (already-existing machinery,
+  built for Summon: Bahamut's own Saga chapters) fires named triggers
+  AFTER that lifecycle, against the same shared `GameState`. So a single
+  scenario with no top-level `trigger` and `sequence: ['onDies']` (or
+  `['onEnter']`) gets BOTH real cast/enters evidence AND the card's own
+  real unique-ability evidence, no tradeoff needed — `dwarven-castle-guard`
+  went from 2 scenarios (plain cast; separate `trigger:'onDies'`) to 1;
+  `cloudbound-moogle` went from 3 (plain cast; two separate `trigger:
+  'onEnter'` branches) to 2 (both branches now individually carry real
+  cast/enters evidence too, a strict improvement, not just a count
+  reduction). `verify-synergy.mjs`'s `DEATH_TRIGGER_NAMES` exemption
+  (dwarven-castle-guard's own self-dies fact) doesn't care whether `onDies`
+  fired via a top-level `trigger` or mid-`sequence`, only that it fired at
+  all — no evidence loss. Checked the rest of the already-migrated
+  fin/11-20 batch for the same redundant shape (coeurl, dion-bahamut-s-
+  dominant-bahamut-warden-of-light, dragoon-s-lance, crystal-fragments-
+  summon-alexander, the-crystal-s-chosen, delivery-moogle, fate-of-the-
+  sun-cryst, from-father-to-son) — none have it; every other card's
+  scenarios are either all real engine-piloted playthroughs already, or
+  each scenario already demonstrates a genuinely distinct real branch with
+  no separate plain-cast-only boilerplate alongside it. Scoped to these 2
+  cards, not applied as a blanket retroactive sweep.
+
+- **Innate printed keyword modeled via `grantKeyword` vocabulary reuse;
+  full engine-piloted consolidation for `dion-bahamut-s-dominant-bahamut-
+  warden-of-light` and `crystal-fragments-summon-alexander` (2026-09-11,
+  later)**: user overrode the earlier "self-inherent keyword, no
+  vocabulary" call on Bahamut, Warden of Light's own printed Flying —
+  "face - for sure also source of flying, grant keyword or whatnot." Added
+  `{event:'grantKeyword', keyword:'Flying', subject:'self', target:'self'}`,
+  reusing the SAME vocabulary `haste-magic`/`circle-of-power` already use
+  for a real GRANTED keyword — modeling "this object has flying" the same
+  way as "this object grants flying," deliberate and fine (a flying-
+  matters payoff doesn't care which). No real trace evidence possible (a
+  printed `keywords` array entry is static data, never a real
+  `grantKeyword` action call) — new GENERAL (not per-card)
+  `verify-synergy.mjs` exemption, `isInnatePrintedKeywordFact`, cross-
+  checked against the card's own real declared keywords so it can't wave
+  through a fabricated claim. Applied the identical fix to
+  `summon-bahamut`'s own identical printed Flying too (flagged by the
+  user as worth reconsidering for consistency, judged cheap/mechanical
+  enough to just fix in the same pass). `find-synergies.mjs`: 0 diff both
+  cards (real, documented zero-match new vocabulary usage).
+
+  Separately, two more cards migrated to full engine-piloted
+  `runEngineScenarios()`, mirroring `jill-shiva-s-dominant-shiva-warden-
+  of-ice`'s own real single-scenario shape (user: "let's make 1 scenario,
+  not 5, similar to fin 58" / "also expecting one scenario here"):
+  - `dion-bahamut-s-dominant-bahamut-warden-of-light`: 5 flat scenarios ->
+    1 real playthrough (cast -> real ETB Knight token -> real turn
+    passage -> real `{4}{W}{W},{T}` transform -> Bahamut's Saga chapters
+    over real turns -> chapter III's real Gigaflare destroy, targeting a
+    real opponent Coeurl via `preferTarget` instead of the old flat
+    scenario's own documented self-destroy modeling-limitation finding ->
+    transform back). Needed `on:'enter'` added to the front face's
+    `onEnter` trigger (real 603.6b auto-fire, matching Jill's/Cloud's own
+    convention) — previously absent since the old flat-scenario style
+    never needed it.
+  - `crystal-fragments-summon-alexander`: 2 flat scenarios -> 1 real
+    playthrough (cast -> real Equipment attachment -> real turn passage ->
+    real `{5}{W}{W}` transform -> Summon: Alexander's Saga chapters over
+    real turns -> real "Sacrifice after III"). Front face is an EQUIPMENT
+    with only ONE activationCost/effects slot, reserved for the transform
+    (definition.ts's own documented constraint) — real Equip {1} has no
+    modeled `Effect` to pilot at all; checked `engine-trace.ts` for
+    existing equip-piloting precedent first (none — no dedicated
+    `pilotEquip` helper), used the same manual `state.equip()` +
+    hand-pushed `fn:'equip'` log line technique `adelbert-steiner`'s own
+    scenario already established for the identical "no modeled ability to
+    activate" situation, rather than fabricate a `pilotActivate` call
+    against an ability that doesn't exist. Also checked `sba.ts` for a
+    real Saga-sacrifice-after-final-chapter rule — none exists anywhere
+    (no Saga-specific SBA at all) — matched `harness.ts`'s own
+    `sacrificeSelfAfter` mechanism 1:1 (`state.move` to Graveyard + a real
+    `fn:'sacrifice'` log line) rather than invent a new one.
+
+  Both consolidations closed a real, previously-relied-on exemption for
+  real: the front face's own baseline `self-cast`/`self-enters` facts on
+  BOTH cards previously depended on `isActivationCostPermanentBaselineFact`
+  (their own old flat-scenario style never actually cast the permanent for
+  real) — the new engine-piloted scenarios now produce REAL `fn:'cast'`/
+  `fn:'enters'` evidence instead, so that reliance is gone (the exemption
+  function itself is untouched/still-needed elsewhere, e.g. Coeurl).
+  Checked every OTHER currently-exempted fact on both cards against the
+  fuller pilot and confirmed neither closes: `isCrystalFragmentsEquipped
+  PumpFact` (no continuous-effect/layer-7c pipeline exists regardless of
+  real attachment) and `isSummonAlexanderDamagePreventionFact` (no
+  prevention/replacement-effect pipeline exists at all, `state.ts`'s own
+  header) are both genuine, structural, engine-wide gaps unaffected by
+  better piloting — left in place, not stale.
+
+- **Equipment cards are a general "wants a creature you control on the
+  battlefield" SINK — standing rule for future migrations (2026-09-12)**:
+  user's own reasoning, live on `crystal-fragments-summon-alexander`:
+  "we can reason equipment is a sink for battlefield presence for your
+  creature" — ANY real Equipment inherently needs a creature you control
+  to equip to, so this is a real, general fact, not flavor-only.
+  `dragoon-s-lance` (fin/17) already had this exact shape
+  (`{to:'Battlefield', controller:'you', types:{has:['Creature']}}`,
+  oracle-anchored on its own "Equip {N}" line) — added the identical
+  fact to `crystal-fragments-summon-alexander`'s own front face.
+  `find-synergies.mjs`: 0 lost, ~100 gained (every unconstrained-
+  creature-presence producer in the pool). **Standing rule for future
+  migrations**: every real Equipment card (`typeLine` includes
+  `Equipment`, has a real printed "Equip {N}" line) should get this same
+  sink by default, not as a special case per card — NOT swept pool-wide
+  in this pass (out of scope), but the next card touched that has this
+  shape should get it without re-litigating whether it's warranted.
+- **`describeFact`'s generic bare-event fallback returned raw camelCase
+  for real, unhandled multi-word event strings (2026-09-12, real bug)**:
+  user caught `event:'preventDamage'` rendering literally as
+  "PreventDamage" (the card page's own `first-letter:uppercase` CSS only
+  capitalizes the first letter, never inserts word-boundary spaces).
+  Added explicit bare-label branches, same convention as every other
+  `if (event === ...)` branch above the fallback: `preventDamage` ->
+  "prevent damage" (Summon: Alexander's own chapters I/II — deliberately
+  generic, same "unlikely to be synergistic, but good to highlight
+  regardless" spirit as `pump`'s own promotion, no richer vocabulary
+  built out). Grepped the whole pool for every OTHER real camelCase event
+  string that would hit the same generic fallback (the doc comment's own
+  named examples: `castCreatureSpell`/`castNoncreatureSpell`/
+  `graveyardLeaves`) — `castCreatureSpell` is real (champions-of-the-
+  perfect, fang-fearless-l-cie), fixed the same way -> "cast a creature
+  spell"; `castNoncreatureSpell`/`graveyardLeaves` have zero real pool
+  instances (checked), left unfixed per "fix real instances, not
+  hypothetical ones." No data changes to any card — this is a shared
+  `synergy.ts` rendering fix, so no card's own `progress.json`/`review`
+  flag needed touching for the two sibling cards that merely benefit from
+  the fix.
+
+- **CORRECTION (2026-09-12): reversal on innate printed keywords — no Fact
+  needed at all, not even via vocabulary reuse.** User's own correction to
+  the entry just above: "Not needed for keywords on card. That would be
+  parsed directly - we don't need facts for that." Removed the self-only
+  `{event:'grantKeyword', keyword:'Flying', subject:'self', target:'self'}`
+  facts from both `summon-bahamut` and `dion-bahamut-s-dominant-bahamut-
+  warden-of-light`'s back face, and the now-unused `isInnatePrintedKeyword
+  Fact` verify-synergy.mjs exemption (checked: nothing else used it).
+  **Standing rule for future migrations**: a card's own bare printed
+  keyword, with no grant/broadcast to anything else involved, is already
+  structured, directly-parseable data (`CardDefinition.keywords`/
+  `backFace.keywords`) — it is NOT synergy-relevant occurrence data and
+  never needs a `Fact` (of any shape) to represent it. This is narrower
+  than it first sounds: it does NOT cover a keyword being GRANTED — to
+  self via a real resolved effect, or broadcast to other permanents — both
+  of those remain real, Fact-worthy vocabulary (`haste-magic`'s/`circle-
+  of-power`'s own real granted-keyword facts, and Dion's own "Dragonfire
+  Dive"/Bahamut's own "Wings of Light" broadcasts, both still real and in
+  scope — see ENGINE_GAPS.md gap #14's own resolution).
+
+- **ENGINE_GAPS.md gap #14 closed for real (2026-09-12): continuous,
+  turn-conditional static keyword grants.** New `CardDefinition.
+  continuousKeywordGrants?: {keywords, includeSelf, subtype?,
+  onlyDuringYourTurn?}[]` (`card.ts`), mirroring the existing `ptFormula`
+  CDA precedent exactly — copied onto the live `RealCard` only once, at
+  the moment a permanent actually resolves onto the battlefield
+  (`engine.ts`'s `resolveTop`, right after the pre-existing `real.
+  manaAbility = manaAbilityColorFromStaticText(...)` line, which turned
+  out to be the exact same "derive a field from `CardDefinition` at
+  resolve time" precedent this needed — found and reused, not invented).
+  New `GameState.activePlayerId?: number` (defaults to the first player
+  added, kept in sync by `engine.ts`'s `doAdvance()` after every real
+  phase/turn change) plus `isActiveOrDefault(state, controllerId)` (treats
+  `undefined` as "yes," so a plain harness.ts `Scenario` with no turn
+  concept still reads as "your turn," matching that file's own documented
+  baseline) give this engine its first-ever "whose turn is it" query.
+  New `state.ts` export `effectiveKeywords(state, card)` is the real
+  QUERY-TIME read path (same "recalculated on read" pattern `effectivePT`
+  already established for CDAs) — unions a card's own printed `keywords`
+  with every currently-qualifying grant from any battlefield permanent.
+  Made functionally real, not cosmetic, by routing every raw
+  `card.keywords.includes(...)` read through it instead:
+  `wrapCard`'s `hasKeyword`, `state.dealDamage`'s Deathtouch/Lifelink
+  checks, and `engine.ts`'s Haste/Defender sickness/attack-legality
+  checks (`payableManaSources`/`canActivateAbility`/`canAttack`) — a
+  granted keyword genuinely exempts summoning sickness, triggers
+  lifegain, and blocks attacking now, same as a printed one.
+  **Real bug found and fixed along the way**: `resolveTop` never copied
+  `continuousKeywordGrants` (or, less critically, `keywords`) onto a
+  scenario-built `RealCard` — caught because Dion's own manual evidence
+  query (below) returned `false` on his own turn, right after he
+  resolved, when it should have been `true`.
+  **New evidence shape for `verify-synergy.mjs`**: a continuous grant is
+  derived/query-time and never produces a discrete `fn:'grantKeyword'`
+  trace-log ACTION (nothing ever calls `actions.grantKeyword` for it), so
+  the only possible real evidence is a deliberate `{fn:'read:hasKeyword',
+  keyword, result:true}` query against real board state — same "manual
+  CDA read" pattern `adelbert-steiner`'s own `read:getNetPower` line
+  already established. New general (not per-card) evidence branch:
+  a SOURCE `grantKeyword` fact is satisfied by any `read:hasKeyword` line
+  with a matching `keyword` and `result:true`. Verified both directions
+  for real (not just "fires once"): Dion's own Flying grant reads `true`
+  during his own turn, `false` during the opponent's, via a real
+  `advanceOneStep` loop crossing the turn boundary.
+  **Two real cards, two different evidence outcomes**: Dion, Bahamut's
+  Dominant's front face ("Dragonfire Dive — During your turn, Dion and
+  other Knights you control have flying," genuinely turn-conditional) has
+  a real fact plus a real `read:hasKeyword` evidence line (its
+  `engine-trace.ts` pilot-script scenario can inject one). Ardyn, the
+  Usurper ("Demons you control have menace, lifelink, and haste" —
+  checked fresh against real oracle text: genuinely unconditional, no
+  turn restriction) has 3 real facts (Menace/Lifelink/Haste) but a plain
+  `harness.ts` `Scenario[]` scenario, which has no field letting a pilot
+  script push an arbitrary custom log line mid-scenario — structurally
+  can't produce this evidence shape at all, so its 3 facts are covered by
+  a narrow, documented `isArdynDemonGrantFact` exemption instead (real
+  fact, real mechanism, zero possible evidence given this one card's own
+  scenario-authoring style — not a deeper engine limitation).
+  **Standing rule**: `Constraints.types` is reused loosely for a subtype
+  target here too (`{types:{has:['Knight']}}`/`{types:{has:['Demon']}}`),
+  same "used for both real types and subtypes interchangeably" existing
+  pool convention.
+  **Still open, cross-domain**: nothing in this engine ever logs a
+  discrete action for a continuous grant, so the app's replay UI
+  (`app/SCENARIO_REPLAY.md`'s own documented keyword-icon rendering, keyed
+  off either a card's static `cardKeywords` prop or a discrete
+  `grantKeyword` log entry) has no way to visually show a query-time
+  grant turning on/off across turns yet — needs a `card`-agent-side change
+  to consult `CardDefinition.continuousKeywordGrants` directly against the
+  replay's own per-step turn state, not a further engine change.
+
+- **Standing rule (2026-09-12): scenario count defaults to 1 per card,
+  going forward.** Generalizes today's own repeated consolidation pattern
+  (`dwarven-castle-guard`, `cloudbound-moogle`, `dion-bahamut-s-dominant-
+  bahamut-warden-of-light`, `crystal-fragments-summon-alexander`,
+  `from-father-to-son` — all collapsed to 1 real scenario today) into an
+  explicit default, per the user's own words: "for all cards - we should
+  default to one scenario (or 0 if the card is very basic). More than 1
+  scenario should require a very significant reason (i.e. branching
+  spells etc)."
+  - **Default: 1 real scenario**, covering as much of the card's own real
+    behavior as one continuous playthrough honestly can — today's
+    established shape (cast -> ETB -> activate -> chapters -> resolution,
+    all one story), real engine-piloted where the card's complexity
+    warrants it, a flat `harness.ts` scenario where it doesn't.
+  - **0 scenarios** only for a card SO basic there's nothing beyond
+    baseline cast/enter worth demonstrating (a vanilla creature, no real
+    ability at all) — even then, weigh whether the baseline cast/enter
+    demonstration is still worth 1 scenario purely for annotation/
+    verify-synergy evidence purposes; use judgment, not a hard rule.
+  - **More than 1 scenario requires a REAL, SIGNIFICANT reason** — genuine
+    branching (a spell with two meaningfully different MODES that can't
+    both be shown in one continuous story, e.g. a real "choose one" with
+    mutually exclusive outcomes), NOT just "this card has 2 abilities" — 2
+    abilities on one card can almost always be chained into one story
+    (exactly what today's own consolidation work repeatedly demonstrated:
+    Dion's ETB trigger + transform activation + Saga chapters, all one
+    playthrough; Crystal Fragments' equip + transform + chapters, same).
+  - Applies to NEW/touched work going forward only — not a forced
+    retroactive audit of the already-committed pool (most of the fin/1-20
+    batch already got consolidated today anyway); if a card already being
+    touched for an unrelated reason happens to have an unjustified 2+
+    count, consolidate it in the same pass rather than leaving it, but
+    don't go looking for violations pool-wide as a separate task.
+
+- **Phoenix Down (fin/29) migrated to the unified Fact/annotations model
+  (2026-09-12), a real worked example of the "2 scenarios, one per real
+  mode" rule above.** Real oracle text: "{1}{W}, {T}, Exile this artifact:
+  Choose one — / Return target creature card with mana value 4 or less
+  from your graveyard to the battlefield tapped. / Exile target Skeleton,
+  Spirit, or Zombie." A genuine branching modal with two mutually
+  exclusive outcomes — exactly 2 scenarios (one per mode), the two
+  no-op/defensive variants the pre-migration file carried dropped (they
+  called neither `moveTo` nor `tap` against an empty pool, so they added
+  zero real trace evidence beyond the two real-outcome scenarios).
+  - **Cost-payment fact house-style, applied and flagged, not resolved**:
+    this card's own activation cost has TWO real self-referencing cost
+    components — `{T}` and "Exile this artifact." Both modeled as SOURCE
+    facts (`{event:'tap'|'exile', subject:'self', target:'self'}`) by
+    direct analogy to the existing sacrifice/tap-as-cost precedent
+    (Coeurl/Dion's own self-tap fact, `isCostOnlyArtifactSacrificeFact`),
+    not Cloudbound Moogle's SINK-shaped discard-as-cost fact — self-exile
+    is closer in spirit to sacrifice/tap (a permanent's own cost-driven
+    removal from play) than to discarding a card from hand. The real
+    discard-vs-sacrifice/tap SOURCE-vs-SINK inconsistency this file
+    already documents (2026-09-11, Coeurl's own entry above) is NOT
+    resolved by this choice — flagged again here rather than silently
+    picked without checking precedent, per the same standing concern.
+    Added a new general (not per-card) `isSelfExileActivationCostFact`
+    exemption, exact mirror of `isSelfTapActivationCostFact`, including
+    the identical false-pass risk it guards against: this card's OWN
+    mode-1 "exile target Skeleton, Spirit, or Zombie" EFFECT genuinely
+    produces real `{event:'exile'}` trace evidence that would otherwise
+    wrongly satisfy the self-exile-cost fact by bare event-name equality
+    alone. Neither cost fact can ever have real trace evidence in the
+    first place: `engine.ts`'s `unsupportedCostComponent` doesn't
+    recognize "Exile this artifact" as a payable cost component at all (not
+    pure mana/`{T}`, not the one accepted "Sacrifice another/a/two X"
+    pattern), so this card's own activated ability can never be piloted
+    through `canActivateAbility`/`activateAbility` — confirmed genuinely
+    unpilotable, which is why this card's `scenarios.ts` stays plain
+    `harness.ts` `Scenario` style (mode-gated custom effects), not
+    `engine-trace.ts`.
+  - **New vocabulary: `event:'exile'`, a bare ACT-shaped tag (not an inline
+    `to:'Exile'` zone fact), by direct analogy to `destroy-act` staying
+    bare** — a real, targeted removal act, same shape class. Checked
+    before promoting: zero prior pool usage of `event:'exile'` in either
+    role. Promoted `verify-synergy.mjs`'s `producedEvents`'s `case
+    'moveTo'` AND `case 'ceasesToExist'` to recognize a real move into
+    `zone:'Exile'` as `{event:'exile'}` evidence (general, pool-wide, not
+    per-card, same "landing on the battlefield always triggers
+    entersBattlefield" promotion pattern already applied to that event) —
+    needed BOTH cases since this card's own mode-1 scenario exiles a TOKEN
+    Zombie, which `harness.ts` logs as `ceasesToExist`, not `moveTo`, per
+    real 111.7. Zero risk to the rest of the pool today (no other card
+    declares `event:'exile'` yet) but DOES surface ~43 real pool-wide
+    `fn:'moveTo'`/`zone:'Exile'` trace lines as new SOFT notes (produced-
+    but-unexplained) on other cards that already exile something without
+    declaring a matching fact — same accepted, non-fatal, note-not-fail
+    side effect the `pump` promotion caused pool-wide (2026-09-11 entry
+    above).
+  - **New named `ZONE_MOVEMENT_NAMES` entry: `reanimate`
+    (Graveyard→Battlefield)** — the first real pool usage of this `(from,
+    to)` pair (checked: zero prior facts anywhere in the pool), for the
+    card's own "Return target creature card ... from your graveyard to
+    the battlefield tapped" mode. Named after the classic MTG effect
+    archetype, same "borrow the short, common term" convention `tutor`/
+    `regrowth`/`bounce` already established.
+  - **Real, pre-existing, pool-wide gap surfaced (not new, but concretely
+    hit for the first time by this card's own honest authoring): a
+    `cmc:{max:4}` constraint on a `subject`-resolved zone fact is
+    currently UNSATISFIABLE by any producer in the pool.** `CardDefinition
+    .cmc` is deliberately optional and "omit unless a real card's own
+    EFFECT reads its own cmc" (`card.ts`'s own doc comment) — almost no
+    pool card populates it, since the synergy matcher's `staticAttrsFor`
+    (`cmc: card.cmc`) is a DIFFERENT consumer than the one that field's own
+    doc comment was written for. `satisfiesNum` treats an unresolved
+    (`undefined`) value as an automatic non-match, so a real, textually
+    accurate `cmc:{max:4}` — matching the card's own actual "mana value 4
+    or less" restriction — currently cannot be satisfied by any producer
+    regardless of their real cost. Confirmed via a real `find-synergies
+    .mjs` diff (below): kept the honest constraint on both the reanimate
+    SOURCE fact and its companion graveyard SINK fact rather than dropping
+    it to preserve match count — same "correctness over match count"
+    precedent this file's own From Father to Son Vehicle-vs-Artifact fix
+    already established (2026-09-11 entry above). A real, computed
+    cmc-from-`manaCost` field for the synergy matcher specifically (not
+    reusing the effect-facing optional field) is open future work, not
+    done here.
+  - **Real `find-synergies.mjs` diff** (isolated swap against the
+    pre-migration HEAD file): BEFORE 94 lines, AFTER 49. Gained: +39 new
+    "enters the battlefield" matches via the new `self-enters` baseline
+    fact (the pre-migration file had no baseline self-cast/self-enters
+    facts at all). The `reanimate` fact's own 12 matches are the IDENTICAL
+    card set the pre-migration file's own (incorrectly type-unconstrained)
+    "reanimate" fact happened to match — the new Creature+cmc `target`
+    filter cost zero real matches here. Lost: all 88 reverse graveyard-
+    presence/dies matches (82 "graveyard presence" + 6 "dies") the OLD
+    sink used to get purely because it had no `cmc` filter at all — see
+    the gap above; a real, accounted-for, documented tradeoff, not a
+    silent regression. `event:'exile'` itself: 0 matches either direction,
+    expected (new, forward-looking vocabulary, same `pump`-promotion
+    pattern). `verify-synergy.mjs` scoped: 0 hard failures. `vitest run
+    functional-model`: 238/238.
+  - **Open Forge-verification**: none needed — real oracle text confirmed
+    directly against `data/fin/fin_scryfall.json` (collector_number 29,
+    mana_cost `{W}`, matches `definition.ts` exactly); this pass is a fact-
+    model/vocabulary migration, not new engine mechanics.

@@ -189,9 +189,15 @@ describe('describeFact — zone facts', () => {
     it('from: "Battlefield", to: "Graveyard" — "dies" (CR 700.4 — real Summon: Bahamut shape, self-graveyard — the DYING zone-consequence, a separate concept from the sacrifice ACT itself, which is its own event fact)', () => {
       expect(describeFact(zf({ from: 'Battlefield', to: 'Graveyard', controller: 'you', subject: 'self' }))).toBe('dies');
     });
-    it('a `(from, to)` pair with no named movement falls back to the same bare "<to> presence" phrasing', () => {
-      expect(describeFact(zf({ from: 'Hand', to: 'Graveyard', controller: 'you' }))).toBe('graveyard presence');
-      expect(describeFact(zf({ from: 'Library', to: 'Exile' }))).toBe('exile from battlefield'); // ZONE_PRESENCE_PHRASE override still applies to the fallback
+    it('a `(from, to)` pair with no named movement gets a generic-but-honest movement phrase, NEVER presence wording (real bug, fixed 2026-09-11 — Ambrosia Whiteheart\'s own unnamed Battlefield->Hand bounce fact used to render as "Hand presence")', () => {
+      expect(describeFact(zf({ from: 'Hand', to: 'Graveyard', controller: 'you' }))).toBe('moves to graveyard (from hand)');
+      expect(describeFact(zf({ from: 'Library', to: 'Exile' }))).toBe('moves to exile (from library)'); // ZONE_PRESENCE_PHRASE (sink-only) no longer applies to a SOURCE fact's own fallback
+    });
+    it('a Battlefield->Hand SOURCE fact renders the real named "bounce" movement', () => {
+      expect(describeFact(zf({ from: 'Battlefield', to: 'Hand', controller: 'you' }))).toBe('bounce');
+    });
+    it('a Library->Hand SOURCE fact renders the real named "tutor" movement (shared by Cloud, Midgar Mercenary\'s full-library search and Ashe, Princess of Dalmasca\'s top-5 dig — this table keys on (from,to) only, not effect kind)', () => {
+      expect(describeFact(zf({ from: 'Library', to: 'Hand', controller: 'you' }))).toBe('tutor');
     });
     it('a SINK fact never gets a movement name, even if it happened to carry `to`/`from` (it should not, but the label must not silently misrepresent a state check as an event)', () => {
       expect(describeFact({ role: 'sink', zone: 'Battlefield', annotations: FIXTURE_ANNOTATIONS })).toBe('battlefield presence');
@@ -227,6 +233,36 @@ describe('factsInteract — SOURCE zone-change facts match a SINK presence want 
     const groups = findInteractionsForCard('Dies A Lot 2', [dier, wantsBattlefield]);
     const zoneGroup = groups.find((g) => g.direction === 'source');
     expect(zoneGroup).toBeUndefined();
+  });
+});
+
+describe('selfInteractionKind — a merged zone+event fact self-matches via its ZONE shape, not its `event` name (real bug found+fixed 2026-09-11 during aerith-gainsborough\'s migration — see synergy.ts\'s own doc comment on `selfInteractionKind`)', () => {
+  function legendaryCreature(name: string): CardDefinition {
+    return { name, manaCost: '', typeLine: 'Legendary Creature — Test Testperson' };
+  }
+
+  it('a merged `{event:\'entersBattlefield\', to:\'Battlefield\'}` produce self-matching its OWN zone-shaped Battlefield-presence want is `second-copy-legendary`, not `same-instance`', () => {
+    const card = poolCard(
+      legendaryCreature('Self Enters Legend'),
+      [{ event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: 'self', target: 'self', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<Fact, 'role'>],
+      [{ zone: 'Battlefield', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>],
+    );
+    const groups = findInteractionsForCard('Self Enters Legend', [card]);
+    const zoneGroup = groups.find((g) => g.direction === 'source');
+    const selfMatch = zoneGroup?.matches.find((m) => m.card === 'Self Enters Legend');
+    expect(selfMatch?.selfInteraction).toBe('second-copy-legendary');
+  });
+
+  it('a pure event-only produce (no zone data) self-matching its own event-shaped want is still `same-instance` (unaffected by the fix)', () => {
+    const card = poolCard(
+      land('Self Lifegain'),
+      [{ event: 'lifegain', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [{ event: 'lifegain', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+    );
+    const groups = findInteractionsForCard('Self Lifegain', [card]);
+    const eventGroup = groups.find((g) => g.direction === 'source');
+    const selfMatch = eventGroup?.matches.find((m) => m.card === 'Self Lifegain');
+    expect(selfMatch?.selfInteraction).toBe('same-instance');
   });
 });
 
@@ -353,7 +389,12 @@ describe('describeFact — named event branches', () => {
   });
 
   it('an unrecognized event name falls through to the bare event string itself — no `controller`/qualifier prefix (2026-09-10: reverts a same-day pass baking both in)', () => {
-    expect(describeFact(ef({ event: 'grantKeyword' }))).toBe('grantKeyword');
+    // `grantKeyword` used to be the example here — 2026-09-12 gave it (and
+    // its new sibling `grantType`) real explicit branches (same camelCase-
+    // display-bug fix class as `preventDamage`/`castCreatureSpell`), so
+    // it's no longer a real "falls through" example; `surveil` still is
+    // (checked: no branch exists for it).
+    expect(describeFact(ef({ event: 'surveil' }))).toBe('surveil');
     // Real shape: "land landfall" no longer includes the `types` qualifier.
     expect(describeFact(ef({ event: 'landfall', types: { has: ['Land'] } }))).toBe('landfall');
     // Real shapes: "each opponent loses life" / "you lose 2 life" (Golbez, Crystal Collector / Summon: Primal Odin)

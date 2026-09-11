@@ -36,7 +36,9 @@
       {
         "fn": "dealDamage",
         "source": "Thunder Magic",
-        "target": "opp0-creature-token-0",
+        "sourceId": 2573,
+        "target": "Grizzly Bears",
+        "id": 2572,
         "amount": 2
       },
       {
@@ -86,7 +88,9 @@
       {
         "fn": "dealDamage",
         "source": "Thunder Magic",
-        "target": "opp0-creature-token-0",
+        "sourceId": 2577,
+        "target": "Grizzly Bears",
+        "id": 2576,
         "amount": 4
       },
       {
@@ -136,7 +140,9 @@
       {
         "fn": "dealDamage",
         "source": "Thunder Magic",
-        "target": "opp0-creature-token-0",
+        "sourceId": 2581,
+        "target": "Grizzly Bears",
+        "id": 2580,
         "amount": 8
       },
       {

@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Cleric",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Cleric",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
+      "highlight": "put a +1/+1 counter on each Cleric you control"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
+      "highlight": "Whenever you gain life"
+    },
+    {
+      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
+      "highlight": "each Cleric you control"
+    }
+  ]
+}

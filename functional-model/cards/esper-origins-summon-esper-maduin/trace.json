@@ -74,18 +74,21 @@
       {
         "fn": "moveTo",
         "target": "Esper Origins",
+        "id": 762,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Esper Origins",
+        "id": 762,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "Esper Origins",
+        "id": 762,
         "counterType": "finality",
         "amount": 1,
         "controller": "you"
@@ -132,6 +135,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 764,
         "zone": "Hand",
         "controller": "you"
       }
@@ -185,13 +189,15 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 769,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 770,
         "power": 2,
         "toughness": 2
       },
@@ -202,12 +208,14 @@
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 769,
         "keyword": "Trample"
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 770,
         "keyword": "Trample"
       }
     ]

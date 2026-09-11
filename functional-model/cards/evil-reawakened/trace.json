@@ -35,12 +35,14 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 773,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "you-gy-creature-0",
+        "id": 773,
         "counterType": "+1/+1",
         "amount": 2,
         "controller": "you"

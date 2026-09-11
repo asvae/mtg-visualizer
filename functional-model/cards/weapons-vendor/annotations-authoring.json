@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Human Artificer",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Human Artificer",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "When this creature enters, draw a card.",
+      "highlight": "draw a card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "At the beginning of combat on your turn, if you control an Equipment, you may pay {1}.",
+      "highlight": "if you control an Equipment"
+    },
+    {
+      "sourceText": "attach target Equipment you control to target creature you control.",
+      "highlight": "target creature you control"
+    }
+  ]
+}

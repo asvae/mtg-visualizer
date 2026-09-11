@@ -2,17 +2,36 @@
   {
     "scenario": {
       "setup": "you: 2 creature(s)",
-      "action": "\"chapterI\" trigger fires",
-      "result": "other creatures you control get +1/+0",
+      "action": "cast from hand",
+      "result": "Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same real way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.",
       "raw": {
-        "result": "other creatures you control get +1/+0",
-        "trigger": "chapterI",
+        "result": "Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same real way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.",
+        "sequence": [
+          "chapterI",
+          "chapterII",
+          "chapterIII",
+          "chapterIV"
+        ],
+        "sacrificeSelfAfter": true,
         "you": {
           "creaturesCount": 2
         }
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Summon: Choco/Mog",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Summon: Choco/Mog",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
@@ -26,32 +45,18 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2237,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2238,
         "power": 1,
         "toughness": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterII\" trigger fires",
-      "result": "no other creatures to pump, no-op",
-      "raw": {
-        "result": "no other creatures to pump, no-op",
-        "trigger": "chapterII",
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
+      },
       {
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
@@ -61,24 +66,22 @@
       {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterIII\" trigger fires",
-      "result": "other creatures you control get +1/+0",
-      "raw": {
-        "result": "other creatures you control get +1/+0",
-        "trigger": "chapterIII",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "count": 3
+      },
+      {
+        "fn": "pump",
+        "target": "Grizzly Bears",
+        "id": 2237,
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "pump",
+        "target": "Grizzly Bears",
+        "id": 2238,
+        "power": 1,
+        "toughness": 0
+      },
       {
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
@@ -92,32 +95,18 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2237,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2238,
         "power": 1,
         "toughness": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterIV\" trigger fires",
-      "result": "other creatures you control get +1/+0",
-      "raw": {
-        "result": "other creatures you control get +1/+0",
-        "trigger": "chapterIV",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+      },
       {
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
@@ -131,15 +120,22 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2237,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2238,
         "power": 1,
         "toughness": 0
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "card": "Summon: Choco/Mog"
       }
     ]
   }

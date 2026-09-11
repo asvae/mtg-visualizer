@@ -44,6 +44,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 2262,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -108,7 +109,7 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
@@ -157,7 +158,7 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 3
       },
       {
@@ -206,7 +207,7 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 5
       }
     ]

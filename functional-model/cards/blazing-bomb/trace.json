@@ -19,6 +19,7 @@
       {
         "fn": "putCounter",
         "target": "Blazing Bomb",
+        "id": 272,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -57,7 +58,9 @@
       {
         "fn": "dealDamage",
         "source": "Blazing Bomb",
-        "target": "you-creature-token-0",
+        "sourceId": 275,
+        "target": "Grizzly Bears",
+        "id": 274,
         "amount": 1
       }
     ]

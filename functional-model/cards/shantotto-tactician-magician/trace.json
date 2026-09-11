@@ -22,6 +22,7 @@
       {
         "fn": "pump",
         "target": "Shantotto, Tactician Magician",
+        "id": 2047,
         "power": 4,
         "toughness": 0
       },
@@ -54,6 +55,7 @@
       {
         "fn": "pump",
         "target": "Shantotto, Tactician Magician",
+        "id": 2049,
         "power": 2,
         "toughness": 0
       }

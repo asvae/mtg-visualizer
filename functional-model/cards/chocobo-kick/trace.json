@@ -38,13 +38,15 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-0",
-        "target": "opp0-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 347,
+        "target": "Grizzly Bears",
+        "id": 349,
         "amount": 2
       },
       {
@@ -94,7 +96,7 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
@@ -105,6 +107,7 @@
       {
         "fn": "moveTo",
         "target": "you-land-0",
+        "id": 353,
         "zone": "Hand",
         "controller": "you"
       },
@@ -120,13 +123,15 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-0",
-        "target": "opp0-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 352,
+        "target": "Grizzly Bears",
+        "id": 355,
         "amount": 4
       },
       {

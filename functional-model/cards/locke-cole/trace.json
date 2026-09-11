@@ -67,6 +67,7 @@
       {
         "fn": "dealDamage",
         "source": "Locke Cole",
+        "sourceId": 1354,
         "target": "opp0",
         "amount": 3
       },

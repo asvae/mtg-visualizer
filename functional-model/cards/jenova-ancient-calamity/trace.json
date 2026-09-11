@@ -31,14 +31,16 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1152,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "animate",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1152,
         "types": [
           "Mutant"
         ]

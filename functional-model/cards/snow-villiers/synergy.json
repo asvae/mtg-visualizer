@@ -1,23 +1,64 @@
 {
   "source": [
     {
-      "id": "self-battlefield",
-      "zone": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — Snow Villiers's own text is entirely static: \"Vigilance\" and \"Snow Villiers's power is equal to the number of creatures you control,\" both of which only matter while it's on the battlefield)",
-      "highlight": "Snow Villiers's power is equal to the number of creatures you control"
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
-      "controller": "you",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)",
-      "highlight": "goes to the graveyard like any creature that dies"
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 16,
+          "end": 69
+        }
+      ]
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 34,
+          "end": 69
+        }
+      ]
+    }
+  ]
 }

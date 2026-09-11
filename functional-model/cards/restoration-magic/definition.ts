@@ -1,11 +1,41 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
-// Tiered (real 701.x-style "choose one additional cost" mechanic) — modal's
-// own `modes` has no per-mode COST field (Battle Menu, the only other modal
-// precedent, is cost-uniform across modes), so the real Cure {0}/Cura {1}/
-// Curaga {3}{W} additional costs are documentary only, carried in each
-// mode's own `describe` rather than mechanically distinct — flagged to the
-// parent session alongside this card's other gaps below.
+// "Tiered" (choose one additional cost) maps onto the real "choose one —"
+// `modal` shape Battle Menu/Fire Magic already use — each tier is a real,
+// mutually exclusive branch, same as a modal spell's own modes. "Tiered"
+// itself isn't a recognized `Keyword` (not a real, resolution-affecting
+// keyword like Flying/Lifelink), so it stays implicit in each mode's own
+// `describe` rather than added to `keywords` — same treatment Fire Magic/
+// Ice Magic's own Tiered already got. Unlike those two, this card's three
+// tiers don't branch into genuinely DIFFERENT effects — Cure/Cura/Curaga
+// are one real escalating effect (same hexproof+indestructible grant,
+// widening SCOPE from a single chosen permanent to every permanent you
+// control, plus a lifegain bonus at the two higher tiers) — `modal` is
+// still the right shape (real per-mode cost/text), just modeled as one
+// scaling idea rather than 3 unrelated modes.
+//
+// `grantKeywordTarget`'s `validType: 'any'` (Cure/Cura's own real "Target
+// permanent" — any permanent, not creature-only) and `grantKeywordAll`'s
+// `predicate: 'permanents-you-control'` (Curaga's own real "Permanents you
+// control") are both NEW engine vocabulary added for this card (card.ts,
+// 2026-09-12) — until now every `grantKeywordTarget`/`grantKeywordAll` call
+// in the pool only ever needed a creature-only pool, so `validType`/
+// `predicate` had no 'any'/'permanents' branch actually wired in the
+// `applyEffect` switch (a real, previously-unnoticed gap: `validType` was
+// declared in the `Effect` union's own type but silently ignored at
+// runtime). Both are safe, additive fixes — `validType` defaults to
+// 'creature' when omitted (every existing caller's behavior is unchanged),
+// and `'permanents-you-control'` is a new predicate value alongside the
+// original 'creatures-you-control', not a replacement.
+//
+// Two separate `grantKeywordTarget`/`grantKeywordAll` calls per tier (one
+// per keyword) rather than one call granting both — no Effect kind grants
+// more than one keyword at once. `chooseTarget`'s own deterministic
+// "always pick pool[0]" behavior (see Coral Sword's own definition.ts
+// comment for the same pattern) means both Cure/Cura grants land on the
+// SAME chosen permanent, matching Forge's real `Defined$ Targeted` (the
+// second effect targeting whatever the first one targeted) rather than
+// two independent targeting decisions.
 export const restorationMagic: CardDefinition = {
   name: 'Restoration Magic',
   manaCost: '{W}',
@@ -16,49 +46,25 @@ export const restorationMagic: CardDefinition = {
       kind: 'modal',
       modes: [
         {
-          describe: 'Cure — {0} — target permanent gains hexproof and indestructible until end of turn',
+          describe: 'Cure — {0} — Target permanent gains hexproof and indestructible until end of turn.',
           effects: [
-            {
-              kind: 'custom',
-              // Two real gaps, both flagged to the parent session: (1) no
-              // Effect kind grants a keyword to a chosen target at all
-              // (`pumpTarget` only ever moves P/T); (2) the real target
-              // pool is "target permanent" (any permanent, not just a
-              // creature) — `pumpTarget`'s own hardcoded pool is creatures
-              // only. `custom`, choosing from the real battlefield-wide
-              // pool, is the honest shape until either lands.
-              describe: 'target permanent gains hexproof and indestructible until end of turn (no keyword-grant Effect shape exists yet — not mechanically enforced)',
-              run: (ctx: EffectContext, actions: Actions) => {
-                const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))];
-                if (pool.length > 0) actions.chooseTarget(pool);
-              },
-            } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'any' } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Indestructible', validType: 'any' } satisfies Effect,
           ],
         },
         {
-          describe: 'Cura — {1} — target permanent gains hexproof and indestructible until end of turn. You gain 3 life.',
+          describe: 'Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life.',
           effects: [
-            {
-              kind: 'custom',
-              describe: 'target permanent gains hexproof and indestructible until end of turn (no keyword-grant Effect shape exists yet — not mechanically enforced)',
-              run: (ctx: EffectContext, actions: Actions) => {
-                const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))];
-                if (pool.length > 0) actions.chooseTarget(pool);
-              },
-            } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'any' } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Indestructible', validType: 'any' } satisfies Effect,
             { kind: 'gainLife', amount: 3 } satisfies Effect,
           ],
         },
         {
-          describe: 'Curaga — {3}{W} — permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.',
+          describe: 'Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.',
           effects: [
-            {
-              kind: 'custom',
-              describe: 'permanents you control gain hexproof and indestructible until end of turn (no keyword-grant Effect shape exists yet — not mechanically enforced)',
-              run: (ctx: EffectContext) => {
-                ctx.you.getCardsIn('Battlefield');
-              },
-            } satisfies Effect,
+            { kind: 'grantKeywordAll', predicate: 'permanents-you-control', keyword: 'Hexproof' } satisfies Effect,
+            { kind: 'grantKeywordAll', predicate: 'permanents-you-control', keyword: 'Indestructible' } satisfies Effect,
             { kind: 'gainLife', amount: 6 } satisfies Effect,
           ],
         },

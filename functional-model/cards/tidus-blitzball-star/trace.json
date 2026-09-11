@@ -19,6 +19,7 @@
       {
         "fn": "putCounter",
         "target": "Tidus, Blitzball Star",
+        "id": 2583,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -56,12 +57,14 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2586,
+        "controller": "opp0"
       }
     ]
   },

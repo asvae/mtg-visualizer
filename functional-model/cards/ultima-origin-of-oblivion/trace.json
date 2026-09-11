@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 6 Forest(s); opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> turn passage -> real attack -> onAttack",
-      "result": "Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1), putting a real blight counter on the opponent's only land. The land's own granted \"{T}: Add {C}\" and Ultima's mana-doubling static are real printed text with no engine machinery behind them yet.",
+      "action": "real engine playthrough: cast -> turn passage -> real attack -> onAttack -> real land tap -> onTapLandForC",
+      "result": "Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1), putting a real blight counter on the opponent's only land (whose granted \"{T}: Add {C}\" stays real printed text with no engine machinery behind it). Separately, a real Adventurer's Inn is tapped for its own real {C}, and Ultima's own mana-doubling trigger fires right after, adding a real additional {C}.",
       "raw": {
-        "result": "Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1), putting a real blight counter on the opponent's only land. The land's own granted \"{T}: Add {C}\" and Ultima's mana-doubling static are real printed text with no engine machinery behind them yet.",
+        "result": "Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1), putting a real blight counter on the opponent's only land (whose granted \"{T}: Add {C}\" stays real printed text with no engine machinery behind it). Separately, a real Adventurer's Inn is tapped for its own real {C}, and Ultima's own mana-doubling trigger fires right after, adding a real additional {C}.",
         "you": {
           "basicLands": [
             "Forest",
@@ -122,11 +122,13 @@
       },
       {
         "fn": "tap",
-        "target": "Ultima, Origin of Oblivion"
+        "target": "Ultima, Origin of Oblivion",
+        "id": 2680
       },
       {
         "fn": "attack",
-        "card": "Ultima, Origin of Oblivion"
+        "card": "Ultima, Origin of Oblivion",
+        "id": 2680
       },
       {
         "fn": "trigger",
@@ -191,9 +193,40 @@
       {
         "fn": "putCounter",
         "target": "Forest",
+        "id": 2674,
         "counterType": "blight",
         "amount": 1,
         "controller": "opp0"
+      },
+      {
+        "fn": "activate",
+        "card": "Adventurer's Inn",
+        "instanceId": 1,
+        "cost": "{T}"
+      },
+      {
+        "fn": "tap",
+        "target": "Adventurer's Inn",
+        "id": 2681,
+        "controller": "you"
+      },
+      {
+        "fn": "addMana",
+        "player": "you",
+        "color": "C",
+        "amount": 1
+      },
+      {
+        "fn": "trigger",
+        "card": "Ultima, Origin of Oblivion",
+        "instanceId": 1,
+        "name": "onTapLandForC"
+      },
+      {
+        "fn": "addMana",
+        "player": "you",
+        "color": "C",
+        "amount": 1
       }
     ],
     "actions": [
@@ -228,6 +261,18 @@
       {
         "label": "Fire onAttack",
         "from": 20
+      },
+      {
+        "label": "Tap Adventurer's Inn for {C}",
+        "from": 32
+      },
+      {
+        "label": "Resolve",
+        "from": 34
+      },
+      {
+        "label": "Ultima triggers: add an additional {C}",
+        "from": 35
       }
     ]
   }

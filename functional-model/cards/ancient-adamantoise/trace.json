@@ -19,6 +19,7 @@
       {
         "fn": "moveTo",
         "target": "Ancient Adamantoise",
+        "id": 121,
         "zone": "Exile",
         "controller": "you"
       },

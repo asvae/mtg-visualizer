@@ -32,6 +32,8 @@ export interface StackObject {
   abilityName?: string;
   /** True when this object came from `engine.ts`'s `activateAbility` (602.1) rather than a spell cast — `engine.ts`'s own `resolveTop` uses this to skip the spell-only "move to Battlefield/Graveyard after resolving" step (602.1 activated abilities don't move their source permanent; only their OWN effects, if any, do that). */
   isAbility?: boolean;
+  /** True when this spell was cast via an `AlternateCost` (`card.ts`) whose own `thenExile` is set — Flashback/Jump-start's real rule (CR 702.32/702.67): once it resolves, it goes to exile instead of its owner's graveyard. `engine.ts`'s own `castSpell` sets this from the `AlternateCost` it was given; `resolveTop` reads it back to pick the real post-resolution zone for an instant/sorcery. */
+  thenExile?: boolean;
 }
 
 export class Stack {

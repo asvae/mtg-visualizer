@@ -1,4 +1,70 @@
 {
-  "source": [],
-  "sink": []
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "oncePerTurn": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 89,
+          "end": 100
+        }
+      ]
+    }
+  ],
+  "sink": [
+    {
+      "event": "dies",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Creature",
+            "Artifact"
+          ]
+        }
+      },
+      "oncePerTurn": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 27,
+          "end": 87
+        }
+      ]
+    }
+  ]
 }

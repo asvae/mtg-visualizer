@@ -102,11 +102,13 @@
       },
       {
         "fn": "tap",
-        "target": "Adelbert Steiner"
+        "target": "Adelbert Steiner",
+        "id": 23
       },
       {
         "fn": "attack",
-        "card": "Adelbert Steiner"
+        "card": "Adelbert Steiner",
+        "id": 23
       },
       {
         "fn": "phase",

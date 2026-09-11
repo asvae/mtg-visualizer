@@ -2,10 +2,10 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the unified Fact model (SYNERGY_DESIGN.md). Real printed pt:[3,3] was missing from definition.ts before this pass (fixed). Consolidated 4 flat scenarios (one per identical chapter) into 1 real scenario using harness.ts's sequence:['chapterI'..'chapterIV'] + sacrificeSelfAfter (per the 2026-09-12 default-1-scenario standing rule) — real fn:'cast'/'enters'/'pump'x4/'sacrifice' trace evidence. Added baseline self-cast/self-enters/dies+sacrifice facts and a real SOURCE event:'pump' fact (now-promoted vocabulary) alongside the pre-existing 'wants creature you control' SINK. notSelf (real Forge Creature.YouCtrl+Other exclusion on the pumpAll Effect) deliberately NOT surfaced as Fact-level vocabulary — checked real precedent (Ambrosia Whiteheart's own notSelf move/bounce fact carries no exclusion marker either); this model's Constraints vocabulary has no self-exclusion concept and no sink in the pool wants one.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "produces:[] is intentional — its only effect is pumpAll (anthem), and pump has zero fact vocabulary; the whole ability is functionally invisible to synergy matching"
+    "event:'pump' has zero real sink consumers pool-wide today (checked via find-synergies.mjs diff) — real, promoted vocabulary with no payoff card yet, not a modeling gap on this card."
   ]
 }

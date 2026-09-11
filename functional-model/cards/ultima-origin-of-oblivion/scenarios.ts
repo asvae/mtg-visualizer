@@ -1,16 +1,20 @@
-// Real engine-piloted trace (see engine-trace.ts's own header). onAttack has
-// no auto-fire in this engine (Trigger.on only recognizes
-// 'enter'|'upkeep'|'endStep') — so this pilots a real attack declaration,
-// then fires the trigger manually right after.
+// Real engine-piloted trace (see engine-trace.ts's own header). Neither
+// onAttack nor onTapLandForC auto-fires in this engine (Trigger.on only
+// recognizes 'enter'|'upkeep'|'endStep') — so this pilots a real attack
+// declaration and a real land-tap-for-{C} activation, then fires each
+// trigger manually right after.
 
 import { ultimaOriginOfOblivion } from './definition';
+import { adventurersInn } from '../adventurer-s-inn/definition';
 import { basicLandsFor } from '../../mana';
 import type { TraceResult } from '../../harness';
+import type { CardDefinition, Effect } from '../../card';
 import {
   setupEnginePilot,
   pilotActions,
   pilotCast,
   pilotResolveTop,
+  pilotActivate,
   advanceToPlayersNextMain1,
   advanceToDeclareAttackersStep,
   pilotDeclareAttackers,
@@ -18,6 +22,23 @@ import {
   finishEnginePilotTrace,
   type EnginePilotSetup,
 } from '../../engine-trace';
+
+// Adventurer's Inn's own real, single, unambiguous "{T}: Add {C}." line
+// (its only static ability — see its own definition.ts) — no mana-producing
+// Effect/Action exists on the REAL card (documented STILL-DEFERRED gap, same
+// as every other plain Town-land mana ability pool-wide), so this is a
+// throwaway, scenario-local CardDefinition pairing that one real printed
+// line with a real `kind:'addMana'` Effect (the same shape Elvish
+// Archdruid's own activated mana ability already proves executable),
+// scoped entirely to this file — adventurer-s-inn's own definition.ts is
+// untouched.
+const adventurersInnManaAbility: CardDefinition = {
+  name: adventurersInn.name,
+  manaCost: '',
+  typeLine: adventurersInn.typeLine,
+  activationCost: '{T}',
+  effects: [{ kind: 'addMana', color: 'C', amount: 1 } satisfies Effect],
+};
 
 export function runEngineScenarios(): TraceResult[] {
   const setup: EnginePilotSetup = {
@@ -57,7 +78,27 @@ export function runEngineScenarios(): TraceResult[] {
   // onAttack fired manually — puts a real blight counter on the opponent's only land
   pilotFireTrigger(pilot, ultimaOriginOfOblivion, ctx, actions, 'onAttack');
 
+  // A real Adventurer's Inn, already resolved on your battlefield (added
+  // directly, same "bystander permanent" convention every other scenario's
+  // own non-protagonist permanents use — no `enteredThisTurn` stamp, so no
+  // summoning-sickness gate applies to its own {T} cost either).
+  const innReal = pilot.state.addCard(pilot.you, 'Battlefield', {
+    name: adventurersInn.name,
+    types: ['Land'],
+    subtypes: ['Town'],
+    manaAbility: 'C',
+  });
+  const innCtx = pilot.ctxFor(innReal);
+  const innActions = pilotActions(pilot, innReal.id);
+  // Real {T}: Add {C} activation (602.1) — tap the Inn for its own {C}.
+  pilotActivate(pilot, pilot.you, innReal, adventurersInnManaAbility, innCtx, innActions, "Tap Adventurer's Inn for {C}");
+  pilotResolveTop(pilot);
+  // Ultima's own real "Whenever you tap a land for {C}, add an additional
+  // {C}" — fired manually right after the real land tap above, adding a
+  // real second {C} via the same `kind:'addMana'` Effect shape.
+  pilotFireTrigger(pilot, ultimaOriginOfOblivion, ctx, actions, 'onTapLandForC', "Ultima triggers: add an additional {C}");
+
   const result =
-    'Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1), putting a real blight counter on the opponent\'s only land. The land\'s own granted "{T}: Add {C}" and Ultima\'s mana-doubling static are real printed text with no engine machinery behind them yet.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real attack -> onAttack', result)];
+    'Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1), putting a real blight counter on the opponent\'s only land (whose granted "{T}: Add {C}" stays real printed text with no engine machinery behind it). Separately, a real Adventurer\'s Inn is tapped for its own real {C}, and Ultima\'s own mana-doubling trigger fires right after, adding a real additional {C}.';
+  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real attack -> onAttack -> real land tap -> onTapLandForC', result)];
 }

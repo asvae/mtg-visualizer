@@ -40,13 +40,13 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Bird",
         "result": true
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Bird",
         "result": true
       },
@@ -58,24 +58,28 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-0",
-        "target": "opp0-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 208,
+        "target": "Grizzly Bears",
+        "id": 211,
         "amount": 2
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-1",
-        "target": "opp0-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 209,
+        "target": "Grizzly Bears",
+        "id": 211,
         "amount": 2
       }
     ]

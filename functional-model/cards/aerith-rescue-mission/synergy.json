@@ -1,15 +1,34 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "event": "entersBattlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 5,
-      "sourceText": "Take the Elevator — Create three 1/1 colorless Hero creature tokens.",
-      "id": "create-hero-tokens",
-      "highlight": "Create three 1/1 colorless Hero creature tokens"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 22,
+          "end": 69
+        }
+      ]
     },
     {
       "event": "putCounter",
@@ -21,32 +40,48 @@
           ]
         }
       },
+      "targeted": true,
       "value": 1,
-      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them.",
-      "id": "stun-counter-produce",
-      "highlight": "Put a stun counter on one of them"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 64,
+          "end": 97
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)",
-      "id": "self-graveyard"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them.",
       "value": 1,
-      "id": "wants-target-creatures",
-      "highlight": "Tap up to three target creatures"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 30,
+          "end": 62
+        }
+      ]
     }
   ]
 }

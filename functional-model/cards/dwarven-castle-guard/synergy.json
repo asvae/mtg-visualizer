@@ -1,25 +1,81 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 23
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "event": "entersBattlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "id": "dies-hero-token",
-      "highlight": "create a 1/1 colorless Hero creature token",
-      "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 25,
+          "end": 67
+        }
+      ]
     }
   ],
   "sink": [
     {
       "event": "dies",
       "target": "self",
-      "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token. (needs itself to die)",
-      "id": "wants-self-dies",
-      "highlight": "When this creature dies",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 23
+        }
+      ]
     }
   ]
 }

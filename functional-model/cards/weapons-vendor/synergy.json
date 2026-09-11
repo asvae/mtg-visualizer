@@ -1,31 +1,82 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 27,
+          "end": 38
+        }
+      ]
+    }
+  ],
   "sink": [
     {
-      "id": "equipment-check",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Equipment"
         ]
       },
-      "sourceText": "At the beginning of combat on your turn, if you control an Equipment, you may pay {1}.",
-      "highlight": "if you control an Equipment",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 41,
+          "end": 68
+        }
+      ]
     },
     {
-      "id": "attach-equipment",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "When you do, attach target Equipment you control to target creature you control.",
-      "highlight": "attach target Equipment you control to target creature you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 139,
+          "end": 166
+        }
+      ]
     }
   ]
 }

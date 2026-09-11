@@ -64,7 +64,8 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1869,
         "power": 2,
         "toughness": 2
       }

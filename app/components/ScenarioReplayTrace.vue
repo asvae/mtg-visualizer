@@ -23,6 +23,8 @@ import {
 import { ABILITY_ICON_NAMES } from '../lib/abilityIconPaths';
 import type { LogEntry, Scenario } from '../../functional-model/harness';
 import type { ZoneType } from '../../functional-model/interfaces';
+import { TOKENS } from '../../functional-model/tokens';
+import type { ContinuousKeywordGrant } from '../../server/api/card/[set]/[number]';
 
 // Subtle per-zone tint — low-opacity fill/border, just enough to tell zones
 // apart at a glance without competing with the warn-colored highlight ring.
@@ -56,6 +58,8 @@ const props = defineProps<{
   cardBackToughness?: string;
   /** See ScenarioReplay.vue's own doc comment on this prop — real art/keywords for any OTHER genuinely-named real card, keyed by name. Always populated (ScenarioReplay.vue itself resolves it generically via `/api/cards/by-names`); a caller's own richer data (currently only the keywords-coverage page) is merged on top there, not a replacement for it. */
   namedCardArt?: Record<string, { images: string[]; keywords: string[]; power?: string; toughness?: string }>;
+  /** The tested card's own real `CardDefinition.continuousKeywordGrants` (front, then back for a transforming DFC) — see `continuousGrantedKeywords`'s own doc comment just below for how this gets cross-referenced against a live snapshot instead of a discrete log entry. */
+  continuousKeywordGrants?: { front?: ContinuousKeywordGrant[]; back?: ContinuousKeywordGrant[] } | null;
 }>();
 
 /** One or two image URLs to show for this card (front, then back for a flipping self) — undefined when this card has no real art to show (an old-style synthetic filler, `placeholderLabel` covers it instead), or when it's real hidden information (a card sitting in Library — real MTG rules, a library is secret; the `card-back` branch below covers that instead, even for a real-identity filler like GENERIC_FILLER_LAND that this file otherwise happily shows real art for everywhere else). `namedCardArt` (keyed by this card's own real name) is checked FIRST, ahead of the singular `isSelf`-only `cardImages` prop below — it covers the exact same tested "self" card just as well when present (see its own doc comment), PLUS any other real card a scenario puts on the board that isn't `isSelf` at all (e.g. summon-bahamut's own bystander Ahriman/Coeurl, or flying-reach's own Iron Giant blocking Ahriman on the keywords page — none of these is ever marked `isSelf`, see scenarioReplay.ts's own `instanceId`-driven detection). */
@@ -75,9 +79,96 @@ function printedKeywords(card: GroupedReplayCard): string[] {
   return card.isSelf ? (props.cardKeywords ?? []) : [];
 }
 
-/** This card's keywords worth a badge — its own real printed ones (see `printedKeywords`) plus anything `grantKeyword` added mid-scenario, filtered down to what AbilityIcon.vue actually has a glyph for. */
+// Real subtype list for a NAMED TOKEN creature (functional-model/tokens.ts's
+// `TOKENS` registry), keyed by the token's own printed name (`ReplayCard.name`
+// for a `createToken`-made chip is always `TOKENS[key].name` — see
+// scenarioReplay.ts's own `createToken` case) — built once, module scope,
+// same "plain data, no engine execution" import ScenarioReplay.vue's own
+// `tokenNameToKeys` map already establishes for this file's sibling. Unlike
+// that map, an ambiguous name (two TOKENS keys sharing one name, e.g. "Cat")
+// is safe to resolve to ANY one matching key here — every current variant of
+// a shared name has the SAME subtype list (they only ever differ by
+// printed keyword, e.g. w_1_1_cat vs w_1_1_cat_lifelink), so there is no
+// "wrong pick" the way there is for art. A real bystander creature (not a
+// TOKENS-registry token) has no entry here — see `continuousGrantedKeywords`'s
+// own doc comment for why that's an accepted, documented gap rather than a
+// silent wrong answer.
+const TOKEN_SUBTYPES_BY_NAME = new Map<string, string[]>();
+for (const def of Object.values(TOKENS)) {
+  if (!TOKEN_SUBTYPES_BY_NAME.has(def.name)) {
+    TOKEN_SUBTYPES_BY_NAME.set(
+      def.name,
+      def.types.filter((t) => !['Creature', 'Artifact', 'Enchantment', 'Land'].includes(t)),
+    );
+  }
+}
+function subtypesOf(card: GroupedReplayCard): string[] {
+  return TOKEN_SUBTYPES_BY_NAME.get(card.name) ?? [];
+}
+
+/**
+ * A real, QUERY-TIME continuous keyword grant (613, ENGINE_GAPS.md gap #14,
+ * closed 2026-09-12 — see `functional-model/state.ts`'s own `effectiveKeywords`
+ * doc comment for the engine-side read path this mirrors) — "Dion and other
+ * Knights you control have flying," "Demons you control have menace,
+ * lifelink, and haste." Unlike every other keyword source this file reads
+ * (`printedKeywords`, `card.keywords` off a `grantKeyword` log entry), a
+ * continuous grant is NEVER a discrete event — nothing "happens" at a single
+ * log step to represent "the grant is active right now," so there is no
+ * `fn:'grantKeyword'`-style entry for it to read (Dion's own `scenarios.ts`
+ * can only prove it fired with a manual `read:hasKeyword` query at ONE
+ * instant — see that file's own comment — and even that never names the
+ * Knight token specifically, only Dion himself). Recalculating it HERE, at
+ * render time, once per snapshot/card, is the only way a board chip that
+ * isn't the granting permanent itself (the Knight token, not Dion) ever gets
+ * the icon at all — and the only way it correctly toggles off again once the
+ * turn passes to an opponent (`grant.onlyDuringYourTurn`), rather than being
+ * permanently on or off for the whole replay.
+ *
+ * Deliberately generic — reads whichever grant(s) `props.continuousKeywordGrants`
+ * describes for THIS card's own front/back face, no Dion-specific branch.
+ * Two real, accepted gaps, both because `ReplayCard` doesn't (yet) track the
+ * field a grant would need to check:
+ *  - `grant.subtype`-matched OTHER permanents only resolve via the TOKENS
+ *    registry (`subtypesOf` above) — a real BYSTANDER creature (not a
+ *    functional-model token) has no served subtype data anywhere in this
+ *    pipeline today, so it can never match a subtype-scoped grant. Not hit by
+ *    any currently-authored scenario (checked: no card combines a subtype
+ *    grant with a real non-token bystander of that subtype).
+ *  - `grant.equippedBySelf` (Dragoon's Lance's own "equipped creature has
+ *    flying") is never matched — `scenarioReplay.ts`'s own `equip` case
+ *    doesn't record WHICH creature an Equipment is attached to, only that
+ *    both chips exist. A real, flagged follow-up, not fixed here (out of
+ *    this task's own scope — Dion's grant is subtype-based, not
+ *    equipment-based).
+ */
+function continuousGrantedKeywords(card: GroupedReplayCard): string[] {
+  const self = snapshot.value.cards.find((c) => c.isSelf);
+  if (!self || self.zone !== 'Battlefield' || card.zone !== 'Battlefield') return [];
+  // `faceName` is only ever set once a transform has moved display away from
+  // the stable front `name` (see `ReplayCard.faceName`'s own doc comment in
+  // scenarioReplay.ts) — so its mere presence means "currently showing the
+  // back face," which face's own grants (if any) apply instead of the front's.
+  const grants = (self.faceName ? props.continuousKeywordGrants?.back : props.continuousKeywordGrants?.front) ?? [];
+  if (!grants.length) return [];
+  // `undefined` activePlayer (a flat harness.ts scenario, never a real turn)
+  // reads as "yes, it's this permanent's controller's turn" — the exact same
+  // default `state.ts`'s own `isActiveOrDefault` uses, so a turn-conditional
+  // grant isn't silently, permanently off outside an engine-piloted trace.
+  const activePlayer = snapshot.value.activePlayer;
+  const out = new Set<string>();
+  for (const grant of grants) {
+    if (grant.onlyDuringYourTurn && activePlayer !== undefined && activePlayer !== self.owner) continue;
+    const isSelfMatch = grant.includeSelf && card.isSelf;
+    const isMatchingOther = !!grant.subtype && !card.isSelf && card.owner === self.owner && subtypesOf(card).includes(grant.subtype);
+    if (isSelfMatch || isMatchingOther) for (const kw of grant.keywords) out.add(kw);
+  }
+  return [...out];
+}
+
+/** This card's keywords worth a badge — its own real printed ones (see `printedKeywords`) plus anything `grantKeyword` added mid-scenario, plus any real continuous grant (`continuousGrantedKeywords`) currently in effect, filtered down to what AbilityIcon.vue actually has a glyph for. */
 function iconKeywords(card: GroupedReplayCard): string[] {
-  const all = new Set([...printedKeywords(card), ...card.keywords]);
+  const all = new Set([...printedKeywords(card), ...card.keywords, ...continuousGrantedKeywords(card)]);
   return [...all].filter((k) => ABILITY_ICON_NAMES.has(k));
 }
 

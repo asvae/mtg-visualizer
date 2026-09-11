@@ -1,6 +1,19 @@
 {
   "source": [
     {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "blight",
       "target": {
@@ -10,24 +23,76 @@
           ]
         }
       },
+      "targeted": true,
       "value": 1,
-      "sourceText": "Whenever Ultima attacks, put a blight counter on target land.",
-      "id": "blight-counter-attack",
-      "highlight": "put a blight counter on target land"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 25,
+          "end": 60
+        }
+      ]
+    },
+    {
+      "event": "addMana",
+      "colors": {
+        "has": [
+          "C"
+        ]
+      },
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 33,
+          "end": 54
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Land"
         ]
       },
-      "sourceText": "Whenever Ultima attacks, put a blight counter on target land.",
       "value": 1,
-      "id": "wants-target-land",
-      "highlight": "target land"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 49,
+          "end": 60
+        }
+      ]
+    },
+    {
+      "event": "addMana",
+      "colors": {
+        "has": [
+          "C"
+        ]
+      },
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 13,
+          "end": 31
+        }
+      ]
     }
   ]
 }

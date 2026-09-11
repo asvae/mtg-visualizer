@@ -18,6 +18,7 @@
       {
         "fn": "putCounter",
         "target": "Demon Wall",
+        "id": 567,
         "counterType": "+1/+1",
         "amount": 2,
         "controller": "you"

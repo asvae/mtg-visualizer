@@ -33,12 +33,14 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 1658,
+        "controller": "opp0"
       },
       {
         "fn": "read:getCardsIn",
@@ -49,7 +51,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -59,7 +61,8 @@
       },
       {
         "fn": "putCounter",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1658,
         "counterType": "Stun",
         "amount": 2,
         "controller": "opp0"

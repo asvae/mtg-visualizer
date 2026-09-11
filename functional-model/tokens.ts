@@ -65,4 +65,15 @@ export const TOKENS = {
   // landfall token (a green 1/1 Elf, Forge's real `g_1_1_elf`), same
   // ad-hoc-addition precedent as b_2_2_horror/c_1_1_hero above.
   g_1_1_elf: { name: 'Elf', manaCost: '0', types: ['Creature', 'Elf'], basePower: 1, baseToughness: 1 },
+  // FIN's own token (Moogles' Valor's "1/2 white Moogle creature token with
+  // lifelink") — real printing verified against `data/cards.db`'s own
+  // Scryfall record for scryfall_id 20a709d5-4be5-487b-bfba-4b1821f2ebd3
+  // (tfin/34, "Moogle", `Token Creature — Moogle`, P/T 1/2, real printed
+  // `keywords: ["Lifelink"]`), not the token-image-only cache in
+  // `data/fin/fin_tokens_scryfall.json` (no P/T/keywords there). `keywords`
+  // is a real, already-wired `TokenInfo` field (`state.createToken` copies
+  // it onto the made `RealCard`) — added directly since Lifelink is real
+  // printed text on this exact token, same ad-hoc-addition precedent as
+  // b_2_2_horror/c_1_1_hero/g_1_1_elf above.
+  w_1_2_moogle_lifelink: { name: 'Moogle', manaCost: '0', types: ['Creature', 'Moogle'], basePower: 1, baseToughness: 2, keywords: ['Lifelink'] },
 } satisfies Record<string, TokenInfo>;

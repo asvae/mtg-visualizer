@@ -2,8 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
-  "textCoverageAudited": false,
-  "knownGaps": []
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to unified Fact model (2026-09-12). 5 source + 1 sink fact, all annotated (ANNOTATED_CARD_SLUGS). New real vocabulary added this pass: `event:'crew'` (the Crew N cost ACT) and `Fact.type` (grantType's granted-type detail) + promoted `animate` off verify-synergy.mjs's PARKED_ACTION_FNS to real evidence (a self-targeted `animate` effect's logged `types` array backs a `grantType` fact for real). Added `isCrewCostCreatureWant` exemption (verify-synergy.mjs) for the sink fact wanting a Battlefield creature to crew — tautologically real, no achievable trace evidence given this harness's simplified activationCost lifecycle (no crewedBy simulation). find-synergies.mjs diff: 12 -> 152 interaction lines (the 12 lost were the old illegitimate bare-presence SOURCE fact, correctly removed per the no-presence-shaped-source rule; 152 gained are legitimate, mostly via the new creature-on-battlefield sink and the two real entersBattlefield facts). Zero grantType/crew matches yet pool-wide (new vocabulary, no consumer sink exists today) — same 'vocabulary now real, matched later' shape as the pump promotion.",
+  "textCoverageAudited": true,
+  "knownGaps": [
+    "Crew (702.121b/c) has real engine execution (canActivateAbility/activateAbility with crewCost+crewedBy, ENGINE_DESIGN.md) but this card's own scenario harness lifecycle doesn't simulate a real crewedBy creature list/tap trace — the sink fact wanting a Battlefield creature to crew has zero achievable trace evidence for that reason (isCrewCostCreatureWant exemption in verify-synergy.mjs), not a modeling gap in the fact itself.",
+    "animate/LayerSet tracks no duration (layers.ts's documented scope, pre-existing, not new to this pass) — a crewed Vehicle becomes a creature PERMANENTLY in this model rather than 'until end of turn'."
+  ]
 }

@@ -45,6 +45,7 @@
       {
         "fn": "grantKeyword",
         "target": "Tyvar, the Pummeler",
+        "id": 2638,
         "keyword": "Indestructible"
       }
     ]
@@ -79,7 +80,7 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-nontoken-0",
+        "target": "Grizzly Bears",
         "result": 3
       },
       {
@@ -94,7 +95,7 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-nontoken-0",
+        "target": "Grizzly Bears",
         "result": 3
       },
       {
@@ -109,13 +110,15 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-nontoken-0",
+        "target": "Grizzly Bears",
+        "id": 2640,
         "power": 3,
         "toughness": 3
       },
       {
         "fn": "pump",
         "target": "Tyvar, the Pummeler",
+        "id": 2641,
         "power": 3,
         "toughness": 3
       }
@@ -170,6 +173,7 @@
       {
         "fn": "pump",
         "target": "Tyvar, the Pummeler",
+        "id": 2643,
         "power": 3,
         "toughness": 3
       }

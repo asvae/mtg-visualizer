@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact Creature",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact Creature",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "This creature gets +1/+0 as long as you control another artifact.",
+      "highlight": "gets +1/+0"
+    },
+    {
+      "sourceText": "{2}{W}: Search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle.",
+      "highlight": "Search your library for a card named Magitek Infantry, put it onto the battlefield tapped"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "This creature gets +1/+0 as long as you control another artifact.",
+      "highlight": "you control another artifact"
+    },
+    {
+      "sourceText": "{2}{W}: Search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle.",
+      "highlight": "a card named Magitek Infantry"
+    }
+  ]
+}

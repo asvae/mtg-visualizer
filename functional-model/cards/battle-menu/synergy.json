@@ -1,18 +1,57 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "w_2_2_knight"
       },
       "value": 1,
-      "sourceText": "Attack — Create a 2/2 white Knight creature token.",
-      "id": "attack-token",
-      "highlight": "Create a 2/2 white Knight creature token"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 11,
+          "end": 51
+        }
+      ]
     },
     {
-      "event": "dies",
+      "event": "pump",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 28,
+          "end": 38
+        }
+      ]
+    },
+    {
+      "event": "destroy",
       "target": {
         "types": {
           "has": [
@@ -23,50 +62,89 @@
           "min": 4
         }
       },
+      "targeted": true,
       "value": 1,
-      "sourceText": "Magic — Destroy target creature with power 4 or greater.",
-      "id": "magic-destroy",
-      "highlight": "Destroy target creature with power 4 or greater"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 10,
+          "end": 57
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
-      "controller": "opp",
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "power": {
+          "min": 4
+        }
+      },
+      "targeted": true,
       "value": 1,
-      "sourceText": "Magic — Destroy target creature with power 4 or greater. (NOTE: real text has no controller restriction on the target — this fact assumes it lands in an opponent's graveyard, but the printed mode can equally hit your own creature.)",
-      "id": "magic-destroy-graveyard-opp"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 10,
+          "end": 57
+        }
+      ]
     },
     {
       "event": "lifegain",
       "controller": "you",
       "value": 5,
-      "sourceText": "Item — You gain 4 life.",
-      "id": "item-lifegain",
-      "highlight": "You gain 4 life"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 4,
+          "start": 9,
+          "end": 24
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(baseline — this sorcery goes to your graveyard after resolving, no special ability text)",
-      "id": "self-graveyard"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Ability — Target creature gets +0/+4 until end of turn.",
       "value": 1,
-      "id": "wants-target-creature-pump",
-      "highlight": "Target creature gets +0/+4 until end of turn"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 12,
+          "end": 56
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Creature"
@@ -75,10 +153,15 @@
       "power": {
         "min": 4
       },
-      "sourceText": "Magic — Destroy target creature with power 4 or greater.",
       "value": 1,
-      "id": "wants-power-4-creature",
-      "highlight": "target creature with power 4 or greater"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 18,
+          "end": 57
+        }
+      ]
     }
   ]
 }

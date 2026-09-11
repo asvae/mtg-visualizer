@@ -1,12 +1,20 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "\"chapterI\" trigger fires",
-      "result": "deals 4 damage to the tapped creature the opponent controls",
+      "setup": "you: 2 creature(s); opp0: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 real damage to the opponent's real creature; chapters II/III fire the same real way on later draw steps, each giving the other real creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
       "raw": {
-        "result": "deals 4 damage to the tapped creature the opponent controls",
-        "trigger": "chapterI",
+        "result": "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 real damage to the opponent's real creature; chapters II/III fire the same real way on later draw steps, each giving the other real creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
+        "sequence": [
+          "chapterI",
+          "chapterII",
+          "chapterIII"
+        ],
+        "sacrificeSelfAfter": true,
+        "you": {
+          "creaturesCount": 2
+        },
         "opponents": [
           {
             "creaturesCount": 1
@@ -15,6 +23,19 @@
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Summon: Primal Garuda",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Summon: Primal Garuda",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Summon: Primal Garuda",
@@ -29,52 +50,11 @@
       {
         "fn": "dealDamage",
         "source": "Summon: Primal Garuda",
-        "target": "opp0-creature-token-0",
+        "sourceId": 2330,
+        "target": "Grizzly Bears",
+        "id": 2329,
         "amount": 4
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterI\" trigger fires",
-      "result": "no creature for the opponent to lose, nothing damaged",
-      "raw": {
-        "result": "no creature for the opponent to lose, nothing damaged",
-        "trigger": "chapterI",
-        "opponents": [
-          {}
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Summon: Primal Garuda",
-        "instanceId": 1,
-        "name": "chapterI"
       },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "opp0",
-        "count": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterII\" trigger fires",
-      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
-      "raw": {
-        "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
-        "trigger": "chapterII",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
       {
         "fn": "trigger",
         "card": "Summon: Primal Garuda",
@@ -88,53 +68,39 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2326,
         "power": 1,
         "toughness": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterII\" trigger fires",
-      "result": "no other creature you control, no-op",
-      "raw": {
-        "result": "no other creature you control, no-op",
-        "trigger": "chapterII",
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Summon: Primal Garuda",
-        "instanceId": 1,
-        "name": "chapterII"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterIII\" trigger fires",
-      "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
-      "raw": {
-        "result": "another creature you control gets +1/+0 (flying grant not mechanically enforced)",
-        "trigger": "chapterIII",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Summon: Primal Garuda",
+        "result": true
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 2326,
+        "keyword": "Flying"
+      },
       {
         "fn": "trigger",
         "card": "Summon: Primal Garuda",
@@ -148,9 +114,43 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2326,
         "power": 1,
         "toughness": 0
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 3,
+        "creatureCount": 3
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Summon: Primal Garuda",
+        "result": true
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 2326,
+        "keyword": "Flying"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "card": "Summon: Primal Garuda"
       }
     ]
   }

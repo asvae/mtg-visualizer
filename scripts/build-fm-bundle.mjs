@@ -112,7 +112,29 @@ for (const slug of slugs) {
 
   bundle[slug] = {
     name: card.name,
-    poolFacts: { name: card.name, manaCost: card.manaCost, typeLine: card.typeLine, cmc: card.cmc, pt: card.pt },
+    // `continuousKeywordGrants` (+ its `backFace` mirror) — 2026-09-12,
+    // ENGINE_GAPS.md gap #14 closure — is a plain declarative CardDefinition
+    // field (613, same category as `manaCost`/`typeLine` above, NOT an
+    // `Effect`/`resolveCard()` internal), so serving it here doesn't cross
+    // the "card must not assume Effect kinds" line in card-schema.md.
+    // `app/components/ScenarioReplayTrace.vue` reads it at RENDER time
+    // (cross-referenced against each snapshot's own `activePlayer`/owner/
+    // subtype) to show a continuously-granted keyword — see that
+    // component's own doc comment for why a discrete trace.json log entry
+    // can't represent this (it's query-time, not event-triggered). `backFace`
+    // only ever carries the few fields that component needs (its own
+    // `continuousKeywordGrants`) — not a full nested CardDefinition.
+    poolFacts: {
+      name: card.name,
+      manaCost: card.manaCost,
+      typeLine: card.typeLine,
+      cmc: card.cmc,
+      pt: card.pt,
+      continuousKeywordGrants: card.continuousKeywordGrants,
+      backFace: card.backFace
+        ? { name: card.backFace.name, manaCost: card.backFace.manaCost, typeLine: card.backFace.typeLine, continuousKeywordGrants: card.backFace.continuousKeywordGrants }
+        : undefined,
+    },
     synergy,
     traces,
     review,

@@ -1,76 +1,87 @@
 {
   "source": [
     {
-      "id": "self-battlefield",
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
-      "sourceText": "Legendary Creature — Human Cleric. Whenever you gain life, put a +1/+1 counter on each Cleric you control (Minwu is itself a Cleric)."
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
     },
     {
-      "id": "lifegain",
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "sourceText": "Vigilance, lifelink",
-      "highlight": "lifelink"
-    },
-    {
-      "id": "counters-per-cleric",
       "event": "putCounter",
       "counterType": "+1/+1",
       "controller": "you",
       "target": {
         "types": {
           "has": [
-            "Creature",
             "Cleric"
           ]
         }
       },
+      "targeted": false,
       "value": 1,
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
-      "highlight": "put a +1/+1 counter on each Cleric you control"
-    },
-    {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "Legendary Creature — Human Cleric (generic creature-dies-to-graveyard fact; no additional death text on this card)."
-    },
-    {
-      "id": "self-dies",
-      "event": "dies",
-      "target": "self",
-      "value": 1,
-      "sourceText": "Legendary Creature — Human Cleric (generic creature-dies fact; no additional death text on this card)."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 70
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-lifegain",
       "event": "lifegain",
       "controller": "you",
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
-      "highlight": "Whenever you gain life",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 22
+        }
+      ]
     },
     {
-      "id": "wants-other-clerics",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
-          "Creature",
           "Cleric"
         ]
       },
-      "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control (needs other Clerics to benefit from).",
-      "highlight": "put a +1/+1 counter on each Cleric you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 47,
+          "end": 70
+        }
+      ]
     }
   ]
 }

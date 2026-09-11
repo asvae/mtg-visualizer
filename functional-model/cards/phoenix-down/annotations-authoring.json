@@ -1,0 +1,14 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Artifact", "highlight": "Artifact" },
+    { "anchor": "typeLine", "sourceText": "Artifact", "highlight": "Artifact" },
+    { "sourceText": "{1}{W}, {T}, Exile this artifact: Choose one —", "highlight": "{T}" },
+    { "sourceText": "{1}{W}, {T}, Exile this artifact: Choose one —", "highlight": "Exile this artifact" },
+    { "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.", "highlight": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped." },
+    { "sourceText": "Exile target Skeleton, Spirit, or Zombie.", "highlight": "Exile target Skeleton, Spirit, or Zombie." }
+  ],
+  "sink": [
+    { "sourceText": "Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.", "highlight": "creature card with mana value 4 or less from your graveyard" },
+    { "sourceText": "Exile target Skeleton, Spirit, or Zombie.", "highlight": "Skeleton, Spirit, or Zombie" }
+  ]
+}

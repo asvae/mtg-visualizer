@@ -38,15 +38,18 @@
       {
         "fn": "gainControl",
         "controller": "you",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2737
       },
       {
         "fn": "untap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2737
       },
       {
         "fn": "grantKeyword",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2737,
         "keyword": "Haste"
       },
       {
@@ -65,7 +68,9 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "target": "opp0-creature-token-0"
+        "equipmentId": 2735,
+        "target": "Grizzly Bears",
+        "id": 2737
       },
       {
         "fn": "move",
@@ -113,15 +118,18 @@
       {
         "fn": "gainControl",
         "controller": "you",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2741
       },
       {
         "fn": "untap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2741
       },
       {
         "fn": "grantKeyword",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2741,
         "keyword": "Haste"
       },
       {

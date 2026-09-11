@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Rebel Noble",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Rebel Noble",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "Whenever Ashe attacks, look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "highlight": "reveal an artifact card from among them and put it into your hand"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever Ashe attacks, look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "highlight": "reveal an artifact card"
+    },
+    {
+      "sourceText": "Whenever Ashe attacks, look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "highlight": "Ashe attacks"
+    }
+  ]
+}

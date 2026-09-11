@@ -20,13 +20,16 @@
       {
         "fn": "putCounter",
         "target": "Relentless X-ATM092",
+        "id": 1794,
         "counterType": "finality",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "tap",
-        "target": "Relentless X-ATM092"
+        "target": "Relentless X-ATM092",
+        "id": 1794,
+        "controller": "you"
       }
     ]
   }

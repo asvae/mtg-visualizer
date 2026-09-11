@@ -1,0 +1,60 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Elder Wizard",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Elder Wizard",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "Whenever you cast a legendary spell, draw a card. This ability triggers only once each turn.",
+      "highlight": "draw a card"
+    },
+    {
+      "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
+      "highlight": "Exile target nonland permanent"
+    },
+    {
+      "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
+      "highlight": "Transform Venat"
+    },
+    {
+      "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
+      "highlight": "Transform Venat"
+    },
+    {
+      "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
+      "highlight": "{T}"
+    },
+    {
+      "sourceText": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. Until your next turn, it gains indestructible. If that creature is legendary, draw a card.",
+      "highlight": "put a +1/+1 counter on another target creature you control"
+    },
+    {
+      "sourceText": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. Until your next turn, it gains indestructible. If that creature is legendary, draw a card.",
+      "highlight": "Until your next turn, it gains indestructible"
+    },
+    {
+      "sourceText": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. Until your next turn, it gains indestructible. If that creature is legendary, draw a card.",
+      "highlight": "If that creature is legendary, draw a card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever you cast a legendary spell, draw a card. This ability triggers only once each turn.",
+      "highlight": "you cast a legendary spell"
+    },
+    {
+      "sourceText": "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform Venat. Activate only as a sorcery.",
+      "highlight": "target nonland permanent"
+    },
+    {
+      "sourceText": "Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. Until your next turn, it gains indestructible. If that creature is legendary, draw a card.",
+      "highlight": "another target creature you control"
+    }
+  ]
+}

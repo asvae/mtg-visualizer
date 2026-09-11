@@ -2,14 +2,34 @@
   {
     "scenario": {
       "setup": "",
-      "action": "\"chapterI\" trigger fires",
-      "result": "creates three 2/2 Knight tokens",
+      "action": "cast from hand",
+      "result": "Knights of Round enters (714.2b/c fires chapter I immediately, creating three real 2/2 white Knight tokens); chapters II-IV fire the same real way on later draw steps, each creating three more (up to 12 total); chapter V — Ultimate End — pumps every other creature you control (the real Knight tokens) +2/+2 until end of turn and puts a real indestructible counter on each of them; once chapter V resolves, 714.4 sacrifices it.",
       "raw": {
-        "result": "creates three 2/2 Knight tokens",
-        "trigger": "chapterI"
+        "result": "Knights of Round enters (714.2b/c fires chapter I immediately, creating three real 2/2 white Knight tokens); chapters II-IV fire the same real way on later draw steps, each creating three more (up to 12 total); chapter V — Ultimate End — pumps every other creature you control (the real Knight tokens) +2/+2 until end of turn and puts a real indestructible counter on each of them; once chapter V resolves, 714.4 sacrifices it.",
+        "sequence": [
+          "chapterI",
+          "chapterII",
+          "chapterIII",
+          "chapterIV",
+          "chapterV"
+        ],
+        "sacrificeSelfAfter": true
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{6}{W}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Summon: Knights of Round",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Summon: Knights of Round",
@@ -24,20 +44,7 @@
         "tapped": false,
         "power": 2,
         "toughness": 2
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterII\" trigger fires",
-      "result": "creates three 2/2 Knight tokens",
-      "raw": {
-        "result": "creates three 2/2 Knight tokens",
-        "trigger": "chapterII"
-      }
-    },
-    "log": [
+      },
       {
         "fn": "trigger",
         "card": "Summon: Knights of Round",
@@ -52,20 +59,7 @@
         "tapped": false,
         "power": 2,
         "toughness": 2
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterIII\" trigger fires",
-      "result": "creates three 2/2 Knight tokens",
-      "raw": {
-        "result": "creates three 2/2 Knight tokens",
-        "trigger": "chapterIII"
-      }
-    },
-    "log": [
+      },
       {
         "fn": "trigger",
         "card": "Summon: Knights of Round",
@@ -80,20 +74,7 @@
         "tapped": false,
         "power": 2,
         "toughness": 2
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterIV\" trigger fires",
-      "result": "creates three 2/2 Knight tokens",
-      "raw": {
-        "result": "creates three 2/2 Knight tokens",
-        "trigger": "chapterIV"
-      }
-    },
-    "log": [
+      },
       {
         "fn": "trigger",
         "card": "Summon: Knights of Round",
@@ -108,23 +89,7 @@
         "tapped": false,
         "power": 2,
         "toughness": 2
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 3 creature(s)",
-      "action": "\"chapterV\" trigger fires",
-      "result": "other creatures you control get +2/+2 and an indestructible counter",
-      "raw": {
-        "result": "other creatures you control get +2/+2 and an indestructible counter",
-        "trigger": "chapterV",
-        "you": {
-          "creaturesCount": 3
-        }
-      }
-    },
-    "log": [
+      },
       {
         "fn": "trigger",
         "card": "Summon: Knights of Round",
@@ -134,83 +99,197 @@
       {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 4
+        "count": 13
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Knight",
+        "id": 2300,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Knight",
+        "id": 2301,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-2",
+        "target": "Knight",
+        "id": 2302,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2303,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2304,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2305,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2306,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2307,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2308,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2309,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2310,
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Knight",
+        "id": 2311,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 4
+        "count": 13
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Knight",
+        "id": 2300,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
+        "target": "Knight",
+        "id": 2301,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-2",
+        "target": "Knight",
+        "id": 2302,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterV\" trigger fires",
-      "result": "no other creatures to affect, no-op",
-      "raw": {
-        "result": "no other creatures to affect, no-op",
-        "trigger": "chapterV",
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Summon: Knights of Round",
-        "instanceId": 1,
-        "name": "chapterV"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2303,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2304,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2305,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2306,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2307,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2308,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2309,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2310,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Knight",
+        "id": 2311,
+        "counterType": "Indestructible",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "sacrifice",
         "player": "you",
-        "count": 1
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
+        "card": "Summon: Knights of Round"
       }
     ]
   }

@@ -28,7 +28,9 @@
       },
       {
         "fn": "tap",
-        "target": "you-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2176,
+        "controller": "you"
       }
     ]
   }

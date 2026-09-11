@@ -89,6 +89,47 @@ export interface RealCard {
    * `resolvedPermanents` already established for ETB-derived bookkeeping.
    */
   manaAbility?: ManaColor;
+  /** Real, query-time continuous keyword grant(s) (613, ENGINE_GAPS.md gap #14) — see `card.ts`'s own `CardDefinition.continuousKeywordGrants` doc comment for the two real Forge shapes (Dion's turn-conditional Dragonfire Dive, Ardyn's unconditional Demons grant). Copied from the resolving `CardDefinition` at `addCard` time, same convention `ptFormula`/`manaAbility` already establish — `RealCard` never holds a live reference back to its own `CardDefinition`. Consumed by `effectiveKeywords` below, not read directly anywhere else. */
+  continuousKeywordGrants?: { keywords: string[]; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
+}
+
+/** GameState-wide, real turn state kept in sync by `engine.ts`'s own `advance()` (set to the real active player's id after every phase change) — `undefined` only ever means "no real turn ever started" (a plain `harness.ts` scenario, which has no turn/phase concept at all). `effectiveKeywords`'s own `onlyDuringYourTurn` check treats that `undefined` case as "yes, it's this permanent's controller's turn" — matching `Scenario`'s own documented baseline ("Main Phase with priority," i.e. already assumed to be YOUR turn unless a scenario says otherwise) rather than leaving a turn-conditional grant silently, permanently off in every non-engine-piloted scenario. */
+export function isActiveOrDefault(state: GameState, controllerId: number): boolean {
+  return state.activePlayerId === undefined || state.activePlayerId === controllerId;
+}
+
+/**
+ * Real, LIVE keyword set (613, ENGINE_GAPS.md gap #14) — a permanent's own
+ * printed `keywords` UNION every real `continuousKeywordGrants` entry any
+ * OTHER (or the same) permanent on the battlefield currently grants it,
+ * re-evaluated fresh on every call (never cached/baked in) so a turn-
+ * conditional grant genuinely turns on/off as `state.activePlayerId`
+ * changes — same "recalculated on read" treatment `effectivePT` already
+ * gives a layer-7a CDA. This is THE read path for "does this card have
+ * keyword K right now" — `wrapCard`'s own `hasKeyword` and every other
+ * real keyword-sensitive check in this engine (combat/summoning-sickness,
+ * Deathtouch/Lifelink damage) route through this, not a raw
+ * `card.keywords.includes(...)` read, so a granted keyword is functionally
+ * real (a Demon token really attacks unaffected by summoning sickness
+ * under Ardyn's granted Haste), not just a label. `equippedBySelf`
+ * (Dragoon's Lance's own "During your turn, equipped creature has
+ * flying") is the same live-recheck treatment applied to Equipment's own
+ * `attachedToId` link instead of a subtype/controller match — the grant
+ * really follows the Equipment if re-equipped, real-time.
+ */
+export function effectiveKeywords(state: GameState, card: RealCard): string[] {
+  const set = new Set(card.keywords);
+  for (const source of state.cards.values()) {
+    if (source.zone !== 'Battlefield' || !source.continuousKeywordGrants) continue;
+    for (const grant of source.continuousKeywordGrants) {
+      if (grant.onlyDuringYourTurn && !isActiveOrDefault(state, source.controllerId)) continue;
+      const isSelf = grant.includeSelf && source.id === card.id;
+      const isMatchingOther = grant.subtype !== undefined && card.controllerId === source.controllerId && card.subtypes.includes(grant.subtype);
+      const isEquipped = grant.equippedBySelf === true && source.attachedToId === card.id;
+      if (isSelf || isMatchingOther || isEquipped) for (const kw of grant.keywords) set.add(kw);
+    }
+  }
+  return [...set];
 }
 
 /** Layer 4 (TYPE) applied — the card's CURRENT type list, not just its printed one. Use this instead of raw `card.types` anywhere "is this a creature/artifact/etc. right now" matters (an `animate`d permanent really does count). */
@@ -207,6 +248,8 @@ export class GameState {
   players = new Map<number, RealPlayer>();
   cards = new Map<number, RealCard>();
   delayedTriggers: DelayedTrigger[] = [];
+  /** See `isActiveOrDefault`'s own doc comment (just below `RealCard`, above) — kept in sync by `engine.ts`'s `advance()`; defaults to the FIRST player added (the scenario's own conventional 'you') the moment they're added, so an unadvanced/plain scenario already reads as "your turn" without needing a real turn simulation to say so explicitly. */
+  activePlayerId?: number;
 
   /** Schedules `run` to fire the next time the game enters `phase` (see `DelayedTrigger` above) — real 603.7 duration only, not a repeating/every-turn trigger: fires once, then this entry is gone (drained by `turn.ts`'s `advancePhase`). */
   scheduleDelayedTrigger(phase: Phase, run: () => void): void {
@@ -216,6 +259,7 @@ export class GameState {
   addPlayer(name: string): RealPlayer {
     const player: RealPlayer = { id: nextObjectId++, name, life: 20, hand: [], library: [], graveyard: [], battlefield: [], exile: [] };
     this.players.set(player.id, player);
+    if (this.activePlayerId === undefined) this.activePlayerId = player.id;
     return player;
   }
 
@@ -244,6 +288,7 @@ export class GameState {
       ptFormula: opts.ptFormula,
       cmc: opts.cmc,
       manaAbility: opts.manaAbility,
+      continuousKeywordGrants: opts.continuousKeywordGrants,
     };
     this.cards.set(card.id, card);
     const arr = zoneArray(owner, zone);
@@ -601,9 +646,15 @@ export class GameState {
       target.life -= amount;
     } else {
       target.damageMarked = (target.damageMarked ?? 0) + amount;
-      if (amount > 0 && source?.keywords.includes('Deathtouch')) target.deathtouchDamaged = true;
+      // `effectiveKeywords`, not a raw `source?.keywords.includes(...)` read
+      // (2026-09-12, ENGINE_GAPS.md gap #14) — a GRANTED Deathtouch/Lifelink
+      // (Ardyn, the Usurper's own "Demons you control have menace,
+      // lifelink, and haste") needs to function for real in combat, not
+      // just render as a label; `card.keywords` alone only ever has a
+      // permanent's own PRINTED keywords.
+      if (amount > 0 && source && effectiveKeywords(this, source).includes('Deathtouch')) target.deathtouchDamaged = true;
     }
-    if (source?.keywords.includes('Lifelink')) {
+    if (source && effectiveKeywords(this, source).includes('Lifelink')) {
       const controller = this.players.get(source.controllerId);
       if (controller) {
         controller.life += amount;
@@ -635,7 +686,12 @@ export function wrapCard(state: GameState, real: RealCard): Card {
     getAttachedTo: () => (real.attachedToId !== undefined ? wrapCard(state, state.cards.get(real.attachedToId)!) : undefined),
     getEquippedBy: () => [...state.cards.values()].filter((c) => c.attachedToId === real.id).map((c) => wrapCard(state, c)),
     hasSubtype: (subtype: string) => real.subtypes.includes(subtype),
-    hasKeyword: (keyword: string) => real.keywords.includes(keyword),
+    // `effectiveKeywords`, not a raw `real.keywords.includes(...)` read
+    // (2026-09-12, ENGINE_GAPS.md gap #14) — includes any real, live
+    // `continuousKeywordGrants` this permanent currently qualifies for
+    // (Dion's own Dragonfire Dive, Ardyn's own Demons grant), not just
+    // this card's own printed keywords.
+    hasKeyword: (keyword: string) => effectiveKeywords(state, real).includes(keyword),
     getOwner: () => wrapPlayer(state, state.players.get(real.ownerId)!),
     getController: () => wrapPlayer(state, state.players.get(real.controllerId)!),
     getNetPower: () => effectivePT(state, real)[0],

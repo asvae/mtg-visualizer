@@ -28,7 +28,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -38,7 +38,8 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1851,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -98,6 +99,7 @@
       {
         "fn": "animate",
         "target": "Ride the Shoopuf",
+        "id": 1856,
         "types": [
           "Creature",
           "Beast"
@@ -116,6 +118,7 @@
       {
         "fn": "pump",
         "target": "Ride the Shoopuf",
+        "id": 1856,
         "power": 6,
         "toughness": 6
       }

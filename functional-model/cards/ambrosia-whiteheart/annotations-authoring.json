@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Bird",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Bird",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand.",
+      "highlight": "return another permanent you control to its owner's hand"
+    },
+    {
+      "sourceText": "Landfall — Whenever a land you control enters, Ambrosia Whiteheart gets +1/+0 until end of turn.",
+      "highlight": "gets +1/+0"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand.",
+      "highlight": "another permanent you control"
+    },
+    {
+      "sourceText": "Landfall — Whenever a land you control enters, Ambrosia Whiteheart gets +1/+0 until end of turn.",
+      "highlight": "Whenever a land you control enters"
+    }
+  ]
+}

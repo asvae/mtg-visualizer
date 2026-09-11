@@ -38,13 +38,15 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1699,
         "power": -1,
         "toughness": -1
       },
       {
         "fn": "pump",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1701,
         "power": -1,
         "toughness": -1
       },

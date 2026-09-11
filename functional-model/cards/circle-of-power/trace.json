@@ -52,13 +52,14 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Wizard",
         "result": true
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 366,
         "power": 1,
         "toughness": 0
       },
@@ -71,6 +72,7 @@
       {
         "fn": "pump",
         "target": "Wizard",
+        "id": 368,
         "power": 1,
         "toughness": 0
       },
@@ -81,13 +83,14 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Wizard",
         "result": true
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 366,
         "keyword": "Lifelink"
       },
       {
@@ -99,6 +102,7 @@
       {
         "fn": "grantKeyword",
         "target": "Wizard",
+        "id": 368,
         "keyword": "Lifelink"
       },
       {
@@ -165,6 +169,7 @@
       {
         "fn": "pump",
         "target": "Wizard",
+        "id": 371,
         "power": 1,
         "toughness": 0
       },
@@ -182,6 +187,7 @@
       {
         "fn": "grantKeyword",
         "target": "Wizard",
+        "id": 371,
         "keyword": "Lifelink"
       },
       {

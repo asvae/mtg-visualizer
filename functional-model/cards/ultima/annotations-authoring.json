@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Sorcery",
+      "highlight": "Sorcery"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Sorcery",
+      "highlight": "Sorcery"
+    },
+    {
+      "sourceText": "Destroy all artifacts and creatures.",
+      "highlight": "Destroy all artifacts and creatures"
+    },
+    {
+      "sourceText": "Destroy all artifacts and creatures.",
+      "highlight": "Destroy all artifacts and creatures"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Destroy all artifacts and creatures.",
+      "highlight": "artifacts and creatures"
+    }
+  ]
+}

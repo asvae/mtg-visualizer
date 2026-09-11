@@ -1,28 +1,130 @@
 {
   "source": [
     {
-      "id": "reveal-to-hand",
-      "zone": "Hand",
-      "controller": "you",
-      "value": 1,
-      "sourceText": "If it's an artifact or creature card, you may reveal it and put it into your hand.",
-      "highlight": "you may reveal it and put it into your hand",
-      "face": "front"
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 11
+        }
+      ]
     },
     {
-      "id": "transform-food",
-      "zone": "Battlefield",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": -1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 11
+        }
+      ]
+    },
+    {
+      "from": "Library",
+      "to": "Hand",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Artifact",
+            "Creature"
+          ]
+        }
+      },
+      "value": 1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 109,
+          "end": 152
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "event": "entersBattlefield",
       "controller": "you",
       "subject": {
         "token": "c_a_food_sac"
       },
       "value": 1,
-      "sourceText": "If you put a card into your hand this way, create a Food token and transform this enchantment.",
-      "highlight": "create a Food token",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 197,
+          "end": 216
+        }
+      ]
     },
     {
-      "id": "cooking-campsite-counters",
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "W"
+        ]
+      },
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 5,
+          "end": 12
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "sacrifice",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Artifact"
+          ]
+        }
+      },
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 31
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "+1/+1",
       "controller": "you",
@@ -34,50 +136,75 @@
         }
       },
       "value": 1,
-      "sourceText": "Cooking Campsite — {3}, {T}, Sacrifice an artifact: Put a +1/+1 counter on each creature you control.",
-      "highlight": "Put a +1/+1 counter on each creature you control",
-      "face": "back"
-    },
-    {
-      "id": "mana",
-      "event": "addMana",
-      "controller": "you",
-      "color": "W",
-      "sourceText": "{T}: Add {W}.",
-      "highlight": "{W}",
-      "value": 1,
-      "face": "back"
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 33,
+          "end": 81
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-artifact-or-creature-on-top",
-      "zone": "Library",
+      "to": "Library",
       "controller": "you",
       "types": {
         "hasAny": [
-          "Creature",
+          "Artifact",
+          "Creature"
+        ]
+      },
+      "value": 1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 33,
+          "end": 69
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
           "Artifact"
         ]
       },
-      "sourceText": "At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card...",
-      "highlight": "look at the top card of your library",
       "value": 1,
-      "face": "front"
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 31
+        }
+      ]
     },
     {
-      "id": "wants-creatures-for-counters",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Cooking Campsite — Put a +1/+1 counter on each creature you control (needs creatures to benefit).",
-      "highlight": "Put a +1/+1 counter on each creature you control",
       "value": 1,
-      "face": "back"
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 56,
+          "end": 81
+        }
+      ]
     }
   ]
 }

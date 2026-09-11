@@ -29,7 +29,7 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Equipment",
         "result": false
       },
@@ -53,7 +53,9 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "target": "you-creature-token-0"
+        "equipmentId": 1771,
+        "target": "Grizzly Bears",
+        "id": 1770
       }
     ]
   },
@@ -86,7 +88,7 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Equipment",
         "result": false
       },

@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+      "highlight": "create a 1/1 colorless Hero creature token"
+    },
+    {
+      "sourceText": "Equipped creature gets +1/+0 and is a Knight in addition to its other types.",
+      "highlight": "Equipped creature gets +1/+0"
+    },
+    {
+      "sourceText": "Equipped creature gets +1/+0 and is a Knight in addition to its other types.",
+      "highlight": "is a Knight in addition to its other types"
+    },
+    {
+      "sourceText": "During your turn, equipped creature has flying.",
+      "highlight": "equipped creature has flying"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Gae Bolg — Equip {4}",
+      "highlight": "Equip {4}"
+    }
+  ]
+}

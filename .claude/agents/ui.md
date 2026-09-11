@@ -27,7 +27,7 @@ graph visualizer.
 
 ## Not yours
 
-- Card page components (CardRelations, ScenarioReplay*, ForgeCardScript,
+- Card page components (CardRelations, ScenarioReplay*,
   FunctionalModelScript/Text) → `card` agent.
 - `functional-model/*` engine/synergy logic → `engine` agent.
 - Nuxt config, build, deploy, CI → `server` agent.

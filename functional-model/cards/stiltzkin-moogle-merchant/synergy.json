@@ -1,31 +1,89 @@
 {
   "source": [
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — no death trigger of its own; goes to the graveyard like any creature that dies)",
-      "highlight": "goes to the graveyard like any creature that dies"
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
     },
     {
-      "id": "lifelink-gain",
-      "event": "lifegain",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
-      "value": 5,
-      "sourceText": "Lifelink (deals combat damage → you gain that much life)",
-      "highlight": "Lifelink"
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "gainControl",
+      "controller": "you",
+      "recipient": "opp",
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 79
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 93,
+          "end": 108
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "gift-permanent",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
-      "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card. (needs another permanent you control to give away)",
-      "highlight": "another target permanent you control",
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 43,
+          "end": 79
+        }
+      ]
     }
   ]
 }

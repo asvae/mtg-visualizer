@@ -1,40 +1,165 @@
 {
   "source": [
     {
-      "id": "aerial-blast",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 12,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ]
+    },
+    {
       "event": "damage",
       "controller": "you",
+      "recipient": "opp",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "tapped": true
+      },
+      "targeted": true,
       "value": 5,
-      "sourceText": "I — Aerial Blast — This creature deals 4 damage to target tapped creature an opponent controls.",
-      "highlight": "deals 4 damage to target tapped creature an opponent controls"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 33,
+          "end": 94
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 59,
+          "end": 69
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Flying",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 74,
+          "end": 104
+        }
+      ]
+    },
+    {
+      "event": "sacrifice",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 86
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 86
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "aerial-blast-target",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "opp",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "I — Aerial Blast — ...target tapped creature an opponent controls.",
-      "highlight": "target tapped creature an opponent controls",
-      "value": 1
+      "tapped": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 51,
+          "end": 94
+        }
+      ]
     },
     {
-      "id": "slipstream-target",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "II, III — Slipstream — Another target creature you control gets +1/+0 and gains flying until end of turn.",
-      "highlight": "Another target creature you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 23,
+          "end": 58
+        }
+      ]
     }
   ]
 }

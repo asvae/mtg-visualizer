@@ -28,7 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Dark Knight's Greatsword",
-        "target": "Hero"
+        "equipmentId": 517,
+        "target": "Hero",
+        "id": 518
       }
     ]
   },
@@ -64,7 +66,9 @@
       {
         "fn": "equip",
         "equipment": "Dark Knight's Greatsword",
-        "target": "you-creature-token-0"
+        "equipmentId": 522,
+        "target": "Grizzly Bears",
+        "id": 520
       }
     ]
   }

@@ -28,11 +28,14 @@
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Grizzly Bears",
+        "id": 2721,
+        "controller": "opp0"
       },
       {
         "fn": "putCounter",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2721,
         "counterType": "Stun",
         "amount": 1,
         "controller": "opp0"
@@ -86,6 +89,7 @@
       {
         "fn": "putCounter",
         "target": "Ultros, Obnoxious Octopus",
+        "id": 2727,
         "counterType": "+1/+1",
         "amount": 8,
         "controller": "you"

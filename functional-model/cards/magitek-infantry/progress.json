@@ -2,10 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the unified Fact model (was old string-key/id/sourceText v1-ish shape, 1 bare sink fact). 6 facts, all annotated: self-cast/self-enters baseline, event:'pump' for the +1/+0 threshold (same real engine gap as Gaelicat's own 'control two or more artifacts' — no threshold-CDA machinery, see isMagitekInfantryArtifactThresholdPumpFact), a real Constraints-based condition sink for 'another artifact' (to:'Battlefield', types:has:['Artifact'], amount:{min:1} — amount is never actually matched by factsInteract, confirmed, so no self-exclusion mechanism was needed; a real second copy of this card correctly self-matches as selfInteractionKind:'second-copy'), and a genuine NAME-specific tutor pair (SOURCE from:'Library' to:'Battlefield' name:{eq:'Magitek Infantry'} tapped:true, value:1; SINK to:'Library' name:{eq:'Magitek Infantry'} value:-1 for the precondition). Added pt:[1,1] to definition.ts (was missing entirely). Added harness.ts PlayerState.libraryNamedCount/libraryNamedCard (first name-addressable library seed field) and a new scenario demonstrating the tutor's real success path (moveTo+tap trace evidence) — previously structurally impossible with the old harness.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "name-comparison half of its tutor filter (getName() ===) is NOT independently instrumented by harness.ts (deliberately, to avoid spamming every trace) — only the Library-zone half of the want is truly verified; also scenarios.ts has no scenario where the tutor actually succeeds — both documented in SYNERGY_DESIGN.md itself"
+    "the +1/+0 threshold CDA and its own condition-sink amount:{min:1} are both real, honest DATA with zero possible trace/read evidence — this engine has no threshold-CDA machinery at all (same documented gap as Gaelicat); both exempted via narrowly-scoped verify-synergy.mjs functions, not silently tolerated",
+    "the tutor SOURCE fact's own subject:'self' happens to also satisfy isActivationCostPermanentBaselineFact's over-broad predicate (any subject:'self'/target:'self' zone fact on an activationCost permanent) — not a false pass here (real scenario evidence exists regardless) but flagged as a latent, unfixed exemption looseness worth tightening pool-wide someday"
   ]
 }

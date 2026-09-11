@@ -47,6 +47,7 @@
       {
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
+        "id": 2445,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -60,12 +61,14 @@
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
+        "id": 2445,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
+        "id": 2445,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -94,6 +97,7 @@
       {
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
+        "id": 2447,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -137,6 +141,7 @@
       {
         "fn": "dealDamage",
         "source": "The Lord Master of Hell",
+        "sourceId": 2450,
         "target": "opp0",
         "amount": 0
       }

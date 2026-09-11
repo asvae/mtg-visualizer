@@ -167,6 +167,41 @@ function effectiveZone(fact: ZoneFact): string | undefined {
 }
 
 /**
+ * Which zone's noun (`ZONE_NOUN` below) a zone fact's own `types`/`cmc`/...
+ * constraint should be read against — the thing being type-checked is
+ * whatever it IS at the moment of the check, which for a real movement
+ * fact (`from` set) is its ORIGIN, not its destination. A tutor/search
+ * fact like `{from:'Library', to:'Battlefield', types:{has:['Artifact']}}`
+ * is checking a CARD sitting in the library at search time (real cards are
+ * artifact CARDS in a library, never "artifact permanents" — that noun only
+ * applies once something is actually on the battlefield); using
+ * `effectiveZone` (the destination) here picked "permanents" purely because
+ * Battlefield happens to be where the search result ends up, not because
+ * that's what's being described. Falls back to `effectiveZone` (the
+ * destination, or a plain sink's own single zone) whenever there's no real
+ * `from` at all — a plain `{to:'Battlefield', types:{...}}` sink with no
+ * origin genuinely is describing something already on the battlefield, so
+ * "permanents" is correct there and unaffected by this change.
+ */
+function constraintNounZone(fact: ZoneFact): string | undefined {
+  return fact.from ?? effectiveZone(fact);
+}
+
+/**
+ * Origin defaults so common/expected that repeating them in this column
+ * would be pure noise — e.g. an ordinary `cast` is from `Hand` in the
+ * overwhelming majority of cases, so only a genuinely alternate origin
+ * (Flashback's `from:'Graveyard'`, real oracle-backed "cast this card from
+ * your graveyard") is worth a note. Keyed by `event`; an event with no
+ * entry here has no established default, so any real `from` on it is shown
+ * (same "show unless known-redundant" default this file follows
+ * everywhere else).
+ */
+const EVENT_DEFAULT_FROM: Record<string, string> = {
+  cast: 'Hand',
+};
+
+/**
  * A SOURCE zone-change fact's own `from` origin, surfaced in this column
  * ONLY when it adds real information beyond what `describeFact`'s own label
  * already conveys via `zoneMovementName`/`ZONE_MOVEMENT_NAMES`
@@ -184,12 +219,27 @@ function effectiveZone(fact: ZoneFact): string | undefined {
  * `to`/`from` — a plain state check, not a movement, per `ZoneFact`'s own
  * doc comment) or a legacy bare-`zone` SOURCE fact (no `to`/`from` set at
  * all — not yet migrated; still-unmigrated cards render exactly as before).
+ *
+ * A `from`-only fact whose real destination is the deliberately-invisible
+ * Stack (a `cast` event — see `Fact`'s own doc comment, `effectiveZone`
+ * returns `undefined` for it since there's no `to`/`zone` at all) has no
+ * `zoneMovementName` lookup to fall back on either way — `describeFact`'s
+ * own label for it is a bare, origin-blind "cast a spell" regardless of
+ * `from`, so this is the ONLY place a real alternate origin (Flashback's
+ * `from:'Graveyard'`) ever surfaces at all; suppressed via
+ * `EVENT_DEFAULT_FROM` for the common `from:'Hand'` case, same "don't
+ * repeat the obvious" treatment as the named-movement branch above.
  */
 function movementOriginPhrase(fact: ZoneFact): string | undefined {
   if (fact.role !== 'source') return undefined;
   if (fact.to === undefined && fact.from === undefined) return undefined;
   const to = effectiveZone(fact);
-  if (!to || zoneMovementName(fact.from, to)) return undefined;
+  if (to === undefined) {
+    if (!fact.from) return undefined;
+    if (EVENT_DEFAULT_FROM[fact.event ?? ''] === fact.from) return undefined;
+    return `from ${fact.from.toLowerCase()}`;
+  }
+  if (zoneMovementName(fact.from, to)) return undefined;
   return fact.from ? `from ${fact.from.toLowerCase()}` : undefined;
 }
 
@@ -270,7 +320,7 @@ export function factConditions(fact: Fact): string {
 
   if (fact.subject && fact.subject !== 'self') bits.push(`token: ${fact.subject.token}`);
 
-  bits.push(...constraintPhrases(fact, isZoneFact(fact) ? (ZONE_NOUN[effectiveZone(fact) ?? ''] ?? 'permanents') : 'permanents'));
+  bits.push(...constraintPhrases(fact, isZoneFact(fact) ? (ZONE_NOUN[constraintNounZone(fact) ?? ''] ?? 'permanents') : 'permanents'));
 
   if (isEventFact(fact) && fact.target && typeof fact.target === 'object') {
     bits.push(...constraintPhrases(fact.target, 'permanent'));

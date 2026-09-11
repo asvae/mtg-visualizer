@@ -31,22 +31,22 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-3",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -59,22 +59,22 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-3",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -119,7 +119,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -132,7 +132,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -165,6 +165,7 @@
       {
         "fn": "putCounter",
         "target": "Zodiark, Umbral God",
+        "id": 2987,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

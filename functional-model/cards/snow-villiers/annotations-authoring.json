@@ -1,0 +1,24 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Rebel Monk",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Rebel Monk",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Snow Villiers's power is equal to the number of creatures you control.",
+      "highlight": "power is equal to the number of creatures you control"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Snow Villiers's power is equal to the number of creatures you control.",
+      "highlight": "the number of creatures you control"
+    }
+  ]
+}

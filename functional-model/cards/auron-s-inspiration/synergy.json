@@ -1,21 +1,78 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — this sorcery goes to your graveyard after first resolving, no special ability text)",
-      "id": "self-graveyard"
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "zone": "Exile",
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
-      "id": "flashback-exile",
-      "highlight": "Flashback {2}{W}{W}"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "attacking": true
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 20,
+          "end": 29
+        }
+      ]
+    },
+    {
+      "event": "cast",
+      "from": "Graveyard",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 29,
+          "end": 86
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 88,
+          "end": 101
+        }
+      ]
     }
   ],
   "sink": []

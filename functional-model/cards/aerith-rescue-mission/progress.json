@@ -1,9 +1,11 @@
 {
   "enrichment": "ai",
-  "review": "ai",
+  "review": "human",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
-  "textCoverageAudited": false,
-  "knownGaps": []
+  "lastVerified": "2026-09-11",
+  "notes": "Migrated to the unified Fact/annotations model (2026-09-11, same pass as summon-bahamut). All 4 facts (3 source, 1 sink) reshaped: `zone`->`to` on the 2 source zone facts (create-hero-tokens, self-graveyard), `event:'entersBattlefield'` added to create-hero-tokens (same real CR 111.7 token-creation-is-entering treatment as Bahamut's self-enters — purely documentary, doesn't change matching), `targeted:true` added to stun-counter-produce (real 'target creatures' oracle language), `id`/`sourceText`/`highlight` moved out of synergy.json into new annotations-authoring.json, `annotations` computed for all 4 facts via compute-annotations.mjs (self-graveyard anchored to the printed type line 'Sorcery' — CR 608.2m baseline, no real ability-text basis, same treatment as Bahamut's self-cast/self-enters). No facts removed or re-anchored beyond that — all 3 original source facts and 1 sink fact had genuine textual/type-line backing already. Real find-synergies.mjs diff: 0 matches gained/lost from this card's own changes (an incidental +1 gained match from a concurrent, unrelated adelbert-steiner migration happening in parallel is NOT from this change); 11 existing unconstrained-battlefield-presence matches (Clash of the Eikons, Dion Bahamut's Dominant, Doppelgang, Formidable Speaker, Omega Heartless Evolution, Restoration Magic, Sage's Nouliths, Squall SeeD Mercenary, Stiltzkin Moogle Merchant, Summon: Bahamut, The Wandering Minstrel) now correctly render as 'enters the battlefield' instead of generic 'battlefield presence'. Added to scripts/annotation-coverage.mjs's ANNOTATED_CARD_SLUGS.",
+  "textCoverageAudited": true,
+  "knownGaps": [],
+  "oracleTextSnapshot": "Choose one —\n• Take the Elevator — Create three 1/1 colorless Hero creature tokens.\n• Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+  "reviewedAt": "2026-09-11"
 }

@@ -30,11 +30,14 @@
       },
       {
         "fn": "tap",
-        "target": "Tonberry"
+        "target": "Tonberry",
+        "id": 2611,
+        "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "Tonberry",
+        "id": 2611,
         "counterType": "stun",
         "amount": 1,
         "controller": "you"

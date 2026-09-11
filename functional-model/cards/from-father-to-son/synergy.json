@@ -1,63 +1,116 @@
 {
   "source": [
     {
-      "id": "flashback",
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flashback {4}{W}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
-      "highlight": "Flashback {4}{W}{W}{W}"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "id": "flashback-exile",
-      "zone": "Exile",
+      "event": "cast",
+      "from": "Graveyard",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 89
+        }
+      ]
+    },
+    {
+      "to": "Exile",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "You may cast this card from your graveyard for its flashback cost. Then exile it.",
-      "highlight": "Then exile it"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 91,
+          "end": 104
+        }
+      ]
     },
     {
-      "id": "search-vehicle",
-      "zone": "Hand",
+      "from": "Library",
+      "to": "Hand",
       "controller": "you",
       "types": {
         "has": [
-          "Artifact"
+          "Vehicle"
         ]
       },
       "value": 1,
-      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand.",
-      "highlight": "Search your library for a Vehicle card"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 76
+        }
+      ]
     },
     {
-      "id": "flashback-cast-to-battlefield",
-      "zone": "Battlefield",
+      "from": "Library",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
-          "Artifact"
+          "Vehicle"
         ]
       },
       "value": 1,
-      "sourceText": "If this spell was cast from a graveyard, put that card onto the battlefield instead.",
-      "highlight": "put that card onto the battlefield instead"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 119,
+          "end": 161
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-vehicle-in-library",
-      "zone": "Library",
+      "to": "Library",
       "controller": "you",
       "types": {
         "has": [
-          "Artifact"
+          "Vehicle"
         ]
       },
-      "sourceText": "Search your library for a Vehicle card, reveal it, and put it into your hand.",
-      "highlight": "Search your library for a Vehicle card",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 38
+        }
+      ]
     }
   ]
 }

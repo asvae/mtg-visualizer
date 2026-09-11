@@ -30,7 +30,9 @@
       },
       {
         "fn": "tap",
-        "target": "Shambling Cie'th"
+        "target": "Shambling Cie'th",
+        "id": 2043,
+        "controller": "you"
       }
     ]
   },
@@ -54,6 +56,7 @@
       {
         "fn": "moveTo",
         "target": "Shambling Cie'th",
+        "id": 2045,
         "zone": "Hand",
         "controller": "you"
       }

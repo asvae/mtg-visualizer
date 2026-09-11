@@ -26,73 +26,75 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Kraken",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Leviathan",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Merfolk",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Octopus",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Serpent",
         "result": false
       },
       {
         "fn": "ceasesToExist",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2313,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Kraken",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Leviathan",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Merfolk",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Octopus",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "subtype": "Serpent",
         "result": false
       },
       {
         "fn": "ceasesToExist",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2314,
         "zone": "Hand",
         "controller": "you"
       },
@@ -150,19 +152,19 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Kraken",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Leviathan",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Merfolk",
         "result": true
       },
@@ -180,37 +182,38 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Kraken",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Leviathan",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Merfolk",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Octopus",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "subtype": "Serpent",
         "result": false
       },
       {
         "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2319,
         "zone": "Hand",
         "controller": "opp0"
       }

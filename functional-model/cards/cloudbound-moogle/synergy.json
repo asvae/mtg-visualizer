@@ -1,6 +1,34 @@
 {
   "source": [
     {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": {
@@ -10,24 +38,67 @@
           ]
         }
       },
+      "targeted": true,
       "value": 1,
-      "id": "etb-counter",
-      "highlight": "put a +1/+1 counter on target creature",
-      "sourceText": "When this creature enters, put a +1/+1 counter on target creature."
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 27,
+          "end": 65
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Plains"
+        ]
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 43,
+          "end": 114
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "put a +1/+1 counter on target creature (needs a creature on the battlefield to target)",
-      "id": "wants-creature-target",
-      "highlight": "put a +1/+1 counter on target creature",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 50,
+          "end": 65
+        }
+      ]
+    },
+    {
+      "event": "discard",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 24,
+          "end": 41
+        }
+      ]
     }
   ]
 }

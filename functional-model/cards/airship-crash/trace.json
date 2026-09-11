@@ -34,6 +34,7 @@
       {
         "fn": "destroy",
         "target": "you-artifact-0",
+        "id": 87,
         "controller": "you"
       },
       {
@@ -86,6 +87,7 @@
       {
         "fn": "destroy",
         "target": "you-enchantment-0",
+        "id": 90,
         "controller": "you"
       },
       {

@@ -50,6 +50,7 @@
       {
         "fn": "dealDamage",
         "source": "Lightning, Army of One",
+        "sourceId": 1323,
         "target": "opp0",
         "amount": 3
       },

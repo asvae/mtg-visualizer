@@ -1,14 +1,105 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "activated ({5}{W}{W})",
-      "result": "exiles itself and returns transformed into Summon: Alexander",
+      "setup": "you: 7 Plains(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> equip -> transform -> Saga chapters over real turns -> sacrifice",
+      "result": "Crystal Fragments enters, real Equipment attachment onto a real creature (+1/+1 — no continuous-effect pipeline in this engine recalculates the equipped creature, a real documented gap); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — real 714.2b/c, chapter I fires immediately (damage prevention — no resolvable effect in this model), chapter II fires on your next draw step (same), chapter III fires the turn after (taps the real opponent Coeurl), then the real \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the real turn-based engine.",
       "raw": {
-        "result": "exiles itself and returns transformed into Summon: Alexander"
+        "result": "Crystal Fragments enters, real Equipment attachment onto a real creature (+1/+1 — no continuous-effect pipeline in this engine recalculates the equipped creature, a real documented gap); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — real 714.2b/c, chapter I fires immediately (damage prevention — no resolvable effect in this model), chapter II fires on your next draw step (same), chapter III fires the turn after (taps the real opponent Coeurl), then the real \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the real turn-based engine.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 10
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 10
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Dwarven Castle Guard",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Crystal Fragments",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
+        "fn": "enters",
+        "card": "Crystal Fragments",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "equip",
+        "equipment": "Crystal Fragments",
+        "target": "Dwarven Castle Guard"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
       {
         "fn": "activate",
         "card": "Crystal Fragments",
@@ -16,82 +107,167 @@
         "cost": "{5}{W}{W}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Crystal Fragments"
+      },
+      {
         "fn": "moveTo",
         "target": "Crystal Fragments",
+        "id": 501,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
+        "id": 501,
         "zone": "Battlefield",
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterI\" trigger fires, back face",
-      "result": "no resolvable effect in this model (damage prevention is not tracked here)",
-      "raw": {
-        "result": "no resolvable effect in this model (damage prevention is not tracked here)",
-        "face": "back",
-        "trigger": "chapterI",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "transform",
+        "card": "Crystal Fragments",
+        "into": "Summon: Alexander"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Crystal Fragments",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Alexander",
         "instanceId": 1,
         "name": "chapterI"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterII\" trigger fires, back face",
-      "result": "no resolvable effect in this model (damage prevention is not tracked here)",
-      "raw": {
-        "result": "no resolvable effect in this model (damage prevention is not tracked here)",
-        "face": "back",
-        "trigger": "chapterII",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Crystal Fragments",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Alexander",
         "instanceId": 1,
         "name": "chapterII"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 2 creature(s)",
-      "action": "\"chapterIII\" trigger fires, back face",
-      "result": "taps both of the opponent's creatures",
-      "raw": {
-        "result": "taps both of the opponent's creatures",
-        "face": "back",
-        "trigger": "chapterIII",
-        "opponents": [
-          {
-            "creaturesCount": 2
-          }
-        ]
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 6,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 7,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Crystal Fragments",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Alexander",
@@ -101,15 +277,78 @@
       {
         "fn": "read:getCreaturesInPlay",
         "player": "opp0",
-        "count": 2
+        "count": 1
       },
       {
         "fn": "tap",
-        "target": "opp0-creature-token-0"
+        "target": "Coeurl",
+        "id": 500,
+        "controller": "opp0"
       },
       {
-        "fn": "tap",
-        "target": "opp0-creature-token-1"
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 7,
+        "player": "you"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "card": "Summon: Alexander"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Crystal Fragments ({W})",
+        "from": 2
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Real Equipment attachment (301.5c)",
+        "from": 5
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 6
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 9
+      },
+      {
+        "label": "Activate Crystal Fragments",
+        "from": 12
+      },
+      {
+        "label": "Resolve",
+        "from": 20
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 25
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 34
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 39
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 41
+      },
+      {
+        "label": "Real \"Sacrifice after III\" (714.4/704.5x)",
+        "from": 48
       }
     ]
   }

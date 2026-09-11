@@ -22,6 +22,7 @@
       {
         "fn": "putCounter",
         "target": "Vincent Valentine",
+        "id": 2819,
         "counterType": "+1/+1",
         "amount": 3,
         "controller": "you"
@@ -48,12 +49,14 @@
       {
         "fn": "moveTo",
         "target": "Vincent Valentine",
+        "id": 2821,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Vincent Valentine",
+        "id": 2821,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -80,12 +83,15 @@
       {
         "fn": "moveTo",
         "target": "Galian Beast",
+        "id": 2823,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
-        "target": "Galian Beast"
+        "target": "Galian Beast",
+        "id": 2823,
+        "controller": "you"
       }
     ]
   },
@@ -119,6 +125,7 @@
       {
         "fn": "dealDamage",
         "source": "Galian Beast",
+        "sourceId": 2825,
         "target": "opp0",
         "amount": 3
       },

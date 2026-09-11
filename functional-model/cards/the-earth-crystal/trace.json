@@ -27,12 +27,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -42,14 +42,16 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2433,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2434,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -84,7 +86,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -94,7 +96,8 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2437,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

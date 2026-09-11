@@ -54,6 +54,7 @@
       {
         "fn": "destroy",
         "target": "opp0-artifact-0",
+        "id": 430,
         "controller": "opp0"
       }
     ]
@@ -107,12 +108,12 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isEnchantment",
-        "target": "opp0-creature-token-0",
+        "target": "Grizzly Bears",
         "result": false
       }
     ]

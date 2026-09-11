@@ -28,7 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "target": "Hero"
+        "equipmentId": 161,
+        "target": "Hero",
+        "id": 162
       }
     ]
   },
@@ -52,6 +54,7 @@
       {
         "fn": "putCounter",
         "target": "Astrologian's Planisphere",
+        "id": 164,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -78,6 +81,7 @@
       {
         "fn": "putCounter",
         "target": "Astrologian's Planisphere",
+        "id": 166,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -111,7 +115,9 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "target": "you-creature-token-0"
+        "equipmentId": 170,
+        "target": "Grizzly Bears",
+        "id": 168
       }
     ]
   }

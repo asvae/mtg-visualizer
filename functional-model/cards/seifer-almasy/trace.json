@@ -20,13 +20,26 @@
         "name": "onAttacksAlone"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 2
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Seifer Almasy",
+        "result": true
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 1969,
         "keyword": "DoubleStrike"
       }
     ]

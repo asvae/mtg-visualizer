@@ -29,6 +29,7 @@
       {
         "fn": "moveTo",
         "target": "Eden, Seat of the Sanctum",
+        "id": 664,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -42,6 +43,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-creature-0",
+        "id": 660,
         "zone": "Hand",
         "controller": "you"
       }
@@ -76,6 +78,7 @@
       {
         "fn": "moveTo",
         "target": "Eden, Seat of the Sanctum",
+        "id": 668,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -89,6 +92,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
+        "id": 666,
         "zone": "Hand",
         "controller": "you"
       }

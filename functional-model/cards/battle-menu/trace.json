@@ -117,6 +117,7 @@
       {
         "fn": "pump",
         "target": "Cat",
+        "id": 233,
         "power": 0,
         "toughness": 4
       },
@@ -224,6 +225,7 @@
       {
         "fn": "destroy",
         "target": "Coliseum Behemoth",
+        "id": 240,
         "controller": "opp0"
       },
       {

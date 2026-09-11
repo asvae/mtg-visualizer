@@ -113,11 +113,13 @@
       },
       {
         "fn": "tap",
-        "target": "Aerith Gainsborough"
+        "target": "Aerith Gainsborough",
+        "id": 52
       },
       {
         "fn": "attack",
-        "card": "Aerith Gainsborough"
+        "card": "Aerith Gainsborough",
+        "id": 52
       },
       {
         "fn": "phase",
@@ -146,6 +148,7 @@
       {
         "fn": "putCounter",
         "target": "Aerith Gainsborough",
+        "id": 52,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -190,11 +193,13 @@
       },
       {
         "fn": "tap",
-        "target": "Aerith Gainsborough"
+        "target": "Aerith Gainsborough",
+        "id": 52
       },
       {
         "fn": "attack",
-        "card": "Aerith Gainsborough"
+        "card": "Aerith Gainsborough",
+        "id": 52
       },
       {
         "fn": "phase",
@@ -205,7 +210,9 @@
       {
         "fn": "block",
         "blocker": "Gigantoad",
-        "attacker": "Aerith Gainsborough"
+        "blockerId": 54,
+        "attacker": "Aerith Gainsborough",
+        "attackerId": 52
       },
       {
         "fn": "dealDamage",
@@ -250,6 +257,7 @@
       {
         "fn": "putCounter",
         "target": "Freya Crescent",
+        "id": 53,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

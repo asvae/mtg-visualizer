@@ -5,6 +5,10 @@ export const gaelicat: CardDefinition = {
   manaCost: '{2}{W}',
   typeLine: 'Creature — Cat',
 
+  // Real printed base P/T (data/fin/fin_scryfall.json) — without this,
+  // state.ts's own addCard silently defaults to a fake 1/1 (same real gap
+  // adelbert-steiner's own `pt` field closes).
+  pt: [1, 3],
   keywords: ['Flying', 'Vigilance'],
   // A conditional continuous P/T ability, presence-gated — a different
   // shape than adelbert-steiner's own count-scaling `ptFormula` CDA (a

@@ -35,28 +35,16 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2420,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      },
-      {
-        "fn": "putCounter",
-        "target": "Hero",
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      },
-      {
-        "fn": "putCounter",
-        "target": "Hero",
+        "target": "Grizzly Bears",
+        "id": 2421,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -64,6 +52,7 @@
       {
         "fn": "putCounter",
         "target": "Hero",
+        "id": 2423,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -71,6 +60,23 @@
       {
         "fn": "putCounter",
         "target": "Hero",
+        "id": 2424,
+        "counterType": "+1/+1",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Hero",
+        "id": 2425,
+        "counterType": "+1/+1",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Hero",
+        "id": 2426,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

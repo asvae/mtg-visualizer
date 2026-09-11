@@ -19,6 +19,7 @@
       {
         "fn": "pump",
         "target": "Jumbo Cactuar",
+        "id": 1254,
         "power": 9999,
         "toughness": 0
       }

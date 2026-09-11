@@ -83,12 +83,14 @@
       {
         "fn": "moveTo",
         "target": "Exdeath, Void Warlock",
+        "id": 795,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Exdeath, Void Warlock",
+        "id": 795,
         "zone": "Battlefield",
         "controller": "you"
       }

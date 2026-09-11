@@ -51,3 +51,29 @@ Both generation paths produce this SAME shape:
   renderer to describe it (no renderer-specific side-channel needed).
 - Changing an existing entry's field names/shape is a breaking change to
   `card`'s renderer — flag it, don't just ship it.
+
+## Per-instance `id` fields (2026-09-12, additive)
+
+Every per-instance action entry (`pump`, `moveTo`/`ceasesToExist`,
+`putCounter`, `equip`, `animate`, `gainControl`, `destroy`/
+`destroyPrevented`, `dealDamage`, `tap`, `untap`, `grantKeyword`, dig's own
+`moveTo`, and `engine-trace.ts`'s `tap`/`attack`/`block`) now ALSO carries
+a real, stable per-instance `id` (`RealCard.id`/`Card.getId()` — the same
+id `state.cards.get(id)` already keys on internally) alongside its
+existing `name`/`target`-style field — `equipmentId`/`sourceId` on `equip`/
+`dealDamage` for their own second real-card party, `blockerId`/
+`attackerId` on `block`. This is purely additive (no existing field
+renamed/removed) — added because `name`-only target resolution silently
+breaks once 2+ real, distinct board instances share a name
+(`GENERIC_FILLER_CREATURE`, dynamically created tokens, e.g. 2 Grizzly
+Bears both under the same controller) — a real regression (The Crystal's
+Chosen, fin/14: a `putCounter`-each-creature effect landed unevenly, 2
+counters on one Grizzly Bears/0 on the other, instead of 1 each).
+
+**`card` (consumer) should**: have `ensureForZone`/`ensureForTap`
+(`app/lib/scenarioReplay.ts`) prefer matching on `id` when present, falling
+back to the existing name(+owner/zone)-only match for older/id-less
+entries — the existing `owner`-scoping fix there (`ensureForTap`'s own
+`owner` param) narrows but does NOT fully resolve this collision class
+(same-owner, same-name, multiple instances still collide under
+owner-scoping alone).

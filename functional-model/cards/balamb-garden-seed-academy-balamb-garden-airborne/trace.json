@@ -18,12 +18,14 @@
       {
         "fn": "moveTo",
         "target": "Balamb Garden, SeeD Academy",
+        "id": 183,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Balamb Garden, SeeD Academy",
+        "id": 183,
         "zone": "Battlefield",
         "controller": "you"
       }

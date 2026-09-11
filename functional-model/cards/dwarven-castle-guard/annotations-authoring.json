@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Dwarf Soldier",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Dwarf Soldier",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token.",
+      "highlight": "When this creature dies"
+    },
+    {
+      "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token.",
+      "highlight": "create a 1/1 colorless Hero creature token"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "When this creature dies, create a 1/1 colorless Hero creature token.",
+      "highlight": "When this creature dies"
+    }
+  ]
+}

@@ -28,7 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Samurai's Katana",
-        "target": "Hero"
+        "equipmentId": 1934,
+        "target": "Hero",
+        "id": 1935
       }
     ]
   },
@@ -59,7 +61,9 @@
       {
         "fn": "equip",
         "equipment": "Samurai's Katana",
-        "target": "you-creature-token-0"
+        "equipmentId": 1939,
+        "target": "Grizzly Bears",
+        "id": 1937
       }
     ]
   }

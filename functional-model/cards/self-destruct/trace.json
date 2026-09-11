@@ -33,7 +33,7 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 4
       },
       {
@@ -48,14 +48,18 @@
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-0",
-        "target": "opp0-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 1977,
+        "target": "Grizzly Bears",
+        "id": 1979,
         "amount": 4
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-0",
-        "target": "you-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 1977,
+        "target": "Grizzly Bears",
+        "id": 1977,
         "amount": 4
       },
       {
@@ -97,7 +101,7 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 3
       },
       {
@@ -107,8 +111,10 @@
       },
       {
         "fn": "dealDamage",
-        "source": "you-creature-token-0",
-        "target": "you-creature-token-0",
+        "source": "Grizzly Bears",
+        "sourceId": 1982,
+        "target": "Grizzly Bears",
+        "id": 1982,
         "amount": 3
       },
       {

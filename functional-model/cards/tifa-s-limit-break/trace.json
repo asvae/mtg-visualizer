@@ -29,7 +29,8 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2600,
         "power": 2,
         "toughness": 2
       },
@@ -73,17 +74,18 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 3
       },
       {
         "fn": "read:getNetToughness",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 3
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2603,
         "power": 3,
         "toughness": 3
       },
@@ -127,17 +129,18 @@
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
         "fn": "read:getNetToughness",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
         "result": 2
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2606,
         "power": 4,
         "toughness": 4
       },

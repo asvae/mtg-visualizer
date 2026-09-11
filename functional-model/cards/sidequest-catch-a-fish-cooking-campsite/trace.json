@@ -1,19 +1,39 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 artifact(s) in library",
-      "action": "\"onUpkeep\" trigger fires",
-      "result": "reveals the artifact and puts it into hand, creates a Food token",
+      "setup": "you: 2 creature(s); you: 1 artifact(s) in library",
+      "action": "cast from hand",
+      "result": "casts and enters; real upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
       "raw": {
-        "result": "reveals the artifact and puts it into hand, creates a Food token",
-        "trigger": "onUpkeep",
+        "result": "casts and enters; real upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
         "you": {
           "libraryCount": 1,
-          "libraryArtifactCount": 1
-        }
+          "libraryArtifactCount": 1,
+          "creaturesCount": 2
+        },
+        "sequence": [
+          "onUpkeep",
+          {
+            "face": "back",
+            "activate": true
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Sidequest: Catch a Fish",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Sidequest: Catch a Fish",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Sidequest: Catch a Fish",
@@ -40,6 +60,7 @@
       {
         "fn": "moveTo",
         "target": "you-library-artifact-0",
+        "id": 2071,
         "zone": "Hand",
         "controller": "you"
       },
@@ -49,92 +70,7 @@
         "token": "Food",
         "qty": 1,
         "tapped": false
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 card(s) in library",
-      "action": "\"onUpkeep\" trigger fires",
-      "result": "top card is neither artifact nor creature, no-op",
-      "raw": {
-        "result": "top card is neither artifact nor creature, no-op",
-        "trigger": "onUpkeep",
-        "you": {
-          "libraryCount": 1
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Sidequest: Catch a Fish",
-        "instanceId": 1,
-        "name": "onUpkeep"
       },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 1,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isCreature",
-        "target": "Forest",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "Forest",
-        "result": false
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onUpkeep\" trigger fires",
-      "result": "empty library, no-op",
-      "raw": {
-        "result": "empty library, no-op",
-        "trigger": "onUpkeep",
-        "you": {
-          "libraryCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Sidequest: Catch a Fish",
-        "instanceId": 1,
-        "name": "onUpkeep"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 0,
-        "creatureCount": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s); you: 1 artifact(s)",
-      "action": "activated ({3}, {T}, Sacrifice an artifact (activate only as a sorcery)), back face",
-      "result": "sacrifices an artifact, puts a +1/+1 counter on each creature you control",
-      "raw": {
-        "result": "sacrifices an artifact, puts a +1/+1 counter on each creature you control",
-        "face": "back",
-        "you": {
-          "creaturesCount": 2,
-          "artifactsCount": 1
-        }
-      }
-    },
-    "log": [
       {
         "fn": "activate",
         "card": "Cooking Campsite",
@@ -148,14 +84,16 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 2069,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 2070,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

@@ -47,6 +47,11 @@ const TOKEN_KEY_TO_PRINT: Record<keyof typeof TOKENS, { set: string; number: str
   c_1_1_hero: { set: 'tfin', number: '2' },
   w_2_2_knight: { set: 'tfin', number: '10' },
   g_1_1_elf: { set: 'thob', number: '8' },
+  // Verified against data/cards.db: scryfall_id 20a709d5-4be5-487b-bfba-
+  // 4b1821f2ebd3 = set_code 'tfin', collector_number '34' ("Moogle", 1/2
+  // white Moogle creature token, Lifelink) — matches tokens.ts's own
+  // w_1_2_moogle_lifelink entry exactly.
+  w_1_2_moogle_lifelink: { set: 'tfin', number: '34' },
 };
 
 const DB_PATH = join(process.cwd(), 'data', 'cards.db');

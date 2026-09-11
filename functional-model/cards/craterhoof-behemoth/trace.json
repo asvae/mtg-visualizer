@@ -51,17 +51,20 @@
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 464,
         "keyword": "Trample"
       },
       {
         "fn": "grantKeyword",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 465,
         "keyword": "Trample"
       },
       {
         "fn": "grantKeyword",
         "target": "Craterhoof Behemoth",
+        "id": 466,
         "keyword": "Trample"
       },
       {
@@ -81,19 +84,22 @@
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-0",
+        "target": "Grizzly Bears",
+        "id": 464,
         "power": 3,
         "toughness": 3
       },
       {
         "fn": "pump",
-        "target": "you-creature-token-1",
+        "target": "Grizzly Bears",
+        "id": 465,
         "power": 3,
         "toughness": 3
       },
       {
         "fn": "pump",
         "target": "Craterhoof Behemoth",
+        "id": 466,
         "power": 3,
         "toughness": 3
       }
@@ -127,6 +133,7 @@
       {
         "fn": "grantKeyword",
         "target": "Craterhoof Behemoth",
+        "id": 468,
         "keyword": "Trample"
       },
       {
@@ -147,6 +154,7 @@
       {
         "fn": "pump",
         "target": "Craterhoof Behemoth",
+        "id": 468,
         "power": 1,
         "toughness": 1
       }

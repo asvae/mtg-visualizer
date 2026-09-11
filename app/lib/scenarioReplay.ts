@@ -25,7 +25,7 @@
 // on that fn) — see that case's own doc comment for the remaining gap.
 
 import type { LogEntry, PlayerState, Scenario } from '../../functional-model/harness';
-import { GENERIC_FILLER_LAND } from '../../functional-model/harness';
+import { GENERIC_FILLER_CREATURE, GENERIC_FILLER_LAND } from '../../functional-model/harness';
 import type { ZoneType } from '../../functional-model/interfaces';
 import { TOKENS } from '../../functional-model/tokens';
 
@@ -52,6 +52,8 @@ export interface ReplayCard {
   /** True from an `attack`/`block` entry until the next real `phase` entry (combat's own step boundary) clears it — an engine-piloted trace only (a flat harness.ts scenario never crosses a real phase, so these two would never clear); a purely visual "currently in combat" marker, not itself a source of any other state. */
   attacking?: boolean;
   blocking?: boolean;
+  /** The real, stable per-instance id (`RealCard.id`/`Card.getId()`, harness.ts's `loggingActions`/engine-trace.ts) this chip was confirmed to be, once any `id`-carrying log entry has resolved to it (see `resolveInstance` below and `.claude/contracts/state-event-format.md`'s "Per-instance `id` fields" section). Undefined for a chip no id-carrying entry has ever touched (most filler that's only ever seeded, never individually acted on). Deliberately NOT part of `groupKey` — two real distinct instances that currently look identical (same owner/zone/tapped/counters/keywords) should still visually collapse into one "×N" chip, same as any other fungible group; this field only disambiguates WHICH object a later same-id log entry mutates, not how chips render. */
+  id?: number;
 }
 
 export interface ReplaySnapshot {
@@ -80,10 +82,16 @@ function seedPlayerCards(owner: string, ps: PlayerState | undefined): ReplayCard
   // power and toughness, matching `setupPlayer`'s own `creaturePower` use
   // for BOTH fields (harness.ts).
   const creaturePT: [number, number] = [ps?.creaturePower ?? 1, ps?.creaturePower ?? 1];
+  // Real vanilla creature (harness.ts's `GENERIC_FILLER_CREATURE`) — not the
+  // old synthetic `${n}-creature-nontoken-${i}`/`${n}-creature-token-${i}`
+  // placeholder, so one of these gets real art instead of a "Cr" chip.
+  // Pushed unprefixed like `GENERIC_FILLER_LAND` below, same reason — and
+  // always the SAME one for both loops (harness.ts's own naming now agrees),
+  // so N of them collapse onto one grouped "×N" chip.
   const nontoken = ps?.nontokenCreaturesCount ?? 0;
-  for (let i = 0; i < nontoken; i++) push(`${n}-creature-nontoken-${i}`, 'Battlefield', creaturePT);
+  for (let i = 0; i < nontoken; i++) push(GENERIC_FILLER_CREATURE, 'Battlefield', creaturePT);
   const tokenCreatures = Math.max(0, (ps?.creaturesCount ?? 0) - nontoken);
-  for (let i = 0; i < tokenCreatures; i++) push(`${n}-creature-token-${i}`, 'Battlefield', creaturePT);
+  for (let i = 0; i < tokenCreatures; i++) push(GENERIC_FILLER_CREATURE, 'Battlefield', creaturePT);
   // Real named tokens/basic lands (harness.ts's `PlayerState.tokens`/
   // `basicLands`) — pushed under their OWN real name, unprefixed, same as
   // `state.createToken`/`addCard` do there (no `${owner}-` prefix these
@@ -188,12 +196,18 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
   const cards: ReplayCard[] = initialCards(trace.scenario.raw);
   const byName = new Map<string, ReplayCard>(cards.map((c) => [c.name, c]));
 
-  const ensure = (name: string | undefined, zone: ZoneType | 'Unknown' = 'Unknown'): ReplayCard | undefined => {
+  const ensure = (name: string | undefined, zone: ZoneType | 'Unknown' = 'Unknown', exclude?: ReadonlySet<ReplayCard>): ReplayCard | undefined => {
     if (!name) return undefined;
     let card = byName.get(name);
+    // `exclude` (see `resolveInstance` below) — the byName alias target has
+    // already been claimed by a DIFFERENT real id, so a fresh id needs a
+    // genuinely different same-named instance, not the same one again.
+    if (card && exclude?.has(card)) {
+      card = cards.find((c) => c.name === name && !exclude.has(c));
+    }
     if (!card) {
       card = { name, zone, owner: guessOwner(name, roles), tapped: false, counters: {}, keywords: new Set() };
-      byName.set(name, card);
+      if (!byName.has(name)) byName.set(name, card);
       cards.push(card);
     }
     return card;
@@ -215,11 +229,30 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
    * (a genuinely not-yet-seen name, or every instance already in the
    * target state — the tap/untap then becomes a harmless no-op on
    * whichever one `ensure` aliases to, same as before this fix).
+   *
+   * `owner`, when given, ALSO scopes the match — plain `tap` (harness.ts,
+   * `GENERIC_FILLER_CREATURE`) now carries a real `controller`, and needed
+   * this the instant an effect taps only ONE side's own generic filler
+   * creature while both sides share the exact same fungible name on the
+   * battlefield (confirmed the hard way: Crystal Fragments' own chapter III
+   * "tap all creatures your opponents control" could otherwise flip YOUR
+   * own untapped filler instead of the opponent's). `tapForMana`/`untap`
+   * don't carry a `controller` field yet, so their own call sites just pass
+   * nothing here — same untargeted behavior as before this parameter
+   * existed.
    */
-  const ensureForTap = (name: string | undefined, wantTapped: boolean, zone: ZoneType | 'Unknown' = 'Battlefield'): ReplayCard | undefined => {
+  const ensureForTap = (
+    name: string | undefined,
+    wantTapped: boolean,
+    zone: ZoneType | 'Unknown' = 'Battlefield',
+    owner?: string,
+    exclude?: ReadonlySet<ReplayCard>,
+  ): ReplayCard | undefined => {
     if (!name) return undefined;
-    const candidate = cards.find((c) => c.name === name && c.zone === zone && c.tapped !== wantTapped);
-    return candidate ?? ensure(name, zone);
+    const candidate = cards.find(
+      (c) => c.name === name && c.zone === zone && c.tapped !== wantTapped && (!owner || c.owner === owner) && !exclude?.has(c),
+    );
+    return candidate ?? ensure(name, zone, exclude);
   };
   /**
    * Same "several real instances share a fungible name, pick any ONE
@@ -235,10 +268,54 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
    * tap/untap entry has no `player` field to scope by in the first place,
    * but drawCard/drawCards/discard all do).
    */
-  const ensureForZone = (name: string | undefined, fromZone: ZoneType, owner?: string): ReplayCard | undefined => {
+  const ensureForZone = (name: string | undefined, fromZone: ZoneType, owner?: string, exclude?: ReadonlySet<ReplayCard>): ReplayCard | undefined => {
     if (!name) return undefined;
-    const candidate = cards.find((c) => c.name === name && c.zone === fromZone && (!owner || c.owner === owner));
-    return candidate ?? ensure(name, fromZone);
+    const candidate = cards.find((c) => c.name === name && c.zone === fromZone && (!owner || c.owner === owner) && !exclude?.has(c));
+    return candidate ?? ensure(name, fromZone, exclude);
+  };
+  /**
+   * Real per-instance `id` field (`RealCard.id`/`Card.getId()`, additive —
+   * see `.claude/contracts/state-event-format.md`'s "Per-instance `id`
+   * fields" section) — the actual fix for the class of bug `ensureForZone`/
+   * `ensureForTap`'s own `owner`-scoping above does NOT resolve: several
+   * real, DISTINCT board instances sharing both a name AND an owner (2
+   * Grizzly Bears filler creatures both under "you," 4 "Hero" tokens all
+   * created by the same effect, ...) — confirmed the hard way (The
+   * Crystal's Chosen, fin/14): a "put a +1/+1 counter on each creature you
+   * control" effect visibly piled every counter onto ONE creature instead
+   * of spreading one each, because plain name+zone+owner matching always
+   * finds the exact same first candidate for every entry.
+   *
+   * `id` is only ever useful ACROSS entries that share one, so this tracks
+   * a running `id -> ReplayCard` map: the FIRST entry carrying a given id
+   * still resolves via the ordinary name/zone/owner `resolve` callback
+   * (nothing else to go on yet) but is then pinned to that id going
+   * forward — every LATER entry sharing the same id skips straight to the
+   * pinned object, never re-running `resolve` at all. The one extra piece
+   * needed for the FIRST resolution itself to land correctly: `resolve` is
+   * called with the set of cards already pinned to some OTHER id
+   * (`claimedByOtherId`) so it's steered away from re-picking an instance a
+   * previous distinct id already claimed, landing on a genuinely different
+   * same-named sibling instead (see `ensure`/`ensureForZone`/
+   * `ensureForTap`'s own new `exclude` parameter). An id-less entry (older
+   * trace shapes, or an fn that never needed one) always gets today's exact
+   * unscoped behavior — no exclusion applied, first-registered alias
+   * returned, matching every pre-existing test/behavior byte for byte.
+   */
+  const idCards = new Map<number, ReplayCard>();
+  const claimedByOtherId = new Set<ReplayCard>();
+  const NO_EXCLUDE: ReadonlySet<ReplayCard> = new Set();
+  const resolveInstance = (id: number | undefined, resolve: (exclude: ReadonlySet<ReplayCard>) => ReplayCard | undefined): ReplayCard | undefined => {
+    if (id === undefined) return resolve(NO_EXCLUDE);
+    const existing = idCards.get(id);
+    if (existing) return existing;
+    const card = resolve(claimedByOtherId);
+    if (card) {
+      idCards.set(id, card);
+      claimedByOtherId.add(card);
+      card.id = id;
+    }
+    return card;
   };
   /**
    * Real 400.7 — an object that changes zones becomes a NEW object; nothing
@@ -446,7 +523,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'moveTo': {
-        const c = ensure(target);
+        const c = resolveInstance(num(entry.id), (exclude) => ensure(target, 'Unknown', exclude));
         resetOnLeavingBattlefield(c);
         if (c) c.zone = (str(entry.zone) as ZoneType | undefined) ?? c.zone;
         break;
@@ -458,7 +535,12 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // stops existing). `'Unknown'` is the SAME "don't render this" zone
         // every other never-seeded reference already falls back to — no new
         // sentinel needed, this file's own render filter already skips it.
-        const c = ensure(target);
+        // `ensureForZone`, not plain `ensure` — this is the path a destroyed/
+        // bounced TOKEN filler creature actually takes (`isTokenCard`), and
+        // `GENERIC_FILLER_CREATURE` (harness.ts) now gives every player's
+        // generic filler creature the same fungible name, same reasoning
+        // `putCounter` above needed `ensureForZone` for `GENERIC_FILLER_LAND`.
+        const c = resolveInstance(num(entry.id), (exclude) => ensureForZone(target, 'Battlefield', str(entry.controller), exclude));
         resetOnLeavingBattlefield(c);
         if (c) c.zone = 'Unknown';
         break;
@@ -477,7 +559,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'tap': {
-        const c = ensureForTap(target, true);
+        const c = resolveInstance(num(entry.id), (exclude) => ensureForTap(target, true, 'Battlefield', str(entry.controller), exclude));
         if (c) c.tapped = true;
         break;
       }
@@ -498,7 +580,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'untap': {
-        const c = ensureForTap(target, false);
+        const c = resolveInstance(num(entry.id), (exclude) => ensureForTap(target, false, 'Battlefield', undefined, exclude));
         if (c) c.tapped = false;
         break;
       }
@@ -514,14 +596,19 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // already did — scopes the match to the RIGHT player's own card too
         // (both players seed the same fungible land name).
         const controllerName = str(entry.controller);
-        const c = ensureForZone(target, 'Battlefield', controllerName);
+        const c = resolveInstance(num(entry.id), (exclude) => ensureForZone(target, 'Battlefield', controllerName, exclude));
         const counterType = str(entry.counterType) ?? '+1/+1';
         const amount = num(entry.amount) ?? 0;
         if (c) c.counters[counterType] = (c.counters[counterType] ?? 0) + amount;
         break;
       }
       case 'destroy': {
-        const c = ensure(target);
+        // `ensureForZone`, same reasoning as `ceasesToExist` above — a
+        // destroyed NONTOKEN filler creature (isTokenCard:false, so it takes
+        // this plain `destroy` path rather than `ceasesToExist`) can share
+        // `GENERIC_FILLER_CREATURE`'s own fungible name with siblings still
+        // on the battlefield.
+        const c = resolveInstance(num(entry.id), (exclude) => ensureForZone(target, 'Battlefield', str(entry.controller), exclude));
         resetOnLeavingBattlefield(c);
         if (c) c.zone = 'Graveyard';
         break;
@@ -539,17 +626,17 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
       }
       case 'equip': {
         const equipment = str(entry.equipment);
-        ensure(equipment, 'Battlefield');
-        ensure(target, 'Battlefield');
+        resolveInstance(num(entry.equipmentId), (exclude) => ensure(equipment, 'Battlefield', exclude));
+        resolveInstance(num(entry.id), (exclude) => ensure(target, 'Battlefield', exclude));
         break;
       }
       case 'gainControl': {
-        const c = ensure(target, 'Battlefield');
+        const c = resolveInstance(num(entry.id), (exclude) => ensure(target, 'Battlefield', exclude));
         if (c && player) c.owner = player;
         break;
       }
       case 'grantKeyword': {
-        const c = ensure(target, 'Battlefield');
+        const c = resolveInstance(num(entry.id), (exclude) => ensure(target, 'Battlefield', exclude));
         const keyword = str(entry.keyword);
         if (c && keyword) c.keywords.add(keyword);
         break;
@@ -670,7 +757,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'pump': {
-        const c = ensure(target, 'Battlefield');
+        const c = resolveInstance(num(entry.id), (exclude) => ensure(target, 'Battlefield', exclude));
         if (c) {
           c.powerMod = (c.powerMod ?? 0) + (num(entry.power) ?? 0);
           c.toughnessMod = (c.toughnessMod ?? 0) + (num(entry.toughness) ?? 0);
@@ -678,7 +765,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'animate': {
-        const c = ensure(target, 'Battlefield');
+        const c = resolveInstance(num(entry.id), (exclude) => ensure(target, 'Battlefield', exclude));
         const types = Array.isArray(entry.types) ? entry.types.filter((t): t is string => typeof t === 'string') : undefined;
         if (c && types) c.animatedTypes = types;
         break;
@@ -718,16 +805,16 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         // already handled by the `tap` case above; this just adds the
         // purely-visual "currently attacking" flag (cleared at the next real
         // `phase` entry, see that case's own comment).
-        const c = cardName ? ensure(cardName, 'Battlefield') : undefined;
+        const c = resolveInstance(num(entry.id), (exclude) => (cardName ? ensure(cardName, 'Battlefield', exclude) : undefined));
         if (c) c.attacking = true;
         break;
       }
       case 'block': {
         const blocker = str(entry.blocker);
         const attacker = str(entry.attacker);
-        const b = blocker ? ensure(blocker, 'Battlefield') : undefined;
+        const b = resolveInstance(num(entry.blockerId), (exclude) => (blocker ? ensure(blocker, 'Battlefield', exclude) : undefined));
         if (b) b.blocking = true;
-        const a = attacker ? ensure(attacker, 'Battlefield') : undefined;
+        const a = resolveInstance(num(entry.attackerId), (exclude) => (attacker ? ensure(attacker, 'Battlefield', exclude) : undefined));
         if (a) a.attacking = true;
         break;
       }

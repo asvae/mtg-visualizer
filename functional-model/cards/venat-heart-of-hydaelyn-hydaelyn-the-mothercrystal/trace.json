@@ -1,15 +1,83 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onCastLegendarySpell\" trigger fires",
-      "result": "draws a card",
+      "setup": "you: 11 Plains(s)",
+      "action": "real engine playthrough: cast -> cast (legendary trigger) -> transform (Hero's Sundering) -> beginning of combat (Blessing of Light)",
+      "result": "Venat enters; Freya Crescent (a real second legendary spell) is cast while Venat is on the battlefield, firing \"Whenever you cast a legendary spell, draw a card\" for real. Real turn passage clears summoning sickness; Hero's Sundering ({7}, {T}) exiles the opponent's real Coeurl, then transforms Venat into Hydaelyn, the Mothercrystal. At the real subsequent beginning of combat, Blessing of Light puts a +1/+1 counter on Freya Crescent, grants it real Indestructible, and — since Freya is legendary — draws another card.",
       "raw": {
-        "result": "draws a card",
-        "trigger": "onCastLegendarySpell"
+        "result": "Venat enters; Freya Crescent (a real second legendary spell) is cast while Venat is on the battlefield, firing \"Whenever you cast a legendary spell, draw a card\" for real. Real turn passage clears summoning sickness; Hero's Sundering ({7}, {T}) exiles the opponent's real Coeurl, then transforms Venat into Hydaelyn, the Mothercrystal. At the real subsequent beginning of combat, Blessing of Light puts a +1/+1 counter on Freya Crescent, grants it real Indestructible, and — since Freya is legendary — draws another card.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Mountain",
+            "Plains",
+            "Mountain",
+            "Plains",
+            "Mountain",
+            "Plains",
+            "Mountain",
+            "Plains",
+            "Mountain"
+          ],
+          "libraryCount": 10
+        },
+        "opponents": [
+          {
+            "libraryCount": 10
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Venat, Heart of Hydaelyn",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "enters",
+        "card": "Venat, Heart of Hydaelyn",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "cast",
+        "card": "Freya Crescent",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{R}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Freya Crescent"
+      },
       {
         "fn": "trigger",
         "card": "Venat, Heart of Hydaelyn",
@@ -18,25 +86,59 @@
       },
       {
         "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "enters",
+        "card": "Freya Crescent",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Mountain"
+      },
+      {
+        "fn": "untap",
+        "target": "Mountain"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
         "player": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "activated ({7}, {T})",
-      "result": "exiles the target nonland permanent, then exiles and returns Venat transformed into Hydaelyn, the Mothercrystal",
-      "raw": {
-        "result": "exiles the target nonland permanent, then exiles and returns Venat transformed into Hydaelyn, the Mothercrystal",
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ]
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
       {
         "fn": "activate",
         "card": "Venat, Heart of Hydaelyn",
@@ -44,11 +146,52 @@
         "cost": "{7}, {T}"
       },
       {
+        "fn": "tap",
+        "target": "Venat, Heart of Hydaelyn",
+        "id": 35,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Venat, Heart of Hydaelyn"
+      },
+      {
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "count": 13,
+        "creatureCount": 2
       },
       {
         "fn": "read:getCardsIn",
@@ -59,116 +202,106 @@
       },
       {
         "fn": "read:isLand",
+        "target": "Plains",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Plains",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Mountain",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Plains",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Mountain",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Plains",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Mountain",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Plains",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Mountain",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Plains",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Mountain",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
         "target": "Venat, Heart of Hydaelyn",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "opp0-creature-token-0",
+        "target": "Freya Crescent",
         "result": false
       },
       {
-        "fn": "ceasesToExist",
-        "target": "opp0-creature-token-0",
+        "fn": "read:isLand",
+        "target": "Coeurl",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "Coeurl",
+        "id": 34,
         "zone": "Exile",
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
+        "id": 35,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
+        "id": 35,
         "zone": "Battlefield",
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 2 land(s)",
-      "action": "activated ({7}, {T})",
-      "result": "no nonland permanent to exile, still exiles and returns Venat transformed",
-      "raw": {
-        "result": "no nonland permanent to exile, still exiles and returns Venat transformed",
-        "opponents": [
-          {
-            "landsCount": 2
-          }
-        ]
-      }
-    },
-    "log": [
+      },
       {
-        "fn": "activate",
+        "fn": "transform",
         "card": "Venat, Heart of Hydaelyn",
-        "instanceId": 1,
-        "cost": "{7}, {T}"
+        "into": "Hydaelyn, the Mothercrystal"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "fn": "phase",
+        "phase": "CombatBegin",
+        "turn": 3,
+        "player": "you"
       },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 2,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isLand",
-        "target": "Venat, Heart of Hydaelyn",
-        "result": false
-      },
-      {
-        "fn": "read:isLand",
-        "target": "opp0-land-0",
-        "result": true
-      },
-      {
-        "fn": "read:isLand",
-        "target": "opp0-land-1",
-        "result": true
-      },
-      {
-        "fn": "moveTo",
-        "target": "Venat, Heart of Hydaelyn",
-        "zone": "Exile",
-        "controller": "you"
-      },
-      {
-        "fn": "moveTo",
-        "target": "Venat, Heart of Hydaelyn",
-        "zone": "Battlefield",
-        "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 Legendary creature(s)",
-      "action": "\"onBeginCombat\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on the other legendary creature you control and draws a card",
-      "raw": {
-        "result": "puts a +1/+1 counter on the other legendary creature you control and draws a card",
-        "face": "back",
-        "trigger": "onBeginCombat",
-        "you": {
-          "creaturesCount": 1,
-          "creatureSubtypes": [
-            "Legendary"
-          ]
-        }
-      }
-    },
-    "log": [
       {
         "fn": "trigger",
         "card": "Hydaelyn, the Mothercrystal",
@@ -182,137 +315,78 @@
       },
       {
         "fn": "putCounter",
-        "target": "you-creature-token-0",
+        "target": "Freya Crescent",
+        "id": 36,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
       },
       {
+        "fn": "grantKeyword",
+        "target": "Freya Crescent",
+        "id": 36,
+        "keyword": "Indestructible"
+      },
+      {
         "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
+        "target": "Freya Crescent",
         "subtype": "Legendary",
         "result": true
       },
       {
         "fn": "drawCard",
-        "player": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "\"onBeginCombat\" trigger fires, back face",
-      "result": "puts a +1/+1 counter on the other (non-legendary) creature you control, no card drawn",
-      "raw": {
-        "result": "puts a +1/+1 counter on the other (non-legendary) creature you control, no card drawn",
-        "face": "back",
-        "trigger": "onBeginCombat",
-        "you": {
-          "creaturesCount": 1
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Hydaelyn, the Mothercrystal",
-        "instanceId": 1,
-        "name": "onBeginCombat"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 2
-      },
-      {
-        "fn": "putCounter",
-        "target": "you-creature-token-0",
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "you-creature-token-0",
-        "subtype": "Legendary",
-        "result": false
+        "card": "Forest"
       }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onBeginCombat\" trigger fires, back face",
-      "result": "no other creature you control, no-op",
-      "raw": {
-        "result": "no other creature you control, no-op",
-        "face": "back",
-        "trigger": "onBeginCombat",
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
+    ],
+    "actions": [
       {
-        "fn": "trigger",
-        "card": "Hydaelyn, the Mothercrystal",
-        "instanceId": 1,
-        "name": "onBeginCombat"
+        "label": "Start",
+        "from": 0
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({7}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Venat, Heart of Hydaelyn",
-        "instanceId": 1,
-        "cost": "{7}, {T}"
+        "label": "Cast Venat, Heart of Hydaelyn ({1}{W}{W})",
+        "from": 1
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "label": "Resolve",
+        "from": 5
       },
       {
-        "fn": "read:isLand",
-        "target": "Venat, Heart of Hydaelyn",
-        "result": false
+        "label": "Cast Freya Crescent ({R})",
+        "from": 6
       },
       {
-        "fn": "moveTo",
-        "target": "Venat, Heart of Hydaelyn",
-        "zone": "Exile",
-        "controller": "you"
+        "label": "Fire onCastLegendarySpell",
+        "from": 8
       },
       {
-        "fn": "moveTo",
-        "target": "Venat, Heart of Hydaelyn",
-        "zone": "Battlefield",
-        "controller": "you"
+        "label": "Resolve",
+        "from": 10
       },
       {
-        "fn": "legendRule",
-        "card": "Venat, Heart of Hydaelyn",
-        "player": "you"
+        "label": "Pass turn (you)",
+        "from": 11
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 17
+      },
+      {
+        "label": "Activate Venat, Heart of Hydaelyn",
+        "from": 20
+      },
+      {
+        "label": "Resolve",
+        "from": 29
+      },
+      {
+        "label": "Advance to beginning of combat",
+        "from": 49
+      },
+      {
+        "label": "Fire onBeginCombat",
+        "from": 50
       }
     ]
   }

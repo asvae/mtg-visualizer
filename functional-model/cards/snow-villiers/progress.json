@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to unified Fact model (2026-09-12): baseline self-cast/self-enters, real event:'pump' for the live layer-7a CDA (power = creatures you control, ptFormula:'setToCreaturesControlled'), paired SINK wanting Creature-on-Battlefield presence (mirrors adelbert-steiner's own Equipment-count pairing). Vigilance gets no Fact (bare printed keyword, no grant/broadcast). Consolidated to 1 scenario per the scenario-count standing rule -- dropped keywordScenarios()'s extra 3-/0-creature CDA re-probes and the legend-rule probe (no fact depends on either; the kept scenario's own 2-creature setup already demonstrates live recalculation, and harness.ts auto-logs read:getNetPower for any ptFormula card once self is on the battlefield). Old self-graveyard baseline dies/graveyard-presence fact intentionally dropped, not carried forward -- matches the newer convention already set by sibling CDA creatures adelbert-steiner/gaelicat, neither of which authors one either.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

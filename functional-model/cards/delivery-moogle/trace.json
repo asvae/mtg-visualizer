@@ -1,19 +1,65 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 card(s) in library; you: 1 artifact(s) in library",
-      "action": "\"onEnter\" trigger fires",
-      "result": "finds the artifact and puts it into hand",
+      "setup": "you: 4 Plains(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> real ETB library search",
+      "result": "Delivery Moogle enters; real ETB (603.6b) searches your real library for an artifact card with mana value 2 or less (real getCMC() check), puts it into hand.",
       "raw": {
-        "result": "finds the artifact and puts it into hand",
-        "trigger": "onEnter",
+        "result": "Delivery Moogle enters; real ETB (603.6b) searches your real library for an artifact card with mana value 2 or less (real getCMC() check), puts it into hand.",
         "you": {
-          "libraryArtifactCount": 1,
-          "libraryCount": 3
-        }
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 3,
+          "libraryArtifactCount": 1
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Delivery Moogle",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "enters",
+        "card": "Delivery Moogle",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Delivery Moogle",
@@ -40,6 +86,11 @@
         "result": true
       },
       {
+        "fn": "read:getCMC",
+        "target": "you-library-artifact-0",
+        "result": 0
+      },
+      {
         "fn": "read:isArtifact",
         "target": "Forest",
         "result": false
@@ -52,25 +103,87 @@
       {
         "fn": "moveTo",
         "target": "you-library-artifact-0",
+        "id": 538,
         "zone": "Hand",
         "controller": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Delivery Moogle ({3}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 5
       }
     ]
   },
   {
     "scenario": {
-      "setup": "you: 2 card(s) in library",
-      "action": "\"onEnter\" trigger fires",
-      "result": "no artifact in library or graveyard, nothing found",
+      "setup": "you: 4 Plains(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> real ETB graveyard search",
+      "result": "Delivery Moogle enters with no artifact in library; real ETB (603.6b) falls through to the real artifact card sitting in your graveyard (mana value 2 or less, real getCMC() check), puts it into hand.",
       "raw": {
-        "result": "no artifact in library or graveyard, nothing found",
-        "trigger": "onEnter",
+        "result": "Delivery Moogle enters with no artifact in library; real ETB (603.6b) falls through to the real artifact card sitting in your graveyard (mana value 2 or less, real getCMC() check), puts it into hand.",
         "you": {
-          "libraryCount": 2
-        }
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 3,
+          "graveyardArtifactCount": 1
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Delivery Moogle",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Delivery Moogle"
+      },
+      {
+        "fn": "enters",
+        "card": "Delivery Moogle",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Delivery Moogle",
@@ -81,14 +194,14 @@
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Library",
-        "count": 2,
+        "count": 3,
         "creatureCount": 0
       },
       {
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Graveyard",
-        "count": 0,
+        "count": 1,
         "creatureCount": 0
       },
       {
@@ -100,6 +213,42 @@
         "fn": "read:isArtifact",
         "target": "Forest",
         "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "you-gy-artifact-0",
+        "result": true
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "you-gy-artifact-0",
+        "result": 0
+      },
+      {
+        "fn": "moveTo",
+        "target": "you-gy-artifact-0",
+        "id": 554,
+        "zone": "Hand",
+        "controller": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Delivery Moogle ({3}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 5
       }
     ]
   }

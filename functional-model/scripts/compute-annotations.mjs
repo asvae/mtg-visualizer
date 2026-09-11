@@ -130,10 +130,23 @@ async function main() {
       continue;
     }
     if (!card?.name) continue;
-    const oracle = oracleByName.get(card.name);
+    // A transforming/two-faced `CardDefinition.name` is only the FRONT
+    // face's own printed name (every real DFC definition.ts in this pool —
+    // Jill/Shiva, Jecht/Braska, Clive/Ifrit, Dion/Bahamut — sets `name` to
+    // just its own face and `backFace.name` separately, never a combined
+    // string), but `loadOracleTextByName` keys its map by Scryfall's own
+    // top-level `name` field, which for a two-faced card IS the combined
+    // "Front // Back" string (`card_faces[0].name + ' // ' + card_faces[1]
+    // .name`, Scryfall's own convention) — a real, previously-unhit lookup
+    // gap surfaced by this card being the first two-faced card run through
+    // this script. Reconstruct the same combined key when `backFace` is
+    // present rather than changing what `definition.ts.name` means
+    // pool-wide.
+    const lookupName = card.backFace?.name ? `${card.name} // ${card.backFace.name}` : card.name;
+    const oracle = oracleByName.get(lookupName);
     if (!oracle) {
       skippedNoOracle++;
-      console.log(`skip ${slug}: no real oracle text found for "${card.name}" in data/*/*_scryfall.json`);
+      console.log(`skip ${slug}: no real oracle text found for "${lookupName}" in data/*/*_scryfall.json`);
       continue;
     }
 

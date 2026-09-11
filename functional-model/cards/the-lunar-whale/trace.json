@@ -21,6 +21,7 @@
       {
         "fn": "animate",
         "target": "The Lunar Whale",
+        "id": 2479,
         "types": [
           "Artifact",
           "Creature"
@@ -48,6 +49,7 @@
       {
         "fn": "animate",
         "target": "The Lunar Whale",
+        "id": 2481,
         "types": [
           "Artifact",
           "Creature"
