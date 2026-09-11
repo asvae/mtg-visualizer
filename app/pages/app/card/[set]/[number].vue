@@ -331,6 +331,23 @@ function openFactDebugModal(fact: Fact) {
   openDebugModal(`Fact JSON — ${factKey(fact)}`, factDebugJsonPretty(fact));
 }
 
+// Copy-role-marker button, sitting next to the debug-JSON braces icon in the
+// same cell: copies the plain string "SO" (source) / "SI" (sink) to the
+// clipboard, so a row's role is grab-able as real text without fighting the
+// role icon's own DOM (replaces an earlier hidden-text-behind-icon attempt
+// that was too fiddly to actually select in practice). `copiedRoleKey` briefly
+// swaps the button's own icon to a checkmark as click feedback, keyed by
+// `row.key` so only the clicked row's button flips.
+const copiedRoleKey = ref<string | null>(null);
+async function copyRoleMarker(row: FactRow) {
+  const marker = row.fact.role === 'source' ? 'SO' : 'SI';
+  await navigator.clipboard.writeText(marker);
+  copiedRoleKey.value = row.key;
+  setTimeout(() => {
+    if (copiedRoleKey.value === row.key) copiedRoleKey.value = null;
+  }, 1000);
+}
+
 // Every fact — including `addMana` events — renders as its own plain row,
 // same convention as any other fact (no card-owned grouping/collapsing;
 // see .claude/contracts/card-schema.md for what's engine- vs. card-owned).
@@ -871,8 +888,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            (functional-model/card.ts) run through real, mutable game state
            (functional-model/state.ts) across its own scenarios.ts. Primary
            position right under the card now (not a comparison column
-           anymore) — synergy-model/forge-model are deprecated (see their
-           own README/SCHEMA.md banners), this is the current direction. -->
+           anymore) — synergy-model is deprecated (see its own README/
+           SCHEMA.md banners) and forge-model was removed outright
+           (2026-09-11, GPL-3.0 exposure cleanup — it was dead code), this
+           is the current direction. -->
       <div v-if="data?.functionalModel" class="mt-2">
         <!-- Real structured per-face card data (server/api/card/[set]/
              [number].ts) — `oracleText` served raw/untouched; the component
@@ -963,12 +982,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                   </td>
                   <td class="py-1 px-2 whitespace-pre-wrap text-muted/60">{{ factConditions(row.fact) }}</td>
                   <td v-if="SHOW_FACT_DEBUG_COLUMN" class="py-1 px-2">
-                    <Icon
-                      name="lucide:braces"
-                      class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
-                      title="View this fact's raw JSON"
-                      @click="openFactDebugModal(row.fact)"
-                    />
+                    <span class="inline-flex items-center gap-1.5">
+                      <Icon
+                        name="lucide:braces"
+                        class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
+                        title="View this fact's raw JSON"
+                        @click="openFactDebugModal(row.fact)"
+                      />
+                      <Icon
+                        :name="copiedRoleKey === row.key ? 'lucide:check' : 'lucide:copy'"
+                        class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
+                        :title="row.fact.role === 'source' ? 'Copy SO' : 'Copy SI'"
+                        @click="copyRoleMarker(row)"
+                      />
+                    </span>
                   </td>
                 </tr>
               </tbody>
@@ -1014,8 +1041,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
            card's own node (or, for a rule this card only bears, the rule
            owner's node — see groupInteractionsForCard) — one row per
            mechanism, with every matching pool card and a count, rather than
-           one row per pair. Computed server-side from real synergy nodes
-           (hand-authored or Forge-translated, see the two columns above),
+           one row per pair. Computed server-side from real synergy nodes,
            not pre-baked; only wired for the small worked-example pool in
            server/api/card/[set]/[number].ts (no full-corpus join yet). -->
       <div v-if="orderedInteractions.length" class="mt-4 w-full max-w-full">

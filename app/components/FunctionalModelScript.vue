@@ -20,9 +20,10 @@ const highlighted = computed(() => hljs.highlight(props.code, { language: 'types
 
 <style scoped>
 /* Maps highlight.js's own token classes onto this app's existing palette
-   (the same hex values ForgeCardScript.vue's FORGE_LINE_COLORS and the card
-   page's SYNERGY_ROLE_COLORS already use for T:/K:/S:/A: lines and
-   enters/trigger/emit/move/source roles) rather than pulling in a stock
+   (the same hex values the card page's SYNERGY_ROLE_COLORS already uses for
+   enters/trigger/emit/move/source roles, plus the T:/K:/S:/A: line colors
+   the now-removed ForgeCardScript.vue used to define) rather than pulling in
+   a stock
    hljs theme stylesheet, which ships its own background/foreground/palette
    choices that would fight this app's own dark theme instead of sitting
    inside it. Every hljs class selector below is wrapped in `:global(...)` —
@@ -34,18 +35,18 @@ const highlighted = computed(() => hljs.highlight(props.code, { language: 'types
    out of scoping entirely instead. */
 .fms-root :global(.hljs-keyword),
 .fms-root :global(.hljs-built_in) {
-  color: #9dcacf; /* same cyan as ForgeCardScript.vue's T: (trigger) lines */
+  color: #9dcacf; /* same cyan the removed ForgeCardScript.vue used for T: (trigger) lines */
 }
 .fms-root :global(.hljs-title.function_),
 .fms-root :global(.hljs-title.class_) {
-  color: #d8ab88; /* same tan/orange as ForgeCardScript.vue's A: (activated) lines */
+  color: #d8ab88; /* same tan/orange the removed ForgeCardScript.vue used for A: (activated) lines */
 }
 .fms-root :global(.hljs-string) {
-  color: #9ecfa0; /* same green as ForgeCardScript.vue's K: (keyword) lines */
+  color: #9ecfa0; /* same green the removed ForgeCardScript.vue used for K: (keyword) lines */
 }
 .fms-root :global(.hljs-number),
 .fms-root :global(.hljs-literal) {
-  color: #cfa9d8; /* same purple as ForgeCardScript.vue's S: (static) lines */
+  color: #cfa9d8; /* same purple the removed ForgeCardScript.vue used for S: (static) lines */
 }
 .fms-root :global(.hljs-type) {
   color: #cfa9d8;

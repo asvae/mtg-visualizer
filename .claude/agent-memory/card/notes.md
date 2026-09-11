@@ -1,5 +1,40 @@
 # card agent notes
 
+- 2026-09-11 (follow-up): Reverted the hidden-text-behind-icon "SO"/"SI"
+  select-to-copy trick from the Facts tab's role cell (user tried it live:
+  "very hard to select, I pretty much have to go from previous row") —
+  replaced with a real copy-icon button. `app/pages/app/card/[set]/[number].vue`:
+  role `<td>` restored byte-for-byte to its pre-trick form (plain `<Icon>`
+  with `title`, no wrapping `<span>`/hidden text/`pointer-events-none`).
+  New copy button lives in the SAME debug-column `<td>` as the existing
+  braces/JSON-debug icon (`SHOW_FACT_DEBUG_COLUMN`), immediately to its
+  right, both inside one `inline-flex items-center gap-1.5` wrapper span:
+  `lucide:copy` icon, `title="Copy SO"`/`"Copy SI"`, `@click="copyRoleMarker(row)"`.
+  New `copyRoleMarker(row: FactRow)` async helper calls
+  `navigator.clipboard.writeText(marker)` with the plain string `'SO'`/`'SI'`
+  per `row.fact.role`. Added the nice-to-have click feedback (trivial given
+  an existing icon-swap convention already in this file for reviewed-state
+  icons): new `copiedRoleKey` ref holds `row.key` for ~1s after a click,
+  icon swaps `lucide:copy` → `lucide:check` while set (per-row, keyed by
+  `row.key` so only the clicked row's button flips), `setTimeout` clears it
+  back.
+  - Verified live (Playwright, throwaway scripts copied to repo root then
+    deleted, per this project's established module-resolution workaround)
+    against the already-running dev server, fin/1: clicking a row's copy
+    button — clipboard read-back exactly matched `"SO"` for that row's
+    source fact; icon visibly swapped to `lucide:check` immediately after
+    click, reverted to `lucide:copy` ~1.1s later; the adjacent braces/debug
+    button still opens the existing shared JSON modal unaffected (confirmed
+    the modal body renders the correct fact JSON — its own lack of a
+    visible "Fact JSON —" title text is pre-existing/by-design, that modal
+    is deliberately header-less, not a regression from this change); role
+    cell's own icon+title confirmed unchanged from the pre-trick markup.
+  - `npm run typecheck`: exit 0 (used the correct command per this file's
+    own earlier-logged policy correction, not the no-op `vue-tsc -p .`).
+  - No `.claude/contracts/*.md` mismatch — pure card-page display/
+    interaction change, no engine-served shape touched.
+
+
 - 2026-09-11 (latest, scenario replay real-art fix): Fixed the root cause of
   fin/1's Scenarios tab showing blank placeholder boxes ("Ah"/"Co") for real
   bystander cards Ahriman/Coeurl in summon-bahamut's own scenario, generally
@@ -2877,3 +2912,96 @@ resume alone (session transcripts are swept after ~30 days).
   - No contract mismatch found this round
     (`.claude/contracts/card-schema.md` not implicated — purely a card-page
     presentation change, no `Fact`/engine shape touched).
+
+- 2026-09-11 (read-only investigation, licensing exposure check): confirmed
+  `forge-model/` (verbatim GPL Forge scripts) is entirely DEAD — nothing
+  under it reaches any live render path today, and its own `README.md` is
+  stale/wrong about the current wiring (worth orchestrator flagging, not a
+  `.claude/contracts/*.md` file so not touched here):
+  - `server/api/card/[set]/[number].ts` (grepped in full): zero references
+    to `forge-model`, `forgeScript`, `forgeTranslate`, `ForgeCardScript`, or
+    `synergyInteractions` anywhere. `Interactions panel` data
+    (`loadInteractionGroups`) comes entirely from
+    `functional-model/synergy.ts`'s `findInteractionsForCard` — no
+    forge-model involvement.
+  - `app/lib/synergyInteractions.ts` (the file the README cites for the
+    Interactions panel) no longer exists on disk at all — confirmed via
+    `find`. `forge-model/pools/` (the data dir that same README section
+    cites) also no longer exists — `forge-model/` now contains only
+    `README.md` + `data/*.txt`.
+  - `app/components/ForgeCardScript.vue` and `app/lib/forgeScript.ts`/
+    `forgeTranslate.ts`: no `.vue` file imports/renders
+    `<ForgeCardScript>` anywhere (grepped templates repo-wide) — only
+    referenced in comments (a color-palette cross-reference in
+    `FunctionalModelScript.vue`) and their own test files
+    (`forgeTranslate.test.ts`/`.blb.test.ts`). Orphaned component, no live
+    caller.
+  - The card page itself (`app/pages/app/card/[set]/[number].vue`) has an
+    explicit comment (line ~891): "synergy-model/forge-model are
+    deprecated ... this is the current direction" — confirming the "Forge
+    model" column / "Raw Forge script" spoiler UI the README describes was
+    since removed from the template (grepped, zero hits for that markup).
+  - **Verdict for all three README-claimed features: DEAD**, not dormant-
+    but-reachable — (a) Synergy-column fallback: dead, column itself
+    removed from the template; (b) Raw Forge script spoiler: dead, same
+    removal; (c) Interactions panel: itself still LIVE and rendered
+    (`orderedInteractions` in `[number].vue`), but it depends ENTIRELY on
+    `functional-model/synergy.ts`, not `forge-model/` at all anymore — the
+    README's claim that it reads `forge-model/pools/` is stale/false.
+  - Flagged for orchestrator: `forge-model/README.md` itself needs a
+    rewrite (not done here, read-only task) — it currently describes two
+    live integration points that don't exist anymore, which is exactly
+    backwards for a file whose whole purpose is documenting GPL-exposure
+    surface accurately.
+
+- 2026-09-11 (follow-up, actual deletion): acted on the above — deleted
+  `forge-model/` in full (README.md + all `data/*.txt`), the orphaned
+  `app/components/ForgeCardScript.vue`, `app/lib/forgeScript.ts` +
+  `forgeTranslate.ts`, and their test files (`forgeTranslate.test.ts`,
+  `.blb.test.ts`, plus the vitest snapshot
+  `app/lib/__snapshots__/forgeTranslate.blb.test.ts.snap` which the earlier
+  read-only pass didn't list but which only existed for the now-deleted
+  `.blb.test.ts`). Repo-wide re-grep (excluding `tmp/mtg-forge` — a
+  gitignored scratch clone of the real Forge repo, unrelated — and
+  `archive/`, `functional-model/`, both out of this task's remit) found a
+  few stray doc/comment pointers, fixed:
+  - `app/types.ts`: `ForgeLineType`/`ForgeRow`/`ForgeFace`/`ForgeCard` were
+    defined here for `forgeScript.ts`/`forgeTranslate.ts` alone (confirmed
+    via grep — no other importer) — deleted the interfaces along with a
+    trimmed removal-note comment in their place.
+  - `app/components/FunctionalModelScript.vue` and `app/lib/manaSegments.ts`:
+    both had comments cross-referencing `ForgeCardScript.vue`'s color
+    palette/shared helper — reworded to note the file was removed rather
+    than pointing at a component that no longer exists.
+  - `app/pages/app/card/[set]/[number].vue`: two stale comments — one said
+    "synergy-model/forge-model are deprecated" (forge-model is now actually
+    gone, not just deprecated); the other described the Interactions panel
+    as sourced from "hand-authored or Forge-translated" nodes, a Forge-
+    translation path that no longer exists. Both reworded.
+  - `.claude/agents/card.md` (this agent's own definition): dropped
+    `ForgeCardScript.vue` from the Domain list and the description line,
+    left a one-line pointer back to this note. Left `.claude/agents/ui.md`
+    alone despite it also listing `ForgeCardScript` under its own "Not
+    yours" — that's `ui`'s file, not mine to touch; flagged for
+    orchestrator instead.
+  - `functional-model/README.md` still has several stale mentions of
+    `forge-model`/`forgeTranslate.ts`/`forgeScript.ts` (describes reusing
+    `forgeTranslate.ts`'s helpers, cites `forge-model/pools/blb.json`,
+    etc.) — left untouched per this task's explicit constraint not to
+    touch `functional-model/`; flagging for orchestrator to route to
+    `engine` (that file is their domain, and by their own conventions the
+    forge-model integration it describes was already stale/dead before
+    today's deletion, per the read-only pass above).
+  - `archive/synergy-model/**` and `archive/card-shorthand/README.md` also
+    turned up in the grep (script filenames like `make-exam-forge.mjs`,
+    fixture content mentioning "real Forge") — these are frozen historical
+    archives, not live docs; left alone.
+  - Verified clean: `npx vue-tsc --noEmit` (no errors) and `npx vitest run`
+    (only pre-existing unrelated failures — 5 tests in
+    `scripts/relations.test.mjs` missing `tagging/sets/{leb,2ed,arn}/*`
+    fixture files, part of the separate historical-sets sweep, not touched
+    by this change; 299 passed, 0 forge-related failures).
+  - Committed as a standalone commit, staged narrowly (the forge deletions/
+    edits + this notes.md entry only) — left the large set of unrelated
+    pre-existing `functional-model/*` and other agents' in-flight modified
+    files untouched in the working tree.

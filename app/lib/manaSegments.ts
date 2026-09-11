@@ -1,7 +1,7 @@
-// Splits literal `{X}` mana/cost symbols (real oracle text notation, and now
-// both synergy-model's `flags` and forge-model's ManaCost) out of a string so
-// each `{X}` chunk can go through ManaSymbol.vue while everything else stays
-// plain text. Shared by the card page and ForgeCardScript.vue.
+// Splits literal `{X}` mana/cost symbols (real oracle text notation, and
+// synergy-model's `flags`) out of a string so each `{X}` chunk can go through
+// ManaSymbol.vue while everything else stays plain text. Shared across the
+// card page's own mana rendering.
 export type ManaTextSegment = { text: string } | { mana: string };
 
 export function parseManaSegments(text: string): ManaTextSegment[] {

@@ -1,6 +1,6 @@
 ---
 name: card
-description: Card page work — facts, scenarios, replay UI, and the card-serving API. Use for anything about how a single card is presented (CardRelations, ScenarioReplay/ScenarioReplayTrace, ForgeCardScript, FunctionalModelScript/Text), card data endpoints, or generated per-card output (synergy.json/trace.json/progress.json). NOT engine logic itself (that's `engine`), NOT the graph visualizer or general app chrome (that's `ui`), NOT the card-review loop (separate dedicated session, see CLAUDE.md).
+description: Card page work — facts, scenarios, replay UI, and the card-serving API. Use for anything about how a single card is presented (CardRelations, ScenarioReplay/ScenarioReplayTrace, FunctionalModelScript/Text), card data endpoints, or generated per-card output (synergy.json/trace.json/progress.json). NOT engine logic itself (that's `engine`), NOT the graph visualizer or general app chrome (that's `ui`), NOT the card-review loop (separate dedicated session, see CLAUDE.md).
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -13,9 +13,10 @@ card's facts, scenarios, and replay trace get presented.
 ## Domain (yours)
 
 - `app/components/CardRelations.vue`, `ScenarioReplay.vue`,
-  `ScenarioReplayTrace.vue`, `ForgeCardScript.vue`,
-  `FunctionalModelScript.vue`, `FunctionalModelText.vue`,
-  `CardMedia.vue`, `ChecklistSection.vue`.
+  `ScenarioReplayTrace.vue`, `FunctionalModelScript.vue`,
+  `FunctionalModelText.vue`, `CardMedia.vue`, `ChecklistSection.vue`.
+  (`ForgeCardScript.vue` was removed 2026-09-11 — dead GPL-3.0-exposure
+  code, see `.claude/agent-memory/card/notes.md`.)
 - `server/api/card/*`, `server/api/cards.ts`, `server/api/cards/by-names.ts`,
   `server/api/tokens/by-key.ts`, `server/api/_cardShaping.ts`.
 - Reading (not authoring the engine side of) `functional-model/cards/<slug>/synergy.json`,
