@@ -2,15 +2,16 @@
   {
     "scenario": {
       "setup": "you: 1 creature(s)",
-      "action": "\"onEnter\" trigger fires",
-      "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
+      "action": "cast from hand",
+      "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
       "raw": {
-        "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
-        "trigger": "onEnter",
+        "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
+        "forceCast": true,
         "you": {
           "creaturesCount": 1
         },
         "sequence": [
+          "onEnter",
           {
             "activate": true
           }
@@ -18,6 +19,21 @@
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Machinist's Arsenal",
+        "instanceId": 1,
+        "id": 3,
+        "from": "hand",
+        "cost": "{4}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Machinist's Arsenal",
+        "instanceId": 1,
+        "id": 3,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Machinist's Arsenal",

@@ -16410,3 +16410,71 @@ neither affected this closure's own design.
   299/362/969-971, `AbilityUtils.java` lines 2204-2207,
   `genji_glove.txt`/`balthier_and_fran.txt`/`yshtola_rhul.txt`) was
   checked directly against `tmp/mtg-forge`, not assumed.
+
+## forceCast retrofit swept across the remaining Job-select-Equipment
+## family (2026-09-13) — fin/28 (paladin-s-arms) regression, real user report
+
+Dragoon's Lance got the real `Scenario.forceCast` fix same-day (see its own
+entry above) but explicitly did NOT retrofit its 5 siblings, flagged as a
+"future upgrade candidate." The user then hit the exact same bug live on
+fin/28 (Paladin's Arms): its scenario showed the Job-select ETB trigger
+firing with no real cast preceding it — "should have been cast, onEnter
+trigger doesn't magically trigger." Root cause was the identical
+`trigger:'onEnter'`-at-top-level shortcut dragoon-s-lance's own comment
+already documents: starts `self` already on the Battlefield, skips
+`cast`/`enters` entirely.
+
+- **Fixed all 6 remaining Job-select-Equipment `scenarios.ts` files**:
+  paladin-s-arms, astrologian-s-planisphere, sage-s-nouliths,
+  white-mage-s-staff, machinist-s-arsenal, black-mage-s-rod. Each now sets
+  `forceCast: true` and moves `'onEnter'` from the top-level `trigger`
+  field into the front of `sequence` (`sequence: ['onEnter', {activate:
+  true}, ...]`), same real `Scenario.forceCast` mechanism dragoon-s-lance
+  established (no new harness.ts code needed — the field already existed
+  and worked, this was purely a per-card retrofit).
+- **astrologian-s-planisphere was a genuine outlier**: it had never even
+  gotten the 2026-09-12 "chain into one continuous story" treatment its
+  siblings got — it still had TWO separate scenarios (a bare
+  `trigger:'onEnter'` plus a second bare-activate scenario relying on
+  `harness.ts`'s automatic top-level `activate`). Consolidated to the same
+  one-scenario `forceCast`+`sequence` shape as the rest, preserving the
+  real `read:getCreaturesInPlay` sink evidence the old second scenario
+  provided (`you: {creaturesCount: 1}`, same "other real creature already
+  on the battlefield" convention every sibling uses).
+- **sage-s-nouliths** kept its existing 3-step `sequence` (Equip activate +
+  the granted `onEquippedAttacks`/untap trigger) — only the `trigger:
+  'onEnter'`→`forceCast`+sequence-prefix change was needed, nothing else
+  in its chain changed.
+- Confirmed via each regenerated `trace.json`: all 6 now show
+  `cast → enters → trigger → createToken → equip → activate →
+  read:getCreaturesInPlay → equip` (sage-s-nouliths additionally continues
+  `→ trigger → read:getCreaturesInPlay → untap`) — a real cast/enters
+  lifecycle precedes the Job-select trigger in every one, not a "mythical
+  enter."
+- Regenerated `trace.json` **scoped per card** (`vite-node
+  functional-model/scripts/run-scenarios.mjs --slug=<slug>`, one at a
+  time) — never an unscoped run (the documented accidental-full-pool-write
+  hazard this same file's own gap #17/#18 entries already flag). `git
+  status` before and after confirmed only these 6 cards' own
+  `scenarios.ts`/`trace.json`/`progress.json` changed, nothing else in the
+  pool touched.
+- `progress.json` updated for all 6 with a dated note citing this fix and
+  dragoon-s-lance as precedent; `paladin-s-arms`'s own `review` flag was
+  `'human'` (from an earlier reviewer pass) and got reset to `'ai'` per
+  this project's stale-review-flag convention (authored scenario content
+  genuinely changed) — the other 5 were already `'ai'`, no reset needed.
+- **verify-synergy.mjs**: scoped run for each of the 6 — 0 hard failures
+  each (only the same pre-existing, already-documented soft "equip ...
+  with no matching declared produce" notes every Job-select Equipment
+  already has, `PARKED_ACTION_FNS`-covered, unchanged in count/shape from
+  before this fix). Full pool: 320 v2 cards checked, 3 skipped (still
+  v1-shaped, unrelated), **0 hard failures**.
+- `npx vitest run functional-model`: 373/373 passed (no regressions).
+- **No Forge verification needed for this pass** — purely a harness-side
+  scenario-authoring fix reusing the already-Forge-grounded `forceCast`
+  mechanism dragoon-s-lance's own same-day entry already cites; no new
+  `interfaces.ts` mirror or engine mechanism was touched.
+- **Thief's Knife deliberately left alone** — confirmed it already uses a
+  full `engine-trace.ts`-piloted `pilotCast` approach (a different,
+  also-real technique), not the `harness.ts` `Scenario[]`/`forceCast`
+  shape this sweep applies to.

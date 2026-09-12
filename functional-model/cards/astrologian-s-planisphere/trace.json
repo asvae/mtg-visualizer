@@ -1,20 +1,44 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 Hero token and attaches itself to it",
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {2} activation re-attaches it to the other creature already on the battlefield instead",
       "raw": {
-        "result": "creates a 1/1 Hero token and attaches itself to it",
-        "trigger": "onEnter"
+        "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {2} activation re-attaches it to the other creature already on the battlefield instead",
+        "forceCast": true,
+        "you": {
+          "creaturesCount": 1
+        },
+        "sequence": [
+          "onEnter",
+          {
+            "activate": true
+          }
+        ]
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Astrologian's Planisphere",
+        "instanceId": 1,
+        "id": 3,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Astrologian's Planisphere",
+        "instanceId": 1,
+        "id": 3,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
-        "id": 2,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -29,30 +53,15 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "equipmentId": 2,
+        "equipmentId": 3,
         "target": "Hero",
-        "id": 3
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "activated ({2})",
-      "result": "attaches to a creature you control",
-      "raw": {
-        "result": "attaches to a creature you control",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "id": 4
+      },
       {
         "fn": "activate",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
-        "id": 7,
+        "id": 3,
         "cost": "{2}"
       },
       {
@@ -63,9 +72,9 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "equipmentId": 7,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 5
+        "id": 2
       }
     ]
   }
