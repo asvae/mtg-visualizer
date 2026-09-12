@@ -627,6 +627,72 @@ worth remembering the pitfalls before re-deriving them:
     still renders its placeholder chip — that's the intended fallback, not
     a bug, per the user's own "text placeholder only when a card genuinely
     has no art" framing.
+- 2026-09-12, keywords-coverage same-bug-class fix (companion to `card` lane's
+  `cardFaceKeywords` fix on the per-card page for transform DFCs): the
+  coverage page (`server/api/keywords/index.get.ts`'s `cardArtFor` +
+  `KeywordEntryCard.vue`) still did `keywords: card.keywords ?? []` — raw
+  Scryfall whole-card union, which for a transform DFC wrongly badges BOTH
+  faces with a keyword only one actually prints (Crystal Fragments // Summon:
+  Alexander: front only has Equip, back only has Flying, but the union lists
+  all three of `['Flying','Transform','Equip']`).
+  - Fix: `cardArtFor` now imports `cardFaceKeywords`/`ScryfallCard` straight
+    from `app/lib/buildGraph.ts` (same helper/type
+    `server/api/card/[set]/[number].ts` already uses — didn't reinvent it),
+    dropped the file's own narrower local `ScryfallCard`/`ScryfallCardFace`
+    interfaces in favor of the shared one (structurally compatible with the
+    real `data/fin/fin_scryfall.json` shape; no runtime behavior change,
+    pure retype). `CardArt.keywords` is now front-face-only
+    (`cardFaceKeywords(card, 0)`), new `CardArt.backKeywords` field added
+    (`card.card_faces?.[1] ? cardFaceKeywords(card, 1) : undefined`).
+    Deliberately did NOT filter either against `BADGE_KEYWORDS` the way the
+    per-card page's own `keywords`/`backKeywords` fields do — that route's
+    fields are scoped to the curated evergreen-badge icon strip, this page's
+    `keywords` is meant to reflect a card's real full printed keyword set
+    (e.g. "Equip", not evergreen) — filtering would have silently dropped
+    real, non-evergreen keywords this page needs to show.
+  - `KeywordEntryCard.vue`: threaded the new field through as
+    `:card-back-keywords="entry.cards[0]?.backKeywords"` on its
+    `ScenarioReplay` (that prop already existed end-to-end,
+    `ScenarioReplay.vue` -> `ScenarioReplayTrace.vue`, from the card-lane fix
+    — just wasn't being fed here yet). Left `namedCardArt`'s own map
+    (keyed by name, used for every OTHER/bystander card on a scenario board)
+    as front-face-keywords-only — its shape
+    (`Record<string, {images,keywords,power,toughness}>`) has no back-face
+    variant and lives in `ScenarioReplayTrace.vue` (card lane's file); no
+    registry bundle currently puts a transform DFC in a non-self/bystander
+    role while `ai_reviewed`/`human_reviewed` (checked: every entry whose
+    `cardNames` includes a `"X // Y"` transform name is still
+    `status: 'not_implemented'`, i.e. `entry.cards` for those is computed but
+    never actually rendered anywhere on this page today) — documented as a
+    known follow-up for `card` lane if/when the "transform" keyword entry
+    itself graduates past `not_implemented` with a bundle that flips a
+    non-self card mid-replay, rather than widening that file's prop type
+    myself.
+  - Verified against real data (`data/fin/fin_scryfall.json`, reusing
+    `cardFaceKeywords`'s exact algorithm in a scratch script): Crystal
+    Fragments // Summon: Alexander — whole union `['Flying','Transform',
+    'Equip']`, front now correctly `['Equip']` only, back `['Flying']` only.
+    Dion, Bahamut's Dominant // Bahamut, Warden of Light (fin/16) — whole
+    union `['Dragonfire Dive','Flying','Transform']`, front now correctly
+    `[]` (its own "Dragonfire Dive — ...have flying" line is a conditional
+    grant sentence, not a standalone printed-keyword line, correctly
+    excluded), back `['Flying']` (Bahamut's own back face literally ends its
+    oracle text with a bare "Flying" line — real static keyword, correctly
+    picked up). Both `not_implemented` today so not yet visible on the page
+    itself, but the underlying data is now correct for whenever "transform"
+    graduates. `npm run typecheck` clean (one pre-existing, unrelated error
+    in `server/api/tokens/by-key.ts` — confirmed present before this change
+    too, not mine); `vitest run app/lib` (68 tests) still passing; no
+    dedicated keyword-page test file exists in the repo.
+  - Housekeeping note: found and removed a stray untracked
+    `dion-check-tmp.mjs` scratch script sitting in the repo root (not
+    scratchpad) during this task — looked like leftover verification scratch
+    from the just-landed card-lane DFC fix (same Dion example), not
+    referenced anywhere. Flagging in case whoever left it there still wanted
+    it; low-risk since it was untracked and unreferenced, but I didn't create
+    it myself so wanted this on record rather than silently deleting it
+    without a note.
+
   - Verified live end-to-end via Playwright against the already-running
     dev server: bare `/app/keywords` defaults to first entry; clicking
     Flying & Reach in the sidebar navigates to

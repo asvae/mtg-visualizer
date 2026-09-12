@@ -39,21 +39,25 @@ for current design/known gaps.
 
 ## Ground truth discipline
 
-Per project convention: Forge (`../tmp/mtg-forge` checkout / real
-forge-game source) is the sole primary source for engine behavior and
-`interfaces.ts` signatures. XMage is a secondary cross-check only for hard
-engine gaps Forge doesn't resolve — never a replacement source. Cite the
-real Forge file/line when adding or changing an `interfaces.ts` mirror, the
-way existing entries do.
+Per project convention: Forge (`tmp/mtg-forge` checkout / real forge-game
+source, real git history, git-ignored, lives under this project's OWN
+`tmp/` — not a sibling directory) is the sole primary source for engine
+behavior and `interfaces.ts` signatures. XMage (`tmp/xmage`, also
+git-ignored under this project's `tmp/`, cloned 2026-09-12) is a secondary
+cross-check only for hard engine gaps Forge doesn't resolve — never a
+replacement source. Cite the real Forge file/line when adding or changing
+an `interfaces.ts` mirror, the way existing entries do.
 
-If `../tmp/mtg-forge` isn't present in this environment, check for a real
-Forge game install before falling back to trained-knowledge guesses — one
-has been found at `/mnt/c/Games/ForgeInstaller` on this machine (WSL),
-with real card scripts in `res/cardsfolder/cardsfolder.zip` and the
-scripting reference under `docs/Card-scripting-API/`. Not a source
-checkout, but real ground truth for card-script vocabulary/keywords —
-grep it directly rather than answering from memory and flagging low
-confidence.
+Both checkouts are real and present as of 2026-09-12 — don't assume either
+is missing without checking `tmp/mtg-forge`/`tmp/xmage` first (a shallow
+`find` from the repo root can miss them; look inside the project's own
+`tmp/` directly). If somehow gone, check for a real Forge game install
+before falling back to trained-knowledge guesses — one has been found at
+`/mnt/c/Games/ForgeInstaller` on this machine (WSL), with real card
+scripts in `res/cardsfolder/cardsfolder.zip` and the scripting reference
+under `docs/Card-scripting-API/`. Not a source checkout, but real ground
+truth for card-script vocabulary/keywords — grep it directly rather than
+answering from memory and flagging low confidence.
 
 ## Scenario/replay content rule
 

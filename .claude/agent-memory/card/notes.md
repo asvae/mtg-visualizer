@@ -3799,6 +3799,61 @@ resume alone (session transcripts are swept after ~30 days).
     `.event` fields; nothing served differently than the contract
     describes.
 
+## 2026-09-12 (latest, "traces missing from Scenarios tab" — false alarm, stale dev-server HMR)
+
+User report on fin/23 (Machinist's Arsenal), right after asking to trim it
+to 1 scenario: "I don't see traces in scenarios, were these removed at
+some point?" Investigated as a possible rendering regression given how
+many concurrent sessions touched `ScenarioReplay.vue`/
+`ScenarioReplayTrace.vue`/`[set]/[number].vue` today (copy-button rework,
+keyword-badge per-face fix, `continuousKeywordGrants`, per-instance `id`
+consumption, etc. — all logged above).
+
+- **Root cause: the documented stale-Vite-HMR gotcha (`NEXT_STEPS.md`
+  "Known issues"), not a code regression.** Before touching anything, a
+  `curl /api/card/fin/23` showed `functionalModel.traces[0].log` at only
+  length 3 — but the on-disk `functional-model/cards/machinist-s-arsenal/
+  trace.json` (dirty in `git status` from a concurrent `engine` session's
+  same-day edit, confirmed via the shared `git status` output at the top
+  of this task) had clearly moved on from that. Killed the long-running
+  `nuxt dev` process (up since 08:40 today, predating a large volume of
+  same-day `functional-model/` edits from concurrent sessions) and
+  restarted cleanly. Post-restart, the identical `curl` call returned
+  `log.length === 6` — confirms the dev server really was serving a stale
+  compiled snapshot, exactly the class of bug `NEXT_STEPS.md` already
+  warns about ("after many rapid successive edits to a heavily-shared
+  file in one dev-server lifetime... the browser can keep executing a
+  stale bundled module even though the file on disk is current").
+- **Verified live** (Playwright, throwaway scripts copied to repo root
+  then deleted, per this project's established module-resolution
+  workaround) against the freshly-restarted dev server: fin/23, fin/21,
+  fin/16 (real-engine-playthrough scenario, the richer two-table
+  ACTION+FN/FIELDS trace shape) all render their trace/log panel
+  correctly — zero browser console errors on any. Stepped fin/23's replay
+  forward through all 5 steps via the Play/step controls: board updated
+  correctly (Grizzly Bears bystander enters, Equipment re-attaches to it),
+  right-side FN/FIELDS trace table's currently-active row highlight
+  advanced in lockstep (row 5 "equip" highlighted at step "5/5"),
+  confirming the panel isn't just present but genuinely wired to replay
+  state. fin/23 alone lacks the separate higher-level "ACTION" summary
+  table fin/21/fin/16 show above their FN/FIELDS table — this is a
+  pre-existing, correct distinction (fin/23's own `setup`/`action` line
+  reads "onEnter trigger fires," a harness-log-only scenario, vs. fin/21
+  /fin/16's "real engine playthrough" scenarios that populate the
+  additional real-turn-engine action log), not something broken by
+  today's changes.
+- **No code fix needed** — did not touch `ScenarioReplayTrace.vue`,
+  `ScenarioReplay.vue`, or the card page for this task; the restart alone
+  resolved it. No `.claude/contracts/*.md` mismatch to flag.
+- Flagging the broader pattern (not new, but worth restating): this repo's
+  dev server is shared across concurrently-running sessions, and
+  `functional-model/` is under very heavy same-day multi-session edit
+  churn right now (`git status` at task start showed ~230 files dirty
+  across `functional-model/cards/*`) — a "trace looks stale/wrong/missing"
+  report is worth a dev-server restart + before/after `curl` diff check
+  FIRST, before assuming a rendering regression in this domain's own
+  `.vue` files.
+
 ## 2026-09-12 — Flag: `engine` agent touched `app/lib/scenarioReplay.ts`/`scenarioReplay.test.ts` directly (cross-lane, not hidden)
 
 Fixing a live regression report (Dion, Bahamut's Dominant, fin/16 — Knight
@@ -3813,3 +3868,158 @@ engine session already set for `continuousGrantedKeywords()` in
 Full root-cause writeup: `.claude/agent-memory/engine/notes.md`'s own
 "latest+56" entry. Nothing else in `card`'s own lane changed; flagging in
 case a `card`-agent session sees this diff and wants to review/restyle it.
+
+## 2026-09-12 — Fix: self's own real `id` never registered into `idCards`/`claimedByOtherId` (magitek-infantry, fin/25)
+
+Consumer-side half of a bug the `engine` agent found+partially fixed same
+day (see `.claude/contracts/state-event-format.md`'s "Self's own `id` field
+..." section for the producer-side writeup). `app/lib/scenarioReplay.ts`
+had two disconnected per-object identity systems: `ensureSelf`/
+`instanceCards` (keyed on harness.ts's scenario-domain `instanceId`, only
+ever present on self's own `cast`/`activate`/`trigger`/`enters`/`move`
+entries) and `resolveInstance`/`idCards`/`claimedByOtherId` (keyed on the
+real `RealCard.id`, used by every generic per-instance action —
+`moveTo`/`tap`/`pump`/etc). Self's own chip was never entered into the
+second system at all, so once `harness.ts` started also emitting `id` on
+self's own entries (additive, inert until consumed), a LATER entry naming
+a genuinely different real object sharing self's exact name (magitek-
+infantry's own "search library for a card named Magitek Infantry, put it
+onto the battlefield tapped" tutor ability) resolved via `ensure`'s plain
+`byName` lookup straight onto self's ALREADY-EXISTING chip — visibly
+flipping the ORIGINAL, untouched permanent tapped instead of adding a
+second, correctly-tapped one.
+
+**Fix**: new `registerSelfId(card, entry)` helper (`app/lib/
+scenarioReplay.ts`) — called from `ensureSelf` (covers `cast`/`activate`/
+`trigger`/`enters`) and from the `move` case (lifecycleAfter's own self-
+move, which resolves self via plain `ensure` rather than `ensureSelf` — a
+pre-existing quirk, left as-is). Registers `entry.id` into `idCards`/
+`claimedByOtherId` the same way `resolveInstance` does for every other
+per-instance action, idempotently (skips if that id is already registered).
+Once self's own id is registered (from its very first log entry, which
+always precedes any effect it causes), a later `moveTo`/`tap` for a
+different id correctly gets excluded from self's chip via `ensure`'s
+`exclude` param and lands on a fresh one instead.
+
+Verified two ways:
+- `npx vitest run app/lib` — 69/69 still pass, no regression.
+- Direct repro via `replayTrace()` against the real (engine-regenerated)
+  `functional-model/cards/magitek-infantry/trace.json`: pre-fix (stashed
+  the change) → 1 Magitek Infantry chip, `tapped: true` (the bug, exactly
+  as reported). Post-fix → 2 chips: original `isSelf: true, tapped: false,
+  id: 6` and the tutored copy `tapped: true, id: 3`. Did not have a live
+  browser tool available this task; this reproduces the exact same
+  `replayTrace` code path the Scenarios tab calls, so it's a faithful
+  stand-in, but a follow-up eyeball-in-browser check on fin/25 wouldn't
+  hurt if anyone's in a position to do it.
+
+No `.claude/contracts/*.md` mismatch found — the contract's own dated
+section already correctly described this as the needed consumer-side fix
+before I started; nothing to correct there.
+
+- 2026-09-12: fixed Interactions-panel duplicate-related-card bug (repro'd
+  live on fin/15 Delivery Moogle — "enters the battlefield" group listed
+  Clash of the Eikons, Dion Bahamut's Dominant, and 7 others each TWICE).
+  Root cause: `functional-model/synergy.ts`'s `findInteractionsForCard`
+  produces one `InteractionMatch` per SATISFIED FACT PAIR, not per related
+  card — when the other card has multiple facts on its opposite side that
+  each independently satisfy `mine` (Clash of the Eikons has both a
+  Creature-gated Battlefield-presence sink fact AND a separate unconstrained
+  one, both satisfied by Delivery Moogle's single ETB source fact), you get
+  N `InteractionMatch`es with the same `card` string in one group. That
+  per-fact granularity is real and load-bearing for a DIFFERENT consumer
+  (`server/api/graph-links.ts`, keys off `theirFactId` for its own supply-
+  side normalization) — so did NOT touch `synergy.ts`/`findInteractionsForCard`
+  itself (stayed in-lane, no `engine`-domain edit needed). Fixed instead in
+  `server/api/card/[set]/[number].ts`'s `loadInteractionGroups`: new
+  `dedupMatchesByCard` helper collapses `group.matches` to one entry per
+  `card` name (after the existing `filterNames` filter, before the async
+  image-metadata resolution — so dupes don't even cost a redundant lookup),
+  keeping the highest-`theirTotal` duplicate rather than an arbitrary one.
+  No data loss: `selfInteraction` is derived from `mine`/`mineCard` alone
+  (never `theirs`), so it's provably identical across duplicates of the same
+  card in the same group — confirmed this live too (fin/1 Summon: Bahamut,
+  fin/4 Aerith Gainsborough, etc. still show correct `selfInteraction` kinds
+  post-fix). Verified via a full sweep of all 320 fin/1..320 API responses
+  (live dev server) — 0 groups with duplicate card entries afterward (was 1
+  group w/ 9 duplicated cards on fin/15 alone before); fin/15's "enters the
+  battlefield" group matches count dropped 139→130 (the exact 9 collapsed),
+  other two of its groups unaffected (had no dupes). `npx vue-tsc --noEmit`
+  clean. Diff scoped to just the new `dedupMatchesByCard` function + its one
+  call site in `loadInteractionGroups` — left alone the unrelated pre-
+  existing dirty changes already in this same file from a concurrent session
+  (`cardFaceKeywords`/`backKeywords` DFC front-face-keywords work), per this
+  task's own explicit shared-working-tree constraint. Not committed, per
+  task instructions — left for approval.
+
+- 2026-09-12 (copy-fact-context: added source/sink role tag): follow-up to
+  the same day's `copyFactContext`/`factContextText` rework (entry above,
+  "Facts-tab copy button rework"). Added the fact's own `role` to the
+  copied one-line string, per direct request to pick whatever reads
+  clearest for an AI agent parsing pasted text. Chose a bracketed, full-word
+  tag placed right after the `#<row number>` token (before the label):
+  `<set>/<number> #<row-number> [source|sink] <label>[ · <conditions>]` —
+  e.g. `fin/21 #3 [sink] Dying · yours · another (Creature/Artifact)
+  permanent · once per turn`. Considered but rejected the on-page debug
+  column's older abbreviated convention (`title="Copy SO"`/`"Copy SI"`, from
+  the now-removed bare-role-marker button, see the "reverted hidden-text...
+  real copy-icon button" entry) — full words in their own `[...]` delimiter
+  read unambiguously as a role tag with no risk of being mistaken for label
+  text, which matters more here than brevity since the whole point of this
+  string is downstream AI parsing. `factContextText` in
+  `app/pages/app/card/[set]/[number].vue` now derives `role` straight off
+  `row.fact.role` (`'source'`/`'sink'`, same field the row's own role icon
+  already reads at the same site — `log-out`/blue for source, `log-in`/
+  green for sink). No unit test existed for this function anywhere (grepped
+  for `factContextText`/`copyFactContext` project-wide — 0 hits outside this
+  file) — the whole button predates any unit test and was verified live via
+  Playwright both times, so did the same again here rather than inventing a
+  first test in isolation: scripted a throwaway Playwright run (temp file
+  copied into the project root so `node` could resolve the `playwright`
+  package, deleted after) against fin/21 on the already-running dev server,
+  clicked all 4 Facts-tab copy buttons in order, read
+  `navigator.clipboard.readText()` after each — confirmed `[source]` on
+  rows 1/2/4 and `[sink]` on row 3 (Dying), matching each row's own role
+  icon. No contract mismatch to flag.
+
+- 2026-09-12 (bug fix: sink/movement `tapped` constraint silently dropped
+  in the notes column): fin/19 (Fate of the Sun-Cryst) fact #3's Facts-tab
+  row showed label "Battlefield presence" (bare, correct) but notes
+  "creature permanents" with no "tapped" anywhere — the sink's own real
+  `{to:'Battlefield', types:{has:['Creature']}, tapped:true}` constraint
+  (its "targets a tapped creature" cost-reduction condition) lost the
+  `tapped` bit entirely. Root cause: SYSTEMIC, not one-off — `app/lib/
+  factConditions.ts`'s `tapped` rendering (`if (fact.tapped !== undefined)
+  bits.push(...)`) was nested inside an `if (isEventFact(fact))` block, but
+  `isEventFact` checks for a literal `event` key (`functional-model/
+  synergy.ts`), and a plain zone-shaped source/sink fact with a top-level
+  `Constraints.tapped` (the "candidate must currently be tapped" meaning,
+  distinct from `EventFact.tapped`'s "subject enters tapped" meaning — both
+  share the field name, see that field's own doc comment in synergy.ts) has
+  no `event` field at all — so the bit was unconditionally skipped, AND
+  `tapped` already sat in `HANDLED_OR_LABEL_KEYS`, so the generic unknown-
+  field fallback loop didn't catch it either. Silent, total drop, not a
+  mislabel. `describeFact()` itself (engine-owned, `functional-model/
+  synergy.ts`) was already correct/bare per the single-dimensional-label
+  design — this was purely a card-owned `factConditions.ts` bug. Grepped
+  every `synergy.json` pool-wide for non-`entersBattlefield`-event facts
+  carrying top-level `tapped` — 2 other real cards affected the same way:
+  `summon-primal-garuda` (sink) and `magitek-infantry` (source movement,
+  Library→Battlefield). Every `entersBattlefield`-event `tapped` fact (the
+  ~10 tapped-land cards, Phoenix Down) was unaffected (already had `event`
+  set, `isEventFact` true). Fix: hoisted the `tapped` bit out of the
+  `isEventFact` block to run unconditionally (placed just before that block
+  so an EventFact's own `tapped`/`oncePerTurn` order is unchanged) — no
+  `describeFact`/engine-side change needed or made. Added a regression test
+  (`factConditions.test.ts`) for the plain-zone-fact case. Verified live via
+  `npx tsx` against the real fin/19/summon-primal-garuda/magitek-infantry
+  facts — all three now render the `tapped` bit in conditions; labels
+  stayed bare throughout, confirming no re-fold into the label ever
+  happened (the bug was a silent drop, not a label/notes split issue as
+  initially suspected from the bug report's own wording). Scoped diff: only
+  `app/lib/factConditions.ts` + its own test file touched (left the file's
+  pre-existing, concurrent-session `excludeSelf`/`untilEndOfTurn` changes
+  already on disk alone, per shared-working-tree convention). Not
+  committed, per task instructions — left for approval. No contract
+  mismatch — this was a card-owned rendering bug, not a `card-schema.md`
+  shape issue.
