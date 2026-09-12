@@ -1,5 +1,470 @@
 # card agent notes
 
+- 2026-09-12 (latest, Previous/Next walks unique cards only + header row
+  never hides behind the loading spinner): Two related asks against
+  `app/pages/app/card/[set]/[number].vue`.
+  - **Task 1 — Previous/Next skip bonus/variant collector numbers.** FIN
+    reuses collector numbers 300+/400+/500+ for booster-fun/showcase/
+    extended-art/surgefoil re-treatments of the SAME card (Aerith
+    Gainsborough: #4 base, #374/#423/#519 bonus variants) — plain ±1 on
+    `:number` (the old default-path fallback, no filter active) walked
+    through these as separate "stops." Per the task's own explicit
+    definition, "mechanically unique" = Scryfall's own `unique=cards`
+    one-printing-per-name collapse, already relied on elsewhere in this repo
+    (`server/api/cards.ts`, `server/api/cards/by-names.ts`,
+    `server/api/card/[set]/[number].ts`'s own `fetchStandardPrintForName`) —
+    reused that convention rather than inventing an oracle_id/name-based
+    de-dup rule.
+    - **New generic server route,
+      `server/api/cards/set-order/[set].ts`**: `GET /api/cards/set-order/:set`
+      -> `{ collectorNumbers: string[]; representativeByNumber: Record<string,
+      string> }`. Dev/local path reads `data/cards.db` (the same gitignored,
+      `scripts/sync-card-db.mjs`-synced bulk mirror
+      `server/api/card/[set]/[number].ts`'s own `cardsDb` already reads) —
+      groups every English-language row for the set by NAME, picks one
+      representative per name via the exact same `is_normal DESC,
+      released_at DESC` tie-break that file's own `dbExactNameStmt` already
+      uses for the identical "prefer the standard/normal-art printing"
+      purpose, sorts the resulting numbers by leading numeric prefix. Also
+      builds `representativeByNumber`, mapping EVERY real printing's own
+      number (including a bonus one) to its representative — this turned out
+      load-bearing, see the "real gap found" note below. Falls back (no local
+      DB — always true in prod, Netlify Functions never ship
+      `data/cards.db`) to a live, paginated Scryfall search
+      (`set:<set>&unique=cards`), same polite-pagination shape
+      `server/api/cards.ts`'s own search loop already uses; documented
+      in-file that this path's own `representativeByNumber` is identity-only
+      (Scryfall's `unique=cards` doesn't expose the OTHER printings of a
+      name it collapsed away, so there's nothing to map bonus numbers from
+      on this path) — an accepted degradation, not a bug, only reachable when
+      the local DB is absent.
+    - **New client cache, `app/composables/useSetOrder.ts`**: module-scope
+      `Map<string, Promise<SetOrderData>>` (same "outlives one component
+      instance, keyed by set code" shape this file's own doc comment
+      compares to `server/api/card/[set]/[number].ts`'s `cardMetaCache`) —
+      fetches once per set code, caches the in-flight PROMISE (not just the
+      settled value) so concurrent callers for an uncached set share one
+      request. Verified live (Playwright): exactly 1 `/api/cards/set-order/`
+      request across an initial load + 4 Previous/Next clicks within FIN.
+      Exported `neighborsInSetOrder(data, current)` is the actual stepping
+      logic.
+    - **Real behavioral gap found and fixed mid-task, not just "de-dup the
+      list": a bonus/variant number needs to resolve to its CARD'S OWN TRUE
+      POSITION, not its own raw number, when computing neighbors.** First cut
+      only shipped the de-duped `collectorNumbers` list and treated the
+      current URL number as a plain "insert point" via numeric betweenness.
+      That's correct when Previous/Next arrives at a bonus number by
+      stepping there from its base card, but WRONG for a direct visit to a
+      bonus number itself (e.g. loading `/app/card/fin/374`, Aerith's own
+      showcase print, directly): betweenness against the RAW number 374
+      landed neighbors at #309/#482 (numerically nearest OTHER unique cards,
+      a huge meaningless jump), not Aerith's real neighbors #3/#5. Fixed by
+      having the server also emit `representativeByNumber` (every printing,
+      including bonus ones, mapped to its own representative) — the client
+      now anchors on `representativeByNumber[current] ?? current` before
+      indexing into `collectorNumbers`, so viewing Aerith at #4, #374, #423,
+      or #519 all produce the IDENTICAL #3/#5 Previous/Next pair. Verified
+      live (Playwright, dev server): `/app/card/fin/374` — Previous href
+      `/app/card/fin/3`, Next href `/app/card/fin/5`, clicking Next actually
+      lands on `/app/card/fin/5`. Sequential walk from `/app/card/fin/1`
+      clicking Next 5 times: `#1,#2,#3,#4,#5,#6` (below the bonus range,
+      unaffected). At `#1`, Previous correctly renders disabled (no
+      wraparound). `nearestNumericNeighbors` (the old betweenness logic) kept
+      as a fallback ONLY for a number with no `representativeByNumber` entry
+      at all (an unresolvable/typo'd number, or the live-Scryfall-fallback
+      path where the map is identity-only).
+    - **Loading-state decision, documented in the page's own new comments**:
+      while the one-time per-set fetch is still in flight
+      (`setOrderLoaded === false`), Previous/Next render DISABLED (same look
+      as either edge of the set) rather than showing a transient plain-±1
+      target that would visibly change out from under the user the instant
+      the real list lands. Only once the fetch has settled AND come back
+      genuinely empty (network hiccup, or a set this route can't resolve at
+      all) does it fall back to the old plain ±1 arithmetic, as a safety net
+      rather than leaving Previous/Next permanently dead.
+    - Deliberately did NOT touch `filterOrder`/`filterIndex` (the
+      deck-import/Scryfall-query active-filter path) at all — confirmed via
+      diff review that only the no-filter default branch of
+      `prevTarget`/`nextTarget` changed.
+  - **Task 2 — header row never hides behind the loading spinner.** The
+    entire page content, including the "← Back to graph" link and the
+    "← Previous / #N / Next →" row, used to sit behind
+    `v-if="pending && !hasLoadedCard"` inside `template v-else` — a
+    Previous/Next click blanked the WHOLE page (including its own trigger
+    controls) back to a spinner. Moved the header `<div>` block out to sit
+    unconditionally at the top of the outer wrapper, before the
+    pending/error/loaded branches — nothing in it actually depends on
+    `card`/`data` having resolved (`deckQty` already self-guards via its own
+    `v-if`, `currentNumber` reads straight off the route param,
+    `prevTarget`/`nextTarget` are route/setOrder-derived). The
+    `hasLoadedCard`/pending spinner-flash-avoidance gate is UNCHANGED in
+    behavior, just now only covers the actual card-detail content below the
+    header (CardMedia, review-status table, functional-model tabs,
+    Interactions, ...). Verified live (Playwright): `document` still shows
+    "Back to graph" (`isVisible() === true`) immediately after a Next click,
+    before the new card's fetch resolves.
+  - `npm run typecheck`: 0 new errors in any file this task touched (2 real
+    ones surfaced mid-task from a `RegExpExecArray` capture-group typing
+    quirk — `m[1]` typed `string | undefined` even though the code's own
+    logic guarantees it matched; fixed both the server route and the
+    composable by reading `m[0]` — the whole match, identical value for an
+    unnamed all-digits group — instead of `m[1]`). Only remaining error is
+    the same pre-existing, confirmed-not-mine `server/api/tokens/by-key.ts`
+    `u_3_3_robot_warrior` gap logged repeatedly below (confirmed via
+    `git status` — that file isn't in this task's own diff at all, a
+    concurrent `functional-model/tokens.ts` edit is). `npx vitest run
+    app/lib`: 69/69 pass. Full `npx vitest run`: one unrelated pre-existing
+    failure (`scripts/relations.test.mjs`, missing
+    `tagging/card-enrichment-status.json`) confirmed via `git stash` to fail
+    identically on the pre-task tree too — not caused by this change.
+  - **No `.claude/contracts/*.md` mismatch** — this task added a new
+    server↔client data shape entirely within the card domain's own lane
+    (a plain per-set collector-number list/map, nothing engine-served), no
+    existing contract describes or needs to describe it.
+  - Scope: new files `server/api/cards/set-order/[set].ts`,
+    `app/composables/useSetOrder.ts`; touched
+    `app/pages/app/card/[set]/[number].vue` (script: new setOrder
+    load/cache wiring, `prevTarget`/`nextTarget` no-filter branch rewritten;
+    template: header row hoisted above the pending/error/loaded gate) plus
+    this notes file. Did not touch `functional-model/`, any other
+    `.vue`/`server/api` file, or the deck/query `filterOrder` logic.
+
+- 2026-09-12 (latest, face-aware printed keywords — fin/13 Crystal
+  Fragments front-face false-Flying badge, fin/16 Dion follow-up): Fixed
+  the exact bug flagged (not fixed) at the end of the same-day
+  `continuousKeywordGrants` entry below — `printedKeywords()` badged a
+  transform DFC's CURRENT face with the OTHER face's own keyword.
+  - **Root cause, more subtle than it first looked**: the code read
+    `card.keywords`, Scryfall's raw WHOLE-card field, which for a
+    transform DFC is already the union of both faces'. The obvious fix
+    ("read `card_faces[i].keywords` instead") doesn't work — confirmed
+    live against Scryfall's real `/cards/<set>/<num>` API for several FIN
+    transform DFCs (Crystal Fragments, Dion, Jill, Cecil, Kefka, and the
+    other ~20 transform DFCs in the set) that Scryfall **never serves a
+    per-face `keywords` array at all**, only the whole-card top-level one
+    — `card_faces[i].keywords` is always `undefined`, so a naive per-face
+    read would silently return `[]` for EVERY face, hiding a real
+    printed keyword like Bahamut's back-face Flying entirely instead of
+    just misattributing it.
+  - **Fix — `app/lib/buildGraph.ts`'s new `cardFaceKeywords(card, face)`**:
+    scans that face's own `oracle_text` for a STANDALONE keyword line (the
+    MTG frame convention — a printed keyword ability is always its own
+    line, comma-separated if more than one, optionally with a trailing
+    cost/number like "Ward {2}"/"Crew 1", reminder text either on its own
+    line or trailing the keyword on the SAME line with no comma — both
+    stripped before matching), restricted to keywords `card.keywords`
+    already confirms the card genuinely HAS somewhere (so a face can never
+    pick up a bare word the whole card doesn't actually carry as a real
+    keyword). This is what correctly tells apart Dion, Bahamut's Dominant's
+    front face — which only MENTIONS "flying" inside a full sentence
+    ("Dragonfire Dive — During your turn, Dion and other Knights you
+    control have flying," a CONTINUOUS turn-conditional grant, handled by
+    the separate `continuousKeywordGrants`/`continuousGrantedKeywords`
+    mechanism, not a static keyword) — from its back face Bahamut, which
+    prints "Flying" as its own bare line. Verified pool-wide (throwaway
+    Node script against `data/fin/fin_scryfall.json`) across all ~26 FIN
+    transform DFCs: zero missed keywords vs. the old whole-card union
+    (every real keyword still attributed to SOME face) and zero false
+    positives (Dion's own front face, the one case with a same-word grant
+    sentence, correctly stays empty).
+  - **Threaded through**: `server/api/card/[set]/[number].ts`'s
+    `CardData.keywords` now uses `cardFaceKeywords(card, 0)` (front) instead
+    of the old whole-card `cardKeywords(card)`; new `CardData.backKeywords`
+    (`cardFaceKeywords(card, 1)`, undefined with no second face) mirrors the
+    existing `backPower`/`backToughness` convention. `app/types.ts`'s
+    `CardData` gained the new field + a doc-comment caveat that
+    `buildGraph.ts`'s own separate whole-graph node builder deliberately
+    keeps the UNION for its own independently-constructed `CardData` shape
+    (a graph node badge means "has this ability somewhere," not
+    "on the currently-shown face" — not a bug, a different, correct,
+    out-of-lane (`ui`) use of the same type). Card page → `ScenarioReplay.vue`
+    → `ScenarioReplayTrace.vue`: new `cardBackKeywords` prop threaded
+    alongside the existing `cardKeywords`/`cardPower`/`cardBackPower` set;
+    `printedKeywords()` now picks `cardBackKeywords` once `card.faceName`
+    shows the self chip has transformed (same `flipped` check `ptFor`
+    already uses for power/toughness) instead of always reading the front
+    prop. Also fixed the same bug class for a real BYSTANDER card (not just
+    the tested "self" card): `ScenarioReplay.vue`'s own `extraArt` builder
+    (feeds `namedCardArt`/`iconKeywords` for any other real card a scenario
+    references by name) used the same wrong `c.keywords` whole-card read;
+    switched to `cardFaceKeywords(c, 0)` (a bystander is always shown
+    printed/front-face — this replay model has no mechanism for a non-self
+    card to transform mid-scenario). `server/api/_cardShaping.ts`'s shared
+    `CardFace`/`minimalCard()` (used by both `cards.ts` and
+    `cards/by-names.ts`) gained a passthrough `oracle_text` field — it had
+    been stripped entirely (this file's own header comment: "shrink to only
+    what buildGraph.ts reads," which didn't need per-face oracle text until
+    this task), needed for `cardFaceKeywords` to have anything to scan for a
+    bystander fetched via `/api/cards/by-names`.
+  - **Verified live** (Playwright, throwaway scripts at repo root, deleted
+    after) against the already-running dev server, stepping fin/13's real
+    scenario with the Forward button: front chip (Crystal Fragments) has
+    ZERO ability-icon `<svg>`s at every step before transform; back chip
+    (Summon: Alexander) shows exactly one `<svg>` (Flying) from the
+    transform step onward. fin/16 (Dion) spot-checked the same way — front
+    chip's OWN printed-keyword contribution confirmed empty at every step
+    (the on/off flying icon actually observed on Dion's own chip across
+    turns is the separate, pre-existing, correctly-still-working
+    `continuousGrantedKeywords` mechanism firing per `onlyDuringYourTurn`,
+    not this fix — confirmed by reading the served `continuousKeywordGrants`
+    JSON directly, `includeSelf: true`, which is in fact semantically
+    correct: the real oracle text says "Dion **and other Knights**... have
+    flying," including Dion himself, just conditionally/via a grant rather
+    than a static keyword). Also re-verified via direct `/api/card/fin/<n>`
+    curl calls for all ~26 FIN transform DFCs (Crystal Fragments, Dion,
+    Jill, Cecil, Kefka, Sephiroth, Vincent Valentine, Zenos, Clive, Emet-
+    Selch, Exdeath, Garland, Joshua, Kuja, Serah, Terra, Ultimecia, Balamb
+    Garden, the various Sidequest lands, ...) — every front/back split now
+    matches the real card's own actual printed keywords, no card left with
+    a wrong or dropped badge.
+  - `npm run typecheck`: zero new errors in any file this task touched.
+    Two pre-existing, confirmed-not-mine failures at check time: the
+    long-standing `server/api/tokens/by-key.ts` `u_3_3_robot_warrior` gap
+    (logged repeatedly below), and a NEW-that-session
+    `functional-model/state.ts` `untilEndOfTurnKeywordGrants` error —
+    confirmed via `git status`/`git diff --stat` that `state.ts` was
+    already dirty (a concurrent `engine` session's own in-flight,
+    uncommitted work) before and unrelated to anything touched here; not a
+    file in this task's own diff at all. `npx vitest run app/lib`: 68/68
+    pass.
+  - **No `.claude/contracts/*.md` mismatch** — `CardData`/`card-schema.md`
+    don't describe this specific field's face-scoping either way; nothing
+    there was wrong, just under-specified for a case that hadn't come up
+    before. Not adding a new contract entry unprompted (out of this
+    session's own ask), but worth a future note if another specialist
+    trips on the same "Scryfall doesn't serve per-face keywords" surprise.
+  - Scope: touched `app/lib/buildGraph.ts`, `app/types.ts`,
+    `server/api/card/[set]/[number].ts`, `server/api/_cardShaping.ts`,
+    `app/components/ScenarioReplay.vue`, `app/components/
+    ScenarioReplayTrace.vue`, `app/pages/app/card/[set]/[number].vue` (one
+    new prop wired through), plus this notes file. Did not touch
+    `functional-model/` or the keywords-coverage page
+    (`KeywordEntryCard.vue`/`server/api/keywords/index.get.ts`) — the
+    latter has the exact same bug class (`keywords: card.keywords ?? []`,
+    confirmed via grep) but lives outside this domain's file list; flagging
+    for whichever agent owns it (`ui`, per the keyword-coverage-page project
+    note) rather than fixing it here.
+
+- 2026-09-12 (latest, Facts-tab copy button rework — full context string +
+  spacing fix): Two related requests on the same Facts-tab copy button added
+  earlier the same day (see the "reverted hidden-text ... real copy-icon
+  button" entry below): (1) "copy button for fact is pretty useless now" —
+  it copied only the bare role marker ("SO"/"SI"); wanted the full row
+  context instead. (2) "add some padding to the right of that button, so
+  that I don't hit json instead" — it sat flush against the adjacent
+  debug-JSON braces icon in the same cell.
+  - **Task 1 fix**: reworked `copyRoleMarker`/`copiedRoleKey` (renamed
+    `copyFactContext`/`copiedFactKey`) in
+    `app/pages/app/card/[set]/[number].vue`. New `factContextText(row)`
+    builds `` `${cardRef} #${rowNumber} ${label}[ · ${conditions}]` `` —
+    `cardRef` is `${route.params.set}/${route.params.number}` (e.g.
+    `fin/21`), `rowNumber` is 1-based off the ALREADY-EXISTING
+    `factOrderIndex` computed (built for the Interactions panel's own
+    reordering) — the fact's position in the table's actual DISPLAYED order,
+    not raw synergy.json source/sink array order — and `label`/`conditions`
+    are the exact same `factLabel(row.fact)`/`factConditions(row.fact)` calls
+    the row's own label/notes `<td>`s already render (reused, not
+    reformatted from raw JSON, per the task's own explicit ask). Verified
+    live real output on fin/21's 3rd displayed fact row: clipboard read back
+    exactly `"fin/21 #3 Dying · yours · (Creature/Artifact) permanent · once
+    per turn"` — matches the requested shape byte-for-byte.
+  - **Task 2 fix**: reordered the two icons in the shared debug `<td>` — copy
+    now comes FIRST (left) with its own `mr-2` on top of the existing
+    `gap-1.5` wrapper gap, braces/JSON second (right). Chose reorder+own-margin
+    over just widening the shared gap so the literal "padding to the right of
+    that [copy] button" wording is satisfied exactly (previously copy was
+    the RIGHTMOST icon, so a right-margin on it alone wouldn't have separated
+    it from JSON, which sat to its left) — copy is also the more-used button
+    per the user's own framing, so giving it the left/first slot reads
+    naturally. Verified live via bounding boxes: icon gap widened from the
+    old flush `gap-1.5` (6px) to 14px (`mr-2`'s 8px + the wrapper's own
+    6px gap) between copy's right edge and braces' left edge.
+  - Verified live (Playwright, throwaway script at repo root, deleted after)
+    against the already-running dev server, fin/21: clipboard content
+    confirmed exact as above; screenshot confirms visible checkmark click
+    feedback and clear spacing between the two icons.
+  - `npm run typecheck`: only the same pre-existing, unrelated
+    `server/api/tokens/by-key.ts` `u_3_3_robot_warrior` error already logged
+    in the entry below (not touched by this task). No test suite covers this
+    template-only change; didn't add one (no existing `.test.ts` exercises
+    this `.vue` file's button handlers).
+  - Scope: touched only `app/pages/app/card/[set]/[number].vue` + this notes
+    file.
+  - No `.claude/contracts/*.md` mismatch — pure client-side display/
+    interaction change, no engine-served shape touched.
+
+- 2026-09-12 (latest, `untilEndOfTurn` camelCase display bug): Same bug
+  class as the earlier same-day `preventDamage`/`grantKeyword`/`grantType`
+  raw-label fixes, but this one was in the CONDITIONS/notes column
+  (`app/lib/factConditions.ts`), not the label column (`describeFact` in
+  `functional-model/synergy.ts`) those were. `Fact.untilEndOfTurn?: boolean`
+  (documentary-only field `engine` added earlier the same day) had no
+  branch in `factConditions()` and no entry in `HANDLED_OR_LABEL_KEYS`, so
+  it fell through to the generic `formatUnknown` fallback loop and rendered
+  as the raw field name `untilEndOfTurn` instead of a phrase — reported
+  live on fin/27 (Moogles' Valor)'s Grant keyword row.
+  - **Fix**: mirrored the exact existing `tapped`/`oncePerTurn` pattern
+    (both already handled the same way): added `'untilEndOfTurn'` to
+    `HANDLED_OR_LABEL_KEYS` (suppresses the generic fallback) and a new
+    `if (fact.untilEndOfTurn) bits.push('until end of turn');` line right
+    after the `oncePerTurn` branch, inside the same `isEventFact(fact)`
+    block (the field only lives on `EventFact` per `synergy.ts`'s own
+    doc comment, same as `tapped`/`oncePerTurn`).
+  - **Pool-wide confirmed**: `grep -rl '"untilEndOfTurn": true'
+    functional-model/cards/*/synergy.json` → 12 cards (cargo-ship,
+    restoration-magic, the-lunar-whale, summon-choco-mog, moogles-valor,
+    magic-damper, the-prima-vista, zack-fair, the-wind-crystal,
+    summon-knights-of-round, magitek-armor, summon-primal-garuda) — the fix
+    is in the shared `factConditions()` function, applies to all of them
+    identically, not a per-card patch.
+  - **Verified live** (Playwright, throwaway scripts at repo root, deleted
+    after) against the already-running dev server: fin/27, fin/30
+    (Restoration Magic), fin/43 (The Wind Crystal) — each Facts tab now
+    shows "until end of turn" in the conditions column, zero raw
+    `untilEndOfTurn` text anywhere on any of the three pages. fin/27's
+    exact Grant keyword row confirmed: "yours · creature permanent · until
+    end of turn · keyword: Indestructible · not targeted".
+  - **Real, unrelated, engine-owned type gap found along the way, flagged
+    not fixed (out of lane)**: `grantKeyword` facts' own `keyword: string`
+    field (e.g. `moogles-valor/synergy.json`'s `{"event": "grantKeyword",
+    "keyword": "Indestructible", ...}`) is written pool-wide but is NOT a
+    declared property anywhere on the `Fact` type in
+    `functional-model/synergy.ts` (confirmed via grep — no `keyword` field
+    declaration exists, only the string `'grantKeyword'` event-name
+    literal and the word appearing in prose comments). Runtime is
+    unaffected (it flows through as a plain untyped extra property, caught
+    by `factConditions()`'s generic `formatUnknown` fallback same as any
+    other undeclared field, rendering as `keyword: Indestructible` — this
+    is in fact why my own test fixture had to drop a `keyword: ...` literal
+    to pass `npm run typecheck`, since object-literal excess-property
+    checking rejects it on a variable explicitly typed `Fact`). Not fixed
+    here (`functional-model/synergy.ts` is `engine`'s lane) — worth a
+    small follow-up there (`keyword?: string` alongside `type`/`color`/
+    `counterType`'s own free-form-field pattern) so future authors get
+    real type-checking on it instead of only JSON-shape convention.
+    `.claude/contracts/card-schema.md` also doesn't mention this field at
+    all; not flagging that as a contract error per se (the contract
+    doesn't enumerate every free-form per-event field), just noting it
+    alongside the type gap in case it's useful context for whoever picks
+    up the `synergy.ts` fix.
+  - `npm run typecheck`: same single pre-existing, unrelated failure both
+    before and after this change (`server/api/tokens/by-key.ts` missing a
+    `u_3_3_robot_warrior` entry in its per-key map — not a file I touched,
+    not in `git status` as dirty from my own edits, some other concurrent
+    session's in-flight token addition; zero errors in either file this
+    task touched). `npx vitest run app/lib`: 65/65 pass (added 1 new case
+    to `factConditions.test.ts`'s existing 64).
+  - Scope: touched only `app/lib/factConditions.ts` +
+    `app/lib/factConditions.test.ts`; did not touch
+    `functional-model/synergy.ts` or any `synergy.json` (per this project's
+    engine/card lane split — the `keyword` type gap above is a flag, not a
+    fix, for that reason).
+
+- 2026-09-12 (latest, `PlayerState.creatureCards` board-seeding gap +
+  placeholder-label follow-ups): Fixed a real bug on fin/29 (Phoenix Down)
+  scenario 2's replay — a real, specifically-named creature seeded via
+  `functional-model/harness.ts`'s new `PlayerState.creatureCards` field
+  (added same-day by an engine session, replacing a fabricated fake-Zombie
+  Grizzly Bears — Qutrub Forayer, a real 3/2 Zombie Horror) didn't appear on
+  the board at Start, only once the trace's own `moveTo` (to Exile) log
+  entry happened to name it and fell through to `ensure`'s lazy-create path.
+  - **Root cause confirmed**: `app/lib/scenarioReplay.ts`'s `seedPlayerCards`
+    mirrors `harness.ts`'s `setupPlayer` field-for-field (per its own header
+    doc comment) but had NO branch at all for `PlayerState.creatureCards` —
+    a genuine gap, not a stale-data issue (`setupPlayer` itself already had
+    the real loop).
+  - **Fix**: added a matching loop to `seedPlayerCards` — `for (const c of
+    ps?.creatureCards ?? []) push(c.name, 'Battlefield', [c.power ?? 1,
+    c.toughness ?? 1])`, positioned identically (right after the
+    token-creature filler loop, before `tokens`/`basicLands`) to
+    `setupPlayer`'s own ordering.
+  - **Pool-wide check**: grepped every `scenarios.ts`/`definition.ts` for
+    `creatureCards` — exactly 2 cards use it: `phoenix-down` (this bug) and
+    `louisoix-s-sacrifice` (Stiltzkin, Moogle Merchant, `you:` side) — the
+    latter benefits from the same fix, not independently verified beyond the
+    generic fix applying identically to both (same field, same seeding
+    code).
+  - **Verified live** (fresh dev-server restart — see stale-HMR note below
+    — then Playwright, throwaway scripts at repo root, deleted after):
+    fin/29 scenario 2 ("exiles the Zombie") — Qutrub Forayer now renders
+    with real Scryfall art on OPP0's own battlefield at step 0/2 (Start),
+    correct 3/2 P/T badge, title="Qutrub Forayer" — not just appearing
+    retroactively once the Exile `moveTo` replays. Also confirmed directly
+    via a standalone script calling the real `replayTrace()`/
+    `groupForDisplay()` against the live `run-one-card.mjs` output (not just
+    the browser) for both phoenix-down scenarios and restoration-magic's
+    Curaga scenario.
+  - **Stale dev-server HMR gotcha hit again** (NEXT_STEPS.md's own
+    documented issue) — the long-running dev server (up since 2026-09-11,
+    predating today's `GENERIC_FILLER_ARTIFACT` addition to `harness.ts` by
+    a concurrent engine session) threw `SyntaxError: ... does not provide an
+    export named 'GENERIC_FILLER_ARTIFACT'` in the browser console even
+    though the source file plainly had it — restarted `npm run dev` (killed
+    the stale PIDs, relaunched in background), confirmed clean after.
+    Flagging since this is a SHARED dev server other sessions may also be
+    using — did this only because the documented convention explicitly
+    permits/expects it for this exact symptom, not a unilateral call.
+  - **Coordinator-added follow-ups, same task, same file**:
+    1. Fixed `seedPlayerCards`'s `plainArtifacts` loop, which had fallen out
+       of sync with an ALREADY-LANDED `setupPlayer` change (same-day, a
+       sibling fix for Restoration Magic's own Curaga scenario): `setupPlayer`
+       already seeds a plain artifact as `GENERIC_FILLER_ARTIFACT` ("Mind
+       Stone", a real card), but `seedPlayerCards`'s own mirror still pushed
+       the old synthetic `${n}-artifact-${i}` name, producing a stub "Ar"
+       placeholder chip. Fixed to match (`push(GENERIC_FILLER_ARTIFACT,
+       'Battlefield')`), imported the constant. Verified live: fin/30
+       (Restoration Magic) scenario 3's Mind Stone chip now resolves real art
+       (no placeholder text at all).
+    2. General "show full name, not a 2-letter stub" fix to
+       `placeholderLabel()` per direct user request ("use full name on card
+       as a fallback — so I have easier time communicating"): the function's
+       final fallback (previously `displayName(card).slice(0, 2)`) now
+       returns the full `displayName(card)` untouched. The short
+       bucket-specific abbreviations (`Cr`/`Ld`/`Eq`/`Ar`/`En`/`?`) are kept
+       ONLY for names still matching a genuinely-synthetic per-index pattern
+       (no real card exists to name at all) — `-hand-`/`-library-` are
+       already dead code today (both zones' own fillers already carry a real
+       name), kept defensively for an older/unmigrated trace shape rather
+       than deleted. This box only ever renders when the caller's own
+       `imagesFor()` found no real art (an art-lookup miss, not proof the
+       name is fake) — for anything with a real resolvable name, real art
+       generally already wins over this fallback anyway (confirmed: Qutrub
+       Forayer/Mind Stone/Grizzly Bears never actually reach this function
+       live, since real art resolves for all three via the existing
+       `autoNamedCardArt` mechanism — this fallback change mainly matters for
+       a real name that DOESN'T have art available for some reason, or a
+       future caller/edge case).
+  - **Real, confirmed, engine-owned gap found — NOT fixed here, flagged for
+    `engine`**: `harness.ts`'s `setupPlayer` own `graveyardCreatureCount`
+    loop still seeds a purely synthetic `${n}-gy-creature-${i}` name (no real
+    Scryfall identity at all) — same class of gap `GENERIC_FILLER_CREATURE`/
+    `_LAND`/`_ARTIFACT` already fixed for their own buckets, just not yet
+    done for this one. This is why fin/29 scenario 1 (mode 0, "returns a
+    creature card from graveyard...") still shows a "Cr" placeholder chip
+    live (confirmed, screenshot). Deliberately did NOT fix this myself even
+    though it's the exact same shape of change as the artifact fix above —
+    the NAME is produced by `harness.ts`'s own real trace log entries (an
+    engine-lane file, `functional-model/`), and changing ONLY
+    `scenarioReplay.ts`'s own mirrored seed name without a matching
+    `harness.ts` change would break identity matching entirely (the seeded
+    chip and the log's own `moveTo`/`tap` target name would no longer agree,
+    producing a phantom duplicate chip instead of fixing anything) — needs a
+    coordinated two-file change engine should own, not a one-sided
+    card-lane patch.
+  - `npm run typecheck`: only pre-existing error is `server/api/
+    tokens/by-key.ts`'s `u_3_3_robot_warrior` `Record` mismatch — confirmed
+    via `git stash`/re-run NOT caused by this task (disappears when
+    stashing, since it comes from a concurrent engine session's own
+    in-flight, uncommitted `tokens.ts` edit, unrelated to anything touched
+    here). `npx vitest run app/lib`: 64/64 pass (unchanged assertions — no
+    existing test covers `seedPlayerCards`/`placeholderLabel` directly).
+  - Scope: touched only `app/lib/scenarioReplay.ts` + this notes file — no
+    `functional-model/` or `.vue` changes.
+  - **Contract note**: no `.claude/contracts/*.md` mismatch — `PlayerState.
+    creatureCards` is plain harness-side scenario-setup data, not part of
+    the engine↔card `card-schema.md`/`state-event-format.md` boundary
+    either contract describes; nothing there needed correcting.
+
 - 2026-09-12 (latest, continuous keyword grants in scenario replay —
   fin/16 Dion, Bahamut's Dominant / ENGINE_GAPS.md gap #14 UI side):
   `engine` built real query-time machinery (`CardDefinition.
@@ -3333,3 +3798,18 @@ resume alone (session transcripts are swept after ~30 days).
     presentation logic over already-correctly-documented `Fact.from`/`.to`/
     `.event` fields; nothing served differently than the contract
     describes.
+
+## 2026-09-12 — Flag: `engine` agent touched `app/lib/scenarioReplay.ts`/`scenarioReplay.test.ts` directly (cross-lane, not hidden)
+
+Fixing a live regression report (Dion, Bahamut's Dominant, fin/16 — Knight
+token showing Flying permanently, even during the opponent's turn) required
+a matching one-line change in `scenarioReplay.ts`'s `grantKeyword` case
+(`entry.removed` → `keywords.delete` instead of `.add`) to consume a new,
+additive `engine`-owned trace-log field (`grantKeyword`'s own `removed`/
+`untilEndOfTurn` fields — see `.claude/contracts/state-event-format.md`'s
+own new dated section for the full shape). Same precedent this exact
+engine session already set for `continuousGrantedKeywords()` in
+`ScenarioReplayTrace.vue` (gap #14, written directly by `engine` too).
+Full root-cause writeup: `.claude/agent-memory/engine/notes.md`'s own
+"latest+56" entry. Nothing else in `card`'s own lane changed; flagging in
+case a `card`-agent session sees this diff and wants to review/restyle it.

@@ -10,6 +10,7 @@ import type { EnrichedInteractionGroup, ContinuousKeywordGrant } from '../../../
 import type { CardData, EdgeData, ThemeData, AnnotatedCard, ReviewStatus } from '../../../../types';
 import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
 import { getKnownDeckCards, getActiveFilterMode, StoreKey } from '../../../../composables/useGraphStore';
+import { useSetOrder, neighborsInSetOrder, type SetOrderData } from '../../../../composables/useSetOrder';
 
 definePageMeta({ layout: 'graph' });
 
@@ -49,12 +50,47 @@ interface CardResponse {
   interactions: EnrichedInteractionGroup[];
 }
 
-// Plain client-side ±1 on the URL's :number when no global filter (deck
-// import / Scryfall query) is active — no server round-trip to validate a
-// neighbor exists, so clicking Next/Previous (or pressing the arrow keys)
-// doesn't wait on anything. A number past either edge of the set just 404s
-// into this page's own "Card not found" state.
+// The URL's raw :number segment, parsed for the old plain-±1 fallback only
+// (see setOrderLoaded's own comment below for when that fallback still
+// applies) — the real default Previous/Next path now walks setOrder's own
+// per-set unique-card list instead of doing arithmetic on this.
 const currentNumber = computed(() => parseInt(String(route.params.number), 10));
+
+// Per-set "mechanically unique" collector-number list (see
+// app/composables/useSetOrder.ts and server/api/cards/set-order/[set].ts's
+// own header for what "mechanically unique" means and why plain ±1 on
+// :number is wrong for a set like FIN, which reuses collector numbers
+// 300+/400+/500+ for booster-fun/showcase/extended-art/surgefoil
+// re-treatments of the SAME card) — fetched once per set code, reused
+// across every Previous/Next click within that set (the composable's own
+// module-scope cache, not a local one here, is what makes that true across
+// this whole tab, not just this one component instance). Refetches (from
+// cache, so effectively free after the first time) whenever :set itself
+// changes, which only happens on a direct cross-set URL visit — normal
+// within-set Previous/Next browsing never changes :set.
+const { getSetOrder } = useSetOrder();
+const setOrder = ref<SetOrderData>({ collectorNumbers: [], representativeByNumber: {} });
+// True once the fetch above has SETTLED (success or failure/empty) for the
+// set currently on screen — distinguishes "still loading, don't show a
+// target that's about to change out from under the user" (Previous/Next
+// render disabled, same look as either edge of the set) from "genuinely
+// came back empty" (network hiccup, or a set this route can't resolve at
+// all), which falls back to the old plain ±1 arithmetic as a safety net
+// rather than leaving Previous/Next permanently dead.
+const setOrderLoaded = ref(false);
+watch(
+  () => String(route.params.set),
+  async (set) => {
+    setOrderLoaded.value = false;
+    setOrder.value = await getSetOrder(set);
+    setOrderLoaded.value = true;
+  },
+  { immediate: true }
+);
+// This card's own nearest unique-card neighbors within setOrder — see
+// neighborsInSetOrder's own doc comment for how a bonus/variant number (not
+// itself a list entry) is handled the same as one that is.
+const setNeighbors = computed(() => neighborsInSetOrder(setOrder.value, String(route.params.number)));
 
 interface FilterCardEntry {
   name: string;
@@ -142,14 +178,27 @@ interface NeighborTarget {
   set: string;
   collectorNumber: string;
 }
+// No-filter default path, below: walks setOrder's own unique-card list via
+// setNeighbors whenever it's available (setOrder.value.length — the common
+// case once the one-time per-set fetch settles), falling back to the old
+// plain ±1 arithmetic only if that fetch genuinely came back empty
+// (setOrderLoaded true, setOrder still `[]` — a network hiccup, or a set
+// this route can't resolve at all). While the fetch is still in flight
+// (setOrderLoaded false) Previous/Next render disabled — same look as
+// either edge of the set — rather than showing a plain-±1 target that would
+// visibly change out from under the user the instant the real list lands.
 const prevTarget = computed<NeighborTarget | null>(() => {
   if (filterIndex.value >= 0) return filterIndex.value > 0 ? filterOrder.value![filterIndex.value - 1]! : null;
+  if (setOrder.value.collectorNumbers.length) return setNeighbors.value.prev ? { set: String(route.params.set), collectorNumber: setNeighbors.value.prev } : null;
+  if (!setOrderLoaded.value) return null;
   return Number.isFinite(currentNumber.value) && currentNumber.value > 1
     ? { set: String(route.params.set), collectorNumber: String(currentNumber.value - 1) }
     : null;
 });
 const nextTarget = computed<NeighborTarget | null>(() => {
   if (filterIndex.value >= 0) return filterIndex.value < filterOrder.value!.length - 1 ? filterOrder.value![filterIndex.value + 1]! : null;
+  if (setOrder.value.collectorNumbers.length) return setNeighbors.value.next ? { set: String(route.params.set), collectorNumber: setNeighbors.value.next } : null;
+  if (!setOrderLoaded.value) return null;
   return Number.isFinite(currentNumber.value) ? { set: String(route.params.set), collectorNumber: String(currentNumber.value + 1) } : null;
 });
 
@@ -332,20 +381,35 @@ function openFactDebugModal(fact: Fact) {
   openDebugModal(`Fact JSON — ${factKey(fact)}`, factDebugJsonPretty(fact));
 }
 
-// Copy-role-marker button, sitting next to the debug-JSON braces icon in the
-// same cell: copies the plain string "SO" (source) / "SI" (sink) to the
-// clipboard, so a row's role is grab-able as real text without fighting the
-// role icon's own DOM (replaces an earlier hidden-text-behind-icon attempt
-// that was too fiddly to actually select in practice). `copiedRoleKey` briefly
-// swaps the button's own icon to a checkmark as click feedback, keyed by
-// `row.key` so only the clicked row's button flips.
-const copiedRoleKey = ref<string | null>(null);
-async function copyRoleMarker(row: FactRow) {
-  const marker = row.fact.role === 'source' ? 'SO' : 'SI';
-  await navigator.clipboard.writeText(marker);
-  copiedRoleKey.value = row.key;
+// Copy-fact-context button, sitting next to the debug-JSON braces icon in the
+// same cell: copies a full one-line context string — "<set>/<number> #<row
+// number> <label>[ · <conditions>]" (e.g. "fin/21 #3 Dying · yours ·
+// (Creature/Artifact) permanent · once per turn") — built from the SAME
+// rendered `factLabel`/`factConditions` text already shown in this row's own
+// cells, not reformatted from raw JSON. `#<row number>` is the fact's 1-based
+// position in the table's own DISPLAYED order (`factOrderIndex`, already
+// computed below for the Interactions panel's own reordering — matches what
+// a person actually sees counting rows down the table, not raw synergy.json
+// source/sink array order). Replaces an earlier version of this button that
+// only copied the bare role marker ("SO"/"SI") — dropped per direct user
+// feedback that a bare marker wasn't useful once the row's own role icon
+// already conveys that. `copiedFactKey` briefly swaps the button's own icon
+// to a checkmark as click feedback, keyed by `row.key` so only the clicked
+// row's button flips.
+const copiedFactKey = ref<string | null>(null);
+function factContextText(row: FactRow): string {
+  const cardRef = `${route.params.set}/${route.params.number}`;
+  const index = factOrderIndex.value.get(row.key);
+  const label = factLabel(row.fact);
+  const conditions = factConditions(row.fact);
+  const text = conditions ? `${label} · ${conditions}` : label;
+  return `${cardRef} #${index === undefined ? '?' : index + 1} ${text}`;
+}
+async function copyFactContext(row: FactRow) {
+  await navigator.clipboard.writeText(factContextText(row));
+  copiedFactKey.value = row.key;
   setTimeout(() => {
-    if (copiedRoleKey.value === row.key) copiedRoleKey.value = null;
+    if (copiedFactKey.value === row.key) copiedFactKey.value = null;
   }, 1000);
 }
 
@@ -766,6 +830,44 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 <template>
   <div class="flex-1 overflow-y-auto p-6">
+    <!-- Header row (Back-to-graph link + Previous/#N/Next) — deliberately
+         OUTSIDE the pending/error/loaded branches below, and rendered
+         unconditionally: it never disappears behind the spinner during any
+         navigation, only the inner card-detail content below it does.
+         Nothing here actually depends on `card`/`data` having resolved yet —
+         `deckQty` already guards itself (`v-if`, returns null with no
+         card), `currentNumber` reads straight off the route param, and
+         `prevTarget`/`nextTarget` are themselves route/setOrder-derived, not
+         fetched-card-derived. Previously this whole block sat inside
+         `template v-else` (fetched-card-only), which meant it vanished
+         along with everything else the instant a Previous/Next click
+         flipped `pending` back to true — fixed per direct request; the
+         `hasLoadedCard`/pending gate below still exists for the exact same
+         flash-avoidance reason it always did, it just no longer covers this
+         region. -->
+    <div class="mb-4 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <NuxtLink to="/app" class="inline-block text-sm text-muted hover:text-text">&larr; Back to graph</NuxtLink>
+        <span v-if="deckQty" class="rounded-full bg-bg px-2 py-0.5 text-xs font-bold text-muted" title="Copies in your imported deck">
+          ×{{ deckQty }}
+        </span>
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <NuxtLink v-if="prevTarget" :to="`/app/card/${prevTarget.set}/${prevTarget.collectorNumber}`" class="text-muted hover:text-text">
+          &larr; Previous
+        </NuxtLink>
+        <span v-else class="text-muted/40">&larr; Previous</span>
+        <span class="text-muted">#{{ currentNumber }}</span>
+        <NuxtLink v-if="nextTarget" :to="`/app/card/${nextTarget.set}/${nextTarget.collectorNumber}`" class="text-muted hover:text-text">
+          Next &rarr;
+        </NuxtLink>
+      </div>
+    </div>
+
+    <!-- Everything below is the actual card-detail CONTENT (CardMedia, the
+         review-status table, the functional-model tabs, Interactions,
+         ...) — this is the only region the pending/error/loaded gate below
+         covers now. -->
     <div v-if="pending && !hasLoadedCard" class="flex flex-1 items-center justify-center">
       <div
         class="size-8 animate-spin rounded-full border-[3px] border-border border-t-produce"
@@ -774,30 +876,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     </div>
     <div v-else-if="error || !card" class="text-muted">Card not found.</div>
     <template v-else>
-      <!-- No page-level name heading anymore — the card's name now renders
-           exactly once, as FunctionalModelText.vue's own per-face heading
-           directly above the mana cost/type line/oracle text (see that
-           component's own self-fact annotation, `headerFaceFacts` below).
-           `deckQty` (this row's own concern, not that component's) keeps its
-           spot up here rather than following the heading down. -->
-      <div class="mb-4 flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <NuxtLink to="/app" class="inline-block text-sm text-muted hover:text-text">&larr; Back to graph</NuxtLink>
-          <span v-if="deckQty" class="rounded-full bg-bg px-2 py-0.5 text-xs font-bold text-muted" title="Copies in your imported deck">
-            ×{{ deckQty }}
-          </span>
-        </div>
-        <div class="flex items-center gap-3 text-sm">
-          <NuxtLink v-if="prevTarget" :to="`/app/card/${prevTarget.set}/${prevTarget.collectorNumber}`" class="text-muted hover:text-text">
-            &larr; Previous
-          </NuxtLink>
-          <span v-else class="text-muted/40">&larr; Previous</span>
-          <span class="text-muted">#{{ currentNumber }}</span>
-          <NuxtLink v-if="nextTarget" :to="`/app/card/${nextTarget.set}/${nextTarget.collectorNumber}`" class="text-muted hover:text-text">
-            Next &rarr;
-          </NuxtLink>
-        </div>
-      </div>
       <!-- CardMedia + the review-status table side by side once there's
            room (md and up); stacked (table below the images) on narrow/
            mobile viewports, same "stack on narrow, row on wide" shape as
@@ -983,18 +1061,28 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                   </td>
                   <td class="py-1 px-2 whitespace-pre-wrap text-muted/60">{{ factConditions(row.fact) }}</td>
                   <td v-if="SHOW_FACT_DEBUG_COLUMN" class="py-1 px-2">
+                    <!-- Copy button sits FIRST (left) with its own extra
+                         right-margin (beyond the plain `gap-1.5` used
+                         everywhere else in this file), and the JSON/braces
+                         debug button sits second (right) — deliberately
+                         reordered + spaced apart per direct user feedback
+                         ("copy button ... I keep hitting json instead"): the
+                         two are similar-looking small icons right next to
+                         each other, so copy (the one actually used often)
+                         gets breathing room on its own right side rather than
+                         living flush against the debug button. -->
                     <span class="inline-flex items-center gap-1.5">
+                      <Icon
+                        :name="copiedFactKey === row.key ? 'lucide:check' : 'lucide:copy'"
+                        class="h-3.5 w-3.5 mr-2 cursor-pointer text-muted/50 hover:text-text"
+                        title="Copy fact context (card + row number + text)"
+                        @click="copyFactContext(row)"
+                      />
                       <Icon
                         name="lucide:braces"
                         class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
                         title="View this fact's raw JSON"
                         @click="openFactDebugModal(row.fact)"
-                      />
-                      <Icon
-                        :name="copiedRoleKey === row.key ? 'lucide:check' : 'lucide:copy'"
-                        class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
-                        :title="row.fact.role === 'source' ? 'Copy SO' : 'Copy SI'"
-                        @click="copyRoleMarker(row)"
                       />
                     </span>
                   </td>
@@ -1011,6 +1099,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
             :traces="data.functionalModel.traces"
             :card-images="card.images"
             :card-keywords="card.keywords"
+            :card-back-keywords="card.backKeywords"
             :card-power="card.power"
             :card-toughness="card.toughness"
             :card-back-power="card.backPower"
