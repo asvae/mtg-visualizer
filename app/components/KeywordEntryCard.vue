@@ -44,6 +44,18 @@
 // `iconKeywords` can resolve ANY real card by name — not just whichever one
 // (if any) the trace happens to mark `isSelf`. See ScenarioReplay.vue's own
 // doc comment on the prop itself.
+// 2026-09-12: `c.keywords` here is `entry.cards[*]`'s own FRONT-face-only
+// keywords now (server/api/keywords/index.get.ts's `cardArtFor`, fixed to
+// use the same `cardFaceKeywords` helper the per-card page's own DFC-badge
+// fix uses) — previously Scryfall's raw whole-card `keywords` union, which
+// wrongly badged a transform DFC's front face with a keyword only its back
+// face prints (e.g. Crystal Fragments // Summon: Alexander's Flying).
+// `namedCardArt`'s own shape (ScenarioReplayTrace.vue, card-lane) has no
+// back-face variant, so a NON-self bystander that transforms mid-scenario
+// would still only ever show its front-face keywords here — no such bundle
+// exists in the registry today (every transform-DFC cardNames entry is
+// still `not_implemented`), so left as a known follow-up rather than
+// widening that prop's type, which is card lane's file.
 import { computed, ref } from 'vue';
 import type { KeywordPageEntry } from '../../server/api/keywords/index.get';
 import type { ReviewStatus } from '../types';
@@ -139,6 +151,7 @@ async function confirmReview() {
           :traces="entry.traces"
           :card-images="entry.cards[0]?.images"
           :card-keywords="entry.cards[0]?.keywords"
+          :card-back-keywords="entry.cards[0]?.backKeywords"
           :card-power="entry.cards[0]?.power"
           :card-toughness="entry.cards[0]?.toughness"
           :named-card-art="namedCardArt"

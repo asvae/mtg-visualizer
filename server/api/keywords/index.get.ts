@@ -24,6 +24,8 @@ import { join } from 'node:path';
 import { KEYWORD_REGISTRY } from '../../../functional-model/keywords/registry';
 import type { KeywordCategory, KeywordStatus } from '../../../functional-model/keywords/registry';
 import type { Scenario, LogEntry } from '../../../functional-model/harness';
+import { cardFaceKeywords } from '../../../app/lib/buildGraph';
+import type { ScryfallCard } from '../../../app/lib/buildGraph';
 
 // Read fresh off disk every request (dev convention, same as
 // review-status.ts's own sibling in server/api/card/ and this file's own
@@ -37,22 +39,12 @@ function loadReviewOverrides(): Record<string, true> {
   }
 }
 
-interface ScryfallCardFace {
-  power?: string;
-  toughness?: string;
-  image_uris?: { normal?: string };
-}
-interface ScryfallCard {
-  name: string;
-  power?: string;
-  toughness?: string;
-  keywords?: string[];
-  image_uris?: { normal?: string };
-  card_faces?: ScryfallCardFace[];
-}
-
 // Read fresh off disk (dev convention — see server/api/card/[set]/[number].ts's
 // own `loadJsonFresh`), so a hand-edited fixture reflects without a restart.
+// Typed via buildGraph.ts's own `ScryfallCard` (not a narrower local
+// interface, as this used to be) — needed so `cardFaceKeywords` below (same
+// helper server/api/card/[set]/[number].ts already uses for the identical
+// bug on the per-card page) can read each face's own `oracle_text`.
 function loadFinScryfall(): ScryfallCard[] {
   try {
     return JSON.parse(readFileSync(join(process.cwd(), 'data', 'fin', 'fin_scryfall.json'), 'utf8'));
@@ -65,6 +57,10 @@ interface CardArt {
   name: string;
   images: string[];
   keywords: string[];
+  /** Back face's own printed keywords — undefined for a card with no second
+   * face at all. See `keywords`' own doc comment just below for why this
+   * exists as a separate field rather than folding into one array. */
+  backKeywords?: string[];
   power?: string;
   toughness?: string;
 }
@@ -76,7 +72,18 @@ function cardArtFor(name: string, pool: ScryfallCard[]): CardArt | null {
   return {
     name: card.name,
     images,
-    keywords: card.keywords ?? [],
+    // Front-face-only keywords — NOT Scryfall's raw `card.keywords` (which
+    // for a transform DFC is already the union of both faces' keywords, e.g.
+    // FIN's Crystal Fragments // Summon: Alexander: front has no Flying,
+    // only the back Summon: Alexander face does — the same bug just fixed on
+    // the per-card page, server/api/card/[set]/[number].ts, reusing its same
+    // `cardFaceKeywords` helper here rather than re-deriving it). Unlike that
+    // route's own `keywords` field, deliberately NOT filtered down to
+    // `BADGE_KEYWORDS` — this page's `keywords` is meant to reflect a card's
+    // real full printed keyword set (e.g. "Equip", not an evergreen combat
+    // keyword), not just the curated badge-icon subset.
+    keywords: cardFaceKeywords(card, 0),
+    backKeywords: card.card_faces?.[1] ? cardFaceKeywords(card, 1) : undefined,
     power: card.power ?? card.card_faces?.[0]?.power,
     toughness: card.toughness ?? card.card_faces?.[0]?.toughness,
   };

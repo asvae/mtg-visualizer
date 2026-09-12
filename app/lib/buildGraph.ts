@@ -94,6 +94,61 @@ export function cardKeywords(card: ScryfallCard): string[] {
   return [...kws];
 }
 
+// Face-scoped keywords — unlike `cardKeywords` above (deliberately a union
+// across every face, for the graph node's own single "this card has these
+// abilities somewhere" badge strip), a transform DFC's two faces can have
+// genuinely DIFFERENT printed keywords (e.g. FIN's Crystal Fragments //
+// Summon: Alexander — front face has no Flying, only the back Summon:
+// Alexander face does). Scryfall's own top-level `card.keywords` is already
+// the union of both, so reading it directly for a specific face is wrong —
+// but Scryfall ALSO doesn't serve a per-face `keywords` array at all
+// (confirmed live against the real `/cards/<set>/<num>` API for several FIN
+// transform DFCs: every `card_faces[i]` entry omits the field entirely, only
+// the whole-card top-level array exists). So this scans this face's own
+// `oracle_text` for a standalone keyword line instead — the MTG frame
+// convention a printed keyword ability always follows (its own line, comma-
+// separated if more than one, optionally with a trailing cost/number like
+// "Ward {2}"), restricted to keywords `card.keywords` already confirms this
+// card genuinely HAS somewhere (never a mention/grant the whole-card field
+// itself already excludes — see `keywordMentions` below for that
+// distinction). This is what correctly tells apart Dion, Bahamut's
+// Dominant's front face — which only MENTIONS "flying" inside a full
+// sentence ("Dragonfire Dive — During your turn, Dion and other Knights you
+// control have flying," a CONTINUOUS, turn-conditional grant — handled
+// separately by `CardDefinition.continuousKeywordGrants`/
+// `ScenarioReplayTrace.vue`'s own `continuousGrantedKeywords`, not a static
+// printed keyword this function should ever report) — from its back face
+// Bahamut, Warden of Light, which prints "Flying" as its own bare line
+// (Bahamut's own real, unconditional keyword). Used by the card-detail page,
+// which always knows which face
+// it's showing (front/back toggle, or a scenario replay mid-transform) and
+// must not badge a not-yet-transformed front face with a keyword only the
+// back face has, or vice versa. A card with no `card_faces` (single-faced,
+// split, adventure — sharing one face) has only "face 0", the whole card's
+// own `keywords` untouched (no per-face ambiguity to resolve there).
+export function cardFaceKeywords(card: ScryfallCard, face: number): string[] {
+  const whole = card.keywords || [];
+  if (!card.card_faces?.length || !whole.length) return face === 0 ? whole : [];
+  const text = card.card_faces[face]?.oracle_text ?? '';
+  const found = new Set<string>();
+  for (const rawLine of text.split('\n')) {
+    // Reminder text often trails the keyword on the SAME line, no comma
+    // separator ("Crew 1 (Tap any number of creatures...)", "Menace (This
+    // creature can't be blocked except by two or more creatures.)") — strip
+    // it before splitting on comma, or it'd swallow the whole line as one
+    // non-matching segment.
+    const line = rawLine.replace(/\([^)]*\)/g, '');
+    for (const seg of line.split(',')) {
+      // Strip a trailing reminder-cost/number ("Ward {2}", "Crew 2") and any
+      // trailing sentence punctuation before the exact-match check below.
+      const bare = seg.trim().replace(/[.:]$/, '').replace(/\s*(\{[^}]*\}|\d+)\s*$/, '').trim();
+      const match = whole.find((k) => k.toLowerCase() === bare.toLowerCase());
+      if (match) found.add(match);
+    }
+  }
+  return [...found];
+}
+
 // Scryfall's own `keywords` array (cardKeywords above) only ever lists
 // abilities the card itself HAS — never one it merely GRANTS or references
 // on something else. FIN's Zack Fair ("{1}, Sacrifice Zack Fair: Target

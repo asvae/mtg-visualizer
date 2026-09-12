@@ -50,6 +50,14 @@ export interface CardData {
   artCrop: string | null;
   tokens: { name: string; image: string }[];
   scryfallUri: string;
+  // The card detail page's own server route (server/api/card/[set]/[number].ts)
+  // serves this as FRONT-face-only (NOT Scryfall's raw `keywords` field,
+  // which for a transform DFC is the union of both faces') — see
+  // `backKeywords` below for the second face's own set, same convention as
+  // `power`/`backPower`. The whole-graph node builder (buildGraph.ts's own
+  // `buildGraph()`) constructs this same shape independently and keeps the
+  // union there instead (a graph node's badge deliberately means "this card
+  // has this ability somewhere," not "on the currently-shown face").
   keywords: string[];
   // Scryfall's own set/collector-number identity — the card detail page is
   // routed by these (/app/card/[set]/[number]), same URL shape as
@@ -69,6 +77,9 @@ export interface CardData {
   toughness?: string;
   backPower?: string;
   backToughness?: string;
+  // Back face's own printed keywords — undefined for anything with no
+  // second face at all (a transform DFC only). See `keywords` above.
+  backKeywords?: string[];
 }
 
 export interface ThemeData {

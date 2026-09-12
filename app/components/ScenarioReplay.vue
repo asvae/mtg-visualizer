@@ -8,6 +8,7 @@ import { GENERIC_FILLER_LAND } from '../../functional-model/harness';
 import type { LogEntry, Scenario } from '../../functional-model/harness';
 import { TOKENS } from '../../functional-model/tokens';
 import { replayTrace } from '../lib/scenarioReplay';
+import { cardFaceKeywords, type ScryfallCard } from '../lib/buildGraph';
 import type { ContinuousKeywordGrant } from '../../server/api/card/[set]/[number]';
 
 const props = defineProps<{
@@ -18,8 +19,10 @@ const props = defineProps<{
   }[];
   /** The real card's own images (front/back) — forwarded to each ScenarioReplayTrace so the one "self" chip per board can show real art instead of a placeholder. */
   cardImages?: string[];
-  /** The real card's own printed keywords (Scryfall's `card.keywords`) — shown on the "self" chip alongside any mid-scenario `grantKeyword` log entries. */
+  /** The real card's own FRONT-face printed keywords (server's `CardData.keywords` — already face-scoped, not Scryfall's raw whole-card `keywords` union) — shown on the "self" chip alongside any mid-scenario `grantKeyword` log entries. */
   cardKeywords?: string[];
+  /** The real card's own BACK-face printed keywords (`CardData.backKeywords`) — used instead of `cardKeywords` once the self chip has transformed (`ReplayCard.faceName` set). Undefined for anything with no second face. */
+  cardBackKeywords?: string[];
   /** The real card's own printed power/toughness (front, then back for a transforming DFC whose back face is also a creature) — app/pages/app/card/[set]/[number].vue's own `card.power`/`toughness`/`backPower`/`backToughness`. Raw Scryfall strings ("3", "*", ...); undefined for a non-creature. */
   cardPower?: string;
   cardToughness?: string;
@@ -182,7 +185,17 @@ watch(
             const cardImages = [c.image_uris?.normal, ...(c.card_faces ?? []).map((f: { image_uris?: { normal?: string } }) => f.image_uris?.normal)].filter(
               (u: string | undefined): u is string => !!u
             );
-            if (cardImages.length) extraArt[c.name] = { images: cardImages, keywords: c.keywords ?? [] };
+            // A real bystander is always shown printed/front-face here — this
+            // replay model has no mechanism for a non-self card to transform
+            // mid-scenario — so its badge should read the FRONT face's own
+            // keywords, not Scryfall's raw `c.keywords` (which for a
+            // transform DFC is the union of both faces', same bug class as
+            // the self chip's own `cardKeywords`/`cardBackKeywords` fix —
+            // see `buildGraph.ts`'s own `cardFaceKeywords` doc comment for
+            // why a standalone-keyword-line scan, not a `card_faces[].keywords`
+            // read, is what's actually needed here).
+            const kw = cardFaceKeywords(c as ScryfallCard, 0);
+            if (cardImages.length) extraArt[c.name] = { images: cardImages, keywords: kw };
           }
         } catch {
           // network hiccup — these just keep their placeholder chip
@@ -207,6 +220,7 @@ const mergedNamedCardArt = computed(() => ({ ...autoNamedCardArt.value, ...(prop
       :trace="trace"
       :card-images="cardImages"
       :card-keywords="cardKeywords"
+      :card-back-keywords="cardBackKeywords"
       :card-power="cardPower"
       :card-toughness="cardToughness"
       :card-back-power="cardBackPower"

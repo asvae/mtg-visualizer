@@ -49,8 +49,10 @@ const props = defineProps<{
   cardImages?: string[];
   /** Real name -> image, for basic-land/named-token filler (harness.ts's `PlayerState.basicLands`/`tokens`) — resolved once in ScenarioReplay.vue via server/api/cards/by-names.ts and server/api/tokens/by-key.ts. */
   fillerImages?: Record<string, string>;
-  /** The real card's own printed keywords (Scryfall's `card.keywords`) — shown on the "self" chip alongside whatever `card.keywords` (mid-scenario `grantKeyword` entries) already tracks. Every OTHER chip only ever gets keywords via `grantKeyword` (a filler creature has no real printed keywords of its own). */
+  /** The real card's own printed keywords, FRONT face only (server's `CardData.keywords` — already face-scoped, not Scryfall's raw whole-card `keywords` union, which for a transform DFC combines both faces) — shown on the "self" chip alongside whatever `card.keywords` (mid-scenario `grantKeyword` entries) already tracks. Every OTHER chip only ever gets keywords via `grantKeyword` (a filler creature has no real printed keywords of its own). */
   cardKeywords?: string[];
+  /** The real card's own printed keywords, BACK face only (`CardData.backKeywords`) — used instead of `cardKeywords` once the self chip's `faceName` shows a transform has flipped it (same `flipped` check `ptFor` already uses for power/toughness). Undefined for anything with no second face. */
+  cardBackKeywords?: string[];
   /** The tested card's own real printed power/toughness (front, then back for a transforming DFC whose back face is also a creature) — app/pages/app/card/[set]/[number].vue's own `card.power`/`toughness`/`backPower`/`backToughness`. Raw Scryfall strings ("3", "*", ...), same reasoning `cardImages`/`cardKeywords` already use real external data for the one `isSelf` chip instead of tracking it in the trace itself. */
   cardPower?: string;
   cardToughness?: string;
@@ -72,11 +74,12 @@ function imagesFor(card: GroupedReplayCard): string[] | undefined {
   return filler ? [filler] : undefined;
 }
 
-/** This card's own real printed keywords — `namedCardArt` by name when present (any real card a keywords-page scenario references), else the singular `cardKeywords` prop for the `isSelf` card only (per-card page's own Scenarios tab), else none (a bystander/filler with no real identity of its own). */
+/** This card's own real printed keywords — `namedCardArt` by name when present (any real card a keywords-page scenario references), else `cardKeywords`/`cardBackKeywords` for the `isSelf` card only (per-card page's own Scenarios tab — picks the BACK-face prop once `card.faceName` shows a transform has flipped it, same `flipped` check `ptFor` already uses for power/toughness, so a not-yet-transformed front face never gets badged with a keyword only the back face actually has), else none (a bystander/filler with no real identity of its own). */
 function printedKeywords(card: GroupedReplayCard): string[] {
   const named = props.namedCardArt?.[card.name];
   if (named) return named.keywords;
-  return card.isSelf ? (props.cardKeywords ?? []) : [];
+  if (!card.isSelf) return [];
+  return (card.faceName ? props.cardBackKeywords : props.cardKeywords) ?? [];
 }
 
 // Real subtype list for a NAMED TOKEN creature (functional-model/tokens.ts's

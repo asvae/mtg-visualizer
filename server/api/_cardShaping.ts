@@ -49,6 +49,14 @@ export interface CardFace {
   colors?: string[];
   type_line?: string;
   keywords?: string[];
+  // Scryfall doesn't serve a per-face `keywords` array at all (confirmed
+  // live — only the whole-card top-level field exists), so a caller needing
+  // to know WHICH face of a transform DFC actually has a given keyword
+  // (`buildGraph.ts`'s own `cardFaceKeywords`) has to scan this instead, for
+  // a standalone keyword line. Kept here even though `keywords` above is
+  // also declared (and always empty in practice) in case Scryfall ever
+  // starts populating it — cheap to keep both.
+  oracle_text?: string;
   image_uris?: ImageUris;
   mana_cost?: string;
 }
@@ -99,6 +107,7 @@ export function minimalCard(c: ScryfallCard) {
       colors: f.colors,
       type_line: f.type_line,
       keywords: f.keywords,
+      oracle_text: f.oracle_text,
       image_uris: f.image_uris ? { normal: f.image_uris.normal, art_crop: f.image_uris.art_crop } : undefined,
       mana_cost: f.mana_cost,
     })),

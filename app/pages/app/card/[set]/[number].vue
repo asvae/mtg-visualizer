@@ -383,27 +383,32 @@ function openFactDebugModal(fact: Fact) {
 
 // Copy-fact-context button, sitting next to the debug-JSON braces icon in the
 // same cell: copies a full one-line context string — "<set>/<number> #<row
-// number> <label>[ · <conditions>]" (e.g. "fin/21 #3 Dying · yours ·
-// (Creature/Artifact) permanent · once per turn") — built from the SAME
-// rendered `factLabel`/`factConditions` text already shown in this row's own
-// cells, not reformatted from raw JSON. `#<row number>` is the fact's 1-based
-// position in the table's own DISPLAYED order (`factOrderIndex`, already
-// computed below for the Interactions panel's own reordering — matches what
-// a person actually sees counting rows down the table, not raw synergy.json
-// source/sink array order). Replaces an earlier version of this button that
-// only copied the bare role marker ("SO"/"SI") — dropped per direct user
-// feedback that a bare marker wasn't useful once the row's own role icon
-// already conveys that. `copiedFactKey` briefly swaps the button's own icon
-// to a checkmark as click feedback, keyed by `row.key` so only the clicked
-// row's button flips.
+// number> [source|sink] <label>[ · <conditions>]" (e.g. "fin/21 #3 [source]
+// Dying · yours · (Creature/Artifact) permanent · once per turn") — built
+// from the SAME rendered `factLabel`/`factConditions` text already shown in
+// this row's own cells, not reformatted from raw JSON. `#<row number>` is
+// the fact's 1-based position in the table's own DISPLAYED order
+// (`factOrderIndex`, already computed below for the Interactions panel's own
+// reordering — matches what a person actually sees counting rows down the
+// table, not raw synergy.json source/sink array order). The bracketed
+// `[source]`/`[sink]` tag mirrors this row's own role icon (`log-out`/blue =
+// source, `log-in`/green = sink, just above) — spelled out in full rather
+// than abbreviated ("SO"/"SI", used by an earlier now-removed version of
+// this button) since the whole point of this string is unambiguous parsing
+// by whoever it's pasted to (typically an AI agent), and a full word in its
+// own delimiter reads as a role tag at a glance with zero risk of being
+// mistaken for label text. `copiedFactKey` briefly swaps the button's own
+// icon to a checkmark as click feedback, keyed by `row.key` so only the
+// clicked row's button flips.
 const copiedFactKey = ref<string | null>(null);
 function factContextText(row: FactRow): string {
   const cardRef = `${route.params.set}/${route.params.number}`;
   const index = factOrderIndex.value.get(row.key);
+  const role = row.fact.role === 'source' ? 'source' : 'sink';
   const label = factLabel(row.fact);
   const conditions = factConditions(row.fact);
   const text = conditions ? `${label} · ${conditions}` : label;
-  return `${cardRef} #${index === undefined ? '?' : index + 1} ${text}`;
+  return `${cardRef} #${index === undefined ? '?' : index + 1} [${role}] ${text}`;
 }
 async function copyFactContext(row: FactRow) {
   await navigator.clipboard.writeText(factContextText(row));

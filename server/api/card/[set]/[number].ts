@@ -20,7 +20,7 @@ import { pathToFileURL } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
-import { cardArtCrop, cardImages, cardKeywords, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
+import { cardArtCrop, cardFaceKeywords, cardImages, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
 import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
 import { findInteractionsForCard } from '../../../../functional-model/synergy';
@@ -677,7 +677,14 @@ export default defineEventHandler(async (event) => {
     artCrop: cardArtCrop(card),
     tokens: cardTokens(card, tokensById),
     scryfallUri: card.scryfall_uri,
-    keywords: cardKeywords(card).filter((k) => BADGE_KEYWORDS.has(k)),
+    // Front-face-only keywords — NOT Scryfall's raw `card.keywords` (which
+    // for a transform DFC is already the union of both faces' keywords, e.g.
+    // FIN's Crystal Fragments // Summon: Alexander: front has no Flying,
+    // only the back Summon: Alexander face does). `backKeywords` mirrors
+    // `backPower`/`backToughness` just below — undefined for a card with no
+    // second face at all, same convention.
+    keywords: cardFaceKeywords(card, 0).filter((k) => BADGE_KEYWORDS.has(k)),
+    backKeywords: card.card_faces?.[1] ? cardFaceKeywords(card, 1).filter((k) => BADGE_KEYWORDS.has(k)) : undefined,
     set: card.set || set,
     collectorNumber: card.collector_number || number,
     power: card.power ?? card.card_faces?.[0]?.power,

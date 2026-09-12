@@ -25,7 +25,7 @@
 // on that fn) — see that case's own doc comment for the remaining gap.
 
 import type { LogEntry, PlayerState, Scenario } from '../../functional-model/harness';
-import { GENERIC_FILLER_CREATURE, GENERIC_FILLER_LAND } from '../../functional-model/harness';
+import { GENERIC_FILLER_ARTIFACT, GENERIC_FILLER_CREATURE, GENERIC_FILLER_LAND } from '../../functional-model/harness';
 import type { ZoneType } from '../../functional-model/interfaces';
 import { TOKENS } from '../../functional-model/tokens';
 
@@ -92,6 +92,17 @@ function seedPlayerCards(owner: string, ps: PlayerState | undefined): ReplayCard
   for (let i = 0; i < nontoken; i++) push(GENERIC_FILLER_CREATURE, 'Battlefield', creaturePT);
   const tokenCreatures = Math.max(0, (ps?.creaturesCount ?? 0) - nontoken);
   for (let i = 0; i < tokenCreatures; i++) push(GENERIC_FILLER_CREATURE, 'Battlefield', creaturePT);
+  // Real, specifically-named nontoken creatures (harness.ts's `PlayerState.
+  // creatureCards`) — pushed under their OWN real name/P-T, same as
+  // `setupPlayer`'s own mirrored loop there, so a real card (Qutrub Forayer,
+  // Stiltzkin, Moogle Merchant, ...) is on the board from the Start step
+  // instead of only appearing once a later log entry (e.g. its own exile
+  // `moveTo`) happens to name it and fall through to `ensure`'s lazy-create
+  // path. Missing this branch entirely was a real bug (2026-09-12,
+  // phoenix-down's own mode-1 scenario) — confirmed live: Qutrub Forayer
+  // didn't render at all until the trace's graveyard/exile-bound `moveTo`
+  // entry for it replayed.
+  for (const c of ps?.creatureCards ?? []) push(c.name, 'Battlefield', [c.power ?? 1, c.toughness ?? 1]);
   // Real named tokens/basic lands (harness.ts's `PlayerState.tokens`/
   // `basicLands`) — pushed under their OWN real name, unprefixed, same as
   // `state.createToken`/`addCard` do there (no `${owner}-` prefix these
@@ -104,9 +115,24 @@ function seedPlayerCards(owner: string, ps: PlayerState | undefined): ReplayCard
   const equipment = ps?.equipmentCount ?? 0;
   for (let i = 0; i < equipment; i++) push(`${n}-equipment-${i}`, 'Battlefield');
   const plainArtifacts = Math.max(0, (ps?.artifactsCount ?? 0) - equipment);
-  for (let i = 0; i < plainArtifacts; i++) push(`${n}-artifact-${i}`, 'Battlefield');
+  // Real named artifact (harness.ts's `GENERIC_FILLER_ARTIFACT`, "Mind
+  // Stone") — not the old synthetic `${n}-artifact-${i}` placeholder, same
+  // upgrade `GENERIC_FILLER_CREATURE`/`GENERIC_FILLER_LAND` already got (this
+  // file mirrors `setupPlayer`'s own naming — it had fallen out of sync with
+  // `setupPlayer`'s own already-landed `GENERIC_FILLER_ARTIFACT` use, caught
+  // live as a stub "Ar" placeholder chip, 2026-09-12).
+  for (let i = 0; i < plainArtifacts; i++) push(GENERIC_FILLER_ARTIFACT, 'Battlefield');
   for (let i = 0; i < (ps?.enchantmentsCount ?? 0); i++) push(`${n}-enchantment-${i}`, 'Battlefield');
-  for (let i = 0; i < (ps?.graveyardCreatureCount ?? 0); i++) push(`${n}-gy-creature-${i}`, 'Graveyard', creaturePT);
+  // Real vanilla creature (harness.ts's `GENERIC_FILLER_CREATURE`, same one
+  // the battlefield fillers above use) — not the old synthetic
+  // `${n}-gy-creature-${i}` placeholder, so a graveyard filler gets real art
+  // instead of a "Cr" chip (2026-09-12, phoenix-down's own mode-0 scenario:
+  // this stub name doubled as a "fabricated card" false-positive in the
+  // replay UI even though the NAME itself was never asserted as real
+  // anywhere). Mirrors `setupPlayer`'s own matching change in harness.ts —
+  // both sides must stay in sync or a trace's `moveTo` target name desyncs
+  // from what got seeded here.
+  for (let i = 0; i < (ps?.graveyardCreatureCount ?? 0); i++) push(GENERIC_FILLER_CREATURE, 'Graveyard', creaturePT);
   for (let i = 0; i < (ps?.landsCount ?? 0); i++) push(`${n}-land-${i}`, 'Battlefield');
   // Real basic land (harness.ts's `GENERIC_FILLER_LAND`) — not the old
   // synthetic `${n}-hand-${i}`/`${n}-library-${i}` placeholder, so a
@@ -359,6 +385,34 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
   // scenario: legendRule then had only one chip to move, so the survivor
   // silently vanished too instead of staying on the battlefield).
   const instanceCards = new Map<number, ReplayCard>();
+  /**
+   * Registers a self-identifying entry's own real per-instance `id`
+   * (additive, see `.claude/contracts/state-event-format.md`'s "Self's own
+   * `id` field" section) into the SAME `idCards`/`claimedByOtherId`
+   * bookkeeping every other per-instance action (`moveTo`/`tap`/etc,
+   * `resolveInstance` above) already uses. Without this, self's own chip
+   * was never entered into that id-keyed system at all — `instanceId`
+   * (the SEPARATE scenario-domain concept `ensureSelf`/`instanceCards`
+   * track) has no relationship to it — so a LATER entry naming a
+   * genuinely different real `id` sharing self's own name (a tutor
+   * effect's own `moveTo`/`tap` for a second copy, e.g.) would resolve via
+   * `ensure`'s plain `byName` lookup straight onto self's ALREADY-EXISTING
+   * chip instead of landing on a fresh one. Confirmed live: magitek-
+   * infantry's own "search library for a card named Magitek Infantry, put
+   * it onto the battlefield tapped" visibly flipped the ORIGINAL permanent
+   * tapped instead of adding a second, correctly-tapped chip. Idempotent
+   * (`idCards.has` guard) — self's own id is stable across every one of
+   * its own lifecycle entries, so a later call for the same id is a
+   * harmless no-op.
+   */
+  const registerSelfId = (card: ReplayCard | undefined, entry: LogEntry): void => {
+    const selfId = num(entry.id);
+    if (card && selfId !== undefined && !idCards.has(selfId)) {
+      idCards.set(selfId, card);
+      claimedByOtherId.add(card);
+      card.id = selfId;
+    }
+  };
   const ensureSelf = (entry: LogEntry, zone: ZoneType | 'Unknown', forceZone = false): ReplayCard | undefined => {
     const cardName = str(entry.card);
     const instanceId = num(entry.instanceId);
@@ -400,6 +454,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
       card.isSelf = true;
       if (cardName && cardName !== card.name) card.faceName = cardName;
     }
+    registerSelfId(card, entry);
     return card;
   };
   // Real turn/phase/active-player — only ever set by an engine-piloted
@@ -555,6 +610,7 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
           const c = ensure(cardName);
           resetOnLeavingBattlefield(c);
           if (c) c.zone = (str(entry.to) as ZoneType | undefined) ?? c.zone;
+          registerSelfId(c, entry);
         }
         break;
       }
@@ -636,9 +692,20 @@ export function replayTrace(trace: { scenario: { raw?: Scenario }; log: LogEntry
         break;
       }
       case 'grantKeyword': {
+        // `entry.removed` (additive, 2026-09-12 — see
+        // `.claude/contracts/state-event-format.md`'s own dated entry): a
+        // real CR 514.2 "until end of turn" grant's own expiry, synthesized
+        // by `engine-trace.ts`'s `logAutomaticPhaseEntry` at the Cleanup
+        // step that ends it — same shape every other entry here, just
+        // deleting from `keywords` instead of adding. Every OTHER
+        // `grantKeyword` entry (no `removed` field at all) keeps its prior,
+        // permanent-within-scenario meaning unchanged.
         const c = resolveInstance(num(entry.id), (exclude) => ensure(target, 'Battlefield', exclude));
         const keyword = str(entry.keyword);
-        if (c && keyword) c.keywords.add(keyword);
+        if (c && keyword) {
+          if (entry.removed) c.keywords.delete(keyword);
+          else c.keywords.add(keyword);
+        }
         break;
       }
       case 'gainLife': {
@@ -890,7 +957,29 @@ export function displayName(card: ReplayCard): string {
   return name.startsWith(prefix) ? name.slice(prefix.length) : name;
 }
 
-/** Short label for a filler card's placeholder chip (no real Scryfall identity to show an image for) — keyed off `setupPlayer`'s own naming convention (harness.ts), same one `displayName` above already reads. */
+/**
+ * Label for a card's placeholder chip — shown only when `imagesFor` (the
+ * caller, ScenarioReplayTrace.vue) found no real art for this card, NOT
+ * evidence the name itself is fake. Most buckets `setupPlayer`
+ * (harness.ts) seeds now carry a real Scryfall identity (`GENERIC_FILLER_
+ * LAND`/`_CREATURE`/`_ARTIFACT`, a real named `creatureCards`/`tokens`
+ * entry, or the tested card itself) — for any of those this shows the FULL
+ * real name, not a lossy 2-letter stub, so a user can actually read/
+ * communicate which card a chip is (2026-09-12, direct user request: "use
+ * full name on card as a fallback — so I have easier time communicating").
+ * The abbreviations below are a last resort, ONLY for the couple of
+ * buckets `setupPlayer` still seeds with a genuinely synthetic per-index
+ * name with no real card behind it at all (equipment, enchantment, plain
+ * non-basic battlefield land). Graveyard-creature filler got the same real-
+ * identity upgrade (2026-09-12, `GENERIC_FILLER_CREATURE`, matching
+ * `setupPlayer`'s own change in harness.ts) so it no longer hits the
+ * `-creature-` branch below at all — kept only in case an older/unmigrated
+ * trace still carries the old `${n}-gy-creature-${i}` shape. `-hand-`/
+ * `-library-` are dead today (both zones' own fillers already carry a real
+ * name) but kept for an older/unmigrated trace shape, so a legacy name
+ * shows a stub rather than a raw synthetic string like "you-hand-0" leaking
+ * onto the chip.
+ */
 export function placeholderLabel(card: ReplayCard): string {
   const n = card.name;
   if (/-creature-/.test(n)) return 'Cr';
@@ -899,7 +988,7 @@ export function placeholderLabel(card: ReplayCard): string {
   if (/-artifact-/.test(n)) return 'Ar';
   if (/-enchantment-/.test(n)) return 'En';
   if (/-hand-/.test(n) || /-library-/.test(n)) return '?';
-  return displayName(card).slice(0, 2);
+  return displayName(card);
 }
 
 // ---------------------------------------------------------------------------

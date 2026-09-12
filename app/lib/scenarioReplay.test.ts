@@ -44,6 +44,31 @@ describe('replayTrace', () => {
     expect(cards.find((c) => c.name === 'Treasure')?.zone).toBe('Unknown');
   });
 
+  it('grantKeyword adds the keyword; a later grantKeyword with removed:true takes it back off (real 514.2 "until end of turn" expiry, engine-trace.ts\'s own Cleanup-synthesized entry)', () => {
+    // Regression: Dion, Bahamut's Dominant (fin/16) — Bahamut's own "Wings
+    // of Light... gain flying until end of turn" got wired to a real,
+    // permanent grantKeywordAll with no expiry, so its Knight token kept
+    // showing Flying in the replay UI through the opponent's own
+    // subsequent turns forever, once fired. `card.ts`/`state.ts` now track
+    // an opt-in `untilEndOfTurn` grant and emit a matching real removal
+    // entry at the next Cleanup crossing (see this repo's own
+    // `.claude/contracts/state-event-format.md`) — this only tests the
+    // CONSUMER half (this file's own `grantKeyword` case), not the
+    // producer.
+    const cards = lastCards([
+      { fn: 'enters', card: 'Knight', instanceId: 1, zone: 'Battlefield' },
+      { fn: 'grantKeyword', target: 'Knight', id: 1, keyword: 'Flying', untilEndOfTurn: true },
+    ]);
+    expect(cards.find((c) => c.name === 'Knight')?.keywords.has('Flying')).toBe(true);
+
+    const cardsAfterCleanup = lastCards([
+      { fn: 'enters', card: 'Knight', instanceId: 1, zone: 'Battlefield' },
+      { fn: 'grantKeyword', target: 'Knight', id: 1, keyword: 'Flying', untilEndOfTurn: true },
+      { fn: 'grantKeyword', target: 'Knight', id: 1, keyword: 'Flying', removed: true },
+    ]);
+    expect(cardsAfterCleanup.find((c) => c.name === 'Knight')?.keywords.has('Flying')).toBe(false);
+  });
+
   it('createToken adds one NEW chip per qty, not aliased onto an existing same-named card', () => {
     const cards = lastCards([
       { fn: 'createToken', controller: 'you', token: 'Treasure', qty: 1, tapped: false },
