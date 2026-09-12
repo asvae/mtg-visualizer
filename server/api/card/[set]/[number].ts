@@ -540,6 +540,29 @@ export interface EnrichedInteractionGroup extends Omit<InteractionGroup, 'matche
 // track quantities, so there's no way to know if a second copy is actually
 // in the 60/100, and dropping self-interactions outright would just be
 // wrong for cards that ARE genuinely in the deck.
+// `findInteractionsForCard`'s own `matches` are per SATISFIED FACT PAIR, not
+// per related card — the same `other` card can show up more than once
+// within one group when it has multiple facts on its opposite side that
+// each independently satisfy `mine` (e.g. Delivery Moogle's single "enters
+// the battlefield" source fact against Clash of the Eikons, which carries
+// BOTH a Creature-gated Battlefield-presence sink fact AND a separate
+// unconstrained one — both individually satisfied by the same ETB, two
+// `InteractionMatch`es, same `card` string). That per-fact granularity is
+// real and wanted for `server/api/graph-links.ts` (keys off `theirFactId` to
+// normalize per sink fact) — collapsing it in `synergy.ts` itself would
+// break that consumer. This panel instead wants one gallery entry per
+// related card, so collapse only here, keeping the strongest duplicate
+// (highest `theirTotal`) rather than an arbitrary one; `selfInteraction` is
+// derived from `mine`/`mineCard` alone (never `theirs`), so it's identical
+// across duplicates and never lost by this collapse.
+function dedupMatchesByCard(matches: InteractionGroup['matches']): InteractionGroup['matches'] {
+  const byCard = new Map<string, InteractionGroup['matches'][number]>();
+  for (const m of matches) {
+    const existing = byCard.get(m.card);
+    if (!existing || (m.theirTotal ?? -Infinity) > (existing.theirTotal ?? -Infinity)) byCard.set(m.card, m);
+  }
+  return [...byCard.values()];
+}
 async function loadInteractionGroups(cardName: string, filterNames?: Set<string>): Promise<EnrichedInteractionGroup[]> {
   const pool = await loadFunctionalModelPool();
   if (!pool.some((c) => c.name === cardName)) return [];
@@ -547,8 +570,9 @@ async function loadInteractionGroups(cardName: string, filterNames?: Set<string>
   const enriched = await Promise.all(
     groups.map(async (group) => {
       const filtered = group.matches.filter((m) => !filterNames || m.selfInteraction || filterNames.has(m.card));
+      const deduped = dedupMatchesByCard(filtered);
       const matches = await Promise.all(
-        filtered.map(async (m): Promise<EnrichedInteractionMatch> => {
+        deduped.map(async (m): Promise<EnrichedInteractionMatch> => {
           const ref = await resolveFunctionalModelCardMeta(m.card);
           return { card: m.card, selfInteraction: m.selfInteraction, set: ref?.set, collectorNumber: ref?.collectorNumber, image: ref?.image ?? null };
         }),

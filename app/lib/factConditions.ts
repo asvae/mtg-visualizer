@@ -135,7 +135,17 @@ function numText(n: NumConstraint): string {
 function constraintPhrases(c: Constraints, noun: string): string[] {
   const bits: string[] = [];
   const types = typeBits(c.types);
-  if (types.length) bits.push(`${types.join(' ')} ${noun}`);
+  // `excludeSelf` (functional-model/synergy.ts) — "another X," never just
+  // "X" — a real, important part of the printed oracle text (CR 109.5),
+  // not decoration; "another" prefixes the WHOLE type+noun phrase ("another
+  // (Creature/Artifact) permanent"), not just the bare noun — "(Creature/
+  // Artifact) another permanent" reads as a dangling qualifier misattached
+  // to the noun alone, not the whole "another Creature/Artifact permanent"
+  // concept the real oracle text expresses.
+  if (types.length || c.excludeSelf) {
+    const phrase = types.length ? `${types.join(' ')} ${noun}` : noun;
+    bits.push(c.excludeSelf ? `another ${phrase}` : phrase);
+  }
   if (c.cmc) bits.push(`mana value ${numText(c.cmc)}`);
   if (c.power) bits.push(`power ${numText(c.power)}`);
   if (c.toughness) bits.push(`toughness ${numText(c.toughness)}`);
@@ -277,11 +287,13 @@ const HANDLED_OR_LABEL_KEYS = new Set([
   'toughness',
   'amount',
   'name',
+  'excludeSelf',
   'counterType',
   'color',
   'colors',
   'tapped',
   'oncePerTurn',
+  'untilEndOfTurn',
 ]);
 
 /** Best-effort, still-never-raw-JSON rendering for a field this file
@@ -326,6 +338,26 @@ export function factConditions(fact: Fact): string {
     bits.push(...constraintPhrases(fact.target, 'permanent'));
   }
 
+  // `tapped` (Fate of the Sun-Cryst's own real "targets a tapped creature"
+  // cost-reduction condition, `functional-model/synergy.ts`'s `Constraints.
+  // tapped` doc comment) is real on a plain ZONE fact too (a sink/movement's
+  // own top-level constraint — "the candidate must currently be tapped" —
+  // has no `event` field at all, so `isEventFact(fact)` is false), not just
+  // on an `entersBattlefield` EventFact ("the subject enters tapped," e.g.
+  // Vector, Imperial Capital). Checked unconditionally here (rather than
+  // nested inside the `isEventFact` block below) so a non-event fact's own
+  // `tapped` constraint isn't silently dropped — real bug, caught live on
+  // fin/19 (Fate of the Sun-Cryst)'s own "wants a tapped creature" sink,
+  // which rendered as bare "creature permanents" with no tapped qualifier
+  // anywhere; `summon-primal-garuda`'s sink and `magitek-infantry`'s source
+  // movement fact carry the same non-event top-level `tapped` shape and were
+  // affected the same way. `tapped` already sits in `HANDLED_OR_LABEL_KEYS`
+  // below either way, so this doesn't risk a double render via the generic
+  // fallback loop. Placed before the `isEventFact` block so an
+  // `entersBattlefield` fact's own `tapped`/`oncePerTurn` pair keeps
+  // rendering in the same order as before this fix.
+  if (fact.tapped !== undefined) bits.push(fact.tapped ? 'tapped' : 'untapped');
+
   if (isEventFact(fact)) {
     // `counterType` (e.g. "+1/+1", "LORE", "stun") used to fold into the
     // `putCounter` label itself ("<counterType> counters"); overridden
@@ -339,8 +371,8 @@ export function factConditions(fact: Fact): string {
     } else if (fact.color) {
       bits.push(`${fact.color} mana`);
     }
-    if (fact.tapped !== undefined) bits.push(fact.tapped ? 'tapped' : 'untapped');
     if (fact.oncePerTurn) bits.push('once per turn');
+    if (fact.untilEndOfTurn) bits.push('until end of turn');
   }
 
   for (const [key, value] of Object.entries(fact as unknown as Record<string, unknown>)) {

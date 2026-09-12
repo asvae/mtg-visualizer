@@ -111,6 +111,16 @@ describe('factConditions', () => {
     expect(factConditions(fact)).toBe('yours · tapped · once per turn');
   });
 
+  it('`tapped` on a plain (non-event) zone fact — a sink/movement\'s own top-level "candidate must be tapped" constraint, e.g. Fate of the Sun-Cryst\'s sink — still renders, not just on an `entersBattlefield` EventFact', () => {
+    const sink: Fact = { role: 'sink', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], to: 'Battlefield', types: { has: ['Creature'] }, tapped: true, value: -1 };
+    expect(factConditions(sink)).toBe('creature permanents · tapped');
+  });
+
+  it('`untilEndOfTurn` renders as "until end of turn", not raw camelCase', () => {
+    const fact: Fact = { role: 'source', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], event: 'grantKeyword', controller: 'you', untilEndOfTurn: true, value: 1 };
+    expect(factConditions(fact)).toBe('yours · until end of turn');
+  });
+
   it('omits any key whose own value is undefined, rather than emitting a literal "undefined"', () => {
     const fact: Fact = {
       role: 'source',
@@ -180,6 +190,31 @@ describe('factConditions', () => {
     it('shows "from graveyard" for a Flashback-style `from: \'Graveyard\'` cast — genuinely new info the bare "cast a spell" label doesn\'t carry', () => {
       const fact: Fact = { role: 'source', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], event: 'cast', from: 'Graveyard', target: 'self', value: 1 };
       expect(factConditions(fact)).toBe('self · from graveyard');
+    });
+  });
+
+  describe('`excludeSelf` — "another X," not just "X" (2026-09-12, G\'raha Tia)', () => {
+    it('event-shaped sink with `excludeSelf` nested under `target` (fin/21 G\'raha Tia\'s real dies want) folds "another" into the type+noun phrase', () => {
+      const fact: Fact = {
+        role: 'sink',
+        annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }],
+        event: 'dies',
+        controller: 'you',
+        target: { types: { hasAny: ['Creature', 'Artifact'] }, excludeSelf: true },
+        oncePerTurn: true,
+        value: 1,
+      };
+      expect(factConditions(fact)).toBe('yours · another (Creature/Artifact) permanent · once per turn');
+    });
+
+    it('zone-shaped fact with top-level `excludeSelf` and no other type constraint still says "another <noun>", not silently dropped (Magitek Infantry\'s real "another artifact" condition sink)', () => {
+      const fact: Fact = { role: 'sink', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], to: 'Battlefield', controller: 'you', excludeSelf: true, value: 1 };
+      expect(factConditions(fact)).toBe('yours · another permanents');
+    });
+
+    it('zone-shaped fact with top-level `excludeSelf` AND a real type constraint folds "another" into the type+noun phrase, same as the nested-target case', () => {
+      const fact: Fact = { role: 'sink', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], to: 'Battlefield', controller: 'you', types: { has: ['Artifact'] }, excludeSelf: true, value: 1 };
+      expect(factConditions(fact)).toBe('yours · another artifact permanents');
     });
   });
 
