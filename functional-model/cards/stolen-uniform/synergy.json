@@ -1,42 +1,129 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "gainControl",
+      "controller": "you",
+      "recipient": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Equipment"
+          ]
+        }
+      },
+      "targeted": true,
+      "untilEndOfTurn": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 57,
+          "end": 105
+        }
+      ]
+    },
+    {
+      "event": "equip",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 107,
+          "end": 139
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 7,
+          "end": 34
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Equipment"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 39,
+          "end": 55
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "opp",
       "types": {
         "has": [
           "Equipment"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 39,
+          "end": 55
+        }
+      ]
     }
   ]
 }

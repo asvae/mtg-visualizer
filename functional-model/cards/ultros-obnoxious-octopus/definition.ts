@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 export const ultrosObnoxiousOctopus: CardDefinition = {
   name: 'Ultros, Obnoxious Octopus',
@@ -16,28 +16,27 @@ export const ultrosObnoxiousOctopus: CardDefinition = {
       // anywhere in this batch's read of card.ts/harness.ts); a scenario
       // firing this named trigger already stands in for "the condition was
       // met," same as every other conditional trigger name in this repo
-      // (Minwu's own `onLifeGained`, e.g.).
+      // (Minwu's own `onLifeGained`, e.g.). Sahagin (fin/71, same batch,
+      // its own identical real `ValidSA$ Spell.ManaSpent GE4` condition)
+      // reaches the same conclusion in its own definition.ts comment —
+      // checked before writing this card's own fact model, to stay
+      // consistent rather than re-litigate: no real mana-spent tracking
+      // exists anywhere in this engine.
       name: 'onNoncreatureSpellCastGE4Mana',
       effects: [
-        {
-          // "tap target creature an OPPONENT controls and put a stun
-          // counter on IT" — the same chosen object twice. Neither
-          // `tapTarget` nor `putCounterTarget` restricts its pool to one
-          // player's creatures (both draw from the union of every
-          // creature on the battlefield), and nothing ties two separate
-          // declarative effects to the SAME chosen target — `custom`,
-          // picking one real target from the real opponent-only pool and
-          // applying both actions to it, is the honest shape.
-          kind: 'custom',
-          describe: 'tap target creature an opponent controls and put a stun counter on it',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const pool = ctx.opponents.flatMap((p) => p.getCreaturesInPlay());
-            if (pool.length === 0) return;
-            const target = actions.chooseTarget(pool);
-            actions.tap(target);
-            actions.putCounter(target, 'Stun', 1);
-          },
-        } satisfies Effect,
+        // "tap target creature an OPPONENT controls and put a stun counter
+        // on IT" — the same chosen object twice. Real Ice Flan/Summon Shiva
+        // precedent (see either's own definition.ts comment): nothing ties
+        // two separate declarative effects to the SAME chosen target, but
+        // both pools here are identical (`owner:'opponents'`, nothing moves
+        // zones in between), so `chooseTarget`'s own deterministic
+        // first-pool-candidate rule lands on the same creature both times —
+        // no `custom` workaround needed now that `tapTarget`/
+        // `putCounterTarget`'s own `owner` field exists (this card's own
+        // former `custom` implementation predated it and is now obsolete,
+        // per Ice Flan's own comment calling this exact card out by name).
+        { kind: 'tapTarget', validType: 'creature', owner: 'opponents' } satisfies Effect,
+        { kind: 'putCounterTarget', validType: 'creature', counterType: 'stun', amount: 1, owner: 'opponents' } satisfies Effect,
       ],
     },
     {

@@ -1,0 +1,36 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Leviathan", "highlight": "Creature" },
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Leviathan", "highlight": "Enchantment Creature" },
+    {
+      "sourceText": "I — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand.",
+      "highlight": "Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand."
+    },
+    {
+      "sourceText": "II, III — Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.",
+      "highlight": "Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card."
+    },
+    {
+      "sourceText": "II, III — Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.",
+      "highlight": "Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card."
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "add a lore counter"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "Sacrifice after III"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "Sacrifice after III"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "II, III — Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.",
+      "highlight": "Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card."
+    }
+  ]
+}

@@ -1,15 +1,73 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 11
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 11
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Artifact",
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 23,
+          "end": 46
+        }
+      ]
+    }
+  ],
   "sink": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
+      "to": "Battlefield",
       "types": {
-        "has": [
+        "hasAny": [
+          "Artifact",
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 8,
+          "end": 28
+        }
+      ]
     }
   ]
 }

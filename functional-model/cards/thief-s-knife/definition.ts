@@ -6,7 +6,27 @@ export const thiefsKnife: CardDefinition = {
   manaCost: '{2}{U}',
   typeLine: 'Artifact — Equipment',
 
-  staticAbilities: ['Equipped creature gets +1/+1 and is a Rogue in addition to its other types.'],
+  // "Equipped creature gets +1/+1, has '...', and is a Rogue in addition to
+  // its other types" — real Forge citation (thiefs_knife.txt, ../mtg-forge):
+  // ONE static ability, `S:Mode$ Continuous | Affected$ Creature.EquippedBy |
+  // AddPower$ 1 | AddToughness$ 1 | AddType$ Rogue | AddTrigger$ TrigDmg |
+  // ...` — the SAME real, query-time recipient-resolution mechanism
+  // dragoon-s-lance/paladin-s-arms/crystal-fragments-summon-alexander/
+  // white-mage-s-staff/sage-s-nouliths/machinist-s-arsenal/astrologian-s-
+  // planisphere already establish (ENGINE_GAPS.md gap #14's own follow-up,
+  // closed 2026-09-12), modeled as two independent grant fields here since
+  // state.ts's own layer split (P/T vs. type) already keeps them in separate
+  // read paths (`effectivePT`/`effectiveSubtypes`) regardless of how Forge's
+  // own single ability groups them. The `AddTrigger$ TrigDmg` third clause
+  // ("has 'whenever this creature deals combat damage to a player, draw a
+  // card'") is a granted NEW triggered ability, not a static broadcast —
+  // modeled the same `onEquippedDealsDamage`-as-self simplification buster-
+  // sword/genji-glove already establish (the real source is whichever
+  // creature is equipped, not this permanent), via the trigger below.
+  staticAbilities: ['Equipped creature gets +1/+1, has "Whenever this creature deals combat damage to a player, draw a card," and is a Rogue in addition to its other types.'],
+
+  continuousPTGrants: [{ power: 1, toughness: 1, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Rogue'], includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     // Job select — same real ETB mechanic as sage-s-nouliths/dragoon-s-

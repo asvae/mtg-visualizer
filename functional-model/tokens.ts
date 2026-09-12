@@ -89,4 +89,21 @@ export const TOKENS = {
   // resolvable-subject convention every other migrated token-making card
   // (aerith-rescue-mission, battle-menu) already relies on.
   u_3_3_robot_warrior: { name: 'Robot Warrior', manaCost: '0', types: ['Artifact', 'Creature', 'Robot', 'Warrior'], basePower: 3, baseToughness: 3 },
+  // FIN's own token (Ardyn, the Usurper's "create a token that's a copy of
+  // that card, except it's a 5/5 black Demon") — a copy-WITH-OVERRIDE token,
+  // genuinely different from a plain copy (Relm's Sketching's own real
+  // precedent, which copies a target's actual name/types/P/T verbatim):
+  // Ardyn's own token always has this FIXED shape regardless of which real
+  // creature card was exiled to make it — only its `name` varies at runtime
+  // (`definition.ts`'s own `custom` effect reads `target.getName()`), which
+  // is why the synergy layer resolves it as a static, subject-`{token:...}`
+  // fact (Dwarven Castle Guard's own Hero-token precedent) rather than
+  // Relm's Sketching's `target:{types:{hasAny:[...]}}` variable-copy shape.
+  // `name` here is a placeholder ('Demon') purely because `TokenInfo`
+  // requires one — no real fact constrains on it. Color (black) isn't
+  // tracked anywhere in this model (no color field on `TokenInfo`/
+  // `RealCard`), same limitation `ardyn-the-usurper/definition.ts`'s own
+  // comment already documents. Ad hoc id, same precedent as
+  // b_2_2_horror/c_1_1_hero/w_2_2_knight/u_3_3_robot_warrior above.
+  b_5_5_demon: { name: 'Demon', manaCost: '0', types: ['Creature', 'Demon'], basePower: 5, baseToughness: 5 },
 } satisfies Record<string, TokenInfo>;

@@ -1,20 +1,89 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "\"chapterI\" trigger fires",
-      "result": "taps the opponent's target creature and puts a stun counter on it",
+      "setup": "you: 5 Island(s)",
+      "action": "real engine playthrough: cast -> Saga chapters over real turns -> real stun-counter timing + a real attack keep two creatures tapped for chapter III",
+      "result": "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent genuinely attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are genuinely tapped — a real, live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.",
       "raw": {
-        "result": "taps the opponent's target creature and puts a stun counter on it",
-        "trigger": "chapterI",
+        "result": "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent genuinely attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are genuinely tapped — a real, live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.",
+        "you": {
+          "libraryCount": 15,
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ]
+        },
         "opponents": [
           {
-            "creaturesCount": 1
+            "libraryCount": 10
           }
         ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "enters",
+        "card": "Hill Gigas",
+        "zone": "Battlefield",
+        "power": 5,
+        "toughness": 4,
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Summon: Shiva",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Shiva"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Shiva"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Shiva"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Shiva"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Shiva"
+      },
+      {
+        "fn": "enters",
+        "card": "Summon: Shiva",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Shiva",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Shiva",
@@ -22,42 +91,101 @@
         "name": "chapterI"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "opp0",
-        "count": 1
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hill Gigas",
+        "result": true
       },
       {
         "fn": "tap",
-        "target": "Grizzly Bears",
-        "id": 2342,
+        "target": "Coeurl",
+        "id": 2529,
         "controller": "opp0"
       },
       {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hill Gigas",
+        "result": true
+      },
+      {
         "fn": "putCounter",
-        "target": "Grizzly Bears",
-        "id": 2342,
+        "target": "Coeurl",
+        "id": 2529,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "\"chapterII\" trigger fires",
-      "result": "taps the opponent's target creature and puts a stun counter on it",
-      "raw": {
-        "result": "taps the opponent's target creature and puts a stun counter on it",
-        "trigger": "chapterII",
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ]
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Shiva",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Shiva",
@@ -65,47 +193,214 @@
         "name": "chapterII"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "opp0",
-        "count": 1
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hill Gigas",
+        "result": true
       },
       {
         "fn": "tap",
-        "target": "Grizzly Bears",
-        "id": 2346,
+        "target": "Hill Gigas",
+        "id": 2530,
         "controller": "opp0"
       },
       {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hill Gigas",
+        "result": true
+      },
+      {
         "fn": "putCounter",
-        "target": "Grizzly Bears",
-        "id": 2346,
+        "target": "Hill Gigas",
+        "id": 2530,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 2 creature(s)",
-      "action": "\"chapterIII\" trigger fires",
-      "result": "no resolvable effect in this model (tapped-state isn't readable through Card here — see the gap noted in definition.ts)",
-      "raw": {
-        "result": "no resolvable effect in this model (tapped-state isn't readable through Card here — see the gap noted in definition.ts)",
-        "trigger": "chapterIII",
-        "opponents": [
-          {
-            "creaturesCount": 2
-          }
-        ]
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "untap",
+        "target": "Coeurl"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
+        "fn": "tap",
+        "target": "Coeurl",
+        "id": 2529
+      },
+      {
+        "fn": "attack",
+        "card": "Coeurl",
+        "id": 2529
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Shiva",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Shiva",
         "instanceId": 1,
         "name": "chapterIII"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "opp0",
+        "count": 2
+      },
+      {
+        "fn": "read:isTapped",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isTapped",
+        "target": "Hill Gigas",
+        "result": true
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "card": "Summon: Shiva"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Summon: Shiva ({3}{U}{U})",
+        "from": 2
+      },
+      {
+        "label": "Resolve",
+        "from": 8
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 19
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 26
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 40
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 43
+      },
+      {
+        "label": "Declare Coeurl as attacker",
+        "from": 44
+      },
+      {
+        "label": "Advance one step",
+        "from": 46
+      },
+      {
+        "label": "Declare no blockers",
+        "from": 47
+      },
+      {
+        "label": "Resolve combat damage",
+        "from": 47
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 47
+      },
+      {
+        "label": "Real 714.4 sacrifice — lore counters were never reset",
+        "from": 57
       }
     ]
   }

@@ -2,18 +2,36 @@
   {
     "scenario": {
       "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "surveils 2",
+      "action": "cast from hand",
+      "result": "is cast from hand, enters the battlefield, then surveils 2",
       "raw": {
-        "result": "surveils 2",
-        "trigger": "onEnter"
+        "result": "is cast from hand, enters the battlefield, then surveils 2",
+        "sequence": [
+          "onEnter"
+        ]
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Valkyrie Aerial Unit",
+        "instanceId": 1,
+        "id": 2,
+        "from": "hand",
+        "cost": "{5}{U}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Valkyrie Aerial Unit",
+        "instanceId": 1,
+        "id": 2,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Valkyrie Aerial Unit",
         "instanceId": 1,
+        "id": 2,
         "name": "onEnter"
       },
       {

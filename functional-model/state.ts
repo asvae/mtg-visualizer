@@ -813,8 +813,27 @@ export class GameState {
    * inconsistency in the cards themselves (`cards/*` out of scope to
    * edit), so both keys are checked here rather than picking one and
    * silently breaking the other two real cards.
+   *
+   * Also checks the real `'CantUntap'` granted keyword (`card.ts`'s own
+   * doc comment — Sleep Magic's real "Enchanted creature doesn't untap
+   * during its controller's untap step," CR 614.2, `Layer$ CantHappen`)
+   * FIRST, before the stun check — genuinely different in kind, not just
+   * checked first for convenience: stun is a per-object COUNTER that gets
+   * consumed the moment it would've blocked an untap (so the permanent
+   * untaps again once every counter is gone); `CantUntap` is an
+   * unconditional, always-on lockdown for as long as its granting source
+   * (an attached Aura, here) remains attached — nothing is consumed, the
+   * event simply never happens, every single time, for as long as the
+   * grant applies. No FIN card in this pool combines both on one
+   * permanent at once (checked), so there's no real ordering ambiguity to
+   * resolve between them today — `CantUntap` returning early first simply
+   * means a (hypothetical) permanent with both would neither untap NOR
+   * lose its stun counter, an honest simplification given real Forge's
+   * own APNAP-ordered multiple-replacement-effect choice isn't modeled
+   * here at all (same "no general 614/616 dispatcher" gap as above).
    */
   untap(card: RealCard): void {
+    if (effectiveKeywords(this, card).includes('CantUntap')) return;
     const stunKey = (card.counters['stun'] ?? 0) > 0 ? 'stun' : (card.counters['Stun'] ?? 0) > 0 ? 'Stun' : undefined;
     if (stunKey) {
       this.putCounter(card, stunKey, -1);

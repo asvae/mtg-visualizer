@@ -2,27 +2,52 @@
   {
     "scenario": {
       "setup": "",
-      "action": "\"onNoncreatureSpellCast\" trigger fires",
-      "result": "puts a +1/+1 counter on itself (and can't be blocked this turn, not tracked in this model)",
+      "action": "cast from hand",
+      "result": "is cast and enters the battlefield, then puts a +1/+1 counter on itself and gains Unblockable until end of turn (triggered by casting a real 4+-mana noncreature spell)",
       "raw": {
-        "result": "puts a +1/+1 counter on itself (and can't be blocked this turn, not tracked in this model)",
-        "trigger": "onNoncreatureSpellCast"
+        "result": "is cast and enters the battlefield, then puts a +1/+1 counter on itself and gains Unblockable until end of turn (triggered by casting a real 4+-mana noncreature spell)",
+        "sequence": [
+          "onCastNoncreatureSpell4Mana"
+        ]
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Sahagin",
+        "instanceId": 1,
+        "id": 2,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Sahagin",
+        "instanceId": 1,
+        "id": 2,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Sahagin",
         "instanceId": 1,
-        "name": "onNoncreatureSpellCast"
+        "id": 2,
+        "name": "onCastNoncreatureSpell4Mana"
       },
       {
         "fn": "putCounter",
         "target": "Sahagin",
-        "id": 1932,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Sahagin",
+        "id": 2,
+        "keyword": "Unblockable",
+        "untilEndOfTurn": true
       }
     ]
   }

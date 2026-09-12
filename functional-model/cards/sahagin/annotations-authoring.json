@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Merfolk Warrior",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Merfolk Warrior",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, put a +1/+1 counter on this creature and it can't be blocked this turn.",
+      "highlight": "put a +1/+1 counter on this creature"
+    },
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, put a +1/+1 counter on this creature and it can't be blocked this turn.",
+      "highlight": "it can't be blocked this turn"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, put a +1/+1 counter on this creature and it can't be blocked this turn.",
+      "highlight": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Enchantment", "highlight": "Enchantment" },
+    { "anchor": "typeLine", "sourceText": "Enchantment", "highlight": "Enchantment" },
+    {
+      "sourceText": "When this enchantment enters, draw three cards, then discard two cards.",
+      "highlight": "draw three cards"
+    },
+    {
+      "sourceText": "When this enchantment enters, draw three cards, then discard two cards.",
+      "highlight": "then discard two cards"
+    },
+    {
+      "sourceText": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "Tap any number of creatures you control with total power 1 or more"
+    },
+    {
+      "sourceText": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "This Vehicle becomes an artifact creature until end of turn"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "Tap any number of creatures you control with total power 1 or more"
+    }
+  ]
+}

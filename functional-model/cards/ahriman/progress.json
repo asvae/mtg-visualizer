@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated from v1 (bare zone/excludeSelf patch) to the unified Fact model. Baseline self-cast(Hand)/self-enters(Battlefield), bare Flying/Deathtouch keywords (no facts). Real activation-cost pair: {event:'sacrifice', from:'Battlefield', to:'Graveyard', controller:'you', target:{types:{hasAny:['Creature','Artifact']}, excludeSelf:true}, targeted:true} (mirrors louisoix-s-sacrifice's own sacrifice-of-another-permanent shape — zone data inline on the ACT since the move is unconditional/guaranteed and has no separate consequence fact to defer to) + {event:'drawCard'}. Real SINK restored (was wrongly dropped in an interim pass, then re-added): {to:'Battlefield', controller:'you', types:{hasAny:['Creature','Artifact']}, excludeSelf:true} — same dual-fact pattern louisoix-s-sacrifice uses (own SOURCE target constraint + a separate SINK 'wants fodder present' want, not redundant). Dropped the old v1 presence-shaped Graveyard SOURCE fact (banned) and the old unconstrained {event:'dies'} fact (superseded by the real sacrifice fact's own from/to zone data, displayed as 'dies' via zoneMovementName). Added 'ahriman' to ANNOTATED_CARD_SLUGS + annotations-authoring.json, ran compute-annotations.mjs.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

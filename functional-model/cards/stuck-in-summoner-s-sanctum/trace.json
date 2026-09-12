@@ -2,11 +2,13 @@
   {
     "scenario": {
       "setup": "you: 1 creature(s)",
-      "action": "\"onEnter\" trigger fires",
+      "action": "cast from hand",
       "result": "taps the enchanted permanent",
       "raw": {
         "result": "taps the enchanted permanent",
-        "trigger": "onEnter",
+        "sequence": [
+          "onEnter"
+        ],
         "you": {
           "creaturesCount": 1
         }
@@ -14,9 +16,25 @@
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Stuck in Summoner's Sanctum",
+        "instanceId": 1,
+        "id": 3,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Stuck in Summoner's Sanctum",
+        "instanceId": 1,
+        "id": 3,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Stuck in Summoner's Sanctum",
         "instanceId": 1,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -27,9 +45,24 @@
         "creatureCount": 1
       },
       {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Stuck in Summoner's Sanctum",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Stuck in Summoner's Sanctum",
+        "result": false
+      },
+      {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2176,
+        "id": 2,
         "controller": "you"
       }
     ]

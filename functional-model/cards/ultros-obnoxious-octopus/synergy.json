@@ -1,20 +1,37 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "event": "putCounter",
-      "counterType": "Stun",
+      "event": "tap",
       "controller": "opp",
       "target": {
         "types": {
@@ -23,25 +40,72 @@
           ]
         }
       },
-      "value": 5
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 83,
+          "end": 123
+        }
+      ]
+    },
+    {
+      "event": "putCounter",
+      "counterType": "stun",
+      "controller": "opp",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 5,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 128,
+          "end": 152
+        }
+      ]
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": 5
+      "value": 5,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 84,
+          "end": 118
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "opp",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 87,
+          "end": 123
+        }
+      ]
     }
   ]
 }

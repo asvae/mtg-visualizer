@@ -1,0 +1,48 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Elder Human Noble",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Elder Human Noble",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "Demons you control have menace, lifelink, and haste.",
+      "highlight": "menace"
+    },
+    {
+      "sourceText": "Demons you control have menace, lifelink, and haste.",
+      "highlight": "lifelink"
+    },
+    {
+      "sourceText": "Demons you control have menace, lifelink, and haste.",
+      "highlight": "haste"
+    },
+    {
+      "sourceText": "Demons you control have menace, lifelink, and haste.",
+      "highlight": "lifelink"
+    },
+    {
+      "sourceText": "Starscourge — At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that's a copy of that card, except it's a 5/5 black Demon.",
+      "highlight": "exile up to one target creature card from a graveyard"
+    },
+    {
+      "sourceText": "Starscourge — At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that's a copy of that card, except it's a 5/5 black Demon.",
+      "highlight": "create a token that's a copy of that card, except it's a 5/5 black Demon"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Starscourge — At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that's a copy of that card, except it's a 5/5 black Demon.",
+      "highlight": "exile up to one target creature card from a graveyard"
+    },
+    {
+      "sourceText": "Starscourge — At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that's a copy of that card, except it's a 5/5 black Demon.",
+      "highlight": "exile up to one target creature card from a graveyard"
+    }
+  ]
+}

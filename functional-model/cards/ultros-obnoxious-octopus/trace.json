@@ -2,97 +2,133 @@
   {
     "scenario": {
       "setup": "opp0: 1 creature(s)",
-      "action": "\"onNoncreatureSpellCastGE4Mana\" trigger fires",
-      "result": "taps the opponent creature and puts a stun counter on it",
+      "action": "cast from hand",
+      "result": "enters the battlefield; later, an opponent creature is present when you cast a big enough noncreature spell — both mana-spent thresholds are met at once, so it taps and stuns the opponent creature, then puts 8 +1/+1 counters on itself",
       "raw": {
-        "result": "taps the opponent creature and puts a stun counter on it",
-        "trigger": "onNoncreatureSpellCastGE4Mana",
+        "result": "enters the battlefield; later, an opponent creature is present when you cast a big enough noncreature spell — both mana-spent thresholds are met at once, so it taps and stuns the opponent creature, then puts 8 +1/+1 counters on itself",
         "opponents": [
           {
             "creaturesCount": 1
           }
+        ],
+        "sequence": [
+          "onNoncreatureSpellCastGE4Mana",
+          "onNoncreatureSpellCastGE8Mana"
         ]
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "id": 4,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "id": 4,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
+        "id": 4,
         "name": "onNoncreatureSpellCastGE4Mana"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "opp0",
-        "count": 1
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
       },
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2721,
+        "id": 3,
         "controller": "opp0"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
       },
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2721,
-        "counterType": "Stun",
+        "id": 3,
+        "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onNoncreatureSpellCastGE4Mana\" trigger fires",
-      "result": "no opponent creature present, no legal target",
-      "raw": {
-        "result": "no opponent creature present, no legal target",
-        "trigger": "onNoncreatureSpellCastGE4Mana",
-        "opponents": [
-          {}
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Ultros, Obnoxious Octopus",
-        "instanceId": 1,
-        "name": "onNoncreatureSpellCastGE4Mana"
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "opp0",
-        "count": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onNoncreatureSpellCastGE8Mana\" trigger fires",
-      "result": "puts 8 +1/+1 counters on itself",
-      "raw": {
-        "result": "puts 8 +1/+1 counters on itself",
-        "trigger": "onNoncreatureSpellCastGE8Mana"
-      }
-    },
-    "log": [
-      {
         "fn": "trigger",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
+        "id": 4,
         "name": "onNoncreatureSpellCastGE8Mana"
       },
       {
         "fn": "putCounter",
         "target": "Ultros, Obnoxious Octopus",
-        "id": 2727,
+        "id": 4,
         "counterType": "+1/+1",
         "amount": 8,
         "controller": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "no opponent creature present — the 4-mana threshold trigger fires but finds no legal target",
+      "raw": {
+        "result": "no opponent creature present — the 4-mana threshold trigger fires but finds no legal target",
+        "sequence": [
+          "onNoncreatureSpellCastGE4Mana"
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "id": 6,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "id": 6,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ultros, Obnoxious Octopus",
+        "instanceId": 1,
+        "id": 6,
+        "name": "onNoncreatureSpellCastGE4Mana"
       }
     ]
   },
@@ -111,6 +147,7 @@
         "fn": "cast",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
+        "id": 8,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -118,6 +155,7 @@
         "fn": "enters",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
+        "id": 8,
         "zone": "Battlefield"
       },
       {

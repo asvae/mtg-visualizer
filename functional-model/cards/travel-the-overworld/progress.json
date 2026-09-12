@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the unified Fact model (2026-09-12). \"Affinity for Towns\" (a real, board-state-COUNTED cast-cost discount, CR 601.2f) closed a real remaining engine gap: card.ts's CostReduction gained a new perControlled shape (same ActivationCostReduction mechanism Qiqirn Merchant already uses on the activation side, generalized here to a spell's own cast cost) and engine.ts's effectiveCastCost now sums it alongside the existing target-conditional/broadcast cases. definition.ts declares costReduction:{perControlled:{amountPerMatch:1,subtype:'Town'}}, replacing the old documentary-only staticAbilities string. Facts: cast (Hand, costReductionPerControlled documentary field), self-graveyard, drawCard(4). Scenario (engine-piloted, real Capital City + Gongaga Reactor Town on board) shows the real discount: logged cast cost {3}{U}{U} (not the printed {5}{U}{U}), only 5 tapForMana lines. drawCard's own value stays the pool-wide neutral 1 (compute-weights.mjs has no drawCard magnitude branch yet, same as every other multi-card drawCard fact in the pool, e.g. Qiqirn Merchant's own 3-card bigDraw) - a real, pool-wide, pre-existing tooling gap, not specific to this card.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Octopus",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Octopus",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, tap target creature an opponent controls and put a stun counter on it.",
+      "highlight": "tap target creature an opponent controls"
+    },
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, tap target creature an opponent controls and put a stun counter on it.",
+      "highlight": "put a stun counter on it"
+    },
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least eight mana was spent to cast it, put eight +1/+1 counters on Ultros.",
+      "highlight": "put eight +1/+1 counters on Ultros"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, tap target creature an opponent controls and put a stun counter on it.",
+      "highlight": "target creature an opponent controls"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "source": [
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "surveil",
+      "controller": "you",
+      "value": 2,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 21,
+          "end": 30
+        }
+      ]
+    },
+    {
+      "event": "counter",
+      "target": {},
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 37,
+          "end": 124
+        }
+      ]
+    }
+  ],
+  "sink": []
+}

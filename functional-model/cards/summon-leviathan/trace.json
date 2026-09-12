@@ -1,18 +1,103 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"chapterI\" trigger fires",
-      "result": "returns your 2 non-tribal creatures to hand",
+      "setup": "you: 6 Island(s)",
+      "action": "real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice",
+      "result": "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both real, non-token permanents — while Sahagin (a real Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a real, still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.",
       "raw": {
-        "result": "returns your 2 non-tribal creatures to hand",
-        "trigger": "chapterI",
+        "result": "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both real, non-token permanents — while Sahagin (a real Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a real, still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.",
         "you": {
-          "creaturesCount": 2
-        }
+          "libraryCount": 15,
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ]
+        },
+        "opponents": [
+          {
+            "libraryCount": 10
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Sahagin",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 3,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Ahriman",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Summon: Leviathan",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{U}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Leviathan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Leviathan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Leviathan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Leviathan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Leviathan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Summon: Leviathan"
+      },
+      {
+        "fn": "enters",
+        "card": "Summon: Leviathan",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Leviathan",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Leviathan",
@@ -25,235 +110,256 @@
         "count": 3
       },
       {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Kraken",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Leviathan",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Merfolk",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Octopus",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Serpent",
-        "result": false
-      },
-      {
-        "fn": "ceasesToExist",
-        "target": "Grizzly Bears",
-        "id": 2313,
-        "zone": "Hand",
-        "controller": "you"
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Kraken",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Leviathan",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Merfolk",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Octopus",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Serpent",
-        "result": false
-      },
-      {
-        "fn": "ceasesToExist",
-        "target": "Grizzly Bears",
-        "id": 2314,
-        "zone": "Hand",
-        "controller": "you"
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Summon: Leviathan",
-        "subtype": "Kraken",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Summon: Leviathan",
-        "subtype": "Leviathan",
-        "result": true
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 Merfolk creature(s); opp0: 1 creature(s)",
-      "action": "\"chapterI\" trigger fires",
-      "result": "returns the opponent's non-tribal creature to hand; your own Merfolk stays (an exempt subtype)",
-      "raw": {
-        "result": "returns the opponent's non-tribal creature to hand; your own Merfolk stays (an exempt subtype)",
-        "trigger": "chapterI",
-        "you": {
-          "creaturesCount": 1,
-          "creatureSubtypes": [
-            "Merfolk"
-          ]
-        },
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Summon: Leviathan",
-        "instanceId": 1,
-        "name": "chapterI"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 2
-      },
-      {
         "fn": "read:getCreaturesInPlay",
         "player": "opp0",
         "count": 1
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Sahagin",
         "subtype": "Kraken",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Sahagin",
         "subtype": "Leviathan",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Sahagin",
         "subtype": "Merfolk",
         "result": true
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Summon: Leviathan",
+        "target": "Ahriman",
         "subtype": "Kraken",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Summon: Leviathan",
-        "subtype": "Leviathan",
-        "result": true
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Kraken",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Ahriman",
         "subtype": "Leviathan",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Ahriman",
         "subtype": "Merfolk",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Ahriman",
         "subtype": "Octopus",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Ahriman",
         "subtype": "Serpent",
         "result": false
       },
       {
-        "fn": "ceasesToExist",
-        "target": "Grizzly Bears",
-        "id": 2319,
+        "fn": "moveTo",
+        "target": "Ahriman",
+        "id": 35,
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Leviathan",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Summon: Leviathan",
+        "subtype": "Leviathan",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Coeurl",
+        "subtype": "Kraken",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Coeurl",
+        "subtype": "Leviathan",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Coeurl",
+        "subtype": "Merfolk",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Coeurl",
+        "subtype": "Octopus",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Coeurl",
+        "subtype": "Serpent",
+        "result": false
+      },
+      {
+        "fn": "moveTo",
+        "target": "Coeurl",
+        "id": 36,
         "zone": "Hand",
         "controller": "opp0"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterII\" trigger fires",
-      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
-      "raw": {
-        "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
-        "trigger": "chapterII"
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Leviathan",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Leviathan",
         "instanceId": 1,
         "name": "chapterII"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"chapterIII\" trigger fires",
-      "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
-      "raw": {
-        "result": "no resolvable effect in this model (a temporary granted delayed trigger is not tracked)",
-        "trigger": "chapterIII"
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 4,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "putCounter",
+        "target": "Summon: Leviathan",
+        "counterType": "LORE",
+        "amount": 1
+      },
       {
         "fn": "trigger",
         "card": "Summon: Leviathan",
         "instanceId": 1,
         "name": "chapterIII"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 5,
+        "player": "you"
+      },
+      {
+        "fn": "sacrifice",
+        "player": "you",
+        "card": "Summon: Leviathan"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Summon: Leviathan ({4}{U}{U})",
+        "from": 3
+      },
+      {
+        "label": "Resolve",
+        "from": 10
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 32
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 40
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 45
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 47
+      },
+      {
+        "label": "Real 714.4 sacrifice — lore counters were never reset",
+        "from": 52
       }
     ]
   }

@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Eye Horror",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Eye Horror",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "{3}, Sacrifice another creature or artifact: Draw a card.",
+      "highlight": "Sacrifice another creature or artifact"
+    },
+    {
+      "sourceText": "{3}, Sacrifice another creature or artifact: Draw a card.",
+      "highlight": "Draw a card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "{3}, Sacrifice another creature or artifact: Draw a card.",
+      "highlight": "Sacrifice another creature or artifact"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Equipment",
+      "highlight": "Artifact"
+    },
+    {
+      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+      "highlight": "create a 1/1 colorless Hero creature token"
+    },
+    {
+      "sourceText": "Equipped creature gets +1/+0, has \"Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent,\" and is a Wizard in addition to its other types.",
+      "highlight": "Equipped creature gets +1/+0"
+    },
+    {
+      "sourceText": "Equipped creature gets +1/+0, has \"Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent,\" and is a Wizard in addition to its other types.",
+      "highlight": "has \"Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent,\""
+    },
+    {
+      "sourceText": "Equipped creature gets +1/+0, has \"Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent,\" and is a Wizard in addition to its other types.",
+      "highlight": "is a Wizard in addition to its other types"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Equip {3}",
+      "highlight": "Equip {3}"
+    }
+  ]
+}

@@ -1,11 +1,111 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 11
+        }
+      ],
+      "value": 1
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 11
+        }
+      ],
+      "value": 1
+    },
+    {
+      "event": "drawCard",
       "controller": "you",
-      "value": 1,
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 30,
+          "end": 46
+        }
+      ],
+      "value": 1
+    },
+    {
+      "event": "discard",
+      "controller": "you",
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 48,
+          "end": 70
+        }
+      ],
+      "value": 1
+    },
+    {
+      "event": "crew",
+      "target": "self",
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 8,
+          "end": 74
+        }
+      ],
+      "value": 1
+    },
+    {
+      "event": "grantType",
+      "type": "Creature",
+      "target": "self",
+      "untilEndOfTurn": true,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 76,
+          "end": 135
+        }
+      ],
+      "value": 1
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 8,
+          "end": 74
+        }
+      ],
+      "value": 1
+    }
+  ]
 }

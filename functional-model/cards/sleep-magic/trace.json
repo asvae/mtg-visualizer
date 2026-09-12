@@ -2,21 +2,39 @@
   {
     "scenario": {
       "setup": "you: 1 creature(s)",
-      "action": "\"onEnter\" trigger fires",
-      "result": "taps the enchanted creature",
+      "action": "cast from hand",
+      "result": "cast from hand, enters the battlefield, attaches to the enchanted creature and taps it",
       "raw": {
-        "result": "taps the enchanted creature",
-        "trigger": "onEnter",
+        "result": "cast from hand, enters the battlefield, attaches to the enchanted creature and taps it",
         "you": {
           "creaturesCount": 1
-        }
+        },
+        "sequence": [
+          "onEnter"
+        ]
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Sleep Magic",
+        "instanceId": 1,
+        "id": 2265,
+        "from": "hand",
+        "cost": "{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Sleep Magic",
+        "instanceId": 1,
+        "id": 2265,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Sleep Magic",
         "instanceId": 1,
+        "id": 2265,
         "name": "onEnter"
       },
       {
@@ -37,9 +55,16 @@
         "result": false
       },
       {
+        "fn": "equip",
+        "equipment": "Sleep Magic",
+        "equipmentId": 2265,
+        "target": "Grizzly Bears",
+        "id": 2264
+      },
+      {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2131,
+        "id": 2264,
         "controller": "you"
       }
     ]
@@ -59,6 +84,7 @@
         "fn": "trigger",
         "card": "Sleep Magic",
         "instanceId": 1,
+        "id": 2267,
         "name": "onEnchantedDealtDamage"
       },
       {

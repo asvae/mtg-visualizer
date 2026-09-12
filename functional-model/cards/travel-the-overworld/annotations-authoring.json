@@ -1,0 +1,18 @@
+{
+  "source": [
+    {
+      "sourceText": "Affinity for Towns (This spell costs {1} less to cast for each Town you control.)",
+      "highlight": "Affinity for Towns (This spell costs {1} less to cast for each Town you control.)"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Sorcery",
+      "highlight": "Sorcery"
+    },
+    {
+      "sourceText": "Draw four cards.",
+      "highlight": "Draw four cards"
+    }
+  ],
+  "sink": []
+}

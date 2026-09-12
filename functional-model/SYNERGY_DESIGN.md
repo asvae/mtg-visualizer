@@ -2757,6 +2757,73 @@ history / PR this file ships with for the concrete diff.
     migration (plus the `TRIGGER_EVENT_MAP` addition), not new engine
     mechanics.
 
+- **Y'shtola Rhul (fin/86) migrated to the unified Fact/annotations model
+  (2026-09-12)**: "At the beginning of your end step, exile target creature
+  you control, then return it to the battlefield under its owner's control.
+  Then if it's the first end step of the turn, there is an additional end
+  step after this step." 4 SOURCE facts: baseline `self-cast`/`self-enters`
+  (typeLine-anchored to "Creature", same span zack-fair/the-lunar-whale
+  already use for a plain "Legendary Creature" type line — no second
+  stacked type to distinguish cast-vs-enters the way summon-choco-mog's
+  "Enchantment Creature" does), plus a real targeted exile-then-return pair
+  — `{to:'Exile',from:'Battlefield',controller:'you',
+  target:{types:{has:['Creature']}},targeted:true}` and
+  `{to:'Battlefield',from:'Exile',event:'entersBattlefield',
+  controller:'you',target:{types:{has:['Creature']}},targeted:true}` — the
+  same `to`/`from` pair shape jill-shiva-s-dominant/dion-bahamut-s-dominant's
+  own self-transform exile+return already use, but with a `target`
+  constraint instead of `subject:'self'`, since this blinks a CHOSEN
+  creature, not necessarily itself (checked: no existing pool precedent for
+  blinking a target OTHER than self before this card). 1 SINK fact:
+  `{to:'Battlefield',controller:'you',types:{has:['Creature']}}` for the
+  "target creature you control" the trigger needs. The "additional end
+  step" clause gets NO Fact at all — not even an unmatchable one — since no
+  Effect kind/event vocabulary represents "insert another phase" in any
+  form (a stricter case than Auron's Inspiration's own "real vocabulary
+  exists, trace evidence doesn't" exemption); stays honest documentary text
+  on the trigger's own comment, the same way Ultimecia's back-face "take an
+  extra turn" stayed undemonstrated before extra turns was closed.
+  **Surfaced a genuine new engine gap** (`ENGINE_GAPS.md` gap #17): checked
+  `turn.ts` directly rather than assuming — `TurnState.extraTurns` (gap #3,
+  closed) only queues a whole EXTRA TURN at the turn-wrap point; nothing
+  anywhere splices one more occurrence of the CURRENT phase into the
+  CURRENT turn's own fixed `PHASES` walk. Real Forge citation:
+  `res/cardsfolder/y/yshtola_rhul.txt`'s own `DB$ AddPhase | ExtraPhase$ End
+  of Turn | AfterPhase$ End of Turn | ConditionCheckSVar$ X |
+  ConditionSVarCompare$ LT1` (gated by `SVar:X:Count$
+  FinishedEndOfTurnsThisTurn`). **Checked pool-wide before writing this up
+  as narrow, and it isn't**: Balthier and Fran and Genji Glove (both already
+  migrated) independently hit the identical `DB$ AddPhase` primitive gap for
+  their own "additional combat phase" clauses, each with only a per-card
+  comment ("no turn/phase-structure Effect shape exists here") and no
+  central `ENGINE_GAPS.md` entry until now — gap #17 is written to cover
+  both real shapes (extra end step, extra combat phase) as one underlying
+  primitive, not two coincidentally-similar gaps. `find-synergies.mjs`
+  diff (isolated via a temporary HEAD-restore of just this card's own
+  `synergy.json`): lost ~130 old unconstrained "battlefield presence"
+  matches from the removed bare-presence self-battlefield SOURCE fact (no
+  longer allowed post-rework — a SOURCE must be a real movement) plus 1
+  self-interaction (`second-copy-legendary`, since `self-enters` correctly
+  has no `subject`, the same accepted tradeoff summon-bahamut's own
+  `self-enters`/`self-cast` already established); gained 22 lines (11
+  unconstrained battlefield-presence sinks matched twice — once via
+  `self-enters`, once via the blink-return fact, both zone-shaped with
+  `to:'Battlefield'` — same duplicate-match shape summon-bahamut's own
+  migration diff already documented). The new `to:'Exile'`/targeted
+  Creature-constrained facts currently have zero real pool matches (no sink
+  wants Exile presence or a type-constrained blink producer yet) — real,
+  honest, just unmatched today. `verify-synergy.mjs` scoped: 0 hard
+  failures, 1 soft note (`legendRule` with no matching declared produce) —
+  confirmed this exact soft note is the same pool-wide-accepted
+  `keywordScenarios()` "second-copy-legendary" probe every other annotated
+  Legendary card using that helper also produces (checked live against
+  the-prima-vista/ultros-obnoxious-octopus), not something this migration
+  introduced. Full pool: 319 checked, 4 pre-existing hard failures
+  unrelated to this card (al-bhed-salvagers, stuck-in-summoner-s-sanctum,
+  ultros-obnoxious-octopus, valkyrie-aerial-unit — all mid-edit by
+  concurrent sessions per `git status`). `npx vitest run functional-model`:
+  351/351 pass.
+
 ## Standing rule: scenario `result` text is user-facing prose — no "real"/"genuine"/"actual" emphasis (2026-09-12)
 
 A `Scenario`'s `result` string (`cards/<slug>/scenarios.ts`) is read

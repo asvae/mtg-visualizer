@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Gain control of that Equipment until end of turn.",
+      "highlight": "Gain control of that Equipment until end of turn"
+    },
+    {
+      "sourceText": "Attach it to the chosen creature.",
+      "highlight": "Attach it to the chosen creature"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Choose target creature you control and target Equipment.",
+      "highlight": "target creature you control"
+    },
+    {
+      "sourceText": "Choose target creature you control and target Equipment.",
+      "highlight": "target Equipment"
+    },
+    {
+      "sourceText": "Choose target creature you control and target Equipment.",
+      "highlight": "target Equipment"
+    }
+  ]
+}

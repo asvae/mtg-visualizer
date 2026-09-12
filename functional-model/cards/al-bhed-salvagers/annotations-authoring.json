@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Human Artificer Warrior",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Human Artificer Warrior",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Whenever this creature or another creature or artifact you control dies, target opponent loses 1 life and you gain 1 life.",
+      "highlight": "Whenever this creature or another creature or artifact you control dies"
+    },
+    {
+      "sourceText": "Whenever this creature or another creature or artifact you control dies, target opponent loses 1 life and you gain 1 life.",
+      "highlight": "target opponent loses 1 life"
+    },
+    {
+      "sourceText": "Whenever this creature or another creature or artifact you control dies, target opponent loses 1 life and you gain 1 life.",
+      "highlight": "you gain 1 life"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever this creature or another creature or artifact you control dies, target opponent loses 1 life and you gain 1 life.",
+      "highlight": "Whenever this creature or another creature or artifact you control dies"
+    }
+  ]
+}

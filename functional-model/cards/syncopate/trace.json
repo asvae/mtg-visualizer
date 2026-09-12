@@ -1,0 +1,92 @@
+[
+  {
+    "scenario": {
+      "setup": "you: 3 Island(s); opp0: 1 Mountain(s)",
+      "action": "real engine playthrough: opponent casts Fire Magic (real {R} payment) -> you cast Syncopate in response (real X=2 payment, {2}{U}) -> resolve (counters unconditionally, per this engine's log-only counter primitive)",
+      "result": "Counters the opponent's Fire Magic — a real spell genuinely cast onto the stack in the setup above, still sitting there (uninvolved, unresolved) when Syncopate resolves on top of it, real LIFO stack order (CR 405/608) — while paying a real, caster-chosen X=2: the logged `cast` entry's own `cost` reads {2}{U} (2 generic + 1 blue, 3 real lands tapped for mana), not the printed template {X}{U} (ENGINE_GAPS.md gap #6, closed for spell-cast {X} — engine.test.ts's own synthetic fixture already covers the general mechanism, this is the real {X}{U}-costed card). The `counter` log line fires unconditionally — the same log-only ceiling `kind:'counter'` already has for every card that uses it (Louisoix's Sacrifice's own identical shape): this engine has no stack/object model that lets a resolving spell actually remove a different object from the stack, so there's nothing a real target reference could point at and remove. The 'unless its controller pays {X}' branch (a choice belonging to the COUNTERED spell's controller, made mid-resolution — this engine has no player-decision process for that) and the exile-instead-of-graveyard destination (there's no real target reference to redirect in the first place) are both real, printed text this model can't mechanically enforce — left honestly undemonstrated rather than faked; see definition.ts for the full reasoning on both.",
+      "raw": {
+        "result": "Counters the opponent's Fire Magic — a real spell genuinely cast onto the stack in the setup above, still sitting there (uninvolved, unresolved) when Syncopate resolves on top of it, real LIFO stack order (CR 405/608) — while paying a real, caster-chosen X=2: the logged `cast` entry's own `cost` reads {2}{U} (2 generic + 1 blue, 3 real lands tapped for mana), not the printed template {X}{U} (ENGINE_GAPS.md gap #6, closed for spell-cast {X} — engine.test.ts's own synthetic fixture already covers the general mechanism, this is the real {X}{U}-costed card). The `counter` log line fires unconditionally — the same log-only ceiling `kind:'counter'` already has for every card that uses it (Louisoix's Sacrifice's own identical shape): this engine has no stack/object model that lets a resolving spell actually remove a different object from the stack, so there's nothing a real target reference could point at and remove. The 'unless its controller pays {X}' branch (a choice belonging to the COUNTERED spell's controller, made mid-resolution — this engine has no player-decision process for that) and the exile-instead-of-graveyard destination (there's no real target reference to redirect in the first place) are both real, printed text this model can't mechanically enforce — left honestly undemonstrated rather than faked; see definition.ts for the full reasoning on both.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island"
+          ]
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Mountain"
+            ]
+          }
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Fire Magic",
+        "from": "hand",
+        "cost": "{R}",
+        "controller": "opp0"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Fire Magic",
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "Syncopate",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Syncopate"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Syncopate"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Syncopate"
+      },
+      {
+        "fn": "counter",
+        "what": "Counter target spell unless its controller pays {X}. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
+      },
+      {
+        "fn": "move",
+        "card": "Syncopate",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Opponent casts Fire Magic ({R})",
+        "from": 0
+      },
+      {
+        "label": "Cast Syncopate ({2}{U})",
+        "from": 2
+      },
+      {
+        "label": "Resolve",
+        "from": 6
+      }
+    ]
+  }
+]

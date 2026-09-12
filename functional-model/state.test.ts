@@ -173,6 +173,47 @@ describe('GameState.tap / untap', () => {
     state.untap(card);
     expect(card.tapped).toBe(false);
   });
+
+  it("CR 614.2: a real 'CantUntap' grant (Sleep Magic-shaped) is an unconditional, non-consuming lockdown — genuinely different from a stun counter", () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const aura = state.addCard(you, 'Battlefield', {
+      name: 'sleep-magic',
+      continuousKeywordGrants: [{ keywords: ['CantUntap'], includeSelf: false, equippedBySelf: true }],
+    });
+    const creature = state.addCard(you, 'Battlefield', { name: 'enchanted-creature' });
+    state.tap(creature);
+    state.equip(aura, creature);
+    state.untap(creature);
+    expect(creature.tapped).toBe(true); // stays tapped — no counter to consume, just never untaps
+    state.untap(creature); // a SECOND attempt — still locked down, unlike a stun counter which would be exhausted after one
+    expect(creature.tapped).toBe(true);
+  });
+
+  it("CR 614.2: 'CantUntap' genuinely follows a live re-attach and turns off once detached", () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const aura = state.addCard(you, 'Battlefield', {
+      name: 'sleep-magic',
+      continuousKeywordGrants: [{ keywords: ['CantUntap'], includeSelf: false, equippedBySelf: true }],
+    });
+    const creatureA = state.addCard(you, 'Battlefield', { name: 'creature-a' });
+    const creatureB = state.addCard(you, 'Battlefield', { name: 'creature-b' });
+    state.tap(creatureA);
+    state.tap(creatureB);
+    state.equip(aura, creatureA);
+    state.untap(creatureA);
+    expect(creatureA.tapped).toBe(true); // locked down while attached
+    state.untap(creatureB);
+    expect(creatureB.tapped).toBe(false); // never attached — untaps normally
+    // Re-attach to B instead — the lockdown genuinely moves, live.
+    state.equip(aura, creatureB);
+    state.tap(creatureB);
+    state.untap(creatureB);
+    expect(creatureB.tapped).toBe(true);
+    state.untap(creatureA); // no longer attached — untaps normally now
+    expect(creatureA.tapped).toBe(false);
+  });
 });
 
 describe('GameState.move — FINALITY counter (real replacement: dying exiles instead, CR-equivalent to Card.java ~7067-7076)', () => {

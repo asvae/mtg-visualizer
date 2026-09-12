@@ -1,0 +1,24 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact Creature",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact Creature",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "As long as you control seven or more lands, this creature gets +3/+0.",
+      "highlight": "gets +3/+0"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "As long as you control seven or more lands, this creature gets +3/+0.",
+      "highlight": "As long as you control seven or more lands"
+    }
+  ]
+}

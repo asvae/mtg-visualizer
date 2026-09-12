@@ -1,0 +1,48 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Elemental", "highlight": "Creature" },
+    { "anchor": "typeLine", "sourceText": "Enchantment Creature — Saga Elemental", "highlight": "Enchantment Creature" },
+    {
+      "sourceText": "I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+      "highlight": "Tap target creature an opponent controls"
+    },
+    {
+      "sourceText": "I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+      "highlight": "Put a stun counter on it"
+    },
+    {
+      "sourceText": "I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+      "highlight": "Tap target creature an opponent controls"
+    },
+    {
+      "sourceText": "I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+      "highlight": "Put a stun counter on it"
+    },
+    {
+      "sourceText": "III — Diamond Dust — Draw a card for each tapped creature your opponents control.",
+      "highlight": "Draw a card for each tapped creature your opponents control"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "add a lore counter"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "Sacrifice after III"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)",
+      "highlight": "Sacrifice after III"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+      "highlight": "target creature an opponent controls"
+    },
+    {
+      "sourceText": "III — Diamond Dust — Draw a card for each tapped creature your opponents control.",
+      "highlight": "each tapped creature your opponents control"
+    }
+  ]
+}

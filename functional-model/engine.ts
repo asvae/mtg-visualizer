@@ -261,11 +261,23 @@ function costReductionCondition(condition: 'tappedCreatureTarget', declaredTarge
  * doc comment), with `{X}` resolved first (CR 601.2b, `x` — a caller-chosen
  * value, same "caller supplies the real choice" shape `declaredTarget`
  * already establishes; defaults to 0 per `resolveXCost`'s own doc
- * comment), THEN discounted by TWO independent, real, real-Forge-distinct
- * mechanisms, summed (118.9 lets multiple "costs {N} less" effects stack):
- *  - `card.costReduction` — THIS card's own target-conditional discount
- *    (Fate of the Sun-Cryst), applied only if its own condition holds
- *    against `declaredTarget`.
+ * comment), THEN discounted by up to THREE independent, real,
+ * real-Forge-distinct mechanisms, summed (118.9 lets multiple "costs {N}
+ * less" effects stack):
+ *  - `card.costReduction.condition`/`.amount` — THIS card's own
+ *    target-conditional discount (Fate of the Sun-Cryst), applied only if
+ *    its own condition holds against `declaredTarget`.
+ *  - `card.costReduction.perControlled` — THIS card's own board-state-
+ *    COUNTED discount (Travel the Overworld's own "Affinity for Towns" —
+ *    ENGINE_GAPS.md gap #7, closed 2026-09-12), unconditional: `caster`'s
+ *    real battlefield permanents whose subtypes include
+ *    `perControlled.subtype`, counted fresh, times
+ *    `perControlled.amountPerMatch` — the same mechanism
+ *    `effectiveActivationCost` already uses for `ActivationCostReduction`
+ *    on the activated-ability side, applied here to a spell's own cast cost
+ *    instead. Mutually exclusive with the target-conditional case above on
+ *    any one card (`card.costReduction` picks one shape or the other);
+ *    needs `caster` supplied, same as the broadcast case below.
  *  - `caster`'s own battlefield permanents' `spellCostReductionGrants` — a
  *    flat, unconditional, color-gated BROADCAST discount from a DIFFERENT
  *    permanent (The Wind Crystal's own "White spells you cast cost {1}
@@ -273,7 +285,7 @@ function costReductionCondition(condition: 'tappedCreatureTarget', declaredTarge
  *    THIS spell's own colored mana-cost pips. Omitted (no discount) when
  *    `caster` isn't supplied — same "irrelevant/ignored" treatment
  *    `declaredTarget` already gets for a card with no `costReduction`.
- * Neither applies when `alt` is set (a real `AlternateCost` REPLACES the
+ * None of these apply when `alt` is set (a real `AlternateCost` REPLACES the
  * whole cost, CR 702.32/702.67 — see below). Returns the parsed (for
  * affordability/payment) AND the printed-style string (for trace logging
  * the cost actually paid, not just the nominal one) — see `mana.ts`'s
@@ -302,8 +314,18 @@ export function effectiveCastCost(card: CardDefinition, alt?: AlternateCost, dec
     return { cost, costString: resolvedCostString, discounted: false };
   }
   let discount = 0;
-  if (card.costReduction && costReductionCondition(card.costReduction.condition, declaredTarget)) {
-    discount += card.costReduction.amount;
+  if (card.costReduction?.perControlled) {
+    // Board-state-COUNTED case (Travel the Overworld's own "Affinity for
+    // Towns") — unconditional, no `declaredTarget` gate at all; needs
+    // `caster` to actually count anything (same "irrelevant/ignored
+    // without a caster" treatment the broadcast case below already has).
+    if (caster) {
+      const { amountPerMatch, subtype } = card.costReduction.perControlled;
+      const matchCount = caster.battlefield.filter((c) => c.subtypes.includes(subtype)).length;
+      discount += amountPerMatch * matchCount;
+    }
+  } else if (card.costReduction?.condition && costReductionCondition(card.costReduction.condition, declaredTarget)) {
+    discount += card.costReduction.amount ?? 0;
   }
   if (caster) {
     const cardColors = Object.entries(cost.colors)

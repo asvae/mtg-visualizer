@@ -5,13 +5,18 @@ export const travelTheOverworld: CardDefinition = {
   manaCost: '{5}{U}{U}',
   typeLine: 'Sorcery',
 
-  // Real Forge K:Affinity:Town — a genuine dynamic mana-cost reduction
-  // (costs {1} less per Town you control). No cost-reduction machinery
-  // exists anywhere in this model (`manaCost` is a fixed printed string,
-  // never recomputed for a specific cast) — same treatment fate-of-the-
-  // sun-cryst's own ReduceCost static already gets: real text, not an
-  // executed effect.
-  staticAbilities: ['Affinity for Towns (This spell costs {1} less to cast for each Town you control.)'],
+  // Real Forge K:Affinity:Town — CLOSED (2026-09-12, ENGINE_GAPS.md gap #7):
+  // a real, board-state-COUNTED cast-cost discount (CR 601.2f), same
+  // underlying mechanism as Qiqirn Merchant's own activated-ability
+  // discount (`ActivationCostReduction`), now generalized to a spell's own
+  // cast cost via `card.ts`'s new `CostReduction.perControlled` —
+  // `engine.ts`'s `effectiveCastCost` genuinely counts real Town-subtype
+  // permanents `caster` controls and discounts the {5} generic portion
+  // accordingly, replacing the old documentary-only `staticAbilities`
+  // string, same "structured field replaces free text once real"
+  // convention `continuousKeywordGrants`/`costReduction`'s other cards
+  // already established.
+  costReduction: { perControlled: { amountPerMatch: 1, subtype: 'Town' } },
 
   effects: [{ kind: 'drawCard', amount: 4 } satisfies Effect],
 };

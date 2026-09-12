@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Cat Druid",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Cat Druid",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "At the beginning of your end step, exile target creature you control, then return it to the battlefield under its owner's control. Then if it's the first end step of the turn, there is an additional end step after this step.",
+      "highlight": "exile target creature you control"
+    },
+    {
+      "sourceText": "At the beginning of your end step, exile target creature you control, then return it to the battlefield under its owner's control. Then if it's the first end step of the turn, there is an additional end step after this step.",
+      "highlight": "return it to the battlefield under its owner's control"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "At the beginning of your end step, exile target creature you control, then return it to the battlefield under its owner's control. Then if it's the first end step of the turn, there is an additional end step after this step.",
+      "highlight": "target creature you control"
+    }
+  ]
+}

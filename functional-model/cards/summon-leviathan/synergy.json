@@ -1,36 +1,173 @@
 {
   "source": [
     {
-      "zone": "Hand",
-      "controller": "you",
-      "value": 1
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 12,
+          "end": 20
+        }
+      ]
     },
     {
-      "zone": "Hand",
-      "controller": "opp",
-      "value": 1
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Battlefield",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ],
+          "not": [
+            "Kraken",
+            "Leviathan",
+            "Merfolk",
+            "Octopus",
+            "Serpent"
+          ]
+        }
+      },
+      "targeted": false,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 4,
+          "end": 106
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Kraken",
+            "Leviathan",
+            "Merfolk",
+            "Octopus",
+            "Serpent"
+          ]
+        }
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 10,
+          "end": 109
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Kraken",
+            "Leviathan",
+            "Merfolk",
+            "Octopus",
+            "Serpent"
+          ]
+        }
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 10,
+          "end": 109
+        }
+      ]
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 47,
+          "end": 65
+        }
+      ]
+    },
+    {
+      "event": "sacrifice",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 86
+        }
+      ]
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 67,
+          "end": 86
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
+      "to": "Battlefield",
       "types": {
-        "has": [
-          "Creature"
+        "hasAny": [
+          "Kraken",
+          "Leviathan",
+          "Merfolk",
+          "Octopus",
+          "Serpent"
         ]
       },
-      "value": 1
-    },
-    {
-      "zone": "Battlefield",
-      "controller": "opp",
-      "types": {
-        "has": [
-          "Creature"
-        ]
-      },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 10,
+          "end": 109
+        }
+      ]
     }
   ]
 }

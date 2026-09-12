@@ -1,0 +1,15 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    {
+      "sourceText": "Choose target spell. Surveil 2, then counter the chosen spell unless its controller pays {1} for each card in your graveyard. (To surveil 2, look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+      "highlight": "Surveil 2"
+    },
+    {
+      "sourceText": "Choose target spell. Surveil 2, then counter the chosen spell unless its controller pays {1} for each card in your graveyard. (To surveil 2, look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+      "highlight": "counter the chosen spell unless its controller pays {1} for each card in your graveyard"
+    }
+  ],
+  "sink": []
+}

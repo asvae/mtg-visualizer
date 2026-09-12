@@ -1,15 +1,70 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
+      "setup": "you: 7 Island(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> Job select ETB -> equip recalculation -> re-equip via Equip {4} -> granted combat-damage draw",
+      "result": "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero genuinely recalculates to a 2/2 Rogue the instant it's equipped (real read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant genuinely follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires for real, drawing a card.",
       "raw": {
-        "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
-        "trigger": "onEnter"
+        "result": "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero genuinely recalculates to a 2/2 Rogue the instant it's equipped (real read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant genuinely follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires for real, drawing a card.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 10
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 10
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Qiqirn Merchant",
+        "zone": "Battlefield",
+        "power": 1,
+        "toughness": 4,
+        "controller": "you"
+      },
+      {
+        "fn": "cast",
+        "card": "Thief's Knife",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Thief's Knife"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Thief's Knife"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Thief's Knife"
+      },
+      {
+        "fn": "enters",
+        "card": "Thief's Knife",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Thief's Knife",
@@ -28,30 +83,47 @@
       {
         "fn": "equip",
         "equipment": "Thief's Knife",
-        "equipmentId": 2544,
+        "equipmentId": 32,
         "target": "Hero",
-        "id": 2545
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "activated ({4})",
-      "result": "attaches itself to the target creature",
-      "raw": {
-        "result": "attaches itself to the target creature",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "id": 33
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Hero",
+        "power": 2,
+        "toughness": 2
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Hero",
+        "subtype": "Rogue",
+        "result": true
+      },
       {
         "fn": "activate",
         "card": "Thief's Knife",
         "instanceId": 1,
         "cost": "{4}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Thief's Knife"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Thief's Knife"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Thief's Knife"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Thief's Knife"
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -61,23 +133,34 @@
       {
         "fn": "equip",
         "equipment": "Thief's Knife",
-        "equipmentId": 2549,
-        "target": "Grizzly Bears",
-        "id": 2547
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onEquippedDealsDamage\" trigger fires",
-      "result": "draws a card",
-      "raw": {
-        "result": "draws a card",
-        "trigger": "onEquippedDealsDamage"
-      }
-    },
-    "log": [
+        "equipmentId": 32,
+        "target": "Qiqirn Merchant",
+        "id": 31
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Hero",
+        "power": 1,
+        "toughness": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Hero",
+        "subtype": "Rogue",
+        "result": false
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Qiqirn Merchant",
+        "power": 2,
+        "toughness": 5
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Qiqirn Merchant",
+        "subtype": "Rogue",
+        "result": true
+      },
       {
         "fn": "trigger",
         "card": "Thief's Knife",
@@ -86,7 +169,46 @@
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Thief's Knife ({2}{U})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 5
+      },
+      {
+        "label": "Fire onEnter",
+        "from": 6
+      },
+      {
+        "label": "Real layer-7c/layer-4 recalculation — Equipped creature gets +1/+1 and is a Rogue",
+        "from": 9
+      },
+      {
+        "label": "Activate Thief's Knife",
+        "from": 11
+      },
+      {
+        "label": "Resolve",
+        "from": 16
+      },
+      {
+        "label": "Real re-equip: the grant follows the live attachment, off the Hero token and onto Qiqirn Merchant",
+        "from": 18
+      },
+      {
+        "label": "Fire onEquippedDealsDamage",
+        "from": 22
       }
     ]
   }

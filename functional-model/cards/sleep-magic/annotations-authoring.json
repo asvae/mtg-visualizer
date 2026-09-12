@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment — Aura",
+      "highlight": "Enchantment"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment — Aura",
+      "highlight": "Enchantment"
+    },
+    {
+      "sourceText": "When this Aura enters, tap enchanted creature.",
+      "highlight": "tap enchanted creature"
+    },
+    {
+      "sourceText": "Enchanted creature doesn't untap during its controller's untap step.",
+      "highlight": "doesn't untap during its controller's untap step"
+    },
+    {
+      "sourceText": "When enchanted creature is dealt damage, sacrifice this Aura.",
+      "highlight": "sacrifice this Aura"
+    },
+    {
+      "sourceText": "When enchanted creature is dealt damage, sacrifice this Aura.",
+      "highlight": "sacrifice this Aura"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Enchant creature",
+      "highlight": "creature"
+    }
+  ]
+}

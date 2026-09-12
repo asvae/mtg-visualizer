@@ -2,8 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the current unified Fact model (role-less on-disk source/sink arrays, to/from, annotations required, no id). Facts: self-cast (Hand, typeLine-anchored), self-enters (Battlefield, typeLine-anchored), and a real `tap` produce (targeted:true, target:{types:{hasAny:['Artifact','Creature']}}) for the ETB tap trigger, plus a matching Battlefield-presence sink (same hasAny type set, no controller restriction — oracle prints no controller restriction on the enchant target). No Fact for 'doesn't untap'/'activated abilities can't be activated' (both real, unenforced static locks, same treatment sleep-magic's own 'doesn't untap' clause already got) or for Flash (timing-only, no board-state fact). Also fixed a real, stale bug found in the process: this card's own onEnter effect declared `validType:'any'` with a comment claiming tapTarget's pool is always creature-only regardless of validType — checked card.ts directly, that's false (tapTarget passes validType straight through to battlefieldPool, no creature-only default the way grantKeywordTarget has); switched to the correct `validType:'creature-or-artifact'`, which already existed as real engine vocabulary. Scenario switched from a bare `trigger:'onEnter'` to `sequence:['onEnter']` so the trace shows a real cast->enters->trigger lifecycle (bare `trigger` suppresses lifecycleBefore entirely) — needed for the new self-cast/self-enters facts to have real trace evidence.",
   "textCoverageAudited": false,
-  "knownGaps": []
+  "knownGaps": [
+    "'Enchanted permanent doesn't untap during its controller's untap step' — state.ts's untap() only special-cases the real STUN counter replacement; no general per-object 'can't untap' lock exists. Unenforced, same gap sleep-magic's identical clause already has.",
+    "'...and its activated abilities can't be activated' — real, additional restriction beyond sleep-magic's own shape. Checked engine.ts's canActivateAbility end-to-end: no hook anywhere checks whether the TARGET permanent's own activation is locked by another permanent's static ability (every check there is about the activator's own state). Genuinely unenforced, not just undemonstrated."
+  ]
 }

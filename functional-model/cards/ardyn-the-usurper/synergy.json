@@ -1,20 +1,32 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
-      "value": 1
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1
-    },
-    {
-      "event": "dies",
       "target": "self",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
     },
     {
       "event": "grantKeyword",
@@ -22,10 +34,20 @@
       "controller": "you",
       "target": {
         "types": {
-          "has": ["Demon"]
+          "has": [
+            "Demon"
+          ]
         }
       },
-      "value": -1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 24,
+          "end": 30
+        }
+      ]
     },
     {
       "event": "grantKeyword",
@@ -33,10 +55,20 @@
       "controller": "you",
       "target": {
         "types": {
-          "has": ["Demon"]
+          "has": [
+            "Demon"
+          ]
         }
       },
-      "value": -1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 32,
+          "end": 40
+        }
+      ]
     },
     {
       "event": "grantKeyword",
@@ -44,32 +76,117 @@
       "controller": "you",
       "target": {
         "types": {
-          "has": ["Demon"]
+          "has": [
+            "Demon"
+          ]
         }
       },
-      "value": -1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 46,
+          "end": 51
+        }
+      ]
+    },
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Demon"
+          ]
+        }
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 32,
+          "end": 40
+        }
+      ]
+    },
+    {
+      "event": "exile",
+      "from": "Graveyard",
+      "to": "Exile",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 55,
+          "end": 108
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "b_5_5_demon"
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 141,
+          "end": 213
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Graveyard",
+      "to": "Graveyard",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 55,
+          "end": 108
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "to": "Graveyard",
       "controller": "opp",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 55,
+          "end": 108
+        }
+      ]
     }
   ]
 }

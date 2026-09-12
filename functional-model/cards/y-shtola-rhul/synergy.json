@@ -1,38 +1,95 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "zone": "Exile",
+      "to": "Exile",
+      "from": "Battlefield",
       "controller": "you",
-      "value": 1
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 35,
+          "end": 68
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
+      "from": "Exile",
+      "event": "entersBattlefield",
       "controller": "you",
-      "value": 1
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 75,
+          "end": 129
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 41,
+          "end": 68
+        }
+      ]
     }
   ]
 }

@@ -504,15 +504,36 @@ so a future pass doesn't mistake them for missing work:
    crystal/fin-43), and a discount on an ACTIVATED ABILITY's own cost
    rather than a spell's cast cost (qiqirn-merchant/fin-65). Both reuse
    the SAME generalized hook, not two one-off patches — see below for the
-   shared design. **Still explicitly NOT modeled**: a variable/dynamic
-   `amount` for the CAST-side `CostReduction` shape (e.g. "for each X you
-   control," as opposed to fate-of-the-sun-cryst's fixed `{2}`) —
-   `CostReduction.amount` is still a plain number, not a `Computed`-style
-   hook (the ACTIVATION-side shape below DOES support a board-counted
-   variable amount, since qiqirn-merchant needed exactly that — the two
-   shapes diverge here, an intentional, checked asymmetry, not an
-   oversight: no real cast-side FIN card needs a variable cast discount
-   today).
+   shared design. ~~**Still explicitly NOT modeled**: a variable/dynamic
+   `amount` for the CAST-side `CostReduction` shape~~ **Also now CLOSED
+   (2026-09-12, `travel-the-overworld`/fin-82's migration)** — real Scryfall
+   oracle text (`data/fin/fin_scryfall.json` collector_number 82): "Affinity
+   for Towns (This spell costs {1} less to cast for each Town you control.)"
+   Real Forge citation: `res/cardsfolder/t/travel_the_overworld.txt`
+   declares `K:Affinity:Town`; `tmp/mtg-forge`'s own source confirms this
+   keyword expands (via `forge-game/.../keyword/Keyword.java` line 12 +
+   `CardFactoryUtil.java`'s `addStaticAbility`, ~lines 3749-3766) into
+   exactly a `Mode$ ReduceCost | ValidCard$ Card.Self | Type$ Spell |
+   Amount$ AffinityX | EffectZone$ All` static ability paired with a
+   dynamically-built `SVar:AffinityX:Count$Valid Town.YouCtrl` — the SAME
+   real board-counted mechanism qiqirn-merchant's own `ActivationCostReduction`
+   already models on the ACTIVATION side, generalized here to the CAST side.
+   `card.ts`'s `CostReduction` gained a new `perControlled: {amountPerMatch,
+   subtype}` field (mutually exclusive with the existing target-conditional
+   `amount`/`condition` pair, both now optional) reusing
+   `ActivationCostReduction`'s exact shape; `engine.ts`'s `effectiveCastCost`
+   counts real `caster.battlefield` permanents matching `subtype` and applies
+   the discount the same generic-only/floored-at-0 way every other cast-cost
+   discount already does. `cards/travel-the-overworld/definition.ts` now
+   declares `costReduction: {perControlled: {amountPerMatch: 1, subtype:
+   'Town'}}`, replacing the old documentary-only `staticAbilities` string;
+   its own real engine-piloted scenario controls 2 real Town lands (Capital
+   City, Gongaga, Reactor Town) and shows the logged `cast` cost genuinely
+   reading `{3}{U}{U}` (5 minus 2), not the printed `{5}{U}{U}` — only 5
+   real lands tapped for mana, not 7. The two shapes (target-conditional
+   `amount`/`condition` vs. board-counted `perControlled`) stay genuinely
+   mutually exclusive on any one card, same as before — no real FIN card
+   needs both at once to check the interaction against.
 
    **Second real example, a plainer shape, CLOSED (2026-09-12,
    `the-wind-crystal`/fin-43's migration):** "White spells you cast cost
@@ -1596,6 +1617,152 @@ so a future pass doesn't mistake them for missing work:
     `turn.test.ts`'s two new cases (the flag persists through the rest of
     the turn once set, then clears at the real Cleanup; it does not persist
     into a later turn — a real per-turn reset, not a one-time clear).
+
+17. **"Insert one more of this same step before the turn moves on" — a real,
+    still-OPEN gap affecting multiple real FIN cards, structurally distinct
+    from extra turns (500.7, gap #3).** Surfaced migrating Y'shtola Rhul
+    (fin/86): "At the beginning
+    of your end step, exile target creature you control, then return it to
+    the battlefield under its owner's control. Then if it's the first end
+    step of the turn, there is an additional end step after this step." (real
+    Scryfall oracle text, `data/fin/fin_scryfall.json` collector_number 86;
+    real Forge citation, `res/cardsfolder/y/yshtola_rhul.txt`'s own
+    `SVar:DBAddEOT:DB$ AddPhase | ExtraPhase$ End of Turn | AfterPhase$ End
+    of Turn | ConditionCheckSVar$ X | ConditionSVarCompare$ LT1` (gated by
+    `SVar:X:Count$FinishedEndOfTurnsThisTurn` — Forge's own real mechanism
+    for "only the FIRST end step of the turn adds another one").) Checked
+    `turn.ts` directly before
+    concluding this is a real gap, not just an unfamiliar corner of existing
+    machinery: `TurnState.phaseIndex` walks the fixed `PHASES` const array
+    one index at a time (`advancePhase`'s own `turn.phaseIndex + 1 <
+    PHASES.length` branch), wrapping to a brand-new `TurnState` (next
+    player, `Untap`, `turnNumber + 1`) only once `Cleanup` is exhausted —
+    there is no way to re-enter or repeat an EARLIER index of `PHASES` within
+    the SAME turn/player, and `TurnState.extraTurns` (gap #3, closed) only
+    ever queues a WHOLE additional TURN at the turn-wrap point, never a
+    single extra STEP spliced into the CURRENT turn's own phase list. These
+    are genuinely different real MTG concepts (500.7's "extra turn" is a
+    fresh turn with its own Untap/Upkeep/Draw/etc.; this card's "additional
+    end step" repeats exactly one step, immediately, with no Untap/Upkeep/
+    Draw/Combat in between) and Forge itself models them via two entirely
+    separate mechanisms (`DB$ AddPhase` for a repeated step, this card's own
+    real script above, vs. `DB$ AddTurn` for a genuine extra turn — Ultimecia,
+    Time Sorceress // Ultimecia, Omnipotent's own real
+    `res/cardsfolder/u/ultimecia_time_sorceress_ultimecia_omnipotent.txt`:
+    `SVar:TrigAddTurn:DB$ AddTurn | NumTurns$ 1`, gap #3's own closed
+    `queueExtraTurn`/`TurnState.extraTurns`) — confirming this isn't a
+    redundant restatement of gap #3. No `Effect` kind, `Actions` method, or `TurnState` field
+    anywhere in this model represents "insert one more of this same step" —
+    genuinely unsupported, not fabricated: `cards/y-shtola-rhul/definition.ts`
+    keeps this half of the ability as real, honest, undemonstrated
+    documentary text (same "described but not executed" treatment
+    `moogles-valor`'s own once-open keyword-grant gap got) rather than a
+    fake `custom` no-op pretending to model it.
+    **Correction after actually grepping the real cardsfolder pool-wide
+    (don't repeat the mistake of assuming from one card alone): this is NOT
+    narrow to Y'shtola.** `AddPhase` also backs 3 other real, already-
+    migrated FIN cards' own "additional combat phase" clauses — Balthier
+    and Fran (`res/cardsfolder/b/balthier_and_fran.txt`: `SVar:TrigAddCombat:
+    AB$ AddPhase | Cost$ 1 R G | ExtraPhase$ Combat | AfterPhase$
+    EndCombat`), Genji Glove (`res/cardsfolder/g/genji_glove.txt`:
+    `SVar:DBAddCombat:DB$ AddPhase | ExtraPhase$ Combat | AfterPhase$
+    EndCombat`), and Tifa, Martial Artist (`res/cardsfolder/t/
+    tifa_martial_artist.txt`: `SVar:DBAddCombat:DB$ AddPhase | ExtraPhase$
+    Combat | ConditionFirstCombat$ True | AfterPhase$ EndCombat` — not yet
+    migrated into this pool, unlike the other two). `cards/balthier-and-fran/
+    definition.ts` and `cards/genji-glove/definition.ts` had ALREADY
+    independently hit this identical primitive gap (their own comments:
+    "no turn/phase-structure Effect shape exists here" / "no phase/turn-
+    structure Effect shape exists here") and, correctly, left it as honest
+    undemonstrated text the same way this pass does for Y'shtola — but
+    neither had a corresponding `ENGINE_GAPS.md` entry until now, so this
+    same real gap was silently rediscovered per-card instead of tracked
+    once, centrally. This entry is that first central tracking, generalized
+    to cover BOTH real shapes actually needed today (an additional END step,
+    Y'shtola; an additional COMBAT phase, Balthier and Fran/Genji Glove/Tifa)
+    — both are the identical missing primitive ("repeat/insert one more
+    occurrence of a specific phase within the CURRENT turn," Forge's own
+    single `DB$ AddPhase` covers both via its `ExtraPhase$` parameter), not
+    two separate gaps that happen to look similar. Revisit when a future
+    migration wants to actually demonstrate it (would need a `TurnState`
+    field structurally like `extraTurns` but scoped to "insert one more
+    occurrence of a named phase before the turn's own phase list advances
+    past `AfterPhase$`," not a new queued player/turn) — 4 real FIN cards
+    now depend on it (1 migrated-and-documented here, 2 previously migrated
+    with only a per-card comment, 1 not yet migrated), a big enough real
+    count that this is genuinely worth closing in a future pass, not
+    permanently deferred.
+
+18. **A static effect locking a DIFFERENT permanent's own activated-ability
+    activation — real, still OPEN.** Surfaced migrating Stuck in Summoner's
+    Sanctum (fin/76): "Enchanted permanent doesn't untap during its
+    controller's untap step and its activated abilities can't be
+    activated." (real Scryfall oracle text, `data/fin/fin_scryfall.json`
+    collector_number 76.) The "doesn't untap" half is the same already-known
+    gap sleep-magic's own identical clause has (`state.ts`'s `untap()` only
+    special-cases the real STUN counter replacement, no general per-object
+    lock) — not new. The "activated abilities can't be activated" half is:
+    checked `engine.ts`'s `canActivateAbility` end-to-end and found no hook
+    of any kind for "is THIS permanent's own activation locked by some OTHER
+    permanent's static ability" — every real check there (control, tap-cost
+    payability, summoning sickness, mana, Equip/Crew shape) is about the
+    ACTIVATOR's own state, never a lock imposed on the target by a third
+    party. No `Keyword`, `RealCard` field, or `effectiveKeywords`-style
+    lookup anywhere represents "can't activate abilities" the way
+    `'Unblockable'`/`'DamagePrevention'` already represent other granted
+    locks. Genuinely unsupported, not fabricated: `cards/
+    stuck-in-summoner-s-sanctum/definition.ts` keeps this whole line as real,
+    honest, undemonstrated `staticAbilities` text (same treatment
+    `moogles-valor`'s own once-open keyword-grant gap got, and the same
+    treatment sleep-magic's own "doesn't untap" half already has). No other
+    migrated FIN card in this pool has this exact restriction yet (checked);
+    revisit if a future card needs it — would need a new `Keyword` (e.g.
+    `'CantActivateAbilities'`) plumbed into `canActivateAbility`'s own
+    permanent-state checks, structurally parallel to how `'Unblockable'`
+    already gates `canBlock`.
+
+19. **No `mill` mechanism/chokepoint at all — real, still OPEN.** Surfaced
+    migrating The Water Crystal (fin/85): "If an opponent would mill one or
+    more cards, they mill that many cards plus four instead." (real
+    Scryfall oracle text, `data/fin/fin_scryfall.json` collector_number 85;
+    real Forge citation, `res/cardsfolder/t/the_water_crystal.txt`:
+    `R:Event$ Mill | ActiveZones$ Battlefield | ValidPlayer$ Player.Opponent
+    | ReplaceWith$ MillPlus4 | ...`) — a genuine CR 614.2 replacement effect
+    on the MILL event. Structurally the SAME shape as gap #8b's
+    lifegain-doubling ("If you would gain life, you gain twice that much
+    life instead.", The Wind Crystal/fin-43), but NOT closeable the same
+    way: gap #8b's closure worked because `state.gainLife` was already a
+    real, single chokepoint every lifegain call funneled through BEFORE the
+    replacement was added — doubling it there was a small, local addition.
+    Mill has no equivalent chokepoint to add to. Checked directly, not
+    assumed: `state.ts` has NO `mill()` method anywhere; `interfaces.ts`'s
+    own `mill(player, qty)` is a pure ambient Forge-signature mirror
+    (declared, documenting the real `Player.mill(int)` shape for
+    traceability, per this file's own header convention) that was never
+    given a real body — the identical "declared but unimplemented" status
+    `scry`/`surveil` also carry. Every real mill effect in this pool today
+    (this card's own "{4}{U}{U}, {T}: Each opponent mills cards equal to
+    the number of cards in your hand," its only real user) is instead
+    modeled ad hoc through the generic `move` Effect kind (library ->
+    graveyard, an unchosen batch) — the SAME generic primitive every OTHER
+    zone-change effect in the pool (bounce, sacrifice, exile, tutor, ...)
+    also dispatches through, with nothing distinguishing "this move is
+    specifically a mill" at the point a replacement could intercept it.
+    Building the replacement would first require a real, dedicated mill
+    action/chokepoint (structurally parallel to what `gainLife` already was
+    pre-#8b) that at minimum the base activated ability's own `move` effect
+    would need to route through instead — not attempted here (a
+    fact-authoring pass, not new engine mechanism). Genuinely unsupported,
+    not fabricated: `cards/the-water-crystal/definition.ts` keeps this
+    clause as real, honest, undemonstrated `staticAbilities` text (same
+    "described but not executed" treatment `moogles-valor`'s own once-open
+    keyword-grant gap got), no Fact authored for it (nothing real to anchor
+    a produce fact to without inventing a mechanism that doesn't exist).
+    Revisit if a future card needs a real mill effect demonstrated with
+    doubling/replacement semantics — would need a new `state.mill()`
+    chokepoint (structurally parallel to `gainLife`/`dig`) plus a
+    replacement hook on it, the same shape gap #8b's `gainLife` fix
+    already established as the template.
 
 ## What's already solid (don't re-litigate)
 

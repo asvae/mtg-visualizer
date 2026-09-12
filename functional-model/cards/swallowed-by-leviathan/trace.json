@@ -1,0 +1,40 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand",
+      "result": "surveils 2, then counters the chosen spell",
+      "raw": {
+        "result": "surveils 2, then counters the chosen spell"
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Swallowed by Leviathan",
+        "instanceId": 1,
+        "id": 2568,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "surveil",
+        "player": "you",
+        "qty": 2
+      },
+      {
+        "fn": "counter",
+        "what": "Counter the chosen spell unless its controller pays {1} for each card in your graveyard."
+      },
+      {
+        "fn": "move",
+        "card": "Swallowed by Leviathan",
+        "instanceId": 1,
+        "id": 2568,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  }
+]

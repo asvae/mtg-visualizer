@@ -6,15 +6,27 @@ export const blackMagesRod: CardDefinition = {
   manaCost: '{1}{B}',
   typeLine: 'Artifact — Equipment',
 
-  // "+1/+0, has 'Whenever you cast a noncreature spell, this creature
-  // deals 1 damage to each opponent,' and is a Wizard in addition to its
-  // other types" — a static grant of a TRIGGERED ability to whichever
-  // creature is equipped, not to this permanent itself (this card has no
-  // `AddTrigger$`-equivalent field — `staticAbilities` is real text only,
-  // same treatment ninja-s-blades' own granted-trigger comment documents).
+  // The +1/+0 P/T bonus and "is a Wizard" type grant are now real,
+  // executable machinery (ENGINE_GAPS.md gap #14, fully closed 2026-09-12),
+  // same generalization dragoon-s-lance's/paladin-s-arms's/white-mage-s-
+  // staff's own migrations established. The granted "Whenever you cast a
+  // noncreature spell, this creature deals 1 damage to each opponent"
+  // triggered ability is a genuinely DIFFERENT, still-open gap class (no
+  // vocabulary/pipeline anywhere in this model grants a WHOLE NEW triggered
+  // ability — its own trigger condition PLUS its own effect — to another
+  // permanent; `continuousKeywordGrants`/`continuousPTGrants`/
+  // `continuousTypeGrants` only ever broadcast a keyword/P&T delta/subtype,
+  // never a fresh condition+effect pair) — stays real-but-inert, unaffected
+  // by this pass (see synergy.json's own `damage` fact,
+  // `isBlackMagesRodGrantedAbilityFact` in verify-synergy.mjs; same
+  // treatment White Mage's Staff's own granted-lifegain-on-attack got —
+  // checked ENGINE_GAPS.md fresh, nothing has closed this gap class since).
   staticAbilities: [
     'Equipped creature gets +1/+0, has "Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent," and is a Wizard in addition to its other types.',
   ],
+
+  continuousPTGrants: [{ power: 1, toughness: 0, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Wizard'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — same real ETB mechanic (create a Hero token, attach this
   // to it) as dragoon-s-lance/paladin-s-arms/machinist-s-arsenal's own

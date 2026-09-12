@@ -1,0 +1,24 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment — Aura",
+      "highlight": "Enchantment"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Enchantment — Aura",
+      "highlight": "Enchantment"
+    },
+    {
+      "sourceText": "When this Aura enters, tap enchanted permanent.",
+      "highlight": "tap enchanted permanent"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Enchant artifact or creature",
+      "highlight": "artifact or creature"
+    }
+  ]
+}

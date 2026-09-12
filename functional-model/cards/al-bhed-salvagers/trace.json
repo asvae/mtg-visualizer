@@ -1,18 +1,151 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onDies\" trigger fires",
-      "result": "target opponent loses 1 life, you gain 1 life",
+      "setup": "you: 3 Swamp(s)",
+      "action": "real engine playthrough: cast -> real lethal combat (SBA) -> onDies",
+      "result": "Al Bhed Salvagers is cast, enters the battlefield, then attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires off its own death: target opponent loses 1 life, you gain 1 life.",
       "raw": {
-        "result": "target opponent loses 1 life, you gain 1 life",
-        "trigger": "onDies",
+        "result": "Al Bhed Salvagers is cast, enters the battlefield, then attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires off its own death: target opponent loses 1 life, you gain 1 life.",
+        "you": {
+          "basicLands": [
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ],
+          "libraryCount": 8
+        },
         "opponents": [
-          {}
+          {
+            "libraryCount": 8,
+            "creatureCards": [
+              {
+                "name": "Hill Gigas",
+                "subtypes": [
+                  "Giant"
+                ],
+                "power": 5,
+                "toughness": 4
+              }
+            ]
+          }
         ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Al Bhed Salvagers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Al Bhed Salvagers"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Al Bhed Salvagers"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Al Bhed Salvagers"
+      },
+      {
+        "fn": "enters",
+        "card": "Al Bhed Salvagers",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Al Bhed Salvagers",
+        "id": 23
+      },
+      {
+        "fn": "attack",
+        "card": "Al Bhed Salvagers",
+        "id": 23
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Hill Gigas",
+        "blockerId": 14,
+        "attacker": "Al Bhed Salvagers",
+        "attackerId": 23
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Al Bhed Salvagers",
+        "target": "Hill Gigas",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Hill Gigas",
+        "target": "Al Bhed Salvagers",
+        "amount": 5
+      },
+      {
+        "fn": "destroy",
+        "target": "Al Bhed Salvagers",
+        "controller": "you"
+      },
       {
         "fn": "trigger",
         "card": "Al Bhed Salvagers",
@@ -28,6 +161,52 @@
         "fn": "gainLife",
         "player": "you",
         "amount": 1
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Al Bhed Salvagers ({2}{B})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 5
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 10
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 13
+      },
+      {
+        "label": "Declare Al Bhed Salvagers as attacker",
+        "from": 14
+      },
+      {
+        "label": "Advance one step",
+        "from": 16
+      },
+      {
+        "label": "Declare Hill Gigas as blocker",
+        "from": 17
+      },
+      {
+        "label": "Resolve lethal combat damage (704.5g SBA)",
+        "from": 18
+      },
+      {
+        "label": "Al Bhed Salvagers's own dying trigger fires",
+        "from": 21
       }
     ]
   }

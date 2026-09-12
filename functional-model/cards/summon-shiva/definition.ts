@@ -1,5 +1,13 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect, EffectContext } from '../../card';
 
+// Real 714.3a/b Saga chapters modeled as named `triggers`, same
+// simplification summon-bahamut/summon-primal-garuda/etc. already
+// establish (turn-based-action precision traded for reusing the existing
+// multi-trigger mechanism). Real Forge script (shiva.txt-style
+// K:Chapter:3:DBTap,DBTap,DBDraw) — chapters I and II both point at the
+// SAME real ability (Heavenly Strike), the ability repeats, not a typo,
+// same shared-SVar shape summon-bahamut's own chapters I/II already
+// establish for a different pair of abilities.
 export const summonShiva: CardDefinition = {
   name: 'Summon: Shiva',
   manaCost: '{3}{U}{U}',
@@ -9,63 +17,44 @@ export const summonShiva: CardDefinition = {
 
   triggers: [
     {
-      // Heavenly Strike — "target creature AN OPPONENT CONTROLS." Neither
-      // `tapTarget` nor `putCounterTarget` has an owner-restriction option
-      // (both pool across every player's battlefield) — `custom`, pooling
-      // only `ctx.opponents`' creatures, then chaining the real
-      // `tap`/`putCounter` actions against that one chosen target.
+      // Heavenly Strike — "Tap target creature an opponent controls. Put
+      // a stun counter on it." Real, controller-restricted target (an
+      // OPPONENT'S creature, `ValidTgts$ Creature.OppCtrl`) — same `owner`
+      // field Ice Flan's own ETB uses for the identical real shape
+      // (tap-then-stun a chosen target). Two separate declarative
+      // effects rather than one `custom`: `tapTarget`'s and
+      // `putCounterTarget`'s pools are identical (opponents' creatures,
+      // nothing moves zones in between), so `chooseTarget`'s own
+      // deterministic pool-candidate rule lands both on the same chosen
+      // creature, same reasoning Ice Flan's own definition.ts documents
+      // for its own tap+stun pair.
       name: 'chapterI',
       effects: [
-        {
-          kind: 'custom',
-          describe: 'Heavenly Strike — tap target creature an opponent controls, then put a stun counter on it',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const pool = ctx.opponents.flatMap((p) => p.getCreaturesInPlay());
-            const target = actions.chooseTarget(pool);
-            if (target) {
-              actions.tap(target);
-              actions.putCounter(target, 'stun', 1);
-            }
-          },
-        } satisfies Effect,
+        { kind: 'tapTarget', validType: 'creature', owner: 'opponents' } satisfies Effect,
+        { kind: 'putCounterTarget', validType: 'creature', counterType: 'stun', amount: 1, owner: 'opponents' } satisfies Effect,
       ],
     },
     {
       name: 'chapterII',
       effects: [
-        {
-          kind: 'custom',
-          describe: 'Heavenly Strike — tap target creature an opponent controls, then put a stun counter on it',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const pool = ctx.opponents.flatMap((p) => p.getCreaturesInPlay());
-            const target = actions.chooseTarget(pool);
-            if (target) {
-              actions.tap(target);
-              actions.putCounter(target, 'stun', 1);
-            }
-          },
-        } satisfies Effect,
+        { kind: 'tapTarget', validType: 'creature', owner: 'opponents' } satisfies Effect,
+        { kind: 'putCounterTarget', validType: 'creature', counterType: 'stun', amount: 1, owner: 'opponents' } satisfies Effect,
       ],
     },
     {
-      // Diamond Dust — "draw a card for each tapped creature your
-      // opponents control." No fitting Effect kind/field: `Card` (the
-      // wrapped interface every `getCreaturesInPlay()` result is, see
-      // interfaces.ts) has no `isTapped()` anywhere — the ONLY tapped-state
-      // read in this whole model is `RealCard.tapped` inside state.ts
-      // itself, never exposed through the `Card` interface `custom`'s own
-      // `ctx.opponents` actually receives. Genuine gap (see this batch's
-      // final report): `Card.isTapped()` would need to be added to
-      // interfaces.ts (and wired in state.ts's `wrapCard`) before Diamond
-      // Dust's real X-count is computable here. No-op `custom` in the
-      // meantime, same treatment every other unmodelable count/condition
-      // in this batch gets.
+      // Diamond Dust — "Draw a card for each tapped creature your
+      // opponents control." `Card.isTapped()` genuinely exists
+      // (interfaces.ts's own real mirror of `RealCard.tapped`, state.ts) —
+      // an earlier version of this file's own comment wrongly claimed no
+      // tapped-state read was exposed anywhere in this model (the same
+      // stale claim summon-primal-garuda's own definition.ts already
+      // corrected on an unrelated card/effect). Real, live-counted here
+      // via `drawCard`'s own `Computed<number>` amount — not a no-op.
       name: 'chapterIII',
       effects: [
         {
-          kind: 'custom',
-          describe: "Diamond Dust — draw a card for each tapped creature your opponents control (needs Card.isTapped(), not exposed anywhere in this model)",
-          run: () => {},
+          kind: 'drawCard',
+          amount: (ctx: EffectContext) => ctx.opponents.flatMap((p) => p.getCreaturesInPlay()).filter((c) => c.isTapped()).length,
         } satisfies Effect,
       ],
     },

@@ -1,0 +1,11 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    {
+      "sourceText": "Counter target spell unless its controller pays {X}. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+      "highlight": "Counter target spell unless its controller pays {X}. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
+    }
+  ],
+  "sink": []
+}

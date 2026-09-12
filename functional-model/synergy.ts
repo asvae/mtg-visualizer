@@ -1135,6 +1135,14 @@ export const ZONE_MOVEMENT_NAMES: ReadonlyArray<{ from?: string; to: string; nam
   { from: 'Library', to: 'Hand', name: 'tutor' },
   { from: 'Graveyard', to: 'Hand', name: 'regrowth' },
   { from: 'Graveyard', to: 'Battlefield', name: 'reanimate' },
+  // The Water Crystal/fin-85 (2026-09-12) — its own real "{4}{U}{U}, {T}:
+  // Each opponent mills..." activated ability is the first real card in
+  // the pool with a Library->Graveyard fact (checked: zero prior facts
+  // with this exact `(from, to)` pair before this one) — named after the
+  // real MTG term ("mill" is itself Comprehensive Rules glossary
+  // vocabulary, not a colloquialism — same "real, not invented" bar
+  // `dies`/`tutor`/`reanimate` above already meet), not an invented word.
+  { from: 'Library', to: 'Graveyard', name: 'mill' },
 ];
 
 /** Looks up `ZONE_MOVEMENT_NAMES` for a specific `(from, to)` pair — `from: undefined` in a table entry means "matches any origin, including a real declared one" only when the fact ITSELF also omits `from` (an entry that only cares about `to` would be a different, broader kind of rule this table doesn't need yet — see its own doc comment's "grow only when forced" discipline). Returns `undefined` (not a fallback string) when nothing matches, so callers can tell "no friendly name yet" apart from "the name is itself falsy." */

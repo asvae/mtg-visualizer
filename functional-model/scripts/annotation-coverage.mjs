@@ -33,6 +33,7 @@ import { readFile } from 'node:fs/promises';
 
 export const ANNOTATED_CARD_SLUGS = new Set([
   'summon-bahamut',
+  'ardyn-the-usurper',
   'ultima-origin-of-oblivion',
   'adelbert-steiner',
   'aerith-rescue-mission',
@@ -77,6 +78,7 @@ export const ANNOTATED_CARD_SLUGS = new Set([
   'you-re-not-alone',
   'white-mage-s-staff',
   'the-wind-crystal',
+  'the-water-crystal',
   'combat-tutorial',
   'dreams-of-laguna',
   'cargo-ship',
@@ -84,6 +86,7 @@ export const ANNOTATED_CARD_SLUGS = new Set([
   'il-mheg-pixie',
   'ice-magic',
   'ice-flan',
+  'ultros-obnoxious-octopus',
   'ether',
   'jill-shiva-s-dominant-shiva-warden-of-ice',
   'edgar-king-of-figaro',
@@ -98,6 +101,21 @@ export const ANNOTATED_CARD_SLUGS = new Set([
   'qiqirn-merchant',
   'rook-turret',
   'sage-s-nouliths',
+  'scorpion-sentinel',
+  'swallowed-by-leviathan',
+  'ahriman',
+  'sahagin',
+  'valkyrie-aerial-unit',
+  'stuck-in-summoner-s-sanctum',
+  'y-shtola-rhul',
+  'black-mage-s-rod',
+  'stolen-uniform',
+  'travel-the-overworld',
+  'summon-leviathan',
+  'thief-s-knife',
+  'syncopate',
+  'summon-shiva',
+  'sleep-magic',
 ]);
 
 /**

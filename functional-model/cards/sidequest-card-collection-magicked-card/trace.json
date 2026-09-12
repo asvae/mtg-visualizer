@@ -1,18 +1,59 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 card(s) in hand",
-      "action": "\"onEnter\" trigger fires",
-      "result": "draws three cards, then discards two",
+      "setup": "you: 4 Island(s)",
+      "action": "real engine playthrough: cast -> real ETB draw/discard -> turn passage to end step (real graveyard-count check) -> transform -> real Crew 1 activation",
+      "result": "Sidequest: Card Collection is cast; its real ETB draws 3 cards then discards 2, bringing the graveyard to 8 (6 already there + 2 just discarded). Turn passage to the real end step auto-fires the \"if eight or more cards are in your graveyard\" trigger for real, genuinely reading the graveyard count — the condition holds, so the pilot represents the real transform into Magicked Card. Magicked Card is then crewed for real (Crew 1, tapping Ahriman) and becomes an artifact creature.",
       "raw": {
-        "result": "draws three cards, then discards two",
-        "trigger": "onEnter",
+        "result": "Sidequest: Card Collection is cast; its real ETB draws 3 cards then discards 2, bringing the graveyard to 8 (6 already there + 2 just discarded). Turn passage to the real end step auto-fires the \"if eight or more cards are in your graveyard\" trigger for real, genuinely reading the graveyard count — the condition holds, so the pilot represents the real transform into Magicked Card. Magicked Card is then crewed for real (Crew 1, tapping Ahriman) and becomes an artifact creature.",
         "you": {
-          "handCount": 2
-        }
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {}
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Sidequest: Card Collection",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sidequest: Card Collection"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sidequest: Card Collection"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sidequest: Card Collection"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sidequest: Card Collection"
+      },
+      {
+        "fn": "enters",
+        "card": "Sidequest: Card Collection",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Sidequest: Card Collection",
@@ -21,15 +62,18 @@
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "discard",
@@ -39,51 +83,131 @@
           "Forest",
           "Forest"
         ]
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onEndStep\" trigger fires",
-      "result": "no resolvable effect in this model (transform is not tracked as state)",
-      "raw": {
-        "result": "no resolvable effect in this model (transform is not tracked as state)",
-        "trigger": "onEndStep"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Sidequest: Card Collection",
-        "instanceId": 1,
-        "name": "onEndStep"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, back face",
-      "result": "back face: Magicked Card, a 4/4 flying Vehicle, enters as itself",
-      "raw": {
-        "result": "back face: Magicked Card, a 4/4 flying Vehicle, enters as itself",
-        "face": "back"
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Magicked Card",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": ""
       },
       {
-        "fn": "enters",
+        "fn": "phase",
+        "phase": "CombatBegin",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDamage",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatEnd",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main2",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 8,
+        "creatureCount": 2
+      },
+      {
+        "fn": "phase",
+        "phase": "EndOfTurn",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "transform",
+        "card": "Sidequest: Card Collection",
+        "into": "Magicked Card"
+      },
+      {
+        "fn": "activate",
         "card": "Magicked Card",
         "instanceId": 1,
-        "zone": "Battlefield"
+        "cost": "Crew 1 (tap creatures with total power 1 or more)"
+      },
+      {
+        "fn": "tap",
+        "target": "Ahriman",
+        "id": 19,
+        "controller": "you"
+      },
+      {
+        "fn": "animate",
+        "target": "Sidequest: Card Collection",
+        "id": 12,
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Sidequest: Card Collection ({3}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 5
+      },
+      {
+        "label": "Advance one step",
+        "from": 11
+      },
+      {
+        "label": "Advance one step",
+        "from": 12
+      },
+      {
+        "label": "Advance one step",
+        "from": 13
+      },
+      {
+        "label": "Advance one step",
+        "from": 14
+      },
+      {
+        "label": "Advance one step",
+        "from": 15
+      },
+      {
+        "label": "Advance one step",
+        "from": 16
+      },
+      {
+        "label": "Advance one step",
+        "from": 17
+      },
+      {
+        "label": "Crew 1: tap Ahriman",
+        "from": 20
+      },
+      {
+        "label": "Resolve",
+        "from": 22
       }
     ]
   }

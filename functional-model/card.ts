@@ -628,13 +628,39 @@ export interface AlternateCost {
  * The Wind Crystal's own "White spells you cast cost {1} less to cast" —
  * see ENGINE_GAPS.md gap #7) but is a BROADCAST effect (applies to spells
  * OTHER than itself, gated on color, not on this card's own chosen target)
- * — a genuinely different mechanism from this self-discount shape, not
- * modeled here; same for a cost reduction on an ACTIVATED ABILITY's own
- * cost rather than a spell's (Qiqirn Merchant, same gap writeup).
+ * — a genuinely different mechanism from this self-discount shape, modeled
+ * separately as `SpellCostReductionGrant` below; same for a cost reduction
+ * on an ACTIVATED ABILITY's own cost rather than a spell's (Qiqirn
+ * Merchant, same gap writeup, `ActivationCostReduction` below).
+ *
+ * **`perControlled` (closed 2026-09-12, Travel the Overworld/fin-82's
+ * migration) — a real board-state-COUNTED discount on THIS SAME card's own
+ * cast cost**, unconditional (no chosen-target gate at all — mutually
+ * exclusive with `amount`/`condition` above, which is why both are now
+ * optional instead of required). Real Forge citation:
+ * `res/cardsfolder/t/travel_the_overworld.txt` (Travel the Overworld's own
+ * real shipped script) declares `K:Affinity:Town` — real Forge (checked
+ * against `tmp/mtg-forge`'s own source, not guessed) expands that keyword
+ * into EXACTLY the `ReduceCost$`+board-count pair this doc comment already
+ * describes: `forge-game/.../keyword/Keyword.java` line 12 (`AFFINITY`) +
+ * `forge-game/.../card/CardFactoryUtil.java`'s `addStaticAbility`
+ * (~lines 3749-3766) generates `Mode$ ReduceCost | ValidCard$ Card.Self |
+ * Type$ Spell | Amount$ AffinityX | EffectZone$ All` paired with a
+ * dynamically-built `SVar:AffinityX:Count$Valid Town.YouCtrl` — the exact
+ * same underlying "costs {1} less per [type] you control" reduction Qiqirn
+ * Merchant's `ActivationCostReduction` already models on the ACTIVATION
+ * side, here on a spell's own CAST cost. Real printed text: "This spell
+ * costs {1} less to cast for each Town you control." `engine.ts`'s
+ * `effectiveCastCost` computes the real discount the exact same way
+ * `effectiveActivationCost` already does for `ActivationCostReduction` —
+ * `amountPerMatch * (real permanents `caster` controls whose subtypes
+ * include `subtype`)` — re-tallied fresh at cast time, not derived from a
+ * fixed number. Only a bare-subtype board count is modeled, same scope
+ * `ActivationCostReduction` already restricts itself to.
  */
 export interface CostReduction {
-  /** Generic mana reduced (Forge's own `Amount$`) — only a fixed integer generic-mana discount is modeled; a variable/dynamic amount (e.g. "for each X you control") would need a `Computed`-style hook, not built here since no real card in this pool needs one yet. */
-  amount: number;
+  /** Generic mana reduced (Forge's own `Amount$`) — only a fixed integer generic-mana discount is modeled; a variable/dynamic amount (e.g. "for each X you control") would need a `Computed`-style hook, not built here since no real card in this pool needs one yet. Omit when `perControlled` is used instead. */
+  amount?: number;
   /**
    * What has to be true about the caster's OWN chosen target (Forge's
    * `ValidTarget$`) for the reduction to apply. `'tappedCreatureTarget'`
@@ -644,8 +670,12 @@ export interface CostReduction {
    * permanent" (Fate of the Sun-Cryst's own resolved EFFECT can target any
    * nonland permanent, a broader pool than the reduction's own narrower
    * condition — a real, textually-precise distinction, not a simplification).
+   * Omit when `perControlled` is used instead (a board-counted discount has
+   * no target condition at all).
    */
-  condition: 'tappedCreatureTarget';
+  condition?: 'tappedCreatureTarget';
+  /** Board-state-COUNTED discount — see this interface's own doc comment above. Mutually exclusive with `amount`/`condition`; a card in this pool needs only one shape at a time. */
+  perControlled?: { amountPerMatch: number; subtype: string };
 }
 
 /**
@@ -667,6 +697,11 @@ export interface CostReduction {
  * `mana.ts`'s `reduceGenericCost` already does for `CostReduction`. Only a
  * bare-subtype board count is modeled (no compound filter, e.g. "Town you
  * control that's also tapped") since no real card in this pool needs one.
+ *
+ * Same shape now ALSO reused on `CostReduction.perControlled` below for the
+ * CAST-side case (Travel the Overworld's own "Affinity for Towns" — CR
+ * 601.2f, the same real board-count mechanism just applied to a spell's own
+ * cast cost instead of an activated ability's).
  */
 export interface ActivationCostReduction {
   amountPerMatch: number;
@@ -854,7 +889,41 @@ export type Keyword =
    * PLAYER's own Battlefield permanents (same player-level scope
    * `'LifegainDouble'` uses, not a per-creature one).
    */
-  | 'TwoHeadedCoin';
+  | 'TwoHeadedCoin'
+  /**
+   * Real CR 614.2 continuous replacement on the UNTAP event itself (ENGINE_GAPS.md,
+   * new narrow closure — Sleep Magic's own migration, fin/74) — genuinely
+   * different in kind from the existing STUN-counter untap-replacement
+   * (`state.untap`'s own counter check, ENGINE_GAPS.md's "Stun and finality
+   * counters" section): stun is a ONE-SHOT per-counter consumption (the
+   * permanent untaps again once every counter is gone), this is an
+   * unconditional, always-on lockdown for as long as the source is still
+   * attached — real Forge citation, `res/cardsfolder/s/sleep_magic.txt`:
+   * `R:Event$ Untap | ActiveZones$ Battlefield | ValidCard$ Creature.EnchantedBy
+   * | ValidStepTurnToController$ You | Layer$ CantHappen` (a genuine 614
+   * "the event doesn't happen at all" replacement, not a counter-removal
+   * substitution). Same "not a literal `K:` line, approximated via the
+   * existing keyword-grant machinery, checked at the one real mutation
+   * chokepoint" treatment as `'DamagePrevention'`/`'LifegainDouble'` above —
+   * checked in `state.untap` against the untapping card's own
+   * `effectiveKeywords`, granted (never printed) via `continuousKeywordGrants`'
+   * existing `equippedBySelf` targeting (the SAME real `attachedToId`
+   * Equipment-broadcast mechanism an Aura's own attachment uses too — Forge's
+   * own `ValidCard$ Creature.EnchantedBy` is the Aura-flavored spelling of the
+   * identical "whatever this permanent is currently attached to" relationship
+   * `state.ts`'s `qualifiesForContinuousGrant` already generalizes over both
+   * Equipment and Auras). **Real, deliberate scope limit, checked before
+   * building this**: only ONE real FIN card needs a continuous (non-counter)
+   * untap lockdown at all — Stuck in Summoner's Sanctum (fin's own second Aura)
+   * has the identical clause but is NOT migrated to this keyword in this pass
+   * (out of scope — only Sleep Magic's own migration is in scope here); a
+   * general 614 replacement-effect dispatcher (letting an arbitrary event be
+   * intercepted/replaced) is still NOT built, same accepted scope cut
+   * ENGINE_GAPS.md's gap #8 already documents for damage-prevention shields —
+   * this is one more narrow hook at one real mutation chokepoint, not that
+   * general mechanism.
+   */
+  | 'CantUntap';
 
 /**
  * Shared recipient-targeting/timing shape for a continuous, QUERY-TIME

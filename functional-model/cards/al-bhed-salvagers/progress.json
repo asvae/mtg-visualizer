@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
-  "textCoverageAudited": false,
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the unified Fact model (SYNERGY_DESIGN.md): baseline self-cast/self-enters/self-dies facts, real lifeloss/lifegain sources, and the onDies sink (dies, controller:you, target:{types:{hasAny:[Creature,Artifact]}}) — no excludeSelf, since the printed trigger explicitly covers self dying too (this creature OR another creature/artifact you control dies), unlike G'raha Tia's own excludeSelf case. All facts carry required annotations (oracle/typeLine) via annotations-authoring.json + compute-annotations.mjs. scenarios.ts rewritten as a real engine-piloted trace (cast -> resolve -> lethal one-sided combat vs. Hill Gigas -> real 704.5g death -> onDies fired manually) replacing the old flat harness.ts trigger-only scenario, which produced no evidence for the new baseline facts. The Masamune's own combo scenario (cards/the-masamune/scenarios.ts) already demonstrates this same card's death+trigger doubling under its own triggerDoubling grant, written to its own trace.json (run-scenarios.mjs only runs a card's own scenarios.ts, so this card's own trace.json still needed independent evidence).",
+  "textCoverageAudited": true,
   "knownGaps": []
 }
