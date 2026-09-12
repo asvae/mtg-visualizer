@@ -10,19 +10,28 @@ export const machinistsArsenal: CardDefinition = {
   // dependent P/T grant (layer 7c, but recalculated off board state rather
   // than a fixed delta), same "no live-recalculated CDA machinery" gap
   // gaelicat/adelbert-steiner's own comments already document; kept as
-  // real text. Structurally identical clause shape to dragoon-s-lance's own
-  // "+1/+0 and is a Knight" (an Equipment's static bonus/type grant applied
-  // to whatever it's attached to) — same real, honest-but-structurally-inert
-  // Facts exist for both halves (see synergy.json): no continuous-effect/
-  // layer-7c pipeline anywhere in this model applies a static bonus or a
-  // dynamic type grant to ANOTHER permanent (checked card.ts's `animate`
-  // dispatch: self-only). The per-artifact-count SCALING factor is
-  // deliberately left unrepresented in the pump fact's own shape — same
-  // "bare event, no numeric sub-fields" treatment adelbert-steiner's own
-  // live-recalculated per-equipment-count pump already established (a fixed
-  // delta like dragoon-s-lance's own flat +1/+0 gets real `power`/
-  // `toughness` fields; a scaling count does not).
+  // real text. UNLIKE dragoon-s-lance/paladin-s-arms/crystal-fragments/
+  // white-mage-s-staff/sage-s-nouliths' own identical-SHAPED "+N/+N" clause
+  // (now real via `continuousPTGrants`, ENGINE_GAPS.md gap #14 fully
+  // closed 2026-09-12), THIS card's own bonus is genuinely VARIABLE (scales
+  // with the controller's own artifact count), not a fixed delta —
+  // `continuousPTGrants` is deliberately a plain `{power, toughness}` NUMBER
+  // pair (see `card.ts`'s own doc comment), so it structurally cannot
+  // represent this clause; stays real `staticAbilities` text only, a real,
+  // separate, still-open gap (same class as Gaelicat's/Magitek Infantry's
+  // own threshold-CDA gaps, NOT closed by this pass). The per-artifact-count
+  // SCALING factor is deliberately left unrepresented in the pump fact's own
+  // shape — same "bare event, no numeric sub-fields" treatment
+  // adelbert-steiner's own live-recalculated per-equipment-count pump
+  // already established.
+  //
+  // The "is an Artificer" TYPE-grant half is a DIFFERENT, independently
+  // fixed clause (a bare subtype addition, not scaled by anything) — closed
+  // for real below via `continuousTypeGrants`, same mechanism the sibling
+  // cards' own "is a Knight/Cleric/Wizard" grants now use.
   staticAbilities: ['Equipped creature gets +2/+2 for each artifact you control and is an Artificer in addition to its other types.'],
+
+  continuousTypeGrants: [{ types: ['Artificer'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — same real ETB mechanic (create a Hero token, attach this
   // to it) as dragoon-s-lance's own onEnter trigger; independent of the

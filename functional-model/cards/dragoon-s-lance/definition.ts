@@ -7,26 +7,30 @@ export const dragoonsLance: CardDefinition = {
   typeLine: 'Artifact — Equipment',
 
   // "Equipped creature gets +1/+0 and is a Knight in addition to its other
-  // types" / "During your turn, equipped creature has flying" — 2026-09-12
-  // real split: the FLYING clause is now real, executable machinery
-  // (`continuousKeywordGrants`'s new `equippedBySelf` mode, ENGINE_GAPS.md
-  // gap #14 generalized — ask that reused the exact turn-conditional
-  // mechanism just built for Dion/Ardyn, with a different recipient
-  // predicate: whatever creature THIS Equipment is currently attached to,
-  // via the real, live `RealCard.attachedToId` link, not a subtype match).
-  // The +1/+0 PUMP and "is a Knight" TYPE-grant clauses stay real text
-  // only, same real structural gaps `crystal-fragments-summon-alexander`'s
-  // own equivalent pump clause already established (no continuous-effect/
-  // layer-7c pipeline anywhere in this model for a static bonus flowing
-  // from an Equipment to whatever it's attached to) — checked `card.ts`'s
-  // own `animate` dispatch (only ever self-targeted, `actions.animate
-  // (ctx.self, ...)`) and `layers.ts`'s own header for a dynamic TYPE
-  // grant to ANOTHER permanent: none exists (only Phantom Train's own
-  // self-animate). A real Fact still exists for both (see synergy.json),
-  // honest-but-structurally-inert, not fabricated trace evidence.
+  // types" / "During your turn, equipped creature has flying" — ALL THREE
+  // real, executable machinery now (ENGINE_GAPS.md gap #14, fully closed
+  // 2026-09-12): the Flying clause was already real via
+  // `continuousKeywordGrants`'s `equippedBySelf` mode; the +1/+0 P/T bonus
+  // and "is a Knight" type grant are now the SAME real, query-time
+  // mechanism generalized to two new sibling fields
+  // (`continuousPTGrants`/`continuousTypeGrants`, `card.ts`) — a fixed
+  // delta and a creature-subtype broadcast, both re-checked live against
+  // whatever creature `RealCard.attachedToId` currently names, exactly
+  // like the Flying grant already was. Real Forge citation (dragoons_lance.
+  // txt, ../mtg-forge): all three clauses are ONE `S:Mode$ Continuous |
+  // Affected$ Creature.EquippedBy | AddPower$ 1 | AddType$ Knight |
+  // Description$ ...` static ability plus a second `AddKeyword$ Flying |
+  // Condition$ PlayerTurn` one — this engine models them as three
+  // independent grant fields rather than one combined ability, since
+  // `state.ts`'s own layer split (P/T vs. type vs. keyword) already keeps
+  // them in separate read paths (`effectivePT`/`effectiveSubtypes`/
+  // `effectiveKeywords`) regardless of how Forge's own single ability
+  // groups them.
   staticAbilities: ['Equipped creature gets +1/+0 and is a Knight in addition to its other types.'],
 
   continuousKeywordGrants: [{ keywords: ['Flying'], includeSelf: false, equippedBySelf: true, onlyDuringYourTurn: true }],
+  continuousPTGrants: [{ power: 1, toughness: 0, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Knight'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — "When this Equipment enters, create a 1/1 colorless Hero
   // creature token, then attach this to it." A real ETB trigger (Forge's

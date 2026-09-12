@@ -74,6 +74,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotFireTrigger(pilot, weaponsVendor, ctx, actions, 'onBeginCombat', 'Beginning of combat on your turn — pay {1}, attach the Equipment');
 
   const result =
-    "Weapons Vendor is cast for {3}{W} and resolves, drawing a card for real on ETB; a real Equipment (Dragoon's Lance) and a real second creature (Coeurl) are already on the battlefield when real turn passage reaches the beginning of combat on your turn, so the optional pay-{1} ability fires for real and attaches the Equipment to Coeurl.";
+    "Weapons Vendor is cast for {3}{W} and resolves, drawing a card on ETB; an Equipment (Dragoon's Lance) and a second creature (Coeurl) are already on the battlefield when turn passage reaches the beginning of combat on your turn, so the optional pay-{1} ability fires and attaches the Equipment to Coeurl.";
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB draw -> real turn passage to beginning of combat -> pay {1}, attach Equipment to a creature', result)];
 }

@@ -14,11 +14,18 @@
 //   - Untap (`Untap.java` ~line 86-90, `doUntap()`: untaps the active
 //     player's own battlefield), Draw (`PhaseHandler.java` ~line 268-273:
 //     `playerTurn.drawCard()`), and Cleanup (514.1's own discard-to-
-//     maximum-hand-size, 514.2's own damage-clearing — NOT the "until end
-//     of turn effects end" half, since `layers.ts`'s own duration-not-
-//     tracked simplification is unchanged/accepted) are the automatic
-//     actions modeled. Upkeep/end-step TRIGGER auto-firing (as opposed to
-//     these automatic non-trigger actions) is `engine.ts`'s own job
+//     maximum-hand-size, 514.2's own damage-clearing, PLUS 514.2's "until
+//     end of turn" half for any `grantKeyword` call that opted into real
+//     tracking via `opts.untilEndOfTurn` — added 2026-09-12,
+//     `state.ts`'s own `clearUntilEndOfTurnKeywordGrants`; `layers.ts`'s
+//     own BROADER duration-not-tracked simplification, covering every
+//     other "until end of turn" effect shape — pump/type-change/etc. with
+//     no opt-in flag of their own — is otherwise unchanged/accepted), PLUS
+//     508.1's own "attacked this turn" reset (`state.ts`'s own
+//     `clearAttackedThisTurn`, added 2026-09-12, ENGINE_GAPS.md gap #16 —
+//     The Lunar Whale's own "as long as it attacked this turn" needs this)
+//     are the automatic actions modeled. Upkeep/end-step TRIGGER auto-firing
+//     (as opposed to these automatic non-trigger actions) is `engine.ts`'s own job
 //     (`fireOnPhaseEnterTriggers`, since it needs `resolveCard`/
 //     `CardDefinition`, which this lower-level file deliberately doesn't
 //     import).
@@ -111,9 +118,25 @@ function runPhaseEntryAction(state: GameState, turn: TurnState, players: RealPla
     // `state.discard`'s own doc comment already notes its "front of hand"
     // simplification (real Forge lets the player choose).
     if (active.hand.length > 7) state.discard(active, active.hand.length - 7);
-    // 514.2's damage-clearing half only — NOT "until end of turn effects
-    // end" (layers.ts's own duration-not-tracked simplification, unchanged).
+    // 514.2's damage-clearing half, plus the real "until end of turn"
+    // keyword-grant half for any grant that opted into tracking
+    // (`state.ts`'s own `grantKeyword` `opts.untilEndOfTurn`/
+    // `clearUntilEndOfTurnKeywordGrants`) — `layers.ts`'s own broader
+    // duration-not-tracked simplification (pump/type-change/etc. effects
+    // with no "until end of turn" flag at all) is otherwise unchanged.
     state.clearAllDamage();
+    state.clearUntilEndOfTurnKeywordGrants();
+    // Real per-turn coin-flip tracking reset (ENGINE_GAPS.md gap #15,
+    // `state.ts`'s own `flippedCoinThisTurn`/`flipCoin` doc comments for the
+    // real Forge citation) — game-wide (any player, not just the active
+    // one), same scope `clearAllDamage`/`clearUntilEndOfTurnKeywordGrants`
+    // already use.
+    state.resetFlippedCoinThisTurn();
+    // Real 508.1 "attacked this turn" reset (ENGINE_GAPS.md gap #16,
+    // `state.ts`'s own `clearAttackedThisTurn` doc comment for the real
+    // Forge citation) — same "real, game-wide, once per Cleanup" shape as
+    // the two calls just above.
+    state.clearAttackedThisTurn();
     // Real 305.1's own per-turn land-drop counter reset (`Player.onCleanupPhase`'s
     // own `resetLandsPlayedThisTurn()` call, `Player.java` ~line 2473) — only
     // the ACTIVE player's own count, same "only the active player's own

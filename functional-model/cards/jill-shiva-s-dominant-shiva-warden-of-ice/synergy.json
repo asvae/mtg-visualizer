@@ -1,42 +1,275 @@
 {
   "source": [
     {
-      "id": "self-battlefield",
-      "zone": "Battlefield",
-      "controller": "you",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": 1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Battlefield",
+      "target": {
+        "types": {
+          "not": [
+            "Land"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 18,
+          "end": 85
+        }
+      ]
+    },
+    {
+      "event": "tap",
       "subject": "self",
+      "target": "self",
       "value": 1,
-      "sourceText": "(baseline — Jill, Shiva's Dominant is itself a creature permanent on your battlefield, and returns there transformed after each activation/Cold Snap).",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 11,
+          "end": 14
+        }
+      ]
     },
     {
-      "id": "bounce-nonland",
-      "zone": "Hand",
-      "controller": "opp",
+      "to": "Exile",
+      "from": "Battlefield",
+      "subject": "self",
+      "controller": "you",
       "value": 1,
-      "sourceText": "When Jill enters, return up to one other target nonland permanent to its owner's hand.",
-      "highlight": "return up to one other target nonland permanent to its owner's hand",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 16,
+          "end": 99
+        }
+      ]
     },
     {
-      "id": "mesmerize-unblockable",
+      "to": "Battlefield",
+      "from": "Exile",
+      "event": "entersBattlefield",
+      "subject": "self",
+      "target": "self",
+      "controller": "you",
+      "value": 1,
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 16,
+          "end": 99
+        }
+      ]
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
+      "target": "self",
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 47,
+          "end": 65
+        }
+      ]
+    },
+    {
       "event": "grantKeyword",
       "keyword": "Unblockable",
-      "value": 3,
-      "sourceText": "I, II — Mesmerize — Target creature can't be blocked this turn.",
-      "highlight": "Target creature can't be blocked this turn",
-      "face": "back"
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 20,
+          "end": 62
+        }
+      ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Unblockable",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 20,
+          "end": 62
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "controller": "opp",
+      "target": {
+        "types": {
+          "has": [
+            "Land"
+          ]
+        }
+      },
+      "targeted": false,
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 18,
+          "end": 54
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "from": "Battlefield",
+      "subject": "self",
+      "controller": "you",
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 56,
+          "end": 118
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "from": "Exile",
+      "event": "entersBattlefield",
+      "subject": "self",
+      "target": "self",
+      "controller": "you",
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 56,
+          "end": 118
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "bounce-target",
-      "zone": "Battlefield",
-      "controller": "opp",
+      "to": "Battlefield",
+      "types": {
+        "not": [
+          "Land"
+        ]
+      },
       "value": 1,
-      "sourceText": "return up to one other target nonland permanent to its owner's hand",
-      "highlight": "return up to one other target nonland permanent to its owner's hand",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 18,
+          "end": 85
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 20,
+          "end": 62
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "value": 1,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 18,
+          "end": 54
+        }
+      ]
     }
   ]
 }

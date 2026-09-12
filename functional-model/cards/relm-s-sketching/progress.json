@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to unified v2 Fact model (annotations required, cast/graveyard baseline + real targeted copy-token creation).",
   "textCoverageAudited": false,
   "knownGaps": []
 }

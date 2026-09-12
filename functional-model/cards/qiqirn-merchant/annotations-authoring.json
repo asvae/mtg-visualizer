@@ -1,0 +1,35 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Beast Citizen",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Beast Citizen",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "{1}, {T}: Draw a card, then discard a card.",
+      "highlight": "{T}"
+    },
+    {
+      "sourceText": "{1}, {T}: Draw a card, then discard a card.",
+      "highlight": "Draw a card"
+    },
+    {
+      "sourceText": "{1}, {T}: Draw a card, then discard a card.",
+      "highlight": "then discard a card"
+    },
+    {
+      "sourceText": "{7}, {T}, Sacrifice this creature: Draw three cards. This ability costs {1} less to activate for each Town you control.",
+      "highlight": "Sacrifice this creature"
+    },
+    {
+      "sourceText": "{7}, {T}, Sacrifice this creature: Draw three cards. This ability costs {1} less to activate for each Town you control.",
+      "highlight": "Draw three cards"
+    }
+  ],
+  "sink": []
+}

@@ -145,6 +145,6 @@ export function runEngineScenarios(): TraceResult[] {
   }
 
   const result =
-    'Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life — onLifeGained fires manually, putting a real +1/+1 counter on herself; another real turn later she attacks again, blocked by a creature that deals real lethal damage back (a genuine 704.5g SBA destruction) — onDies then fires manually, spreading X real +1/+1 counters onto the other legendary creature on the battlefield.';
+    'Aerith enters; turn passage clears summoning sickness, then attacks unblocked, gaining Lifelink life — onLifeGained fires manually, putting a +1/+1 counter on herself; another turn later she attacks again, blocked by a creature that deals lethal damage back (a 704.5g SBA destruction) — onDies then fires manually, spreading X +1/+1 counters onto the other legendary creature on the battlefield.';
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real Lifelink -> onLifeGained -> real lethal combat (SBA) -> onDies', result)];
 }

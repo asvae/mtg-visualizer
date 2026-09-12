@@ -382,43 +382,103 @@ crewed Vehicle becomes a creature PERMANENTLY rather than "until end of
 turn" — the same simplification the 3 real cards' own `effects:
 [animate]` already committed to before this pass touched anything.
 
-### Non-basic mana sources — a narrow real slice, `mana.ts`/`state.ts`/`engine.ts`
+### Non-basic mana sources — `mana.ts`/`state.ts`/`engine.ts`
 
 `mana.ts` only ever recognized basic lands (subtype-inferred color).
 Checked every real `{T}: Add ...` static-ability string across the pool
 (35 cards use one shape or another) and found 10 that fit a genuinely
 narrow, correct slice: an EXACT, single-color, unrestricted
-`"{T}: Add {X}."` string (`manaAbilityColorFromStaticText`). A dual/
-choice-of-color ability, a restricted one, a colorless one, or a variable
-one are all explicitly still NOT recognized (see this file's own doc
-comment for exactly why each is a bigger, separate lift).
+`"{T}: Add {X}."` string (`manaAbilityColorFromStaticText`), PLUS
+(closed 2026-09-12, ENGINE_GAPS.md gap #5's own dual/choice-of-color
+remainder) 12 more that fit an EXACT `"{T}: Add {X} or {Y}."` string
+(`manaAbilityColorsFromStaticText` — already existed for
+`scripts/prefill-mana-facts.mjs`'s own synergy-FACT generation, now ALSO a
+real payment/affordability primitive). A restricted ability or a variable
+one are still explicitly NOT recognized (see this file's own doc comment
+for exactly why each is a bigger, separate lift — a real spendable-mana-
+pool mechanism for the former, teaching `payMana` that one tap can yield
+more than one mana unit for the latter).
 
 The hard part isn't the text match — it's that `RealCard` carries no
 live `CardDefinition` reference to re-derive "does this thing make mana"
-from later. So the color is derived ONCE, for real, at the exact moment
-a permanent resolves onto the battlefield (`resolveTop`, same hook Saga
-automation and `enteredThisTurn` already use), and stored on a new
-`RealCard.manaAbility` field:
+from later. So the color(s) are derived ONCE, for real, at the exact
+moment a permanent resolves onto the battlefield (`resolveTop`/`playLand`,
+same hook Saga automation and `enteredThisTurn` already use), and stored
+on `RealCard.manaAbility` — widened from a bare `ManaColor` to
+`ManaColor | ManaColor[]` for this pass:
 
 ```ts
-real.manaAbility = manaAbilityColorFromStaticText(resolved.card.staticAbilities);
+real.manaAbility = deriveManaAbility(resolved.card.staticAbilities); // single-color match first, dual-color fallback
 ```
 
-`mana.ts`'s own `manaColorOf` then checks a basic-land subtype first,
-falling back to `card.manaAbility` — so `untappedManaSources`/
-`canAfford`/`payMana` all pick up a real non-Land mana source for free,
-no changes needed to their own logic.
+`mana.ts`'s own `sourceColors(card): ManaColor[]` (renamed/generalized from
+the old single-`ManaColor`-returning `manaColorOf`) checks a basic-land
+subtype first, falling back to `card.manaAbility` (normalized to an array
+either way) — so `untappedManaSources` picks up a real non-Land mana
+source for free either way. `canAfford`/`payMana` themselves needed a real
+rewrite, not just a wider return type: a dual source can pay EITHER of its
+two colors, which is a genuine assignment problem (which source pays which
+requirement) rather than a fixed per-color lookup. `mana.ts`'s new
+`assignManaRequirements(sources, requirements)` — exhaustive backtracking,
+matching each `{colors: ManaColor[]}` requirement (a fixed pip is
+`{colors:[X]}`, a Hybrid pip, see below, is `{colors:[X,Y]}`) against the
+first not-yet-used source whose own producible colors overlap, undoing and
+retrying on failure — is shared by this closure AND the Hybrid-pip closure
+below, since both are the exact same shape from the requirement side; only
+the SOURCE side (a source with more than one producible color) is new
+here. `canAfford`/`payMana` were rewritten around this shared assignment
+(verified NOT to change behavior for the ordinary single-color case — same
+source-iteration order preserved).
 
-The one real wrinkle: 3 of the 10 qualifying cards (Druid of the Cowl,
-Goobbue Gardener, Llanowar Elves) are CREATURES, and 302.6's own
-summoning-sickness restriction genuinely applies to a `{T}` mana ability
-exactly like any other `{T}` ability — a basic land is never sick, so
-this was never an issue before. A new `payableManaSources(engine, player)`
-wraps `untappedManaSources`, additionally excluding a still-sick creature
-mana source (Haste exempts it, same check `canActivateAbility` already
-does) — `engine.ts`'s 4 call sites (`canCastSpell`/`castSpell`/
+The one real wrinkle (unchanged from before this pass): 3 of the 10
+single-color-only qualifying cards (Druid of the Cowl, Goobbue Gardener,
+Llanowar Elves) are CREATURES, and 302.6's own summoning-sickness
+restriction genuinely applies to a `{T}` mana ability exactly like any
+other `{T}` ability — a basic land is never sick, so this was never an
+issue before. A new `payableManaSources(engine, player)` wraps
+`untappedManaSources`, additionally excluding a still-sick creature mana
+source (Haste exempts it, same check `canActivateAbility` already does) —
+`engine.ts`'s 4 call sites (`canCastSpell`/`castSpell`/
 `canActivateAbility`/`activateAbility`) all use this wrapper now instead
-of calling `untappedManaSources` directly.
+of calling `untappedManaSources` directly. None of the 12 dual-color cards
+are creatures (all Town-cycle lands), so this doesn't add a new
+sickness-adjacent case.
+
+### Hybrid mana pips and `{X}` costs — `mana.ts`/`engine.ts` (closed 2026-09-12, ENGINE_GAPS.md gap #6)
+
+`parseManaCost` used to throw on Hybrid (`{G/U}`-shaped), Phyrexian, `{X}`,
+and a colorless-in-a-cost `{C}` pip. Grepped every real `manaCost:` string
+across the ~321-card pool first: exactly 3 real cards need Hybrid or `{X}`
+(Thranduil, Sindarin Liege // Silvan Rally's `{2}{G/U}{G/U}`/
+`{1}{G/U}{G/U}`; Choco Comet's `{X}{R}{R}`; Doppelgang's
+`{X}{X}{X}{G}{U}`) — zero need Phyrexian or a `{C}` cast-cost pip, so those
+two stay unmodeled (fail-loud, not silently mis-costed).
+
+`ParsedManaCost` gained two fields: `hybrid: ManaColor[][]` (one 2-color
+entry per printed Hybrid pip) and `xCount: number` (a COUNT of `{X}`
+symbols, not a value — CR 107.3c: multiple `{X}`s in one cost share the
+SAME chosen value). Paying a Hybrid pip reuses the exact same
+`assignManaRequirements` machinery the dual-color-SOURCE closure above
+introduced — a Hybrid pip is just a requirement accepting 2 colors instead
+of 1. A new `resolveXCost(cost, x)` folds a caller-chosen `x` (default 0,
+a real CR 107.3b-legal choice) into `generic` before `canAfford`/`payMana`
+ever see the cost; `engine.ts`'s `effectiveCastCost`/`canCastSpell`/
+`castSpell` (and `engine-trace.ts`'s `pilotCast`) all take a new optional
+`x` param threaded the same way `declaredTarget` already is — `x` only
+affects affordability/payment, a caller wanting the card's own EFFECT to
+see the same value must also set `ctx.xPaid` itself (`card.ts`'s
+pre-existing field). `formatManaCost` renders both a resolved `{X}` cost
+(the real paid total, e.g. `{3}{R}{R}`, not the printed template) and real
+Hybrid pips (`{G/U}`); `basicLandsFor` provisions one land per Hybrid pip
+too (arbitrarily the pip's first printed color — a real payer could choose
+either, this helper just needs ONE legal board state).
+
+Neither Choco Comet's, Doppelgang's, nor Thranduil // Silvan Rally's own
+`scenarios.ts` needed touching — `harness.ts` never calls `parseManaCost`
+at all (a scenario's own board setup is manual, not derived from
+`manaCost`), so this gap only ever blocked `engine.ts`'s real-pilot
+`canCastSpell`/`castSpell` path, which none of these 3 cards' own
+scenarios use.
 
 ### Sacrifice-cost activated abilities — trusted, not re-paid, `unsupportedCostComponent`
 
@@ -460,6 +520,98 @@ a real, separate, unbuilt gap here — so genuinely sacrificing `self` as
 part of paying the cost would silently break both cards (their own
 `ctx.self` would report post-zone-change-reset values instead). Left
 unsupported rather than risk that regression.
+
+### "Play the top card of your library" (CR 601/305) and "attacked this turn" (508.1) — `engine.ts`/`state.ts`/`card.ts` (closed 2026-09-12, ENGINE_GAPS.md gap #16)
+
+The Lunar Whale's own "As long as The Lunar Whale attacked this turn, you
+may play the top card of your library" needed two independent, real
+primitives:
+
+```ts
+// engine.ts — reuses playLand/canPlayLand or castSpell/canCastSpell
+// verbatim, dispatched on the revealed card's own real typeLine (real
+// Forge citation: PlayEffect.java's own identical land-vs-spell branch).
+canPlayFromLibraryTop(engine, caster, cardReal, card); // ALSO checks cardReal is genuinely caster.library[0]
+playFromLibraryTop(engine, caster, cardReal, card, ctx, actions);
+
+// state.ts — a real, persistent per-permanent flag, not a fresh-each-combat
+// list like GameEngine.attackers.
+card.attackedThisTurn; // set by declareAttackers, cleared by state.clearAttackedThisTurn() at Cleanup
+```
+
+`card.ts`'s new `kind:'playFromLibraryTop'` Effect (no fields — this
+dispatch is total over whatever's on top, never scoped to a subset) peeks
+`ctx.you.getCardsIn('Library')[0]` and calls a new `Actions.play(player,
+target, card?)` — the `card` param (a new `EffectContext.topLibraryCard`,
+threaded in by whoever built the `ctx`) is REQUIRED for any real dispatch,
+since `RealCard` carries no live `CardDefinition` reference (the same
+"caller supplies the real fact" convention `castFrom`/`declaredTarget`
+already establish). `harness.ts`'s own `loggingActions.play` is a real but
+plain (no legality/mana) fallback; `engine-trace.ts`'s `pilotActions`
+overrides JUST this one method with the real `canPlayFromLibraryTop`/
+`playFromLibraryTop` dispatch, since only an engine-piloted caller has the
+`GameEngine` reference those need — every other `Actions` method stays
+`loggingActions`'s own shared implementation, reused as-is.
+
+`RealCard.attackedThisTurn` mirrors real Forge's own
+`CardDamageHistory.attackedThisTurn`/`hasAttackedThisTurn` (set via
+`setCreatureAttackedThisCombat`, cleared each turn by `newTurn()`) — a
+plain boolean, not a turn-number comparison, since clearing it at this
+engine's own Cleanup (the last phase before the next Untap) is functionally
+identical to Forge's own "clear at the start of a new turn."
+
+The Lunar Whale's own `definition.ts` wires both together via a
+`triggers: [{name:'playFromLibraryTop', effects:[{kind:'playFromLibraryTop'}]}]`
+entry — NOT a real CR 603 trigger (this clause is a continuous granted
+permission, not something that triggers), but reusing the same "named
+effect bundle, manually invoked via `pilotFireTrigger`" shape this engine
+already uses for a real triggered ability it can't auto-fire (Ultima
+Weapon's own `onEquippedAttacks`); a pilot script is responsible for only
+invoking it once `attackedThisTurn` is genuinely set (the engine primitive
+itself doesn't know about a specific card's own gating condition, same
+split `crewedBy`/`declaredTarget` already establish elsewhere). Its own
+`scenarios.ts` (`runEngineScenarios`) is also the FIRST real engine-piloted
+Crew scenario in the pool (`pilotActivate` extended to accept a
+`crewedBy: RealCard[]`, mirroring `canActivateAbility`/`activateAbility`'s
+pre-existing param) — every other `crewCost` card stayed on the flat
+`harness.ts` style specifically to sidestep the latent crew/second-ability
+collision bug (ENGINE_GAPS.md's own Crew entry), which doesn't apply here
+since The Lunar Whale has no second ability.
+
+**Real, still-open, adjacent gap**: The Regalia's own attack-triggered
+"reveal cards from the top of your library UNTIL you reveal a land" is an
+UNBOUNDED dig-until-a-match effect, genuinely different machinery from
+"look at exactly the top card, dispatch on its type" — `kind:
+'playFromLibraryTop'` deliberately isn't reused for it (see ENGINE_GAPS.md
+gap #16's own closure writeup for why forcing it would misrepresent an
+unbounded search as a single-card peek).
+
+### Trigger-doubling ("Panharmonicon effect") — new `triggers.ts` (closed 2026-09-12, ENGINE_GAPS.md gap #13)
+
+A real, general "a triggered ability triggers an additional time" mechanism
+— 3 real FIN cards need it (Cloud, Midgar Mercenary; The Masamune; Traveling
+Chocobo), each with a genuinely different gate, confirmed by grepping the
+pool for "additional time" before building anything narrower. `card.ts`'s
+new `CardDefinition.triggerDoubling?: TriggerDoublingGrant[]` declares the
+gate (`scope` — who can double; `causedBy`/`entersMatch` — which real cause
+qualifies); `state.ts`'s new `shouldDoubleTrigger` is the query-time check
+(same "recalculated on read" treatment `effectiveKeywords` already
+establishes for gap #14's continuous grants), consulted by a new file,
+`triggers.ts`'s `fireTrigger(state, card, ctx, actions, triggerName, cause?,
+onDoubled?)` — the ONE shared chokepoint every real trigger-firing call site
+in this codebase (`stack.ts`, `engine.ts`'s 3 dispatch sites, `saga.ts`,
+`harness.ts`'s scenario runner, `engine-trace.ts`'s `pilotFireTrigger`) now
+funnels a named trigger's resolution through, instead of calling
+`card.ts`'s `resolveCard` directly. `triggers.ts` is its own new file rather
+than living in `state.ts` or `engine.ts` specifically to avoid a genuine
+circular VALUE import (`engine.ts` already imports `{advanceSaga}` from
+`saga.ts` as a value; `saga.ts` calling back into a `fireTrigger` that lived
+in `engine.ts` would be a real runtime cycle neither file has today). See
+ENGINE_GAPS.md gap #13's own closure writeup for the full per-call-site
+migration, the 3 cards' real gate shapes, and a real, useful, genuinely
+unplanned consequence its own scenario surfaced (a card's own ETB doubling
+itself via a board-wide grant, when the card matches the grant's own
+`entersMatch` filter).
 
 ## In scope for this first slice
 
@@ -517,15 +669,26 @@ unsupported rather than risk that regression.
   `crewedBy` creature list) bypassing the free-text cost checks entirely,
   reusing the existing `animate` Effect/stack pipeline for resolution —
   see "Crew (702.121b/c)" above.
-- **Non-basic mana sources — narrow slice** — a real single-color,
-  unrestricted `{T}: Add {X}.` static ability derived at ETB onto a new
-  `RealCard.manaAbility` field, with real 302.6 summoning-sickness
-  enforcement for a creature mana source — see "Non-basic mana sources"
-  above.
+- **Non-basic mana sources — single- AND dual-color** — a real
+  unrestricted `{T}: Add {X}.` OR `{T}: Add {X} or {Y}.` static ability
+  derived at ETB onto `RealCard.manaAbility` (`ManaColor | ManaColor[]`),
+  with real 302.6 summoning-sickness enforcement for a creature mana
+  source and a genuine backtracking assignment (`assignManaRequirements`)
+  letting a dual source pay either of its two colors — see "Non-basic mana
+  sources" above.
+- **Hybrid mana pips and `{X}` costs** — real Hybrid (`{G/U}`-shaped) pips
+  (paid via the same assignment machinery as a dual-color source above)
+  and real `{X}` symbols (resolved via a caller-supplied `x`, CR 107.3b/c)
+  — see "Hybrid mana pips and `{X}` costs" above.
 - **Sacrifice-cost activated abilities (non-self)** — a real
   "Sacrifice another/a/two X" cost trusted whenever the card's own
   `effects` already pay it for real at resolution, with no risk of
   double-payment — see "Sacrifice-cost activated abilities" above.
+- **Trigger-doubling ("Panharmonicon effect")** — a real, general
+  `CardDefinition.triggerDoubling` gate, checked at query time
+  (`shouldDoubleTrigger`) by a new shared chokepoint (`triggers.ts`'s
+  `fireTrigger`) every real trigger-firing call site in this codebase now
+  funnels a named trigger through — see "Trigger-doubling" above.
 
 ## Explicitly out of scope (real gaps, not silently assumed away)
 
@@ -548,13 +711,22 @@ unsupported rather than risk that regression.
   currently holds priority" state between calls (it's scripted per round, not
   simulated) — a caller keeps this honest by only calling `castSpell` between
   `stepPriority` rounds, not by the engine enforcing it directly.
-- **Non-basic mana sources — the remainder.** A dual/choice-of-color
-  ability, a restricted one, a colorless one, or a variable one (Elvish
-  Archdruid's own `{T}: Add {G} for each Elf you control`, e.g.) are still
-  not recognized mana sources — only a narrow single-color, unrestricted
-  slice is (see "Non-basic mana sources" above and `mana.ts`'s own
-  header).
-- Alternate costs, X spells, modal/split costs, casting from anywhere but hand.
+- **Non-basic mana sources — the remainder.** A restricted ability
+  (Cargo Ship's own real "Spend this mana only to cast an artifact
+  spell...") or a variable one (Elvish Archdruid's own
+  `{T}: Add {G} for each Elf you control`) are still not recognized mana
+  sources — the single-color AND dual-color slices both are now (see
+  "Non-basic mana sources" above and `mana.ts`'s own header) — closing
+  either of these two remaining shapes needs materially bigger
+  infrastructure (a real spendable-mana-pool tracker; teaching `payMana`
+  that one tap can yield a variable amount), assessed and deliberately not
+  attempted.
+- **Phyrexian mana and a colorless-in-a-cast-cost `{C}` pip.** Checked, no
+  real FIN card needs either (unlike Hybrid/`{X}`, both closed — see
+  "Hybrid mana pips and `{X}` costs" above) — `parseManaCost` still throws
+  on either, fail-loud rather than silently mis-costed.
+- Modal/split costs, casting from anywhere but hand beyond the existing
+  Flashback/Jump-start-shaped `AlternateCost`.
 - A real AI/player decision process — unchanged from `priority.ts`'s own
   existing scope note: every round's choices are supplied by the caller.
 
@@ -593,20 +765,67 @@ creature, an already-tapped creature, a non-creature permanent, legality
 outside a main phase/with a non-empty stack (no sorcery-speed
 restriction), and a summoning-sick creature still being allowed to crew.
 `mana.test.ts` covers `manaAbilityColorFromStaticText` (recognized/
-skipped shapes: restricted, dual, colorless, variable, none) and
+skipped shapes: restricted, dual, colorless, variable, none),
+`manaAbilityColorsFromStaticText`/`deriveManaAbility` (single-color,
+dual-color, and the still-unrecognized restricted/variable shapes), and
 `untappedManaSources` picking up a real `manaAbility`-bearing non-Land
-source. `engine.test.ts`'s own `Non-basic mana sources` describe block
-covers a resolved artifact mana rock genuinely becoming payable (and
-really getting tapped), a freshly-resolved mana-dork CREATURE correctly
-NOT counting toward affordability the turn it enters (302.6), the same
-dork correctly counting on a later turn, and a dual-color ability
-correctly not being recognized at all. Its `Sacrifice cost trusted...`
-describe block covers a legal Ahriman-shaped activation, a real
-resolution proving exactly one OTHER permanent is sacrificed (never the
-source, never twice — the actual double-payment risk this fix avoids), a
-Gold-Saucer-shaped cost with no matching effect staying rejected, and
-self-sacrifice cost text staying rejected even alongside a matching
-effect.
+source (single- AND dual-color). New (2026-09-12, ENGINE_GAPS.md gaps #5/#6):
+`parseManaCost`/`resolveXCost`/`formatManaCost` for real Hybrid pips and
+`{X}` (parsing, resolving a chosen `x`, formatting the real paid total,
+still throwing on Phyrexian/`{C}`), and `canAfford`/`payMana` describe
+blocks for both Hybrid pips AND dual-color sources — including a genuine
+backtracking-forced case (a source tried first for one requirement has to
+be un-picked once a later, stricter requirement turns out to have no
+other option) proving `assignManaRequirements` is real exhaustive search,
+not a greedy heuristic that happens to work on the easy cases.
+`engine.test.ts`'s own `Non-basic mana sources` describe block covers a
+resolved artifact mana rock genuinely becoming payable (and really
+getting tapped), a freshly-resolved mana-dork CREATURE correctly NOT
+counting toward affordability the turn it enters (302.6), the same dork
+correctly counting on a later turn, and (updated 2026-09-12) a dual-color
+ability now genuinely paying for EITHER of its two colors via a real
+`canCastSpell`/`castSpell` cast (plus the negative "can't pay a third
+color" case). New `Hybrid mana costs`/`{X} mana costs` describe blocks
+cast synthetic `CardDefinition`s using the SAME real cost strings as
+Thranduil // Silvan Rally / Choco Comet through `canCastSpell`/`castSpell`,
+proving both are now genuinely castable (and still genuinely rejected when
+unaffordable). Its `Sacrifice cost trusted...` describe block covers a
+legal Ahriman-shaped activation, a real resolution proving exactly one
+OTHER permanent is sacrificed (never the source, never twice — the actual
+double-payment risk this fix avoids), a Gold-Saucer-shaped cost with no
+matching effect staying rejected, and self-sacrifice cost text staying
+rejected even alongside a matching effect.
+
+New (2026-09-12, ENGINE_GAPS.md gap #16): `engine.test.ts`'s own
+`canPlayFromLibraryTop / playFromLibraryTop` describe block covers a
+rejected non-top card (mutating nothing), a real land dispatched to
+`playLand` (Battlefield move, no Stack, real ETB fires, the per-turn
+counter increments), a real spell dispatched to `castSpell` (real mana
+paid, pushed onto the Stack), an unaffordable spell correctly rejected,
+and a rejection outside sorcery-speed timing — all sharing the same
+`canCastSpell`/`canPlayLand` legality this primitive reuses, not a
+parallel check. Two new cases in its existing `declareAttackers` describe
+block cover the real `attackedThisTurn` flag: set on a legal declaration,
+NOT set on a rejected one. `turn.test.ts`'s two new cases cover the same
+flag's full lifecycle at the `state.ts`/`turn.ts` level: it persists
+through every remaining phase of the turn it was set, then clears at the
+real Cleanup; it does not persist into a later turn (a real per-turn
+reset, not a one-time clear).
+
+New (2026-09-12, ENGINE_GAPS.md gap #13): `functional-model/triggers.test.ts`
+(new file, 12 cases) covers `fireTrigger`/`shouldDoubleTrigger` directly —
+a baseline no-grant case, all 3 real cards' own gate shapes each genuinely
+doubling, and the negative cases proving each gate's own real precondition
+is enforced (not just its presence): Cloud's shape doesn't double while
+unequipped; Masamune's shape doesn't double with no/wrong cause or a
+different creature's own trigger; Chocobo's shape doesn't double a
+non-land/non-Bird cause or an opponent's own permanent. `engine.test.ts`'s
+new `Trigger-doubling` describe block (3 cases) additionally proves the
+real `engine.ts` wiring itself, not just `triggers.ts`'s own pure logic: a
+permanent's own ETB does NOT double through the real `castSpell`->
+`resolveTop` path before anything is equipped to it; a LATER real
+upkeep/end-step auto-fire (`fireOnPhaseEnterTriggers`) DOES double once
+genuinely equipped; an unrelated permanent's own trigger does NOT double.
 
 ## Gap analysis vs. real Forge
 

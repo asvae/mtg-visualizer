@@ -7,13 +7,17 @@ export const paladinsArms: CardDefinition = {
   typeLine: 'Artifact — Equipment',
 
   // "Equipped creature gets +2/+1 ... and is a Knight in addition to its
-  // other types" — same real, honest-but-structurally-inert gap dragoon-
-  // s-lance's/machinist-s-arsenal's own identical clause shape already
-  // documents: no continuous-effect/layer-7c pipeline anywhere in this
-  // model applies a static P/T bonus or a dynamic type grant to ANOTHER
-  // permanent (card.ts's own `animate` dispatch is self-only). Real Facts
-  // still exist for both halves (see synergy.json).
+  // other types" — ALL THREE clauses on this card (including Ward below)
+  // are now real, executable machinery (ENGINE_GAPS.md gap #14, fully
+  // closed 2026-09-12), same generalization dragoon-s-lance's own migration
+  // just established: a FIXED P/T delta and a creature-subtype broadcast,
+  // both via new sibling fields to `continuousKeywordGrants`
+  // (`continuousPTGrants`/`continuousTypeGrants`, `card.ts`), re-checked
+  // live against whatever creature `RealCard.attachedToId` currently names.
   staticAbilities: ['Equipped creature gets +2/+1 and is a Knight in addition to its other types.'],
+
+  continuousPTGrants: [{ power: 2, toughness: 1, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Knight'], includeSelf: false, equippedBySelf: true }],
 
   // "...has ward {1}..." — same real clause, but a KEYWORD grant rather
   // than a P/T/type grant, so it plugs directly into already-built,

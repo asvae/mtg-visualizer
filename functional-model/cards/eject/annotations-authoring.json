@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Return target nonland permanent to its owner's hand.",
+      "highlight": "Return target nonland permanent to its owner's hand"
+    },
+    {
+      "sourceText": "Draw a card.",
+      "highlight": "Draw a card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Return target nonland permanent to its owner's hand.",
+      "highlight": "Return target nonland permanent to its owner's hand"
+    }
+  ]
+}

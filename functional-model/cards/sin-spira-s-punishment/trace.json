@@ -28,30 +28,30 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 2116,
+        "target": "Grizzly Bears",
+        "id": 2,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "copyPermanent",
-        "source": "you-gy-creature-0",
+        "source": "Grizzly Bears",
         "controller": "you"
       },
       {
         "fn": "tap",
-        "target": "you-gy-creature-0",
-        "id": 2118,
+        "target": "Grizzly Bears",
+        "id": 4,
         "controller": "you"
       },
       {
         "fn": "read:isLand",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": false
       }
     ]

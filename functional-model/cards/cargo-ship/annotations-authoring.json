@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Vehicle",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact — Vehicle",
+      "highlight": "Artifact"
+    },
+    {
+      "sourceText": "{T}: Add {C}. Spend this mana only to cast an artifact spell or activate an ability of an artifact source.",
+      "highlight": "{T}: Add {C}."
+    },
+    {
+      "sourceText": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "Tap any number of creatures you control with total power 1 or more"
+    },
+    {
+      "sourceText": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "This Vehicle becomes an artifact creature until end of turn"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "Tap any number of creatures you control with total power 1 or more"
+    }
+  ]
+}

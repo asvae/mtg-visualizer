@@ -25,6 +25,7 @@ import { crystalFragmentsSummonAlexander } from './definition';
 import { basicLandsFor } from '../../mana';
 import { typesFromTypeLine, subtypesFromTypeLine } from '../../harness';
 import type { TraceResult } from '../../harness';
+import { wrapCard, effectivePT } from '../../state';
 import {
   setupEnginePilot,
   pilotActions,
@@ -44,13 +45,14 @@ export function runEngineScenarios(): TraceResult[] {
   };
   const pilot = setupEnginePilot(setup);
 
-  // A real creature to equip Crystal Fragments to (301.5c). The "Equipped
-  // creature gets +1/+1" fact itself stays exempted regardless of real
-  // attachment (isCrystalFragmentsEquippedPumpFact, verify-synergy.mjs) —
-  // no continuous-effect/layer-7c pipeline exists anywhere in this engine
-  // to recalculate whatever creature is equipped, checked pool-wide — this
-  // step is about showing the real attachment for real, not manufacturing
-  // evidence for a fact this engine structurally can't back.
+  // A real creature to equip Crystal Fragments to (301.5c). "Equipped
+  // creature gets +1/+1" is now real, executable machinery
+  // (`continuousPTGrants`, ENGINE_GAPS.md gap #14's own follow-up, closed
+  // 2026-09-12) — this step also demonstrates the recalculation for real
+  // (see the `read:getNetPower` line right after the equip below), unlike
+  // this shape's OTHER sibling cards (Dragoon's Lance/Machinist's Arsenal/
+  // Paladin's Arms/White Mage's Staff/Sage's Nouliths), whose plain
+  // `harness.ts` Scenario[] style structurally can't inject that read.
   const yourCreature = pilot.state.addCard(pilot.you, 'Battlefield', {
     name: 'Dwarven Castle Guard',
     types: ['Creature'],
@@ -89,6 +91,17 @@ export function runEngineScenarios(): TraceResult[] {
   pilot.state.equip(cfReal, yourCreature);
   pilot.log.push({ fn: 'equip', equipment: cfReal.name, target: yourCreature.name });
 
+  // Real proof the "+1/+1" continuousPTGrants bonus genuinely recalculates
+  // (ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12) — same
+  // "manual CDA read" pattern adelbert-steiner's own `read:getNetPower` line
+  // already established for its layer-7a CDA, reused here for a layer-7c
+  // equip-broadcast grant instead: Dwarven Castle Guard's printed 2/1
+  // becomes a live 3/2 the instant it's equipped, re-read from
+  // `effectivePT`, not a fixed/timestamped delta.
+  pilot.beginStep('Real layer-7c recalculation — Equipped creature gets +1/+1');
+  const [power, toughness] = effectivePT(pilot.state, yourCreature);
+  pilot.log.push({ fn: 'read:getNetPower', card: yourCreature.name, power, toughness });
+
   // Real turn passage
   advanceToPlayersNextMain1(pilot, pilot.you);
 
@@ -97,15 +110,23 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   // Front -> Summon: Alexander. Real 714.2b/c: enters as a Saga with no
-  // lore counters, then immediately gets its first — chapter I fires here
-  // (damage prevention — no resolvable effect in this model, see
-  // definition.ts's own comment).
+  // lore counters, then immediately gets its first — chapter I fires here,
+  // now a real `grantKeywordAll` shield (ENGINE_GAPS.md gap #8, closed —
+  // see definition.ts's own comment).
   const backFace = crystalFragmentsSummonAlexander.backFace!;
   const alexanderCtx = pilot.ctxFor(cfReal);
   pilotTransform(pilot, cfReal, backFace, alexanderCtx, actions);
 
+  // Real proof the chapter I shield actually WORKS this turn — a 3-damage
+  // hit against your own (equipped) creature is genuinely prevented
+  // (`state.dealDamage`'s own 'DamagePrevention' check), not just a
+  // granted-but-inert keyword. Real evidence: a `fn:'damagePrevented'` log
+  // line, not `fn:'dealDamage'`.
+  pilot.beginStep("Chapter I shield: a 3-damage hit against your own creature is prevented");
+  actions.dealDamage(wrapCard(pilot.state, oppCreature), wrapCard(pilot.state, yourCreature), 3);
+
   // Real turn passage through your next draw step — chapter II fires for
-  // real (same no-op damage-prevention text)
+  // real (same real damage-prevention shield, re-granted for THIS turn)
   advanceToPlayersNextMain1(pilot, pilot.you, cfReal);
 
   // Another real turn — chapter III fires: taps the opponent's real Coeurl
@@ -123,7 +144,7 @@ export function runEngineScenarios(): TraceResult[] {
   pilot.log.push({ fn: 'sacrifice', player: pilot.you.name, card: backFace.name });
 
   const result =
-    'Crystal Fragments enters, real Equipment attachment onto a real creature (+1/+1 — no continuous-effect pipeline in this engine recalculates the equipped creature, a real documented gap); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — real 714.2b/c, chapter I fires immediately (damage prevention — no resolvable effect in this model), chapter II fires on your next draw step (same), chapter III fires the turn after (taps the real opponent Coeurl), then the real "Sacrifice after III" rule (714.4/704.5x) sacrifices it — all through the real turn-based engine.';
+    'Crystal Fragments enters, Equipment attachment onto a creature genuinely recalculates its P/T live (a real +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, genuinely granting a real all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is actually prevented), chapter II fires on your next draw step (same real shield, re-granted), chapter III fires the turn after (taps the opponent\'s Coeurl), then the "Sacrifice after III" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.';
 
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> equip -> transform -> Saga chapters over real turns -> sacrifice', result)];
 }

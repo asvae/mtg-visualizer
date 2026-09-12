@@ -31,7 +31,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "oncePerTurn": true,
       "value": -1,
       "annotations": [
         {
@@ -53,7 +52,8 @@
             "Creature",
             "Artifact"
           ]
-        }
+        },
+        "excludeSelf": true
       },
       "oncePerTurn": true,
       "value": -1,

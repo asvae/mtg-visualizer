@@ -33,7 +33,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "oncePerTurn": true,
       "value": -1,
       "face": "front",
       "annotations": [

@@ -29,6 +29,9 @@
 // own header), so this is a type-level-only cycle: TS erases both sides
 // before anything runs, no runtime circular dependency.
 import type { Phase } from './turn';
+// Type-only, same erased-cycle reasoning as the `turn.ts` import above —
+// `card.ts` itself imports `play` (below) FROM this file.
+import type { CardDefinition } from './card';
 
 /**
  * Mirrors forge-game/src/main/java/forge/game/GameEntity.java (~line 51 for
@@ -228,12 +231,17 @@ export declare function untap(target: Card): void;
  * Convenience wrapper over `Card.addChangedCardKeywords(...)` (Card.java
  * ~line 5017) — real Forge tracks a granted keyword as a duration-scoped,
  * timestamped layer-6 entry, reverted at the real effect's end ("until end
- * of turn," e.g.). This model has no phase/turn-boundary reset step
- * anywhere (see state.ts's own header), so this applies the grant as a
- * direct, PERMANENT mutation instead — see state.ts's own `grantKeyword`
- * doc comment for the full reasoning.
+ * of turn," e.g.). This model applies the grant as a direct mutation of
+ * the card's own `keywords` array either way; `opts.untilEndOfTurn` (real
+ * 514.2 — Cleanup ends "until end of turn" effects) additionally registers
+ * it with `GameState` for real removal at the next Cleanup step
+ * (`turn.ts`'s `runPhaseEntryAction`, `state.ts`'s own
+ * `clearUntilEndOfTurnKeywordGrants`) — omitted (the default), the grant
+ * stays PERMANENT within the scenario, same simplification every
+ * non-`untilEndOfTurn` grant in this pool already accepts; see state.ts's
+ * own `grantKeyword` doc comment for the full reasoning either way.
  */
-export declare function grantKeyword(target: Card, keyword: string): void;
+export declare function grantKeyword(target: Card, keyword: string, opts?: { untilEndOfTurn?: boolean }): void;
 
 /** Convenience wrapper over `Player.mill(int)` — moves `qty` cards library-&gt;graveyard, returns them. */
 export declare function mill(player: Player, qty: number): Card[];
@@ -327,8 +335,19 @@ export declare function pump(target: Card | Player, powerDelta: number, toughnes
 /** Convenience wrapper over `CardFactory.copyCard(Card, Player, ...)`. */
 export declare function copyPermanent(source: Card, controller: Player): Card;
 
-/** Convenience wrapper over "you may play the revealed/chosen card" effects. */
-export declare function play(player: Player, target: Card): void;
+/**
+ * Convenience wrapper over "you may play the revealed/chosen card" effects
+ * — real Forge's own `PlayEffect.java` (see `engine.ts`'s own
+ * `canPlayFromLibraryTop`/`playFromLibraryTop` doc comment for the real
+ * line-numbered citation) dispatches a played card on whether it's a land
+ * or a spell, which needs the played card's own `CardDefinition` (its
+ * `typeLine`/`manaCost`/`effects`), not just the wrapped `Card` — `card`
+ * (optional; ENGINE_GAPS.md gap #16) carries that, supplied by whichever
+ * caller built the `EffectContext` this ran under
+ * (`EffectContext.topLibraryCard`, card.ts). Omitted (the pre-existing
+ * signature) only for a caller with no real dispatch to perform.
+ */
+export declare function play(player: Player, target: Card, card?: CardDefinition): void;
 
 /**
  * Convenience wrapper over a "does at least one card matching this

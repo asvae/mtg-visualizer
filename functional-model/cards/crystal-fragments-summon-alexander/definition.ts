@@ -19,7 +19,23 @@ export const crystalFragmentsSummonAlexander: CardDefinition = {
   manaCost: '{W}',
   typeLine: 'Artifact — Equipment',
 
+  // "Equipped creature gets +1/+1." — now real, executable machinery
+  // (ENGINE_GAPS.md gap #14's own follow-up, fully closed 2026-09-12):
+  // `continuousPTGrants` (`card.ts`'s new sibling field to
+  // `continuousKeywordGrants`), read live by `state.ts`'s `effectivePT`
+  // against whatever creature `RealCard.attachedToId` currently names —
+  // same real, query-time mechanism dragoon-s-lance's own equipped-Flying
+  // grant already established, generalized to a fixed P/T delta. This is
+  // the ONE card in this shape's own migration batch whose scenario is a
+  // real `engine-trace.ts` pilot (see scenarios.ts), so its own `pump`
+  // fact now gets REAL trace evidence (a genuine `read:getNetPower` line
+  // showing the equipped creature's P/T before and after attachment) —
+  // unlike its siblings (Dragoon's Lance/Machinist's Arsenal/Paladin's
+  // Arms/White Mage's Staff/Sage's Nouliths), whose plain `harness.ts`
+  // Scenario[] style structurally cannot inject that read.
   staticAbilities: ['Equipped creature gets +1/+1.', 'Equip {1}'],
+
+  continuousPTGrants: [{ power: 1, toughness: 1, includeSelf: false, equippedBySelf: true }],
 
   activationCost: '{5}{W}{W}',
   effects: [
@@ -47,27 +63,30 @@ export const crystalFragmentsSummonAlexander: CardDefinition = {
       {
         name: 'chapterI',
         effects: [
-          {
-            kind: 'custom',
-            // A whole-turn damage-prevention shield — no prevention/
-            // replacement-effect machinery exists anywhere in this model
-            // (state.ts's own header explicitly rules out replacement
-            // effects), so this stays a no-op `run` with the real text
-            // carried only in `describe` for synergyTags() — same honest
-            // treatment Namazu Trader's own "if you do" gate gets.
-            describe: 'prevent all damage that would be dealt to creatures you control this turn',
-            run: () => {},
-          } satisfies Effect,
+          // A whole-turn, all-damage prevention shield (ENGINE_GAPS.md gap
+          // #8, closed) — real Forge citation,
+          // `res/cardsfolder/c/crystal_fragments_summon_alexander.txt`'s own
+          // shipped script: `SVar:RPrevent:Event$ DamageDone | Prevent$ True
+          // | ActiveZones$ Command | ValidTarget$ Creature.YouCtrl` (a real
+          // per-object `ReplacementEffect`, general machinery this engine
+          // doesn't have — see `state.dealDamage`'s own doc comment). Modeled
+          // as a real `grantKeywordAll` grant of the `'DamagePrevention'`
+          // keyword (card.ts's own approximation, same shape `'Unblockable'`
+          // already establishes), `untilEndOfTurn: true` for real 514.2
+          // Cleanup expiry — reuses the EXISTING until-end-of-turn
+          // keyword-grant machinery (`state.grantKeyword`/
+          // `clearUntilEndOfTurnKeywordGrants`), not a new mechanism. No
+          // longer a no-op `run: () => {}`.
+          { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'DamagePrevention', untilEndOfTurn: true } satisfies Effect,
         ],
       },
       {
         name: 'chapterII',
         effects: [
-          {
-            kind: 'custom',
-            describe: 'prevent all damage that would be dealt to creatures you control this turn',
-            run: () => {},
-          } satisfies Effect,
+          // Same real shield as chapter I — Forge's own script fires the
+          // identical `DBDefend` sub-ability for both chapters (`K:Chapter:
+          // 3:DBDefend,DBDefend,DBSubdue`).
+          { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'DamagePrevention', untilEndOfTurn: true } satisfies Effect,
         ],
       },
       {

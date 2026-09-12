@@ -1,16 +1,93 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
     },
     {
-      "event": "dies",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
       "target": "self",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "event": "crew",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 0,
+          "end": 6
+        }
+      ]
+    },
+    {
+      "event": "grantType",
+      "type": "Creature",
+      "target": "self",
+      "untilEndOfTurn": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 0,
+          "end": 6
+        }
+      ]
+    },
+    {
+      "event": "play",
+      "from": "Library",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 47,
+          "end": 88
+        }
+      ]
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 0,
+          "end": 6
+        }
+      ]
+    }
+  ]
 }

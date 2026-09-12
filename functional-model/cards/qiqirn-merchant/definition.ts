@@ -19,15 +19,29 @@ export const qiqirnMerchant: CardDefinition = {
     },
     {
       // "This ability costs {1} less to activate for each Town you
-      // control" — `SVar:X:Count$Valid Town.YouCtrl` is a dynamic cost
-      // reduction; `cost` here is documentary text only (same convention
-      // every other card's `activationCost` string already uses — no field
-      // anywhere computes a real dynamic mana cost), not something this
-      // model recalculates. Sacrificing itself is part of the COST (Forge's
-      // own `Sac<1/CARDNAME>`), not an effect — same "cost, not effect"
-      // convention phoenix-down's own tap/exile cost text uses.
+      // control" — CLOSED (2026-09-12, ENGINE_GAPS.md gap #7's third
+      // example): a real, board-state-COUNTED discount on THIS ability's
+      // own cost, `card.ts`'s new `ActivationCostReduction` (real Forge
+      // citation, `res/cardsfolder/q/qiqirn_merchant.txt`: `A:AB$ Draw |
+      // Cost$ 7 T Sac<1/CARDNAME> | ... | ReduceCost$ X | ...` +
+      // `SVar:X:Count$Valid Town.YouCtrl`) — `engine.ts`'s
+      // `effectiveActivationCost` genuinely counts real Town-subtype
+      // permanents the activator controls and discounts the {7} generic
+      // portion accordingly, replacing the old documentary-only
+      // parenthetical, same "structured field replaces free text once real"
+      // convention `continuousKeywordGrants`'s own cards already established.
+      // `cost` itself stays real printed text (no field anywhere renders a
+      // dynamic mana cost back into a string for display — `activationCostFor`/
+      // `effectiveActivationCost` compute the real number separately).
+      // Sacrificing itself is part of the COST (Forge's own
+      // `Sac<1/CARDNAME>`), not an effect — same "cost, not effect"
+      // convention phoenix-down's own tap/exile cost text uses; still not
+      // itself payable through `canActivateAbility` (self-sacrifice is a
+      // real, separate, unbuilt engine gap — see this card's own
+      // `scenarios.ts` header), unrelated to and unaffected by this discount.
       name: 'bigDraw',
       cost: '{7}, {T}, Sacrifice Qiqirn Merchant (costs {1} less for each Town you control)',
+      costReduction: { amountPerMatch: 1, subtype: 'Town' },
       effects: [{ kind: 'drawCard', amount: 3 } satisfies Effect],
     },
   ],

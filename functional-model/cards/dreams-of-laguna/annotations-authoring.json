@@ -1,0 +1,31 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Flashback {3}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "highlight": "cast this card from your graveyard for its flashback cost"
+    },
+    {
+      "sourceText": "Flashback {3}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "highlight": "Then exile it"
+    },
+    {
+      "sourceText": "Surveil 1, then draw a card. (To surveil 1, look at the top card of your library. You may put it into your graveyard.)",
+      "highlight": "Surveil 1"
+    },
+    {
+      "sourceText": "Surveil 1, then draw a card. (To surveil 1, look at the top card of your library. You may put it into your graveyard.)",
+      "highlight": "draw a card"
+    }
+  ],
+  "sink": []
+}

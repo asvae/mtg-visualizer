@@ -51,9 +51,11 @@
           "has": [
             "Creature"
           ]
-        }
+        },
+        "excludeSelf": true
       },
       "targeted": false,
+      "untilEndOfTurn": true,
       "value": -1,
       "annotations": [
         {
@@ -73,7 +75,8 @@
           "has": [
             "Creature"
           ]
-        }
+        },
+        "excludeSelf": true
       },
       "targeted": false,
       "value": -1,
@@ -126,6 +129,7 @@
           "Creature"
         ]
       },
+      "excludeSelf": true,
       "value": -1,
       "annotations": [
         {

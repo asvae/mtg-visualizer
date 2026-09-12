@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
+        "id": 2,
         "name": "onDealsDamage"
       },
       {
@@ -52,6 +53,7 @@
         "fn": "trigger",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
+        "id": 4,
         "name": "onDealsDamage"
       },
       {
@@ -67,19 +69,19 @@
       {
         "fn": "untap",
         "target": "Cecil, Dark Knight",
-        "id": 323
+        "id": 4
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
-        "id": 323,
+        "id": 4,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
-        "id": 323,
+        "id": 4,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -104,7 +106,52 @@
         "fn": "trigger",
         "card": "Cecil, Redeemed Paladin",
         "instanceId": 1,
+        "id": 7,
         "name": "onAttacks"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "cast from hand, back face, deals 3 combat damage",
+      "result": "Lifelink: deals 3 combat damage to an opponent, gains that much life",
+      "raw": {
+        "result": "Lifelink: deals 3 combat damage to an opponent, gains that much life",
+        "face": "back",
+        "dealsCombatDamage": {
+          "amount": 3
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Cecil, Redeemed Paladin",
+        "instanceId": 1,
+        "id": 9,
+        "from": "hand",
+        "cost": ""
+      },
+      {
+        "fn": "enters",
+        "card": "Cecil, Redeemed Paladin",
+        "instanceId": 1,
+        "id": 9,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Cecil, Redeemed Paladin",
+        "sourceId": 9,
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
       }
     ]
   },
@@ -123,6 +170,7 @@
         "fn": "cast",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
+        "id": 12,
         "from": "hand",
         "cost": "{B}"
       },
@@ -130,6 +178,7 @@
         "fn": "enters",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
+        "id": 12,
         "zone": "Battlefield"
       },
       {

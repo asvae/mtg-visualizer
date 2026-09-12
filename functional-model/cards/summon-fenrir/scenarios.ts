@@ -7,7 +7,7 @@ export const scenarios: Scenario[] = [
     you: { libraryCount: 3 },
   },
   {
-    result: 'no mechanism here creates a new triggered ability at runtime — no observable effect (real text: the next creature spell cast this turn would enter with an extra +1/+1 counter)',
+    result: 'no mechanism here creates a new triggered ability at runtime — no observable effect (printed text: the next creature spell cast this turn would enter with an extra +1/+1 counter)',
     trigger: 'chapterII',
   },
   {

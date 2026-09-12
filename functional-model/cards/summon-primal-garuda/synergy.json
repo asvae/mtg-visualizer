@@ -60,6 +60,7 @@
         }
       },
       "targeted": true,
+      "untilEndOfTurn": true,
       "value": 1,
       "annotations": [
         {
@@ -82,6 +83,7 @@
         }
       },
       "targeted": true,
+      "untilEndOfTurn": true,
       "value": 1,
       "annotations": [
         {

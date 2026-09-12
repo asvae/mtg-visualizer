@@ -92,6 +92,6 @@ export function runEngineScenarios(): TraceResult[] {
   for (const removed of sbaResult.legendRuleRemoved) pilot.log.push({ fn: 'legendRule', card: removed.name, player: pilot.you.name });
 
   const result =
-    'Steiner enters, a real Equipment (Sword) attaches — the printed "+1/+1 for each Equipment" CDA recalculates (layer 7a) to 3/2; real turn passage clears summoning sickness, then it attacks unblocked, dealing real combat damage and gaining its controller life via Lifelink; a second real copy of Steiner enters, and the real legend rule (704.5j) removes one of the two.';
+    'Steiner enters, an Equipment (Sword) attaches — the printed "+1/+1 for each Equipment" CDA recalculates (layer 7a) to 3/2; turn passage clears summoning sickness, then it attacks unblocked, dealing combat damage and gaining its controller life via Lifelink; a second copy of Steiner enters, and the legend rule (704.5j) removes one of the two.';
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> equip -> CDA recalculation -> real combat -> Lifelink', result)];
 }

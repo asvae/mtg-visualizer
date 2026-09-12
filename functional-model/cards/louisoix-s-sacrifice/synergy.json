@@ -1,38 +1,88 @@
 {
   "source": [
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
-      "controller": "you",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "subject": "self",
-      "value": 1,
-      "sourceText": "(baseline — Louisoix's Sacrifice is an instant, so it goes to your graveyard after it resolves, no special ability text)."
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "id": "sac-legendary-cost",
-      "event": "dies",
+      "event": "sacrifice",
+      "from": "Battlefield",
+      "to": "Graveyard",
       "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Legendary",
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
       "value": 1,
-      "sourceText": "As an additional cost to cast this spell, sacrifice a legendary creature or pay {2}.",
-      "highlight": "sacrifice a legendary creature or pay {2}"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 42,
+          "end": 72
+        }
+      ]
     },
     {
-      "id": "counter",
       "event": "counter",
-      "value": 3,
-      "sourceText": "Counter target activated ability, triggered ability, or noncreature spell.",
-      "highlight": "Counter target activated ability, triggered ability, or noncreature spell"
+      "target": {},
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 74
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "sac-fodder",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
-      "types": { "has": ["Creature"] },
+      "types": {
+        "has": [
+          "Legendary",
+          "Creature"
+        ]
+      },
       "value": 1,
-      "sourceText": "sacrifice a legendary creature or pay {2}",
-      "highlight": "sacrifice a legendary creature or pay {2}"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 42,
+          "end": 72
+        }
+      ]
     }
   ]
 }

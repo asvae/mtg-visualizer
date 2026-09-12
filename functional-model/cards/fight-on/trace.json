@@ -29,25 +29,25 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 818,
+        "target": "Grizzly Bears",
+        "id": 2,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-1",
-        "id": 819,
+        "target": "Grizzly Bears",
+        "id": 3,
         "zone": "Hand",
         "controller": "you"
       },
@@ -91,13 +91,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 822,
+        "target": "Grizzly Bears",
+        "id": 6,
         "zone": "Hand",
         "controller": "you"
       },

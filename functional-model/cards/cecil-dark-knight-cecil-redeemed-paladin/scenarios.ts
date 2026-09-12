@@ -20,5 +20,14 @@ export const scenarios: Scenario[] = [
     trigger: 'onAttacks',
     you: { creaturesCount: 1 },
   },
+  // Back face's own real printed Lifelink (Cecil, Redeemed Paladin) — real
+  // lifegain SOURCE fact restored 2026-09-12 (CR 702.15e: Lifelink
+  // deterministically produces a real lifegain event on ANY damage dealt,
+  // unlike a purely passive/no-event keyword — see SYNERGY_DESIGN.md's own
+  // dated entry). `keywordScenarios` below only ever checks the FRONT
+  // face's own `card.keywords` (no face-awareness), so it can't cover this
+  // — same manual `{face:'back', dealsCombatDamage:...}` probe shape
+  // `keywordScenarios`'s own front-face version already uses.
+  { result: 'Lifelink: deals 3 combat damage to an opponent, gains that much life', face: 'back', dealsCombatDamage: { amount: 3 } },
   ...keywordScenarios(cecilDarkKnight),
 ];

@@ -1,22 +1,84 @@
 {
   "source": [
     {
-      "id": "graveyard-flashback-source",
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
       "value": 1,
-      "sourceText": "Flashback {3}{U} (You may cast this card from your graveyard for its flashback cost.) — also the generic 'instant goes to its owner's graveyard after resolving' rule (608.2m) on the card's first, non-flashback cast.",
-      "highlight": "Flashback {3}{U}"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "id": "flashback-exile",
-      "zone": "Exile",
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "Flashback ... Then exile it.",
-      "highlight": "Then exile it"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "cast",
+      "from": "Graveyard",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 26,
+          "end": 83
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 85,
+          "end": 98
+        }
+      ]
+    },
+    {
+      "event": "surveil",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 9
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 16,
+          "end": 27
+        }
+      ]
     }
   ],
   "sink": []

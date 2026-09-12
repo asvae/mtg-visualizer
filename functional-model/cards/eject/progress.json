@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to unified Fact model (2026-09-12): self-cast(Hand)/self-graveyard baseline (no self-enters, Instant), real targeted bounce {to:'Hand',from:'Battlefield',target:{types:{not:['Land']}},targeted:true} reusing the 'bounce' ZONE_MOVEMENT_NAMES entry, real drawCard, and a matching sink {to:'Battlefield',types:{not:['Land']}} for the bounce target. 'This spell can't be countered' intentionally has no Fact — bare CantHappen-style replacement rule, no observable event/zone-change and nothing in the pool sinks on 'can't be countered' (same precedent as fate-of-the-sun-cryst's cost-reduction static text). annotations-authoring.json added, real offsets baked via compute-annotations.mjs (verified against data/fin/fin_scryfall.json #52 oracle text).",
   "textCoverageAudited": false,
   "knownGaps": []
 }

@@ -1,101 +1,40 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 artifact(s)",
-      "action": "\"onEnter\" trigger fires",
-      "result": "draws 2 cards, one for each of the 2 artifacts you control",
+      "setup": "you: 6 Island(s)",
+      "action": "real engine playthrough: cast -> real ETB draw scaled by real artifact count -> real coin flip, forced win",
+      "result": "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A real coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement genuinely forces a WIN instead (the first flip this turn), proving the mechanism is real, not just descriptive text.",
       "raw": {
-        "result": "draws 2 cards, one for each of the 2 artifacts you control",
-        "trigger": "onEnter",
+        "result": "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A real coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement genuinely forces a WIN instead (the first flip this turn), proving the mechanism is real, not just descriptive text.",
         "you": {
-          "artifactsCount": 2
-        }
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 6
+        },
+        "opponents": [
+          {}
+        ]
       }
     },
     "log": [
       {
-        "fn": "trigger",
-        "card": "Edgar, King of Figaro",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
+        "fn": "enters",
+        "card": "Astrologian's Planisphere",
         "zone": "Battlefield",
-        "count": 3,
-        "creatureCount": 1
+        "controller": "you"
       },
       {
-        "fn": "read:isArtifact",
-        "target": "you-artifact-0",
-        "result": true
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-artifact-1",
-        "result": true
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "Edgar, King of Figaro",
-        "result": false
-      },
-      {
-        "fn": "drawCard",
-        "player": "you"
-      },
-      {
-        "fn": "drawCard",
-        "player": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "no artifacts you control, draws no cards",
-      "raw": {
-        "result": "no artifacts you control, draws no cards",
-        "trigger": "onEnter",
-        "you": {
-          "artifactsCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Edgar, King of Figaro",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
+        "fn": "enters",
+        "card": "Ether",
         "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
+        "controller": "you"
       },
-      {
-        "fn": "read:isArtifact",
-        "target": "Edgar, King of Figaro",
-        "result": false
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
       {
         "fn": "cast",
         "card": "Edgar, King of Figaro",
@@ -104,15 +43,137 @@
         "cost": "{4}{U}{U}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Edgar, King of Figaro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Edgar, King of Figaro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Edgar, King of Figaro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Edgar, King of Figaro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Edgar, King of Figaro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Edgar, King of Figaro"
+      },
+      {
         "fn": "enters",
         "card": "Edgar, King of Figaro",
         "instanceId": 1,
         "zone": "Battlefield"
       },
       {
-        "fn": "legendRule",
+        "fn": "trigger",
         "card": "Edgar, King of Figaro",
-        "player": "you"
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 9,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Astrologian's Planisphere",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Ether",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Edgar, King of Figaro",
+        "result": false
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "coinFlip",
+        "player": "you",
+        "won": true,
+        "requestedWin": false,
+        "forced": true
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Real artifacts already on the battlefield: Astrologian's Planisphere and Ether",
+        "from": 0
+      },
+      {
+        "label": "Cast Edgar, King of Figaro ({4}{U}{U})",
+        "from": 2
+      },
+      {
+        "label": "Resolve",
+        "from": 9
+      },
+      {
+        "label": "A real coin flip resolves — Two-Headed Coin forces the win (CR-614-style replacement)",
+        "from": 23
       }
     ]
   }

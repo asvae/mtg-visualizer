@@ -1,22 +1,83 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "zone": "Hand",
-      "controller": "opp",
-      "value": 1
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Battlefield",
+      "target": {
+        "types": {
+          "not": [
+            "Land"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 51
+        }
+      ]
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 11
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
-      "controller": "opp",
-      "value": 1
+      "to": "Battlefield",
+      "types": {
+        "not": [
+          "Land"
+        ]
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 51
+        }
+      ]
     }
   ]
 }

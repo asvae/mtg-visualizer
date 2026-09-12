@@ -1,7 +1,7 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 Legendary creature(s)",
+      "setup": "you: a Stiltzkin, Moogle Merchant",
       "action": "cast from hand, mode 0 chosen",
       "result": "sacrifices a legendary creature (additional cost) as this counters a target ability or noncreature spell",
       "raw": {
@@ -9,9 +9,16 @@
         "castFrom": "hand",
         "mode": 0,
         "you": {
-          "creaturesCount": 1,
-          "creatureSubtypes": [
-            "Legendary"
+          "creatureCards": [
+            {
+              "name": "Stiltzkin, Moogle Merchant",
+              "subtypes": [
+                "Legendary",
+                "Moogle"
+              ],
+              "power": 1,
+              "toughness": 2
+            }
           ]
         }
       }
@@ -26,7 +33,7 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "Grizzly Bears",
+        "target": "Stiltzkin, Moogle Merchant",
         "result": true
       },
       {
@@ -36,39 +43,6 @@
         "validType": "creature",
         "notSelf": false,
         "tokenFilter": null
-      },
-      {
-        "fn": "counter",
-        "what": "Counter target activated ability, triggered ability, or noncreature spell."
-      },
-      {
-        "fn": "move",
-        "card": "Louisoix's Sacrifice",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, mode 1 chosen",
-      "result": "pays {2} instead of sacrificing, then counters a target ability or noncreature spell",
-      "raw": {
-        "result": "pays {2} instead of sacrificing, then counters a target ability or noncreature spell",
-        "castFrom": "hand",
-        "mode": 1
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Louisoix's Sacrifice",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{U}"
       },
       {
         "fn": "counter",

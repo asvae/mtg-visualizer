@@ -1,27 +1,94 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
-      "value": 1
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "cast",
+      "from": "Graveyard",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 26,
+          "end": 83
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 85,
+          "end": 98
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "u_3_3_robot_warrior"
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 55
+        }
+      ]
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "controller": "you",
-      "value": 4
-    },
-    {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
-    },
-    {
-      "zone": "Exile",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
+      "target": {
+        "name": {
+          "eq": "Robot Warrior"
+        }
+      },
+      "value": 4,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 103,
+          "end": 139
+        }
+      ]
     }
   ],
   "sink": []

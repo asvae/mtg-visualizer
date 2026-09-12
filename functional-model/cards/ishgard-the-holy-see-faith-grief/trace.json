@@ -30,22 +30,22 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isEnchantment",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isEnchantment",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": false
       },
       {

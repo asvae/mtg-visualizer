@@ -39,7 +39,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2142,
+        "id": 2,
         "keyword": "DoubleStrike"
       }
     ]
@@ -73,18 +73,18 @@
       },
       {
         "fn": "read:getCMC",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": 0
       },
       {
         "fn": "read:getCMC",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": 0
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 2145,
+        "target": "Grizzly Bears",
+        "id": 5,
         "zone": "Battlefield",
         "controller": "you"
       }

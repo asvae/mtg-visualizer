@@ -1,12 +1,21 @@
 [
   {
     "scenario": {
-      "setup": "",
+      "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
+      "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {3} activation re-attaches it to the other creature already on the battlefield, whose attack then untaps a target attacking creature",
       "raw": {
-        "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
-        "trigger": "onEnter"
+        "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {3} activation re-attaches it to the other creature already on the battlefield, whose attack then untaps a target attacking creature",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        },
+        "sequence": [
+          {
+            "activate": true
+          },
+          "onEquippedAttacks"
+        ]
       }
     },
     "log": [
@@ -14,6 +23,7 @@
         "fn": "trigger",
         "card": "Sage's Nouliths",
         "instanceId": 1,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -28,29 +38,15 @@
       {
         "fn": "equip",
         "equipment": "Sage's Nouliths",
-        "equipmentId": 1921,
+        "equipmentId": 3,
         "target": "Hero",
-        "id": 1922
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "activated ({3})",
-      "result": "attaches itself to the target creature",
-      "raw": {
-        "result": "attaches itself to the target creature",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "id": 4
+      },
       {
         "fn": "activate",
         "card": "Sage's Nouliths",
         "instanceId": 1,
+        "id": 3,
         "cost": "{3}"
       },
       {
@@ -61,30 +57,15 @@
       {
         "fn": "equip",
         "equipment": "Sage's Nouliths",
-        "equipmentId": 1926,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 1924
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"onEquippedAttacks\" trigger fires",
-      "result": "untaps a target attacking creature",
-      "raw": {
-        "result": "untaps a target attacking creature",
-        "trigger": "onEquippedAttacks",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "id": 2
+      },
       {
         "fn": "trigger",
         "card": "Sage's Nouliths",
         "instanceId": 1,
+        "id": 3,
         "name": "onEquippedAttacks"
       },
       {
@@ -95,7 +76,7 @@
       {
         "fn": "untap",
         "target": "Grizzly Bears",
-        "id": 1928
+        "id": 2
       }
     ]
   }

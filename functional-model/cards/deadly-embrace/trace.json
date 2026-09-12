@@ -37,7 +37,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 525,
+        "id": 3,
         "zone": "Graveyard",
         "controller": "opp0"
       },
@@ -106,7 +106,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 531,
+        "id": 9,
         "zone": "Graveyard",
         "controller": "opp0"
       },
@@ -126,12 +126,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {

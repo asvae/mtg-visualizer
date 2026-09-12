@@ -3,10 +3,15 @@
     "scenario": {
       "setup": "",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 Hero token",
+      "result": "the real ETB creates a 1/1 Hero token, which then crews Magitek Armor (Crew 1) so it becomes an artifact creature",
       "raw": {
-        "result": "creates a 1/1 Hero token",
-        "trigger": "onEnter"
+        "result": "the real ETB creates a 1/1 Hero token, which then crews Magitek Armor (Crew 1) so it becomes an artifact creature",
+        "trigger": "onEnter",
+        "sequence": [
+          {
+            "activate": true
+          }
+        ]
       }
     },
     "log": [
@@ -24,22 +29,7 @@
         "tapped": false,
         "power": 1,
         "toughness": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "activated (Crew 1 (tap creatures with total power 1 or more))",
-      "result": "becomes an artifact creature",
-      "raw": {
-        "result": "becomes an artifact creature",
-        "you": {
-          "creaturesCount": 1
-        }
-      }
-    },
-    "log": [
+      },
       {
         "fn": "activate",
         "card": "Magitek Armor",
@@ -49,7 +39,7 @@
       {
         "fn": "animate",
         "target": "Magitek Armor",
-        "id": 1404,
+        "id": 2,
         "types": [
           "Artifact",
           "Creature"

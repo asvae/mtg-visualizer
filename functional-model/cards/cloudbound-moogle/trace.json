@@ -54,64 +54,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 417,
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "is cast from hand, enters the battlefield; no other creature present, so it puts the +1/+1 counter on itself",
-      "raw": {
-        "result": "is cast from hand, enters the battlefield; no other creature present, so it puts the +1/+1 counter on itself",
-        "you": {
-          "creaturesCount": 0
-        },
-        "sequence": [
-          "onEnter"
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Cloudbound Moogle",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{3}{W}{W}"
-      },
-      {
-        "fn": "enters",
-        "card": "Cloudbound Moogle",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "trigger",
-        "card": "Cloudbound Moogle",
-        "instanceId": 1,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
-      },
-      {
-        "fn": "read:isCreature",
-        "target": "Cloudbound Moogle",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "Cloudbound Moogle",
-        "id": 420,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

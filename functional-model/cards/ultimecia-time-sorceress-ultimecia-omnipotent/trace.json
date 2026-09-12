@@ -54,14 +54,14 @@
       {
         "fn": "moveTo",
         "target": "Ultimecia, Time Sorceress",
-        "id": 2713,
+        "id": 12,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Ultimecia, Time Sorceress",
-        "id": 2713,
+        "id": 12,
         "zone": "Battlefield",
         "controller": "you"
       }

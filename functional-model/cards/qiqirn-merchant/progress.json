@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to unified Fact/annotations model (2026-09-12). Engine-piloted single scenario chaining both real activated abilities (cantrip, bigDraw). 7 real SOURCE facts, no SINK: baseline self-cast/self-enters, a shared self-tap-cost fact (both abilities' {T}), cantrip's own real drawCard+discard (discard modeled as a produced SOURCE fact, not cost-shaped like Cloudbound Moogle's Plainscycling), bigDraw's own real self-sacrifice-cost fact (mirrors Zack Fair) and its own separately-anchored drawCard fact. Fixed a general engine-trace.ts gap: pilotActivate had no way to pilot a NAMED ability (card.abilities) at all. Per-Town activation-cost reduction CLOSED (2026-09-12, ENGINE_GAPS.md gap #7's third example): real `card.ts` ActivationCostReduction on the 'bigDraw' ability + engine.ts's generalized effectiveActivationCost hook (canActivateAbility/activateAbility), real `costReductionPerControlled` descriptive field added to the existing self-sacrifice-cost fact (still exempted from trace-evidence checking via the pre-existing isSelfSacrificeActivationCostFact shape check — the discount mechanism itself is real and independently unit-tested in engine.test.ts, but this specific card's own bigDraw activation still can't be piloted through canActivateAbility at all, self-sacrifice-as-cost being a separate, unrelated, still-open engine gap). Dropped the old file's unbacked zone:Graveyard fact (no real evidence, same situation as Zack Fair's own self-sacrifice).",
   "textCoverageAudited": false,
   "knownGaps": []
 }

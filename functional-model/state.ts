@@ -77,20 +77,188 @@ export interface RealCard {
   /** Whether ANY of this card's marked damage came from a source with Deathtouch (702.2b/704.5h) — any nonzero amount from such a source is lethal regardless of accumulated total, so this is tracked as a flag rather than trying to recover "was source X deathtouch" from the summed `damageMarked` number alone. Same clearing caveat as `damageMarked`. */
   deathtouchDamaged?: boolean;
   /**
-   * A real, structural "{T}: Add {X}." mana ability (narrow slice of
-   * ENGINE_GAPS.md gap #5 — a single, unrestricted, fixed color; see
-   * `mana.ts`'s own `manaAbilityColorFromStaticText`), derived from the
-   * resolving `CardDefinition.staticAbilities` text at the moment this
-   * permanent enters the battlefield (`resolveTop`, `engine.ts`) — NOT
-   * live-derived from a stored `CardDefinition` reference (`RealCard` has
-   * none), so this is the one place that fact is captured. A card seeded
-   * directly onto the battlefield (never cast through the engine) has no
-   * value here, same documented convention `enteredThisTurn`/
-   * `resolvedPermanents` already established for ETB-derived bookkeeping.
+   * A real, structural "{T}: Add {X}." (or "{T}: Add {X} or {Y}.") mana
+   * ability — narrow slices of ENGINE_GAPS.md gap #5, see `mana.ts`'s own
+   * `manaAbilityColorFromStaticText`/`manaAbilityColorsFromStaticText` —
+   * derived from the resolving `CardDefinition.staticAbilities` text at the
+   * moment this permanent enters the battlefield (`resolveTop`/`playLand`,
+   * `engine.ts`) — NOT live-derived from a stored `CardDefinition`
+   * reference (`RealCard` has none), so this is the one place that fact is
+   * captured. A card seeded directly onto the battlefield (never cast
+   * through the engine) has no value here, same documented convention
+   * `enteredThisTurn`/`resolvedPermanents` already established for
+   * ETB-derived bookkeeping.
+   *
+   * A single `ManaColor` for the ORIGINAL single-color-only slice (10 real
+   * cards — Druid of the Cowl, White Auracite, etc.); a `ManaColor[]`
+   * (always length 2 in practice — no real FIN card offers 3+ choices) for
+   * the widened real "choice of color" slice (12 real Town-cycle lands,
+   * e.g. Vector, Imperial Capital's own "{T}: Add {B} or {R}.") — closed
+   * 2026-09-12 via `mana.ts`'s `sourceColors`/`assignManaRequirements`
+   * generalizing `canAfford`/`payMana`'s own colored-pip matching into a
+   * real bipartite-style assignment, so a dual land now genuinely counts
+   * toward EITHER color a cost needs, not just a fixed one. Restricted
+   * ("Spend this mana only to...") and variable-amount ("for each Elf you
+   * control") sources are still NOT represented here at all — see
+   * `mana.ts`'s own header for why both remain open.
    */
-  manaAbility?: ManaColor;
+  manaAbility?: ManaColor | ManaColor[];
   /** Real, query-time continuous keyword grant(s) (613, ENGINE_GAPS.md gap #14) — see `card.ts`'s own `CardDefinition.continuousKeywordGrants` doc comment for the two real Forge shapes (Dion's turn-conditional Dragonfire Dive, Ardyn's unconditional Demons grant). Copied from the resolving `CardDefinition` at `addCard` time, same convention `ptFormula`/`manaAbility` already establish — `RealCard` never holds a live reference back to its own `CardDefinition`. Consumed by `effectiveKeywords` below, not read directly anywhere else. */
   continuousKeywordGrants?: { keywords: string[]; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
+  /** Real, query-time continuous P/T grant(s) (613.3, layer 7c, ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12) — see `card.ts`'s own `CardDefinition.continuousPTGrants` doc comment for the real Forge citation and the 5 real fixed-delta cards it covers (Dragoon's Lance/Paladin's Arms/Crystal Fragments/White Mage's Staff/Sage's Nouliths). Same copy-at-resolve-time convention as `continuousKeywordGrants` right above. Consumed by `effectivePT` below, not read directly anywhere else. */
+  continuousPTGrants?: { power: number; toughness: number; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
+  /** Real, query-time continuous creature-TYPE grant(s) (613.3, layer 4, ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12) — see `card.ts`'s own `CardDefinition.continuousTypeGrants` doc comment for the real Forge citation and the 6 real cards it covers (Dragoon's Lance/Machinist's Arsenal/Paladin's Arms/White Mage's Staff/Sage's Nouliths/Astrologian's Planisphere — a creature-subtype broadcast, e.g. 'Knight', not a card-type change). Same copy-at-resolve-time convention as `continuousKeywordGrants` above. Consumed by `effectiveSubtypes` below, not read directly anywhere else. */
+  continuousTypeGrants?: { types: string[]; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
+  /**
+   * Real CR 601.2f cost-reduction this permanent BROADCASTS onto OTHER
+   * spells its controller casts (ENGINE_GAPS.md gap #7's second real
+   * example, The Wind Crystal's own "White spells you cast cost {1} less
+   * to cast") — see `card.ts`'s own `CardDefinition.spellCostReductionGrants`/
+   * `SpellCostReductionGrant` doc comments for the real Forge citation and
+   * scope. Copied from the resolving `CardDefinition` at `resolveTop` time,
+   * same convention `continuousKeywordGrants` right above already
+   * establishes — `RealCard` never holds a live `CardDefinition` reference.
+   * Consumed by `activeSpellCostDiscount` below, not read directly anywhere
+   * else.
+   */
+  spellCostReductionGrants?: { amount: number; colors: string[] }[];
+  /**
+   * Real "Panharmonicon effect" static grant (ENGINE_GAPS.md gap #13,
+   * closed 2026-09-12) — see `card.ts`'s own `CardDefinition.triggerDoubling`/
+   * `TriggerDoublingGrant` doc comment for the real Forge citation and the 3
+   * real FIN cards needing this (Cloud, Midgar Mercenary; The Masamune;
+   * Traveling Chocobo), each with a genuinely different gate. Copied from
+   * the resolving `CardDefinition` at `resolveTop`/`addCard` time, same
+   * convention `continuousKeywordGrants`/`spellCostReductionGrants` above
+   * already establish — `RealCard` never holds a live `CardDefinition`
+   * reference. Consumed by `shouldDoubleTrigger` below, not read directly
+   * anywhere else.
+   */
+  triggerDoubling?: TriggerDoublingGrant[];
+  /**
+   * Real 508.1's own per-permanent "attacked this turn" flag (ENGINE_GAPS.md
+   * gap #16, ../mtg-forge's own `CardDamageHistory.attackedThisTurn`/
+   * `hasAttackedThisTurn(GameEntity)`, forge-game/.../card/CardDamageHistory.java
+   * lines 26-27/88-90 — set via `setCreatureAttackedThisCombat`, ~line 54-59,
+   * itself called from `CombatUtil.java` ~line 386 the moment an attacker is
+   * declared; cleared each turn by `CardDamageHistory.newTurn()`, ~line
+   * 282-283). The Lunar Whale's own real "As long as The Lunar Whale attacked
+   * this turn, you may play the top card of your library" is the real FIN
+   * card that needs this. Set by `engine.ts`'s `declareAttackers` for every
+   * real declared attacker; cleared game-wide by `clearAttackedThisTurn`
+   * below, called from `turn.ts`'s Cleanup branch alongside `clearAllDamage`/
+   * `clearUntilEndOfTurnKeywordGrants` — a plain boolean, not a turn-number
+   * comparison like `GameEngine.enteredThisTurn` (that field needs to compare
+   * against a LATER turn number to answer "still this turn?"; this field is
+   * simply reset to false every Cleanup, same shape `damageMarked`/
+   * `deathtouchDamaged` already use for the same "cleared at Cleanup, boolean
+   * in the meantime" reason). Absent/`undefined` means "hasn't attacked this
+   * turn," same "absent means the non-set case" convention every other
+   * optional turn-scoped `RealCard` field here already uses.
+   */
+  attackedThisTurn?: boolean;
+}
+
+/**
+ * Real "Panharmonicon effect" static grant shape (ENGINE_GAPS.md gap #13) —
+ * mirrors `card.ts`'s own `TriggerDoublingGrant` structurally (same
+ * duck-typed-not-imported convention `continuousKeywordGrants`'s own inline
+ * shape already establishes above — `state.ts` deliberately never imports
+ * from `card.ts`, see this file's own header). Three real gates, one per
+ * real FIN card needing this (checked against the pool, ENGINE_GAPS.md gap
+ * #13's own writeup):
+ *  - `'selfAndAttachedEquipment'` (Cloud, Midgar Mercenary — "As long as
+ *    this is equipped, if a triggered ability of this or an Equipment
+ *    attached to it triggers, that ability triggers an additional time"):
+ *    applies to the GRANTING permanent itself, or anything ATTACHED to it,
+ *    but ONLY while it's genuinely equipped by something — no `causedBy`
+ *    restriction, this doubles ANY triggered ability.
+ *  - `'equippedSelf'` (The Masamune — "Equipped creature has 'If a creature
+ *    dying causes a triggered ability of this creature or an emblem you own
+ *    to trigger, that ability triggers an additional time.'"): the grant
+ *    lives on the EQUIPMENT, but applies to whatever creature IT is
+ *    currently equipped to (real `equippedBySelf` shape,
+ *    `qualifiesForContinuousGrant` above), gated to `causedBy: 'dying'`. The
+ *    "...or an emblem you own" half is real printed text but genuinely
+ *    unmodelable — no emblem mechanism exists anywhere in this engine — so
+ *    it can never actually match; not silently dropped, just never
+ *    reachable.
+ *  - `'anyPermanentYouControl'` (Traveling Chocobo — "If a land or Bird you
+ *    control entering the battlefield causes a triggered ability of a
+ *    permanent you control to trigger, that ability triggers an additional
+ *    time."): applies to ANY permanent the SAME controller owns (not just
+ *    self), gated to `causedBy: 'entersBattlefield'` with `entersMatch`
+ *    further restricting WHICH entering permanent counts (a land, or a
+ *    subtype like `'Bird'` — an OR list, any one match qualifies).
+ */
+export interface TriggerDoublingGrant {
+  scope: 'selfAndAttachedEquipment' | 'equippedSelf' | 'anyPermanentYouControl';
+  /** Restricts which real CAUSE of the trigger firing actually gets doubled — omit for "any cause" (Cloud's own shape has no restriction at all). */
+  causedBy?: 'dying' | 'entersBattlefield';
+  /** Only consulted when `causedBy === 'entersBattlefield'` — an OR list, any one match qualifies (Traveling Chocobo's own "a land OR Bird," `[{isLand:true},{subtype:'Bird'}]`). */
+  entersMatch?: { isLand?: boolean; subtype?: string }[];
+}
+
+/**
+ * What caused a named trigger to fire, when a real doubling gate's own
+ * `causedBy` cares (Masamune/Traveling Chocobo) — omit for a trigger whose
+ * only possibly-active doubling gate doesn't filter on cause at all
+ * (Cloud's own shape). Not a general "why did this trigger" taxonomy —
+ * scoped exactly to the two real causes gap #13's own 3 cards need; extend
+ * only once a new real card needs a third.
+ */
+export type TriggerCause = { kind: 'dying' } | { kind: 'entersBattlefield'; entered: RealCard };
+
+function triggerCauseMatches(entered: RealCard, filters: { isLand?: boolean; subtype?: string }[]): boolean {
+  return filters.some((f) => (f.isLand === undefined || entered.types.includes('Land') === f.isLand) && (f.subtype === undefined || entered.subtypes.includes(f.subtype)));
+}
+
+/** One `triggerDoubling` entry's own real qualification check — `source` is the permanent carrying the grant, `firing` is the RealCard whose named trigger is actually resolving, `cause` (if any) is what caused it. */
+function triggerDoublingGrantApplies(state: GameState, source: RealCard, grant: TriggerDoublingGrant, firing: RealCard, cause?: TriggerCause): boolean {
+  if (grant.causedBy === 'dying' && cause?.kind !== 'dying') return false;
+  if (grant.causedBy === 'entersBattlefield') {
+    if (cause?.kind !== 'entersBattlefield') return false;
+    if (!grant.entersMatch || !triggerCauseMatches(cause.entered, grant.entersMatch)) return false;
+  }
+  switch (grant.scope) {
+    case 'selfAndAttachedEquipment': {
+      const isSelfOrAttached = firing.id === source.id || firing.attachedToId === source.id;
+      if (!isSelfOrAttached) return false;
+      // "As long as this is equipped" — real 301.5c-adjacent precondition,
+      // checked fresh every call (some real object currently has `attachedToId`
+      // pointing at `source`), not baked in at grant-authoring time.
+      return [...state.cards.values()].some((c) => c.attachedToId === source.id);
+    }
+    case 'equippedSelf':
+      return source.attachedToId === firing.id;
+    case 'anyPermanentYouControl':
+      return firing.controllerId === source.controllerId;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Real, query-time check (613-adjacent "Panharmonicon effect," ENGINE_GAPS.md
+ * gap #13, closed 2026-09-12) — is there any real, currently-qualifying
+ * `triggerDoubling` grant anywhere on the battlefield that covers THIS
+ * specific trigger firing (`firing`, the RealCard whose named trigger is
+ * resolving; `cause`, if the firing has one worth checking against a gate's
+ * own `causedBy`)? Same "recalculated on read, never a fixed/timestamped
+ * delta" treatment `effectiveKeywords`/`qualifiesForContinuousGrant` already
+ * establish for a continuous grant — consulted by `triggers.ts`'s own shared
+ * `fireTrigger`, the one real chokepoint every trigger-firing call site in
+ * this codebase now funnels a NAMED trigger's resolution through instead of
+ * calling `resolveCard` directly.
+ */
+export function shouldDoubleTrigger(state: GameState, firing: RealCard, cause?: TriggerCause): boolean {
+  for (const source of state.cards.values()) {
+    if (source.zone !== 'Battlefield' || !source.triggerDoubling) continue;
+    for (const grant of source.triggerDoubling) {
+      if (triggerDoublingGrantApplies(state, source, grant, firing, cause)) return true;
+    }
+  }
+  return false;
 }
 
 /** GameState-wide, real turn state kept in sync by `engine.ts`'s own `advance()` (set to the real active player's id after every phase change) — `undefined` only ever means "no real turn ever started" (a plain `harness.ts` scenario, which has no turn/phase concept at all). `effectiveKeywords`'s own `onlyDuringYourTurn` check treats that `undefined` case as "yes, it's this permanent's controller's turn" — matching `Scenario`'s own documented baseline ("Main Phase with priority," i.e. already assumed to be YOUR turn unless a scenario says otherwise) rather than leaving a turn-conditional grant silently, permanently off in every non-engine-piloted scenario. */
@@ -117,19 +285,92 @@ export function isActiveOrDefault(state: GameState, controllerId: number): boole
  * `attachedToId` link instead of a subtype/controller match — the grant
  * really follows the Equipment if re-equipped, real-time.
  */
+/**
+ * Shared recipient-resolution logic for EVERY continuous, query-time grant
+ * this engine models (613, ENGINE_GAPS.md gap #14 and its own follow-up
+ * generalization to P/T and creature-type grants, closed 2026-09-12) —
+ * `effectiveKeywords`/`effectivePT`/`effectiveSubtypes` below all call this
+ * SAME function rather than each re-implementing the identical
+ * `includeSelf`/`subtype`/`onlyDuringYourTurn`/`equippedBySelf` resolution
+ * three times. `source` is the permanent doing the granting, `grant` is one
+ * entry off its own `continuous*Grants` array, `card` is the candidate
+ * recipient being checked. Payload-agnostic on purpose (doesn't know or
+ * care whether `grant` carries `keywords`/`power`+`toughness`/`types` —
+ * only cares whether `card` qualifies to receive WHATEVER it carries), so
+ * one shared implementation serves all three payload shapes at once —
+ * `card.ts`'s own `ContinuousGrantTargeting` is the type this mirrors.
+ */
+function qualifiesForContinuousGrant(
+  state: GameState,
+  source: RealCard,
+  grant: { includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean },
+  card: RealCard,
+): boolean {
+  if (grant.onlyDuringYourTurn && !isActiveOrDefault(state, source.controllerId)) return false;
+  const isSelf = grant.includeSelf && source.id === card.id;
+  const isMatchingOther = grant.subtype !== undefined && card.controllerId === source.controllerId && card.subtypes.includes(grant.subtype);
+  const isEquipped = grant.equippedBySelf === true && source.attachedToId === card.id;
+  return isSelf || isMatchingOther || isEquipped;
+}
+
 export function effectiveKeywords(state: GameState, card: RealCard): string[] {
   const set = new Set(card.keywords);
   for (const source of state.cards.values()) {
     if (source.zone !== 'Battlefield' || !source.continuousKeywordGrants) continue;
     for (const grant of source.continuousKeywordGrants) {
-      if (grant.onlyDuringYourTurn && !isActiveOrDefault(state, source.controllerId)) continue;
-      const isSelf = grant.includeSelf && source.id === card.id;
-      const isMatchingOther = grant.subtype !== undefined && card.controllerId === source.controllerId && card.subtypes.includes(grant.subtype);
-      const isEquipped = grant.equippedBySelf === true && source.attachedToId === card.id;
-      if (isSelf || isMatchingOther || isEquipped) for (const kw of grant.keywords) set.add(kw);
+      if (qualifiesForContinuousGrant(state, source, grant, card)) for (const kw of grant.keywords) set.add(kw);
     }
   }
   return [...set];
+}
+
+/**
+ * Real, LIVE creature-TYPE set (613, layer 4, ENGINE_GAPS.md gap #14's own
+ * follow-up, closed 2026-09-12) — a permanent's own printed `subtypes`
+ * UNION every real `continuousTypeGrants` entry any OTHER (or the same)
+ * permanent on the battlefield currently grants it, re-evaluated fresh on
+ * every call, same "recalculated on read" treatment `effectiveKeywords`
+ * already gives its own sibling grant family (this is genuinely the SAME
+ * mechanism — `qualifiesForContinuousGrant` — with a different payload).
+ * This is THE read path for "does this card have creature type T right
+ * now" — `wrapCard`'s own `hasSubtype` routes through this, not a raw
+ * `card.subtypes.includes(...)` read, so a granted type is functionally
+ * real (a card matching "Knight" via a granted type genuinely satisfies a
+ * `hasSubtype('Knight')` check), not just a label. Named `effectiveSubtypes`
+ * (not `effectiveTypes`, already taken above) — every real FIN card needing
+ * this grants a CREATURE TYPE (`RealCard.subtypes`), never a card
+ * supertype/type (`RealCard.types`, `effectiveTypes`'s own domain).
+ */
+export function effectiveSubtypes(state: GameState, card: RealCard): string[] {
+  const set = new Set(card.subtypes);
+  for (const source of state.cards.values()) {
+    if (source.zone !== 'Battlefield' || !source.continuousTypeGrants) continue;
+    for (const grant of source.continuousTypeGrants) {
+      if (qualifiesForContinuousGrant(state, source, grant, card)) for (const t of grant.types) set.add(t);
+    }
+  }
+  return [...set];
+}
+
+/**
+ * Real CR 601.2f cost-reduction total a `caster` currently benefits from
+ * when casting a spell of `cardColors` (ENGINE_GAPS.md gap #7's second real
+ * example, The Wind Crystal's own "White spells you cast cost {1} less to
+ * cast") — sums every `spellCostReductionGrants` entry on the CASTER'S OWN
+ * battlefield permanents (real Forge: `Activator$ You` — the discount is
+ * scoped to the GRANTING permanent's OWN controller casting, not any
+ * player) whose `colors` intersect `cardColors` at all. `engine.ts`'s
+ * `effectiveCastCost` is the one real call site — see that function's own
+ * doc comment for how this combines with a card's own `costReduction`.
+ */
+export function activeSpellCostDiscount(caster: RealPlayer, cardColors: string[]): number {
+  let total = 0;
+  for (const permanent of caster.battlefield) {
+    for (const grant of permanent.spellCostReductionGrants ?? []) {
+      if (grant.colors.some((c) => cardColors.includes(c))) total += grant.amount;
+    }
+  }
+  return total;
 }
 
 /** Layer 4 (TYPE) applied — the card's CURRENT type list, not just its printed one. Use this instead of raw `card.types` anywhere "is this a creature/artifact/etc. right now" matters (an `animate`d permanent really does count). */
@@ -163,6 +404,24 @@ export function effectivePT(state: GameState, card: RealCard): [number, number] 
     // not assumed for free just because this one exists.
     const creatureCount = controller ? controller.battlefield.filter((c) => effectiveTypes(c).includes('Creature')).length : 0;
     base = creatureCount;
+  }
+  // Real layer 7c: a FIXED-delta continuous P/T grant broadcast from
+  // another (or the same) permanent — same real, query-time mechanism
+  // `effectiveKeywords`/`effectiveSubtypes` use for their own sibling grant
+  // families (ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12),
+  // applied here rather than via `layers.ts`'s per-object `LayerSet` since
+  // the grant lives on the SOURCE permanent (an Equipment) and must
+  // genuinely track a live `attachedToId`/turn-conditional check, not a
+  // fixed timestamped delta on `card` itself. Summed BEFORE counters (7d),
+  // matching real 613.3's own 7c-before-7d sublayer order.
+  for (const source of state.cards.values()) {
+    if (source.zone !== 'Battlefield' || !source.continuousPTGrants) continue;
+    for (const grant of source.continuousPTGrants) {
+      if (qualifiesForContinuousGrant(state, source, grant, card)) {
+        base += grant.power;
+        baseT += grant.toughness;
+      }
+    }
   }
   base += card.counters['+1/+1'] ?? 0;
   baseT += card.counters['+1/+1'] ?? 0;
@@ -248,8 +507,23 @@ export class GameState {
   players = new Map<number, RealPlayer>();
   cards = new Map<number, RealCard>();
   delayedTriggers: DelayedTrigger[] = [];
+  /** Pending real 514.2 "until end of turn" keyword grants — see `grantKeyword`'s own `opts.untilEndOfTurn` doc comment and `clearUntilEndOfTurnKeywordGrants` (drains this at every real Cleanup entry). By `cardId` (not a direct `RealCard` reference) so a card that's since changed zones is still a safe, cheap `Map` lookup rather than a stale object reference. */
+  untilEndOfTurnKeywordGrants: { cardId: number; keyword: string }[] = [];
   /** See `isActiveOrDefault`'s own doc comment (just below `RealCard`, above) — kept in sync by `engine.ts`'s `advance()`; defaults to the FIRST player added (the scenario's own conventional 'you') the moment they're added, so an unadvanced/plain scenario already reads as "your turn" without needing a real turn simulation to say so explicitly. */
   activePlayerId?: number;
+  /**
+   * Real per-player "already flipped a coin this turn" tracking (ENGINE_GAPS.md
+   * gap #15) — real Forge tracks this as a live `Count$YouFlipThisTurn` SVar
+   * (`res/cardsfolder/e/edgar_king_of_figaro.txt`'s own real script:
+   * `CheckSVar$ Count$YouFlipThisTurn | SVarCompare$ EQ0`); this model only
+   * needs the boolean "has this player flipped at least once this turn"
+   * question (`flipCoin` below), not the exact running count, so a bare
+   * per-player `Set` is enough. Reset game-wide at every real Cleanup
+   * (`turn.ts`'s `runPhaseEntryAction`, alongside `clearAllDamage`/
+   * `clearUntilEndOfTurnKeywordGrants` — same "once per real turn boundary,
+   * every player" scope), via `resetFlippedCoinThisTurn` below.
+   */
+  flippedCoinThisTurn = new Set<number>();
 
   /** Schedules `run` to fire the next time the game enters `phase` (see `DelayedTrigger` above) — real 603.7 duration only, not a repeating/every-turn trigger: fires once, then this entry is gone (drained by `turn.ts`'s `advancePhase`). */
   scheduleDelayedTrigger(phase: Phase, run: () => void): void {
@@ -289,6 +563,9 @@ export class GameState {
       cmc: opts.cmc,
       manaAbility: opts.manaAbility,
       continuousKeywordGrants: opts.continuousKeywordGrants,
+      continuousPTGrants: opts.continuousPTGrants,
+      continuousTypeGrants: opts.continuousTypeGrants,
+      triggerDoubling: opts.triggerDoubling,
     };
     this.cards.set(card.id, card);
     const arr = zoneArray(owner, zone);
@@ -498,6 +775,23 @@ export class GameState {
     }
   }
 
+  /**
+   * Real 508.1 "attacked this turn" reset — `CardDamageHistory.newTurn()`'s
+   * own `attackedThisTurn.clear()` (forge-game/.../card/CardDamageHistory.java
+   * ~line 282-283), called here at every real Cleanup entry (`turn.ts`'s
+   * `runPhaseEntryAction`, alongside `clearAllDamage`/
+   * `clearUntilEndOfTurnKeywordGrants`'s own exact same "real, game-wide,
+   * once per Cleanup" shape) rather than at the start of the next turn —
+   * functionally identical in this engine's own fixed phase list, since
+   * Cleanup is always the last phase before the next turn's Untap. See
+   * `RealCard.attackedThisTurn`'s own doc comment for the real Forge
+   * citation and why this is a plain boolean reset, not a turn-number
+   * comparison.
+   */
+  clearAttackedThisTurn(): void {
+    for (const card of this.cards.values()) card.attackedThisTurn = false;
+  }
+
   /** `Card.tap(...)` (forge-game/.../card/Card.java ~line 4662) — real, persistent tapped state. */
   tap(card: RealCard): void {
     card.tapped = true;
@@ -558,17 +852,63 @@ export class GameState {
    * `Card.addChangedCardKeywords(...)` (forge-game/.../card/Card.java ~line
    * 5017) — grants a keyword. Real Forge tracks this as a duration-scoped,
    * timestamped layer-6 entry (reverted at the real effect's end — "until
-   * end of turn," e.g.); this model has no phase/turn-boundary reset step
-   * anywhere (see this file's own header), so the grant is a direct,
-   * PERMANENT push onto the card's own `keywords` array instead — same
-   * documentary-approximation category `move`/`destroy`'s own `optional`
-   * field already carries for a different nuance (player choice, there;
-   * duration, here). Still a REAL mutation, not just a logged intent: a
-   * later `state.destroy`/`state.dealDamage` call genuinely sees the
-   * granted Indestructible/Lifelink within the same scenario.
+   * end of turn," e.g.); this model's default (`opts.untilEndOfTurn`
+   * omitted/false) is still a direct, PERMANENT push onto the card's own
+   * `keywords` array — same documentary-approximation category
+   * `move`/`destroy`'s own `optional` field already carries for a
+   * different nuance (player choice, there; duration, here), unchanged for
+   * every existing pool card using this shape. Still a REAL mutation, not
+   * just a logged intent: a later `state.destroy`/`state.dealDamage` call
+   * genuinely sees the granted Indestructible/Lifelink within the same
+   * scenario.
+   *
+   * `opts.untilEndOfTurn: true` additionally registers the grant in
+   * `untilEndOfTurnKeywordGrants` (real 514.2 — Cleanup ends "until end of
+   * turn" effects), closing the real phase/turn-boundary reset gap this
+   * doc comment used to say didn't exist anywhere — see
+   * `clearUntilEndOfTurnKeywordGrants`, called once per real Cleanup entry
+   * (`turn.ts`'s `runPhaseEntryAction`, alongside `clearAllDamage`'s own
+   * exact same "real, game-wide, once per Cleanup" shape). Opt-in only:
+   * every pre-existing `grantKeyword`/`grantKeywordAll`/`grantKeywordTarget`/
+   * `grantKeywordSelf` call across the pool keeps its prior permanent-
+   * within-scenario behavior unless its own `Effect` explicitly sets
+   * `untilEndOfTurn: true`.
    */
-  grantKeyword(card: RealCard, keyword: string): void {
+  grantKeyword(card: RealCard, keyword: string, opts?: { untilEndOfTurn?: boolean }): void {
     if (!card.keywords.includes(keyword)) card.keywords.push(keyword);
+    if (opts?.untilEndOfTurn) this.untilEndOfTurnKeywordGrants.push({ cardId: card.id, keyword });
+  }
+
+  /**
+   * Real 514.2's "until end of turn" half (the damage-clearing half is
+   * `clearAllDamage`, called alongside this at the same real Cleanup
+   * entry) — ends every keyword grant registered via `grantKeyword`'s own
+   * `opts.untilEndOfTurn: true`, game-wide (any player's permanent, not
+   * just the active player's — matching `clearAllDamage`'s own scope, and
+   * real 514.2's own "all... effects... end" wording, not "the active
+   * player's own"). Removes the keyword from the card's `keywords` array
+   * directly (a real mutation, same as the grant itself) rather than
+   * leaving it in place and filtering at read time — so it disappears
+   * from every consumer at once (`hasKeyword`, `effectiveKeywords`, a raw
+   * `card.keywords.includes(...)` read), no separate "temporary keywords"
+   * array for callers to remember to also check. A card no longer on the
+   * battlefield (already moved to graveyard/exile since the grant) is
+   * silently skipped — CR 514.2 only ever mattered while it still had the
+   * keyword to lose.
+   */
+  clearUntilEndOfTurnKeywordGrants(): void {
+    for (const { cardId, keyword } of this.untilEndOfTurnKeywordGrants) {
+      const card = this.cards.get(cardId);
+      if (!card) continue;
+      const i = card.keywords.indexOf(keyword);
+      if (i !== -1) card.keywords.splice(i, 1);
+    }
+    this.untilEndOfTurnKeywordGrants = [];
+  }
+
+  /** Real per-turn reset for `flippedCoinThisTurn` above (ENGINE_GAPS.md gap #15) — called game-wide at every real Cleanup (`turn.ts`'s `runPhaseEntryAction`, alongside `clearAllDamage`/`clearUntilEndOfTurnKeywordGrants`), same "once per real turn boundary" scope those two already use — matches real Forge's own `Count$YouFlipThisTurn` SVar implicitly resetting every turn (`edgar_king_of_figaro.txt`'s own `SVarCompare$ EQ0` check). */
+  resetFlippedCoinThisTurn(): void {
+    this.flippedCoinThisTurn.clear();
   }
 
   /**
@@ -638,13 +978,56 @@ export class GameState {
    * single damage EVENT hit before granting life once; this simplified
    * version only ever deals damage to one target per call, so summing
    * doesn't come up yet — same single-target scope every other action here
-   * has. Returns the life gained (0 when no Lifelink source), so callers
-   * (harness.ts) can log it as a real, visible fact.
+   * has. Returns whether life was gained AND (a real, separate axis) whether
+   * this call's damage was PREVENTED outright — see `prevented`'s own doc
+   * comment below — so callers (harness.ts) can log either as a real,
+   * visible fact.
+   *
+   * `opts.combat` (ENGINE_GAPS.md gap #8, closed for a narrow real subset) —
+   * whether THIS damage instance is combat damage (510), the one real axis
+   * distinguishing Diamond Weapon's own combat-only shield from Crystal
+   * Fragments/Summon: Alexander's own all-damage shield (see the two
+   * `Keyword` checks below). Real Forge citations, both real per-object
+   * `ReplacementEffect`s (`Event$ DamageDone | Prevent$ True`, general
+   * machinery this engine deliberately doesn't have — `ReplacementEffect
+   * .java`/`ReplacementHandler.java`, forge-game/.../replacement/ — checked
+   * at this ONE real chokepoint instead, same "narrow hook, not a general
+   * dispatcher" shape the STUN/FINALITY counter replacements above already
+   * establish):
+   *  - Diamond Weapon (`res/cardsfolder/d/diamond_weapon.txt`): `R:Event$
+   *    DamageDone | Prevent$ True | IsCombat$ True | ValidTarget$
+   *    Card.Self` — combat damage ONLY, to itself only. Modeled as a real
+   *    `'CombatDamagePrevention'` keyword on its own `keywords` (same
+   *    "approximated via the same grant/`hasKeyword` machinery as a real
+   *    keyword grant" treatment `'Unblockable'` already establishes — see
+   *    that entry's own doc comment, card.ts), checked here gated on
+   *    `opts.combat`.
+   *  - Crystal Fragments/Summon: Alexander (`res/cardsfolder/c/
+   *    crystal_fragments_summon_alexander.txt`): `SVar:RPrevent:Event$
+   *    DamageDone | Prevent$ True | ActiveZones$ Command | ValidTarget$
+   *    Creature.YouCtrl` — ALL damage (no `IsCombat$` field), to every
+   *    creature its controller controls, for the rest of that turn (a real,
+   *    turn-scoped effect — `ActiveZones$ Command` is Forge's own "lives in
+   *    the Command zone until the turn ends" shape). Modeled as a real
+   *    `'DamagePrevention'` keyword GRANTED (`kind:'grantKeywordAll'`,
+   *    `untilEndOfTurn: true`) by each of that Saga's own chapter I/II
+   *    effects (`cards/crystal-fragments-summon-alexander/definition.ts`) —
+   *    reuses the EXISTING real 514.2 until-end-of-turn keyword-grant
+   *    machinery (`grantKeyword`/`clearUntilEndOfTurnKeywordGrants` above),
+   *    not a new expiry mechanism.
+   * Both checked via `effectiveKeywords` (not a raw `target.keywords.includes`
+   * read) so a GRANTED shield (Crystal Fragments' own) is just as real as a
+   * printed one (Diamond Weapon's own) — same reasoning the Deathtouch/
+   * Lifelink checks below already apply.
    */
-  dealDamage(target: RealPlayer | RealCard, amount: number, source?: RealCard): number {
+  dealDamage(target: RealPlayer | RealCard, amount: number, source?: RealCard, opts?: { combat?: boolean }): { lifeGained: number; prevented: boolean } {
     if ('life' in target) {
       target.life -= amount;
     } else {
+      const targetKeywords = effectiveKeywords(this, target);
+      if (targetKeywords.includes('DamagePrevention') || (opts?.combat && targetKeywords.includes('CombatDamagePrevention'))) {
+        return { lifeGained: 0, prevented: true };
+      }
       target.damageMarked = (target.damageMarked ?? 0) + amount;
       // `effectiveKeywords`, not a raw `source?.keywords.includes(...)` read
       // (2026-09-12, ENGINE_GAPS.md gap #14) — a GRANTED Deathtouch/Lifelink
@@ -656,12 +1039,77 @@ export class GameState {
     }
     if (source && effectiveKeywords(this, source).includes('Lifelink')) {
       const controller = this.players.get(source.controllerId);
-      if (controller) {
-        controller.life += amount;
-        return amount;
-      }
+      if (controller) return { lifeGained: this.gainLife(controller, amount), prevented: false };
     }
-    return 0;
+    return { lifeGained: 0, prevented: false };
+  }
+
+  /**
+   * The ONE real chokepoint every life-total INCREASE in this engine now
+   * routes through (`wrapPlayer.gainLife` below, AND `dealDamage`'s own
+   * Lifelink branch above — Lifelink's lifegain is a real `GainLife` event
+   * exactly like any other, CR 614.2 doesn't care what caused it) — same
+   * "narrow hook at the one real mutation site, not a general dispatcher"
+   * shape gap #8's damage shields (`dealDamage`, above) and the STUN/
+   * FINALITY counter replacements already establish, closing ENGINE_GAPS.md
+   * gap #8b. Real Forge citation: The Wind Crystal's own real script
+   * (`res/cardsfolder/t/the_wind_crystal.txt`): `R:Event$ GainLife |
+   * ActiveZones$ Battlefield | ValidPlayer$ You | ReplaceWith$ GainDouble ...
+   * SVar:X:ReplaceCount$LifeGained/Twice` — a real per-player CR 614.2
+   * self-replacement doubling the amount, general `ReplacementEffect`/
+   * `ReplacementHandler` machinery (forge-game/.../replacement/) this engine
+   * doesn't have, checked here instead. Modeled as a real `'LifegainDouble'`
+   * keyword (same `'Unblockable'`-style "approximated via `hasKeyword`
+   * machinery" treatment `dealDamage`'s own two shield keywords use above)
+   * on any of `player`'s own Battlefield permanents — checked via
+   * `effectiveKeywords` per permanent (not just `card.keywords` — a GRANTED
+   * copy would count too, though no real FIN card grants this one).
+   * Returns the REAL amount actually applied (doubled or not) so a caller
+   * can log the true, post-replacement number, not the nominal request.
+   */
+  gainLife(player: RealPlayer, amount: number): number {
+    const doubled = amount > 0 && player.battlefield.some((c) => effectiveKeywords(this, c).includes('LifegainDouble'));
+    const applied = doubled ? amount * 2 : amount;
+    player.life += applied;
+    return applied;
+  }
+
+  /**
+   * Real, minimal coin-flip RESOLUTION primitive (ENGINE_GAPS.md gap #15) —
+   * closing the first of two gaps that section documented (no coin-flip
+   * OUTCOME mechanism of any kind previously existed; `event:'coinFlip'`,
+   * synergy.ts, only ever modeled the FLIP happening, never its result).
+   * Same "no AI/player-decision process — every round's choices are
+   * supplied by the caller" convention `priority.ts`'s own header already
+   * establishes for a different real decision (a priority pass) — `won` is
+   * a real, caller-supplied outcome (this engine has no randomization
+   * anywhere, and isn't the place to add dice-rolling infrastructure just
+   * for this), NOT computed/randomized here. Real Forge citation for the
+   * flip ITSELF: `FlipCoinEffect.java` (forge-game/.../ability/effects/),
+   * whose own real per-player result is either genuinely random
+   * (`MyRandom.getRandom().nextBoolean()`) or, when a static ability forces
+   * one, taken from `StaticAbilityFlipCoinMod.fixedResult(flipper)` instead
+   * — this method mirrors exactly that second, fixed-result path (the ONE
+   * this engine can model without inventing randomization) via the SAME
+   * `'TwoHeadedCoin'` keyword-machinery approximation (`'Unblockable'`-style,
+   * see `gainLife`'s own doc comment just above) `dealDamage`'s shields use.
+   *
+   * Real Forge citation for the "first flip each turn" scoping: Edgar, King
+   * of Figaro's own real script (`res/cardsfolder/e/edgar_king_of_figaro.txt`):
+   * `S:Mode$ FlipCoinMod | ValidPlayer$ You | CheckSVar$ Count$YouFlipThisTurn
+   * | SVarCompare$ EQ0 | Result$ True` — forces a WIN (`Result$ True`) only
+   * when `Count$YouFlipThisTurn` reads 0, i.e. this is genuinely the first
+   * flip this turn; a later flip the same turn is unaffected, real Forge's
+   * own counter having already advanced past 0. `flippedCoinThisTurn`
+   * (above) mirrors that same boolean question (has this player flipped at
+   * least once this turn already), reset every real Cleanup
+   * (`resetFlippedCoinThisTurn`, called from `turn.ts`).
+   */
+  flipCoin(player: RealPlayer, won: boolean): boolean {
+    const isFirstThisTurn = !this.flippedCoinThisTurn.has(player.id);
+    this.flippedCoinThisTurn.add(player.id);
+    const hasTwoHeadedCoin = player.battlefield.some((c) => effectiveKeywords(this, c).includes('TwoHeadedCoin'));
+    return isFirstThisTurn && hasTwoHeadedCoin ? true : won;
   }
 }
 
@@ -685,7 +1133,12 @@ export function wrapCard(state: GameState, real: RealCard): Card {
     getCMC: () => real.cmc ?? 0,
     getAttachedTo: () => (real.attachedToId !== undefined ? wrapCard(state, state.cards.get(real.attachedToId)!) : undefined),
     getEquippedBy: () => [...state.cards.values()].filter((c) => c.attachedToId === real.id).map((c) => wrapCard(state, c)),
-    hasSubtype: (subtype: string) => real.subtypes.includes(subtype),
+    // `effectiveSubtypes`, not a raw `real.subtypes.includes(...)` read
+    // (2026-09-12, ENGINE_GAPS.md gap #14's own P/T-/type-grant follow-up)
+    // — includes any real, live `continuousTypeGrants` this permanent
+    // currently qualifies for (e.g. Dragoon's Lance's own equipped-creature
+    // "is a Knight" grant), not just this card's own printed subtypes.
+    hasSubtype: (subtype: string) => effectiveSubtypes(state, real).includes(subtype),
     // `effectiveKeywords`, not a raw `real.keywords.includes(...)` read
     // (2026-09-12, ENGINE_GAPS.md gap #14) — includes any real, live
     // `continuousKeywordGrants` this permanent currently qualifies for
@@ -707,7 +1160,16 @@ export function wrapPlayer(state: GameState, real: RealPlayer): Player {
     getName: () => real.name,
     getLife: () => real.life,
     gainLife: (amount: number) => {
-      real.life += amount;
+      // `state.gainLife` (ENGINE_GAPS.md gap #8b, closed) — the real
+      // chokepoint that applies The Wind Crystal's own CR 614.2 lifegain-
+      // doubling replacement, not a bare `real.life += amount` anymore. The
+      // boolean return is unchanged (real Forge's own `Player.gainLife` is
+      // also `boolean` — "was any life gained," not the amount); a caller
+      // wanting the real post-replacement number reads `state.gainLife`
+      // directly, or diffs `getLife()` before/after (harness.ts's own
+      // `loggingPlayer.gainLife` does the latter, so the trace shows the
+      // REAL doubled amount, not the nominal request).
+      state.gainLife(real, amount);
       return true;
     },
     loseLife: (amount: number) => {

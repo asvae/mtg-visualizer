@@ -1,11 +1,130 @@
 [
   {
     "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand, mode 0 chosen",
+      "result": "Cure: the target permanent gains hexproof and indestructible until end of turn (no lifegain at this tier)",
+      "raw": {
+        "result": "Cure: the target permanent gains hexproof and indestructible until end of turn (no lifegain at this tier)",
+        "mode": 0,
+        "you": {
+          "creaturesCount": 1
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Restoration Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 2,
+        "keyword": "Hexproof"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 2,
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "move",
+        "card": "Restoration Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand, mode 1 chosen",
+      "result": "Cura: the target permanent gains hexproof and indestructible until end of turn; you gain 3 life",
+      "raw": {
+        "result": "Cura: the target permanent gains hexproof and indestructible until end of turn; you gain 3 life",
+        "mode": 1,
+        "you": {
+          "creaturesCount": 1
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "cast",
+        "card": "Restoration Magic",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 5,
+        "keyword": "Hexproof"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 5,
+        "keyword": "Indestructible"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3
+      },
+      {
+        "fn": "move",
+        "card": "Restoration Magic",
+        "instanceId": 1,
+        "from": "stack",
+        "to": "Graveyard",
+        "cardType": "Instant"
+      }
+    ]
+  },
+  {
+    "scenario": {
       "setup": "you: 2 creature(s); you: 1 artifact(s)",
       "action": "cast from hand, mode 2 chosen",
-      "result": "creatures and artifacts you control gain hexproof and indestructible until end of turn; you gain 6 life",
+      "result": "Curaga: creatures and artifacts you control gain hexproof and indestructible until end of turn; you gain 6 life",
       "raw": {
-        "result": "creatures and artifacts you control gain hexproof and indestructible until end of turn; you gain 6 life",
+        "result": "Curaga: creatures and artifacts you control gain hexproof and indestructible until end of turn; you gain 6 life",
         "mode": 2,
         "you": {
           "creaturesCount": 2,
@@ -31,19 +150,19 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1840,
+        "id": 8,
         "keyword": "Hexproof"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1841,
+        "id": 9,
         "keyword": "Hexproof"
       },
       {
         "fn": "grantKeyword",
-        "target": "you-artifact-0",
-        "id": 1842,
+        "target": "Mind Stone",
+        "id": 10,
         "keyword": "Hexproof"
       },
       {
@@ -56,19 +175,19 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1840,
+        "id": 8,
         "keyword": "Indestructible"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1841,
+        "id": 9,
         "keyword": "Indestructible"
       },
       {
         "fn": "grantKeyword",
-        "target": "you-artifact-0",
-        "id": 1842,
+        "target": "Mind Stone",
+        "id": 10,
         "keyword": "Indestructible"
       },
       {

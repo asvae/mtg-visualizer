@@ -1,0 +1,11 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    { "sourceText": "Return target creature to its owner's hand.", "highlight": "Return target creature to its owner's hand" },
+    { "sourceText": "Target creature's owner puts it on their choice of the top or bottom of their library.", "highlight": "Target creature's owner puts it on their choice of the top or bottom of their library" }
+  ],
+  "sink": [
+    { "sourceText": "Return target creature to its owner's hand.", "highlight": "target creature" }
+  ]
+}

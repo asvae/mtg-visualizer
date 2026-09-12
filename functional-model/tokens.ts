@@ -76,4 +76,17 @@ export const TOKENS = {
   // printed text on this exact token, same ad-hoc-addition precedent as
   // b_2_2_horror/c_1_1_hero/g_1_1_elf above.
   w_1_2_moogle_lifelink: { name: 'Moogle', manaCost: '0', types: ['Creature', 'Moogle'], basePower: 1, baseToughness: 2, keywords: ['Lifelink'] },
+  // FIN's own token (Retrieve the Esper's "3/3 blue Robot Warrior artifact
+  // creature token") — real printing confirmed in
+  // `data/fin/fin_tokens_scryfall.json` (name "Robot Warrior"; that file
+  // has no P/T, same limitation this file's own header already notes, so
+  // 3/3 comes straight from Retrieve the Esper's own printed oracle text
+  // instead), same ad-hoc-addition precedent as b_2_2_horror/c_1_1_hero/
+  // g_1_1_elf/w_1_2_moogle_lifelink above. Single-card token (no other real
+  // pool card makes one), added here rather than left inline in
+  // `definition.ts` so its `synergy.json` source fact's `subject: { token:
+  // 'u_3_3_robot_warrior' }` resolves against something real, same
+  // resolvable-subject convention every other migrated token-making card
+  // (aerith-rescue-mission, battle-menu) already relies on.
+  u_3_3_robot_warrior: { name: 'Robot Warrior', manaCost: '0', types: ['Artifact', 'Creature', 'Robot', 'Warrior'], basePower: 3, baseToughness: 3 },
 } satisfies Record<string, TokenInfo>;

@@ -4,7 +4,7 @@ import { ignisScientia } from './definition';
 
 export const scenarios: Scenario[] = [
   {
-    result: 'searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)',
+    result: 'searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to match, see definition.ts)',
     trigger: 'onEnter',
     you: { libraryCount: 1 },
   },

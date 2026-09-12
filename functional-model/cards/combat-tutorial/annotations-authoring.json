@@ -1,0 +1,11 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Sorcery", "highlight": "Sorcery" },
+    { "anchor": "typeLine", "sourceText": "Sorcery", "highlight": "Sorcery" },
+    { "sourceText": "Target player draws two cards.", "highlight": "Target player draws two cards" },
+    { "sourceText": "Put a +1/+1 counter on up to one target creature you control.", "highlight": "Put a +1/+1 counter on up to one target creature you control" }
+  ],
+  "sink": [
+    { "sourceText": "Put a +1/+1 counter on up to one target creature you control.", "highlight": "target creature you control" }
+  ]
+}

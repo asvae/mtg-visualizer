@@ -10,5 +10,14 @@ import type { Scenario } from '../../harness';
 // already provide).
 export const scenarios: Scenario[] = [
   { result: 'returns a creature card from graveyard to the battlefield tapped', mode: 0, you: { graveyardCreatureCount: 2 } },
-  { result: 'exiles the Zombie', mode: 1, opponents: [{ creaturesCount: 1, creatureSubtypes: ['Zombie'] }] },
+  // Real regression fix (2026-09-12) — the old `creatureSubtypes: ['Zombie']`
+  // filter tagged the shared, real, imageless-otherwise `GENERIC_FILLER_
+  // CREATURE` ("Grizzly Bears," a real, specific, non-Zombie Scryfall card)
+  // with a subtype it doesn't actually have — a real "not mocked" violation
+  // caught live by the user: "exiles grizzly bear as a zombie (even though
+  // it's not a zombie...)". Fixed via `creatureCards` (harness.ts's own new
+  // field, added specifically for this): a real, specifically-named Zombie
+  // (Qutrub Forayer, data/fin/fin_scryfall.json — Creature — Zombie Horror,
+  // 3/2), not a mislabeled bear.
+  { result: 'exiles the Zombie', mode: 1, opponents: [{ creatureCards: [{ name: 'Qutrub Forayer', subtypes: ['Zombie', 'Horror'], power: 3, toughness: 2 }] }] },
 ];

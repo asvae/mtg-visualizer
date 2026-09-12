@@ -1,41 +1,96 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
-      "controller": "you",
-      "value": 1
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "zone": "Graveyard",
+      "to": "Battlefield",
+      "event": "entersBattlefield",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Artifact",
+            "Creature",
+            "Land"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 66
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "hasAny": [
-          "Creature",
           "Artifact",
+          "Creature",
           "Land"
         ]
       },
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 66
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "opp",
       "types": {
         "hasAny": [
-          "Creature",
           "Artifact",
+          "Creature",
           "Land"
         ]
       },
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 66
+        }
+      ]
     }
   ]
 }

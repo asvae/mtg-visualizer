@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 3 Plains(s)",
       "action": "real engine playthrough: 2 real artifacts present -> cast -> real condition/CDA reads (gap documented)",
-      "result": "Gaelicat enters with 2 real Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but real layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a real, documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
+      "result": "Gaelicat enters with 2 Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
       "raw": {
-        "result": "Gaelicat enters with 2 real Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but real layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a real, documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
+        "result": "Gaelicat enters with 2 Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
         "you": {
           "basicLands": [
             "Plains",
@@ -22,6 +22,16 @@
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Phoenix Down",
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "enters",
+        "card": "Elixir",
+        "zone": "Battlefield"
+      },
       {
         "fn": "cast",
         "card": "Gaelicat",
@@ -78,19 +88,19 @@
       },
       {
         "label": "Cast Gaelicat ({2}{W})",
-        "from": 0
+        "from": 2
       },
       {
         "label": "Resolve",
-        "from": 4
+        "from": 6
       },
       {
         "label": "Real condition check — 'you control two or more artifacts'",
-        "from": 5
+        "from": 7
       },
       {
         "label": "Real layer-7a read — no threshold-CDA machinery, so the +2/+0 does not apply",
-        "from": 7
+        "from": 9
       }
     ]
   }

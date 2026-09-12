@@ -27,7 +27,7 @@ import type { Scenario } from '../../harness';
 export const scenarios: Scenario[] = [
   {
     result:
-      "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 real damage to the opponent's real creature; chapters II/III fire the same real way on later draw steps, each giving the other real creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
+      "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 damage to the opponent's creature; chapters II/III fire the same way on later draw steps, each giving the other creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
     sequence: ['chapterI', 'chapterII', 'chapterIII'],
     sacrificeSelfAfter: true,
     you: { creaturesCount: 2 },

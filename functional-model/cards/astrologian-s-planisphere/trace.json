@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
+        "id": 2,
         "name": "onEnter"
       },
       {
@@ -28,63 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "equipmentId": 161,
+        "equipmentId": 2,
         "target": "Hero",
-        "id": 162
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onEquippedCastsNoncreatureSpell\" trigger fires",
-      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
-      "raw": {
-        "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
-        "trigger": "onEquippedCastsNoncreatureSpell"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Astrologian's Planisphere",
-        "instanceId": 1,
-        "name": "onEquippedCastsNoncreatureSpell"
-      },
-      {
-        "fn": "putCounter",
-        "target": "Astrologian's Planisphere",
-        "id": 164,
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onEquippedDrawsThirdCardThisTurn\" trigger fires",
-      "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
-      "raw": {
-        "result": "puts a +1/+1 counter on itself (granted trigger, modeled on this permanent)",
-        "trigger": "onEquippedDrawsThirdCardThisTurn"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Astrologian's Planisphere",
-        "instanceId": 1,
-        "name": "onEquippedDrawsThirdCardThisTurn"
-      },
-      {
-        "fn": "putCounter",
-        "target": "Astrologian's Planisphere",
-        "id": 166,
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
+        "id": 3
       }
     ]
   },
@@ -105,6 +52,7 @@
         "fn": "activate",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
+        "id": 7,
         "cost": "{2}"
       },
       {
@@ -115,9 +63,9 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "equipmentId": 170,
+        "equipmentId": 7,
         "target": "Grizzly Bears",
-        "id": 168
+        "id": 5
       }
     ]
   }

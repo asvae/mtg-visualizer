@@ -59,7 +59,7 @@ function wipesArtifactsAndCreaturesOnBothSides(): TraceResult {
   pilotResolveTop(pilot);
 
   const result =
-    "Destroys all four real artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a genuinely symmetric, untargeted wipe (no controller restriction in the real text). Both real Plains survive untouched. \"End the turn\" is real text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.";
+    "Destroys all four artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a symmetric, untargeted wipe (no controller restriction in the printed text). Both Plains survive untouched. \"End the turn\" is printed text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.";
   return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> resolve (Destroy all artifacts and creatures)', result);
 }
 

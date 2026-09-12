@@ -128,14 +128,14 @@
 //    unchanged from priority.ts's own explicit scope: every round's choices
 //    are supplied by the caller, never simulated here.
 
-import type { CardDefinition, EffectContext, Actions, AlternateCost } from './card';
-import { resolveCard } from './card';
+import type { CardDefinition, EffectContext, Actions, AlternateCost, ActivationCostReduction } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
-import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged } from './state';
+import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged, activeSpellCostDiscount, wrapCard } from './state';
 import { Stack, type StackObject } from './stack';
+import { fireTrigger } from './triggers';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
 import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn as turnQueueExtraTurn, type TurnState } from './turn';
-import { parseManaCost, canAfford, payMana, untappedManaSources, manaAbilityColorFromStaticText } from './mana';
+import { parseManaCost, reduceGenericCost, resolveXCost, formatManaCost, type ParsedManaCost, canAfford, payMana, untappedManaSources, deriveManaAbility } from './mana';
 import { advanceSaga, advanceSagasAfterDrawStep } from './saga';
 import { checkStateBasedActions } from './sba';
 
@@ -242,8 +242,80 @@ function payableManaSources(engine: GameEngine, player: RealPlayer): RealCard[] 
   });
 }
 
-function isLandTypeLine(typeLine: string): boolean {
+/** Exported (2026-09-12, ENGINE_GAPS.md gap #16) so `canPlayFromLibraryTop`/`engine-trace.ts`'s own real "play from library top" dispatch can reuse this exact 305.1 typeLine check instead of re-deriving it. */
+export function isLandTypeLine(typeLine: string): boolean {
   return /\bLand\b/.test(typeLine);
+}
+
+/** Real CR 601.2f condition check for `card.ts`'s `CostReduction` — see that interface's own doc comment for the real Forge citation. Only the single condition shape a real card needs is modeled (`tappedCreatureTarget` — Forge's own `ValidTarget$ Creature.tapped`, BOTH a Creature type AND tapped, checked via `effectiveTypes` so a Crew-animated Vehicle counts); `declaredTarget` is the caller-supplied `RealCard` this spell is being cast at (same "caller supplies the real object" shape `crewedBy` already established for Crew) — absent (no target chosen yet, or a non-targeted cast) always means the condition is false, never a silent match. */
+function costReductionCondition(condition: 'tappedCreatureTarget', declaredTarget: RealCard | undefined): boolean {
+  switch (condition) {
+    case 'tappedCreatureTarget':
+      return declaredTarget !== undefined && declaredTarget.tapped === true && effectiveTypes(declaredTarget).includes('Creature');
+  }
+}
+
+/**
+ * Real CR 601.2f cost, computed for THIS specific cast — `card.manaCost`
+ * (or `alt.cost`, an `AlternateCost` replacement, see `canCastSpell`'s own
+ * doc comment), with `{X}` resolved first (CR 601.2b, `x` — a caller-chosen
+ * value, same "caller supplies the real choice" shape `declaredTarget`
+ * already establishes; defaults to 0 per `resolveXCost`'s own doc
+ * comment), THEN discounted by TWO independent, real, real-Forge-distinct
+ * mechanisms, summed (118.9 lets multiple "costs {N} less" effects stack):
+ *  - `card.costReduction` — THIS card's own target-conditional discount
+ *    (Fate of the Sun-Cryst), applied only if its own condition holds
+ *    against `declaredTarget`.
+ *  - `caster`'s own battlefield permanents' `spellCostReductionGrants` — a
+ *    flat, unconditional, color-gated BROADCAST discount from a DIFFERENT
+ *    permanent (The Wind Crystal's own "White spells you cast cost {1}
+ *    less"), via `state.ts`'s `activeSpellCostDiscount`, checked against
+ *    THIS spell's own colored mana-cost pips. Omitted (no discount) when
+ *    `caster` isn't supplied — same "irrelevant/ignored" treatment
+ *    `declaredTarget` already gets for a card with no `costReduction`.
+ * Neither applies when `alt` is set (a real `AlternateCost` REPLACES the
+ * whole cost, CR 702.32/702.67 — see below). Returns the parsed (for
+ * affordability/payment) AND the printed-style string (for trace logging
+ * the cost actually paid, not just the nominal one) — see `mana.ts`'s
+ * `formatManaCost`. Exported so `engine-trace.ts`'s `pilotCast` can log the
+ * real string without re-deriving this logic.
+ */
+export function effectiveCastCost(card: CardDefinition, alt?: AlternateCost, declaredTarget?: RealCard, x?: number, caster?: RealPlayer): { cost: ParsedManaCost; costString: string; discounted: boolean } {
+  const costString = alt?.cost ?? card.manaCost;
+  const parsed = parseManaCost(costString);
+  const xWasResolved = parsed.xCount > 0;
+  const cost = xWasResolved ? resolveXCost(parsed, x) : parsed;
+  // Once `{X}` is resolved, the nominal printed `costString` ("{X}{R}{R}")
+  // no longer matches what's actually being paid — reformat it the same
+  // way a real cost-reduction discount already does below, so trace
+  // logging shows the real chosen cost, not the printed template.
+  const resolvedCostString = xWasResolved ? formatManaCost(cost) : costString;
+  if (alt) {
+    // A real `AlternateCost` REPLACES the whole cost (Flashback/Jump-start,
+    // CR 702.32/702.67) — both discount mechanisms below are defined
+    // against the card's own NORMAL `manaCost`, not against an alternate
+    // cost that's already a distinct, separately-printed number, so
+    // neither is applied here (no real FIN card has both today; this is
+    // the same "don't silently combine two independent cost-modification
+    // mechanisms with no real card to check the interaction against"
+    // caution `alt`'s own doc comment already applies elsewhere).
+    return { cost, costString: resolvedCostString, discounted: false };
+  }
+  let discount = 0;
+  if (card.costReduction && costReductionCondition(card.costReduction.condition, declaredTarget)) {
+    discount += card.costReduction.amount;
+  }
+  if (caster) {
+    const cardColors = Object.entries(cost.colors)
+      .filter(([, count]) => (count ?? 0) > 0)
+      .map(([color]) => color);
+    discount += activeSpellCostDiscount(caster, cardColors);
+  }
+  if (discount <= 0) {
+    return { cost, costString: resolvedCostString, discounted: false };
+  }
+  const reduced = reduceGenericCost(cost, discount);
+  return { cost: reduced, costString: formatManaCost(reduced), discounted: true };
 }
 
 /**
@@ -264,8 +336,26 @@ function isLandTypeLine(typeLine: string): boolean {
  * card in `alt.from`'s zone — same "trust the caller" contract this
  * function already has for a normal hand-cast (no RealCard reference is
  * even passed here to check against).
+ *
+ * `declaredTarget` (optional) is the real object the caster intends to
+ * target with this spell — ONLY consulted for `card.costReduction`'s own
+ * condition (real 601.2b targets are chosen before 601.2f's cost is
+ * determined; see `card.ts`'s `CostReduction` doc comment for why this is
+ * a separate param rather than reusing this model's own lazy,
+ * resolution-time target selection). Irrelevant/ignored for a card with no
+ * `costReduction`.
+ *
+ * `x` (optional) is the real value the caster announces for a `{X}` in
+ * `card.manaCost` (CR 601.2b, ENGINE_GAPS.md gap #6) — defaults to 0 (a
+ * real, legal choice) when omitted, same shape as `declaredTarget`. ONLY
+ * affects affordability/payment here — a caller wanting the card's own
+ * EFFECT to see the same chosen value (Choco-Comet's own X damage,
+ * Doppelgang's own X copies) must also set `ctx.xPaid` to the same number
+ * when building the `EffectContext` passed to `castSpell`/`resolveCard`
+ * (`card.ts`'s pre-existing `EffectContext.xPaid` field — this function
+ * doesn't build or mutate `ctx` at all, so it can't set it for the caller).
  */
-export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardDefinition, alt?: AlternateCost): ActionResult {
+export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardDefinition, alt?: AlternateCost, declaredTarget?: RealCard, x?: number): ActionResult {
   // Real CR 305.1: playing a land is a special action, NEVER a spell —
   // it has no mana cost to pay, never uses the stack, and isn't subject to
   // 601's casting process at all. Before this guard, neither this function
@@ -283,8 +373,7 @@ export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardD
   if (!isInstantSpeed(card) && !sorcerySpeedTimingOk(engine, caster)) {
     return { ok: false, reason: `sorcery-speed timing violated (307.1a/117.1a): "${card.name}" can only be cast during your own main phase with an empty stack` };
   }
-  const costString = alt?.cost ?? card.manaCost;
-  const cost = parseManaCost(costString);
+  const { cost, costString } = effectiveCastCost(card, alt, declaredTarget, x, caster);
   if (!canAfford(payableManaSources(engine, caster), cost)) {
     return { ok: false, reason: `cannot afford "${card.name}"'s ${alt ? `${alt.name} cost` : 'cost'} ${costString} (601.2g/602.2c) — not enough untapped mana sources` };
   }
@@ -309,12 +398,43 @@ export function canCastSpell(engine: GameEngine, caster: RealPlayer, card: CardD
  * `alt.from`'s zone first — same "trust the caller already has it there"
  * contract `canCastSpell` documents; `engine.state.move(cardReal, 'Stack')`
  * below splices it out of whatever zone it's actually in.
+ *
+ * `declaredTarget` (optional) — see `canCastSpell`'s own doc comment for
+ * its `card.costReduction`-condition use. ALSO now (ENGINE_GAPS.md gap #4,
+ * closed 2026-09-12) genuinely locks in this spell's own real cast-time
+ * target: recorded on the pushed `StackObject` (wrapped once via
+ * `state.ts`'s `wrapCard`) as `declaredTargets: [declaredTarget]` unless
+ * `declaredTargets` (below) is explicitly given instead — `resolveTop`
+ * threads it onto `ctx.declaredTargets`, and `card.ts`'s own
+ * `resolveTargets` re-validates it against live state at resolution,
+ * dropping it (fizzling the effect, CR 608.2b) rather than falling back to
+ * a fresh pick if it's no longer legal. Fate of the Sun-Cryst's real shape
+ * — a cost-reduction condition keyed on the SAME object the spell's own
+ * "destroy target nonland permanent" targets — is exactly why a single
+ * `declaredTarget` naturally serves both roles; a card whose cost-reduction
+ * target and actual spell target genuinely differ (no real FIN card does)
+ * would need `declaredTargets` instead. Still NOT itself legality-checked
+ * at cast time — see `card.ts`'s `EffectContext.declaredTargets` doc
+ * comment for that documented, narrower scope note. A caller wanting the
+ * OLD lazy-`chooseTarget`-at-resolution behavior for a target-bearing
+ * effect should still also set `ctx.preferTarget` (unaffected by this,
+ * still consulted whenever no `declaredTargets` survive resolution's own
+ * `resolveTargets` check — i.e., whenever this param is omitted).
+ *
+ * `declaredTargets` (optional) — the general, multi-target form of the
+ * above (Fight On!'s own "return up to two target creature cards," e.g.) —
+ * takes precedence over the `[declaredTarget]` single-element default when
+ * given.
+ *
+ * `x` (optional) — see `canCastSpell`'s own doc comment; same "affects
+ * payment only, set `ctx.xPaid` yourself for the effect to see it" caveat.
  */
-export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName?: string, alt?: AlternateCost): CastResult {
-  const check = canCastSpell(engine, caster, card, alt);
+export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName?: string, alt?: AlternateCost, declaredTarget?: RealCard, x?: number, declaredTargets?: RealCard[]): CastResult {
+  const check = canCastSpell(engine, caster, card, alt, declaredTarget, x);
   if (!check.ok) return check;
-  const cost = parseManaCost(alt?.cost ?? card.manaCost);
+  const { cost } = effectiveCastCost(card, alt, declaredTarget, x, caster);
   const tappedForMana = payMana(engine.state, payableManaSources(engine, caster), cost);
+  const targets = declaredTargets ?? (declaredTarget ? [declaredTarget] : undefined);
   engine.state.move(cardReal, 'Stack');
   // A permanent with its OWN `activationCost` reserves `card.effects` for
   // that LATER activation (602.1) — real Magic has no "cast effects" for a
@@ -335,7 +455,7 @@ export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: Real
   // auto-fire of a `Trigger.on === 'enter'` entry below. See
   // ENGINE_GAPS.md for the fuller writeup of why this collision exists.
   const pushedCard = isPermanentTypeLine(card.typeLine) && card.activationCost ? { ...card, effects: undefined } : card;
-  engine.stack.push({ card: pushedCard, ctx, actions, triggerName, thenExile: alt?.thenExile });
+  engine.stack.push({ card: pushedCard, ctx, actions, triggerName, thenExile: alt?.thenExile, declaredTargets: targets?.map((t) => wrapCard(engine.state, t)) });
   return { ok: true, tappedForMana };
 }
 
@@ -403,16 +523,97 @@ export function playLand(engine: GameEngine, caster: RealPlayer, cardReal: RealC
   engine.state.move(cardReal, 'Battlefield');
   engine.enteredThisTurn.set(cardReal.id, engine.turn.turnNumber);
   engine.resolvedPermanents.set(cardReal.id, { card, ctx, actions });
-  cardReal.manaAbility = manaAbilityColorFromStaticText(card.staticAbilities);
+  cardReal.manaAbility = deriveManaAbility(card.staticAbilities);
+  // Same "copy once at resolve time, RealCard keeps no live CardDefinition
+  // reference" treatment `resolveTop` gives every other continuous grant —
+  // no real FIN land carries `triggerDoubling` today, but a land IS one of
+  // the two real entering-permanent shapes Traveling Chocobo's own gate
+  // checks for, so this stays consistent rather than a silent asymmetry.
+  cardReal.triggerDoubling = card.triggerDoubling;
   caster.landsPlayedThisTurn = (caster.landsPlayedThisTurn ?? 0) + 1;
   const enterTrigger = card.triggers?.find((t) => t.on === 'enter');
-  if (enterTrigger) resolveCard(card, ctx, actions, enterTrigger.name);
+  // Real "entersBattlefield" cause (ENGINE_GAPS.md gap #13, Traveling
+  // Chocobo's own "a land ... entering causes a triggered ability ... to
+  // trigger" gate) — `cardReal` is both the entering permanent AND (when it
+  // has one) the trigger's own source, same as a card's own ETB can be the
+  // very thing a doubling gate is checking for.
+  if (enterTrigger) fireTrigger(engine.state, card, ctx, actions, enterTrigger.name, { kind: 'entersBattlefield', entered: cardReal });
   return { ok: true };
+}
+
+/**
+ * CR 601/305's own umbrella "play" (ENGINE_GAPS.md gap #16) — real Forge's
+ * own `PlayEffect.resolve()` (forge-game/.../ability/effects/PlayEffect.java
+ * ~line 330-351) dispatches a played card purely on whether it's a land
+ * ability (`tgtSA.isLandAbility()` — resolved directly, `tgtSA.resolve()`,
+ * never touching the stack) or an ordinary spell ability
+ * (`controller.getController().playSaFromPlayEffect(tgtSA)`, ~line 307-473
+ * — the real cast path, same stack/priority flow as an ordinary hand-cast).
+ * This is the identical dispatch, reusing this file's own real
+ * `canPlayLand`/`playLand` (a land) and `canCastSpell`/`castSpell`
+ * (anything else) pairs rather than reimplementing either — The Lunar
+ * Whale's own "As long as The Lunar Whale attacked this turn, you may play
+ * the top card of your library" (fin/60) is the real FIN card that needs
+ * this; Traveling Chocobo (fin/158)'s own "You may play lands and cast Bird
+ * spells from the top of your library" carries the identical vocabulary and
+ * can reuse this same primitive once/if migrated.
+ *
+ * Unlike `canCastSpell`/`canPlayLand` (which only need the `CardDefinition`
+ * — any hand copy of that card is as legal as any other), this ALSO takes
+ * `cardReal` and verifies it's genuinely the real top card of `caster`'s own
+ * library right now (`caster.library[0]`) — the one thing that actually
+ * makes this CR 601/305's "play the top card of your library" rather than
+ * an ordinary hand-cast/land-play. The CALLER (a card's own effect/trigger
+ * wiring — The Lunar Whale's "as long as it attacked this turn," e.g.) is
+ * responsible for checking whatever permission actually GRANTS this special
+ * action in the first place (see `RealCard.attackedThisTurn`, state.ts) —
+ * this primitive only ever dispatches the mechanical HOW, never the
+ * WHETHER, same "engine primitives don't know about a specific card's own
+ * gating condition" split `crewedBy`/`declaredTarget` already establish
+ * elsewhere in this file.
+ */
+export function canPlayFromLibraryTop(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition): ActionResult {
+  if (caster.library[0]?.id !== cardReal.id) {
+    return { ok: false, reason: `"${card.name}" is not the top card of ${caster.name}'s library` };
+  }
+  return isLandTypeLine(card.typeLine) ? canPlayLand(engine, caster, card) : canCastSpell(engine, caster, card);
+}
+
+/**
+ * Legality-checks (see `canPlayFromLibraryTop`'s own doc comment for the
+ * real Forge citation and the WHETHER/HOW split), then dispatches to the
+ * real `playLand` (a land — direct Battlefield move, no stack) or
+ * `castSpell` (anything else — real cost paid, pushed onto the real stack;
+ * a caller still needs a separate `resolveTop` to actually resolve it, same
+ * two-call split every other cast in this engine already has). Returns
+ * `{ok:false, reason}` and mutates NOTHING if illegal.
+ */
+export function playFromLibraryTop(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions): CastResult {
+  const check = canPlayFromLibraryTop(engine, caster, cardReal, card);
+  if (!check.ok) return check;
+  return isLandTypeLine(card.typeLine) ? playLand(engine, caster, cardReal, card, ctx, actions) : castSpell(engine, caster, cardReal, card, ctx, actions);
 }
 
 /** Whether `cost`'s own free text requires tapping the permanent itself ({T}) as part of paying (602.1). `CardDefinition.activationCost` is a plain string — no structured cost grammar exists — so this, like the helpers below, is real but narrow text-pattern detection, not a parser. Exported (2026-09-12, venat-heart-of-hydaelyn-hydaelyn-the-mothercrystal) so `engine-trace.ts`'s own `pilotActivate` can log a real self-tap-for-cost trace line — see that call site's own doc comment for why. */
 export function costRequiresTap(cost: string): boolean {
   return /\{T\}/.test(cost);
+}
+
+/**
+ * Whether `cost`'s own free text requires paying N life as part of the cost
+ * (ENGINE_GAPS.md gap #11's real remainder — checked every real
+ * `activationCost`/ability `cost` string across the pool: Ring of the
+ * Lucii's own "{2}, {T}, Pay 1 life", Elven Passage's own "{T}, Pay 1 life,
+ * Sacrifice this land", Dark Knight's Greatsword's own "Equip—Pay 3 life
+ * (activate only once each turn)"). Returns the real life total required,
+ * or `undefined` if this cost has no such component — same "real but narrow
+ * text-pattern detection, not a parser" shape `costRequiresTap` already
+ * establishes (`CardDefinition.activationCost` has no structured cost
+ * grammar at all).
+ */
+export function costRequiresLifePayment(cost: string): number | undefined {
+  const match = /\bPay (\d+) life\b/i.exec(cost);
+  return match ? Number(match[1]) : undefined;
 }
 
 /** The pure mana-symbol portion of an activationCost string, with `{T}` (handled separately by `costRequiresTap`) and any parenthetical restriction text ("(activate only as a sorcery)") stripped first — `parseManaCost` would otherwise throw trying to parse `{T}` as a color/generic symbol. */
@@ -469,6 +670,15 @@ function unsupportedCostComponent(cost: string, card: CardDefinition): string | 
     // keep those two cards correct, so self-sacrifice deliberately stays
     // unsupported rather than risk that regression.
     if (/^Sacrifice (another|an?|two)\b/i.test(part) && (card.effects ?? []).some((e) => e.kind === 'sacrifice')) continue;
+    // "Pay N life" (ENGINE_GAPS.md gap #11's real remainder — Ring of the
+    // Lucii/Elven Passage/Dark Knight's Greatsword's own real costs, see
+    // `costRequiresLifePayment`'s own doc comment) — accepted here as a
+    // real, payable cost component; `canActivateAbility`/`activateAbility`
+    // separately check affordability (`controller.life >= N`) and actually
+    // deduct it, the same "recognized in the string-parsing loop, paid for
+    // real by a dedicated check elsewhere" split `{T}` already has via
+    // `costRequiresTap`.
+    if (costRequiresLifePayment(part) !== undefined) continue;
     if (!/^(\{[^}]+\})+$/.test(part)) return part;
   }
   return undefined;
@@ -485,6 +695,58 @@ export function activationCostFor(card: CardDefinition, abilityName?: string): s
   return card.activationCost;
 }
 
+/** The real `ActivationCostReduction` for one of `card`'s activated abilities, if it has one — only ever declared on a NAMED `card.abilities` entry today (Qiqirn Merchant's own "bigDraw") since no real card in this pool needs a per-Town-style discount on the single top-level `activationCost` slot; extend here if one ever does. */
+function abilityCostReductionFor(card: CardDefinition, abilityName?: string): ActivationCostReduction | undefined {
+  if (!abilityName) return undefined;
+  return card.abilities?.find((a) => a.name === abilityName)?.costReduction;
+}
+
+/**
+ * Real 602.1 activation cost, computed for THIS specific activation —
+ * generalizes `effectiveCastCost`'s own shape to the activated-ability path
+ * (ENGINE_GAPS.md gap #7's third real example, Qiqirn Merchant's own "costs
+ * {1} less to activate for each Town you control"): `{X}` resolved first
+ * (CR 601.2b, same `x` shape `effectiveCastCost` already uses — Rydia,
+ * Summoner of Mist's own real "Summon — {X}, {T}: ..." activated ability
+ * needs this), THEN discounted by the named ability's own
+ * `ActivationCostReduction` (`abilityCostReductionFor`), a board-state count
+ * of real permanents the ACTIVATOR controls whose subtypes include
+ * `reduction.subtype`, applied the same generic-only/floored-at-0 way
+ * `mana.ts`'s `reduceGenericCost` already does. Returns the discounted
+ * `ParsedManaCost` for the ability's own mana portion (`undefined` if this
+ * ability's cost has no mana component at all — a pure {T}/Sacrifice-only
+ * cost) AND a printed-style `costString` reflecting the REAL cost after any
+ * discount (the raw cost string's own FIRST bracketed generic token
+ * substituted with the discounted value — the rest of the free text, e.g.
+ * "{T}, Sacrifice...", is left exactly as printed), for trace logging the
+ * cost actually owed, same "log what genuinely happened" standard
+ * `effectiveCastCost` already establishes. Exported so `engine-trace.ts`'s
+ * `pilotActivate` can log the real string without re-deriving this logic.
+ */
+export function effectiveActivationCost(engine: GameEngine, controller: RealPlayer, card: CardDefinition, abilityName?: string, x?: number): { manaPortion?: ParsedManaCost; costString: string } {
+  const cost = activationCostFor(card, abilityName);
+  if (cost === undefined) return { costString: '' };
+  const manaPortionStr = manaPortionOf(cost);
+  if (!/\{[^}]+\}/.test(manaPortionStr)) return { costString: cost };
+  const parsed = parseManaCost(manaPortionStr);
+  const resolved = parsed.xCount > 0 ? resolveXCost(parsed, x) : parsed;
+  const reduction = abilityCostReductionFor(card, abilityName);
+  if (!reduction) return { manaPortion: resolved, costString: cost };
+  const matchCount = controller.battlefield.filter((c) => c.subtypes.includes(reduction.subtype)).length;
+  const discount = reduction.amountPerMatch * matchCount;
+  if (discount <= 0) return { manaPortion: resolved, costString: cost };
+  const reducedParsed = reduceGenericCost(resolved, discount);
+  // Substitute the FIRST bracketed generic token (the real mana pip this
+  // discount actually reduces) with the discounted value — the rest of the
+  // free text (a "{T}"/"Sacrifice ..."/parenthetical restriction) is left
+  // untouched. Safe against a coincidental LATER `{N}` elsewhere in the
+  // string (Qiqirn Merchant's own cost text names "{1} less" in its own
+  // parenthetical) since `.replace` with no `/g` flag only ever touches the
+  // first match.
+  const costString = cost.replace(/\{\d+\}/, `{${reducedParsed.generic}}`);
+  return { manaPortion: reducedParsed, costString };
+}
+
 /**
  * Real 602.1 activated-ability legality: controls the permanent, real
  * "activate only as a sorcery" timing (a free-text restriction — no
@@ -496,18 +758,44 @@ export function activationCostFor(card: CardDefinition, abilityName?: string): s
  * a sorcery" on its own equip cost), OR real Crew N (702.121b/c —
  * `card.crewCost`, a structured field entirely bypassing the free-text
  * cost checks below in favor of validating the caller-supplied
- * `crewedBy` creature list), and cost affordability (`{T}`/Equip + mana
+ * `crewedBy` creature list — see below for why this branch is now GATED on
+ * `abilityName === undefined`), and cost affordability (`{T}`/Equip + mana
  * only, PLUS a real "Sacrifice another/a/two X" cost trusted whenever the
- * card's own `effects` already pay it for real at resolution —
- * `unsupportedCostComponent`'s own doc comment lists what a real card's
- * cost can still contain that this engine can't pay: self-Sacrifice/
- * Pay-life/{X}). Read-only, same shape as `canCastSpell`.
+ * card's own `effects` already pay it for real at resolution, PLUS a real
+ * "Pay N life" cost (`costRequiresLifePayment`) — `unsupportedCostComponent`'s
+ * own doc comment lists what a real card's cost can still contain that this
+ * engine can't pay: self-Sacrifice). Read-only, same shape as `canCastSpell`.
+ *
+ * `x` (optional) — CR 601.2b's own "announce X," same shape `canCastSpell`
+ * already uses — ONLY affects this ability's own mana-portion affordability
+ * here (`effectiveActivationCost`); a caller wanting the ability's own
+ * EFFECT to see the same chosen value must also set `ctx.xPaid` (same
+ * "this function doesn't build/mutate `ctx`" caveat `canCastSpell`'s own
+ * doc comment already states).
+ *
+ * **Real bug fix (ENGINE_GAPS.md gap #11, Cargo Ship-shaped Vehicles):**
+ * the `card.crewCost` branch below used to fire UNCONDITIONALLY, before
+ * even looking at `abilityName` — so a Vehicle with BOTH `crewCost` AND a
+ * separate NAMED ability (`card.abilities`, Cargo Ship's own "mana"
+ * ability) would have ANY activation attempt, including one explicitly
+ * naming the other ability, incorrectly routed through the crew-cost
+ * legality/payment path. Fixed: the crew branch is now gated on
+ * `abilityName === undefined` — a caller naming a real `card.abilities`
+ * entry (Cargo Ship's own "mana", e.g.) skips the crew path entirely and
+ * falls through to the ordinary {T}/mana cost checks below; `abilityName`
+ * omitted (Crew's own real convention, per this file's own header — Crew
+ * has no name of its own, only `card.activationCost`'s descriptive label)
+ * still means "this is the crew activation," unchanged for every existing
+ * caller/card. (A caller-supplied `abilityName` that matches NEITHER
+ * `card.abilities` NOR the crew slot already fails earlier, at the
+ * `activationCostFor`-returns-`undefined` check above — that path never
+ * reaches this gate at all, so it needs no special handling here.)
  */
-export function canActivateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, abilityName?: string, crewedBy?: RealCard[]): ActionResult {
+export function canActivateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, abilityName?: string, crewedBy?: RealCard[], x?: number): ActionResult {
   const cost = activationCostFor(card, abilityName);
   if (!cost) return { ok: false, reason: `"${card.name}" has no such activated ability${abilityName ? ` named "${abilityName}"` : ''}` };
   if (permanent.controllerId !== controller.id) return { ok: false, reason: 'you do not control this permanent (602.1)' };
-  if (card.crewCost !== undefined) {
+  if (card.crewCost !== undefined && abilityName === undefined) {
     // Real Crew (702.121b/c): "Tap any number of untapped creatures you
     // control with total power N or greater" — a real, STRUCTURED cost
     // distinct from the free-text `activationCost` (kept only as a
@@ -555,35 +843,54 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
   if (unsupported) {
     return { ok: false, reason: `activation cost includes an unsupported component ("${unsupported}") — this engine only pays {T} + mana costs so far` };
   }
-  const manaPortion = manaPortionOf(cost);
-  if (/\{[^}]+\}/.test(manaPortion)) {
-    let parsedMana;
-    try {
-      parsedMana = parseManaCost(manaPortion);
-    } catch (e) {
-      return { ok: false, reason: (e as Error).message };
-    }
-    if (!canAfford(payableManaSources(engine, controller), parsedMana)) {
-      return { ok: false, reason: `cannot afford "${card.name}"'s cost ${cost} — not enough untapped mana sources` };
-    }
+  const lifeCost = costRequiresLifePayment(cost);
+  if (lifeCost !== undefined && controller.life < lifeCost) {
+    return { ok: false, reason: `cannot pay ${lifeCost} life for "${card.name}"'s cost — only ${controller.life} life remaining` };
+  }
+  let manaPortion;
+  try {
+    manaPortion = effectiveActivationCost(engine, controller, card, abilityName, x).manaPortion;
+  } catch (e) {
+    return { ok: false, reason: (e as Error).message };
+  }
+  if (manaPortion && !canAfford(payableManaSources(engine, controller), manaPortion)) {
+    return { ok: false, reason: `cannot afford "${card.name}"'s cost ${cost} — not enough untapped mana sources` };
   }
   return { ok: true };
 }
 
 /**
  * Legality-checks, then (if legal) pays the real cost (taps `permanent` if
- * the cost says `{T}`, taps mana sources for the mana portion) and pushes
- * the ability onto the real stack (602.2 — an activated ability uses the
- * stack exactly like a spell). Unlike `castSpell`, the permanent itself
- * does NOT move zones here — see `resolveTop`'s own `isAbility` branch:
- * an activated ability resolving doesn't relocate its own source, only
- * its OWN effects (if any) do that (Jill's own transform ability moves
- * itself via its own `custom` effect's `actions.moveTo` calls, e.g.).
+ * the cost says `{T}`, taps mana sources for the mana portion, deducts real
+ * life for a "Pay N life" component) and pushes the ability onto the real
+ * stack (602.2 — an activated ability uses the stack exactly like a
+ * spell). Unlike `castSpell`, the permanent itself does NOT move zones
+ * here — see `resolveTop`'s own `isAbility` branch: an activated ability
+ * resolving doesn't relocate its own source, only its OWN effects (if any)
+ * do that (Jill's own transform ability moves itself via its own `custom`
+ * effect's `actions.moveTo` calls, e.g.).
+ *
+ * `x` (optional) — see `canActivateAbility`'s own doc comment; same
+ * "affects payment only, set `ctx.xPaid` yourself for the effect to see it"
+ * caveat `castSpell`'s own `x` param already has.
+ *
+ * `declaredTargets` (optional, ENGINE_GAPS.md gap #4) — same real cast-time
+ * target-locking `castSpell`'s own `declaredTarget`/`declaredTargets`
+ * params establish (602.1's own "activate, then choose targets" step is
+ * the exact activated-ability analogue of 601.2c) — recorded on the pushed
+ * `StackObject`, re-validated at resolution by `card.ts`'s `resolveTargets`
+ * (608.2b fizzle on an illegal one). No real FIN card's own scenario
+ * exercises a targeted activated ability through this real cast/stack path
+ * yet (Coeurl's own "tap target creature" is piloted directly via
+ * `resolveCard`, not through here — see that card's own scenario comment),
+ * so this stays real, tested machinery without its own dedicated
+ * `cards/*` demonstration this pass.
  */
-export function activateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, abilityName?: string, crewedBy?: RealCard[]): CastResult {
-  const check = canActivateAbility(engine, controller, permanent, card, abilityName, crewedBy);
+export function activateAbility(engine: GameEngine, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, abilityName?: string, crewedBy?: RealCard[], x?: number, declaredTargets?: RealCard[]): CastResult {
+  const check = canActivateAbility(engine, controller, permanent, card, abilityName, crewedBy, x);
   if (!check.ok) return check;
-  if (card.crewCost !== undefined) {
+  const wrappedTargets = declaredTargets?.map((t) => wrapCard(engine.state, t));
+  if (card.crewCost !== undefined && abilityName === undefined) {
     // Real 702.121c: crewing taps the CREATURES paying the cost, never
     // the Vehicle itself. The ability's own effect (real cards here all
     // declare `effects: [{ kind: 'animate', ... }]`, magitek-armor/
@@ -592,14 +899,16 @@ export function activateAbility(engine: GameEngine, controller: RealPlayer, perm
     // kind needed, `animate` already exists and already grants Creature
     // type through the real, existing `resolveCard` dispatch.
     for (const c of crewedBy!) engine.state.tap(c);
-    engine.stack.push({ card, ctx, actions, abilityName, isAbility: true });
+    engine.stack.push({ card, ctx, actions, abilityName, isAbility: true, declaredTargets: wrappedTargets });
     return { ok: true };
   }
   const cost = activationCostFor(card, abilityName)!;
-  const manaPortion = manaPortionOf(cost);
-  const tappedForMana = /\{[^}]+\}/.test(manaPortion) ? payMana(engine.state, payableManaSources(engine, controller), parseManaCost(manaPortion)) : undefined;
+  const { manaPortion } = effectiveActivationCost(engine, controller, card, abilityName, x);
+  const tappedForMana = manaPortion ? payMana(engine.state, payableManaSources(engine, controller), manaPortion) : undefined;
   if (costRequiresTap(cost)) engine.state.tap(permanent);
-  engine.stack.push({ card, ctx, actions, abilityName, isAbility: true });
+  const lifeCost = costRequiresLifePayment(cost);
+  if (lifeCost !== undefined) controller.life -= lifeCost;
+  engine.stack.push({ card, ctx, actions, abilityName, isAbility: true, declaredTargets: wrappedTargets });
   return { ok: true, tappedForMana };
 }
 
@@ -615,7 +924,7 @@ export function activateAbility(engine: GameEngine, controller: RealPlayer, perm
  * effects say otherwise. A no-op, safely, on an empty stack.
  */
 export function resolveTop(engine: GameEngine): StackObject | undefined {
-  const resolved = engine.stack.resolveTop();
+  const resolved = engine.stack.resolveTop(engine.state);
   if (!resolved) return undefined;
   if (resolved.isAbility) return resolved;
   const real = engine.state.cards.get(resolved.ctx.self.getId());
@@ -625,10 +934,11 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       engine.enteredThisTurn.set(real.id, engine.turn.turnNumber);
       engine.resolvedPermanents.set(real.id, { card: resolved.card, ctx: resolved.ctx, actions: resolved.actions });
       // Real narrow-slice mana ability (mana.ts's own
-      // `manaAbilityColorFromStaticText`) — derived here, once, from the
+      // `deriveManaAbility` — single-color OR dual-color-choice, see that
+      // function's own doc comment) — derived here, once, from the
       // resolving CardDefinition's own text, since `RealCard` keeps no
       // live CardDefinition reference to re-derive it from later.
-      real.manaAbility = manaAbilityColorFromStaticText(resolved.card.staticAbilities);
+      real.manaAbility = deriveManaAbility(resolved.card.staticAbilities);
       // Same "copy once at resolve time, RealCard keeps no live
       // CardDefinition reference" treatment for `continuousKeywordGrants`
       // (2026-09-12, ENGINE_GAPS.md gap #14) — a pilot script that builds
@@ -640,12 +950,30 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       // empty regardless of what `addCard`'s caller passed, unless it
       // happens to be resolved through here).
       real.continuousKeywordGrants = resolved.card.continuousKeywordGrants;
+      // Same "copy once at resolve time" treatment for the P/T- and
+      // creature-type-grant siblings (ENGINE_GAPS.md gap #14's own
+      // follow-up, closed 2026-09-12) — `effectivePT`/`effectiveSubtypes`
+      // (state.ts) are the real readers.
+      real.continuousPTGrants = resolved.card.continuousPTGrants;
+      real.continuousTypeGrants = resolved.card.continuousTypeGrants;
+      // Same "copy once at resolve time" treatment for `spellCostReductionGrants`
+      // (ENGINE_GAPS.md gap #7's second real example, The Wind Crystal's own
+      // broadcast cost reduction) — `activeSpellCostDiscount` (state.ts) is
+      // the one real reader.
+      real.spellCostReductionGrants = resolved.card.spellCostReductionGrants;
+      // Same "copy once at resolve time" treatment for `triggerDoubling`
+      // (ENGINE_GAPS.md gap #13, closed 2026-09-12) — `shouldDoubleTrigger`
+      // (state.ts) is the one real reader.
+      real.triggerDoubling = resolved.card.triggerDoubling;
       if (resolved.card.keywords) real.keywords = [...resolved.card.keywords];
       // Real 714.2b: a Saga enters with no lore counters, then immediately
       // gets its first (see saga.ts's own header for the full 714 writeup).
       advanceSaga(engine, real, engine.resolvedPermanents.get(real.id)!);
       const enterTrigger = resolved.card.triggers?.find((t) => t.on === 'enter');
-      if (enterTrigger) resolveCard(resolved.card, resolved.ctx, resolved.actions, enterTrigger.name);
+      // Real "entersBattlefield" cause (ENGINE_GAPS.md gap #13) — `real` is
+      // both the entering permanent AND (when it has one) the trigger's own
+      // source, same reasoning `playLand`'s own identical fix above uses.
+      if (enterTrigger) fireTrigger(engine.state, resolved.card, resolved.ctx, resolved.actions, enterTrigger.name, { kind: 'entersBattlefield', entered: real });
     } else {
       // Real 702.32/702.67: a Flashback/Jump-start spell (or any future
       // alternate-cost `thenExile` case) goes to exile instead of its
@@ -676,7 +1004,11 @@ function fireOnPhaseEnterTriggers(engine: GameEngine): void {
     const registered = engine.resolvedPermanents.get(real.id);
     if (!registered) continue;
     const trigger = registered.card.triggers?.find((t) => t.on === on);
-    if (trigger) resolveCard(registered.card, registered.ctx, registered.actions, trigger.name);
+    // No `cause` — real upkeep/end-step triggers aren't "caused by dying" or
+    // "caused by a permanent entering," so only a cause-less doubling gate
+    // (Cloud's own shape) could ever apply here; none of the 3 real FIN
+    // cards needing gap #13 target this specific trigger occasion.
+    if (trigger) fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
   }
 }
 
@@ -772,6 +1104,16 @@ export function declareAttackers(engine: GameEngine, attackers: RealCard[]): Act
   for (const creature of attackers) {
     if (!creature.keywords.includes('Vigilance')) engine.state.tap(creature);
   }
+  // Real 508.1 "attacked this turn" flag (ENGINE_GAPS.md gap #16,
+  // `RealCard.attackedThisTurn`'s own doc comment for the real Forge
+  // citation) — The Lunar Whale's own "as long as it attacked this turn,
+  // you may play the top card of your library" is the real FIN card that
+  // reads this later in the same turn. Set unconditionally for every real
+  // declared attacker (real Forge sets it the same way regardless of
+  // whether the attack is ultimately blocked/dealt damage — 508.1's own
+  // "has attacked" is about the DECLARATION, not the outcome), cleared
+  // game-wide at the next real Cleanup (`turn.ts`'s own Cleanup branch).
+  for (const creature of attackers) creature.attackedThisTurn = true;
   engine.attackers = attackers;
   engine.blockers = new Map();
   return { ok: true };
@@ -861,6 +1203,16 @@ export interface CombatDamageEntry {
 
 export interface CombatDamageResult {
   entries: CombatDamageEntry[];
+  /**
+   * Real creatures whose combat damage THIS call prevented outright
+   * (ENGINE_GAPS.md gap #8, closed for a narrow real subset) — `state
+   * .dealDamage`'s own `prevented` flag, checked with `{combat:true}` at
+   * every real damage-dealing call below. Diamond Weapon's own "Prevent all
+   * combat damage that would be dealt to Diamond Weapon" is the reference
+   * case (`'CombatDamagePrevention'`, card.ts's own `Keyword` doc comment).
+   * Empty when nothing was prevented this call — the common case.
+   */
+  prevented: RealCard[];
 }
 
 /**
@@ -907,6 +1259,7 @@ export interface CombatDamageResult {
  */
 export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
   const lethalSoFar = new Set<number>();
+  const preventedIds = new Set<number>();
 
   const dealsFirst = (c: RealCard) => c.keywords.includes('FirstStrike') || c.keywords.includes('DoubleStrike');
   const dealsRegular = (c: RealCard) => c.keywords.includes('DoubleStrike') || !c.keywords.includes('FirstStrike');
@@ -926,9 +1279,9 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
         const deathtouch = attacker.keywords.includes('Deathtouch');
         const trample = attacker.keywords.includes('Trample');
         if (!isBlockedAtAll) {
-          engine.state.dealDamage(defender, power, attacker);
+          engine.state.dealDamage(defender, power, attacker, { combat: true });
         } else if (livingBlockers.length === 0) {
-          if (trample) engine.state.dealDamage(defender, power, attacker);
+          if (trample) engine.state.dealDamage(defender, power, attacker, { combat: true });
         } else {
           let remaining = power;
           for (let i = 0; i < livingBlockers.length; i++) {
@@ -939,18 +1292,18 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
             const isLast = i === livingBlockers.length - 1;
             const assign = trample ? Math.min(remaining, lethalNeeded) : isLast ? remaining : Math.min(remaining, lethalNeeded);
             if (assign > 0) {
-              engine.state.dealDamage(blocker, assign, attacker);
+              if (engine.state.dealDamage(blocker, assign, attacker, { combat: true }).prevented) preventedIds.add(blocker.id);
               remaining -= assign;
             }
           }
-          if (trample && remaining > 0) engine.state.dealDamage(defender, remaining, attacker);
+          if (trample && remaining > 0) engine.state.dealDamage(defender, remaining, attacker, { combat: true });
         }
       }
 
       for (const blocker of livingBlockers) {
         if (include(blocker)) {
           const [blockerPower] = effectivePT(engine.state, blocker);
-          engine.state.dealDamage(attacker, blockerPower, blocker);
+          if (engine.state.dealDamage(attacker, blockerPower, blocker, { combat: true }).prevented) preventedIds.add(attacker.id);
         }
       }
     }
@@ -980,5 +1333,15 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
       if (damage > 0) entries.push({ card, damage, lethal: lethalSoFar.has(card.id) });
     }
   }
-  return { entries };
+  const prevented: RealCard[] = [];
+  const seenPrevented = new Set<number>();
+  for (const attacker of engine.attackers) {
+    for (const card of [attacker, ...(engine.blockers.get(attacker.id) ?? [])]) {
+      if (preventedIds.has(card.id) && !seenPrevented.has(card.id)) {
+        seenPrevented.add(card.id);
+        prevented.push(card);
+      }
+    }
+  }
+  return { entries, prevented };
 }

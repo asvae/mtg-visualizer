@@ -21,6 +21,10 @@
     {
       "sourceText": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card.",
       "highlight": "you draw a card"
+    },
+    {
+      "sourceText": "Lifelink",
+      "highlight": "Lifelink"
     }
   ],
   "sink": [

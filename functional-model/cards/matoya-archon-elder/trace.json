@@ -1,58 +1,24 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onScry\" trigger fires",
-      "result": "draws a card",
+      "setup": "you: 3 Island(s)",
+      "action": "real engine playthrough: cast -> real surveil -> onSurveil draws a card",
+      "result": "Matoya, Archon Elder is cast and enters the battlefield; a real surveil 1 resolves, then her own \"Whenever you scry or surveil, draw a card\" trigger fires for real, drawing a card.",
       "raw": {
-        "result": "draws a card",
-        "trigger": "onScry"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Matoya, Archon Elder",
-        "instanceId": 1,
-        "name": "onScry"
-      },
-      {
-        "fn": "drawCard",
-        "player": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onSurveil\" trigger fires",
-      "result": "draws a card",
-      "raw": {
-        "result": "draws a card",
-        "trigger": "onSurveil"
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Matoya, Archon Elder",
-        "instanceId": 1,
-        "name": "onSurveil"
-      },
-      {
-        "fn": "drawCard",
-        "player": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
+        "result": "Matoya, Archon Elder is cast and enters the battlefield; a real surveil 1 resolves, then her own \"Whenever you scry or surveil, draw a card\" trigger fires for real, drawing a card.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8
+          }
+        ]
       }
     },
     "log": [
@@ -64,15 +30,63 @@
         "cost": "{2}{U}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Matoya, Archon Elder"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Matoya, Archon Elder"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Matoya, Archon Elder"
+      },
+      {
         "fn": "enters",
         "card": "Matoya, Archon Elder",
         "instanceId": 1,
         "zone": "Battlefield"
       },
       {
-        "fn": "legendRule",
+        "fn": "surveil",
+        "player": "you",
+        "qty": 1
+      },
+      {
+        "fn": "trigger",
         "card": "Matoya, Archon Elder",
-        "player": "you"
+        "instanceId": 1,
+        "name": "onSurveil"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Matoya, Archon Elder ({2}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Surveil 1 (a real surveil effect resolves)",
+        "from": 5
+      },
+      {
+        "label": "Fire onSurveil",
+        "from": 6
       }
     ]
   }

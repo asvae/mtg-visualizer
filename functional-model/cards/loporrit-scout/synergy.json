@@ -9,6 +9,7 @@
           "Creature"
         ]
       },
+      "excludeSelf": true,
       "value": 1
     }
   ]

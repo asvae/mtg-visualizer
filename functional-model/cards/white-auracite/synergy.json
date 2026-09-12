@@ -1,35 +1,90 @@
 {
   "source": [
     {
-      "id": "exile-on-etb",
-      "zone": "Exile",
-      "value": 1,
-      "sourceText": "When this artifact enters, exile target nonland permanent an opponent controls until this artifact leaves the battlefield.",
-      "highlight": "exile target nonland permanent an opponent controls"
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
     },
     {
-      "id": "mana",
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "to": "Exile",
+      "from": "Battlefield",
+      "controller": "opp",
+      "target": {
+        "types": {
+          "not": [
+            "Land"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 27,
+          "end": 78
+        }
+      ]
+    },
+    {
       "event": "addMana",
       "controller": "you",
-      "color": "W",
-      "sourceText": "{T}: Add {W}.",
-      "highlight": "{W}",
-      "value": 1
+      "colors": {
+        "has": [
+          "W"
+        ]
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 9,
+          "end": 12
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-opp-nonland-permanent",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "opp",
       "types": {
         "not": [
           "Land"
         ]
       },
-      "sourceText": "exile target nonland permanent an opponent controls — needs a legal nonland permanent on an opponent's battlefield to target.",
-      "highlight": "exile target nonland permanent an opponent controls",
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 27,
+          "end": 78
+        }
+      ]
     }
   ]
 }

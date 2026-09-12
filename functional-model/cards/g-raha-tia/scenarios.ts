@@ -109,7 +109,7 @@ export function runEngineScenarios(): TraceResult[] {
   if (townGreeter.zone === 'Graveyard') pilotFireTrigger(pilot, gRahaTia, ctx, actions, 'onOtherPermanentsDie');
 
   const result =
-    "G'raha Tia is cast and enters the battlefield; a real separate creature you control (Town Greeter) attacks, is blocked by a real 2/2 (Coeurl) and dies in genuine lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires for real, drawing a card.";
+    "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires, drawing a card.";
   return [
     finishEnginePilotTrace(pilot, setup, "real engine playthrough: cast -> real other-creature combat death -> onOtherPermanentsDie", result),
   ];

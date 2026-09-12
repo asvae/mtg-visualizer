@@ -55,6 +55,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotFireTrigger(pilot, ambrosiaWhiteheart, ctx, actions, 'onLandfall');
 
   const result =
-    "Ambrosia is cast for real during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; real ETB (603.6b) returns one of your own real Plains to hand (\"another permanent you control,\" no artifact restriction); later a real land entering triggers Landfall, pumping Ambrosia +1/+0 for real.";
+    "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0.";
   return [finishEnginePilotTrace(pilot, setup, "real engine playthrough: Flash cast on opponent's turn -> real ETB bounce -> real Landfall pump", result)];
 }

@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "2026-09-12: this card's own definition.ts/effects are now ALSO reused directly (not re-authored) by `cloud-midgar-mercenary/scenarios.ts`'s own real engine-piloted combo trace (per direct user request — \"fin 563 could be used to test\") — cast Cloud, real ETB tutors this card into hand, cast + equip it for real, attack, this card's own real `onEquippedAttacks` trigger fires (manually, via `pilotFireTrigger`, same gap every attack-triggered card hits — no auto-dispatch for attack triggers exists anywhere in this engine), destroying a real opponent creature. This card's own facts/scenarios/trace.json are UNCHANGED by that — the combo trace lives entirely in cloud-midgar-mercenary's own trace.json, not this card's. Noted here only for cross-reference. `verify-synergy.mjs ultima-weapon`: still OK, 0 hard failures, unaffected.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

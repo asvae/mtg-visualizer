@@ -28,32 +28,32 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1691,
+        "target": "Grizzly Bears",
+        "id": 2,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
-        "target": "you-gy-creature-0",
-        "id": 1691,
+        "target": "Grizzly Bears",
+        "id": 2,
         "controller": "you"
       }
     ]
   },
   {
     "scenario": {
-      "setup": "opp0: 1 Zombie creature(s)",
+      "setup": "opp0: a Qutrub Forayer",
       "action": "activated ({1}{W}, {T}, Exile this artifact), mode 1 chosen",
       "result": "exiles the Zombie",
       "raw": {
@@ -61,9 +61,16 @@
         "mode": 1,
         "opponents": [
           {
-            "creaturesCount": 1,
-            "creatureSubtypes": [
-              "Zombie"
+            "creatureCards": [
+              {
+                "name": "Qutrub Forayer",
+                "subtypes": [
+                  "Zombie",
+                  "Horror"
+                ],
+                "power": 3,
+                "toughness": 2
+              }
             ]
           }
         ]
@@ -88,26 +95,26 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Qutrub Forayer",
         "subtype": "Skeleton",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Qutrub Forayer",
         "subtype": "Spirit",
         "result": false
       },
       {
         "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
+        "target": "Qutrub Forayer",
         "subtype": "Zombie",
         "result": true
       },
       {
-        "fn": "ceasesToExist",
-        "target": "Grizzly Bears",
-        "id": 1696,
+        "fn": "moveTo",
+        "target": "Qutrub Forayer",
+        "id": 7,
         "zone": "Exile",
         "controller": "opp0"
       }

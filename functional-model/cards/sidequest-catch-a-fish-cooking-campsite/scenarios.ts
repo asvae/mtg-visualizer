@@ -30,7 +30,7 @@ import type { Scenario } from '../../harness';
 export const scenarios: Scenario[] = [
   {
     result:
-      "casts and enters; real upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
+      "casts and enters; upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
     you: { libraryCount: 1, libraryArtifactCount: 1, creaturesCount: 2 },
     sequence: ['onUpkeep', { face: 'back', activate: true }],
   },

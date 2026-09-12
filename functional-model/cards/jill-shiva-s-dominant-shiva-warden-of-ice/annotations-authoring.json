@@ -1,0 +1,60 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Legendary Creature", "highlight": "Legendary Creature" },
+    { "anchor": "typeLine", "sourceText": "Legendary Creature", "highlight": "Legendary Creature" },
+    {
+      "sourceText": "When Jill enters, return up to one other target nonland permanent to its owner's hand.",
+      "highlight": "return up to one other target nonland permanent to its owner's hand"
+    },
+    {
+      "sourceText": "{3}{U}{U}, {T}: Exile Jill, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.",
+      "highlight": "{T}"
+    },
+    {
+      "sourceText": "{3}{U}{U}, {T}: Exile Jill, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.",
+      "highlight": "Exile Jill, then return it to the battlefield transformed under its owner's control"
+    },
+    {
+      "sourceText": "{3}{U}{U}, {T}: Exile Jill, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.",
+      "highlight": "Exile Jill, then return it to the battlefield transformed under its owner's control"
+    },
+    {
+      "sourceText": "(As this Saga enters and after your draw step, add a lore counter.)",
+      "highlight": "add a lore counter"
+    },
+    {
+      "sourceText": "I, II — Mesmerize — Target creature can't be blocked this turn.",
+      "highlight": "Target creature can't be blocked this turn"
+    },
+    {
+      "sourceText": "I, II — Mesmerize — Target creature can't be blocked this turn.",
+      "highlight": "Target creature can't be blocked this turn"
+    },
+    {
+      "sourceText": "III — Cold Snap — Tap all lands your opponents control. Exile Shiva, then return it to the battlefield (front face up).",
+      "highlight": "Tap all lands your opponents control"
+    },
+    {
+      "sourceText": "III — Cold Snap — Tap all lands your opponents control. Exile Shiva, then return it to the battlefield (front face up).",
+      "highlight": "Exile Shiva, then return it to the battlefield (front face up)"
+    },
+    {
+      "sourceText": "III — Cold Snap — Tap all lands your opponents control. Exile Shiva, then return it to the battlefield (front face up).",
+      "highlight": "Exile Shiva, then return it to the battlefield (front face up)"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "When Jill enters, return up to one other target nonland permanent to its owner's hand.",
+      "highlight": "return up to one other target nonland permanent to its owner's hand"
+    },
+    {
+      "sourceText": "I, II — Mesmerize — Target creature can't be blocked this turn.",
+      "highlight": "Target creature can't be blocked this turn"
+    },
+    {
+      "sourceText": "III — Cold Snap — Tap all lands your opponents control. Exile Shiva, then return it to the battlefield (front face up).",
+      "highlight": "Tap all lands your opponents control"
+    }
+  ]
+}

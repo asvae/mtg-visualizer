@@ -61,6 +61,7 @@
       "event": "grantType",
       "type": "Creature",
       "target": "self",
+      "untilEndOfTurn": true,
       "value": -1,
       "annotations": [
         {

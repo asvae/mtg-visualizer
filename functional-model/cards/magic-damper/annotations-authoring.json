@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Target creature you control gets +1/+1 and gains hexproof until end of turn.",
+      "highlight": "gets +1/+1"
+    },
+    {
+      "sourceText": "Target creature you control gets +1/+1 and gains hexproof until end of turn.",
+      "highlight": "gains hexproof until end of turn"
+    },
+    {
+      "sourceText": "Untap it.",
+      "highlight": "Untap it"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Target creature you control gets +1/+1 and gains hexproof until end of turn.",
+      "highlight": "Target creature you control"
+    }
+  ]
+}

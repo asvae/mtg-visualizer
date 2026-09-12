@@ -1,15 +1,40 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "enters with a +1/+1 counter on itself",
+      "setup": "you: 1 Plains(s)",
+      "action": "real engine playthrough: cast -> ETB counter -> real board-state filler (second creature, attached Equipment) -> sacrifice ability fires directly, granting indestructible, transferring counters, and re-attaching the Equipment",
+      "result": "Zack Fair is cast for {W} and enters with a +1/+1 counter; with a second creature and a Buster Sword already attached, activating {1}, Sacrifice Zack Fair fires the ability directly, granting the target indestructible, moving Zack Fair's own +1/+1 counter onto it, and re-attaching the Buster Sword to it — all three consequences, on the same target.",
       "raw": {
-        "result": "enters with a +1/+1 counter on itself",
-        "trigger": "onEnter"
+        "result": "Zack Fair is cast for {W} and enters with a +1/+1 counter; with a second creature and a Buster Sword already attached, activating {1}, Sacrifice Zack Fair fires the ability directly, granting the target indestructible, moving Zack Fair's own +1/+1 counter onto it, and re-attaching the Buster Sword to it — all three consequences, on the same target.",
+        "you": {
+          "basicLands": [
+            "Plains"
+          ]
+        },
+        "opponents": [
+          {}
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Zack Fair",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Zack Fair"
+      },
+      {
+        "fn": "enters",
+        "card": "Zack Fair",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Zack Fair",
@@ -19,33 +44,33 @@
       {
         "fn": "putCounter",
         "target": "Zack Fair",
-        "id": 2917,
+        "id": 4,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 creature(s); self already has 2 +1/+1 counter(s)",
-      "action": "activated ({1}, Sacrifice Zack Fair)",
-      "result": "puts Zack Fair's 2 +1/+1 counters onto the target creature you control (indestructible grant and Equipment-transfer not mechanically enforced — see definition.ts's own comments)",
-      "raw": {
-        "result": "puts Zack Fair's 2 +1/+1 counters onto the target creature you control (indestructible grant and Equipment-transfer not mechanically enforced — see definition.ts's own comments)",
-        "selfCounters": {
-          "+1/+1": 2
-        },
-        "you": {
-          "creaturesCount": 1
-        }
-      }
-    },
-    "log": [
+      },
+      {
+        "fn": "enters",
+        "card": "Grizzly Bears",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Buster Sword",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
+      {
+        "fn": "equip",
+        "equipment": "Buster Sword",
+        "target": "Zack Fair"
+      },
       {
         "fn": "activate",
         "card": "Zack Fair",
-        "instanceId": 1,
         "cost": "{1}, Sacrifice Zack Fair"
       },
       {
@@ -54,76 +79,60 @@
         "count": 2
       },
       {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 5,
+        "keyword": "Indestructible"
+      },
+      {
         "fn": "read:getCounters",
         "target": "Zack Fair",
         "counterType": "+1/+1",
-        "result": 2
+        "result": 1
       },
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2919,
+        "id": 5,
         "counterType": "+1/+1",
-        "amount": 2,
+        "amount": 1,
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "self already has 2 +1/+1 counter(s)",
-      "action": "activated ({1}, Sacrifice Zack Fair)",
-      "result": "no other creature you control to target, no counters moved",
-      "raw": {
-        "result": "no other creature you control to target, no counters moved",
-        "selfCounters": {
-          "+1/+1": 2
-        },
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Zack Fair",
-        "instanceId": 1,
-        "cost": "{1}, Sacrifice Zack Fair"
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({1}, Sacrifice Zack Fair), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Zack Fair",
-        "instanceId": 1,
-        "cost": "{1}, Sacrifice Zack Fair"
+        "fn": "read:getEquippedBy",
+        "target": "Zack Fair",
+        "result": [
+          "Buster Sword"
+        ]
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
+        "fn": "equip",
+        "equipment": "Buster Sword",
+        "equipmentId": 6,
+        "target": "Grizzly Bears",
+        "id": 5
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
       },
       {
-        "fn": "legendRule",
-        "card": "Zack Fair",
-        "player": "you"
+        "label": "Cast Zack Fair ({W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 2
+      },
+      {
+        "label": "Real second creature (Grizzly Bears) and a real Equipment (Buster Sword) already attached to Zack Fair",
+        "from": 5
+      },
+      {
+        "label": "Activate {1}, Sacrifice Zack Fair (fired directly — self-sacrifice-as-cost is not payable through canActivateAbility, see this file's own header)",
+        "from": 8
       }
     ]
   }

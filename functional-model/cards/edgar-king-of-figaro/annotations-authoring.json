@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Artificer Noble",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Artificer Noble",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "When Edgar enters, draw a card for each artifact you control.",
+      "highlight": "draw a card for each artifact you control"
+    },
+    {
+      "sourceText": "Two-Headed Coin — The first time you flip one or more coins each turn, those coins come up heads and you win those flips.",
+      "highlight": "you win those flips"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "When Edgar enters, draw a card for each artifact you control.",
+      "highlight": "artifact you control"
+    }
+  ]
+}

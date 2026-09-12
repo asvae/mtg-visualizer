@@ -73,6 +73,7 @@
       "amount": {
         "min": 1
       },
+      "excludeSelf": true,
       "value": 1,
       "annotations": [
         {

@@ -63,6 +63,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   const result =
-    'From Father to Son is cast from hand for {1}{W} and resolves for real: searches the real library for a real Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the real library for another real Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.';
+    'From Father to Son is cast from hand for {1}{W} and resolves: searches the library for a Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the library for another Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.';
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast from hand -> search to hand -> graveyard -> Flashback cast -> search to battlefield -> exile', result)];
 }

@@ -50,6 +50,16 @@ export function runEngineScenarios(): TraceResult[] {
   pilotCast(pilot, stiltzkinReal, stiltzkinMoogleMerchant, ctx, actions);
   pilotResolveTop(pilot);
 
+  // Real printed Lifelink (CR 702.15e: life gained equal to ANY damage
+  // dealt, combat or otherwise — restored 2026-09-12, see SYNERGY_DESIGN.md's
+  // own dated entry) — a real, direct `actions.dealDamage` call, same real
+  // function combat damage itself resolves through (`state.dealDamage`'s
+  // own Lifelink check), demonstrating it without needing a full combat
+  // sub-sequence (Stiltzkin's own {T} activation below already uses up its
+  // one real tap this turn).
+  pilot.beginStep('Real Lifelink: Stiltzkin deals 3 damage to the opponent, gains that much life');
+  actions.dealDamage(ctx.self, ctx.opponents[0]!, 3);
+
   // Real turn passage — summoning sickness (302.6) clears, so the {T} half
   // of the activation cost is legal, and all 4 Plains untap for real (502.3)
   advanceToPlayersNextMain1(pilot, pilot.you);
@@ -65,6 +75,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   const result =
-    'Stiltzkin, Moogle Merchant is cast, real turn passage clears summoning sickness, then its real {2},{T} ability activates: the opponent genuinely gains control of another real permanent you control (one of the same real Plains that helped pay for casting/activation), and because that real control change happened, you draw a real card.';
+    'Stiltzkin, Moogle Merchant is cast, turn passage clears summoning sickness, then its {2},{T} ability activates: the opponent gains control of another permanent you control (one of the same Plains that helped pay for casting/activation), and because that control change happened, you draw a card.';
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real {2},{T} activation -> real gainControl -> real drawCard', result)];
 }

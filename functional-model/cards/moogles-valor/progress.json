@@ -1,9 +1,11 @@
 {
   "enrichment": "ai",
-  "review": "ai",
+  "review": "human",
   "verifySynergy": "pass",
   "lastVerified": "2026-09-12",
   "notes": "Migrated to the unified Fact model (SYNERGY_DESIGN.md). New real token registered (TOKENS.w_1_2_moogle_lifelink, tfin/34, verified against data/cards.db) with a real, structurally-tracked keywords:['Lifelink'] — the old 'TokenInfo has no keywords field' gap claim was stale/wrong, checked and closed. Indestructible grant now uses the real grantKeywordAll effect (Ardyn/Circle of Power precedent), mechanically enforced and producing real fn:'grantKeyword' trace evidence (6 real calls in the 3-creature scenario: 3 pre-existing Grizzly Bears + 3 new Moogle tokens, confirming the card's own 'then' sequencing).",
   "textCoverageAudited": false,
-  "knownGaps": []
+  "knownGaps": [],
+  "oracleTextSnapshot": "For each creature you control, create a 1/2 white Moogle creature token with lifelink. Then creatures you control gain indestructible until end of turn.",
+  "reviewedAt": "2026-09-12"
 }

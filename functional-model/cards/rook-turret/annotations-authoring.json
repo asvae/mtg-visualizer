@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact Creature",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Artifact Creature",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Whenever another artifact you control enters, you may draw a card. If you do, discard a card.",
+      "highlight": "you may draw a card"
+    },
+    {
+      "sourceText": "Whenever another artifact you control enters, you may draw a card. If you do, discard a card.",
+      "highlight": "discard a card"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever another artifact you control enters, you may draw a card. If you do, discard a card.",
+      "highlight": "another artifact you control enters"
+    }
+  ]
+}

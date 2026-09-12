@@ -1,39 +1,100 @@
 {
   "source": [
     {
-      "id": "job-select-token",
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "sourceText": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
-      "highlight": "create a 1/1 colorless Hero creature token"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 40,
+          "end": 82
+        }
+      ]
     },
     {
-      "id": "granted-spellcast-draw-counter",
+      "event": "grantType",
+      "type": "Wizard",
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 18,
+          "end": 60
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "+1/+1",
-      "target": "self",
-      "value": 1,
-      "sourceText": "\"...whenever you cast a noncreature spell and whenever you draw your third card each turn, put a +1/+1 counter on this creature.\" (granted ability, both triggers collapsed into this one fact — same declarative payoff either way)",
-      "highlight": "put a +1/+1 counter on this creature"
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 65,
+          "end": 195
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "equip-2",
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Diana — Equip {2} (standard Equip ability: attach to target creature you control).",
-      "highlight": "attach to target creature you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 8,
+          "end": 17
+        }
+      ]
     }
   ]
 }

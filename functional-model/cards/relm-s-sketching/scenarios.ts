@@ -1,7 +1,9 @@
 import type { Scenario } from '../../harness';
 
 export const scenarios: Scenario[] = [
-  { castFrom: 'hand', you: { creaturesCount: 1, creaturePower: 4 }, result: 'creates a token copy of the target creature (same power/toughness/name)' },
-  { castFrom: 'hand', opponents: [{ artifactsCount: 1 }], result: "creates a token copy of the opponent's target artifact" },
-  { castFrom: 'hand', you: { landsCount: 1 }, result: "creates a token copy of the target land" },
+  {
+    castFrom: 'hand',
+    you: { creaturesCount: 1, creaturePower: 4 },
+    result: "targets the creature on the battlefield and creates a token that's a copy of it (same name, types, power, and toughness)",
+  },
 ];

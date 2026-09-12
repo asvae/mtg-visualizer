@@ -98,7 +98,7 @@
       },
       {
         "fn": "read:hasSubtype",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "subtype": "Saga",
         "result": false
       }

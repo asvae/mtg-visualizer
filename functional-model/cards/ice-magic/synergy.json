@@ -1,32 +1,91 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "zone": "Hand",
-      "controller": "opp",
-      "value": 1
+      "from": "Battlefield",
+      "to": "Hand",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 19,
+          "end": 61
+        }
+      ]
     },
     {
-      "zone": "Library",
-      "controller": "opp",
-      "value": 1
+      "from": "Battlefield",
+      "to": "Library",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 19,
+          "end": 104
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
-      "controller": "opp",
+      "to": "Battlefield",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "value": 1
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 26,
+          "end": 41
+        }
+      ]
     }
   ]
 }

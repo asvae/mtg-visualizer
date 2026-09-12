@@ -1,20 +1,66 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "\"onEnter\" trigger fires",
-      "result": "exiles a nonland permanent the opponent controls",
+      "setup": "you: 4 Plains(s)",
+      "action": "real engine playthrough: cast -> real ETB exile of an opponent nonland permanent",
+      "result": "White Auracite is cast for {2}{W}{W} and resolves; its ETB trigger exiles a nonland permanent an opponent controls (Coeurl). Its own \"{T}: Add {W}.\" mana ability has no scenario evidence — this model has no way to pilot a plain mana ability at all (see this card's own definition.ts comment).",
       "raw": {
-        "result": "exiles a nonland permanent the opponent controls",
-        "trigger": "onEnter",
+        "result": "White Auracite is cast for {2}{W}{W} and resolves; its ETB trigger exiles a nonland permanent an opponent controls (Coeurl). Its own \"{T}: Add {W}.\" mana ability has no scenario evidence — this model has no way to pilot a plain mana ability at all (see this card's own definition.ts comment).",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ]
+        },
         "opponents": [
-          {
-            "creaturesCount": 1
-          }
+          {}
         ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "opp0"
+      },
+      {
+        "fn": "cast",
+        "card": "White Auracite",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{W}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Auracite"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Auracite"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Auracite"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Auracite"
+      },
+      {
+        "fn": "enters",
+        "card": "White Auracite",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "White Auracite",
@@ -30,56 +76,33 @@
       },
       {
         "fn": "read:isLand",
-        "target": "Grizzly Bears",
+        "target": "Coeurl",
         "result": false
       },
       {
-        "fn": "ceasesToExist",
-        "target": "Grizzly Bears",
-        "id": 2860,
+        "fn": "moveTo",
+        "target": "Coeurl",
+        "id": 8,
         "zone": "Exile",
         "controller": "opp0"
       }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 2 land(s)",
-      "action": "\"onEnter\" trigger fires",
-      "result": "no nonland permanent for the opponent to lose, nothing exiled",
-      "raw": {
-        "result": "no nonland permanent for the opponent to lose, nothing exiled",
-        "trigger": "onEnter",
-        "opponents": [
-          {
-            "landsCount": 2
-          }
-        ]
-      }
-    },
-    "log": [
+    ],
+    "actions": [
       {
-        "fn": "trigger",
-        "card": "White Auracite",
-        "instanceId": 1,
-        "name": "onEnter"
+        "label": "Start",
+        "from": 0
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 2,
-        "creatureCount": 0
+        "label": "A real opponent's nonland permanent (Coeurl) already on the battlefield",
+        "from": 0
       },
       {
-        "fn": "read:isLand",
-        "target": "opp0-land-0",
-        "result": true
+        "label": "Cast White Auracite ({2}{W}{W})",
+        "from": 1
       },
       {
-        "fn": "read:isLand",
-        "target": "opp0-land-1",
-        "result": true
+        "label": "Resolve",
+        "from": 6
       }
     ]
   }

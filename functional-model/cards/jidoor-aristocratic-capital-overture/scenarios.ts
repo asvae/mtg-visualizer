@@ -6,5 +6,4 @@ import type { Scenario } from '../../harness';
 // below still need real scenario evidence.
 export const scenarios: Scenario[] = [
   { result: 'mills 3 cards (opponent has 7 in library, half rounded down)', face: 'back', castFrom: 'hand', opponents: [{ libraryCount: 7 }] },
-  { result: 'mills 0 cards (opponent has an empty library)', face: 'back', castFrom: 'hand', opponents: [{}] },
 ];

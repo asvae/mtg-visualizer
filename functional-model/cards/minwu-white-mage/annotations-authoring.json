@@ -13,6 +13,10 @@
     {
       "sourceText": "Whenever you gain life, put a +1/+1 counter on each Cleric you control.",
       "highlight": "put a +1/+1 counter on each Cleric you control"
+    },
+    {
+      "sourceText": "Vigilance, lifelink",
+      "highlight": "lifelink"
     }
   ],
   "sink": [

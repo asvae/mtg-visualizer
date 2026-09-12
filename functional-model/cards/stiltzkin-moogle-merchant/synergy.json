@@ -69,6 +69,19 @@
           "end": 108
         }
       ]
+    },
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "value": 5,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 8
+        }
+      ]
     }
   ],
   "sink": [

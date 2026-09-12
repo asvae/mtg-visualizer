@@ -1,12 +1,26 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "creates a 3/3 blue Robot Warrior artifact creature token, no counters",
+      "setup": "you: 10 Island(s)",
+      "action": "real engine playthrough: cast from hand -> create token (no counters) -> graveyard -> Flashback cast -> create token + 2 counters -> exile",
+      "result": "Retrieve the Esper is cast from hand for {3}{U} and resolves for real: creates a 3/3 blue Robot Warrior artifact creature token with no bonus counters, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {5}{U}: creates a second real Robot Warrior token, this time putting two +1/+1 counters on it (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
       "raw": {
-        "castFrom": "hand",
-        "result": "creates a 3/3 blue Robot Warrior artifact creature token, no counters"
+        "result": "Retrieve the Esper is cast from hand for {3}{U} and resolves for real: creates a 3/3 blue Robot Warrior artifact creature token with no bonus counters, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {5}{U}: creates a second real Robot Warrior token, this time putting two +1/+1 counters on it (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 1
+        }
       }
     },
     "log": [
@@ -16,6 +30,26 @@
         "instanceId": 1,
         "from": "hand",
         "cost": "{3}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
       },
       {
         "fn": "createToken",
@@ -31,28 +65,44 @@
         "card": "Retrieve the Esper",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Sorcery"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from graveyard",
-      "result": "creates the token, then puts two +1/+1 counters on it (cast via Flashback)",
-      "raw": {
-        "castFrom": "graveyard",
-        "result": "creates the token, then puts two +1/+1 counters on it (cast via Flashback)"
-      }
-    },
-    "log": [
+        "to": "Graveyard"
+      },
       {
         "fn": "cast",
         "card": "Retrieve the Esper",
         "instanceId": 1,
         "from": "graveyard",
         "cost": "{5}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Retrieve the Esper"
       },
       {
         "fn": "createToken",
@@ -66,7 +116,7 @@
       {
         "fn": "putCounter",
         "target": "Robot Warrior",
-        "id": 1849,
+        "id": 15,
         "counterType": "+1/+1",
         "amount": 2,
         "controller": "you"
@@ -76,8 +126,29 @@
         "card": "Retrieve the Esper",
         "instanceId": 1,
         "from": "stack",
-        "to": "Exile",
-        "cardType": "Sorcery"
+        "to": "Exile"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Retrieve the Esper ({3}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 5
+      },
+      {
+        "label": "Cast Retrieve the Esper via Flashback ({5}{U})",
+        "from": 7
+      },
+      {
+        "label": "Resolve",
+        "from": 14
       }
     ]
   }

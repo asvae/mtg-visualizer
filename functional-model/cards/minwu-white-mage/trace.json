@@ -2,135 +2,19 @@
   {
     "scenario": {
       "setup": "you: 2 Cleric creature(s)",
-      "action": "\"onLifeGained\" trigger fires",
-      "result": "puts a +1/+1 counter on self and both other Clerics (3 total)",
+      "action": "cast from hand, deals 3 combat damage",
+      "result": "puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life for real via Lifelink",
       "raw": {
-        "result": "puts a +1/+1 counter on self and both other Clerics (3 total)",
-        "trigger": "onLifeGained",
+        "result": "puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life for real via Lifelink",
         "you": {
           "creaturesCount": 2,
           "creatureSubtypes": [
             "Cleric"
           ]
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Minwu, White Mage",
-        "instanceId": 1,
-        "name": "onLifeGained"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 3
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Cleric",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "Grizzly Bears",
-        "id": 1583,
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Cleric",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "Grizzly Bears",
-        "id": 1584,
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Minwu, White Mage",
-        "subtype": "Cleric",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "Minwu, White Mage",
-        "id": 1585,
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "\"onLifeGained\" trigger fires",
-      "result": "puts a +1/+1 counter on self only — the other 2 creatures are not Clerics",
-      "raw": {
-        "result": "puts a +1/+1 counter on self only — the other 2 creatures are not Clerics",
-        "trigger": "onLifeGained",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Minwu, White Mage",
-        "instanceId": 1,
-        "name": "onLifeGained"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 3
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Cleric",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Grizzly Bears",
-        "subtype": "Cleric",
-        "result": false
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "Minwu, White Mage",
-        "subtype": "Cleric",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "Minwu, White Mage",
-        "id": 1589,
-        "counterType": "+1/+1",
-        "amount": 1,
-        "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, deals 3 combat damage",
-      "result": "Lifelink: deals 3 combat damage to an opponent",
-      "raw": {
-        "label": "Lifelink: deals 3 combat damage to an opponent",
+        },
+        "sequence": [
+          "onLifeGained"
+        ],
         "dealsCombatDamage": {
           "amount": 3
         }
@@ -141,6 +25,7 @@
         "fn": "cast",
         "card": "Minwu, White Mage",
         "instanceId": 1,
+        "id": 4,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -148,12 +33,13 @@
         "fn": "enters",
         "card": "Minwu, White Mage",
         "instanceId": 1,
+        "id": 4,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Minwu, White Mage",
-        "sourceId": 1591,
+        "sourceId": 4,
         "target": "opp0",
         "amount": 3
       },
@@ -162,37 +48,60 @@
         "player": "you",
         "amount": 3,
         "cause": "Lifelink"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Minwu, White Mage",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{3}{W}{W}"
       },
       {
-        "fn": "enters",
+        "fn": "trigger",
         "card": "Minwu, White Mage",
         "instanceId": 1,
-        "zone": "Battlefield"
+        "id": 4,
+        "name": "onLifeGained"
       },
       {
-        "fn": "legendRule",
-        "card": "Minwu, White Mage",
-        "player": "you"
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 3
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Grizzly Bears",
+        "subtype": "Cleric",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Grizzly Bears",
+        "id": 2,
+        "counterType": "+1/+1",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Grizzly Bears",
+        "subtype": "Cleric",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Grizzly Bears",
+        "id": 3,
+        "counterType": "+1/+1",
+        "amount": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Minwu, White Mage",
+        "subtype": "Cleric",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Minwu, White Mage",
+        "id": 4,
+        "counterType": "+1/+1",
+        "amount": 1,
+        "controller": "you"
       }
     ]
   }

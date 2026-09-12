@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Warlock",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Warlock",
+      "highlight": "Legendary Creature"
+    },
+    {
+      "sourceText": "Whenever you scry or surveil, draw a card. (Draw after you scry or surveil.)",
+      "highlight": "draw a card"
+    },
+    {
+      "sourceText": "Whenever you scry or surveil, draw a card. (Draw after you scry or surveil.)",
+      "highlight": "Draw after you scry or surveil"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever you scry or surveil, draw a card. (Draw after you scry or surveil.)",
+      "highlight": "scry"
+    },
+    {
+      "sourceText": "Whenever you scry or surveil, draw a card. (Draw after you scry or surveil.)",
+      "highlight": "surveil"
+    }
+  ]
+}

@@ -190,44 +190,244 @@ so a future pass doesn't mistake them for missing work:
    either today — checked): "each player's"/"each opponent's" upkeep/
    end-step triggers (as opposed to "your own"); "skip your next X
    step/phase" effects.
-4. **Target-legality checking at cast/declare time, and re-validation at
-   resolution (608.2b, "fizzle").** `card.ts`'s effect system resolves/picks
-   targets lazily, inside `resolveCard`, at resolution time — there is no
-   pre-resolution "declare and validate targets" step anywhere to hook a
-   legality check onto, and `stack.ts`'s own header already flags that
-   `resolveTop` never re-checks whether a target became illegal before
-   resolving. Retrofitting either means redesigning `Effect`'s whole
-   resolution model — a real, structural gap, not attempted in this pass.
+4. ~~**Target-legality checking at cast/declare time, and re-validation at
+   resolution (608.2b, "fizzle").**~~ **CLOSED for the real, load-bearing
+   shape (2026-09-12)** — real cast-time target LOCKING (601.2c/602.1) plus
+   resolution-time RE-VALIDATION with genuine 608.2b fizzle (including
+   partial multi-target fizzle), for every single/multi-target `Effect` kind
+   a real FIN removal/bounce/pump/tap/etc. spell actually uses. Turned out
+   smaller than the original "redesign Effect's whole resolution model"
+   assessment, once actually attempted: `applyEffect`'s own per-branch
+   candidate `pool` (already rebuilt from LIVE game state at resolution
+   time, in every targeted branch) already doubles as a genuine CR 115
+   legality check for free — the only real piece missing was a way to
+   PIN which object was chosen, at CAST time, and re-check ITS membership
+   in that same pool instead of picking fresh.
+   - **Cast-time locking**: `card.ts`'s new `EffectContext.declaredTargets?:
+     Card[]` (see its own long doc comment for the full design writeup) —
+     `engine.ts`'s `castSpell`/`activateAbility` gained a new
+     `declaredTargets?: RealCard[]` param (defaulting to `[declaredTarget]`
+     when the pre-existing, cost-reduction-only `declaredTarget` single
+     param is given instead — Fate of the Sun-Cryst's own real shape, a
+     cost-reduction condition keyed on the SAME object the spell targets,
+     is exactly why this default is safe and correct, not just convenient),
+     wraps each via `state.ts`'s `wrapCard`, and records them on the pushed
+     `StackObject` (`stack.ts`'s new `StackObject.declaredTargets`).
+   - **Resolution-time re-validation + fizzle**: `stack.ts`'s `resolveTop`
+     now unconditionally copies `StackObject.declaredTargets` onto
+     `ctx.declaredTargets` right before resolving (clearing it to `undefined`
+     when absent — a resolved permanent's own `ctx` is reused across many
+     LATER resolutions, so a stale array from a prior one must never leak
+     forward). `card.ts`'s new shared `resolveTargets(pool, qty, ctx,
+     actions)` is the one chokepoint 9 targeted-effect branches now call
+     instead of a raw `chooseTarget` loop — `destroy`, `move`'s targeted
+     branch, `putCounterTarget`, `dealDamageTarget`, `fightTarget`,
+     `pumpTarget`, `grantKeywordTarget`, `tapTarget`, `untapTarget`. When
+     `ctx.declaredTargets` is set, it takes up to `qty` entries off the
+     FRONT (FIFO) that are STILL present in `pool` (by `getId()`), dropping
+     — never replacing — any that aren't (608.2b: no new target is ever
+     substituted for an illegal one); when unset, behavior is BYTE-FOR-BYTE
+     the prior lazy `chooseTarget(pool, ctx.preferTarget)` loop — zero
+     regression risk for any of this pool's existing scenarios, all of
+     which drive `card.ts` via `harness.ts`'s flat lifecycle and never set
+     this field.
+   - Real card demonstration: `cards/fate-of-the-sun-cryst/scenarios.ts`
+     gained a third real engine-piloted scenario (alongside its existing
+     two gap #7 cost-reduction ones) — casts targeting the opponent's real
+     Coeurl (a legal target at cast time), then Coeurl is destroyed by
+     something else in response (`pilot.state.move` to Graveyard, same
+     "represent the real zone change directly" technique
+     crystal-fragments-summon-alexander's own scenario already uses for an
+     unrelated off-card event) before the spell resolves — the trace shows
+     the spell still correctly resolving into its owner's graveyard with NO
+     `destroy` log line (contrast the other two scenarios, which each log
+     one), real, checkable evidence of the fizzle.
+   - New tests: `stack.test.ts`'s new `StackObject.declaredTargets` describe
+     block (baseline: a legal declared target is destroyed normally; fizzle
+     via the target leaving the battlefield to hand; fizzle via the target
+     being destroyed outright; multi-target partial fizzle — two declared
+     targets, one dies before resolution, the other is still destroyed, a
+     third untouched bystander is never substituted in; the no-
+     `declaredTargets`-at-all backward-compatible case). `engine.test.ts`'s
+     new describe block is the same shape but end-to-end through the real
+     `castSpell`/`resolveTop` pair instead of a bare `Stack` (baseline;
+     fizzle via destroy; fizzle via bounce to hand; the no-`declaredTarget`
+     backward-compatible case).
+   - **Real, deliberately narrower scope, not attempted this pass** (see
+     `EffectContext.declaredTargets`'s own doc comment for the full list):
+     (1) `dealDamageAnyTarget` ("any target" — mixes `Player`/`Card`, not
+     the plain `Card[]` pool shape every other branch shares) isn't wired
+     to this; no real FIN card needs a demonstrated fizzle on that specific
+     kind. (2) This pass does NOT gate the cast/activation ITSELF on the
+     declared target being legal at THAT moment (CR 601.2c's own stricter
+     "can't even be put on the stack targeting something illegal" rule) —
+     only the resolution-time 608.2b re-check is real; a cast at an
+     already-illegal target still goes on the stack and correctly fizzles
+     at resolution instead of being rejected up front (same real-game-
+     visible outcome, one priority-round later). Would need each targeted
+     `Effect` kind's own pool/validity logic exposed a layer higher, in
+     `canCastSpell`/`canActivateAbility`, which today have zero visibility
+     into `card.effects`' targeting shape at all — a real, separate,
+     deliberately-deferred extension. (3) When a spell has MORE THAN ONE
+     effect and only ONE of them is targeted (Eject's own real "return
+     target nonland permanent to hand. Draw a card." shape, e.g.), this
+     pass's fizzle granularity is PER-EFFECT, not per-whole-resolution:
+     only the targeted effect itself no-ops on an illegal target; a
+     separate, genuinely untargeted sibling effect on the SAME card
+     (Eject's own unconditional "draw a card") still runs. Strict CR 608.2b
+     says the WHOLE spell fails to resolve once ALL of its targets (for
+     every instance of the word "target," collectively) are illegal — a
+     real, narrower divergence, flagged here rather than silently assumed
+     correct; deliberately not built this pass since it would need
+     computing every targeted effect's own legal-target survival BEFORE
+     running any effect at all (a two-pass restructure of `resolveCard`'s
+     loop), and no real FIN card's own scenario currently exercises or
+     depends on the stricter whole-spell reading — `eject`'s own
+     `scenarios.ts` is untouched by this pass. (4) `activateAbility` also
+     gained the same `declaredTargets` param for symmetry (602.1's "choose
+     targets" step is the direct analogue of 601.2c) and is exercised by
+     this pass's own unit tests, but no real FIN card's own scenario
+     demonstrates a targeted ACTIVATED ability fizzling yet (Coeurl's own
+     "tap target creature" is piloted directly via `resolveCard`, not
+     through the real cast/stack path, in its own scenario) — real,
+     tested machinery without its own `cards/*` demonstration this pass.
 
 ### Medium priority (common, but narrower blast radius)
 
 5. **Non-basic mana sources.** ~~A narrow real slice~~ **CLOSED for
-   single-color, unrestricted "{T}: Add {X}." sources** — checked every
-   real `{T}: Add ...` static-ability string across the pool (35 cards
-   total): 10 qualify for this narrow slice (Druid of the Cowl, Goobbue
-   Gardener, Llanowar Elves — creatures, so 302.6 summoning-sickness
-   genuinely applies via a new `payableManaSources` wrapper; Midgar,
-   Ishgard, Jidoor, Lindblum, Zanarkand — Adventure lands; White Auracite,
-   an artifact; Willowrush Verge, a plain land with a second, correctly
-   still-ignored restricted ability). `mana.ts`'s new
+   single-color, unrestricted "{T}: Add {X}." sources** (unchanged from
+   before) — checked every real `{T}: Add ...` static-ability string across
+   the pool (35 cards total): 10 qualify for this narrow slice (Druid of
+   the Cowl, Goobbue Gardener, Llanowar Elves — creatures, so 302.6
+   summoning-sickness genuinely applies via a new `payableManaSources`
+   wrapper; Midgar, Ishgard, Jidoor, Lindblum, Zanarkand — Adventure lands;
+   White Auracite, an artifact; Willowrush Verge, a plain land with a
+   second, correctly still-ignored restricted ability). `mana.ts`'s
    `manaAbilityColorFromStaticText` derives the color at the exact moment
-   a permanent resolves (`resolveTop`), stored on a new `RealCard.manaAbility`
-   field — `RealCard` carries no live `CardDefinition` reference to
-   re-derive it from later, same reasoning `enteredThisTurn`/
+   a permanent resolves (`resolveTop`/`playLand`), stored on
+   `RealCard.manaAbility` — `RealCard` carries no live `CardDefinition`
+   reference to re-derive it from later, same reasoning `enteredThisTurn`/
    `resolvedPermanents` already established.
+
+   **Also now CLOSED (2026-09-12) for the dual/choice-of-color remainder** —
+   checked every real `{T}: Add {X} or {Y}.` static-ability string across
+   the pool: 12 real Town-cycle lands qualify (Vector, Imperial Capital's
+   own "{T}: Add {B} or {R}.", e.g.). `RealCard.manaAbility` is now
+   `ManaColor | ManaColor[]` (widened from a bare `ManaColor`); a new
+   `mana.ts` `deriveManaAbility` (the single real call site `resolveTop`/
+   `playLand` now both use, replacing the old single-color-only call) tries
+   the single-color match first, falling back to the existing
+   `manaAbilityColorsFromStaticText` (which already existed for
+   `scripts/prefill-mana-facts.mjs`'s own synergy-FACT generation, but was
+   explicitly NOT wired into affordability before this pass) for a
+   two-color match. The actual matching problem this needed — "one of these
+   two colors, whichever the player needs" — is real, general assignment
+   machinery, not a bigger lookup table: `mana.ts`'s new
+   `assignManaRequirements` (exhaustive backtracking: try the first
+   not-yet-used source whose own producible color(s) overlap a
+   requirement's legal color(s); recurse; undo and retry on failure) is
+   shared by BOTH this closure and gap #6's own Hybrid-pip closure below,
+   since both are the same underlying shape (a requirement or a source that
+   accepts more than one color). `canAfford`/`payMana` (`mana.ts`) were
+   rewritten around this shared assignment instead of the old fixed
+   per-color loop — verified NOT to regress the ordinary single-color case
+   (same iteration order preserved, `mana.test.ts`/`engine.test.ts` both
+   still pass unchanged for every prior single-color scenario). New tests:
+   `mana.test.ts`'s own dual-source `describe` blocks (a dual source paying
+   either of its two colors; correctly NOT paying a third; two dual sources
+   splitting across two different requirements; and a real
+   backtracking-forced case — a dual source tried first for one
+   requirement has to be un-picked and retried once a later, stricter
+   requirement turns out to have no other source), `engine.test.ts`'s own
+   updated `Non-basic mana sources` describe block (a real
+   `canCastSpell`/`castSpell` cast of a `{U}`-costed spell paid for by a
+   dual `{T}: Add {G} or {U}.` rock with no Island anywhere on the board,
+   plus the negative "can't pay a third color" case).
+
    **Still real, explicitly NOT modeled** (the harder remainder of this
-   gap): a dual/choice-of-color ability (`{T}: Add {G} or {U}.` — ~10
-   cards; correctly affording this needs a real bipartite-matching
-   assignment, not just a bigger lookup table), a restricted one
-   ("Activate only if...", "Spend this mana only to..."), a colorless one
-   (`{C}` — `parseManaCost` itself doesn't parse `{C}`, gap #6), and a
-   variable one (Elvish Archdruid's own `{T}: Add {G} for each Elf you
-   control` — not a fixed single symbol). A player who only has ONE of
-   those source shapes still can't be given legal affordability.
-6. **Hybrid/Phyrexian/`{X}`/generic-colorless (`{C}`) mana symbols.**
-   `parseManaCost` throws on any of these rather than mis-costing them
-   (deliberate fail-loud choice) — but that means a cost like `{X}{R}` or
-   `{2/W}` simply can't be cast through this engine at all yet.
+   gap, narrower than before): a restricted ability ("Activate only if...",
+   "Spend this mana only to..." — Cargo Ship's own real "{T}: Add {C}.
+   Spend this mana only to cast an artifact spell..." ability is the
+   concrete, already-declared example; checked before attempting anything
+   here — correctly affording this would need a genuine spendable-mana-pool
+   tracking mechanism this engine doesn't have AT ALL (`interfaces.ts`'s own
+   `Player.addMana` doc comment: a deliberately inert observation point),
+   a materially bigger, riskier lift than the assignment problem above, so
+   deliberately NOT attempted this pass — Cargo Ship's own mana ability
+   stays exactly as undemonstrated as before), and a variable one (Elvish
+   Archdruid's own real, already-declared `{T}: Add {G} for each Elf you
+   control` — its `amount` is a live-computed function of board state, not
+   a fixed symbol at all; unlike the dual-color case, there's no way to
+   represent "this source produces a variable amount" as a
+   `RealCard.manaAbility` value without teaching `payMana` that ONE tap can
+   yield more than one mana unit, a real, separate extension to the payment
+   model itself, not a lookup-widening — also deliberately NOT attempted).
+   A player who only has one of those TWO remaining source shapes still
+   can't be given legal affordability off it.
+6. **Hybrid/`{X}` mana symbols.** ~~`parseManaCost` throws on any of
+   these~~ **CLOSED for real Hybrid pips (`{G/U}`-shaped) and real `{X}`
+   symbols (2026-09-12)** — grepped every real `manaCost:` string across
+   the ~321-card pool first, per this doc's own "does a real card need
+   this" discipline: exactly 3 real cards need either shape. Hybrid:
+   Thranduil, Sindarin Liege // Silvan Rally's own two faces
+   (`{2}{G/U}{G/U}`/`{1}{G/U}{G/U}`). `{X}`: Choco Comet's own `{X}{R}{R}`
+   and Doppelgang's own `{X}{X}{X}{G}{U}` (already real, playable cards via
+   `harness.ts`'s own flat `Scenario.xPaid` field — this gap only ever
+   blocked `engine.ts`'s real-pilot `canCastSpell`/`castSpell` path, which
+   neither of those two cards' own `scenarios.ts` uses, so neither needed
+   touching this pass; see below).
+   - **Hybrid**: `ParsedManaCost` gained a `hybrid: ManaColor[][]` field (one
+     entry per pip, e.g. `['G','U']`); `parseManaCost` recognizes
+     `{X/Y}`-shaped tokens instead of throwing. Paying a Hybrid pip needs
+     the SAME real assignment problem gap #5's own dual-color-source
+     closure introduced (`assignManaRequirements`) — a Hybrid pip is just a
+     requirement that accepts 2 colors instead of 1, matched against
+     sources the exact same way. `formatManaCost`/`basicLandsFor` both
+     updated to render/provision real Hybrid pips too (the latter always
+     picks the pip's FIRST printed color for scenario-setup convenience —
+     a real payer could legally choose either, `assignManaRequirements`
+     does, but this helper only needs ONE legal board state, not every
+     possible one).
+   - **`{X}`**: `ParsedManaCost` gained an `xCount: number` field (a count,
+     not a value — CR 107.3c: multiple `{X}`s in one cost share the SAME
+     chosen value) instead of throwing on the `X` token. A new
+     `resolveXCost(cost, x)` folds a caller-chosen `x` (defaulting to 0, a
+     real, legal CR 107.3b choice) into `generic` before `canAfford`/
+     `payMana` ever see the cost — neither function reads `xCount` at all,
+     so an un-resolved `{X}` cost behaves safely as X=0 rather than
+     crashing (a caller SHOULD resolve first whenever the caster actually
+     wants to pay more). `engine.ts`'s `effectiveCastCost`/`canCastSpell`/
+     `castSpell` (and `engine-trace.ts`'s `pilotCast`) all take a new
+     optional `x` param, threaded the same way `declaredTarget` already is
+     — `effectiveCastCost` calls `resolveXCost` internally and reformats
+     the logged cost string to the real resolved total (`{3}{R}{R}`, not
+     the printed `{X}{R}{R}` template) once resolved, same treatment a real
+     `costReduction` discount already gets. `x` only affects
+     affordability/payment — a caller wanting the card's own EFFECT to see
+     the same chosen value must also set `ctx.xPaid` itself
+     (`card.ts`'s pre-existing field this gap doesn't touch).
+   New tests: `mana.test.ts`'s `parseManaCost`/`resolveXCost`/
+   `formatManaCost` additions (real Hybrid pip parsing/formatting, `{X}`
+   counting/resolving/formatting), its `canAfford / payMana` additions for
+   both shapes (including a genuine backtracking-forced Hybrid case),
+   `engine.test.ts`'s new `Hybrid mana costs`/`{X} mana costs` describe
+   blocks (synthetic `CardDefinition`s using the SAME real cost strings as
+   Thranduil // Silvan Rally / Choco Comet, proving `canCastSpell`/
+   `castSpell` can now actually cast them, plus the negative
+   "still genuinely unaffordable with too few sources" cases).
+   **Not touched, deliberately**: `cards/thranduil-sindarin-liege-silvan-
+   rally/`, `cards/choco-comet/`, `cards/doppelgang/`'s own `scenarios.ts` —
+   none of the three needed a scenario change, since none of their existing
+   scenarios were ever blocked by this gap in the first place (`harness.ts`
+   never calls `parseManaCost` at all; only `engine.ts`'s real pilot path
+   did, and none of these three cards use it).
+   **Still real, explicitly NOT modeled** — checked, no real FIN card needs
+   either: Phyrexian mana (`{U/P}`-shaped) and a colorless-specific PIP IN
+   A CAST COST (`{C}` — e.g. a spell printed as "{3}{C}"; unrelated to a
+   SOURCE that PRODUCES `{C}`, which is a separate, already-real thing —
+   see gap #5). `parseManaCost` still throws (fail-loud, not silently
+   mis-costed) on either. Revisit only if a future card added to the pool
+   actually needs one.
 7. **Alternate costs, modal/split costs, casting from anywhere but hand.**
    `AlternativeCost.java`/`StaticAbilityAlternativeCost.java` (real Forge
    classes) cover flashback, foretell, alternative-cost-reduction effects,
@@ -246,69 +446,280 @@ so a future pass doesn't mistake them for missing work:
    `alt` and logs the real `from`/`cost` it names instead of hardcoded
    `from:'hand'`/`card.manaCost`. **Still real, explicitly NOT modeled**:
    modal/split costs (choose-a-mode-then-pay), Foretell (a two-step
-   exile-then-cast-later sequence, not a same-turn alternate cost), any
-   alternative-cost-REDUCTION effect (layering a discount on top of a cost
-   rather than replacing it outright), and the engine does not itself verify
-   the caller's `cardReal` is actually sitting in `alt.from`'s zone before
-   casting it from there (same pre-existing "trust the caller" contract
-   `canCastSpell`/`castSpell` already have for an ordinary hand-cast, which
+   exile-then-cast-later sequence, not a same-turn alternate cost), and the
+   engine does not itself verify the caller's `cardReal` is actually
+   sitting in `alt.from`'s zone before casting it from there (same
+   pre-existing "trust the caller" contract `canCastSpell`/`castSpell`
+   already have for an ordinary hand-cast, which
    also isn't zone-checked).
 
-   **Real, textually-precise cost-reduction example confirmed still open
-   (2026-09-11, `fate-of-the-sun-cryst`/fin-19's migration):** "This spell
-   costs {2} less to cast if it targets a tapped creature." (real Scryfall
-   oracle text, `data/fin/fin_scryfall.json` collector_number 19) — a real
-   Forge `SVar:X:Count$..." / "S:Mode$ ReduceCost` style dynamic reduction
-   keyed on the CHOSEN TARGET's state at cast time (not a fixed discount,
-   and not a cost REPLACEMENT the way Flashback's `AlternateCost` is), i.e.
-   exactly the case this bullet already calls out as unmodeled. No
-   `Constraints`/`Fact`/engine vocabulary exists for "this spell's own mana
-   cost varies with a targeting choice" — `CardDefinition.manaCost` is a
-   fixed printed string, never recomputed per-cast, and `canCastSpell`/
-   `castSpell` have no discount hook at all (only the `alt` REPLACEMENT
-   param above). `cards/fate-of-the-sun-cryst/definition.ts` documents this
-   as real, un-executed `staticAbilities` text (consistent with every other
-   continuous/cost-affecting static ability in the pool) rather than
-   fabricating a `Fact`/effect with no engine backing behind it — no
-   fact was authored for this clause; only the "Destroy target nonland
-   permanent" half of the card is modeled as facts. Revisit only if a
-   future task specifically asks for cost-reduction modeling to actually
-   work (would need: (a) a real `chooseTarget`-time state check like
-   `isTapped`, (b) a `manaCost`-discount hook parallel to but distinct from
-   `alt`, (c) `Fact`/`Constraints` vocabulary to describe "this spell's own
-   cost is conditional on a targeting choice" — none of which exist today).
-8. **Damage-prevention shields — a narrow `dealDamage` hook, NOT full 614.**
-   Checked the real pool: only 2 of 312 FIN cards need a replacement effect
-   at all — Crystal Fragments/Summon: Alexander ("Prevent all damage that
-   would be dealt to creatures you control this turn") and Diamond Weapon
-   ("Prevent all combat damage that would be dealt to Diamond Weapon"). Both
-   are the same narrow 614.2 damage-prevention-shield pattern. Full general
-   replacement-effect machinery (`ReplacementEffect.java`/
-   `ReplacementHandler.java`/`ReplacementLayer.java`,
-   forge-game/.../replacement/ — arbitrary event interception, dynamic 616
-   ordering, any event type) would mean gating every mutation call site
-   (`dealDamage`/`move`/`drawCard`/`destroy`/...) — assessed as too
-   invasive/risky for what's actually needed and explicitly rejected in
-   favor of the narrow version: a short list of active "prevent damage to X
-   (optionally: only combat damage)" shields, checked inside `dealDamage`
-   only, before applying damage. Still real, still worth doing — just not
-   what "614" as a whole implies.
-   **Blocked on the `cards/*` boundary, not on engine design**: checked
-   both cards' own current `definition.ts`. Crystal Fragments/Summon:
-   Alexander's chapters I/II are already real triggers, but their own
-   `run` bodies are explicit no-ops (`run: () => {}`) specifically because
-   no hook exists for them to call — activating a `dealDamage`-side shield
-   for real means that `run` calling some new `actions.*` method, which
-   means editing the card's own `definition.ts`. Diamond Weapon's shield
-   is plain `staticAbilities` freeform text, not a structured field at
-   all — modeling it without a card-file change would mean matching on
-   the card's own NAME inside `dealDamage`, which is exactly the
-   per-card special-casing this codebase's own conventions (Saga
-   automation, e.g.) deliberately avoid. So: the engine-side design here
-   (a short-lived/always-on shield list, checked in `dealDamage`) is
-   ready to implement the moment either card's own file can be touched —
-   it just can't be done from the engine side alone under the current
-   `cards/*`-is-out-of-scope boundary.
+   ~~**Real, textually-precise cost-reduction example, target-conditional
+   spell shape**~~ **CLOSED (2026-09-12, `fate-of-the-sun-cryst`/fin-19):**
+   "This spell costs {2} less to cast if it targets a tapped creature."
+   (real Scryfall oracle text, `data/fin/fin_scryfall.json` collector_number
+   19; real Forge citation, `res/cardsfolder/f/fate_of_the_sun_cryst.txt`:
+   `S:Mode$ ReduceCost | ValidCard$ Card.Self | Type$ Spell | Amount$ 2 |
+   EffectZone$ All | ValidTarget$ Creature.tapped`) — a real CR 601.2f
+   dynamic reduction keyed on the CHOSEN TARGET's state at cast time (not a
+   fixed discount, and not a cost REPLACEMENT the way Flashback's
+   `AlternateCost` is). Real, general (not one-off) engine vocabulary now
+   exists for this shape: `card.ts`'s new `CostReduction` (`{amount,
+   condition}` — only `'tappedCreatureTarget'` is modeled, checking BOTH
+   Creature type via `effectiveTypes` AND `tapped`, matching Forge's own
+   `ValidTarget$ Creature.tapped` exactly, not just "any tapped permanent")
+   on a new optional `CardDefinition.costReduction` field; `engine.ts`'s
+   `canCastSpell`/`castSpell` take an optional caller-supplied
+   `declaredTarget: RealCard` (same "caller supplies the real object,
+   engine validates" shape `crewedBy` already established for Crew — real
+   601.2b "choose targets" genuinely precedes 601.2f "determine cost," so a
+   real caster always knows their target before the discount is computed)
+   and a new exported `effectiveCastCost(card, alt, declaredTarget)`
+   computes the real discounted `ParsedManaCost` (via `mana.ts`'s new
+   `reduceGenericCost` — generic-only, floored at 0, real 118.9) plus a
+   printed-style string (`mana.ts`'s new `formatManaCost`) for trace
+   logging. `engine-trace.ts`'s `pilotCast` takes the same optional
+   `declaredTarget` and logs the REAL cost actually paid, not the nominal
+   printed one. `cards/fate-of-the-sun-cryst/definition.ts` now declares
+   `costReduction: { amount: 2, condition: 'tappedCreatureTarget' }`
+   (replacing the old documentary-only `staticAbilities` text, same
+   "structured field replaces free text once real" convention
+   `continuousKeywordGrants`'s own cards already established); its
+   `scenarios.ts` (real engine-piloted, `runEngineScenarios`) passes the
+   SAME real Coeurl as `declaredTarget` in both scenarios — only its real
+   tapped state differs — proving the discount is genuinely mechanical, not
+   scripted: the tapped-target scenario's own trace shows `cost:'{2}{W}'`
+   and only 3 real `tapForMana` lines, the untapped-target scenario shows
+   the full `cost:'{4}{W}'` and 5. New tests: `mana.test.ts`'s
+   `reduceGenericCost / formatManaCost` describe block, `engine.test.ts`'s
+   `Cost reduction (CR 601.2f)` describe block (discount making an
+   otherwise-unaffordable cost payable; no discount for an untapped
+   target, a tapped non-creature, or no `declaredTarget` at all; and a
+   real `AlternateCost` correctly NOT stacking with `costReduction` — see
+   `effectiveCastCost`'s own doc comment for why the two are mutually
+   exclusive rather than combined, no real card needing both existing to
+   check the interaction against).
+   **Both remaining real, separate mechanisms below are now ALSO CLOSED
+   (2026-09-12, same pass)** — a BROADCAST discount on OTHER spells
+   (color-gated, not keyed on this card's own chosen target — the-wind-
+   crystal/fin-43), and a discount on an ACTIVATED ABILITY's own cost
+   rather than a spell's cast cost (qiqirn-merchant/fin-65). Both reuse
+   the SAME generalized hook, not two one-off patches — see below for the
+   shared design. **Still explicitly NOT modeled**: a variable/dynamic
+   `amount` for the CAST-side `CostReduction` shape (e.g. "for each X you
+   control," as opposed to fate-of-the-sun-cryst's fixed `{2}`) —
+   `CostReduction.amount` is still a plain number, not a `Computed`-style
+   hook (the ACTIVATION-side shape below DOES support a board-counted
+   variable amount, since qiqirn-merchant needed exactly that — the two
+   shapes diverge here, an intentional, checked asymmetry, not an
+   oversight: no real cast-side FIN card needs a variable cast discount
+   today).
+
+   **Second real example, a plainer shape, CLOSED (2026-09-12,
+   `the-wind-crystal`/fin-43's migration):** "White spells you cast cost
+   {1} less to cast." (real Scryfall oracle text,
+   `data/fin/fin_scryfall.json` collector_number 43) — unlike
+   `fate-of-the-sun-cryst`'s target-conditional discount, this one is a
+   flat, UNCONDITIONAL color-gated discount that applies to OTHER spells,
+   not this card's own cast (real Forge `Mode$ ReduceCost | ValidCard$
+   Card.White | Activator$ You | Amount$ 1`, `res/cardsfolder/t/
+   the_wind_crystal.txt` — a broadcast static ability, not a target-keyed
+   one). New `card.ts` vocabulary: `SpellCostReductionGrant {amount,
+   colors}`, lives on `CardDefinition.spellCostReductionGrants` (an array,
+   since a permanent could in principle grant more than one) — copied onto
+   the resolved `RealCard` at `resolveTop` (same pattern
+   `continuousKeywordGrants` already established), NOT onto the discounted
+   spell itself. `state.ts`'s new `activeSpellCostDiscount(caster,
+   cardColors)` sums every matching grant across the CASTER's OWN
+   battlefield (Forge's `Activator$ You` — a grant never applies to an
+   opponent casting a white spell, checked and tested). `engine.ts`'s
+   `effectiveCastCost` gained a 5th param, `caster?: RealPlayer` — when
+   given (and no `alt` is in play), the broadcast discount is summed
+   together with any target-conditional `card.costReduction` discount
+   before both are applied via the existing `reduceGenericCost`.
+   `cards/the-wind-crystal/definition.ts` now declares
+   `spellCostReductionGrants: [{amount: 1, colors: ['W']}]` (replacing the
+   old documentary-only `staticAbilities` string); a real
+   `event:'costReduction'` `Fact` is authored (`synergy.ts`'s new
+   `Fact.colors` reuse + `value`) — exempted from trace-evidence checking
+   (`scripts/verify-synergy.mjs`'s new `card.name === 'The Wind Crystal' &&
+   p.event === 'costReduction'` line) since demonstrating it needs a
+   DIFFERENT spell's own cast-cost log line to differ, which this card's
+   own scenario (its own `grantKeywordAll` activation) doesn't produce —
+   same zero-possible-evidence class as `isAuronsInspirationBroadcastPumpFact`.
+   **Known, deliberate limitation**: `the-wind-crystal/scenarios.ts` was
+   NOT touched this pass (a concurrent agent was actively migrating this
+   same card's own separate lifegain-doubling clause, gap #8b, in the same
+   file at the same time) — the discount is real and independently
+   unit-tested (`engine.test.ts`'s new "Cost reduction — flat,
+   unconditional, BROADCAST" describe block, a synthetic fixture, NOT this
+   card's own scenario), but this card's OWN scenario does not itself cast
+   a second white spell to show the discount applying end-to-end. Revisit
+   if a future pass wants this card's own trace to demonstrate it directly
+   (would need a second real white spell cast from the same controller's
+   hand in that scenario).
+
+   **Third real example, extends the gap to ACTIVATED-ABILITY costs, not
+   just spell-cast costs, CLOSED (2026-09-12, `qiqirn-merchant`/fin-65's
+   migration):** "{7}, {T}, Sacrifice this creature: Draw three cards. This
+   ability costs {1} less to activate for each Town you control." (real
+   Scryfall oracle text, `data/fin/fin_scryfall.json` collector_number 65)
+   — a real, dynamic, board-state-counted discount (real Forge
+   `SVar:X:Count$Valid Town.YouCtrl`-style reduction,
+   `res/cardsfolder/q/qiqirn_merchant.txt`) on an ACTIVATED ABILITY's own
+   cost, not a spell's. New `card.ts` vocabulary:
+   `ActivationCostReduction {amountPerMatch, subtype}`, lives on the
+   individual ability entry (`CardDefinition.abilities[].costReduction`),
+   not the whole card, since a card could have more than one activated
+   ability and Forge's own reduction is scoped per-ability. New `engine.ts`
+   exported `effectiveActivationCost(engine, controller, card, abilityName?,
+   x?)` generalizes the SAME cost-discount machinery to activated
+   abilities: resolves `{X}` (see gap #11 below) first, then counts the
+   controller's own battlefield permanents matching `reduction.subtype`
+   (`card.subtypes.includes(...)`, exactly Forge's `Count$Valid
+   Town.YouCtrl`), multiplies by `amountPerMatch`, and applies the result
+   via the existing `reduceGenericCost`, patching the single generic-cost
+   bracket token back into the printed cost string via a targeted
+   `cost.replace(/\{\d+\}/, ...)` substitution (the rest of the cost string
+   — `{T}`, `Sacrifice this creature` — is untouched free text).
+   `canActivateAbility`/`activateAbility` (`engine.ts`) both now call this
+   helper instead of parsing the raw mana portion inline. `cards/
+   qiqirn-merchant/definition.ts`'s `bigDraw` ability now declares
+   `costReduction: {amountPerMatch: 1, subtype: 'Town'}`; the pre-existing
+   self-sacrifice-cost `Fact` gained a new, purely-descriptive
+   `costReductionPerControlled` field (`synergy.ts`, NOT consulted by
+   `factsInteract`, same "documentary" convention `tapped`/
+   `untilEndOfTurn` already establish) — no new `verify-synergy.mjs`
+   exemption needed, since this fact was already covered by the
+   pre-existing `isSelfSacrificeActivationCostFact` shape check (bigDraw's
+   own self-sacrifice cost remains separately, unrelatedly unpayable
+   through `canActivateAbility` — see gap #11 below, unaffected by this
+   closure). `cards/qiqirn-merchant/scenarios.ts` (real engine-piloted)
+   now demonstrates the discount computation is genuinely mechanical: the
+   scenario's own board controls 2 real Town lands (Capital City, Gongaga,
+   Reactor Town — real FIN `Land — Town` cards, not invented
+   placeholders), and the logged "bigDraw" cost is computed via
+   `effectiveActivationCost` rather than hardcoded, reading `{5}, {T},
+   ...` (7 minus 2) instead of the raw printed `{7}, {T}, ...` — still
+   fired directly rather than through `canActivateAbility` end-to-end (see
+   that scenario's own header: self-sacrifice-as-cost remains unpayable,
+   an unrelated, separate, still-open gap, see gap #11 below), so this
+   demonstrates the discount's own computation, not the full activation
+   being paid start-to-finish.
+   New tests (`engine.test.ts`): "Cost reduction — flat, unconditional,
+   BROADCAST from a DIFFERENT permanent" (3 cases: discount applies for a
+   matching color, no discount for a non-matching color, no discount from
+   an opponent's permanent) and "Cost reduction — board-state-COUNTED, on
+   an ACTIVATED ABILITY's own cost" (2 cases: discount with 5 matching
+   permanents controlled, correctly unaffordable with 0).
+8. ~~**Damage-prevention shields — a narrow `dealDamage` hook, NOT full
+   614.**~~ **CLOSED (2026-09-12)**. Checked the real pool: only 2 of 312
+   FIN cards need a replacement effect at all — Crystal Fragments/Summon:
+   Alexander ("Prevent all damage that would be dealt to creatures you
+   control this turn") and Diamond Weapon ("Prevent all combat damage that
+   would be dealt to Diamond Weapon"). Both are the same narrow 614.2
+   damage-prevention-shield pattern. Full general replacement-effect
+   machinery (`ReplacementEffect.java`/`ReplacementHandler.java`/
+   `ReplacementLayer.java`, forge-game/.../replacement/ — arbitrary event
+   interception, dynamic 616 ordering, any event type) would mean gating
+   every mutation call site (`dealDamage`/`move`/`drawCard`/`destroy`/...)
+   — still assessed as too invasive/risky and NOT built; the narrow version
+   is what's real now: two new `Keyword` values, `'DamagePrevention'` (ALL
+   damage, per Crystal Fragments' `R:Event$ DamageDone | Prevent$ True |
+   ActiveZones$ Command | ValidTarget$ Creature.YouCtrl`,
+   `res/cardsfolder/c/crystal_fragments_summon_alexander.txt`) and
+   `'CombatDamagePrevention'` (combat damage only, per Diamond Weapon's own
+   `R:Event$ DamageDone | Prevent$ True | IsCombat$ True | ValidTarget$
+   Card.Self`, `res/cardsfolder/d/diamond_weapon.txt`) — checked inside
+   `state.dealDamage`'s own one real chokepoint (a new `opts?: {combat?:
+   boolean}` param, threaded from `engine.ts`'s `resolveCombatDamage`'s 5
+   call sites, distinguishes combat from non-combat damage at the only
+   place that needs to), via the SAME `effectiveKeywords`/keyword-grant
+   machinery a real keyword grant already uses (the `'Unblockable'`
+   precedent) — no new `CardDefinition`/`RealCard` field invented. A
+   prevented hit returns `{prevented: true}` instead of marking damage or
+   triggering Lifelink.
+   **`cards/*` wired for real**: Crystal Fragments/Summon: Alexander's
+   Chapters I/II no longer no-op — both now run
+   `{kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword:
+   'DamagePrevention', untilEndOfTurn: true}`, reusing the existing 514.2
+   Cleanup-based `untilEndOfTurnKeywordGrants` expiry (not a new duration
+   mechanism). Diamond Weapon's old freeform "Immune" `staticAbilities`
+   text is replaced by `keywords: ['Reach', 'CombatDamagePrevention']` — a
+   structured field where one now exists, same convention gap #7's
+   cost-reduction migrations already established. **Scope, precisely**:
+   Crystal Fragments' shield covers ALL damage to its own creatures (any
+   source, combat or not); Diamond Weapon's shield covers ONLY combat
+   damage to itself — the two cards are deliberately NOT symmetric, and
+   this asymmetry is mechanically enforced (the `combat` opt-in on
+   `dealDamage`), not just documented. `engine.ts`'s `CombatDamageResult`
+   gained a `prevented: RealCard[]` field; `harness.ts`'s
+   `loggingActions.dealDamage` now logs `fn:'damagePrevented'` in place of
+   `fn:'dealDamage'` when a shield fires (same "replace, don't append"
+   precedent `destroy`/`destroyPrevented` already set); a new
+   `engine-trace.ts` `pilotResolveCombatDamage` (the first real-combat
+   pilot helper in the pool, since no card had piloted real combat damage
+   through `engine-trace.ts` before Diamond Weapon's own migration) logs
+   the same `damagePrevented` line for the piloted-combat path. Real facts
+   (`event: 'preventDamage'`) now have genuine trace evidence via
+   `scripts/verify-synergy.mjs`'s new `case 'damagePrevented'`
+   `producedEvents` branch — the old `isSummonAlexanderDamagePreventionFact`
+   exemption (which assumed "no possible trace evidence, ever") is now
+   stale and has been REMOVED, not left in place. New tests:
+   `state.test.ts`'s `GameState.dealDamage — damage-prevention shields`
+   describe block (6 cases: all-damage shield blocks combat + non-combat,
+   combat-only shield blocks combat but NOT non-combat, a granted
+   (non-printed) shield works identically to a printed one, no-shield
+   negative path, a fully-prevented hit grants no Lifelink, Lifelink still
+   works when not prevented). Scenarios: Crystal Fragments/Summon:
+   Alexander's own scenario now deals 3 damage to its own creature per
+   chapter and shows it genuinely prevented; Diamond Weapon's own
+   `scenarios.ts` was migrated from the flat `harness.ts` style (no combat
+   modeling at all) to a real `engine-trace.ts` pilot (cast → a real
+   opponent attacker, Hill Gigas, attacks → Diamond Weapon blocks → real
+   combat damage resolves with Diamond Weapon's own 5 damage genuinely
+   prevented while it still deals its own 8 back, unshielded).
+
+8b. ~~**Life-total replacement effects — a real, distinct 614 gap, NOT the
+   same as gap #8's damage shields.**~~ **CLOSED (2026-09-12)**.
+   `the-wind-crystal`/fin-43's own real oracle text: "If you would gain
+   life, you gain twice that much life instead." (`data/fin/
+   fin_scryfall.json` collector_number 43; real Forge citation,
+   `res/cardsfolder/t/the_wind_crystal.txt`: `R:Event$ GainLife |
+   ReplaceWith$ GainDouble ... SVar:X:ReplaceCount$LifeGained/Twice`) — a
+   genuine CR 614.2 self-replacement effect on the LIFEGAIN event, not
+   damage. `state.ts`'s `gainLife` (the one real chokepoint, previously a
+   bare `real.life += amount; return true;` with no interception point at
+   all) now checks a new `'LifegainDouble'` `Keyword` (same
+   `effectiveKeywords`-based approximation gap #8's shields use, the
+   `'Unblockable'` precedent again — no parallel replacement-effect
+   dispatcher built) across the gaining player's own battlefield, doubling
+   the amount actually applied when present; `dealDamage`'s own Lifelink
+   payout now routes through this SAME `gainLife` chokepoint, so a
+   Lifelink source under a lifegain-doubler is ALSO doubled for free, no
+   separate wiring. `cards/the-wind-crystal/definition.ts` now declares
+   `keywords: ['LifegainDouble']` (replacing the old documentary-only
+   `staticAbilities` text). A new synthetic-probe `Scenario.playerGainsLife?:
+   {amount: number}` field (`harness.ts`, mirroring the existing
+   `dealsCombatDamage` synthetic-probe precedent — a real MTG event
+   happening independent of any card's own effect) lets this card's own
+   scenario demonstrate the doubling with real trace evidence even though
+   the card itself never causes a lifegain event: `harness.ts`'s
+   `loggingPlayer.gainLife` now diffs real player life before/after the
+   call (rather than trusting the input `amount`) and additively logs a
+   `requestedAmount` field only when it differs from the real applied
+   amount. A real `event: 'lifegainDouble'` Fact is authored with genuine
+   trace evidence via `scripts/verify-synergy.mjs`'s new
+   `producedEvents` handling (`case 'gainLife'` now also emits
+   `lifegainDouble` when `entry.amount > entry.requestedAmount`) — no
+   exemption needed. New tests: `state.test.ts`'s `GameState.gainLife —
+   lifegain-doubling replacement` describe block (6 cases: doubles the
+   amount, no doubler = normal amount, an opponent's doubler doesn't
+   cross-affect, two doublers still only double once — a documented
+   non-stacking simplification, no real FIN card needs true multiplicative
+   stacking here — Lifelink routes through the same chokepoint and gets
+   doubled too, amount 0 stays 0). Scenario: The Wind Crystal's own
+   `scenarios.ts` gained a second scenario demonstrating a real 3-life gain
+   event doubled to 6 by this card's own presence.
 
 ### Lower priority (narrow, or already partially mitigated)
 
@@ -354,15 +765,43 @@ so a future pass doesn't mistake them for missing work:
     for real through the existing stack/`resolveCard` pipeline once the
     cost is payable at all.
     Verified against the real pool: of 5 Vehicle cards with `crewCost`,
-    only 3 (Magitek Armor, The Prima Vista, The Lunar Whale) also declare
-    the matching `activationCost`+`effects: [animate]` needed to actually
-    resolve — those 3 are real and tested. Cargo Ship and The Regalia's
-    own `definition.ts` set `crewCost` but declare NEITHER field (their
-    own comments say so explicitly), so `activationCostFor` correctly
-    returns `undefined` for them and `canActivateAbility`'s existing
-    "has no such activated ability" check rejects them — same "blocked on
-    `cards/*`, not on engine design" situation as gap #8's damage-shields
-    above, not a bug.
+    3 (Magitek Armor, The Prima Vista, The Lunar Whale) declare the
+    matching `activationCost`+`effects: [animate]` needed to actually
+    resolve — real and tested. **Updated 2026-09-12 (Cargo Ship/fin-47
+    migration): Cargo Ship now also declares this pair** (added alongside
+    its own real mana ability, see below) — 4 of 5 now resolve for real.
+    The Regalia's own `definition.ts` still sets `crewCost` but declares
+    NEITHER field (its own comment says so explicitly), so
+    `activationCostFor` correctly returns `undefined` for it and
+    `canActivateAbility`'s existing "has no such activated ability" check
+    rejects it — same "blocked on `cards/*`, not on engine design"
+    situation as gap #8's damage-shields above, not a bug.
+    **Gap found while migrating Cargo Ship (2026-09-12) — FIXED
+    (2026-09-12, same pass as gap #7's closures above)**:
+    `canActivateAbility`/`activateAbility` (`engine.ts`) used to branch on
+    `card.crewCost !== undefined` UNCONDITIONALLY, before even looking at
+    the caller-supplied `abilityName` — so a Vehicle that has BOTH
+    `crewCost` AND a separate named ability (`card.abilities`) would have
+    ANY activation attempt, including one explicitly naming the other
+    ability, incorrectly routed through the crew-cost legality/payment
+    path if it were ever piloted through `engine.ts`'s own real
+    `canActivateAbility`/`activateAbility` (as opposed to `harness.ts`'s
+    flat `Scenario` lifecycle, which calls `resolveCard` directly and
+    never consults `crewCost` at all — so this bug never affected Cargo
+    Ship's own scenario, which stays on the flat `harness.ts` style
+    regardless). Cargo Ship is the first real card in this pool with this
+    exact shape (crew + a second, independent activated ability); the 4
+    other `crewCost` Vehicles have no second ability to collide with.
+    **Fix**: the crew-cost gate is now `card.crewCost !== undefined &&
+    abilityName === undefined` — a caller that explicitly names an
+    ability routes to the normal named-ability cost path instead (the
+    "or the requested ability doesn't exist" case was already correctly
+    handled by the pre-existing early return in `canActivateAbility`,
+    `if (!cost) return {ok:false, reason:'has no such activated ability'}`
+    — no separate change needed for it). New tests (`engine.test.ts`, a
+    synthetic Cargo-Ship-shaped fixture with BOTH `crewCost` AND a named
+    ability): naming the ability activates it via the normal cost path
+    (not crew); omitting `abilityName` still crews normally.
     One inherited, pre-existing limitation: the `animate` Effect (and
     `LayerSet` generally) has no duration tracking (`layers.ts`'s own
     documented scope), so a crewed Vehicle becomes a creature
@@ -401,10 +840,42 @@ so a future pass doesn't mistake them for missing work:
     real 608.2h last-known-information tracking (a real, separate,
     unbuilt gap) to keep those two cards correct, so this stays a
     deliberately deferred gap rather than risk a regression.
-    Still fully open: `{X}`, `Pay N life` — real, common cost shapes
-    verified by grepping every `activationCost:` string across every
-    card's own `definition.ts`. Actually supporting them (not just
-    rejecting) is the remaining work.
+    ~~Still fully open: `{X}`, `Pay N life`~~ **CLOSED (2026-09-12)** — both
+    real, common cost shapes, verified by grepping every `activationCost:`/
+    `manaCost:` string across every card's own `definition.ts` first (real
+    Forge citation for the general shape: `AbilityManaPart.java`'s own X-cost
+    handling and `Cost.java`'s `CostPayLife`, though the specific closure
+    here is general-purpose, not keyed to any one card by name).
+    - **`{X}` on an activated ability.** New `engine.ts` exported
+      `effectiveActivationCost(engine, controller, card, abilityName?, x?)`
+      (also the same function gap #7's third example above reuses for its
+      own board-counted discount) resolves an `{X}` token in an ability's
+      own mana portion via the SAME `resolveXCost` gap #6 already built for
+      spell-casting — no separate X-resolution mechanism invented.
+      `canActivateAbility`/`activateAbility` both take a new optional `x?`
+      param, threaded through to this helper exactly like `declaredTarget`/
+      `crewedBy` already are. Rydia, Summoner of Mist's own real `{X}`-costed
+      activated ability is the concrete real-pool example motivating this
+      (checked before building). New tests (`engine.test.ts`, a synthetic
+      Rydia-shaped `{X}` fixture): a real chosen X resolved and paid;
+      unaffordable X correctly rejected; omitted X defaults to 0 (CR
+      107.3b).
+    - **"Pay N life" as an ability cost.** New `engine.ts` exported
+      `costRequiresLifePayment(cost)` (`/\bPay (\d+) life\b/i`) —
+      `unsupportedCostComponent` now accepts this shape instead of
+      rejecting it; `canActivateAbility` rejects if `controller.life <
+      lifeCost`, and `activateAbility` genuinely deducts
+      `controller.life -= lifeCost` on top of any mana paid. This directly
+      changes previously-documented behavior: Dark Knight's Greatsword's
+      own real `Equip—Pay 3 life` (gap #11's earlier Equip closure above)
+      is now genuinely payable rather than rejected — `engine.test.ts`'s
+      old negative test for this exact case was rewritten into two real
+      tests (successfully paid, life genuinely drops 20→17; correctly
+      still rejected when life is too low to pay, e.g. `life: 2`).
+    **Still explicitly out of scope, unchanged** (per direct instruction):
+    modal/split costs (choose-a-mode-then-pay) and Foretell — neither
+    touched by this closure, both remain gap #7's own still-open items
+    above.
 
 12. ~~**CR 305 "playing a land" — real special-action mechanics, still only
     closed for the harness/trace-generation path, not `engine.ts`'s own
@@ -511,8 +982,13 @@ so a future pass doesn't mistake them for missing work:
     path reachable once a real `playLand` action exists alongside it would
     reintroduce exactly the ambiguity this whole gap is about.
 
-13. **Trigger-doubling ("Panharmonicon effect") — no general machinery for
-    "a triggered ability triggers an additional time" under a condition.**
+13. ~~**Trigger-doubling ("Panharmonicon effect") — no general machinery for
+    "a triggered ability triggers an additional time" under a condition.**~~
+    **CLOSED (2026-09-12) — see this item's own final subsection below for
+    the real closure writeup; everything through the "Re-checked fresh"
+    subsection is kept as historical record of why a narrow fix was
+    correctly rejected twice before the general mechanism was actually
+    built.**
     Surfaced by Cloud, Midgar Mercenary (fin/10)'s own second static ability:
     "As long as Cloud is equipped, if a triggered ability of Cloud or an
     Equipment attached to it triggers, that ability triggers an additional
@@ -543,7 +1019,235 @@ so a future pass doesn't mistake them for missing work:
     notes"). Cloud's OWN ETB tutor ability (the card's other, fully
     real/traced/verified ability) is unaffected by this gap.
 
-14. **Continuous, turn-conditional static keyword grants.** **Closed
+    **Re-checked fresh, 2026-09-12 (per direct user request — "fin 563
+    could be used to test", fin/563 = Ultima Weapon, a real Legendary
+    Equipment: "Whenever equipped creature attacks, destroy target creature
+    an opponent controls. Equipped creature gets +7/+7. Equip {7}."):**
+    before building anything, re-assessed whether this is now a narrow,
+    scoped chokepoint worth adding (same "narrow hook at the one real call
+    site" bar gap #8's damage-shields and the STUN/FINALITY counter
+    replacements above already cleared) rather than just re-citing the
+    standing writeup above. Conclusion: still NOT narrow, confirmed two new
+    ways:
+    - There is no single existing chokepoint function every trigger-firing
+      call site in this codebase already funnels through — `resolveCard()`
+      is called directly from at least 6 independent sites (`stack.ts`,
+      `engine.ts`'s two separate enter-trigger dispatch sites, `saga.ts`,
+      `harness.ts`'s scenario runner, and `engine-trace.ts`'s own
+      `pilotFireTrigger` for triggers with no auto-dispatch at all, like
+      Cloud's own equip-attack trigger). STUN/FINALITY's own counter
+      replacements (above) each intercept exactly ONE real mutation method
+      (`untap`/`move`) — trigger-doubling would need to intercept ALL of
+      the above, or refactor them to funnel through one, either of which is
+      a real, broader infrastructure change, not a narrow hook.
+    - This is genuinely not Cloud-specific. Grepped the full pool for
+      "additional time": 2 OTHER real FIN cards need the identical general
+      mechanism, each with a DIFFERENT gating condition — The Masamune
+      ("Equipped creature has 'If a creature dying causes a triggered
+      ability of this creature or an emblem you own to trigger, that
+      ability triggers an additional time.'" — a dying-trigger-or-emblem
+      gate, not an equipped-attacks gate) and Traveling Chocobo ("If a land
+      or Bird you control entering the battlefield causes a triggered
+      ability of a permanent you control to trigger, that ability triggers
+      an additional time." — a land/Bird-ETB gate, on ANY permanent you
+      control, not just self). Three real cards, three genuinely different
+      gating conditions and trigger occasions — confirming this needs a
+      real, general "is this trigger-firing event double-able, and by what
+      condition" dispatch mechanism, not a single-card special case.
+    Built instead, since real machinery for the CONDITION (not the
+    doubling) already existed: a real, full engine-piloted combo scenario
+    (`cards/cloud-midgar-mercenary/scenarios.ts`) — cast Cloud, real ETB
+    tutors the real Ultima Weapon into hand, cast + equip it for real
+    (Equip {7}, real `actions.equip`), real 508.1f attack declaration,
+    Ultima Weapon's own real `onEquippedAttacks` trigger fires (manually,
+    via the pre-existing `pilotFireTrigger` — no attack-trigger
+    auto-dispatch exists in this engine at all, a separate, already-
+    accepted gap every attack/dies-triggered card hits, not new), producing
+    ONE real `destroy` log entry against a real opponent creature. The
+    doubling itself is NOT modeled and NOT fabricated — only one destroy
+    fires, honestly, matching this section's own standing conclusion.
+    **Real, good side effect**: this trace is the first in the pool where
+    an ATTACHED Equipment's own triggered ability genuinely fires while
+    attached — `cloud-midgar-mercenary/synergy.json`'s own equipment-half
+    `triggeredAbility` want fact (`target:{types:{has:['Equipment']},
+    attachedToSelf:true}`) previously had ZERO possible trace evidence
+    (documented above and in that card's own `progress.json`); it now does,
+    and `verify-synergy.mjs` was updated with a real evidence branch
+    recognizing this exact shape (a real `equip` bracket naming this card,
+    followed anywhere later by a real `trigger` bracket naming that same
+    attached equipment) — see that script's own updated
+    `isCloudEquipmentTriggeredAbilityFact` doc comment. This closes the
+    CONDITION-side evidence gap for that one fact; the DOUBLING-side gap
+    documented in this whole section is unchanged.
+
+    **REAL CLOSURE (2026-09-12, later the same day):** built the general
+    mechanism the two subsections above correctly concluded was needed,
+    rather than a third narrow-fix re-assessment. One new shared function,
+    a new field on `CardDefinition`/`RealCard`, and a real migration of
+    every trigger-firing call site in this codebase:
+    - **`card.ts`'s new `TriggerDoublingGrant`** (`CardDefinition
+      .triggerDoubling?: TriggerDoublingGrant[]`) — a real, structured
+      declaration of the gate, mirroring `continuousKeywordGrants`'s own
+      `ContinuousGrantTargeting` shape/doc-comment convention (gap #14).
+      `scope` picks WHO can double (`'selfAndAttachedEquipment'` — Cloud;
+      `'equippedSelf'` — Masamune, same real `equippedBySelf` recipient
+      resolution an Equipment-broadcast grant already uses;
+      `'anyPermanentYouControl'` — Traveling Chocobo); `causedBy` (optional
+      — Cloud's own gate has none) restricts WHICH real cause of the
+      firing qualifies (`'dying'` or `'entersBattlefield'`); `entersMatch`
+      (only for the latter) is an OR-list of `{isLand?, subtype?}` filters
+      against the REAL entering permanent (Traveling Chocobo's own "a land
+      OR Bird").
+    - **`state.ts`'s new `RealCard.triggerDoubling`** (a duck-typed,
+      structurally-identical field — `state.ts` deliberately never imports
+      from `card.ts`, same convention `continuousKeywordGrants` already
+      established) and **`shouldDoubleTrigger(state, firing, cause?)`** —
+      the one real, shared QUERY-TIME check (same "recalculated on read,
+      never a fixed/timestamped delta" treatment `effectiveKeywords`
+      already establishes), looping every real `Battlefield` permanent's
+      own `triggerDoubling` grants and checking each against the firing
+      permanent + optional cause. Copied onto `RealCard` at the same
+      resolve-time chokepoints `continuousKeywordGrants`/
+      `spellCostReductionGrants` already use (`engine.ts`'s `resolveTop`/
+      `playLand`).
+    - **New file `functional-model/triggers.ts`, `fireTrigger(state, card,
+      ctx, actions, triggerName, cause?, onDoubled?)`** — the ONE shared
+      chokepoint every trigger-firing call site now funnels a NAMED
+      trigger's resolution through, instead of calling `card.ts`'s
+      `resolveCard` directly: resolves once, checks `shouldDoubleTrigger`
+      off `ctx.self` (the RealCard whose trigger this is), and if it
+      qualifies, resolves the SAME named trigger a second time — the
+      literal, simplest faithful model of "triggers an additional time"
+      given this engine has no separate "trigger object queued on the
+      stack" concept to duplicate instead. Lives in its own new file (not
+      folded into `state.ts` or `engine.ts`) specifically to avoid a real
+      circular VALUE import: `engine.ts` already imports `{advanceSaga}`
+      from `saga.ts` as a value, so `saga.ts` calling a `fireTrigger` that
+      lived in `engine.ts` would be a genuine runtime cycle neither file
+      has today (their existing cross-references are all `import type`,
+      erased before anything runs) — `triggers.ts` sits below both,
+      importing only `card.ts` (a real value import, `resolveCard`) and
+      `state.ts` (a real value import, `shouldDoubleTrigger`), with nothing
+      importing it back.
+    - **All 6 real call sites migrated**, exactly the 6 both earlier
+      subsections identified: `stack.ts`'s `Stack.resolveTop` (now takes an
+      optional `state` param — a triggerName-bearing object routes through
+      `fireTrigger` when given one, unchanged bare `resolveCard` behavior
+      otherwise, so every existing plain-LIFO test stays correct with zero
+      changes); `engine.ts`'s THREE dispatch sites (not two — a fresh count
+      while migrating found `fireOnPhaseEnterTriggers`'s own upkeep/
+      end-step auto-fire is a third, distinct from `playLand`'s and
+      `resolveTop`'s own ETB firings) — `playLand`/`resolveTop` both pass a
+      real `{kind:'entersBattlefield', entered:<the resolving/entering
+      permanent itself>}` cause (a permanent's own ETB genuinely IS "a
+      permanent entering the battlefield causing a trigger," including
+      potentially its OWN — see Traveling Chocobo's own scenario below for
+      why this self-referential case is real, not a bug),
+      `fireOnPhaseEnterTriggers` passes no cause (no real FIN card's
+      upkeep/end-step trigger needs one); `saga.ts`'s `advanceSaga` (no
+      cause — a Saga's own lore-counter chapter tick isn't caused by dying
+      or entering); `harness.ts`'s scenario runner (both the top-level
+      `scenario.trigger` dispatch and the `sequence` step's `trigger`
+      branch — ability/activate dispatch stays on bare `resolveCard`,
+      correctly unaffected, since Panharmonicon-style doubling only ever
+      applies to a TRIGGERED ability, never an ACTIVATED one);
+      `engine-trace.ts`'s `pilotFireTrigger` (gained a new optional trailing
+      `cause` param — every one of its ~14 existing real call sites across
+      the pool stays unchanged, since it's purely additive).
+    - **Real causal-order trace logging**: `fireTrigger`'s own `onDoubled`
+      callback parameter lets a caller that logs a `{fn:'trigger', ...}`
+      bracket entry (`pilotFireTrigger`, and `engine-trace.ts`'s
+      `pilotResolveTop`/`pilotPlayLand` via a pre-check against the same
+      `shouldDoubleTrigger`) log a SECOND bracket at the exact right moment
+      — bracket, first round of real effects, SECOND bracket, second round
+      of real effects — rather than fabricating the doubled bracket
+      up-front or after both rounds of effects already ran.
+    - **All 3 real FIN cards wired for real**: Cloud, Midgar Mercenary
+      (`triggerDoubling: [{scope:'selfAndAttachedEquipment'}]`), The
+      Masamune (`[{scope:'equippedSelf', causedBy:'dying'}]` — the real
+      "...or an emblem you own" half stays permanently unreachable, no
+      emblem mechanism exists anywhere in this engine, documented on the
+      field itself as a real, accepted, permanent sub-gap, not silently
+      dropped), Traveling Chocobo (`[{scope:'anyPermanentYouControl',
+      causedBy:'entersBattlefield', entersMatch:[{isLand:true},
+      {subtype:'Bird'}]}]`) — all three replace the old documentary-only
+      `staticAbilities` string for this one clause specifically (their
+      OTHER real statics, where present, stay text — unrelated, unmodeled
+      mechanisms, e.g. Masamune's first-strike-if-attacking clause).
+    - **All 3 cards' own `scenarios.ts` updated to demonstrate the real
+      doubling, with genuine trace evidence**: Cloud's own real combo
+      scenario (cast Cloud, real ETB tutors Ultima Weapon, cast + equip it,
+      real attack) now shows Ultima Weapon's own `onEquippedAttacks`
+      trigger firing TWICE — two real `destroy` log lines against TWO real
+      opponent creatures (Coeurl AND Hill Gigas, added specifically because
+      the doubled trigger needs two distinct legal targets, not one
+      destroyed twice) — the old "doubling NOT modeled, only one destroy
+      fires honestly" framing is gone from its own comments/`progress.json`.
+      The Masamune's own new real combo scenario (replacing its old flat
+      `harness.ts` scenario) equips a real Al Bhed Salvagers (a real FIN
+      card with its own real `onDies` trigger), which then genuinely dies
+      in real lethal combat (Hill Gigas blocks, a one-sided 704.5g death) —
+      its own dying trigger, fired manually with a real `{kind:'dying'}`
+      cause (same "no auto-fire for a dies-triggered ability" pattern
+      dwarven-castle-guard's own scenario already established), genuinely
+      fires TWICE. Traveling Chocobo's own new real scenario (replacing its
+      old "no resolvable effect" placeholder) reuses Ambrosia Whiteheart (a
+      real FIN card with a real Landfall trigger) — a real land entering
+      the battlefield, fired manually with a real
+      `{kind:'entersBattlefield', entered:<the real land>}` cause, doubles
+      Ambrosia's own Landfall pump. **Real, genuinely unplanned but
+      textually correct consequence, found running the scenario and kept
+      rather than avoided**: Ambrosia Whiteheart is herself a Bird, so her
+      own ETB (auto-fired by `engine.ts`, which threads the identical
+      `entersBattlefield` cause through for a resolving permanent's own
+      ETB) ALSO doubles — the first real trace in the pool showing a
+      card's own ETB double itself via a board-wide Panharmonicon-style
+      grant, not a bug.
+    - **New unit tests**: `functional-model/triggers.test.ts` (new file, 12
+      cases) — a baseline no-grant case (fires once); all 3 real gate
+      shapes each doubling for real (including Cloud's shape doubling BOTH
+      the equipped self's own trigger AND the attached Equipment's own
+      trigger); the negative cases proving each gate's own real
+      precondition is genuinely enforced, not just its presence (Cloud's
+      own gate does NOT double while unequipped; Masamune's own gate does
+      NOT double with no/wrong cause, and does NOT double a DIFFERENT
+      creature's own trigger; Chocobo's own gate does NOT double a
+      non-land/non-Bird cause, and does NOT double an opponent's own
+      permanent). `engine.test.ts`'s new `Trigger-doubling` describe block
+      (3 cases) proves the real `engine.ts` wiring specifically (not just
+      `triggers.ts`'s own pure logic): a permanent's own ETB does NOT
+      double through the real `castSpell`->`resolveTop` path while nothing
+      is equipped to it yet (Cloud's own real story — the static is present
+      from the moment he resolves, but his own ETB tutor still only fires
+      once); once genuinely equipped, a LATER real upkeep/end-step
+      auto-fire (`fireOnPhaseEnterTriggers`) DOES double; a wholly
+      unrelated permanent's own trigger does NOT double even once Cloud is
+      equipped.
+    - **Verified**: `vitest run functional-model` — 340/340 (325 baseline +
+      12 new `triggers.test.ts` + 3 new `engine.test.ts` cases).
+      `verify-synergy.mjs` (scoped to the 6 touched/reused cards — Cloud,
+      Masamune, Chocobo, Ultima Weapon, Al Bhed Salvagers, Ambrosia
+      Whiteheart): 0 hard failures (one new real hard failure surfaced and
+      fixed during this pass — Traveling Chocobo's own new combo trace
+      reuses Ambrosia Whiteheart's own `read:getCardsIn` battlefield read,
+      which `verify-synergy.mjs` initially flagged against Chocobo's own
+      synergy.json as an unexplained aggregate read; fixed with a new
+      `isTravelingChocoboAmbrosiaComboRead` exemption, same shape/treatment
+      `isCloudUltimaWeaponComboRead` already established for the identical
+      structural situation — a combo scenario reusing a different card's
+      own effect). `verify-synergy.mjs` (full pool): 0 hard failures.
+      `tsc --noEmit`: unchanged pre-existing baseline (48 errors, none in
+      any file this pass touched).
+    - **Deliberately NOT done this pass** (a synergy-authoring, not engine,
+      question): no NEW source Fact was authored on any of the 3 cards'
+      own `synergy.json` for the doubling EFFECT itself (as opposed to the
+      pre-existing CONDITION-side sink facts, unaffected) — Cloud's own
+      `progress.json` already records the user's own 2026-09-11 call not
+      to author one; this pass didn't re-litigate that call, but also
+      didn't treat it as a permanent bar now that real trace evidence is
+      achievable. Left open for whoever authors synergy.json content next.
+
+14. **Continuous, turn-conditional static keyword/P&T/type grants.** **Closed
     (2026-09-12), same "narrow rather than delete" treatment gap #7's
     Flashback narrowing established.** Real FIN cards: Dion, Bahamut's
     Dominant's own "Dragonfire Dive — During your turn, Dion and other
@@ -605,15 +1309,293 @@ so a future pass doesn't mistake them for missing work:
     Dragoon's Lance's plain `harness.ts` Scenario style can't inject a
     `read:hasKeyword` line either, covered by a new SHAPE-scoped (not
     card-name-scoped) `isEquippedKeywordGrantFact` exemption — reusable by
-    any future Equipment-broadcast turn-conditional grant. That same card's
-    OTHER static clause ("+1/+0 and is a Knight in addition to its other
-    types") stays a real, separate, still-open gap — no continuous-effect
-    pipeline anywhere in this model for a static P/T bonus OR a dynamic
-    type grant flowing from an Equipment to whatever it's attached to
-    (checked `card.ts`'s `animate` dispatch: self-only today) — real facts
-    exist for both halves (`event:'pump'`, new `event:'grantType'`
-    vocabulary) but are honest-but-structurally-inert, same treatment as
-    Crystal Fragments' own equivalent pump clause.
+    any future Equipment-broadcast turn-conditional grant.
+
+    **That same card's OTHER static clause ("+1/+0 and is a Knight in
+    addition to its other types") — the real, separate sub-gap this row
+    used to leave open — is now ALSO CLOSED (2026-09-12, same day):** the
+    identical query-time recipient-resolution mechanism generalizes to TWO
+    new sibling `CardDefinition` fields, `continuousPTGrants` (a FIXED P/T
+    delta, layer 7c) and `continuousTypeGrants` (a creature-subtype
+    broadcast, layer 4) — both share `continuousKeywordGrants`'s own
+    `includeSelf`/`subtype`/`onlyDuringYourTurn`/`equippedBySelf` targeting
+    shape (factored into one shared type, `card.ts`'s
+    `ContinuousGrantTargeting`, and one shared resolution function,
+    `state.ts`'s `qualifiesForContinuousGrant`, so the logic isn't
+    duplicated three times). `effectivePT` (state.ts) folds a qualifying
+    `continuousPTGrants` delta into its existing layer-7a-CDA-then-counters
+    computation; a new `effectiveSubtypes` (mirroring `effectiveKeywords`
+    exactly) is the real read path for creature-type grants, now consulted
+    by `wrapCard`'s `hasSubtype` instead of a raw `card.subtypes.includes`
+    read. Real Forge citation: `StaticAbilityContinuous.java` — layer
+    SETPT/CHARACTERISTIC (`addPTBoost`, ~line 679-702) and layer TYPE
+    (`addChangedCardTypes`, ~line 866-867) are the SAME real static ability
+    Forge itself uses for these Equipment cards' `Mode$ Continuous |
+    Affected$ Creature.EquippedBy | AddPower$/AddToughness$/AddType$ ...`
+    scripts (`dragoons_lance.txt`/`paladins_arms.txt`/`crystal_fragments_
+    summon_alexander.txt`/`white_mages_staff.txt`/`sages_nouliths.txt`/
+    `machinists_arsenal.txt`/`astrologians_planisphere.txt`, `../mtg-forge`).
+
+    **7 real cards checked and updated**: Dragoon's Lance (`+1/+0`/Knight —
+    both now real, Flying already was), Paladin's Arms (`+2/+1`/Knight —
+    Ward already was), Crystal Fragments (`+1/+1`), White Mage's Staff
+    (`+1/+1`/Cleric), Sage's Nouliths (`+1/+0`/Cleric), Astrologian's
+    Planisphere (Wizard only — this card has no P/T clause), Machinist's
+    Arsenal (Artificer only — its own "+2/+2 for each artifact you control"
+    is a genuinely VARIABLE, board-state-SCALED bonus, real Forge
+    `SVar:X:Count$Valid Artifact.YouCtrl/Times.2` on the SAME static
+    ability, which `continuousPTGrants`'s deliberately-fixed `{power,
+    toughness}` shape structurally can't represent — stays real
+    `staticAbilities` text only, a real, separate, still-open gap, same
+    class as Gaelicat's/Magitek Infantry's own threshold-CDA gaps, NOT
+    closed by this pass).
+
+    **Evidence, checked per-card, not assumed uniform** (same "Ardyn vs.
+    Dion" distinction this gap's own keyword closure already established):
+    of these 7 cards, **Crystal Fragments is the one whose own
+    `scenarios.ts` is a real `engine-trace.ts` pilot** — its own `pump`
+    fact now has REAL, achievable trace evidence (a genuine
+    `read:getNetPower` line pushed right after `state.equip()`, showing
+    Dwarven Castle Guard's printed 2/1 genuinely recalculate to 3/2), so
+    the old `isCrystalFragmentsEquippedPumpFact` name-scoped exemption
+    (`verify-synergy.mjs`) is REMOVED outright, not just left in place. The
+    other 6 cards' own `scenarios.ts` are plain `harness.ts` Scenario[]
+    arrays with no manual-log-injection field (same structural wall
+    Ardyn's/Dragoon's-Lance's-own-Flying-grant's facts already hit) — their
+    `pump`/`grantType` facts stay exempted, now via two new SHAPE-scoped
+    (not card-name-scoped) checks, `isEquippedPTGrantFact`/
+    `isEquippedTypeGrantFact`, replacing the old per-card-name exemption
+    lines (11 lines collapsed to 2 reusable functions). A `hasSubtypeReadEvidence`
+    check (the direct `effectiveSubtypes` analogue of the existing
+    `hasKeywordReadEvidence`) is wired into `verify-synergy.mjs` for real,
+    ready for a FUTURE Equipment card whose own scenario CAN inject a
+    `read:hasSubtype` line, even though no card in the pool exercises it
+    yet.
+
+    New tests: `state.test.ts`'s new `effectiveKeywords / effectivePT /
+    effectiveSubtypes — continuous, query-time grants` describe block (9
+    cases spanning all three grant families: a subtype-matched
+    unconditional grant, `onlyDuringYourTurn` on/off for both the keyword
+    and P/T families, a fixed-delta `equippedBySelf` grant genuinely
+    following a LIVE re-equip for both P/T and type grants, additive
+    stacking with a `+1/+1` counter, `wrapCard.hasSubtype` reading a
+    granted type exactly like a printed one, and an `includeSelf`+`subtype`
+    type grant — proving the shared targeting helper, not a coincidence).
+    This also closes a real, pre-existing test-coverage gap: no unit test
+    for `effectiveKeywords`/`continuousKeywordGrants` existed at all before
+    this pass, despite this gap's own earlier "functionally verified"
+    claim (verified only via a throwaway script, never committed as a real
+    test) — now real, permanent coverage exists for that half too.
+
+    **Adjacent open item, still real, NOT closed by this pass — checked
+    the actual UI consumer directly rather than assuming its shape.**
+    `app/components/ScenarioReplayTrace.vue`'s `continuousGrantedKeywords()`
+    (the keyword case's own live-recalculated replay consumer — a
+    cross-lane touch a prior engine-agent pass made directly into this
+    `card`-owned file, same precedent this note follows) does NOT yet
+    handle `equippedBySelf` grants AT ALL, even for the pre-existing
+    keyword case (Dragoon's Lance's own "During your turn, equipped
+    creature has flying") — its own doc comment already documents this as
+    an accepted, known gap: `scenarioReplay.ts`'s own `equip` case doesn't
+    record WHICH creature an Equipment attached to, only that both chips
+    exist, so `grant.equippedBySelf` can never be matched there today. This
+    means TWO things are needed before a P/T-/type-grant chip could
+    visually toggle in the replay UI, not one:
+    1. `scenarioReplay.ts` would need to start recording the real
+       attachment target on its own `equip` log consumption (a `card`-lane
+       change, prerequisite for EITHER grant family, including the
+       already-shipped keyword one).
+    2. Sibling `continuousGrantedPT()`/`continuousGrantedType()` functions,
+       mirroring `continuousGrantedKeywords()`'s own generic, no-card-
+       specific-branch shape, reading `CardDefinition.continuousPTGrants`/
+       `continuousTypeGrants` (which would need their own new
+       `ScenarioReplayTrace.vue` props, mirroring the existing
+       `continuousKeywordGrants` prop) instead of `continuousKeywordGrants`.
+    Engine-side machinery is fully ready for either (`RealCard.
+    continuousPTGrants`/`continuousTypeGrants` are real, populated fields
+    any consumer can read the same way `continuousKeywordGrants` already
+    is) — both remaining pieces are `card`-lane UI work, not touched here,
+    same "engine ready, UI-side change is a different lane" boundary this
+    gap's own original keyword closure already drew. Since NONE of the 7
+    real cards this pass touches have their own `equippedBySelf` grant
+    visually toggling in the replay UI TODAY regardless (the keyword case
+    was never wired for this recipient mode either), this is a real,
+    pre-existing, unaffected-by-this-pass limitation, not a regression
+    this pass introduces.
+
+15. ~~**Coin flips / random outcomes, and replacement effects on them.**~~
+    **CLOSED (2026-09-12)**, narrowly. A minimal, real coin-flip resolution
+    primitive now exists: `state.ts`'s new `flipCoin(player, won): boolean`
+    — mirrors `priority.ts`'s own established "no AI, caller supplies the
+    decision" convention (the caller decides win/loss for an ordinary flip;
+    no dice-rolling/RNG infrastructure invented, same as `priority.ts`'s own
+    header already commits to for every other decision point in this
+    engine). Edgar, King of Figaro (fin/51)'s own "Two-Headed Coin — The
+    first time you flip one or more coins each turn, those coins come up
+    heads and you win those flips" (real Forge citation:
+    `StaticAbilityFlipCoinMod.java`'s `FlipCoinMod`/`Result$ True` mode,
+    `S:Mode$ FlipCoinMod | ValidPlayer$ You | CheckSVar$ Count$YouFlipThisTurn
+    | SVarCompare$ EQ0 | Result$ True`, `res/cardsfolder/e/
+    edgar_king_of_figaro.txt`) is now a real, narrow replacement hook at
+    that one chokepoint — NOT general 614/616 machinery: a new
+    `GameState.flippedCoinThisTurn: Set<playerId>` tracks whether a
+    player's FIRST flip this turn has already happened (cleared at Cleanup
+    by a new `resetFlippedCoinThisTurn()`, wired into `turn.ts` alongside
+    the other existing Cleanup resets); a new `'TwoHeadedCoin'` `Keyword`
+    (same `effectiveKeywords`-based approximation as gap #8/#8b's shields —
+    the `'Unblockable'` precedent again) forces a win when this is the
+    player's first flip of the turn, overriding whatever the caller
+    requested. `cards/edgar-king-of-figaro/definition.ts` now declares
+    `keywords: ['TwoHeadedCoin']` (replacing the old documentary-only
+    `staticAbilities` text). A real `event: 'winCoinFlip'` Fact is
+    authored with genuine trace evidence: Edgar's own `scenarios.ts` invokes
+    `state.flipCoin` directly as a synthetic probe (same class as gap #8b's
+    `playerGainsLife` probe — a real mechanism demonstrated independent of
+    a triggered ability actually causing the flip), deliberately REQUESTING
+    a loss to prove the replacement genuinely overrides the caller's own
+    input rather than coincidentally agreeing with it; the trace logs
+    `{fn:'coinFlip', player, won, requestedWin, forced}`.
+    `scripts/verify-synergy.mjs`'s new `producedEvents` case for `coinFlip`
+    (`won`+`forced` → `winCoinFlip`, else plain `coinFlip`) gives this real
+    evidence — no exemption needed. New tests: `state.test.ts`'s
+    `GameState.flipCoin` describe block (5 cases: forces a win overriding
+    the caller's own request, no Two-Headed Coin = passthrough both ways,
+    a SECOND flip the same turn is unaffected — CR's own "the FIRST time"
+    wording, mechanically enforced — `resetFlippedCoinThisTurn` resets the
+    "first flip" status, an opponent's Two-Headed Coin doesn't cross-affect
+    another player's own flip).
+    **Still real, explicitly NOT modeled**: true randomness/probability of
+    any kind (an ordinary, non-replaced flip's outcome is still 100%
+    caller-supplied, same as every other decision point in this engine —
+    accepted, not a gap, per the "no AI" convention above) and any
+    OTHER coin-flip payoff card that cares how a flip actually landed
+    (checked: no other FIN card needs one). `event:'coinFlip'` (added
+    2026-09-09 for The Gold Saucer's own "Flip a coin" ability) is
+    unaffected/unchanged by this closure — it's still just "the flip
+    happened," now joined by `winCoinFlip` for the win-outcome-specific
+    case.
+
+16. ~~**No "play a card from the top of your library" primitive, and no
+    persistent "attacked this turn" condition.**~~ **CLOSED (2026-09-12)**:
+    surfaced migrating The Lunar Whale (fin/60): "As long as The Lunar Whale
+    attacked this turn, you may play the top card of your library." Two
+    independent, real gaps, both checked directly rather than assumed, both
+    now closed for real:
+    - **The "play" primitive.** `card.ts`'s new `kind:'playFromLibraryTop'`
+      Effect (no fields — CR 601/305's own "play" dispatch is total over
+      whatever's actually on top, never scoped to a subset) reads
+      `ctx.you.getCardsIn('Library')[0]` and calls a new `Actions.play`
+      (`interfaces.ts`'s own pre-existing but previously-unused ambient
+      `play(player, target)` stub, extended with an optional third
+      `card?: CardDefinition` param — `RealCard` carries no live
+      `CardDefinition` reference, so the caller supplies it via a new
+      `EffectContext.topLibraryCard`, same "explicit, caller-supplied real
+      fact" convention `castFrom`/`mode`/`declaredTarget` already
+      establish). The REAL dispatch — `engine.ts`'s new
+      `canPlayFromLibraryTop`/`playFromLibraryTop`, reusing the existing
+      `canPlayLand`/`playLand` (a land) and `canCastSpell`/`castSpell`
+      (anything else) pairs verbatim, plus a real check that the given
+      `RealCard` genuinely IS `caster.library[0]` right now — lives in
+      `engine-trace.ts`'s own `pilotActions` override of `Actions.play` (the
+      one `Actions` method NOT reused as-is from `harness.ts`'s
+      `loggingActions`, since only an engine-aware caller has the
+      `GameEngine` reference `canPlayLand`/`castSpell` need); real Forge
+      citation confirming the same land-vs-spell dispatch shape,
+      `PlayEffect.java` (forge-game/.../ability/effects/PlayEffect.java
+      ~line 330-351 for the land branch — `tgtSA.isLandAbility()` resolved
+      directly, no stack; ~line 307-473 for the spell branch —
+      `playSaFromPlayEffect`, the real cast path). `harness.ts`'s own
+      `loggingActions.play` (used by any card NOT opted into the
+      engine-piloted pilot path) is a real but plain fallback with no
+      turn/mana legality — same accepted, documented scope every other
+      `loggingActions` method already has.
+    - **The "attacked this turn" condition.** `RealCard.attackedThisTurn`
+      (state.ts) — a real, persistent per-permanent boolean, set by
+      `engine.ts`'s `declareAttackers` for every real declared attacker
+      (unconditionally, regardless of whether the attack is later blocked/
+      dealt damage — 508.1's own "has attacked" is about the DECLARATION),
+      cleared game-wide by a new `state.clearAttackedThisTurn()` at every
+      real Cleanup (`turn.ts`'s own Cleanup branch, alongside
+      `clearAllDamage`/`clearUntilEndOfTurnKeywordGrants`) — a plain
+      boolean reset, not a turn-number comparison like
+      `GameEngine.enteredThisTurn` (that field needs to compare against a
+      LATER turn number; this one is simply false again every Cleanup).
+      Real Forge citation: `CardDamageHistory.attackedThisTurn`/
+      `hasAttackedThisTurn(GameEntity)` (forge-game/.../card/
+      CardDamageHistory.java lines 26-27/88-90), set via
+      `setCreatureAttackedThisCombat` (~line 54-59, itself called from
+      `CombatUtil.java` ~line 386 the moment an attacker is declared),
+      cleared each turn by `CardDamageHistory.newTurn()` (~line 282-283) —
+      functionally identical to clearing at THIS engine's own Cleanup,
+      since Cleanup is always the last phase before the next turn's Untap
+      in this engine's fixed phase list.
+    Wired together for real on The Lunar Whale itself
+    (`cards/the-lunar-whale/definition.ts`): a `triggers:
+    [{name:'playFromLibraryTop', effects:[{kind:'playFromLibraryTop'}]}]`
+    entry — NOT a real CR 603 triggered ability (this clause is a
+    continuous granted PERMISSION, not something that triggers), but reusing
+    the same "named effect bundle, manually invoked via `pilotFireTrigger`"
+    shape this engine already uses for a real triggered ability it can't
+    auto-fire (Ultima Weapon's own `onEquippedAttacks`) — a pilot script is
+    responsible for only invoking it once `attackedThisTurn` is genuinely
+    set, same "engine primitives don't know about a specific card's own
+    gating condition" split `crewedBy`/`declaredTarget` already establish.
+    `cards/the-lunar-whale/scenarios.ts` (`runEngineScenarios`) demonstrates
+    the full real arc: crew (real `crewedBy`, `engine-trace.ts`'s
+    `pilotActivate` extended to accept it — the FIRST real engine-piloted
+    Crew scenario in the pool, every prior `crewCost` card having stayed on
+    the flat `harness.ts` style to sidestep the latent crew/second-ability
+    collision bug noted elsewhere in this doc, which doesn't apply to The
+    Lunar Whale since it has no second ability) → real attack declaration
+    (genuinely sets `attackedThisTurn`) → real sorcery-speed-timing wait to
+    Main2 (305.3/307.1a — playing a land or casting a spell off this
+    permission is STILL only legal in a main phase with an empty stack, even
+    under a "you may" grant that doesn't itself say otherwise; the engine's
+    own `canPlayLand`/`canCastSpell` timing gate catches this for real,
+    confirmed by deliberately trying it right after attacking first) → the
+    real top card played twice, once a real Forest (dispatches to
+    `playLand`) and once — after the Forest is gone — a real Barret Wallace
+    underneath it (dispatches to `castSpell`, real `{3}{R}` paid). The
+    former `isLunarWhalePlayFromLibraryFact` exemption
+    (`scripts/verify-synergy.mjs`) is REMOVED — the card's own `event:'play'`
+    fact now has real, achievable trace evidence (a new `case 'play'` in
+    `producedEvents`, `'play'` added to `explainableFns`), and a new
+    shape-scoped (not name-scoped) `isPlayFromLibraryTopPeekRead` exemption
+    covers the one real remaining wrinkle: the effect's own
+    `ctx.you.getCardsIn('Library')` peek logs as a `read:getCardsIn`, which
+    the reverse "every aggregate read needs a matching declared want" check
+    would otherwise misread as "this card wants Library-zone presence" (it
+    doesn't — it's just how the effect finds what to play). Traveling
+    Chocobo (fin/158, unmigrated) carries the identical clause ("You may
+    play lands and cast Bird spells from the top of your library") and can
+    reuse this exact `kind:'playFromLibraryTop'` vocabulary/primitive/
+    exemption once migrated — its own narrower "lands and Bird spells only"
+    scope is a gate on WHETHER to invoke the effect, not a different effect
+    shape, so no further engine work is needed for it, just the migration
+    itself (out of scope for this pass).
+    **Adjacent gap, explicitly NOT closed by this pass, confirmed still
+    genuinely different**: The Regalia (fin/58)'s own attack-triggered
+    "reveal cards from the top of your library UNTIL you reveal a land, put
+    that card onto the battlefield tapped and the rest on the bottom in a
+    random order" — an UNBOUNDED dig-until-a-match effect, not "look at
+    exactly the top card, dispatch on its type." `card.ts`'s `dig` Effect
+    only covers a FIXED `qty` (not "keep going until X"), and the new
+    `kind:'playFromLibraryTop'` only ever looks at ONE card (the real top,
+    whatever it is) — reusing it for Regalia would silently misrepresent an
+    unbounded search as a single-card peek. Still a real, open, separate
+    gap (kept as an honest no-op `custom` Effect, that card's own
+    `definition.ts` comment).
+    New tests: `engine.test.ts`'s `canPlayFromLibraryTop /
+    playFromLibraryTop` describe block (rejects a card that isn't genuinely
+    the top of the library; dispatches a land to the real `playLand` path;
+    dispatches a spell to the real `castSpell` path with real mana paid;
+    rejects an unaffordable spell; rejects outside sorcery-speed timing —
+    all mutating nothing when illegal) and two new cases in its existing
+    `declareAttackers` describe block (a legal attacker's real
+    `attackedThisTurn` flag gets set; a REJECTED attempt does not set it);
+    `turn.test.ts`'s two new cases (the flag persists through the rest of
+    the turn once set, then clears at the real Cleanup; it does not persist
+    into a later turn — a real per-turn reset, not a one-time clear).
 
 ## What's already solid (don't re-litigate)
 

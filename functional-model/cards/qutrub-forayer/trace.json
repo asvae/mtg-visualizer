@@ -49,7 +49,7 @@
       {
         "fn": "destroy",
         "target": "Qutrub Forayer",
-        "id": 1749,
+        "id": 4,
         "controller": "you"
       }
     ]
@@ -84,15 +84,15 @@
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1751,
+        "target": "Grizzly Bears",
+        "id": 6,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-1",
-        "id": 1752,
+        "target": "Grizzly Bears",
+        "id": 7,
         "zone": "Exile",
         "controller": "you"
       }
@@ -128,8 +128,8 @@
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1755,
+        "target": "Grizzly Bears",
+        "id": 10,
         "zone": "Exile",
         "controller": "you"
       }

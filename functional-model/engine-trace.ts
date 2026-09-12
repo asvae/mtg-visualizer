@@ -37,25 +37,31 @@
 
 import type { CardDefinition, EffectContext, Actions, AlternateCost } from './card';
 import type { Card } from './interfaces';
-import { resolveCard } from './card';
-import { GameState, wrapCard } from './state';
-import type { RealCard, RealPlayer } from './state';
+import { GameState, wrapCard, shouldDoubleTrigger } from './state';
+import type { RealCard, RealPlayer, TriggerCause } from './state';
+import { fireTrigger } from './triggers';
 import {
   createEngine,
   canCastSpell,
   castSpell,
+  effectiveCastCost,
   canPlayLand,
   playLand,
+  canPlayFromLibraryTop,
+  playFromLibraryTop,
   canActivateAbility,
   activateAbility,
   costRequiresTap,
   activationCostFor,
+  effectiveActivationCost,
   resolveTop,
   advance,
   declareAttackers,
   declareBlockers,
   canAttack,
+  resolveCombatDamage,
   type GameEngine,
+  type CombatDamageResult,
 } from './engine';
 import { transformPermanent } from './saga';
 import { PHASES, currentPhase, activePlayer } from './turn';
@@ -100,6 +106,8 @@ export interface EnginePilotCtxOpts {
   castFrom?: 'hand' | 'graveyard' | 'exile';
   /** A real player's own manual target pick (`EffectContext.preferTarget` — see card.ts's own doc comment on it) — NOT automated/weighed selection, just an explicit override of `chooseTarget`'s old unconditional `pool[0]` default. */
   preferTarget?: (c: Card) => boolean;
+  /** The `CardDefinition` matching whatever `RealCard` is genuinely on top of `you`'s library right now (`EffectContext.topLibraryCard`, card.ts — ENGINE_GAPS.md gap #16) — a pilot script invoking a `kind:'playFromLibraryTop'` effect (The Lunar Whale, e.g.) supplies this the same explicit way it supplies `castFrom`/`mode`. */
+  topLibraryCard?: CardDefinition;
 }
 
 export interface EnginePilot {
@@ -172,13 +180,69 @@ export function setupEnginePilot(setup: EnginePilotSetup): EnginePilot {
       triggerInput: opts?.triggerInput,
       mode: opts?.mode,
       preferTarget: opts?.preferTarget,
+      topLibraryCard: opts?.topLibraryCard,
     }),
   };
 }
 
-/** The real `Actions` a pilot script's `resolveCard`/`castSpell`/`activateAbility` calls should run against — same shape `harness.ts`'s own `loggingActions` already builds (real `GameState` mutation, logged), reused directly rather than rebuilt. */
+/**
+ * The real `Actions` a pilot script's `resolveCard`/`castSpell`/
+ * `activateAbility` calls should run against — same shape `harness.ts`'s own
+ * `loggingActions` already builds (real `GameState` mutation, logged) for
+ * every method EXCEPT `play` (ENGINE_GAPS.md gap #16), which this overrides
+ * with a REAL, engine-checked dispatch instead of `loggingActions`'s own
+ * plain (no legality/mana) fallback — see that method's own doc comment for
+ * why a plain harness-style implementation can't reuse `canPlayLand`/
+ * `playLand`/`canCastSpell`/`castSpell` at all (no `GameEngine` reference
+ * there). Reused directly rather than rebuilt for every other method.
+ */
 export function pilotActions(pilot: EnginePilot, selfId: number): Actions {
-  return loggingActions(pilot.state, pilot.log, selfId);
+  const base = loggingActions(pilot.state, pilot.log, selfId);
+  return {
+    ...base,
+    /**
+     * CR 601/305's own umbrella "play" (ENGINE_GAPS.md gap #16) — real
+     * dispatch via `canPlayFromLibraryTop`/`playFromLibraryTop` (`engine.ts`),
+     * which itself reuses the real `canPlayLand`/`playLand`/`canCastSpell`/
+     * `castSpell` pairs (see those functions' own doc comments for the real
+     * Forge `PlayEffect.java` citation). `card` (`EffectContext.topLibraryCard`,
+     * threaded here from whichever effect called `actions.play`) is REQUIRED
+     * for this override — unlike `loggingActions.play`'s own plain fallback,
+     * there's no legality/mana dispatch possible without it.
+     */
+    play: (player, target, card) => {
+      if (!card) throw new Error(`pilotActions.play("${target.getName()}"): missing CardDefinition — a pilot script must supply EffectContext.topLibraryCard`);
+      const playerReal = pilot.state.players.get(player.getId() as number)!;
+      const cardReal = pilot.state.cards.get(target.getId() as number)!;
+      // The umbrella event fact itself (`event:'play'`, `from:'Library'`) —
+      // real regardless of which real sub-action (land-drop or cast) follows,
+      // logged BEFORE the legality check/mutation for the same real-causal-
+      // order reasoning `pilotResolveTop`'s own doc comment establishes.
+      pilot.log.push({ fn: 'play', card: card.name, id: cardReal.id, from: 'Library' });
+      const check = canPlayFromLibraryTop(pilot.engine, playerReal, cardReal, card);
+      if (!check.ok) throw new Error(`pilotActions.play("${card.name}"): illegal — ${check.reason}`);
+      const isLand = /\bLand\b/.test(card.typeLine);
+      const targetCtx = pilot.ctxFor(cardReal);
+      const targetActions = pilotActions(pilot, cardReal.id);
+      if (isLand) {
+        pilot.log.push({ fn: 'playLand', card: card.name, instanceId: SELF_INSTANCE_ID });
+        pilot.log.push({ fn: 'enters', card: card.name, instanceId: SELF_INSTANCE_ID, zone: 'Battlefield' });
+        const enterTrigger = card.triggers?.find((t) => t.on === 'enter');
+        if (enterTrigger) pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+      } else {
+        const { costString } = effectiveCastCost(card, undefined, undefined, undefined, playerReal);
+        pilot.log.push({ fn: 'cast', card: card.name, instanceId: SELF_INSTANCE_ID, from: 'library', cost: costString });
+      }
+      const result = playFromLibraryTop(pilot.engine, playerReal, cardReal, card, targetCtx, targetActions);
+      if (!result.ok) throw new Error(`pilotActions.play("${card.name}"): ${result.reason}`);
+      // The non-land (cast) branch only pushes onto the real stack here —
+      // same two-call split every other cast in this engine has — a pilot
+      // script must still call `pilotResolveTop` afterward to actually
+      // resolve it (a no-op, safely, for the land branch, which never
+      // touches the stack at all).
+      logTappedForMana(pilot, card, result.tappedForMana);
+    },
+  };
 }
 
 /**
@@ -219,6 +283,8 @@ interface PreAdvanceSnapshot {
   tappedIds: Set<number>;
   /** Each player's own hand, as real card OBJECTS (not just ids) — a real Draw needs the newly-ADDED ones (diffed by id against `after`), a real Cleanup discard needs the ones that DISAPPEARED (only readable from a BEFORE list, since a discarded card is gone from `.hand` by the time `advance()` returns). */
   hands: Map<number, RealCard[]>;
+  /** Whatever `GameState.untilEndOfTurnKeywordGrants` held right before this `advance()` call — a real Cleanup-phase entry drains that list entirely (`state.ts`'s own `clearUntilEndOfTurnKeywordGrants`), so by the time `advance()` returns there's nothing left to read it FROM; this is the only way to know which (card, keyword) pairs a Cleanup crossing just ended, for the synthetic removal entry below. */
+  untilEndOfTurnGrants: { cardId: number; keyword: string }[];
 }
 
 function snapshotBeforeAdvance(pilot: EnginePilot): PreAdvanceSnapshot {
@@ -228,7 +294,7 @@ function snapshotBeforeAdvance(pilot: EnginePilot): PreAdvanceSnapshot {
     for (const c of p.battlefield) if (c.tapped) tappedIds.add(c.id);
     hands.set(p.id, [...p.hand]);
   }
-  return { tappedIds, hands };
+  return { tappedIds, hands, untilEndOfTurnGrants: [...pilot.state.untilEndOfTurnKeywordGrants] };
 }
 
 /**
@@ -263,6 +329,22 @@ function logAutomaticPhaseEntry(pilot: EnginePilot, before: PreAdvanceSnapshot, 
     const afterIds = new Set(active.hand.map((c) => c.id));
     const discarded = (before.hands.get(active.id) ?? []).filter((c) => !afterIds.has(c.id));
     if (discarded.length) entries.push({ fn: 'discard', player: active.name, qty: discarded.length, cards: discarded.map((c) => c.name) });
+    // Real 514.2 "until end of turn" keyword-grant removal (`state.ts`'s
+    // own `clearUntilEndOfTurnKeywordGrants`, called game-wide by THIS
+    // SAME `advance()` — not just the active player's own permanents,
+    // matching the real rule's own scope) — a synthetic `grantKeyword`
+    // entry with `removed: true` for each pair `before` actually held,
+    // confirmed still gone from the real card's own `keywords` now (the
+    // one, rare way it wouldn't be: something else re-granted the exact
+    // same keyword to the exact same card permanently in between, which
+    // this diff correctly declines to report as removed). See
+    // `.claude/contracts/state-event-format.md`'s own dated entry for the
+    // full reasoning and the `card`-side rendering contract this commits
+    // to (additive field, no removal without this entry).
+    for (const { cardId, keyword } of before.untilEndOfTurnGrants) {
+      const card = pilot.state.cards.get(cardId);
+      if (card && !card.keywords.includes(keyword)) entries.push({ fn: 'grantKeyword', target: card.name, id: card.id, keyword, removed: true });
+    }
   }
   if (entries.length) pilot.log.splice(atIndex, 0, ...entries);
 }
@@ -399,6 +481,30 @@ export function pilotDeclareBlockers(pilot: EnginePilot, assignments: Array<{ bl
   for (const { blocker, attacker } of assignments) pilot.log.push({ fn: 'block', blocker: blocker.name, blockerId: blocker.id, attacker: attacker.name, attackerId: attacker.id });
 }
 
+/**
+ * Real 510 combat damage (`engine.ts`'s own `resolveCombatDamage`) — logs a
+ * real `damagePrevented` entry (same shape `harness.ts`'s own
+ * `loggingActions.dealDamage` uses for the identical real event, ENGINE_GAPS.md
+ * gap #8) per real creature whose combat damage this call prevented outright
+ * (`result.prevented`, `engine.ts`'s own `CombatDamageResult` doc comment) —
+ * Diamond Weapon's own "Prevent all combat damage that would be dealt to
+ * Diamond Weapon" is the reference case. Deliberately does NOT also log a
+ * generic `dealDamage` entry per `result.entries` — `resolveCombatDamage`
+ * only ever tracks accumulated TOTAL damage per creature this call, not
+ * which individual attacker/blocker dealt how much, so there's no single
+ * real (source, target) pair to name the way every other `dealDamage` log
+ * entry in this codebase does; a future pilot helper wanting that level of
+ * detail would need `resolveCombatDamage` itself restructured to track it,
+ * out of scope here. Returns the real result so a pilot script can still
+ * inspect `entries`/`lethal` directly.
+ */
+export function pilotResolveCombatDamage(pilot: EnginePilot, label?: string): CombatDamageResult {
+  pilot.beginStep(label ?? 'Resolve combat damage');
+  const result = resolveCombatDamage(pilot.engine);
+  for (const card of result.prevented) pilot.log.push({ fn: 'damagePrevented', target: card.name, id: card.id, cause: 'combat' });
+  return result;
+}
+
 /** Logs one real `tapForMana` entry per real source `mana.ts`'s own `payMana` actually tapped (its return value — see that function's own doc comment) — a DIFFERENT fn than plain `tap` (same reasoning this used to log a single summary `payMana` entry instead: a mana-source tap must not be misread as a card EFFECT tapping something by `verify-synergy.mjs`), but now naming exactly which real land/source paid, not just that some real cost was paid (a user's own real question this answers: "which specific lands got tapped for mana?"). A no-op for an empty/undefined list (a `{T}`-only ability's activation cost, e.g. — nothing needed tapping for mana). */
 function logTappedForMana(pilot: EnginePilot, forCard: CardDefinition, tapped: RealCard[] | undefined): void {
   for (const source of tapped ?? []) pilot.log.push({ fn: 'tapForMana', target: source.name, for: forCard.name });
@@ -423,13 +529,44 @@ function logTappedForMana(pilot: EnginePilot, forCard: CardDefinition, tapped: R
  * first — the pilot script is responsible for having put it there (e.g. via
  * `pilot.state.addCard(pilot.you, 'Graveyard', ...)`), same as `engine.ts`'s
  * own "trust the caller" contract for this.
+ *
+ * `declaredTarget` (optional) — see `engine.ts`'s `canCastSpell`/
+ * `castSpell` doc comments: the real object this cast targets, consulted
+ * for a real `card.costReduction` condition (CR 601.2f) AND (ENGINE_GAPS.md
+ * gap #4, closed 2026-09-12) genuinely locked in as this spell's own real
+ * cast-time target — re-validated at resolution (`card.ts`'s
+ * `resolveTargets`, CR 608.2b: dropped, not replaced, if it's no longer
+ * legal by then). The logged `cast` entry's own `cost` field reflects the
+ * REAL cost actually paid after any such reduction (`engine.ts`'s
+ * `effectiveCastCost`), not just the nominal printed/alt cost — same "log
+ * what genuinely happened" standard `tapForMana` already holds to for
+ * exactly which lands paid.
+ *
+ * `declaredTargets` (optional) — the general multi-target form; takes
+ * precedence over `[declaredTarget]` when given (see `castSpell`'s own doc
+ * comment).
+ *
+ * `x` (optional, ENGINE_GAPS.md gap #6) — the real value announced for a
+ * `{X}` in `card.manaCost`; the logged `cast` entry's own `cost` reflects
+ * the RESOLVED cost (e.g. `{3}{R}{R}` for Choco Comet with `x: 3`), same
+ * "log what genuinely happened" standard as the cost-reduction case above.
+ * Only affects payment here — a pilot script wanting the card's own EFFECT
+ * to see the same value must also set `ctx.xPaid` on the `EffectContext` it
+ * builds (`card.ts`'s pre-existing field; `pilotCast` doesn't build `ctx`).
+ *
+ * Also passes `pilot.you` as `effectiveCastCost`'s own `caster` param (ENGINE_GAPS.md
+ * gap #7's second real example, The Wind Crystal's own broadcast cost
+ * reduction) so the logged `cost` field reflects a real battlefield
+ * `spellCostReductionGrants` discount too, not just `declaredTarget`'s own
+ * condition — same "log what genuinely happened" standard.
  */
-export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string, alt?: AlternateCost): void {
-  pilot.beginStep(label ?? (alt ? `Cast ${card.name} via ${alt.name} (${alt.cost})` : `Cast ${card.name} (${card.manaCost})`));
-  const check = canCastSpell(pilot.engine, pilot.you, card, alt);
+export function pilotCast(pilot: EnginePilot, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string, alt?: AlternateCost, declaredTarget?: RealCard, x?: number, declaredTargets?: RealCard[]): void {
+  const { costString } = effectiveCastCost(card, alt, declaredTarget, x, pilot.you);
+  pilot.beginStep(label ?? (alt ? `Cast ${card.name} via ${alt.name} (${costString})` : `Cast ${card.name} (${costString})`));
+  const check = canCastSpell(pilot.engine, pilot.you, card, alt, declaredTarget, x);
   if (!check.ok) throw new Error(`pilotCast("${card.name}"): illegal — ${check.reason}`);
-  pilot.log.push({ fn: 'cast', card: card.name, instanceId: SELF_INSTANCE_ID, from: alt?.from ?? 'hand', cost: alt?.cost ?? card.manaCost });
-  const result = castSpell(pilot.engine, pilot.you, cardReal, card, ctx, actions, undefined, alt);
+  pilot.log.push({ fn: 'cast', card: card.name, instanceId: SELF_INSTANCE_ID, from: alt?.from ?? 'hand', cost: costString });
+  const result = castSpell(pilot.engine, pilot.you, cardReal, card, ctx, actions, undefined, alt, declaredTarget, x, declaredTargets);
   if (!result.ok) throw new Error(`pilotCast("${card.name}"): ${result.reason}`);
   logTappedForMana(pilot, card, result.tappedForMana);
 }
@@ -461,7 +598,16 @@ export function pilotPlayLand(pilot: EnginePilot, cardReal: RealCard, card: Card
   pilot.log.push({ fn: 'playLand', card: card.name, instanceId: SELF_INSTANCE_ID });
   pilot.log.push({ fn: 'enters', card: card.name, instanceId: SELF_INSTANCE_ID, zone: 'Battlefield' });
   const enterTrigger = card.triggers?.find((t) => t.on === 'enter');
-  if (enterTrigger) pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+  if (enterTrigger) {
+    pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+    // Same real doubling pre-check `pilotResolveTop` above uses (ENGINE_GAPS.md
+    // gap #13) — `engine.ts`'s own `playLand` (called just below) already
+    // re-runs the trigger's effects for real via `fireTrigger`; this only
+    // decides whether to log a matching second bracket entry.
+    if (shouldDoubleTrigger(pilot.engine.state, cardReal, { kind: 'entersBattlefield', entered: cardReal })) {
+      pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+    }
+  }
   const result = playLand(pilot.engine, pilot.you, cardReal, card, ctx, actions);
   if (!result.ok) throw new Error(`pilotPlayLand("${card.name}"): ${result.reason}`);
 }
@@ -520,7 +666,21 @@ export function pilotResolveTop(pilot: EnginePilot, label?: string): void {
       pilot.log.push({ fn: 'trigger', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, name: chapterName });
     }
     const enterTrigger = peeked.card.triggers?.find((t) => t.on === 'enter');
-    if (enterTrigger) pilot.log.push({ fn: 'trigger', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+    if (enterTrigger) {
+      pilot.log.push({ fn: 'trigger', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+      // Real "Panharmonicon effect" (ENGINE_GAPS.md gap #13) — `engine.ts`'s
+      // own `resolveTop` (called just below) already re-runs this trigger's
+      // effects a second time via `triggers.ts`'s `fireTrigger` when a real
+      // `triggerDoubling` grant covers it; this pre-check (same board state,
+      // same `entersBattlefield` cause `resolveTop` itself uses) only
+      // decides whether to log a SECOND bracket entry here too, so the
+      // trace's own bracket honestly reflects a doubled firing rather than
+      // implying it happened once while the underlying effects show twice.
+      const selfReal = pilot.engine.state.cards.get(peeked.ctx.self.getId());
+      if (selfReal && shouldDoubleTrigger(pilot.engine.state, selfReal, { kind: 'entersBattlefield', entered: selfReal })) {
+        pilot.log.push({ fn: 'trigger', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, name: enterTrigger.name });
+      }
+    }
     resolveTop(pilot.engine);
   } else {
     // Real 702.32/702.67: a Flashback/Jump-start-cast spell (`peeked.thenExile`
@@ -547,11 +707,27 @@ export function pilotResolveTop(pilot: EnginePilot, label?: string): void {
  * genuinely run the effect but leave it looking, to that check, like it
  * never happened at all (confirmed the hard way: Aerith Gainsborough's own
  * `onLifeGained`/`onDies` wants both hard-failed until this was added).
+ *
+ * Routes through `triggers.ts`'s own shared `fireTrigger` (ENGINE_GAPS.md gap
+ * #13, closed 2026-09-12) rather than calling `resolveCard` directly, so a
+ * real `triggerDoubling` grant on the board genuinely re-fires this trigger
+ * a second time when one applies — `cause` (optional, a NEW trailing param
+ * so every one of this function's ~14 existing real call sites stays
+ * unchanged) is threaded straight through for a gate that filters on it
+ * (Masamune's own `causedBy:'dying'`, Traveling Chocobo's own
+ * `causedBy:'entersBattlefield'`). Logs a SECOND `{fn:'trigger', ...}`
+ * bracket when it doubles, so the trace's own bracket honestly shows the
+ * real doubled firing, not just the underlying effects running twice under
+ * one undoubled-looking bracket.
  */
-export function pilotFireTrigger(pilot: EnginePilot, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName: string, label?: string): void {
+export function pilotFireTrigger(pilot: EnginePilot, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName: string, label?: string, cause?: TriggerCause): void {
   pilot.beginStep(label ?? `Fire ${triggerName}`);
   pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: triggerName });
-  resolveCard(card, ctx, actions, triggerName);
+  // `onDoubled` logs the SECOND bracket in true causal order — right
+  // before the second round of effects runs, not both brackets up front.
+  fireTrigger(pilot.engine.state, card, ctx, actions, triggerName, cause, () => {
+    pilot.log.push({ fn: 'trigger', card: card.name, instanceId: SELF_INSTANCE_ID, name: triggerName });
+  });
 }
 
 /** A real illegal-attempt check worth demonstrating in the trace (e.g. "the transform ability is blocked by summoning sickness the turn it entered") — logs the real rejection reason `canActivateAbility` gives rather than silently skipping it, so a reader of the replay sees the SAME legality wall a real player would hit. Purely observational: never mutates anything. */
@@ -623,17 +799,48 @@ export function pilotExpectIllegalCast(pilot: EnginePilot, caster: RealPlayer, c
  * pool-order limitation happens to retarget onto itself — see that card's
  * own scenarios.ts comment) — without this fix there is no scenario that
  * could ever produce real evidence for such a fact on a card like this one.
+ *
+ * `abilityName` (2026-09-12, Qiqirn Merchant/fin-65 migration): threads
+ * through to `canActivateAbility`/`activateAbility`/`activationCostFor`
+ * (`engine.ts`) exactly the way those three already support — omitted, this
+ * still resolves the single default `card.activationCost`+`card.effects`
+ * ability (every prior caller's own unchanged behavior). A real, general
+ * gap this card's own `card.abilities` array (TWO independent named
+ * activated abilities on one permanent) surfaced: without this, there was
+ * no way to engine-pilot ANY named ability at all — `activationCostFor(card)`
+ * with no name always reads `card.activationCost`, which a `card.abilities`
+ * -shaped card never sets, so `canActivateAbility` unconditionally rejected
+ * with "has no such activated ability" for every one of its real abilities.
+ *
+ * `x` (optional, ENGINE_GAPS.md gap #11 — Rydia, Summoner of Mist's own
+ * real "Summon — {X}, {T}: ..." activated ability) — the real value
+ * announced for a `{X}` in this ability's own cost; the logged `activate`
+ * entry's own `cost` reflects the REAL cost actually paid (`engine.ts`'s
+ * `effectiveActivationCost` — resolved `{X}`, AND any real
+ * `ActivationCostReduction` board-state-counted discount, Qiqirn Merchant's
+ * own shape), not just the nominal printed ability-cost text — same "log
+ * what genuinely happened" standard `pilotCast`'s own `cost` field already
+ * holds to.
  */
-export function pilotActivate(pilot: EnginePilot, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string): void {
-  pilot.beginStep(label ?? `Activate ${card.name}`);
-  const check = canActivateAbility(pilot.engine, controller, permanent, card);
+export function pilotActivate(pilot: EnginePilot, controller: RealPlayer, permanent: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions, label?: string, abilityName?: string, crewedBy?: RealCard[], x?: number): void {
+  pilot.beginStep(label ?? `Activate ${abilityName ? `"${abilityName}" on ` : ''}${card.name}`);
+  const check = canActivateAbility(pilot.engine, controller, permanent, card, abilityName, crewedBy, x);
   if (!check.ok) throw new Error(`pilotActivate("${card.name}"): illegal — ${check.reason}`);
-  pilot.log.push({ fn: 'activate', card: card.name, instanceId: SELF_INSTANCE_ID, cost: card.activationCost ?? '' });
-  const cost = activationCostFor(card);
+  const cost = activationCostFor(card, abilityName);
+  const { costString } = effectiveActivationCost(pilot.engine, controller, card, abilityName, x);
+  pilot.log.push({ fn: 'activate', card: card.name, instanceId: SELF_INSTANCE_ID, cost: costString || (cost ?? ''), ...(abilityName ? { ability: abilityName } : {}) });
   const requiresTap = !!cost && costRequiresTap(cost);
-  const result = activateAbility(pilot.engine, controller, permanent, card, ctx, actions);
+  const result = activateAbility(pilot.engine, controller, permanent, card, ctx, actions, abilityName, crewedBy, x);
   if (!result.ok) throw new Error(`pilotActivate("${card.name}"): ${result.reason}`);
   if (requiresTap) pilot.log.push({ fn: 'tap', target: permanent.name, id: permanent.id, controller: controller.name });
+  // Real 702.121b Crew cost (ENGINE_GAPS.md's own "Crew (702.121b/c)" entry)
+  // — `activateAbility` taps every real `crewedBy` creature as part of
+  // paying the cost, with NO log line of its own (`engine.ts` is
+  // log-agnostic by design) — same root cause, same fix shape as this
+  // function's own `requiresTap` self-tap fix immediately above (a real,
+  // visible state mutation was otherwise invisible to both the trace and
+  // the replay UI).
+  for (const creature of crewedBy ?? []) pilot.log.push({ fn: 'tap', target: creature.name, id: creature.id, controller: controller.name });
   logTappedForMana(pilot, card, result.tappedForMana);
 }
 

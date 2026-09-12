@@ -1,19 +1,44 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
+      "setup": "you: 1 creature(s)",
+      "action": "cast from hand",
+      "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
       "raw": {
-        "result": "creates a 1/1 colorless Hero creature token and attaches itself to it",
-        "trigger": "onEnter"
+        "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
+        "forceCast": true,
+        "you": {
+          "creaturesCount": 1
+        },
+        "sequence": [
+          "onEnter",
+          {
+            "activate": true
+          }
+        ]
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Dragoon's Lance",
+        "instanceId": 1,
+        "id": 3,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "enters",
+        "card": "Dragoon's Lance",
+        "instanceId": 1,
+        "id": 3,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Dragoon's Lance",
         "instanceId": 1,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -28,29 +53,15 @@
       {
         "fn": "equip",
         "equipment": "Dragoon's Lance",
-        "equipmentId": 621,
+        "equipmentId": 3,
         "target": "Hero",
-        "id": 622
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s)",
-      "action": "activated ({4})",
-      "result": "attaches itself to the target creature",
-      "raw": {
-        "result": "attaches itself to the target creature",
-        "you": {
-          "creaturesCount": 2
-        }
-      }
-    },
-    "log": [
+        "id": 4
+      },
       {
         "fn": "activate",
         "card": "Dragoon's Lance",
         "instanceId": 1,
+        "id": 3,
         "cost": "{4}"
       },
       {
@@ -61,9 +72,9 @@
       {
         "fn": "equip",
         "equipment": "Dragoon's Lance",
-        "equipmentId": 626,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 624
+        "id": 2
       }
     ]
   }

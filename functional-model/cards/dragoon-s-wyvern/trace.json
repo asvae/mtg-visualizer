@@ -1,15 +1,52 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 colorless Hero creature token",
+      "setup": "you: 3 Island(s)",
+      "action": "real engine playthrough: cast -> real ETB -> onEnter auto-fires -> creates a 1/1 colorless Hero creature token",
+      "result": "Dragoon's Wyvern is cast for {2}{U} and resolves, entering the battlefield; its onEnter trigger auto-fires, creating a 1/1 colorless Hero creature token.",
       "raw": {
-        "result": "creates a 1/1 colorless Hero creature token",
-        "trigger": "onEnter"
+        "result": "Dragoon's Wyvern is cast for {2}{U} and resolves, entering the battlefield; its onEnter trigger auto-fires, creating a 1/1 colorless Hero creature token.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island"
+          ]
+        },
+        "opponents": [
+          {}
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Dragoon's Wyvern",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dragoon's Wyvern"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dragoon's Wyvern"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dragoon's Wyvern"
+      },
+      {
+        "fn": "enters",
+        "card": "Dragoon's Wyvern",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Dragoon's Wyvern",
@@ -24,6 +61,20 @@
         "tapped": false,
         "power": 1,
         "toughness": 1
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Dragoon's Wyvern ({2}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

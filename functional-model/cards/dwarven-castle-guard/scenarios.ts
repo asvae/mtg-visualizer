@@ -100,6 +100,6 @@ export function runEngineScenarios(): TraceResult[] {
   if (guardReal.zone === 'Graveyard') pilotFireTrigger(pilot, dwarvenCastleGuard, ctx, actions, 'onDies');
 
   const result =
-    'Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in real blocked combat against a real 2/2 (a genuine mutual 704.5g state-based destruction) — it actually leaves the battlefield for the graveyard, then its onDies trigger fires for real, creating a 1/1 colorless Hero creature token.';
+    'Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in blocked combat against a 2/2 (a mutual 704.5g state-based destruction) — it leaves the battlefield for the graveyard, then its onDies trigger fires, creating a 1/1 colorless Hero creature token.';
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real lethal combat (SBA) -> onDies', result)];
 }

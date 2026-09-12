@@ -57,32 +57,32 @@
       },
       {
         "fn": "read:isLand",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-gy-creature-2",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
         "fn": "read:isLand",
-        "target": "you-gy-creature-2",
+        "target": "Grizzly Bears",
         "result": false
       },
       {
@@ -134,7 +134,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2369,
+        "id": 17,
         "power": 2,
         "toughness": 2
       },
@@ -168,7 +168,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2369,
+        "id": 17,
         "keyword": "Trample"
       }
     ]

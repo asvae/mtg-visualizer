@@ -37,60 +37,24 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "opp0-gy-creature-0",
-        "id": 134,
+        "target": "Grizzly Bears",
+        "id": 3,
         "zone": "Exile",
         "controller": "opp0"
       },
       {
         "fn": "createToken",
         "controller": "you",
-        "token": "opp0-gy-creature-0",
+        "token": "Grizzly Bears",
         "qty": 1,
         "tapped": false,
         "power": 5,
         "toughness": 5
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "\"onBeginCombat\" trigger fires",
-      "result": "no creature card in any graveyard, nothing exiled or created",
-      "raw": {
-        "result": "no creature card in any graveyard, nothing exiled or created",
-        "trigger": "onBeginCombat",
-        "opponents": [
-          {}
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "trigger",
-        "card": "Ardyn, the Usurper",
-        "instanceId": 1,
-        "name": "onBeginCombat"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Graveyard",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Graveyard",
-        "count": 0,
-        "creatureCount": 0
       }
     ]
   },

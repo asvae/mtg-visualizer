@@ -77,15 +77,25 @@ export const dionBahamutsDominant: CardDefinition = {
             // added 2026-09-09 — genuinely wasn't available when the
             // comment this replaces was first written). `notSelf: true`
             // matches the counters effect's own `.filter` exclusion.
-            // Duration ("until end of turn") isn't tracked — same
-            // documented `layers.ts`/`state.grantKeyword` simplification
-            // every other keyword grant in this pool already accepts (the
-            // grant persists for the rest of the scenario, not just until
-            // end of turn).
+            // `untilEndOfTurn: true` (real 514.2 Cleanup removal, added
+            // 2026-09-12 same pass as this bug's own root-cause fix — see
+            // state.ts's own `grantKeyword`/`clearUntilEndOfTurnKeywordGrants`
+            // doc comments): a REAL regression was found and fixed here —
+            // without this flag, the grant is permanent-within-scenario
+            // (this pool's own long-standing accepted default for every
+            // OTHER "until end of turn" grantKeyword* use), which used to
+            // be harmless (no card's own scenario ever crossed enough real
+            // turns for it to matter) until THIS card's real multi-turn
+            // engine-piloted scenario made it visibly wrong — the Knight
+            // token kept showing Flying in the replay UI through the
+            // opponent's own subsequent turns, forever, once this chapter
+            // fired. Confirmed live: the icon now correctly disappears at
+            // the very next real Cleanup step.
             kind: 'grantKeywordAll',
             predicate: 'creatures-you-control',
             keyword: 'Flying',
             notSelf: true,
+            untilEndOfTurn: true,
           } satisfies Effect,
         ],
       },
@@ -100,10 +110,12 @@ export const dionBahamutsDominant: CardDefinition = {
             },
           } satisfies Effect,
           {
+            // Same `untilEndOfTurn: true` fix as chapter I above.
             kind: 'grantKeywordAll',
             predicate: 'creatures-you-control',
             keyword: 'Flying',
             notSelf: true,
+            untilEndOfTurn: true,
           } satisfies Effect,
         ],
       },

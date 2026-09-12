@@ -100,7 +100,7 @@ function scenarioA(): TraceResult {
   }
 
   const result =
-    "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's real Coeurl (a genuine choice between it and Bahamut itself — a real, non-token permanent, so it's a real 701.6 destroy, not a token ceasing to exist); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it genuinely declines rather than destroying itself; chapter III draws two real cards; chapter IV deals real damage equal to the real total mana value of the other permanent you control (Ahriman, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.";
+    "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's Coeurl (a choice between it and Bahamut itself — a non-token permanent, so it's a 701.6 destroy, not a token ceasing to exist); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it declines rather than destroying itself; chapter III draws two cards; chapter IV deals damage equal to the total mana value of the other permanent you control (Ahriman, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.";
   return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice', result);
 }
 

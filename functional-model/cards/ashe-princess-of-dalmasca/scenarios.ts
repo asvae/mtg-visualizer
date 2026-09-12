@@ -58,6 +58,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotFireTrigger(pilot, ashePrincessOfDalmasca, ctx, actions, 'onAttack');
 
   const result =
-    "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them (Phoenix Down) to hand.";
+    "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.";
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real attack -> onAttack (real dig)', result)];
 }

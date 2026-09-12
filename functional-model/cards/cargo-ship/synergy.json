@@ -1,13 +1,97 @@
 {
   "source": [
     {
-      "id": "self-battlefield",
-      "zone": "Battlefield",
-      "controller": "you",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "subject": "self",
-      "value": 1,
-      "sourceText": "(implicit — not a specific printed clause: Cargo Ship itself, once cast, is a permanent sitting on your battlefield like any Vehicle/artifact, before Crew 1 makes it a creature.)"
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "C"
+        ]
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 13
+        }
+      ]
+    },
+    {
+      "event": "crew",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 8,
+          "end": 74
+        }
+      ]
+    },
+    {
+      "event": "grantType",
+      "type": "Creature",
+      "target": "self",
+      "untilEndOfTurn": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 76,
+          "end": 135
+        }
+      ]
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 8,
+          "end": 74
+        }
+      ]
+    }
+  ]
 }

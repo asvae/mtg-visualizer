@@ -31,6 +31,7 @@
       "keyword": "Hexproof",
       "target": {},
       "targeted": true,
+      "untilEndOfTurn": true,
       "value": -1,
       "annotations": [
         {
@@ -46,6 +47,7 @@
       "keyword": "Indestructible",
       "target": {},
       "targeted": true,
+      "untilEndOfTurn": true,
       "value": -1,
       "annotations": [
         {
@@ -61,6 +63,7 @@
       "keyword": "Hexproof",
       "controller": "you",
       "target": {},
+      "untilEndOfTurn": true,
       "value": -1,
       "annotations": [
         {
@@ -76,6 +79,7 @@
       "keyword": "Indestructible",
       "controller": "you",
       "target": {},
+      "untilEndOfTurn": true,
       "value": -1,
       "annotations": [
         {

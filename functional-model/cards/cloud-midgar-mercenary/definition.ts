@@ -5,17 +5,16 @@ export const cloudMidgarMercenary: CardDefinition = {
   manaCost: '{W}{W}',
   typeLine: 'Legendary Creature — Human Soldier Mercenary',
 
-  staticAbilities: [
-    // A real conditional trigger-doubling effect ("if equipped, ... triggers
-    // an additional time") — Cloud's own Panharmonicon-style static. No
-    // trigger-multiplying machinery exists in this model (resolveCard()
-    // dispatches a named trigger exactly once per scenario call), so left
-    // as text rather than a fabricated doubling mechanism. Wording matches
-    // real Scryfall oracle text (data/fin/fin_scryfall.json), not the
-    // slightly older cardsfolder script wording ("an ability" vs "a
-    // triggered ability").
-    'As long as this is equipped, if a triggered ability of this or an Equipment attached to it triggers, that ability triggers an additional time.',
-  ],
+  // Real "Panharmonicon effect" (ENGINE_GAPS.md gap #13, closed
+  // 2026-09-12) — "As long as this is equipped, if a triggered ability of
+  // this or an Equipment attached to it triggers, that ability triggers an
+  // additional time." (real Scryfall oracle text, data/fin/
+  // fin_scryfall.json — matches, not the slightly older cardsfolder script
+  // wording "an ability" vs "a triggered ability"). No `causedBy`
+  // restriction at all — ANY triggered ability of Cloud himself OR of
+  // whatever's attached to him doubles, gated purely on "genuinely equipped
+  // right now" (`state.ts`'s own `shouldDoubleTrigger`/`triggerDoublingGrantApplies`).
+  triggerDoubling: [{ scope: 'selfAndAttachedEquipment' }],
 
   triggers: [
     {

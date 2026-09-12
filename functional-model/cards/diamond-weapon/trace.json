@@ -1,11 +1,33 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "enters the battlefield, no resolvable effect (a vanilla body plus real static text — see definition.ts comment)",
+      "setup": "you: 9 Forest(s); opp0: 1 Mountain(s)",
+      "action": "real engine playthrough: cast -> opponent attacks -> Diamond Weapon blocks -> real combat damage, combat-damage-prevention shield genuinely fires",
+      "result": "Diamond Weapon is cast for {7}{G}{G}; a real opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — real 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield genuinely PREVENTS the 5 combat damage it would otherwise take (a real fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's real 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a real, documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.",
       "raw": {
-        "result": "enters the battlefield, no resolvable effect (a vanilla body plus real static text — see definition.ts comment)"
+        "result": "Diamond Weapon is cast for {7}{G}{G}; a real opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — real 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield genuinely PREVENTS the 5 combat damage it would otherwise take (a real fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's real 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a real, documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "libraryCount": 10
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Mountain"
+            ],
+            "libraryCount": 10
+          }
+        ]
       }
     },
     "log": [
@@ -17,30 +39,49 @@
         "cost": "{7}{G}{G}"
       },
       {
-        "fn": "enters",
-        "card": "Diamond Weapon",
-        "instanceId": 1,
-        "zone": "Battlefield"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
       {
-        "fn": "cast",
-        "card": "Diamond Weapon",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{7}{G}{G}"
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Diamond Weapon"
       },
       {
         "fn": "enters",
@@ -49,9 +90,106 @@
         "zone": "Battlefield"
       },
       {
-        "fn": "legendRule",
-        "card": "Diamond Weapon",
-        "player": "you"
+        "fn": "enters",
+        "card": "Hill Gigas",
+        "zone": "Battlefield",
+        "power": 5,
+        "toughness": 4,
+        "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "tap",
+        "target": "Hill Gigas",
+        "id": 34
+      },
+      {
+        "fn": "attack",
+        "card": "Hill Gigas",
+        "id": 34
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "block",
+        "blocker": "Diamond Weapon",
+        "blockerId": 33,
+        "attacker": "Hill Gigas",
+        "attackerId": 34
+      },
+      {
+        "fn": "damagePrevented",
+        "target": "Diamond Weapon",
+        "id": 33,
+        "cause": "combat"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Diamond Weapon ({7}{G}{G})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 10
+      },
+      {
+        "label": "Real opponent attacker: Hill Gigas (5/4, Trample/Haste)",
+        "from": 11
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 12
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 15
+      },
+      {
+        "label": "Declare Hill Gigas as attacker",
+        "from": 16
+      },
+      {
+        "label": "Advance one step",
+        "from": 18
+      },
+      {
+        "label": "Declare Diamond Weapon as blocker",
+        "from": 19
+      },
+      {
+        "label": "Resolve combat damage",
+        "from": 20
       }
     ]
   }

@@ -142,6 +142,70 @@ describe('turn/phase structure', () => {
     expect(theirs.damageMarked).toBe(0);
   });
 
+  it('Cleanup ends "until end of turn" keyword grants, game-wide (514.2)', () => {
+    // Regression: Dion, Bahamut's Dominant (fin/16) — Bahamut's own "Wings
+    // of Light... gain flying until end of turn" chapter effect had been
+    // wired to a bare, permanent `grantKeyword` (this pool's own default
+    // for every keyword grant with no `untilEndOfTurn` flag), so its
+    // Knight token kept showing Flying through the opponent's own
+    // subsequent turns forever — never expiring, unlike the real card.
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    const mine = state.addCard(p1, 'Battlefield', { name: 'Mine', types: ['Creature'] });
+    const theirs = state.addCard(p2, 'Battlefield', { name: 'Theirs', types: ['Creature'] });
+    state.grantKeyword(mine, 'Flying', { untilEndOfTurn: true });
+    state.grantKeyword(theirs, 'Menace', { untilEndOfTurn: true });
+    state.grantKeyword(mine, 'Vigilance'); // a real, permanent grant (no flag) is unaffected
+    let turn = startGame();
+    for (let i = 0; i < PHASES.length - 1; i++) turn = advancePhase(state, turn, [p1, p2]); // -> Cleanup
+    expect(mine.keywords).not.toContain('Flying');
+    expect(theirs.keywords).not.toContain('Menace');
+    expect(mine.keywords).toContain('Vigilance');
+  });
+
+  it('a real attackedThisTurn flag (set the way engine.ts\'s declareAttackers does — ENGINE_GAPS.md gap #16) persists through the rest of the turn, then clears at Cleanup', () => {
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    const attacker = state.addCard(p1, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    // Simulating exactly what engine.ts's own `declareAttackers` does at the
+    // real Declare Attackers step (this file's own scope is state.ts/
+    // turn.ts primitives, not engine.ts — same "call the state.ts primitive
+    // directly" pattern the "until end of turn" keyword-grant test above
+    // already uses for `state.grantKeyword`).
+    attacker.attackedThisTurn = true;
+    let turn = startGame();
+    // Advance through the rest of THIS turn (Declare Attackers through
+    // Main2/EndOfTurn) — the flag must stay real and set the whole way,
+    // not just the instant it was declared.
+    for (let i = 0; i < PHASES.length - 2; i++) {
+      turn = advancePhase(state, turn, [p1, p2]);
+      expect(attacker.attackedThisTurn).toBe(true);
+    }
+    expect(currentPhase(turn)).toBe('EndOfTurn');
+    expect(attacker.attackedThisTurn).toBe(true);
+    // Cleanup — the real, game-wide reset (`state.clearAttackedThisTurn`).
+    turn = advancePhase(state, turn, [p1, p2]);
+    expect(currentPhase(turn)).toBe('Cleanup');
+    expect(attacker.attackedThisTurn).toBe(false);
+  });
+
+  it('attackedThisTurn does not persist into the next turn (real per-turn reset, not a one-time clear)', () => {
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    const attacker = state.addCard(p1, 'Battlefield', { name: 'Attacker', types: ['Creature'] });
+    let turn = startGame();
+    for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 2, real Cleanup already ran once
+    expect(turn.turnNumber).toBe(2);
+    expect(attacker.attackedThisTurn).toBeFalsy(); // never set this turn either — stays off, not left over from a stale true
+    attacker.attackedThisTurn = true; // attacks again, turn 2
+    for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 3
+    expect(turn.turnNumber).toBe(3);
+    expect(attacker.attackedThisTurn).toBe(false); // real per-turn reset, not carried over
+  });
+
   it('an extra turn queued for a player takes priority over the normal round-robin rotation (500.7)', () => {
     const state = new GameState();
     const p1 = state.addPlayer('p1');

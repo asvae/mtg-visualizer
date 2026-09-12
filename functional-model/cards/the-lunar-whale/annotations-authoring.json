@@ -1,0 +1,32 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Artifact — Vehicle",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Artifact — Vehicle",
+      "highlight": "Artifact"
+    },
+    {
+      "sourceText": "Crew 1",
+      "highlight": "Crew 1"
+    },
+    {
+      "sourceText": "Crew 1",
+      "highlight": "Crew 1"
+    },
+    {
+      "sourceText": "As long as The Lunar Whale attacked this turn, you may play the top card of your library.",
+      "highlight": "you may play the top card of your library"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Crew 1",
+      "highlight": "Crew 1"
+    }
+  ]
+}

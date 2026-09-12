@@ -1,0 +1,24 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Faerie",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Faerie",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Whenever this creature attacks, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+      "highlight": "surveil 1"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever this creature attacks, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+      "highlight": "this creature attacks"
+    }
+  ]
+}

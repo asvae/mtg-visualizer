@@ -8,5 +8,5 @@ export const scenarios: Scenario[] = [
     you: { creaturesCount: 1 },
     opponents: [{ creaturesCount: 1 }],
   },
-  { result: 'the opponent discards a card (front of hand — no real player choice of which)', castFrom: 'hand', mode: 1, opponents: [{ handCount: 1 }] },
+  { result: 'the opponent discards a card (front of hand — no player choice of which)', castFrom: 'hand', mode: 1, opponents: [{ handCount: 1 }] },
 ];

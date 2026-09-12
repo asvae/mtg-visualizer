@@ -29,14 +29,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1891,
+        "id": 2,
         "power": 3,
         "toughness": 3
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1892,
+        "id": 3,
         "power": 3,
         "toughness": 3
       },
@@ -81,15 +81,15 @@
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1895,
+        "target": "Grizzly Bears",
+        "id": 6,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-1",
-        "id": 1896,
+        "target": "Grizzly Bears",
+        "id": 7,
         "zone": "Hand",
         "controller": "you"
       },
@@ -134,8 +134,8 @@
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1899,
+        "target": "Grizzly Bears",
+        "id": 10,
         "zone": "Hand",
         "controller": "you"
       },

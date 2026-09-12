@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "activated ({4}{W}{W}, {T})",
-      "result": "activated (no resolvable effect in this model — keyword-only grants are not mechanically enforced)",
+      "result": "activates {4}{W}{W}, {T}: creatures you control (2 Grizzly Bears) gain flying and lifelink until end of turn",
       "raw": {
-        "result": "activated (no resolvable effect in this model — keyword-only grants are not mechanically enforced)",
+        "result": "activates {4}{W}{W}, {T}: creatures you control (2 Grizzly Bears) gain flying and lifelink until end of turn",
         "you": {
           "creaturesCount": 2
         }
@@ -16,7 +16,80 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
+        "id": 4,
         "cost": "{4}{W}{W}, {T}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 2,
+        "keyword": "Flying"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 3,
+        "keyword": "Flying"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 2,
+        "keyword": "Lifelink"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Grizzly Bears",
+        "id": 3,
+        "keyword": "Lifelink"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({4}{W}{W}, {T}), gains 3 life",
+      "result": "a real lifegain event (3 life) is genuinely DOUBLED to 6 by this card's own presence on the battlefield (CR 614.2)",
+      "raw": {
+        "result": "a real lifegain event (3 life) is genuinely DOUBLED to 6 by this card's own presence on the battlefield (CR 614.2)",
+        "playerGainsLife": {
+          "amount": 3
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "The Wind Crystal",
+        "instanceId": 1,
+        "id": 6,
+        "cost": "{4}{W}{W}, {T}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 6,
+        "requestedAmount": 3
       }
     ]
   },
@@ -35,7 +108,18 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
+        "id": 8,
         "cost": "{4}{W}{W}, {T}"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 0
       },
       {
         "fn": "legendRule",

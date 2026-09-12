@@ -7,7 +7,14 @@ export const whiteAuracite: CardDefinition = {
 
   triggers: [
     {
+      // Real 603.6b auto-fire (matching weapons-vendor's/cloud-midgar-
+      // mercenary's own convention) — needed so an engine-piloted
+      // `pilotResolveTop` fires this for real (added 2026-09-12 alongside
+      // this card's migration to the unified Fact/annotations model, so
+      // the baseline self-cast/self-enters facts have real trace evidence),
+      // rather than requiring a scenario to name it explicitly.
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           // Real Oblivion Ring shape: "exile target nonland permanent an
@@ -17,13 +24,17 @@ export const whiteAuracite: CardDefinition = {
           // opponent battlefield pool by `!isLand()`, is the honest shape.
           // The "until this leaves the battlefield" return condition has no
           // tracked linkage anywhere in this model (no card built so far
-          // returns an exiled permanent on its own leaving play) — real
-          // text only, not modeled.
+          // returns an exiled permanent on its own leaving play — checked
+          // the rest of the pool while migrating this card's own facts:
+          // champions-of-the-perfect/y-shtola-rhul/zenos-yae-galvus-shinryu-
+          // transcendent-rival have the identical real mechanic and are
+          // equally unmodeled, so this is a genuine pool-wide engine gap,
+          // not a one-card oversight) — real text only, not modeled.
           kind: 'custom',
           describe: 'exile target nonland permanent an opponent controls until this artifact leaves the battlefield',
           run: (ctx: EffectContext, actions: Actions) => {
             const pool = ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield')).filter((c) => !c.isLand());
-            if (pool.length > 0) actions.moveTo(actions.chooseTarget(pool), 'Exile');
+            if (pool.length > 0) actions.moveTo(actions.chooseTarget(pool, ctx.preferTarget), 'Exile');
           },
         } satisfies Effect,
       ],

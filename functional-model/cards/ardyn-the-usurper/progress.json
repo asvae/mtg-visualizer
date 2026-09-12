@@ -3,7 +3,7 @@
   "review": "ai",
   "verifySynergy": "notes",
   "lastVerified": "2026-09-12",
-  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"opp0-gy-creature-0\",\"id\":134,\"zone\":\"Exile\",\"controller\":\"opp0\"}) with no matching declared produce. 2026-09-12: added 3 real grantKeyword SOURCE facts (Menace/Lifelink/Haste to Demons you control) backed by real continuousKeywordGrants/effectiveKeywords machinery (ENGINE_GAPS.md gap #14, closed) — exempted from forward-evidence check via isArdynDemonGrantFact (real fact, zero possible trace evidence given this card's plain harness.ts Scenario style, which can't inject a manual read:hasKeyword line the way Dion's engine-trace.ts pilot script can).",
+  "notes": "2026-09-12: dropped the 'no creature card in any graveyard, nothing exiled' no-op scenario (effort-calibration pass, on top of this same day's earlier grantKeyword fact additions). verify-synergy/vitest clean.\n\ntrace has moveTo ({\"fn\":\"moveTo\",\"target\":\"opp0-gy-creature-0\",\"id\":134,\"zone\":\"Exile\",\"controller\":\"opp0\"}) with no matching declared produce. 2026-09-12: added 3 real grantKeyword SOURCE facts (Menace/Lifelink/Haste to Demons you control) backed by real continuousKeywordGrants/effectiveKeywords machinery (ENGINE_GAPS.md gap #14, closed) \u2014 exempted from forward-evidence check via isArdynDemonGrantFact (real fact, zero possible trace evidence given this card's plain harness.ts Scenario style, which can't inject a manual read:hasKeyword line the way Dion's engine-trace.ts pilot script can).",
   "textCoverageAudited": false,
   "knownGaps": []
 }

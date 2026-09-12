@@ -25,6 +25,12 @@
       "target": "self",
       "value": 1,
       "face": "front"
+    },
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "value": 5,
+      "face": "back"
     }
   ],
   "sink": []

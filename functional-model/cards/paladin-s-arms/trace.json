@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then a real Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
+      "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
       "raw": {
-        "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then a real Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
+        "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
         "trigger": "onEnter",
         "you": {
           "creaturesCount": 1
@@ -22,6 +22,7 @@
         "fn": "trigger",
         "card": "Paladin's Arms",
         "instanceId": 1,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -44,6 +45,7 @@
         "fn": "activate",
         "card": "Paladin's Arms",
         "instanceId": 1,
+        "id": 3,
         "cost": "{4}"
       },
       {

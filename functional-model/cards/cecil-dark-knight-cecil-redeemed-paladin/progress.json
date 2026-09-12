@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Cecil, Dark Knight\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "lastVerified": "2026-09-12",
+  "notes": "2026-09-12 (later same day): trace.json had gone stale — a later same-day agent edited scenarios.ts (09:30) without re-running run-scenarios.mjs, leaving trace.json at its earlier 04:26 snapshot; verify-synergy.mjs was correctly failing for real (event:lifegain had no supporting trace line), not concurrent-session noise as repeatedly assumed through the day. Fixed by regenerating via `npx vite-node functional-model/scripts/run-scenarios.mjs --slug=cecil-dark-knight-cecil-redeemed-paladin` (scoped, not the unscoped/no-slug form) — no logic bug, no further scenario/definition change needed. verify-synergy.mjs: now note-only (soft, non-fail).\n\n2026-09-12: restored real lifegain SOURCE fact (face:'back') for Cecil, Redeemed Paladin's own printed Lifelink (CR 702.15e exception, missed by the original bare-keyword rule since it predates this exception). Added a manual {face:'back', dealsCombatDamage} probe scenario (keywordScenarios only checks the front face). verify-synergy/vitest clean.\n\ntrace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Cecil, Dark Knight\",\"zone\":\"Exile\"}) with no matching declared produce",
   "textCoverageAudited": false,
   "knownGaps": [
     "transform exile-then-return has no produce fact (informational note)"

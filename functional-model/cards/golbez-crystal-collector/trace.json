@@ -53,12 +53,12 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-1",
+        "target": "Mind Stone",
         "result": true
       },
       {
@@ -98,22 +98,22 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-1",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-2",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-3",
+        "target": "Mind Stone",
         "result": true
       },
       {
@@ -130,18 +130,18 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": 1
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1007,
+        "target": "Grizzly Bears",
+        "id": 13,
         "zone": "Hand",
         "controller": "you"
       }
@@ -180,42 +180,42 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-1",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-2",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-3",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-4",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-5",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-6",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-7",
+        "target": "Mind Stone",
         "result": true
       },
       {
@@ -232,18 +232,18 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:getNetPower",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": 1
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1018,
+        "target": "Grizzly Bears",
+        "id": 24,
         "zone": "Hand",
         "controller": "you"
       },

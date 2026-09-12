@@ -13,7 +13,7 @@
 //     trace evidence at all; an AGGREGATE read (read:getCardsIn/
 //     getCreaturesInPlay/getLandsInPlay) with no matching declared want.
 //   - SOFT notes (printed, don't fail the run): a produce-relevant ACTION
-//     (surveil/equip/dig/...) with no
+//     (equip/dig/...) with no
 //     matching declared produce. `drawCard`/`drawCards` were promoted off
 //     this parked list 2026-09-05 (Elrond, Moon-Reader's own real "draw a
 //     card" trigger) — a real, checkable `event: 'drawCard'` produce now,
@@ -125,8 +125,20 @@ function producedZone(entry, cardName) {
 // still returns exactly one, same values as before.
 function producedEvents(entry, cardName) {
   switch (entry.fn) {
-    case 'gainLife':
-      return [{ event: 'lifegain', side: entry.player === 'you' ? 'you' : 'opp' }];
+    case 'gainLife': {
+      const events = [{ event: 'lifegain', side: entry.player === 'you' ? 'you' : 'opp' }];
+      // The Wind Crystal's own real CR 614.2 lifegain-doubling replacement
+      // (ENGINE_GAPS.md gap #8b, closed 2026-09-12) — `harness.ts`'s own
+      // `loggingPlayer.gainLife` now logs the REAL, post-replacement `amount`
+      // alongside the nominal `requestedAmount` whenever they genuinely
+      // differ (additive field, `.claude/contracts/state-event-format.md`) —
+      // a real, concrete "the amount was actually doubled" signal, not an
+      // assumption from the card's own name/text.
+      if (entry.requestedAmount !== undefined && entry.amount > entry.requestedAmount) {
+        events.push({ event: 'lifegainDouble', side: entry.player === 'you' ? 'you' : 'opp' });
+      }
+      return events;
+    }
     case 'addMana':
       // Promoted the same way drawCard was (2026-09-05) — see card.ts's
       // own `Effect` doc comment on `addMana` for why this exists as a
@@ -134,10 +146,50 @@ function producedEvents(entry, cardName) {
       return [{ event: 'addMana', side: entry.player === 'you' ? 'you' : 'opp' }];
     case 'loseLife':
       return [{ event: 'lifeloss', side: entry.player === 'you' ? 'you' : 'opp' }];
+    case 'discard':
+      // Promoted (2026-09-12, Qiqirn Merchant/fin-65's own real "Draw a
+      // card, then discard a card") — `producedZone` above already reads
+      // this same `fn:'discard'` line for its own zone-shaped (Graveyard)
+      // evidence, but a card whose own real effect just discards a card as
+      // part of what it DOES (not a self-referencing discard-as-COST the
+      // way Cloudbound Moogle's Plainscycling models it, `isCloudboundMoogle
+      // DiscardSelfWant`/`isIceFlanDiscardSelfWant`'s own sibling exemptions
+      // — see those doc comments) needs the EVENT-shaped sibling fact too,
+      // same "one action, two simultaneously-true fact shapes" pattern
+      // `sacrifice`/`destroy` already establish above. `harness.ts`'s own
+      // `loggingActions.discard` always logs the scenario's own `player`
+      // field (never a bare object name needing `sideOf`'s guess), same
+      // shape `gainLife`/`loseLife` already use.
+      return [{ event: 'discard', side: entry.player === 'you' ? 'you' : 'opp' }];
     case 'putCounter':
       return [{ event: 'putCounter', counterType: entry.counterType, side: undefined }];
     case 'dealDamage':
       return [{ event: 'damage', side: 'you' }];
+    // Real CR 614.2 damage-prevention shields (ENGINE_GAPS.md gap #8,
+    // closed 2026-09-12) — `harness.ts`'s own `loggingActions.dealDamage`
+    // (any damage) and `engine-trace.ts`'s own `pilotResolveCombatDamage`
+    // (real 510 combat damage) both log this REPLACING `dealDamage` entirely
+    // (never both — see either function's own doc comment: the damage
+    // event genuinely never happened, so there's no "amount actually dealt"
+    // to also log) whenever a real shield ('DamagePrevention'/
+    // 'CombatDamagePrevention', card.ts's own `Keyword` doc comment) fires.
+    // Crystal Fragments/Summon: Alexander's own chapter I/II, Diamond
+    // Weapon's own printed "Immune" clause are the two real cards.
+    case 'damagePrevented':
+      return [{ event: 'preventDamage', side: sideOf(entry, cardName) }];
+    // Real coin-flip resolution + Edgar, King of Figaro's own Two-Headed
+    // Coin replacement (ENGINE_GAPS.md gap #15, closed 2026-09-12) —
+    // `state.flipCoin`'s own real return value, logged verbatim by whoever
+    // pilots it (`entry.forced` — real, present ONLY when the caller's own
+    // requested outcome was genuinely overridden, same "additive field,
+    // present only when true" convention `untilEndOfTurn` already uses).
+    // `event:'coinFlip'` itself (the flip happening, no vocabulary change
+    // from The Gold Saucer's own 2026-09-09 precedent) stays the fallback
+    // for a real, non-forced flip; `event:'winCoinFlip'` is genuinely new
+    // vocabulary for the REPLACEMENT specifically (see synergy.ts's own
+    // `describeFact` doc comment on why these are two different claims).
+    case 'coinFlip':
+      return [{ event: entry.forced ? 'winCoinFlip' : 'coinFlip', side: entry.player === 'you' ? 'you' : 'opp' }];
     case 'grantKeyword':
       return [{ event: 'grantKeyword', keyword: entry.keyword, side: undefined }];
     case 'counter':
@@ -271,6 +323,18 @@ function producedEvents(entry, cardName) {
     // own evidence path here same as any other event fact.
     case 'cast':
       return [{ event: 'cast', side: 'you' }];
+    // CR 601/305's own umbrella "play" (ENGINE_GAPS.md gap #16, closed
+    // 2026-09-12) — The Lunar Whale's own real "As long as The Lunar Whale
+    // attacked this turn, you may play the top card of your library" now has
+    // a real, engine-checked mechanism behind it (`engine.ts`'s
+    // `canPlayFromLibraryTop`/`playFromLibraryTop`, `card.ts`'s new
+    // `kind:'playFromLibraryTop'` Effect) — `engine-trace.ts`'s own
+    // `pilotActions` override logs a real `fn:'play'` line before dispatching
+    // to the underlying real `playLand`/`cast`, same "cast"/"playLand"
+    // treatment immediately above. Unconditional `side:'you'` — no FIN
+    // scenario plays an opponent's library top through this path.
+    case 'play':
+      return [{ event: 'play', side: 'you' }];
     // Promoted off `PARKED_ACTION_FNS` (2026-09-11, user's own explicit
     // ask: "we need it, otherwise fin8 [Auron's Inspiration] pretty much
     // does nothing") — a deliberately GENERIC catch-all for a real P/T-boost
@@ -324,6 +388,19 @@ function producedEvents(entry, cardName) {
     // EFFECT, never cost payment double-counted as a produce.
     case 'tap':
       return [{ event: 'tap', side: sideOf(entry, cardName) }];
+    // Promoted off `PARKED_ACTION_FNS` (2026-09-12, Magic Damper/fin-61's own
+    // real "Untap it." — the first card in the pool whose own effect, not
+    // just an untap-as-cost-refund, is a real untap). `card.ts`'s own
+    // `untapTarget` Effect kind (`Card.untap()`/`UntapEffect`, forge-game)
+    // already existed for exactly this card before this pass — this was
+    // purely a Fact-vocabulary gap, same "engine machinery real, only the
+    // fact vocabulary was parked" shape `tap`'s own promotion above already
+    // established. `loggingActions.untap` (harness.ts) logs a bare object
+    // NAME (`target`), no `controller` field at all (unlike `tap`, which
+    // gained one) — reuses `sideOf`'s own name-guessing fallback, same as
+    // `tap` before its own real controller field existed.
+    case 'untap':
+      return [{ event: 'untap', side: sideOf(entry, cardName) }];
     // Promoted off `PARKED_ACTION_FNS` (2026-09-12, Magitek Armor/fin-24's
     // own real Crew-triggered "becomes an artifact creature until end of
     // turn") — `loggingActions.animate` (harness.ts) logs a real `types`
@@ -376,6 +453,22 @@ function producedEvents(entry, cardName) {
     // and not part of this reconciliation.
     case 'gainControl':
       return [{ event: 'gainControl', side: 'you' }];
+    // Promoted off `PARKED_ACTION_FNS` (2026-09-12, Dreams of Laguna/fin-50's
+    // own real "Surveil 1, then draw a card" — the first card in the pool
+    // whose own effect needs `event:'surveil'` as REAL, checkable vocabulary
+    // rather than the parked/no-evidence-possible status it had before).
+    // `harness.ts`'s own `loggingActions.surveil` already logs a real
+    // `{fn:'surveil', player, qty}` line for every real `actions.surveil`
+    // call (`card.ts`'s own `kind:'surveil'` Effect, wired since before this
+    // promotion — this was purely a Fact-vocabulary gap, not an engine gap,
+    // same shape every other "parked -> real" promotion this file already
+    // has). `qty` is deliberately NOT compared here (no fact anywhere needs
+    // to distinguish "surveil 1" from "surveil 2" for MATCHING purposes —
+    // same "generic catch-all, no amount sub-vocabulary" scope `pump`'s own
+    // promotion established); `compute-weights.mjs` reads real trace
+    // magnitude separately, for ranking, not matching.
+    case 'surveil':
+      return [{ event: 'surveil', side: entry.player === 'you' ? 'you' : 'opp' }];
     default:
       return [];
   }
@@ -418,8 +511,12 @@ function sideOf(entry, cardName) {
 // fact vocabulary, `producedEvents`'s own `case 'animate'` above.
 // `gainControl` REMOVED 2026-09-12, later still (Stiltzkin, Moogle
 // Merchant/fin-34) — promoted to real fact vocabulary, `producedEvents`'s
-// own `case 'gainControl'` above.
-const PARKED_ACTION_FNS = new Set(['surveil', 'equip', 'untap', 'dig', 'copyPermanent', 'destroyPrevented']);
+// own `case 'gainControl'` above. `surveil` REMOVED 2026-09-12, later still
+// (Dreams of Laguna/fin-50) — promoted to real fact vocabulary,
+// `producedEvents`'s own `case 'surveil'` above. `untap` REMOVED 2026-09-12,
+// later still (Magic Damper/fin-61) — promoted to real fact vocabulary,
+// `producedEvents`'s own `case 'untap'` above.
+const PARKED_ACTION_FNS = new Set(['equip', 'dig', 'copyPermanent', 'destroyPrevented']);
 // fn's that are pure lifecycle/mechanics, never produce-relevant at all.
 // `phase`/`delayUntil` added for turn.ts's real phase-advancement/delayed-
 // trigger scheduling (2026-09-05, Elrond, Moon-Reader's own "return at the
@@ -530,6 +627,37 @@ const TRIGGER_EVENT_MAP = {
   // `pilotFireTrigger` logs the real `{fn:'trigger', name:
   // 'onCastLegendarySpell'}` bracket this maps off of.
   onCastLegendarySpell: 'cast',
+  // The Prima Vista's own real "Whenever you cast a noncreature spell, if
+  // at least four mana was spent to cast it, ... becomes an artifact
+  // creature until end of turn" — same generic Constraints-shaped `'cast'`
+  // event Venat's own onCastLegendarySpell above established (not a bespoke
+  // `castNoncreatureSpell` string), for the same reason: this sink's own
+  // `target:{types:{not:['Creature']},cmc:{min:4}}` filter is what narrows
+  // it, not the event name. The `cmc:{min:4}` half is honest-but-currently-
+  // unsatisfiable — no producer's `CardDefinition.cmc` is populated pool-
+  // wide (Phoenix Down's own already-documented gap), and this engine has
+  // no "mana actually spent" tracking at all (a strictly deeper gap than
+  // the cmc opt-in field: even a populated `cmc` would only approximate
+  // "mana spent," which can exceed mana value via additional/kicker costs)
+  // — kept anyway per the "correctness over match count" precedent
+  // (SYNERGY_DESIGN.md, Phoenix Down). Real evidence for the WANT itself:
+  // this card's own scenario manually fires `{fn:'trigger', name:
+  // 'onCastNoncreatureSpell4Mana'}` (no real "cast another spell" trace
+  // exists in this card's own harness-style scenario — same documented
+  // limitation as every other manually-fired trigger name in this map).
+  onCastNoncreatureSpell4Mana: 'cast',
+  // Rook Turret's own real "Whenever another artifact you control enters,
+  // you may draw a card. If you do, discard a card." (fin/69, 2026-09-12) —
+  // same shape/precedent as `onOtherElfEnters`/`onOtherCreatureEnters`
+  // above (a filtered "another X enters" trigger condition, the filter
+  // living on the fact's own `types`, not the trigger name), left
+  // deliberately unmapped until now per this map's own "add when a card
+  // actually declares the want" discipline (SYNERGY_DESIGN.md's
+  // Implementation notes already flagged this exact trigger name as
+  // unmapped-on-purpose while `wants:[]`). Real evidence: this card's own
+  // scenario already logs a real `{fn:'trigger', name:'onArtifactEnters'}`
+  // bracket.
+  onArtifactEnters: 'entersBattlefield',
 };
 // Triggers whose very existence already implies the card left the
 // battlefield — the harness deliberately does NOT log a real zone-change
@@ -956,25 +1084,51 @@ function isAuronsInspirationBroadcastPumpFact(p, card) {
 }
 
 /**
- * Crystal Fragments' own real "Equipped creature gets +1/+1" — same real,
- * pool-wide engine gap class as Auron's Inspiration above (no live
- * continuous-effect/layer-7c pipeline for an Equipment's own static bonus
- * reaching whatever creature it's attached to — checked EVERY Equipment
- * `definition.ts` in this pool, e.g. excalibur-ii/buster-sword/the-
- * masamune/ultima-weapon/lion-heart/samurai-s-katana/thief-s-knife, and all
- * of them leave this exact line as `staticAbilities` text only, never a
- * resolvable `Effect` — this is not a one-card oversight, it's the
- * established, consistent treatment for "equipped creature gets +N/+N"
- * pool-wide). No scenario addition can produce real `fn:'pump'` trace
- * evidence for this fact without first building that missing continuous-
- * effect machinery — a real, separate, larger engine task, not a one-card
- * fix. Deliberately scoped to THIS one card/fact (not a blanket "any
- * unimplemented pump is fine" exemption), same discipline
- * `isAuronsInspirationBroadcastPumpFact` above already established.
+ * Matoya, Archon Elder's own real "Whenever you scry or surveil, draw a
+ * card." (fin/62) — the SCRY half of its two-trigger pair (`onScry`/
+ * `onSurveil`, matching Forge's own real script's separate Mode$ Scry/
+ * Mode$ Surveil abilities that both run the same TrigDraw). `surveil` is
+ * fully wired, real engine vocabulary (`card.ts`'s own `kind:'surveil'`
+ * Effect, `actions.surveil`/`state.ts`, exercised for real by Dreams of
+ * Laguna/fin-50), but `scry` has ZERO implementation anywhere in this
+ * engine — checked directly: `interfaces.ts`'s own `declare function
+ * scry(player, qty): void` is a bare Forge-signature mirror (same doc-only
+ * treatment every `interfaces.ts` entry gets before it's actually wired),
+ * with no `Effect` kind, no `Actions.scry`, no `state.ts` method anywhere
+ * in the pool. There is no possible scenario addition that could produce
+ * real `fn:'scry'` (or any other) trace evidence for this want without
+ * first building that missing action from scratch — a real, separate
+ * engine task, not a one-card authoring gap. Same "real fact, real
+ * documented wall, zero achievable evidence" tolerance
+ * `isAuronsInspirationBroadcastPumpFact` already established for a produce
+ * fact, extended here to a bare event-shaped SINK want. Deliberately
+ * scoped to THIS one card/event (not a blanket "any unimplemented event
+ * want is fine" exemption) — the `onSurveil` sibling sink on this SAME
+ * card is NOT exempted and does get real evidence (this card's own
+ * scenarios.ts calls the real `actions.surveil`, then fires `onSurveil`
+ * manually).
  */
-function isCrystalFragmentsEquippedPumpFact(p, card) {
-  return p.event === 'pump' && card.name === 'Crystal Fragments';
+function isMatoyaScryBroadcastWant(w, card) {
+  return w.event === 'scry' && card.name === 'Matoya, Archon Elder';
 }
+
+/**
+ * NOTE (ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12): Crystal
+ * Fragments' own "Equipped creature gets +1/+1" used to be exempted here
+ * (`isCrystalFragmentsEquippedPumpFact`) as a structural engine gap — no
+ * pipeline existed anywhere in this model for a static P/T bonus flowing
+ * from an Equipment to whatever it's attached to. It's real now:
+ * `card.ts`'s new `CardDefinition.continuousPTGrants` (a sibling field to
+ * `continuousKeywordGrants`), read live by `state.ts`'s `effectivePT`, and
+ * this card's own `scenarios.ts` (a real `engine-trace.ts` pilot, unlike
+ * its sibling cards below) now pushes a genuine `read:getNetPower` line
+ * proving the recalculation — so the `pump` fact is evidence-backed like
+ * any other (via the pre-existing, generic `case 'read:getNetPower'`
+ * branch in `producedEvents` above, unchanged) and no longer needs (or
+ * gets) a name-matched exemption. See `isEquippedPTGrantFact` below for the
+ * sibling cards that DO still need one (their own plain `harness.ts`
+ * Scenario[] style can't inject the same read).
+ */
 
 /**
  * Gaelicat's own real "As long as you control two or more artifacts, this
@@ -1068,27 +1222,19 @@ function isMagitekInfantryArtifactThresholdWant(w, card) {
 }
 
 /**
- * Summon: Alexander's own real "I, II — Prevent all damage that would be
- * dealt to creatures you control this turn" — a genuine, pool-wide
- * STRUCTURAL engine gap, not specific to this card: `state.ts`'s own header
- * rules out replacement/prevention effects entirely (no mechanism anywhere
- * in this model can intercept a damage event before it applies), so there
- * is no scenario addition that could ever produce real trace evidence for a
- * damage-PREVENTION fact — same "genuinely blocked, document via a real
- * fact + real named exemption" treatment `isAuronsInspirationBroadcastPumpFact`
- * already established, just for a different missing engine surface (real
- * replacement effects vs. real cross-player attacker state). `event:
- * 'preventDamage'` is genuinely new vocabulary (checked: no other pool card
- * declares it) — introduced here specifically because this real printed
- * ability (two full chapters' worth of text) would otherwise be entirely
- * absent from this card's own fact model. Scoped to THIS one card/fact,
- * same narrow-exemption discipline as the pump case above — a future
- * `preventDamage` fact still needs its own real justification, not a free
- * pass just because this name exists.
+ * NOTE (ENGINE_GAPS.md gap #8, closed 2026-09-12): Summon: Alexander's own
+ * "I, II — Prevent all damage that would be dealt to creatures you control
+ * this turn" used to be exempted here as a structural engine gap (no
+ * replacement/prevention mechanism existed). It's real now:
+ * `state.dealDamage`'s own `DamagePrevention`/`CombatDamagePrevention`
+ * keyword check (chokepoint-narrow, same shape as the STUN/FINALITY
+ * counter replacements), Chapters I/II's own
+ * `grantKeywordAll(..., 'DamagePrevention', untilEndOfTurn: true)` effect,
+ * and this card's own scenario now produces a genuine `fn:'damagePrevented'`
+ * trace line (see the `case 'damagePrevented'` branch in `producedEvents`
+ * above) — so the `preventDamage` fact is evidence-backed like any other
+ * and no longer needs (or gets) a name-matched exemption.
  */
-function isSummonAlexanderDamagePreventionFact(p, card) {
-  return p.event === 'preventDamage' && p.face === 'back' && card.name === 'Crystal Fragments';
-}
 
 /**
  * Ardyn, the Usurper's own real "Demons you control have menace, lifelink,
@@ -1133,26 +1279,205 @@ function isEquippedKeywordGrantFact(p, card) {
 }
 
 /**
+ * The SAME real, shape-scoped exemption as `isEquippedKeywordGrantFact`
+ * above, generalized to the P/T-grant sibling family (ENGINE_GAPS.md gap
+ * #14's own follow-up, closed 2026-09-12: `card.ts`'s new
+ * `continuousPTGrants`) — Dragoon's Lance ("+1/+0"), Machinist's Arsenal
+ * (a genuinely VARIABLE per-artifact-count bonus — a real, DIFFERENT,
+ * still-open CDA gap this field structurally can't represent at all, see
+ * that card's own `definition.ts` comment; its own bare `{target:
+ * {equippedBySelf:true}}` pump fact still matches this shape regardless of
+ * WHICH reason blocks evidence), Paladin's Arms ("+2/+1"), White Mage's
+ * Staff ("+1/+1"), and Sage's Nouliths ("+1/+0") all hit the identical
+ * structural wall: their own `scenarios.ts` is a plain `harness.ts`
+ * `Scenario[]` array with no manual-log-injection field, so none of them
+ * can push the `read:getNetPower` line that WOULD constitute real evidence
+ * (the exact same generic `case 'read:getNetPower'` branch in
+ * `producedEvents` above already recognizes one, unconditionally, for any
+ * card — no new evidence plumbing needed, just a card whose own scenario
+ * can actually inject it). Crystal Fragments is the one real card in this
+ * exact clause-shape family whose `scenarios.ts` IS a real
+ * `engine-trace.ts` pilot (see that card's own scenario) and DOES now push
+ * that line — explicitly EXCLUDED from this shape check by name so its own
+ * `pump` fact is evaluated for real evidence below instead of exempted
+ * away (see the NOTE where `isCrystalFragmentsEquippedPumpFact` used to be,
+ * just above `isGaelicatArtifactThresholdPumpFact`).
+ */
+function isEquippedPTGrantFact(p, card) {
+  return card.name !== 'Crystal Fragments' && p.event === 'pump' && p.target && typeof p.target === 'object' && p.target.equippedBySelf === true;
+}
+
+/**
+ * The SAME real, shape-scoped exemption again, generalized to the
+ * creature-TYPE-grant sibling family (ENGINE_GAPS.md gap #14's own
+ * follow-up, closed 2026-09-12: `card.ts`'s new `continuousTypeGrants`) —
+ * Dragoon's Lance ("is a Knight"), Machinist's Arsenal ("is an Artificer"),
+ * Paladin's Arms ("is a Knight"), White Mage's Staff ("is a Cleric"),
+ * Sage's Nouliths ("is a Cleric"), and Astrologian's Planisphere ("is a
+ * Wizard") all hit the identical structural wall as the P/T-grant family
+ * above — none of their own `scenarios.ts` can inject the
+ * `read:hasSubtype` line that WOULD constitute real evidence (see the new
+ * `hasSubtypeReadEvidence` check below, the direct `effectiveSubtypes`
+ * analogue of `hasKeywordReadEvidence`'s own `effectiveKeywords` check). A
+ * future card with a real `engine-trace.ts` pilot script (and a real
+ * `read:hasSubtype` line) is unaffected, since `hasSubtypeReadEvidence` is
+ * checked FIRST and would already satisfy it — same "shape exemption,
+ * evidence checked first" precedent `isEquippedKeywordGrantFact`'s own doc
+ * comment already establishes.
+ */
+function isEquippedTypeGrantFact(p, card) {
+  return p.event === 'grantType' && p.target && typeof p.target === 'object' && p.target.equippedBySelf === true;
+}
+
+/**
+ * White Mage's Staff's own real "...has 'Whenever this creature attacks,
+ * you gain 1 life,'..." (fin/42) — a genuinely DIFFERENT gap class from its
+ * own sibling pump/grantType facts just above, checked and confirmed before
+ * reusing the same treatment: pump/grantType are a STATIC continuous bonus/
+ * type applied to whatever's equipped (missing a layer-7c-style broadcast
+ * pipeline); this clause instead GRANTS A WHOLE NEW TRIGGERED ABILITY (its
+ * own trigger condition — "whenever this creature attacks" — plus its own
+ * effect) to the equipped creature. No Effect kind or `Actions` member
+ * anywhere in this model grants a new triggered ability to ANOTHER
+ * permanent at all (checked `card.ts`'s full `Effect` union — closest is
+ * `grantKeywordTarget`/`grantKeywordAll`, which only ever grant a KEYWORD,
+ * never a fresh ability with its own condition+effect). Modeled honestly as
+ * a real `{event:'lifegain', controller:'you', value:1}` fact — reusing
+ * already-established `lifegain` vocabulary (same shape Lifelink's own
+ * standing exception uses) rather than inventing a new event name, since
+ * the real-world CONSEQUENCE this clause describes (you gain life) is
+ * already exactly what `lifegain` means — but genuinely inert: no
+ * `fn:'gainLife'` trace evidence is possible without first solving the
+ * ability-granting gap above, and fabricating a `gainLife` call on this
+ * card's own scenario would misrepresent an unmodeled granted trigger as a
+ * real, working effect. Scoped by card name (not by fact shape) since this
+ * is the pool's first instance of this specific gap class.
+ */
+function isWhiteMagesStaffGrantedAbilityFact(p, card) {
+  return card.name === "White Mage's Staff" && p.event === 'lifegain';
+}
+
+/**
+ * Astrologian's Planisphere's own real "...has 'Whenever you cast a
+ * noncreature spell and whenever you draw your third card each turn, put
+ * a +1/+1 counter on this creature.'" (fin/46) — the SAME real gap class
+ * `isWhiteMagesStaffGrantedAbilityFact` above documents (an Equipment
+ * granting a WHOLE NEW triggered ability, its own trigger condition plus
+ * its own effect, to whatever creature is equipped — checked `card.ts`'s
+ * full `Effect`/`Actions` surface again for this card specifically, same
+ * result: nothing grants a fresh ability to ANOTHER permanent).
+ * `definition.ts` itself documents the same call, including a real,
+ * corrected mismodel: an earlier version of this file put the counter on
+ * `target: 'self'` (the Equipment permanent), which isn't just inert, it's
+ * WRONG (the real text puts the counter on the equipped creature) — fixed
+ * by removing the fabricated engine trigger entirely and keeping only the
+ * honest fact.
+ *
+ * Generalized by SHAPE (`target.equippedBySelf === true`, same pattern
+ * `isEquippedKeywordGrantFact` above already established for the
+ * keyword-grant case), NOT by card name like
+ * `isWhiteMagesStaffGrantedAbilityFact` — this is the SECOND real card to
+ * hit this exact wall with this exact target shape, which is what
+ * `isEquippedKeywordGrantFact`'s own doc comment says justifies
+ * generalizing (a first instance is scoped by name since it might be
+ * incidental; a second real, identically-shaped instance confirms the
+ * pattern is structural). Scoped to `event: 'putCounter'` specifically
+ * (not every `equippedBySelf` produce) since `pump`/`grantType`/
+ * `grantKeyword` targeting `equippedBySelf` are a DIFFERENT, already
+ * separately-exempted gap class (a static continuous broadcast, not a
+ * granted NEW triggered ability) — conflating the two would blur two real,
+ * differently-caused gaps into one.
+ */
+function isEquipGrantedPutCounterFact(p, card) {
+  return p.event === 'putCounter' && p.target && typeof p.target === 'object' && p.target.equippedBySelf === true;
+}
+
+/**
  * Cloud, Midgar Mercenary's own real "...or an Equipment attached to it
  * triggers" — the equipment half of its Panharmonicon-style static
  * (2026-09-11, added same day the `attacking`-shaped `attachedToSelf`
  * field landed for it — see `synergy.ts`'s own `Constraints.attachedToSelf`
- * doc comment). Same real, DEEP, already-documented engine gap as the
- * SELF half's own doubling effect (ENGINE_GAPS.md gap #13: no
- * trigger-multiplying machinery anywhere in this model) — but this fact
- * is even further from any possible evidence than the self half: not only
- * would demonstrating it need a real attached-Equipment card in the
- * scenario, that Equipment would ALSO need its OWN separate triggered
- * ability that fires independently, which no scenario in this pool
- * exercises for Cloud today (nor should one be fabricated just to
- * manufacture evidence). `w.target` being a `Constraints` object (not
- * `'self'`) is exactly what distinguishes this half from the self half's
- * own real, evidenced `w.target === 'self'` check just above — scoped
- * narrowly to THIS one card/fact shape, not a blanket exemption for any
- * non-self `triggeredAbility` want a future card might declare.
+ * doc comment). The DOUBLING effect itself is still a real, DEEP,
+ * already-documented engine gap (ENGINE_GAPS.md gap #13: no
+ * trigger-multiplying machinery anywhere in this model) — but this
+ * particular want fact is only about the CONDITION ("an Equipment attached
+ * to it triggers" happening at all, not it triggering an EXTRA time), and
+ * that condition now DOES have real evidence: Cloud's own 2026-09-12 "fin
+ * 563" combo trace genuinely casts + equips the real Ultima Weapon and
+ * fires its own real `onEquippedAttacks` trigger while attached — see the
+ * new `w.target.attachedToSelf === true` branch a few lines above this
+ * function, which recognizes exactly that real evidence shape now. This
+ * exemption function is kept only as a fallback for a differently-shaped
+ * retrace that happens to lose that evidence again (e.g. a future edit to
+ * cloud-midgar-mercenary/scenarios.ts) — not because the fact is
+ * inherently unevidenceable anymore, which is no longer an accurate claim.
+ * `w.target` being a `Constraints` object (not `'self'`) is exactly what
+ * distinguishes this half from the self half's own real, evidenced
+ * `w.target === 'self'` check just above — scoped narrowly to THIS one
+ * card/fact shape, not a blanket exemption for any non-self
+ * `triggeredAbility` want a future card might declare.
  */
 function isCloudEquipmentTriggeredAbilityFact(w, card) {
   return w.event === 'triggeredAbility' && card.name === 'Cloud, Midgar Mercenary' && w.target !== 'self';
+}
+
+/**
+ * Cloud, Midgar Mercenary's own real combo trace (2026-09-12, "fin 563"
+ * scenario — cast Cloud, tutor the real Ultima Weapon, cast + equip it for
+ * real, attack, its own attack trigger fires manually). Ultima Weapon — a
+ * DIFFERENT real card's own `CardDefinition` — is deliberately reused
+ * directly (not re-authored) within this trace, so its own two real
+ * Battlefield reads show up here too: `ctx.you.getCreaturesInPlay()`
+ * (choosing the equip target) and the destroy effect's own
+ * `owner:'opponents'` battlefield search (finding a legal creature to
+ * destroy). Both are real, but they're ULTIMA WEAPON's own oracle-text
+ * conditions ("attach to target creature you control" / "destroy target
+ * creature an opponent controls"), not anything Cloud itself says —
+ * authoring a Cloud-side Battlefield want fact for either would misattribute
+ * a different card's own condition onto this one. Scoped to exactly these
+ * two read shapes on this one card (by name), not a blanket "any Battlefield
+ * read is fine" exemption.
+ */
+function isCloudUltimaWeaponComboRead(e, card) {
+  return card.name === 'Cloud, Midgar Mercenary' && (e.fn === 'read:getCreaturesInPlay' || e.fn === 'read:getCardsIn');
+}
+
+/**
+ * Traveling Chocobo's own real trigger-doubling combo trace (2026-09-12,
+ * ENGINE_GAPS.md gap #13's closure) — Ambrosia Whiteheart, a DIFFERENT real
+ * card's own `CardDefinition`, is deliberately reused directly (not
+ * re-authored) to demonstrate Chocobo's own "a land or Bird entering causes
+ * a triggered ability of a permanent you control to trigger" static (the
+ * static needs SOME OTHER real permanent's own reactive trigger to double —
+ * Chocobo has no named trigger of its own at all). Ambrosia's own ETB
+ * ("return another permanent you control to hand") reads
+ * `ctx.you.getCardsIn('Battlefield')` to find its own bounce target — real,
+ * but ABROSIA's own oracle-text condition, not anything Traveling Chocobo
+ * itself says. Same "scoped to exactly this read shape on this one card by
+ * name" treatment `isCloudUltimaWeaponComboRead` above already establishes
+ * for the identical structural situation (a combo scenario reusing a
+ * different card's own effect).
+ */
+function isTravelingChocoboAmbrosiaComboRead(e, card) {
+  return card.name === 'Traveling Chocobo' && e.fn === 'read:getCardsIn';
+}
+
+/**
+ * The real "play the top card of your library" Effect (ENGINE_GAPS.md gap
+ * #16, closed 2026-09-12 — `card.ts`'s `kind:'playFromLibraryTop'`) reads
+ * `ctx.you.getCardsIn('Library')` purely to find WHAT'S currently on top to
+ * play — a real mechanical peek, not a genuine "this card wants Library-zone
+ * presence" claim the way an actual Library-zone SINK fact would assert
+ * (nothing about this effect cares whether the library is non-empty as a
+ * state to preserve; it just looks at whatever's there). Shape-scoped (ANY
+ * card whose trace shows this exact read-then-play pairing), not
+ * name-scoped like `isCloudUltimaWeaponComboRead` above, specifically so
+ * Traveling Chocobo's own identical "play lands and cast Bird spells from
+ * the top of your library" clause (fin/158, unmigrated) is covered for free
+ * once/if migrated, without re-deriving this exemption per card.
+ */
+function isPlayFromLibraryTopPeekRead(e, allEntries) {
+  return e.fn === 'read:getCardsIn' && e.zone === 'Library' && allEntries.some((other) => other.fn === 'play' && other.from === 'Library');
 }
 
 /**
@@ -1160,9 +1485,12 @@ function isCloudEquipmentTriggeredAbilityFact(w, card) {
  * Search your library for a Plains card...") — modeled as two specific
  * facts per the user's own explicit ask (2026-09-11: "sink for discard
  * self" + "tutor for Plains"), NOT as generic TypeCycling engine machinery
- * (that gap stays open — same as malboro/hill-gigas/ice-flan/balamb-t-
+ * (that gap stays open — same as malboro/hill-gigas/balamb-t-
  * rexaur/capital-city/cid-timeless-artificer's own *cycling abilities,
- * still unmodeled). No scenario/trace path can exist for either half:
+ * still unmodeled; ice-flan's own Islandcycling got the identical
+ * per-card two-fact treatment on 2026-09-12 — see
+ * `isIceFlanDiscardSelfWant`/`isIceFlanTutorFact` just below their
+ * Cloudbound Moogle counterparts). No scenario/trace path can exist for either half:
  * Plainscycling lives only as a `staticAbilities` text string on this
  * card's own `definition.ts` (never a resolvable `Effect`), same "known
  * statically, no trace needed" treatment `isCostOnlyArtifactSacrificeWant`/
@@ -1179,6 +1507,23 @@ function isCloudEquipmentTriggeredAbilityFact(w, card) {
  */
 function isCloudboundMoogleDiscardSelfWant(w, card) {
   return w.event === 'discard' && w.target === 'self' && card.name === 'Cloudbound Moogle';
+}
+/**
+ * Ice Flan's own Islandcycling (2026-09-12), the identical per-card
+ * two-fact treatment as `isCloudboundMoogleDiscardSelfWant` immediately
+ * above — same real shape (`{event:'discard', target:'self'}`, the
+ * discard-as-COST act, not a Graveyard-presence want), same "no
+ * scenario/trace path exists — Islandcycling lives only as a
+ * `staticAbilities` text string, never a resolvable `Effect`" reasoning.
+ * Deliberately scoped to THIS one card, same as its Cloudbound Moogle
+ * sibling, not generalized into one shared TypeCycling exemption (see that
+ * function's own doc comment for why a blanket exemption isn't done yet —
+ * the still-unmodeled malboro/hill-gigas/balamb-t-rexaur/capital-city/
+ * cid-timeless-artificer cards would be the natural next candidates for a
+ * real generalization, once a third real card actually needs it).
+ */
+function isIceFlanDiscardSelfWant(w, card) {
+  return w.event === 'discard' && w.target === 'self' && card.name === 'Ice Flan';
 }
 /**
  * A `{event:'tap', subject:'self', target:'self'}` SOURCE fact — the
@@ -1246,6 +1591,33 @@ function isSelfExileActivationCostFact(p) {
   return p.event === 'exile' && p.subject === 'self' && p.target === 'self';
 }
 
+// Third sibling of `isSelfTapActivationCostFact`/`isSelfExileActivationCostFact`
+// above (2026-09-12, Zack Fair/fin-45's own real "{1}, Sacrifice Zack Fair:
+// ...") — a NAMED self-sacrifice cost ("Sacrifice Zack Fair", as opposed to
+// the ONE self-sacrifice shape `unsupportedCostComponent` (engine.ts) does
+// recognize, "Sacrifice another/a/two X") is never accepted as payable
+// there either, so `canActivateAbility`/`activateAbility` always reject
+// this exact ability through the real engine — same "no real trace
+// evidence could ever exist through the normal activation pipeline"
+// situation as the {T}/exile-this-artifact costs, and, per that same doc
+// comment, this one specifically can't be fixed by modeling the sacrifice
+// as a real `{kind:'sacrifice'}` effect the way ahriman/phantom-train/
+// quina-qu-gourmet pay their own "Sacrifice another/a X" costs — doing so
+// would need real 608.2h last-known-information tracking to keep this
+// card's own "read Zack Fair's live counters/attached Equipment" logic
+// correct once it's actually gone, a real, separate, unbuilt gap.
+// Generalized by shape (any card, not scoped to Zack Fair by name) for the
+// same reason the {T}/exile siblings are: a self-sacrifice-as-cost
+// activation hits this exact wall regardless of which card prints it. Same
+// false-pass-collision guard as those two: scoped to the exact
+// `subject`/`target` shape so an unrelated real `{event:'sacrifice'}`
+// produce (Summon: Bahamut's own real Saga-rule sacrifice, e.g. — which has
+// no `subject` at all) can't accidentally satisfy this exemption's intent
+// in reverse.
+function isSelfSacrificeActivationCostFact(p) {
+  return p.event === 'sacrifice' && p.subject === 'self' && p.target === 'self';
+}
+
 function isCloudboundMoogleTutorFact(p, card) {
   return (
     card.name === 'Cloudbound Moogle' &&
@@ -1254,6 +1626,24 @@ function isCloudboundMoogleTutorFact(p, card) {
     p.types &&
     Array.isArray(p.types.has) &&
     p.types.has.includes('Plains')
+  );
+}
+/**
+ * Ice Flan's own Islandcycling tutor half (2026-09-12) — same shape/`tutor`
+ * `ZONE_MOVEMENT_NAMES` label as `isCloudboundMoogleTutorFact` immediately
+ * above, scoped to `Island` instead of `Plains`. See that function's own doc
+ * comment and `isIceFlanDiscardSelfWant`'s for the shared reasoning (no
+ * scenario/trace path exists — Islandcycling lives only as a
+ * `staticAbilities` text string).
+ */
+function isIceFlanTutorFact(p, card) {
+  return (
+    card.name === 'Ice Flan' &&
+    effectiveZone(p) === 'Hand' &&
+    p.from === 'Library' &&
+    p.types &&
+    Array.isArray(p.types.has) &&
+    p.types.has.includes('Island')
   );
 }
 
@@ -1310,6 +1700,7 @@ async function verifyCard(slug) {
       if (isSelfBattlefieldPresenceLand(p, card)) continue; // any Land's own tautological battlefield presence — see isSelfBattlefieldPresenceLand
       if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own presence — see isCoinFlipTokenSubjectFact
       if (isCloudboundMoogleTutorFact(p, card)) continue; // Plainscycling's own tutor-for-Plains half, cost-only ability — see isCloudboundMoogleTutorFact
+      if (isIceFlanTutorFact(p, card)) continue; // Islandcycling's own tutor-for-Island half, cost-only ability — see isIceFlanTutorFact
       const evidence = allEntries.some((e) => {
         const z = producedZone(e, cardName);
         return z && z.zone === zone && (!p.controller || z.side === p.controller);
@@ -1324,20 +1715,18 @@ async function verifyCard(slug) {
       if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own ETB — see isCoinFlipTokenSubjectFact
       if (isCostOnlyArtifactSacrificeFact(p, card)) continue; // the sacrifice ACT itself, cost-only, tautologically real — see isCostOnlyArtifactSacrificeFact
       if (isAuronsInspirationBroadcastPumpFact(p, card)) continue; // real fact, real documented engine gap blocks any possible trace evidence — see isAuronsInspirationBroadcastPumpFact
-      if (isCrystalFragmentsEquippedPumpFact(p, card)) continue; // real fact, real documented engine gap blocks any possible trace evidence — see isCrystalFragmentsEquippedPumpFact
       if (isGaelicatArtifactThresholdPumpFact(p, card)) continue; // real fact, real documented engine gap (no threshold-CDA machinery) — see isGaelicatArtifactThresholdPumpFact
       if (isMagitekInfantryArtifactThresholdPumpFact(p, card)) continue; // real fact, same threshold-CDA engine gap as Gaelicat — see isMagitekInfantryArtifactThresholdPumpFact
-      if (isSummonAlexanderDamagePreventionFact(p, card)) continue; // real fact, real documented engine gap blocks any possible trace evidence — see isSummonAlexanderDamagePreventionFact
       if (isSelfTapActivationCostFact(p)) continue; // the {T} cost payment itself, never logged — see isSelfTapActivationCostFact
       if (isSelfExileActivationCostFact(p)) continue; // the exile-this-artifact cost payment itself, never logged — see isSelfExileActivationCostFact
+      if (isSelfSacrificeActivationCostFact(p)) continue; // a NAMED self-sacrifice cost payment itself, never payable through canActivateAbility — see isSelfSacrificeActivationCostFact
+      if (card.name === 'The Wind Crystal' && p.event === 'costReduction') continue; // real fact (ENGINE_GAPS.md gap #7's second example, engine.ts's SpellCostReductionGrant/canCastSpell hook, 2026-09-12) — real mechanism, but demonstrating it needs a DIFFERENT spell's own cast-cost log line to differ, which this card's own scenario (its OWN grantKeywordAll activation) doesn't produce; zero possible trace evidence given this card's own scenario shape, same class as isAuronsInspirationBroadcastPumpFact
       if (isArdynDemonGrantFact(p, card)) continue; // real fact, real mechanism, zero possible evidence given this card's plain Scenario style — see isArdynDemonGrantFact
       if (isEquippedKeywordGrantFact(p, card)) continue; // real fact, real mechanism, zero possible evidence given this card's plain Scenario style — see isEquippedKeywordGrantFact
-      if (card.name === "Dragoon's Lance" && p.event === 'pump') continue; // real fact, real documented engine gap (no equip-broadcast pump pipeline) — same class as isCrystalFragmentsEquippedPumpFact
-      if (card.name === "Dragoon's Lance" && p.event === 'grantType') continue; // real fact, real documented engine gap (no dynamic type-grant-to-another-permanent pipeline) — new vocabulary, genuinely inert
-      if (card.name === "Machinist's Arsenal" && p.event === 'pump') continue; // real fact, same equip-broadcast pump gap as Dragoon's Lance — see that exemption above
-      if (card.name === "Machinist's Arsenal" && p.event === 'grantType') continue; // real fact, same dynamic type-grant-to-another-permanent gap as Dragoon's Lance — see that exemption above
-      if (card.name === "Paladin's Arms" && p.event === 'pump') continue; // real fact, same equip-broadcast pump gap as Dragoon's Lance — see that exemption above
-      if (card.name === "Paladin's Arms" && p.event === 'grantType') continue; // real fact, same dynamic type-grant-to-another-permanent gap as Dragoon's Lance — see that exemption above
+      if (isEquippedPTGrantFact(p, card)) continue; // real fact, real mechanism (Crystal Fragments excepted — see that function's own doc comment), zero possible evidence given these cards' plain Scenario style — see isEquippedPTGrantFact
+      if (isEquippedTypeGrantFact(p, card)) continue; // real fact, real mechanism, zero possible evidence given these cards' plain Scenario style — see isEquippedTypeGrantFact
+      if (isWhiteMagesStaffGrantedAbilityFact(p, card)) continue; // real fact, a genuinely different gap class from pump/grantType — see isWhiteMagesStaffGrantedAbilityFact
+      if (isEquipGrantedPutCounterFact(p, card)) continue; // real fact, same gap class as isWhiteMagesStaffGrantedAbilityFact (a granted NEW triggered ability, not a static broadcast) — see isEquipGrantedPutCounterFact
       if (p.event === 'cast' && isActivationCostPermanentBaselineFact(p, card)) continue; // see isActivationCostPermanentBaselineFact
       // A real `read:hasKeyword` line with `result:true` (2026-09-12,
       // ENGINE_GAPS.md gap #14) is ALSO real evidence for a `grantKeyword`
@@ -1354,8 +1743,26 @@ async function verifyCard(slug) {
       // the exact same live function the engine itself consults.
       const hasKeywordReadEvidence =
         p.event === 'grantKeyword' && allEntries.some((e) => e.fn === 'read:hasKeyword' && e.keyword === p.keyword && e.result === true);
+      // The direct `effectiveSubtypes` analogue of `hasKeywordReadEvidence`
+      // just above (ENGINE_GAPS.md gap #14's own follow-up, closed
+      // 2026-09-12: `card.ts`'s new `continuousTypeGrants`) — a
+      // query-time continuous type grant never fires a discrete
+      // `fn:'grantType'` ACTION either (nothing calls an `actions.grantType`
+      // for it — `state.ts`'s own `effectiveSubtypes` is a pure read, not a
+      // logged mutation), so a deliberate `hasSubtype` query against the
+      // real board state is the only possible evidence shape for this fact
+      // family too. Not yet exercised by any real card's own scenario (all
+      // 6 real `grantType`-declaring cards stay on the shape-scoped
+      // `isEquippedTypeGrantFact` exemption above instead — none has an
+      // `engine-trace.ts` pilot script that could inject this line), but
+      // wired for real now so a FUTURE card that gets one is recognized
+      // without further plumbing, same "evidence checked first" precedent
+      // `isEquippedKeywordGrantFact`'s own doc comment already establishes.
+      const hasSubtypeReadEvidence =
+        p.event === 'grantType' && allEntries.some((e) => e.fn === 'read:hasSubtype' && e.subtype === p.type && e.result === true);
       const evidence =
         hasKeywordReadEvidence ||
+        hasSubtypeReadEvidence ||
         allEntries.some((e) =>
           producedEvents(e, cardName).some(
             (ev) =>
@@ -1429,10 +1836,36 @@ async function verifyCard(slug) {
                 // still-unmodeled claim — see `isCloudEquipmentTriggeredAbilityFact`
                 // below for that half's own real, zero-evidence treatment).
                 allEntries.some((e) => e.fn === 'trigger' && e.card === cardName)
-              : false;
+              : w.event === 'triggeredAbility' && typeof w.target === 'object' && w.target?.attachedToSelf === true
+                ? // The EQUIPMENT half (2026-09-12, Cloud's own real
+                  // "fin 563" combo trace: cast Cloud, tutor + cast + equip
+                  // the real Ultima Weapon, attack, its own real
+                  // `onEquippedAttacks` trigger fires) — `isCloudEquipmentTriggeredAbilityFact`'s
+                  // own doc comment used to say this fact had "ZERO possible
+                  // evidence... nor should one be fabricated just to
+                  // manufacture evidence." That's now false: this exact
+                  // trace genuinely does it — a real `{fn:'equip', target:
+                  // cardName}` bracket (this permanent got attached to by
+                  // SOME other real card) followed anywhere later by a real
+                  // `{fn:'trigger', card: <that same equipment's name>}`
+                  // bracket (that attached permanent's OWN triggered ability
+                  // actually firing) is exactly "a triggered ability of an
+                  // Equipment attached to it triggers," read straight off
+                  // the trace, not inferred. Scoped to trace-order (the
+                  // trigger must come AFTER the equip) so an unrelated,
+                  // earlier same-named coincidence can't satisfy this.
+                  (() => {
+                    const equipIdx = allEntries.findIndex((e) => e.fn === 'equip' && e.target === cardName);
+                    if (equipIdx === -1) return false;
+                    const equipmentName = allEntries[equipIdx].equipment;
+                    return allEntries.slice(equipIdx + 1).some((e) => e.fn === 'trigger' && e.card === equipmentName);
+                  })()
+                : false;
       if (!triggerEvidence && !readEvidence) {
         if (isCloudEquipmentTriggeredAbilityFact(w, card)) continue; // see isCloudEquipmentTriggeredAbilityFact
         if (isCloudboundMoogleDiscardSelfWant(w, card)) continue; // Plainscycling's own discard-as-cost half — see isCloudboundMoogleDiscardSelfWant
+        if (isIceFlanDiscardSelfWant(w, card)) continue; // Islandcycling's own discard-as-cost half — see isIceFlanDiscardSelfWant
+        if (isMatoyaScryBroadcastWant(w, card)) continue; // no real scry action anywhere in this engine — see isMatoyaScryBroadcastWant
         // With/without diff fallback — a scenario pair whose logs differ at
         // all counts as the want being demonstrated (SYNERGY_DESIGN.md's
         // own "with/without diff" check), since this script doesn't know
@@ -1449,7 +1882,12 @@ async function verifyCard(slug) {
     if (!zone) continue;
     // `'zone' in w || 'to' in w`, not a bare `'zone' in w` — same real fix
     // as this file's own forward-direction want check above.
-    if (!sink.some((w) => ('zone' in w || 'to' in w) && wantMatchesZoneRead(w, zone))) failures.push(`trace has ${e.fn} on zone ${zone} with no matching declared want`);
+    if (!sink.some((w) => ('zone' in w || 'to' in w) && wantMatchesZoneRead(w, zone))) {
+      if (isCloudUltimaWeaponComboRead(e, card)) continue; // see isCloudUltimaWeaponComboRead
+      if (isTravelingChocoboAmbrosiaComboRead(e, card)) continue; // see isTravelingChocoboAmbrosiaComboRead
+      if (isPlayFromLibraryTopPeekRead(e, allEntries)) continue; // see isPlayFromLibraryTopPeekRead
+      failures.push(`trace has ${e.fn} on zone ${zone} with no matching declared want`);
+    }
   }
 
   // --- Reverse: every produce-relevant ACTION must be explained (soft) ---
@@ -1457,7 +1895,7 @@ async function verifyCard(slug) {
   // fn is already skipped by this loop's own guard below (`e.fn.startsWith
   // ('read:')`), same treatment every other low-level read already gets;
   // only `pump` (the real, non-`read:`-prefixed ACTION) needed adding.
-  const explainableFns = new Set(['enters', 'move', 'moveTo', 'ceasesToExist', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter', 'playLand', 'pump', 'attack', 'tap', 'animate', 'gainControl']);
+  const explainableFns = new Set(['enters', 'move', 'moveTo', 'ceasesToExist', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'damagePrevented', 'coinFlip', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter', 'playLand', 'play', 'pump', 'attack', 'tap', 'untap', 'animate', 'gainControl', 'surveil']);
   for (const e of allEntries) {
     if (IGNORED_FNS.has(e.fn) || e.fn.startsWith('read:')) continue;
     if (!explainableFns.has(e.fn)) {

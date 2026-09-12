@@ -7,9 +7,9 @@
       "value": 1
     },
     {
-      "zone": "Graveyard",
+      "event": "preventDamage",
       "controller": "you",
-      "subject": "self",
+      "target": "self",
       "value": 1
     }
   ],

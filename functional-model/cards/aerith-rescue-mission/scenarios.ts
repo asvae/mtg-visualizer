@@ -16,7 +16,7 @@ function elevatorMode(): TraceResult {
   pilotCast(pilot, cardReal, aerithRescueMission, ctx, actions);
   pilotResolveTop(pilot);
 
-  const result = 'Take the Elevator — creates three real 1/1 colorless Hero creature tokens.';
+  const result = 'Take the Elevator — creates three 1/1 colorless Hero creature tokens.';
   return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 0 (Take the Elevator)', result);
 }
 
@@ -33,7 +33,7 @@ function stairsMode(): TraceResult {
   pilotCast(pilot, cardReal, aerithRescueMission, ctx, actions);
   pilotResolveTop(pilot);
 
-  const result = "Take 59 Flights of Stairs — real creatures on the battlefield get tapped (up to three targets), and the first one tapped gets a real stun counter.";
+  const result = "Take 59 Flights of Stairs — creatures on the battlefield get tapped (up to three targets), and the first one tapped gets a stun counter.";
   return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 1 (Take 59 Flights of Stairs)', result);
 }
 

@@ -1,29 +1,130 @@
 {
   "source": [
     {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "tap",
+      "controller": "opp",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Artifact",
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 27,
+          "end": 79
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "stun",
       "controller": "opp",
       "target": {
         "types": {
-          "has": [
+          "hasAny": [
+            "Artifact",
             "Creature"
           ]
         }
       },
-      "value": 1
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 81,
+          "end": 105
+        }
+      ]
+    },
+    {
+      "to": "Hand",
+      "from": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Island"
+        ]
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 43,
+          "end": 115
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "opp",
       "types": {
-        "has": [
+        "hasAny": [
+          "Artifact",
           "Creature"
         ]
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 31,
+          "end": 79
+        }
+      ]
+    },
+    {
+      "event": "discard",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 41
+        }
+      ]
     }
   ]
 }

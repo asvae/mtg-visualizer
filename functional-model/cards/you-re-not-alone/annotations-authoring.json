@@ -1,0 +1,28 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Instant",
+      "highlight": "Instant"
+    },
+    {
+      "sourceText": "Target creature gets +2/+2 until end of turn.",
+      "highlight": "gets +2/+2"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Target creature gets +2/+2 until end of turn.",
+      "highlight": "Target creature gets +2/+2 until end of turn"
+    },
+    {
+      "sourceText": "If you control three or more creatures, it gets +4/+4 until end of turn instead.",
+      "highlight": "you control three or more creatures"
+    }
+  ]
+}

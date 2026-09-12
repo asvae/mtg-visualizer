@@ -52,45 +52,45 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-3",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-4",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-5",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
         "target": "Exdeath, Void Warlock",
-        "id": 795,
+        "id": 10,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Exdeath, Void Warlock",
-        "id": 795,
+        "id": 10,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -125,12 +125,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       }
     ]

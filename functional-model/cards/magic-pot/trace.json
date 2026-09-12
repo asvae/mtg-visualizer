@@ -53,8 +53,8 @@
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1397,
+        "target": "Grizzly Bears",
+        "id": 5,
         "zone": "Exile",
         "controller": "you"
       }

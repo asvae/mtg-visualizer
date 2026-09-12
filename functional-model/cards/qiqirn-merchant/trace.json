@@ -1,25 +1,125 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 card(s) in hand; you: 1 card(s) in library",
-      "action": "\"cantrip\" activated",
-      "result": "draws a card, then discards a card (the front of hand — this model has no real player choice for which card)",
+      "setup": "you: 4 Island(s)",
+      "action": "real engine playthrough: cast -> turn passage -> real \"cantrip\" activation (draw, discard) -> real \"bigDraw\" activation (draw 3)",
+      "result": "Qiqirn Merchant is cast, turn passage clears summoning sickness, then both of its activated abilities fire in sequence against the same board: \"cantrip\" ({1}, {T}) draws a card and discards a card, then \"bigDraw\" ({7}, {T}, Sacrifice this creature) draws three more cards.",
       "raw": {
-        "result": "draws a card, then discards a card (the front of hand — this model has no real player choice for which card)",
-        "ability": "cantrip",
+        "result": "Qiqirn Merchant is cast, turn passage clears summoning sickness, then both of its activated abilities fire in sequence against the same board: \"cantrip\" ({1}, {T}) draws a card and discards a card, then \"bigDraw\" ({7}, {T}, Sacrifice this creature) draws three more cards.",
         "you": {
-          "libraryCount": 1,
-          "handCount": 1
-        }
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Capital City",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Gongaga, Reactor Town",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
+      {
+        "fn": "cast",
+        "card": "Qiqirn Merchant",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Qiqirn Merchant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Qiqirn Merchant"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Qiqirn Merchant"
+      },
+      {
+        "fn": "enters",
+        "card": "Qiqirn Merchant",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
       {
         "fn": "activate",
         "card": "Qiqirn Merchant",
         "instanceId": 1,
         "cost": "{1}, {T}",
         "ability": "cantrip"
+      },
+      {
+        "fn": "tap",
+        "target": "Qiqirn Merchant",
+        "id": 17,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Qiqirn Merchant"
       },
       {
         "fn": "drawCard",
@@ -33,28 +133,11 @@
         "cards": [
           "Forest"
         ]
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 3 card(s) in library",
-      "action": "\"bigDraw\" activated",
-      "result": "draws 3 cards",
-      "raw": {
-        "result": "draws 3 cards",
-        "ability": "bigDraw",
-        "you": {
-          "libraryCount": 3
-        }
-      }
-    },
-    "log": [
+      },
       {
         "fn": "activate",
         "card": "Qiqirn Merchant",
-        "instanceId": 1,
-        "cost": "{7}, {T}, Sacrifice Qiqirn Merchant (costs {1} less for each Town you control)",
+        "cost": "{5}, {T}, Sacrifice Qiqirn Merchant (costs {1} less for each Town you control)",
         "ability": "bigDraw"
       },
       {
@@ -71,6 +154,40 @@
         "fn": "drawCard",
         "player": "you",
         "card": "Forest"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Qiqirn Merchant ({2}{U})",
+        "from": 2
+      },
+      {
+        "label": "Resolve",
+        "from": 6
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 7
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 12
+      },
+      {
+        "label": "Activate \"cantrip\" ({1}, {T}): draw a card, then discard a card",
+        "from": 15
+      },
+      {
+        "label": "Resolve",
+        "from": 18
+      },
+      {
+        "label": "Activate \"bigDraw\" ({7}, {T}, Sacrifice Qiqirn Merchant, discounted {1} per Town you control — real cost computed via effectiveActivationCost, fired directly since self-sacrifice-as-cost is not payable through canActivateAbility, see this file's own header)",
+        "from": 20
       }
     ]
   }

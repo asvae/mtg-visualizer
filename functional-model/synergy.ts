@@ -157,6 +157,37 @@ export interface Constraints {
    * matcher unification" bucket as the other three.
    */
   tapped?: boolean;
+  /**
+   * True only when the candidate must be a DIFFERENT real permanent/card
+   * than the fact's own owner — CR 109.5 ("another" means "other than this
+   * object"). G'raha Tia's own real "Whenever another creature or artifact
+   * you control dies" (`onOtherPermanentsDie`, `definition.ts`) is the card
+   * that forced this (2026-09-12, same "grow only when a real card forces
+   * it" discipline as `attacking`/`attachedToSelf`/`equippedBySelf`/
+   * `tapped` above) — without it, the "another" qualifier that's a real,
+   * important part of the printed text was invisible: the fact looked
+   * identical to a plain, unrestricted "a creature or artifact you control
+   * dies," which is a different, broader real trigger condition.
+   *
+   * **Same known, deliberate limitation as `attacking`/`attachedToSelf`/
+   * `equippedBySelf`/`tapped`**: NOT consulted by `satisfiesConstraints`,
+   * `constraintsOf`, or `hasAnyConstraint` — unlike those, this ISN'T
+   * blocked on missing live board-state (this file's own `factsInteract`
+   * already resolves both sides' real card identity via `pCard.name`/
+   * `wCard.name`, see its `same-instance` self-check), so a future matcher
+   * pass genuinely COULD wire this in without new engine plumbing — but
+   * that's a real, separate MATCHING-semantics change (would need its own
+   * pool-wide before/after diff per SYNERGY_DESIGN.md's own discipline,
+   * same as the `Fact` merge's own `find-synergies.mjs` diffs), not done
+   * here on purpose: this field is scoped to fixing a real, honest DATA/
+   * display gap (the Facts tab silently dropping the "another" qualifier),
+   * not a request to change which cards interact. Real, honest,
+   * self-documenting DATA today; a future matcher extension wanting this to
+   * actually gate a match can do so directly off `pCard`/`wCard` identity,
+   * filed under the same "future full matcher unification" bucket as the
+   * other four.
+   */
+  excludeSelf?: boolean;
 }
 
 /** 1-5, computed mechanically (not authored by hand) — real game-mechanical magnitude of a fact, steeply bucketed from the actual number involved (NOT linear: a 1-for-1 effect and a 2-for-1 effect are not "close" in power, so the bucketing jumps hard past 1 — magnitude 1 → 1, magnitude 2 → 4-5, magnitude 3+ → 5 — rather than spreading evenly):
@@ -441,13 +472,104 @@ export interface Fact extends Constraints {
    * script.
    */
   type?: string;
+  /**
+   * `event: 'grantKeyword'`'s own free-form detail — the keyword name being
+   * granted (Moogles' Valor's own "target creature gains indestructible" →
+   * `keyword: 'Indestructible'`). Matched by plain equality (same treatment
+   * as `counterType`/`type` above) — written pool-wide already (e.g.
+   * `moogles-valor/synergy.json`) but previously only reachable via the
+   * generic untyped-field fallback (`app/lib/factConditions.ts`'s own
+   * `formatUnknown`), not a declared field on this interface; added
+   * 2026-09-12 to close that typing gap, purely additive, no matching
+   * behavior change (plain-equality fallback already worked the same way).
+   */
+  keyword?: string;
   /** `event: 'addMana'`'s own free-form detail — the color produced (card.ts's `Effect` `kind: 'addMana'`'s own `color` field, or the single symbol `mana.ts`'s `manaAbilityColorFromStaticText` recognizes off a plain `"{T}: Add {X}."` static-ability string). Superseded by `colors` below for anything NEW (a plain string can't express a real choice-of-color ability as one matchable fact, only as display-equality) — kept only because 11 real single-color cards (Druid of the Cowl, Goobbue Gardener, Llanowar Elves, Midgar, Ishgard, Jidoor, Lindblum, Zanarkand, White Auracite, Willowrush Verge, Elvish Archdruid) already declare this field and migrating them is out of scope for the pass that added `colors` (2026-09-09) — still matched (by plain equality, same as `counterType`) for backward compatibility, and `factsInteract` also treats it as an implicit single-element `colors` set so it stays comparable against a `colors`-shaped want on the other side. */
   color?: string;
   /** `event: 'addMana'`'s own color-SET detail, added 2026-09-09 alongside `playLand` — reuses `TypeConstraint`'s exact `has`/`hasAny`/`not` vocabulary/matching (`satisfiesType`) rather than inventing a fourth constraint pattern, since "does the producer's color set satisfy the consumer's color need" is structurally the identical question `Constraints.types` already answers for card types. On a PRODUCE fact: which color(s) this ability can actually make — `hasAny` for a genuine choice-of-color ability (Vector, Imperial Capital's own "{T}: Add {B} or {R}." → `{hasAny:['B','R']}`, ONE fact instead of two `color:'B'`/`color:'R'` facts — it makes one of these per activation, never both at once, so `has` would misstate it as "makes both simultaneously"; a fixed single-color ability would use `{has:['G']}` if migrated). On a WANT fact: what color(s) the consumer needs — `has:['R']` for "needs R specifically," `hasAny:['W','U']` for "needs any of W or U," `not:['B']` for "needs any non-black source" — matched against the producer's own declared set (see `factsInteract`'s `colorSetOf`/`satisfiesType` reuse below), no separate matching code written for color. Coexists with `color` above (a legacy single-color fact) via the same `colorSetOf` helper, so a `colors`-shaped want still matches a `color`-shaped produce and vice versa. */
   colors?: TypeConstraint;
   /** `event: 'entersBattlefield'`'s own free-form detail — a real "enters the battlefield tapped" replacement (e.g. Vector, Imperial Capital's own "Vector, Imperial Capital enters tapped."). Same "documented free-form field, matched by plain equality when both sides declare it" treatment as `counterType`/`color` — no want declares one yet, so this is purely descriptive today. */
   tapped?: boolean;
-  /** Documentary only — this event's own trigger/activation is capped to once per turn on the real card (e.g. Elrond's draw-per-activation), but nothing in state.ts/turn.ts enforces that cap yet (see progress.json's knownGaps). Not matched against anything. */
+  /**
+   * Documentary only (2026-09-12, `the-wind-crystal`/fin-43's migration) —
+   * this fact's own real effect is a temporary CR 611/702 duration
+   * ("...until end of turn"), not a permanent/static one. Motivating gap:
+   * a card like Craterhoof Behemoth's own "gain trample ... until end of
+   * turn" and a permanent, always-on grant (Ardyn's own
+   * `continuousKeywordGrants`-backed "Demons you control have menace") were
+   * previously indistinguishable in the `Fact` data itself — both render as
+   * a bare `grantKeyword` with no duration signal at all. Checked the whole
+   * pool before adding this: several existing `grantKeyword`/`pump` facts
+   * ARE genuinely until-end-of-turn on their own real oracle text (Craterhoof
+   * Behemoth, Coral Sword, Restoration Magic's own three modes, Summon
+   * Titan, Blitzball Shot, Squall/Seifer's own combat-trick modes, Moogles'
+   * Valor, Circle of Power's own Wizard pump) but NONE of them set this
+   * field yet — adding it there too is a real pool-wide authoring sweep,
+   * out of scope for this task (scoped to fin/43 only); don't read their
+   * omission as "these are permanent," just "not yet authored."
+   *
+   * **2026-09-12 follow-up sweep** (Moogles' Valor/fin-27 task): applied
+   * retroactively to every other-that-day-migrated fin/1-50 card whose real
+   * grant/pump/animate fact is genuinely until-end-of-turn — moogles-valor
+   * (grantKeyword Indestructible), restoration-magic (all 4 grantKeyword
+   * Hexproof/Indestructible facts across its Cure/Cura/Curaga tiers),
+   * summon-choco-mog (pump), summon-knights-of-round (pump; its own
+   * "put an indestructible counter" fact stays unset — that grant IS
+   * permanent, counters don't wear off), summon-primal-garuda (pump +
+   * grantKeyword Flying), magitek-armor (Crew's own grantType Creature
+   * fact — the animate itself is temporary even though layers.ts's own
+   * animate/LayerSet still tracks no duration, a separate pre-existing
+   * engine gap, see magitek-armor/progress.json). Craterhoof Behemoth,
+   * Coral Sword, Summon Titan, Blitzball Shot, Squall/Seifer, and Circle of
+   * Power remain un-swept (outside fin/1-50 or not migrated that day) —
+   * still "not yet authored," not "confirmed permanent."
+   *
+   * **Only ever written `true`, never `false`.** Same convention as
+   * `targeted`'s own "only set when the axis is actually meaningful"
+   * rule — a permanent/always-on grant doesn't get `untilEndOfTurn: false`
+   * (that would misrepresent "not applicable" as "reviewed and confirmed
+   * permanent"); it's simply omitted.
+   *
+   * **Purely informational — NOT consulted by `factsInteract`, and NOT
+   * added to `themeOf`** (same treatment `targeted`/`zoneFrom`/`zoneTo`
+   * already get). No sink in the pool wants "only a permanent grant" or
+   * "only a temporary one" today; wire this into the matcher deliberately
+   * if a real future card needs that as an actual want.
+   */
+  untilEndOfTurn?: boolean;
+  /**
+   * Documentary only (2026-09-12, Qiqirn Merchant/fin-65) — a real
+   * board-state-COUNTED cost-reduction on THIS fact's own cost-payment act
+   * (CR 601.2f/602.1, Forge's own `SVar:X:Count$Valid Town.YouCtrl` —
+   * "This ability costs {1} less to activate for each Town you control").
+   * `card.ts`'s `ActivationCostReduction` is the real engine-side mechanism
+   * (`engine.ts`'s `effectiveActivationCost`, ENGINE_GAPS.md gap #7's third
+   * example) — this field is purely self-explaining DATA on the fact, same
+   * "documented gap, not silently assumed away" treatment `Constraints.tapped`
+   * already establishes for Fate of the Sun-Cryst's own target-conditional
+   * discount (a genuinely different real mechanism: keyed on a chosen
+   * TARGET, not a board-state COUNT).
+   *
+   * **Purely informational — NOT consulted by `factsInteract`, and NOT
+   * added to `themeOf`** (same treatment `targeted`/`untilEndOfTurn` already
+   * get) — no sink in the pool wants "a cheaper activation" as a theme
+   * today.
+   */
+  costReductionPerControlled?: { amountPerMatch: number; subtype: string };
+  /** Documentary only — this event's own trigger/activation is capped to once per turn on the real card (e.g. Elrond's draw-per-activation), but nothing in state.ts/turn.ts enforces that cap yet (see progress.json's knownGaps). Not matched against anything.
+   *
+   * **Only ever set on the TRIGGER/condition side (a card's own real "this
+   * ability triggers only once each turn" clause), never on the produced
+   * EFFECT fact it fires** (2026-09-12, G'raha Tia/Venat correction —
+   * both cards' own trigger AND their resulting `drawCard` produce fact
+   * had this set, which double-counts the same real cap and implies the
+   * trigger and its effect are linked data, which they explicitly aren't
+   * yet — see `Fact`'s own doc comment on keeping trigger/effect facts
+   * independent for now, no shared-cap linking mechanism exists). If this
+   * ever needs cross-fact linking (a real payoff caring specifically
+   * about a once-per-turn-capped trigger, not just its effect), that's a
+   * deliberate future schema addition, not an accidental byproduct of
+   * setting this field twice. */
   oncePerTurn?: boolean;
   value?: Weight;
   /**
@@ -1223,6 +1345,19 @@ export function describeFact(fact: Fact): string {
   // above are guaranteed by construction, so this is a real, ordinary
   // event fact, not a probabilistic one.
   if (event === 'coinFlip') return 'flip a coin';
+  // Edgar, King of Figaro's own real "Two-Headed Coin — The first time you
+  // flip one or more coins each turn, those coins come up heads and you win
+  // those flips" (ENGINE_GAPS.md gap #15, closed 2026-09-12) — a genuine
+  // CR-614-style REPLACEMENT on a flip's OUTCOME, distinct from `coinFlip`
+  // above (which is only ever about the flip itself happening, never who
+  // wins it).
+  if (event === 'winCoinFlip') return 'win coin flips';
+  // The Wind Crystal's own real "If you would gain life, you gain twice
+  // that much life instead" (ENGINE_GAPS.md gap #8b, closed 2026-09-12) — a
+  // genuine CR 614.2 self-replacement on the LIFEGAIN event's own amount,
+  // distinct from `lifegain` above (which is about SOMETHING gaining life
+  // at all, not a multiplier on however much).
+  if (event === 'lifegainDouble') return 'double lifegain';
   // The Gold Saucer's own real "Sacrifice two artifacts" COST, modeled as
   // a real `{event:'sacrifice'}` produce fact (2026-09-09) — the ACT of
   // sacrificing (a real, deterministic event a sacrifice-themed payoff
@@ -1235,6 +1370,17 @@ export function describeFact(fact: Fact): string {
   // "your"/"opponent's" prefixed) renders into this label anymore; both stay
   // real, intact data on the fact.
   if (event === 'sacrifice') return 'sacrifice';
+  // The Lunar Whale's own real "you may play the top card of your library"
+  // (2026-09-12) — genuinely new vocabulary (CR 601/305's own umbrella
+  // "playing," covering both casting and a land drop, whichever the top
+  // card's own type turns out to be). `from:'Library'` stays real, intact
+  // data on the fact (surfaced in the notes/conditions column), same as
+  // every other event branch here — this label doesn't repeat it. See this
+  // card's own `definition.ts`/`scripts/verify-synergy.mjs`'s
+  // `isLunarWhalePlayFromLibraryFact` for the real, documented double
+  // engine gap behind it (no attacked-this-turn tracking, no play-from-
+  // library Effect kind).
+  if (event === 'play') return 'play a card';
   // Generic fallback for every event this function doesn't special-case
   // above (`lifeloss`, `grantKeyword`, `landfall`, `scry`, `surveil`,
   // `graveyardLeaves`, `counter`, etc. — `damage` got its own bare branch

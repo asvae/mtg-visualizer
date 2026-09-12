@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { TOKENS } from '../../tokens.ts';
 
 export const retrieveTheEsper: CardDefinition = {
   name: 'Retrieve the Esper',
@@ -23,11 +24,7 @@ export const retrieveTheEsper: CardDefinition = {
       kind: 'custom',
       describe: 'creates a 3/3 blue Robot Warrior artifact creature token; if this spell was cast from a graveyard, put two +1/+1 counters on that token',
       run: (ctx: EffectContext, actions: Actions) => {
-        const created = actions.createToken(
-          ctx.you,
-          { name: 'Robot Warrior', manaCost: '0', types: ['Artifact', 'Creature', 'Robot', 'Warrior'], basePower: 3, baseToughness: 3 },
-          1
-        );
+        const created = actions.createToken(ctx.you, TOKENS.u_3_3_robot_warrior, 1);
         if (ctx.castFrom === 'graveyard') {
           for (const token of created) actions.putCounter(token, '+1/+1', 2);
         }

@@ -19,7 +19,7 @@ import type { Scenario } from '../../harness';
 export const scenarios: Scenario[] = [
   {
     result:
-      'Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same real way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.',
+      'Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.',
     sequence: ['chapterI', 'chapterII', 'chapterIII', 'chapterIV'],
     sacrificeSelfAfter: true,
     you: { creaturesCount: 2 },

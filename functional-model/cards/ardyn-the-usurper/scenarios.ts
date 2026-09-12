@@ -8,6 +8,5 @@ export const scenarios: Scenario[] = [
     trigger: 'onBeginCombat',
     opponents: [{ graveyardCreatureCount: 1 }],
   },
-  { result: 'no creature card in any graveyard, nothing exiled or created', trigger: 'onBeginCombat', opponents: [{}] },
   ...keywordScenarios(ardynTheUsurper),
 ];

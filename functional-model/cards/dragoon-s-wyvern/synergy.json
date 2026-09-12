@@ -1,15 +1,49 @@
 {
   "source": [
     {
-      "id": "etb-token",
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
+      "event": "entersBattlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
       "value": 1,
-      "sourceText": "When this creature enters, create a 1/1 colorless Hero creature token.",
-      "highlight": "create a 1/1 colorless Hero creature token"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 27,
+          "end": 69
+        }
+      ]
     }
   ],
   "sink": []

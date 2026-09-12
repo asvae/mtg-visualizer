@@ -2,17 +2,32 @@
   {
     "scenario": {
       "setup": "you: 2 card(s) in hand",
-      "action": "\"onArtifactEnters\" trigger fires",
-      "result": "draws a card, then discards a card",
+      "action": "cast from hand",
+      "result": "is cast from hand, enters the battlefield; another artifact you control then enters, so it draws a card, then discards a card",
       "raw": {
-        "result": "draws a card, then discards a card",
-        "trigger": "onArtifactEnters",
+        "result": "is cast from hand, enters the battlefield; another artifact you control then enters, so it draws a card, then discards a card",
         "you": {
           "handCount": 2
-        }
+        },
+        "sequence": [
+          "onArtifactEnters"
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Rook Turret",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}{U}"
+      },
+      {
+        "fn": "enters",
+        "card": "Rook Turret",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
       {
         "fn": "trigger",
         "card": "Rook Turret",

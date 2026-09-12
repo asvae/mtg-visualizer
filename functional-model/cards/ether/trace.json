@@ -1,0 +1,26 @@
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({T}, Exile this artifact)",
+      "result": "taps and exiles itself to add {U}",
+      "raw": {
+        "result": "taps and exiles itself to add {U}"
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ether",
+        "instanceId": 1,
+        "cost": "{T}, Exile this artifact"
+      },
+      {
+        "fn": "addMana",
+        "player": "you",
+        "color": "U",
+        "amount": 1
+      }
+    ]
+  }
+]

@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "2026-09-12: dropped the 'no creatures to pump, no-op' scenario (effort-calibration pass). verify-synergy/vitest clean.\n\n",
   "textCoverageAudited": false,
   "knownGaps": []
 }

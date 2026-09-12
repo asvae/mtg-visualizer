@@ -1,0 +1,40 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Soldier",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Creature — Human Soldier",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "Zack Fair enters with a +1/+1 counter on it.",
+      "highlight": "enters with a +1/+1 counter"
+    },
+    {
+      "sourceText": "{1}, Sacrifice Zack Fair: Target creature you control gains indestructible until end of turn.",
+      "highlight": "Sacrifice Zack Fair"
+    },
+    {
+      "sourceText": "Target creature you control gains indestructible until end of turn.",
+      "highlight": "gains indestructible until end of turn"
+    },
+    {
+      "sourceText": "Put Zack Fair's counters on that creature and attach an Equipment that was attached to Zack Fair to that creature.",
+      "highlight": "Put Zack Fair's counters on that creature"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Put Zack Fair's counters on that creature and attach an Equipment that was attached to Zack Fair to that creature.",
+      "highlight": "Zack Fair's counters"
+    },
+    {
+      "sourceText": "Target creature you control gains indestructible until end of turn.",
+      "highlight": "Target creature you control"
+    }
+  ]
+}

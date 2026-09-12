@@ -30,7 +30,7 @@ export const scenarios: Scenario[] = [
   // Grizzly Bears (from the real activation) — no double-fire.
   {
     result:
-      'Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then a real Equip {4} activation re-attaches it to the other creature already on the battlefield instead',
+      'Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead',
     trigger: 'onEnter',
     you: { creaturesCount: 1 },
     sequence: [{ activate: true }],

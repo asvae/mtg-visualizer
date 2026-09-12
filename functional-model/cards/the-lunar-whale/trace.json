@@ -1,14 +1,22 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "activated (Crew 1 (tap creatures with total power 1 or more))",
-      "result": "becomes an artifact creature (crewed)",
+      "setup": "you: 4 Mountain(s)",
+      "action": "real engine playthrough: crew The Lunar Whale -> real attack (sets attackedThisTurn) -> play a real land off the library top -> play a real spell off the library top",
+      "result": "The Lunar Whale is crewed (Item Shopkeep taps, real 702.121b/c) and becomes a real Artifact Creature; it attacks (508.1f), genuinely setting RealCard.attackedThisTurn. That real flag is what The Lunar Whale's own \"as long as it attacked this turn\" clause reads. The top card of the library is played twice: first a real Forest (dispatches to the real playLand — direct Battlefield move, no stack), then — once the Forest is gone — the real Barret Wallace underneath it (dispatches to the real castSpell — {3}{R} genuinely paid, pushed onto and resolved off the real stack). Both dispatches reuse engine.ts's existing playLand/canPlayLand and castSpell/canCastSpell pairs via the new canPlayFromLibraryTop/playFromLibraryTop primitive — no fabricated hybrid action.",
       "raw": {
-        "result": "becomes an artifact creature (crewed)",
+        "result": "The Lunar Whale is crewed (Item Shopkeep taps, real 702.121b/c) and becomes a real Artifact Creature; it attacks (508.1f), genuinely setting RealCard.attackedThisTurn. That real flag is what The Lunar Whale's own \"as long as it attacked this turn\" clause reads. The top card of the library is played twice: first a real Forest (dispatches to the real playLand — direct Battlefield move, no stack), then — once the Forest is gone — the real Barret Wallace underneath it (dispatches to the real castSpell — {3}{R} genuinely paid, pushed onto and resolved off the real stack). Both dispatches reuse engine.ts's existing playLand/canPlayLand and castSpell/canCastSpell pairs via the new canPlayFromLibraryTop/playFromLibraryTop primitive — no fabricated hybrid action.",
         "you": {
-          "creaturesCount": 1
-        }
+          "basicLands": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        "opponents": [
+          {}
+        ]
       }
     },
     "log": [
@@ -19,46 +27,195 @@
         "cost": "Crew 1 (tap creatures with total power 1 or more)"
       },
       {
-        "fn": "animate",
-        "target": "The Lunar Whale",
-        "id": 2479,
-        "types": [
-          "Artifact",
-          "Creature"
-        ]
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated (Crew 1 (tap creatures with total power 1 or more)), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "The Lunar Whale",
-        "instanceId": 1,
-        "cost": "Crew 1 (tap creatures with total power 1 or more)"
+        "fn": "tap",
+        "target": "Item Shopkeep",
+        "id": 8,
+        "controller": "you"
       },
       {
         "fn": "animate",
         "target": "The Lunar Whale",
-        "id": 2481,
+        "id": 7,
         "types": [
           "Artifact",
           "Creature"
         ]
       },
       {
-        "fn": "legendRule",
-        "card": "The Lunar Whale",
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
         "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "The Lunar Whale",
+        "id": 7
+      },
+      {
+        "fn": "attack",
+        "card": "The Lunar Whale",
+        "id": 7
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDamage",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatEnd",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main2",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "trigger",
+        "card": "The Lunar Whale",
+        "instanceId": 1,
+        "name": "playFromLibraryTop"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 2,
+        "creatureCount": 1
+      },
+      {
+        "fn": "play",
+        "card": "Forest",
+        "id": 9,
+        "from": "Library"
+      },
+      {
+        "fn": "playLand",
+        "card": "Forest",
+        "instanceId": 1
+      },
+      {
+        "fn": "enters",
+        "card": "Forest",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "trigger",
+        "card": "The Lunar Whale",
+        "instanceId": 1,
+        "name": "playFromLibraryTop"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "play",
+        "card": "Barret Wallace",
+        "id": 10,
+        "from": "Library"
+      },
+      {
+        "fn": "cast",
+        "card": "Barret Wallace",
+        "instanceId": 1,
+        "from": "library",
+        "cost": "{3}{R}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Barret Wallace"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Barret Wallace"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Barret Wallace"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Barret Wallace"
+      },
+      {
+        "fn": "enters",
+        "card": "Barret Wallace",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Crew 1: tap Item Shopkeep",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 2
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 3
+      },
+      {
+        "label": "Declare The Lunar Whale (crewed) as attacker",
+        "from": 4
+      },
+      {
+        "label": "Advance one step",
+        "from": 6
+      },
+      {
+        "label": "Advance one step",
+        "from": 7
+      },
+      {
+        "label": "Advance one step",
+        "from": 8
+      },
+      {
+        "label": "Advance one step",
+        "from": 9
+      },
+      {
+        "label": "Play the top card of the library (Forest, a land)",
+        "from": 10
+      },
+      {
+        "label": "Resolve",
+        "from": 15
+      },
+      {
+        "label": "Play the top card of the library (Barret Wallace, a spell)",
+        "from": 15
+      },
+      {
+        "label": "Resolve",
+        "from": 23
       }
     ]
   }

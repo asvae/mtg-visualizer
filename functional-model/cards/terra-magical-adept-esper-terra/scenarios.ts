@@ -9,6 +9,6 @@ export const scenarios: Scenario[] = [
     you: { libraryCount: 5 },
   },
   { result: 'exiles Terra, then returns it to the battlefield transformed into Esper Terra' },
-  { result: 'back face: Flying only, no resolvable chapters (see definition.ts for the real gap — copyPermanent not wired, mana production out of scope)', face: 'back' },
+  { result: 'back face: Flying only, no resolvable chapters (see definition.ts for the gap — copyPermanent not wired, mana production out of scope)', face: 'back' },
   ...keywordScenarios(terraMagicalAdept),
 ];

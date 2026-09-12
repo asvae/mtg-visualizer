@@ -1,26 +1,52 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "enters the battlefield; Flying/Vigilance are real but not creature-relevant until crewed (crewing itself has no resolvable behavior in this model)",
+      "setup": "you: 1 creature(s)",
+      "action": "\"mana\" activated",
+      "result": "taps for {C} (a restricted mana ability — this engine tracks no mana pool, so the \"spend only on artifact spells/abilities\" restriction itself is unenforced, see definition.ts) and, separately, is crewed (Crew 1) to become an artifact creature until end of turn",
       "raw": {
-        "result": "enters the battlefield; Flying/Vigilance are real but not creature-relevant until crewed (crewing itself has no resolvable behavior in this model)"
+        "result": "taps for {C} (a restricted mana ability — this engine tracks no mana pool, so the \"spend only on artifact spells/abilities\" restriction itself is unenforced, see definition.ts) and, separately, is crewed (Crew 1) to become an artifact creature until end of turn",
+        "ability": "mana",
+        "you": {
+          "creaturesCount": 1
+        },
+        "sequence": [
+          {
+            "activate": true
+          }
+        ]
       }
     },
     "log": [
       {
-        "fn": "cast",
+        "fn": "activate",
         "card": "Cargo Ship",
         "instanceId": 1,
-        "from": "hand",
-        "cost": "{1}{U}"
+        "id": 3,
+        "cost": "{T}",
+        "ability": "mana"
       },
       {
-        "fn": "enters",
+        "fn": "addMana",
+        "player": "you",
+        "color": "C",
+        "amount": 1
+      },
+      {
+        "fn": "activate",
         "card": "Cargo Ship",
         "instanceId": 1,
-        "zone": "Battlefield"
+        "id": 3,
+        "cost": "Crew 1 (tap creatures with total power 1 or more)"
+      },
+      {
+        "fn": "animate",
+        "target": "Cargo Ship",
+        "id": 3,
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
       }
     ]
   }

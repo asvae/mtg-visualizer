@@ -33,6 +33,15 @@ export function runEngineScenarios(): TraceResult[] {
   pilot.beginStep('Real artifacts already on the battlefield (2, meets the printed threshold)');
   const phoenixDown = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Phoenix Down', types: ['Artifact'] });
   const elixir = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Elixir', types: ['Artifact'] });
+  // A real `enters` entry for each bystander (aerith-gainsborough/
+  // scenarios.ts's own convention) — without one, a permanent placed
+  // directly via `addCard` never shows up on the replay board at all (the
+  // replay UI only seeds a card from a real log entry naming it; a later
+  // `read:isArtifact` entry alone registers it in the 'Unknown' zone, not
+  // 'Battlefield' — confirmed the hard way: the user-visible bug this fixes,
+  // both real artifacts invisible on fin/22's replay board).
+  pilot.log.push({ fn: 'enters', card: phoenixDown.name, zone: 'Battlefield' });
+  pilot.log.push({ fn: 'enters', card: elixir.name, zone: 'Battlefield' });
 
   const gaelicatReal = pilot.state.addCard(pilot.you, 'Hand', {
     name: gaelicat.name,
@@ -65,6 +74,6 @@ export function runEngineScenarios(): TraceResult[] {
   const [power, toughness] = effectivePT(pilot.state, gaelicatReal);
   pilot.log.push({ fn: 'read:getNetPower', card: gaelicat.name, power, toughness });
 
-  const result = `Gaelicat enters with 2 real Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=${phoenixIsArtifact}/${elixirIsArtifact}) already on the battlefield, meeting the printed "two or more artifacts" threshold — but real layer-7a effectivePT still reports Gaelicat's unmodified printed ${power}/${toughness}, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a real, documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).`;
+  const result = `Gaelicat enters with 2 Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=${phoenixIsArtifact}/${elixirIsArtifact}) already on the battlefield, meeting the printed "two or more artifacts" threshold — but layer-7a effectivePT still reports Gaelicat's unmodified printed ${power}/${toughness}, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).`;
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: 2 real artifacts present -> cast -> real condition/CDA reads (gap documented)', result)];
 }

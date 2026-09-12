@@ -1,24 +1,141 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "subject": "self",
+      "target": "self",
+      "value": -1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_1_1_hero"
       },
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 40,
+          "end": 82
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "power": 1,
+      "toughness": 0,
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 28
+        }
+      ]
+    },
+    {
+      "event": "untap",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "attacking": true
+      },
+      "targeted": true,
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 30,
+          "end": 100
+        }
+      ]
+    },
+    {
+      "event": "grantType",
+      "type": "Cleric",
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 105,
+          "end": 147
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "you",
-      "value": 1
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 10,
+          "end": 19
+        }
+      ]
     },
     {
-      "zone": "Battlefield",
+      "to": "Battlefield",
       "controller": "opp",
-      "value": 1
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "attacking": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 30,
+          "end": 100
+        }
+      ]
     }
   ]
 }

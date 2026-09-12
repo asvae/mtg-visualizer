@@ -1,39 +1,90 @@
 {
   "source": [
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(implicit — not a printed clause: any instant goes to its owner's graveyard after it resolves, a generic MTG rule (608.2m), not specific to this card's own text.)"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "event": "pump",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 16,
+          "end": 26
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "three-plus-creatures-bonus",
-      "zone": "Battlefield",
+      "to": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 44
+        }
+      ]
+    },
+    {
+      "to": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "If you control three or more creatures, it gets +4/+4 instead.",
-      "highlight": "you control three or more creatures",
-      "value": 1
-    },
-    {
-      "id": "pump-target",
-      "zone": "Battlefield",
-      "types": {
-        "has": [
-          "Creature"
-        ]
+      "amount": {
+        "min": 3
       },
-      "sourceText": "Target creature gets +2/+2 until end of turn — the target itself, no controller restriction printed (any creature is legal).",
-      "highlight": "Target creature gets +2/+2 until end of turn",
-      "value": 1
+      "value": 5,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 49,
+          "end": 84
+        }
+      ]
     }
   ]
 }

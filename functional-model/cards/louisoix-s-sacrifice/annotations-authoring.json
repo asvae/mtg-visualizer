@@ -1,0 +1,20 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    { "anchor": "typeLine", "sourceText": "Instant", "highlight": "Instant" },
+    {
+      "sourceText": "As an additional cost to cast this spell, sacrifice a legendary creature or pay {2}.",
+      "highlight": "sacrifice a legendary creature"
+    },
+    {
+      "sourceText": "Counter target activated ability, triggered ability, or noncreature spell.",
+      "highlight": "Counter target activated ability, triggered ability, or noncreature spell."
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "As an additional cost to cast this spell, sacrifice a legendary creature or pay {2}.",
+      "highlight": "sacrifice a legendary creature"
+    }
+  ]
+}

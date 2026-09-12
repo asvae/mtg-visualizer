@@ -92,6 +92,7 @@ import type {
   grantKeyword as realGrantKeyword,
   copyPermanent as realCopyPermanent,
   delayUntil as realDelayUntil,
+  play as realPlay,
 } from './interfaces';
 
 /**
@@ -126,6 +127,7 @@ export interface Actions {
   grantKeyword: typeof realGrantKeyword;
   copyPermanent: typeof realCopyPermanent;
   delayUntil: typeof realDelayUntil;
+  play: typeof realPlay;
 }
 
 /** Everything an effect needs to read at resolution time — the one argument every effect/Computed function receives. */
@@ -194,6 +196,99 @@ export interface EffectContext {
    * resolution, not computed by an effect.
    */
   preferTarget?: (c: Card) => boolean;
+  /**
+   * The `CardDefinition` matching whatever `RealCard` is genuinely sitting
+   * on top of `you`'s library right now (ENGINE_GAPS.md gap #16) — required
+   * for a `kind:'playFromLibraryTop'` effect to do anything real. Same
+   * "caller-supplied real fact, not something an effect computes" pattern
+   * `castFrom`/`mode`/`xPaid` already use above: `RealCard` carries no live
+   * `CardDefinition` reference to derive this from (see `state.ts`'s own
+   * `manaAbility`/`continuousKeywordGrants` doc comments for the established
+   * convention), so whoever pilots "play the top card of your library" must
+   * supply it explicitly, the same way `harness.ts`/`engine-trace.ts` build
+   * every other `EffectContext` field. Left unset only when there's
+   * genuinely no top card (an empty library) — the effect itself checks
+   * `ctx.you.getCardsIn('Library')` and no-ops if it's empty, same as
+   * `dig`'s own "nothing there" case.
+   */
+  topLibraryCard?: CardDefinition;
+  /**
+   * The real object(s) chosen as THIS spell/ability's own target(s), locked
+   * in at cast/activation time (CR 601.2c/602.1's own "choose targets" step,
+   * BEFORE resolution) — ENGINE_GAPS.md gap #4, closed 2026-09-12. Set by
+   * `stack.ts`'s `Stack.resolveTop` from the `StackObject.declaredTargets`
+   * `engine.ts`'s `castSpell`/`activateAbility` recorded when the spell/
+   * ability was originally put on the stack (a real `RealCard` reference,
+   * wrapped once via `state.ts`'s `wrapCard` — same "caller supplies the
+   * real object, engine records it" shape `crewedBy`/the pre-existing
+   * `declaredTarget` cost-reduction param already established, generalized
+   * here to also genuinely target the effect, not just gate a cost
+   * discount).
+   *
+   * Every targeted-effect branch below that supports this (`destroy`,
+   * `move`'s targeted branch, `putCounterTarget`, `dealDamageTarget`,
+   * `fightTarget`, `pumpTarget`, `grantKeywordTarget`, `tapTarget`,
+   * `untapTarget` — see `resolveTargets`'s own doc comment) checks this
+   * FIRST: when set, resolution uses ONLY these pre-chosen objects (up to
+   * however many the effect's own `qty` allows), filtered to whichever ones
+   * are STILL present in that branch's own freshly-rebuilt candidate pool —
+   * which, since the pool is rebuilt from LIVE game state at the moment
+   * `resolveCard` actually runs, doubles as a genuine CR 115 legality
+   * re-check (still exists, still in the expected zone, still matches the
+   * restriction) without a separate mechanism. A declared target no longer
+   * in the pool is DROPPED, never replaced by a fresh pick (CR 608.2b: an
+   * illegal target is never swapped for a new one) — if NONE of a single-
+   * target effect's declared target(s) survive, that effect simply does
+   * nothing (the real "fizzle"), while the spell/ability itself still
+   * resolves and moves to its normal post-resolution zone (`engine.ts`'s
+   * `resolveTop` does that unconditionally, outside this check). A multi-
+   * target effect (`qty > 1`, e.g. Fight On!'s own "return up to two target
+   * creature cards") keeps whichever of its own declared targets are still
+   * legal and simply omits the rest — real CR 608.2b partial fizzle.
+   *
+   * Consumed FIFO (`resolveTargets` calls `.shift()`) across the WHOLE
+   * resolution, not reset per effect — so a (currently hypothetical; no
+   * real FIN card needs this today) card with more than one distinct
+   * targeted effect in the same `effects`/`triggers` entry can still divide
+   * its own single declared-target list across them, in the same order
+   * `card.effects` runs.
+   *
+   * Left unset (the overwhelming majority of this pool's own scenarios,
+   * which drive `card.ts` directly via `harness.ts`'s flat lifecycle, never
+   * through `engine.ts`'s real cast/stack path) leaves every targeted
+   * branch's behavior EXACTLY as it was before this field existed: a fresh
+   * `actions.chooseTarget(pool, ctx.preferTarget)` pick at resolution time,
+   * zero regression risk for any existing scenario.
+   *
+   * **Known, deliberately narrower scope, not attempted this pass**: (1)
+   * `dealDamageAnyTarget` ("any target" — a player OR a creature) isn't
+   * wired to this, since its own candidate pool mixes `Player`/`Card`
+   * rather than the plain `Card[]` shape every other branch shares, and no
+   * real FIN card needs a demonstrated fizzle on that specific effect kind
+   * yet. (2) This pass does NOT also gate the cast/activation itself on the
+   * declared target being legal AT THAT MOMENT (CR 601.2c's own stricter
+   * "can't even be put on the stack targeting something illegal" rule) —
+   * only the RESOLUTION-time re-check (608.2b) above is real; a caller that
+   * casts a spell at an already-illegal target today still puts it on the
+   * stack and it correctly fizzles at resolution instead of being rejected
+   * up front. The real-game-visible outcome (the spell does nothing) is
+   * identical, just one priority-round later than strict 601.2c would place
+   * it — verifying "is my declared target currently legal" up front would
+   * need the SAME per-effect-kind pool/validity logic exposed a layer
+   * higher (in `engine.ts`'s `canCastSpell`/`canActivateAbility`, which
+   * today have no visibility into `card.effects` targeting shape at all) —
+   * a real, separate, deliberately-deferred extension, not attempted here.
+   * (3) When a spell has MORE THAN ONE effect and its only targeted effect
+   * fizzles, this pass's model only skips THAT effect — any OTHER,
+   * genuinely untargeted effect on the same card (Eject's own unconditional
+   * "draw a card," alongside its own targeted "return ... to hand") still
+   * runs. Strict CR 608.2b says the WHOLE spell fails to resolve once ALL
+   * of its targets (for every instance of the word "target," collectively)
+   * are illegal — a real, narrower divergence, flagged here rather than
+   * silently assumed correct; no real FIN card's own scenario currently
+   * demonstrates or depends on the stricter whole-spell reading.
+   */
+  declaredTargets?: Card[];
 }
 
 /**
@@ -370,17 +465,19 @@ export type Effect =
       toughness: Computed<number>;
     }
   | {
-      /** Grants a keyword to a SINGLE chosen target (Magic Damper-style "target creature gains X") — same target-picking shape as `pumpTarget`. Mechanically REAL, not just documentary (see state.ts's own `grantKeyword`: it mutates the real card's `keywords`, so a later Lifelink/Indestructible check genuinely reflects it) — but DURATION isn't tracked (the grant is permanent within a scenario), same caveat `state.grantKeyword`'s own doc comment explains in full. */
+      /** Grants a keyword to a SINGLE chosen target (Magic Damper-style "target creature gains X") — same target-picking shape as `pumpTarget`. Mechanically REAL, not just documentary (see state.ts's own `grantKeyword`: it mutates the real card's `keywords`, so a later Lifelink/Indestructible check genuinely reflects it) — DURATION defaults to permanent-within-scenario (same caveat `state.grantKeyword`'s own doc comment explains in full) unless `untilEndOfTurn` is set. */
       kind: 'grantKeywordTarget';
       keyword: Keyword;
       validType?: 'creature' | 'any';
       owner?: EffectOwner;
       /** See `pumpTarget`'s own `notSelf` doc comment above — same "another target creature" exclusion. */
       notSelf?: boolean;
+      /** Real oracle text says "until end of turn" (not a bare, permanent grant) — real 514.2 Cleanup removal, see state.ts's own `grantKeyword`/`clearUntilEndOfTurnKeywordGrants` doc comments. Omit (default false) for a permanent grant. */
+      untilEndOfTurn?: boolean;
     }
   | {
       /**
-       * Grants a keyword to every creature matching `predicate` (Ardyn's own "Demons you control have menace," a real static grant to a GROUP) — same `predicate`/`notSelf`/`subtype` shape `pumpAll`/`putCounterAll` already use. Same duration caveat as `grantKeywordTarget` above.
+       * Grants a keyword to every creature matching `predicate` (Ardyn's own "Demons you control have menace," a real static grant to a GROUP) — same `predicate`/`notSelf`/`subtype` shape `pumpAll`/`putCounterAll` already use. Same duration default as `grantKeywordTarget` above (permanent-within-scenario unless `untilEndOfTurn` is set).
        *
        * `'permanents-you-control'` (Restoration Magic's own Curaga mode —
        * "Permanents you control gain hexproof and indestructible until end
@@ -396,11 +493,15 @@ export type Effect =
       keyword: Keyword;
       notSelf?: boolean;
       subtype?: string;
+      /** See `grantKeywordTarget`'s own `untilEndOfTurn` doc comment — same real 514.2 Cleanup removal, opt-in per effect. */
+      untilEndOfTurn?: boolean;
     }
   | {
-      /** `self` gains a keyword with no target/board-wide choice (Zack Fair's own "gains indestructible") — third shape mirroring `pumpSelf`. Same duration caveat as `grantKeywordTarget` above. */
+      /** `self` gains a keyword with no target/board-wide choice (Zack Fair's own "gains indestructible") — third shape mirroring `pumpSelf`. Same duration default as `grantKeywordTarget` above. */
       kind: 'grantKeywordSelf';
       keyword: Keyword;
+      /** See `grantKeywordTarget`'s own `untilEndOfTurn` doc comment — same real 514.2 Cleanup removal, opt-in per effect. */
+      untilEndOfTurn?: boolean;
     }
   | {
       /** `TapEffect`/`TapAllEffect` (forge-game/.../ability/effects/) — a CHOSEN target tapped (Coeurl's own activated ability), as opposed to `tapAll`'s board-wide predicate. */
@@ -440,6 +541,29 @@ export type Effect =
     }
   | {
       /**
+       * CR 601/305's own umbrella "play" (ENGINE_GAPS.md gap #16) — The
+       * Lunar Whale's own "As long as The Lunar Whale attacked this turn,
+       * you may play the top card of your library." Unlike `dig` (which only
+       * ever moves a library card to hand or the bottom), this genuinely
+       * PLAYS the revealed top card — a real land-drop or a real cast,
+       * whichever the card's own type turns out to be — via `actions.play`,
+       * which an engine-aware caller (`engine-trace.ts`'s own pilot Actions)
+       * backs with the real `canPlayFromLibraryTop`/`playFromLibraryTop`
+       * dispatch (`engine.ts`), reusing the real `playLand`/`canPlayLand` or
+       * `castSpell`/`canCastSpell` pairs rather than a fabricated hybrid
+       * action (see those functions' own doc comments for the real Forge
+       * `PlayEffect.java` citation). No `validType`/target filter — CR
+       * 601/305's own "play" dispatch is total over whatever's actually on
+       * top, never scoped to a subset (a card wanting a NARROWER version,
+       * e.g. Traveling Chocobo's own "lands and Bird spells only," gates
+       * whether to invoke this effect at all, same "engine primitives don't
+       * know about a specific card's own condition" split this file's other
+       * effect kinds already establish).
+       */
+      kind: 'playFromLibraryTop';
+    }
+  | {
+      /**
        * A real "choose one —" (Gaius van Baelsar's own Charm) — `ctx.mode`
        * (set per-scenario, a real player decision, not computed) selects
        * which ONE of `modes` actually runs. Every mode still contributes
@@ -471,6 +595,107 @@ export interface AlternateCost {
   from: 'graveyard' | 'exile';
   /** Flashback/Jump-start's own real rule: exiled instead of returning to the graveyard afterward. */
   thenExile?: boolean;
+}
+
+/**
+ * Real CR 601.2f/118.9 cost-reduction, keyed on the CASTER'S OWN CHOSEN
+ * TARGET for this spell (Forge: `S:Mode$ ReduceCost | ValidTarget$ ...` —
+ * `res/cardsfolder/f/fate_of_the_sun_cryst.txt`'s real shipped script:
+ * `S:Mode$ ReduceCost | ValidCard$ Card.Self | Type$ Spell | Amount$ 2 |
+ * EffectZone$ All | ValidTarget$ Creature.tapped`). Distinct from
+ * `AlternateCost` (which REPLACES the whole cost) — this DISCOUNTS the
+ * generic portion of the card's own normal `manaCost`, same as a real
+ * "costs {N} less to cast" clause never touches the colored pips (118.9:
+ * a cost can't be reduced below what its colored requirement demands).
+ *
+ * `engine.ts`'s `canCastSpell`/`castSpell` take an optional caller-supplied
+ * `declaredTarget: RealCard` (same "caller supplies the real object, engine
+ * validates" shape `crewedBy` already established for Crew) — real 601.2b
+ * ("choose targets") genuinely happens before 601.2f ("determine cost"), so
+ * a real caster always knows their own target before the discount is even
+ * computed; this model's own lazy, resolution-time `chooseTarget` machinery
+ * (`card.ts`'s `applyEffect`) is unchanged and still picks the ACTUAL
+ * resolved target later — a caller keeps the two in sync by also setting
+ * `EffectContext.preferTarget` to the same `RealCard` (same convention any
+ * other pre-determined-target scenario already uses).
+ *
+ * Only the single condition shape a real card in this pool needs is
+ * modeled today (`condition` is a plain, controlled string — not an
+ * executable predicate — same "declarative data, not code" bar every other
+ * controlled-vocabulary field in this file holds to; extend the union as a
+ * new real card needs a different condition, don't add a function param).
+ * A flat, unconditional discount (`condition` omitted) is also real (Forge:
+ * The Wind Crystal's own "White spells you cast cost {1} less to cast" —
+ * see ENGINE_GAPS.md gap #7) but is a BROADCAST effect (applies to spells
+ * OTHER than itself, gated on color, not on this card's own chosen target)
+ * — a genuinely different mechanism from this self-discount shape, not
+ * modeled here; same for a cost reduction on an ACTIVATED ABILITY's own
+ * cost rather than a spell's (Qiqirn Merchant, same gap writeup).
+ */
+export interface CostReduction {
+  /** Generic mana reduced (Forge's own `Amount$`) — only a fixed integer generic-mana discount is modeled; a variable/dynamic amount (e.g. "for each X you control") would need a `Computed`-style hook, not built here since no real card in this pool needs one yet. */
+  amount: number;
+  /**
+   * What has to be true about the caster's OWN chosen target (Forge's
+   * `ValidTarget$`) for the reduction to apply. `'tappedCreatureTarget'`
+   * requires BOTH conditions Forge's own `ValidTarget$ Creature.tapped`
+   * checks — the target must be a Creature (`state.ts`'s `effectiveTypes`,
+   * so a Crew-animated Vehicle counts) AND tapped — not just "any tapped
+   * permanent" (Fate of the Sun-Cryst's own resolved EFFECT can target any
+   * nonland permanent, a broader pool than the reduction's own narrower
+   * condition — a real, textually-precise distinction, not a simplification).
+   */
+  condition: 'tappedCreatureTarget';
+}
+
+/**
+ * Real board-state-COUNTED cost-reduction on an ACTIVATED ABILITY's own
+ * cost (ENGINE_GAPS.md gap #7's third real example) — a genuinely
+ * different mechanism from `CostReduction` above (which is keyed on the
+ * CASTER'S CHOSEN TARGET, evaluated once at cast time) and from
+ * `SpellCostReductionGrant` below (a BROADCAST onto OTHER cards' spells) —
+ * this counts real permanents on the ACTIVATOR's OWN battlefield, re-tallied
+ * fresh every time the ability's own cost is computed. Real Forge citation,
+ * `res/cardsfolder/q/qiqirn_merchant.txt` (Qiqirn Merchant's own real
+ * shipped script): `A:AB$ Draw | Cost$ 7 T Sac<1/CARDNAME> | NumCards$ 3 |
+ * ReduceCost$ X | SpellDescription$ Draw three cards. This ability costs
+ * {1} less to activate for each Town you control.` paired with `SVar:X:
+ * Count$Valid Town.YouCtrl`. `engine.ts`'s `effectiveActivationCost`
+ * computes the real discount as `amountPerMatch * (real permanents the
+ * activator controls whose subtypes include `subtype`)`, then discounts the
+ * ability's own generic mana portion the same generic-only/floored-at-0 way
+ * `mana.ts`'s `reduceGenericCost` already does for `CostReduction`. Only a
+ * bare-subtype board count is modeled (no compound filter, e.g. "Town you
+ * control that's also tapped") since no real card in this pool needs one.
+ */
+export interface ActivationCostReduction {
+  amountPerMatch: number;
+  subtype: string;
+}
+
+/**
+ * Real CR 601.2f cost-reduction this permanent BROADCASTS onto OTHER spells
+ * its controller casts, gated on color — a genuinely different mechanism
+ * from `CostReduction` above (which discounts THIS SAME card's own cast
+ * cost, keyed on a chosen target): this is a static ability a PERMANENT
+ * grants to ANY qualifying spell its controller casts, unconditional and
+ * flat, for as long as the permanent stays on the battlefield. Real Forge
+ * citation, `res/cardsfolder/t/the_wind_crystal.txt` (The Wind Crystal's own
+ * real shipped script): `S:Mode$ ReduceCost | ValidCard$ Card.White | Type$
+ * Spell | Activator$ You | Amount$ 1 | Description$ White spells you cast
+ * cost {1} less to cast.` `engine.ts`'s `effectiveCastCost` sums every
+ * matching grant on the caster's OWN battlefield permanents (`state.ts`'s
+ * `activeSpellCostDiscount`) and discounts the cast spell's own generic mana
+ * portion the same generic-only/floored-at-0 way as `CostReduction`. Only a
+ * flat amount gated on a fixed color list is modeled — a variable amount, a
+ * non-color gate (type/subtype), or an "until end of turn"-style duration on
+ * the grant itself are all real Forge shapes but unneeded by any card in
+ * this pool today.
+ */
+export interface SpellCostReductionGrant {
+  amount: number;
+  /** Real WUBRG color letters (e.g. `['W']`) — a spell qualifies if ANY of its own colored mana-cost pips matches ANY color named here (mirrors Forge's own `ValidCard$ Card.White`-style color check). */
+  colors: string[];
 }
 
 /**
@@ -575,7 +800,100 @@ export type Keyword =
    * every other `grantKeyword*` use: the grant is permanent within a
    * scenario, not cleared at end of turn.
    */
-  | 'Unblockable';
+  | 'Unblockable'
+  /**
+   * Real CR 614.2 damage-PREVENTION replacement effects (ENGINE_GAPS.md gap
+   * #8, closed for a narrow real subset) — not literal `K:` lines (real
+   * Forge models both as a per-card `R:Event$ DamageDone | Prevent$ True`
+   * static replacement, general `ReplacementEffect`/`ReplacementHandler`
+   * machinery this engine deliberately doesn't have), approximated via the
+   * SAME `keywords`/`hasKeyword`/`effectiveKeywords` machinery a real
+   * keyword grant already uses, same "duplicating a parallel primitive
+   * would be pure overhead" reasoning `'Unblockable'` above already
+   * establishes — checked at the one real chokepoint, `state.dealDamage`
+   * (see that method's own doc comment for the full real-Forge citations
+   * and exactly how each is scoped):
+   *  - `'DamagePrevention'` — ALL damage (combat or otherwise), to whatever
+   *    creature(s) currently carry it. Crystal Fragments/Summon:
+   *    Alexander's own "Prevent all damage that would be dealt to
+   *    creatures you control this turn" — GRANTED (not printed) by that
+   *    Saga's own chapter I/II effects, `kind:'grantKeywordAll'` with
+   *    `untilEndOfTurn: true` (real 514.2 Cleanup expiry, reusing the
+   *    EXISTING until-end-of-turn keyword-grant machinery, not a new one).
+   *  - `'CombatDamagePrevention'` — combat damage (510) ONLY, gated inside
+   *    `dealDamage` on its own `opts.combat` flag. Diamond Weapon's own
+   *    printed "Immune — Prevent all combat damage that would be dealt to
+   *    Diamond Weapon" — a PRINTED (not granted) self-only `keywords` entry,
+   *    same shape `'Reach'`/`'Deathtouch'` already are.
+   */
+  | 'DamagePrevention'
+  | 'CombatDamagePrevention'
+  /**
+   * Real CR 614.2 lifegain-doubling self-replacement (ENGINE_GAPS.md gap
+   * #8b, closed) — The Wind Crystal's own "If you would gain life, you gain
+   * twice that much life instead" (`res/cardsfolder/t/the_wind_crystal.txt`'s
+   * real `R:Event$ GainLife | ReplaceWith$ GainDouble ...
+   * SVar:X:ReplaceCount$LifeGained/Twice`). Same "not a literal `K:` line,
+   * approximated via the existing keyword-grant machinery" treatment as the
+   * two damage-shield entries above — checked at the one real chokepoint,
+   * `state.gainLife`, against every one of the AFFECTED PLAYER's own
+   * Battlefield permanents (a player-level replacement, not a per-creature
+   * one — see that method's own doc comment).
+   */
+  | 'LifegainDouble'
+  /**
+   * Real CR-614-style replacement on a random coin-flip OUTCOME
+   * (ENGINE_GAPS.md gap #15, closed) — Edgar, King of Figaro's own "Two-
+   * Headed Coin — The first time you flip one or more coins each turn,
+   * those coins come up heads and you win those flips"
+   * (`res/cardsfolder/e/edgar_king_of_figaro.txt`'s real `S:Mode$
+   * FlipCoinMod | ValidPlayer$ You | CheckSVar$ Count$YouFlipThisTurn |
+   * SVarCompare$ EQ0 | Result$ True`). Same not-a-literal-`K:`-line
+   * approximation as the two entries above — checked at the one real
+   * chokepoint, `state.flipCoin`, against every one of the FLIPPING
+   * PLAYER's own Battlefield permanents (same player-level scope
+   * `'LifegainDouble'` uses, not a per-creature one).
+   */
+  | 'TwoHeadedCoin';
+
+/**
+ * Shared recipient-targeting/timing shape for a continuous, QUERY-TIME
+ * grant one permanent broadcasts onto other permanents (613, ENGINE_GAPS.md
+ * gap #14) — `continuousKeywordGrants`/`continuousPTGrants`/
+ * `continuousTypeGrants` below each pair this SAME targeting logic with a
+ * different payload (a keyword list / a fixed P/T delta / a subtype list).
+ * Factored out once a THIRD payload shape needed the identical resolution
+ * rules, rather than tripling the same four fields' own doc comments across
+ * three independently-invented targeting schemes — `state.ts`'s own
+ * `qualifiesForContinuousGrant` is the one real, shared read-time
+ * implementation all three consult (see that function's own doc comment).
+ */
+interface ContinuousGrantTargeting {
+  /** Whether the granting permanent itself is also a recipient (Dion's own "Dion AND other Knights" — true; Ardyn's own "Demons you control," Ardyn himself isn't a Demon — false). */
+  includeSelf: boolean;
+  /** Real subtype filter for OTHER permanents you control this ALSO applies to (Dion's own 'Knight', Ardyn's own 'Demon') — omit for a self-only grant. */
+  subtype?: string;
+  /** Real 508/CR "during your turn" gating (`state.ts`'s own `activePlayerId`, kept in sync by `engine.ts`'s `advance()`) — omit for an unconditional, always-on grant (Ardyn's own). */
+  onlyDuringYourTurn?: boolean;
+  /** Real Equipment-broadcast shape (2026-09-12, Dragoon's Lance's own "During your turn, equipped creature has flying," generalized the same day to the P/T- and type-grant payloads too) — the recipient is whatever real, LIVE creature THIS permanent is currently attached to (`RealCard.attachedToId`, already tracked by `state.equip`/`getEquippedBy`), re-checked fresh on every read same as every other condition here — the grant genuinely moves with the Equipment if it's later re-equipped, and turns off if unattached. Mutually exclusive with `subtype` in every real card checked so far (an Equipment's own broadcast targets its equipped creature, not a controller-wide subtype), but not enforced as exclusive — a future card could plausibly want both. */
+  equippedBySelf?: boolean;
+}
+
+/**
+ * A real "Panharmonicon effect" static grant (ENGINE_GAPS.md gap #13) — see
+ * `CardDefinition.triggerDoubling`'s own doc comment for the full writeup,
+ * the real Forge citation, and the 3 real FIN cards needing this. `scope`
+ * picks WHO a doubled trigger can belong to; `causedBy`/`entersMatch`
+ * (mutually relevant only when `causedBy: 'entersBattlefield'`) restrict
+ * WHICH real cause of the trigger firing actually qualifies — omit
+ * `causedBy` for a gate with no such restriction (Cloud's own shape).
+ */
+export interface TriggerDoublingGrant {
+  scope: 'selfAndAttachedEquipment' | 'equippedSelf' | 'anyPermanentYouControl';
+  causedBy?: 'dying' | 'entersBattlefield';
+  /** OR list — any one match qualifies (Traveling Chocobo's own "a land OR Bird," `[{isLand:true},{subtype:'Bird'}]`). Only consulted when `causedBy === 'entersBattlefield'`. */
+  entersMatch?: { isLand?: boolean; subtype?: string }[];
+}
 
 /**
  * Every card definition is a plain object of this shape — a data RECORD,
@@ -607,6 +925,10 @@ export interface CardDefinition {
   readonly cmc?: number;
   /** Omit for a card with only its normal hand-cast mode. */
   readonly alternateCosts?: AlternateCost[];
+  /** Real CR 601.2f cost-reduction keyed on this spell's OWN chosen target — see `CostReduction`'s own doc comment for the real Forge citation, scope, and what's deliberately NOT covered (broadcast/color-gated discounts, activated-ability cost reductions). Omit for a card with no such clause. */
+  readonly costReduction?: CostReduction;
+  /** Real CR 601.2f cost-reduction this permanent BROADCASTS onto OTHER spells its controller casts (The Wind Crystal's own real shape) — see `SpellCostReductionGrant`'s own doc comment. Omit for a card with no such static ability. */
+  readonly spellCostReductionGrants?: SpellCostReductionGrant[];
   /**
    * Present only for an activated ability (Warren Elder's own "{3}{W}:
    * Creatures you control get +1/+1 until end of turn") — `effects` then
@@ -622,7 +944,7 @@ export interface CardDefinition {
    * Selected the same way `triggers` is (by name — see `Scenario.ability`,
    * functional-model/harness.ts), not by array position.
    */
-  readonly abilities?: { name: string; cost: string; effects: Effect[] }[];
+  readonly abilities?: { name: string; cost: string; effects: Effect[]; costReduction?: ActivationCostReduction }[];
   /** A Vehicle's own real "Crew N" cost (Phantom Train has none printed — its own ability is a sacrifice-cost activated ability instead — but the field exists for the general case). Distinct from `activationCost`: crewing doesn't pay mana, it taps creatures with total power >= N. */
   readonly crewCost?: number;
   /**
@@ -641,15 +963,15 @@ export interface CardDefinition {
    * to `staticAbilities`' freeform text below), Forge's own real K:/S: split
    * (see e.g. `adelbert_steiner.txt`'s own `K:Lifelink` vs. its separate
    * `S:Mode$ Continuous ...` line). Recognized here doesn't mean
-   * MECHANICALLY ENFORCED everywhere real MTG would enforce it — only
-   * `Lifelink` (`state.dealDamage`) and `Indestructible` (`state.destroy`)
-   * actually change resolution behavior today, since this model has no real
-   * combat/attack-block step for the rest (Flying/Trample/Deathtouch/
-   * Menace/First Strike/Double Strike are fundamentally about blocking
-   * legality and damage-assignment order, neither of which exist here) —
-   * still real, structured facts (not text) even when inert, which is
-   * strictly better for synergy detection than the old undifferentiated
-   * `staticAbilities: string[]` blob these used to live in.
+   * MECHANICALLY ENFORCED everywhere real MTG would enforce it — `Lifelink`/
+   * `Deathtouch` (`state.dealDamage`), `Indestructible` (`state.destroy`),
+   * and (2026-09-12, ENGINE_GAPS.md gaps #8/#8b/#15) `DamagePrevention`/
+   * `CombatDamagePrevention` (`state.dealDamage`), `LifegainDouble`
+   * (`state.gainLife`), and `TwoHeadedCoin` (`state.flipCoin`) all actually
+   * change resolution behavior today — still real, structured facts (not
+   * text) even when inert for a keyword this engine doesn't yet enforce,
+   * which is strictly better for synergy detection than the old
+   * undifferentiated `staticAbilities: string[]` blob these used to live in.
    */
   readonly keywords?: Keyword[];
   /**
@@ -695,17 +1017,110 @@ export interface CardDefinition {
    * cross-controller grant shape exists yet, not needed until a real card
    * forces it.
    */
-  readonly continuousKeywordGrants?: {
-    keywords: Keyword[];
-    /** Whether the granting permanent itself is also a recipient (Dion's own "Dion AND other Knights" — true; Ardyn's own "Demons you control," Ardyn himself isn't a Demon — false). */
-    includeSelf: boolean;
-    /** Real subtype filter for OTHER permanents you control this ALSO applies to (Dion's own 'Knight', Ardyn's own 'Demon') — omit for a self-only grant. */
-    subtype?: string;
-    /** Real 508/CR "during your turn" gating (`state.ts`'s own `activePlayerId`, kept in sync by `engine.ts`'s `advance()`) — omit for an unconditional, always-on grant (Ardyn's own). */
-    onlyDuringYourTurn?: boolean;
-    /** Real Equipment-broadcast shape (2026-09-12, Dragoon's Lance's own "During your turn, equipped creature has flying") — the recipient is whatever real, LIVE creature THIS permanent is currently attached to (`RealCard.attachedToId`, already tracked by `state.equip`/`getEquippedBy`), re-checked fresh on every read same as every other condition here — the grant genuinely moves with the Equipment if it's later re-equipped, and turns off if unattached. Mutually exclusive with `subtype` in every real card checked so far (an Equipment's own broadcast targets its equipped creature, not a controller-wide subtype), but not enforced as exclusive — a future card could plausibly want both. */
-    equippedBySelf?: boolean;
-  }[];
+  readonly continuousKeywordGrants?: (ContinuousGrantTargeting & { keywords: Keyword[] })[];
+  /**
+   * Real, QUERY-TIME continuous P/T grant (613.3, layer 7c) — the FIXED-
+   * DELTA sibling of `continuousKeywordGrants` above, same real machinery
+   * generalized (ENGINE_GAPS.md gap #14's own "That same card's OTHER
+   * static clause" follow-up, closed 2026-09-12): "Equipped creature gets
+   * +1/+0" (Dragoon's Lance), "+2/+1" (Paladin's Arms), "+1/+1" (Crystal
+   * Fragments, White Mage's Staff), "+1/+0" (Sage's Nouliths) — all real
+   * Forge `Mode$ Continuous | Affected$ Creature.EquippedBy | AddPower$ N
+   * | AddToughness$ N` static abilities (`StaticAbilityContinuous.java`
+   * ~line 143-166 parses `AddPower`/`AddToughness`, ~line 679-702
+   * `addPTBoost` applies them at `StaticAbilityLayer.SETPT`/
+   * `CHARACTERISTIC`, i.e. this engine's own simplified layer 7 — see
+   * `dragoons_lance.txt`/`paladins_arms.txt`/`crystal_fragments_summon_
+   * alexander.txt`/`white_mages_staff.txt`/`sages_nouliths.txt` in
+   * `../mtg-forge`'s own cardsfolder). Same "recalculated live on every
+   * read, never a fixed/timestamped `layers.ts` delta" treatment as
+   * `continuousKeywordGrants` (`state.ts`'s own `effectivePT` is this
+   * field's read-time counterpart, folded in alongside the existing
+   * layer-7a CDA/counters, same additive-total reasoning). Deliberately
+   * ONLY a fixed `power`/`toughness` NUMBER, not a `Computed`-style
+   * amount — Machinist's Arsenal's own real "+2/+2 for each artifact you
+   * control" is a genuinely VARIABLE, board-state-scaled bonus (Forge's
+   * own `SVar:X:Count$Valid Artifact.YouCtrl/Times.2` on the identical
+   * `AddPower$ X | AddToughness$ X` static ability), a real, separate,
+   * still-open gap (same class as `ptFormula`'s own "anything else stays
+   * `staticAbilities` text" scope, and Gaelicat's/Magitek Infantry's own
+   * threshold-CDA gaps) — NOT modeled by this field, kept as
+   * `staticAbilities` text on that one card only.
+   */
+  readonly continuousPTGrants?: (ContinuousGrantTargeting & { power: number; toughness: number })[];
+  /**
+   * Real, QUERY-TIME continuous TYPE grant (613.3, layer 4) — the creature-
+   * SUBTYPE sibling of `continuousKeywordGrants`/`continuousPTGrants`
+   * above, same real machinery generalized again (closed 2026-09-12):
+   * "is a Knight/Cleric/Artificer/Wizard in addition to its other types"
+   * (Dragoon's Lance/White Mage's Staff/Sage's Nouliths, Machinist's
+   * Arsenal, Astrologian's Planisphere — real Forge `AddType$ Knight` etc.
+   * on the SAME `Mode$ Continuous | Affected$ Creature.EquippedBy` static
+   * ability the P/T bonus above lives on, `StaticAbilityContinuous.java`
+   * ~line 371-426/866-867 `addChangedCardTypes` at layer TYPE — this
+   * engine's own simplified layer 4, `layers.ts`'s own `computeTypes`
+   * scope, though this field is a CROSS-object broadcast grant, not a
+   * per-object `layers.ts` timestamped effect, so it's read via `state.ts`'s
+   * new `effectiveSubtypes` instead, not `LayerSet`). Adds to `subtypes`
+   * (a creature type, e.g. `'Knight'`), not `types` (Land/Creature/
+   * Artifact/Enchantment) — every real FIN card needing this grants a
+   * CREATURE TYPE, never a card supertype/type; a hypothetical future
+   * card broadcasting a full card TYPE (as opposed to Magitek Armor's own
+   * SELF-only `animate`-based type change) would need its own, differently-
+   * scoped field, not assumed for free from this one. `types` is an array
+   * (mirroring `keywords` above) even though every real card here only
+   * ever grants exactly one.
+   */
+  readonly continuousTypeGrants?: (ContinuousGrantTargeting & { types: string[] })[];
+  /**
+   * Real "Panharmonicon effect" — a static ability making some OTHER
+   * triggered ability trigger an ADDITIONAL time under a real, checkable
+   * gate (ENGINE_GAPS.md gap #13, closed 2026-09-12). Real Forge citation
+   * for the general shape: `S:Mode$ Panharmonicon`
+   * (`res/cardsfolder/c/cloud_midgar_mercenary.txt`, the real shipped card
+   * script — a source checkout wasn't available for this exact file, this
+   * is the real shipped script, grepped directly) — Forge itself names this
+   * mode after the card that originated the effect and treats it as a
+   * general, opt-in condition any card's own script can declare (gated by
+   * `ValidCard$`), not a one-off. Checked against the real pool: exactly 3
+   * FIN cards need this, each with a genuinely different gate:
+   *  - Cloud, Midgar Mercenary: "As long as Cloud is equipped, if a
+   *    triggered ability of Cloud or an Equipment attached to it triggers,
+   *    that ability triggers an additional time." — `{ scope:
+   *    'selfAndAttachedEquipment' }`, no `causedBy` restriction at all (ANY
+   *    triggered ability doubles, as long as the precondition — genuinely
+   *    equipped right now — holds).
+   *  - The Masamune: "Equipped creature has 'If a creature dying causes a
+   *    triggered ability of this creature or an emblem you own to trigger,
+   *    that ability triggers an additional time.'" — `{ scope:
+   *    'equippedSelf', causedBy: 'dying' }`, granted via Equip onto whatever
+   *    creature it's attached to (same real `equippedBySelf`-style
+   *    recipient resolution `continuousKeywordGrants` already established
+   *    for an Equipment-broadcast grant). The "...or an emblem you own"
+   *    half is real printed text but genuinely unmodelable — no emblem
+   *    mechanism exists anywhere in this engine — so it can never actually
+   *    match; a real, accepted, permanent sub-gap, not silently dropped.
+   *  - Traveling Chocobo: "If a land or Bird you control entering the
+   *    battlefield causes a triggered ability of a permanent you control to
+   *    trigger, that ability triggers an additional time." — `{ scope:
+   *    'anyPermanentYouControl', causedBy: 'entersBattlefield', entersMatch:
+   *    [{isLand:true}, {subtype:'Bird'}] }` — applies to ANY permanent the
+   *    controller owns, not just self.
+   * `state.ts`'s own `shouldDoubleTrigger` is the one real, shared
+   * QUERY-TIME check (same "recalculated on read, never a fixed/timestamped
+   * delta" treatment `continuousKeywordGrants`/`effectiveKeywords` already
+   * establish) — consulted by the new shared `triggers.ts`'s own
+   * `fireTrigger`, which every real trigger-firing call site in this
+   * codebase (`stack.ts`, `engine.ts`'s 3 trigger-dispatch sites, `saga.ts`,
+   * `harness.ts`'s scenario runner, `engine-trace.ts`'s `pilotFireTrigger`)
+   * now funnels a NAMED trigger's resolution through, instead of calling
+   * `resolveCard` directly. `RealCard.triggerDoubling` (state.ts) is the
+   * duck-typed, structurally-identical field this gets copied onto at
+   * resolve time, same "state.ts never imports card.ts, re-declares its own
+   * matching shape" convention `continuousKeywordGrants` already
+   * establishes.
+   */
+  readonly triggerDoubling?: TriggerDoublingGrant[];
   /**
    * Continuous rules text that ISN'T a recognized `keywords` entry,
    * `ptFormula`, or `continuousKeywordGrants` — plain description, NEVER
@@ -776,6 +1191,49 @@ function battlefieldPool(players: Player[], validType: BattlefieldValidType | un
   return players.flatMap((p) => p.getCardsIn('Battlefield')).filter((c) => matchesValidType(c, validType));
 }
 
+/**
+ * The one shared chokepoint every targeted-effect branch below that
+ * supports cast-time target-locking (ENGINE_GAPS.md gap #4) calls instead
+ * of a raw `actions.chooseTarget` loop — see `EffectContext.declaredTargets`'s
+ * own doc comment for the full CR 601.2c/608.2b design writeup this
+ * implements. `pool` is the CALLING branch's own already-filtered candidate
+ * list (validType/owner/notSelf/etc. already applied) — this function
+ * itself does no filtering beyond membership-by-id, since `pool` IS the
+ * legality check.
+ *
+ * When `ctx.declaredTargets` is set: takes up to `qty` entries off the
+ * FRONT of it (FIFO, shared across the whole resolution — see that field's
+ * own doc comment) that are STILL present in `pool` (by `getId()`, not
+ * object identity — `harness.ts`/`engine-trace.ts`'s own `Player.getCardsIn`
+ * wrapping produces a FRESH `Card` wrapper object per call, never a stable
+ * reference), silently dropping (never replacing) any that aren't. Returns
+ * however many survive — 0 to `qty`, inclusive — with NO fallback to a
+ * fresh `chooseTarget` pick (608.2b: an illegal target is dropped, not
+ * substituted).
+ *
+ * When unset: byte-for-byte the SAME loop every targeted branch already ran
+ * before this pass — a fresh `actions.chooseTarget(remaining, ctx.preferTarget)`
+ * pick per slot, stopping once the pool is exhausted.
+ */
+function resolveTargets(pool: Card[], qty: number, ctx: EffectContext, actions: Actions): Card[] {
+  if (ctx.declaredTargets) {
+    const chosen: Card[] = [];
+    while (chosen.length < qty && ctx.declaredTargets.length > 0) {
+      const next = ctx.declaredTargets.shift()!;
+      if (pool.some((c) => c.getId() === next.getId())) chosen.push(next);
+      // else: this declared target is no longer legal (608.2b) — dropped, not replaced.
+    }
+    return chosen;
+  }
+  const targets: Card[] = [];
+  for (let i = 0; i < qty; i++) {
+    const remaining = pool.filter((c) => !targets.includes(c));
+    if (remaining.length === 0) break;
+    targets.push(actions.chooseTarget(remaining, ctx.preferTarget));
+  }
+  return targets;
+}
+
 function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void {
   switch (effect.kind) {
     case 'createToken':
@@ -823,15 +1281,13 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       if (effect.target) {
         // Real MTG rule (601.2c): ALL targets are chosen together, once,
         // when the spell is cast — BEFORE it resolves. The effect is then
-        // applied to each of them at resolution. Two separate loops on
-        // purpose, not one choose-then-act-immediately loop: excluding an
-        // already-CHOSEN target from the next pick is a targeting
-        // restriction ("can't target the same object twice"), not a
-        // side effect of it having already been moved — those are
-        // different reasons that happen to look identical for this card
-        // (nothing here can invalidate a target between casting and
-        // resolving), but would diverge for a card where something else
-        // could remove a target in between.
+        // applied to each of them at resolution. `resolveTargets` is what
+        // actually enforces this now (ENGINE_GAPS.md gap #4) when a caller
+        // locked in real cast-time targets via `ctx.declaredTargets` —
+        // dropping (never replacing) one that became illegal in between,
+        // real CR 608.2b; falls back to this file's original lazy
+        // choose-at-resolution loop when unset (see that function's own
+        // doc comment).
         //
         // ONE combined pool across every returned player (same shape
         // `destroy`/`putCounterTarget`'s own `battlefieldPool` already
@@ -843,12 +1299,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
           .filter((c) => matchesValidType(c, effect.validType))
           .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId())
           .filter((c) => !effect.nonLand || !c.isLand());
-        const targets: Card[] = [];
-        for (let i = 0; i < qty; i++) {
-          const remaining = pool.filter((c) => !targets.includes(c));
-          if (remaining.length === 0) break;
-          targets.push(actions.chooseTarget(remaining, ctx.preferTarget));
-        }
+        const targets = resolveTargets(pool, qty, ctx, actions);
         for (const target of targets) actions.moveTo(target, effect.to);
       } else {
         // Untargeted batch search stays per-player — `actions.move` is
@@ -865,12 +1316,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     case 'putCounterTarget': {
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType);
       const qty = resolve(effect.qty ?? 1, ctx);
-      const chosen: Card[] = [];
-      for (let i = 0; i < qty; i++) {
-        const remaining = pool.filter((c) => !chosen.includes(c));
-        if (remaining.length === 0) break;
-        chosen.push(actions.chooseTarget(remaining, ctx.preferTarget));
-      }
+      const chosen = resolveTargets(pool, qty, ctx, actions);
       for (const target of chosen) actions.putCounter(target, effect.counterType, resolve(effect.amount, ctx));
       return;
     }
@@ -899,12 +1345,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
             (minPower === undefined || c.getNetPower() >= minPower)
         );
       const qty = resolve(effect.qty, ctx);
-      const targets: Card[] = [];
-      for (let i = 0; i < qty; i++) {
-        const remaining = pool.filter((c) => !targets.includes(c));
-        if (remaining.length === 0) break;
-        targets.push(actions.chooseTarget(remaining, ctx.preferTarget));
-      }
+      const targets = resolveTargets(pool, qty, ctx, actions);
       for (const target of targets) actions.destroy(target);
       return;
     }
@@ -915,7 +1356,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'dealDamageTarget': {
       const pool = playersFor(effect.owner ?? 'each', ctx).flatMap((p) => p.getCreaturesInPlay());
-      const target = actions.chooseTarget(pool, ctx.preferTarget);
+      const target = resolveTargets(pool, 1, ctx, actions)[0];
       if (target) actions.dealDamage(ctx.self, target, resolve(effect.amount, ctx));
       return;
     }
@@ -941,7 +1382,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'fightTarget': {
       const pool = playersFor(effect.owner ?? 'each', ctx).flatMap((p) => p.getCreaturesInPlay());
-      const target = actions.chooseTarget(pool, ctx.preferTarget);
+      const target = resolveTargets(pool, 1, ctx, actions)[0];
       if (target) {
         actions.dealDamage(ctx.self, target, ctx.self.getNetPower());
         actions.dealDamage(target, ctx.self, target.getNetPower());
@@ -961,7 +1402,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       const pool = playersFor(effect.owner ?? 'each', ctx)
         .flatMap((p) => p.getCreaturesInPlay())
         .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
-      const target = actions.chooseTarget(pool, ctx.preferTarget);
+      const target = resolveTargets(pool, 1, ctx, actions)[0];
       if (target) actions.pump(target, resolve(effect.power, ctx), resolve(effect.toughness, ctx));
       return;
     }
@@ -978,8 +1419,8 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       // existing caller (seifer-almasy, gladiolus-amicitia, etc.), not
       // `matchesValidType`'s own "undefined = match everything" default.
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType ?? 'creature').filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
-      const target = actions.chooseTarget(pool, ctx.preferTarget);
-      if (target) actions.grantKeyword(target, effect.keyword);
+      const target = resolveTargets(pool, 1, ctx, actions)[0];
+      if (target) actions.grantKeyword(target, effect.keyword, { untilEndOfTurn: effect.untilEndOfTurn });
       return;
     }
     case 'grantKeywordAll': {
@@ -987,22 +1428,22 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       for (const card of pool) {
         if (effect.notSelf && card.getId() === ctx.self.getId()) continue;
         if (effect.subtype && !card.hasSubtype(effect.subtype)) continue;
-        actions.grantKeyword(card, effect.keyword);
+        actions.grantKeyword(card, effect.keyword, { untilEndOfTurn: effect.untilEndOfTurn });
       }
       return;
     }
     case 'grantKeywordSelf':
-      actions.grantKeyword(ctx.self, effect.keyword);
+      actions.grantKeyword(ctx.self, effect.keyword, { untilEndOfTurn: effect.untilEndOfTurn });
       return;
     case 'tapTarget': {
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType).filter((c) => !effect.excludeEnchantment || !c.isEnchantment());
-      const target = actions.chooseTarget(pool, ctx.preferTarget);
+      const target = resolveTargets(pool, 1, ctx, actions)[0];
       if (target) actions.tap(target);
       return;
     }
     case 'untapTarget': {
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType).filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
-      const target = actions.chooseTarget(pool, ctx.preferTarget);
+      const target = resolveTargets(pool, 1, ctx, actions)[0];
       if (target) actions.untap(target);
       return;
     }
@@ -1012,6 +1453,12 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'dig': {
       actions.dig(ctx.you, resolve(effect.qty, ctx), resolve(effect.take, ctx), effect.validType);
+      return;
+    }
+    case 'playFromLibraryTop': {
+      const top = ctx.you.getCardsIn('Library')[0];
+      if (!top) return; // a real, legal case (CR 601/305's own "play" dispatch has nothing to do against an empty library) — same "nothing there" no-op `dig` already has.
+      actions.play(ctx.you, top, ctx.topLibraryCard);
       return;
     }
     case 'modal': {
@@ -1128,6 +1575,9 @@ export function synergyTags(card: CardDefinition): string[] {
         break;
       case 'dig':
         tags.push(`dig:${effect.validType ?? 'any'}`);
+        break;
+      case 'playFromLibraryTop':
+        tags.push('play:library-top');
         break;
       case 'modal':
         for (const mode of effect.modes) for (const inner of mode.effects) tagEffect(inner);

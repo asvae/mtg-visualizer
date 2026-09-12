@@ -55,6 +55,7 @@
         }
       },
       "targeted": false,
+      "untilEndOfTurn": true,
       "value": 1,
       "annotations": [
         {

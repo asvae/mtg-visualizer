@@ -1,19 +1,49 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> real ETB library search",
-      "result": "Cloud enters; real ETB (603.6b) searches your real library for an artifact card, puts it into hand. The equip-triggered ability-doubling static is printed text only — no trigger-multiplying machinery exists in this engine.",
+      "setup": "you: 9 Plains(s)",
+      "action": "real engine playthrough: cast Cloud -> real ETB tutor -> cast+equip Ultima Weapon -> real attack -> Ultima Weapon's own destroy trigger fires TWICE (Cloud's own doubling static is now real)",
+      "result": "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is genuinely equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it, so it fires TWICE, destroying BOTH real opponent creatures (Coeurl, then Hill Gigas).",
       "raw": {
-        "result": "Cloud enters; real ETB (603.6b) searches your real library for an artifact card, puts it into hand. The equip-triggered ability-doubling static is printed text only — no trigger-multiplying machinery exists in this engine.",
+        "result": "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is genuinely equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it, so it fires TWICE, destroying BOTH real opponent creatures (Coeurl, then Hill Gigas).",
         "you": {
           "basicLands": [
             "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
             "Plains"
           ],
-          "libraryCount": 8,
-          "libraryArtifactCount": 1
-        }
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8,
+            "creatureCards": [
+              {
+                "name": "Coeurl",
+                "subtypes": [
+                  "Cat",
+                  "Beast"
+                ],
+                "power": 2,
+                "toughness": 2
+              },
+              {
+                "name": "Hill Gigas",
+                "subtypes": [
+                  "Giant"
+                ],
+                "power": 5,
+                "toughness": 4
+              }
+            ]
+          }
+        ]
       }
     },
     "log": [
@@ -82,12 +112,256 @@
         "result": false
       },
       {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Ultima Weapon",
+        "result": true
+      },
+      {
         "fn": "move",
         "player": "you",
         "from": "Library",
         "to": "Hand",
         "qty": 1,
         "validType": "artifact"
+      },
+      {
+        "fn": "cast",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{7}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "enters",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "activate",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "cost": "Equip {7}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ultima Weapon"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "equip",
+        "equipment": "Ultima Weapon",
+        "equipmentId": 31,
+        "target": "Cloud, Midgar Mercenary",
+        "id": 30
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Cloud, Midgar Mercenary",
+        "id": 30
+      },
+      {
+        "fn": "attack",
+        "card": "Cloud, Midgar Mercenary",
+        "id": 30
+      },
+      {
+        "fn": "trigger",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "name": "onEquippedAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 2,
+        "creatureCount": 2
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
+        "result": true
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hill Gigas",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "Coeurl",
+        "id": 20,
+        "controller": "opp0"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ultima Weapon",
+        "instanceId": 1,
+        "name": "onEquippedAttacks"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Hill Gigas",
+        "result": true
+      },
+      {
+        "fn": "destroy",
+        "target": "Hill Gigas",
+        "id": 21,
+        "controller": "opp0"
       }
     ],
     "actions": [
@@ -102,6 +376,42 @@
       {
         "label": "Resolve",
         "from": 3
+      },
+      {
+        "label": "Cast Ultima Weapon ({7})",
+        "from": 15
+      },
+      {
+        "label": "Resolve",
+        "from": 23
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 24
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 35
+      },
+      {
+        "label": "Equip {7}: attach Ultima Weapon to Cloud",
+        "from": 38
+      },
+      {
+        "label": "Resolve",
+        "from": 46
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 48
+      },
+      {
+        "label": "Declare Cloud (equipped, +7/+7) as attacker",
+        "from": 49
+      },
+      {
+        "label": "Ultima Weapon's own attack trigger fires (equipped creature attacks) — doubled by Cloud's own equipped static",
+        "from": 51
       }
     ]
   }

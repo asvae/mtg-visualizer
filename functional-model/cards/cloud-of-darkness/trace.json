@@ -38,17 +38,17 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -60,23 +60,23 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 402,
+        "id": 6,
         "power": -3,
         "toughness": -3
       }
@@ -126,7 +126,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 406,
+        "id": 10,
         "power": 0,
         "toughness": 0
       }

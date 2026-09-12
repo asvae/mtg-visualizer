@@ -76,9 +76,9 @@
 //    out of scope to edit.
 
 import type { CardDefinition, EffectContext, Actions } from './card';
-import { resolveCard } from './card';
 import type { RealCard, RealPlayer } from './state';
 import type { GameEngine } from './engine';
+import { fireTrigger } from './triggers';
 
 const CHAPTER_NAMES = ['chapterI', 'chapterII', 'chapterIII', 'chapterIV', 'chapterV'] as const;
 
@@ -133,7 +133,10 @@ export function advanceSaga(engine: GameEngine, real: RealCard, registered: Reso
   engine.state.putCounter(real, 'LORE', 1);
   const chapterName = CHAPTER_NAMES[nextCount - 1]!;
   const trigger = card.triggers?.find((t) => t.name === chapterName);
-  if (trigger) resolveCard(card, registered.ctx, registered.actions, trigger.name);
+  // No `cause` — a Saga chapter's own lore-counter tick isn't "caused by
+  // dying" or "caused by a permanent entering" (ENGINE_GAPS.md gap #13);
+  // only a cause-less doubling gate (Cloud's own shape) could ever apply.
+  if (trigger) fireTrigger(engine.state, card, registered.ctx, registered.actions, trigger.name);
 
   if (nextCount >= max) {
     // 714.4's own sacrifice — SKIPPED if the chapter's own resolution

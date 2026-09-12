@@ -6,7 +6,17 @@ export const sagesNouliths: CardDefinition = {
   manaCost: '{1}{U}',
   typeLine: 'Artifact — Equipment',
 
+  // The +1/+0 P/T bonus and "is a Cleric" type grant are now real,
+  // executable machinery (ENGINE_GAPS.md gap #14, fully closed 2026-09-12),
+  // same generalization dragoon-s-lance's/paladin-s-arms's/white-mage-s-
+  // staff's own migrations established. The granted "Whenever this
+  // creature attacks, untap target attacking creature" ability below stays
+  // its own, unrelated (already-real) mechanism — see the `onEquippedAttacks`
+  // trigger's own comment.
   staticAbilities: ['Equipped creature gets +1/+0 and is a Cleric in addition to its other types.'],
+
+  continuousPTGrants: [{ power: 1, toughness: 0, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Cleric'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — same real ETB mechanic (create a 1/1 Hero token, attach
   // this to it) as dragoon-s-lance/machinist-s-arsenal/paladin-s-arms'
@@ -28,11 +38,26 @@ export const sagesNouliths: CardDefinition = {
     // The granted "whenever this creature attacks, untap target attacking
     // creature" — granted TO the equipped creature by Sage's Nouliths' own
     // static ability, modeled here as if it were Sage's Nouliths' own
-    // trigger, same simplification ninja-s-blades' own
-    // `onEquippedDealsDamage` already documents (the real source is
-    // whichever creature is equipped, not this permanent). No declarative
-    // "untap a chosen target" Effect kind exists (only `tapTarget`), so
-    // `custom` calling the real `untap` action directly.
+    // trigger, same real-source simplification ninja-s-blades'/buster-
+    // sword's/ultima-weapon's own `onEquippedDealsDamage`/`onEquippedAttacks`
+    // already establish (the real source is whichever creature is equipped,
+    // not this permanent) — the SAME conceptual "grants a whole new
+    // triggered ability to another permanent" gap white-mage-s-staff's own
+    // lifegain grant and astrologian-s-planisphere's own putCounter grant
+    // document (no `Effect`/`Actions` member anywhere in this model actually
+    // grants a fresh trigger+effect pair to ANOTHER permanent), but this
+    // card's own version of the simplification was ALREADY WIRED (pre-dates
+    // this migration pass) rather than left deliberately unwired the way
+    // White Mage's Staff's was — so unlike that card's own inert `lifegain`
+    // fact, `synergy.json`'s own `event:'untap'` fact here is REAL,
+    // evidenced vocabulary (`event:'untap'` promoted off `PARKED_ACTION_FNS`
+    // the same day by Magic Damper/fin-61's own `untapTarget` Effect), with
+    // genuine `fn:'untap'` trace evidence from this exact trigger firing
+    // (see `scenarios.ts`) — no `verify-synergy.mjs` exemption needed for
+    // it, only for the sibling `pump`/`grantType` static-broadcast facts
+    // below (still real gaps, no layer-7c pipeline). No declarative "untap
+    // a chosen target" Effect kind exists (only `tapTarget`), so `custom`
+    // calling the real `untap` action directly.
     {
       name: 'onEquippedAttacks',
       effects: [

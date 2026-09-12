@@ -18,7 +18,7 @@ import type { Scenario } from '../../harness';
 export const scenarios: Scenario[] = [
   {
     result:
-      'Knights of Round enters (714.2b/c fires chapter I immediately, creating three real 2/2 white Knight tokens); chapters II-IV fire the same real way on later draw steps, each creating three more (up to 12 total); chapter V — Ultimate End — pumps every other creature you control (the real Knight tokens) +2/+2 until end of turn and puts a real indestructible counter on each of them; once chapter V resolves, 714.4 sacrifices it.',
+      'Knights of Round enters (714.2b/c fires chapter I immediately, creating three 2/2 white Knight tokens); chapters II-IV fire the same way on later draw steps, each creating three more (up to 12 total); chapter V — Ultimate End — pumps every other creature you control (the Knight tokens) +2/+2 until end of turn and puts an indestructible counter on each of them; once chapter V resolves, 714.4 sacrifices it.',
     sequence: ['chapterI', 'chapterII', 'chapterIII', 'chapterIV', 'chapterV'],
     sacrificeSelfAfter: true,
   },

@@ -1,0 +1,10 @@
+{
+  "source": [
+    { "anchor": "typeLine", "sourceText": "Artifact", "highlight": "Artifact" },
+    { "anchor": "typeLine", "sourceText": "Artifact", "highlight": "Artifact" },
+    { "sourceText": "{T}, Exile this artifact: Add {U}.", "highlight": "{T}" },
+    { "sourceText": "{T}, Exile this artifact: Add {U}.", "highlight": "Exile this artifact" },
+    { "sourceText": "{T}, Exile this artifact: Add {U}.", "highlight": "Add {U}" }
+  ],
+  "sink": []
+}

@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Artifact — Vehicle",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Artifact — Vehicle",
+      "highlight": "Legendary Artifact"
+    },
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, The Prima Vista becomes an artifact creature until end of turn.",
+      "highlight": "The Prima Vista becomes an artifact creature until end of turn"
+    },
+    {
+      "sourceText": "Crew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "Tap any number of creatures you control with total power 2 or more"
+    },
+    {
+      "sourceText": "Crew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "This Vehicle becomes an artifact creature until end of turn"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it, The Prima Vista becomes an artifact creature until end of turn.",
+      "highlight": "Whenever you cast a noncreature spell, if at least four mana was spent to cast it"
+    },
+    {
+      "sourceText": "Crew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)",
+      "highlight": "Tap any number of creatures you control with total power 2 or more"
+    }
+  ]
+}

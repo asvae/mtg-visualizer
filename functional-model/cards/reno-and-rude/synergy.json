@@ -38,6 +38,7 @@
           "Artifact"
         ]
       },
+      "excludeSelf": true,
       "value": 1
     }
   ]

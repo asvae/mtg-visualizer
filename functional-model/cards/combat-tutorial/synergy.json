@@ -1,17 +1,48 @@
 {
   "source": [
     {
-      "id": "self-graveyard",
-      "zone": "Graveyard",
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
+    },
+    {
+      "to": "Graveyard",
       "controller": "you",
       "subject": "self",
       "value": 1,
-      "sourceText": "(implicit — not a printed clause: any sorcery goes to its owner's graveyard after it resolves, a generic MTG rule (608.2m), not specific to this card's own text.)"
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ]
     },
     {
-      "id": "counter-target",
+      "event": "drawCard",
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 29
+        }
+      ]
+    },
+    {
       "event": "putCounter",
       "counterType": "+1/+1",
+      "controller": "you",
       "target": {
         "types": {
           "has": [
@@ -19,23 +50,36 @@
           ]
         }
       },
+      "targeted": true,
       "value": 1,
-      "sourceText": "Put a +1/+1 counter on up to one target creature you control.",
-      "highlight": "Put a +1/+1 counter on up to one target creature you control"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 31,
+          "end": 91
+        }
+      ]
     }
   ],
   "sink": [
     {
-      "id": "wants-creature-target",
-      "zone": "Battlefield",
+      "to": "Battlefield",
+      "controller": "you",
       "types": {
         "has": [
           "Creature"
         ]
       },
-      "sourceText": "Put a +1/+1 counter on up to one target creature you control — needs a legal creature to target.",
-      "highlight": "Put a +1/+1 counter on up to one target creature you control",
-      "value": 1
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 64,
+          "end": 91
+        }
+      ]
     }
   ]
 }

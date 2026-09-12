@@ -1,0 +1,36 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Elemental Ooze",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Elemental Ooze",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "When this creature enters, tap target artifact or creature an opponent controls. Put a stun counter on it.",
+      "highlight": "tap target artifact or creature an opponent controls"
+    },
+    {
+      "sourceText": "When this creature enters, tap target artifact or creature an opponent controls. Put a stun counter on it.",
+      "highlight": "Put a stun counter on it"
+    },
+    {
+      "sourceText": "Islandcycling {2} ({2}, Discard this card: Search your library for an Island card, reveal it, put it into your hand, then shuffle.)",
+      "highlight": "Search your library for an Island card, reveal it, put it into your hand"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "When this creature enters, tap target artifact or creature an opponent controls. Put a stun counter on it.",
+      "highlight": "target artifact or creature an opponent controls"
+    },
+    {
+      "sourceText": "Islandcycling {2} ({2}, Discard this card: Search your library for an Island card, reveal it, put it into your hand, then shuffle.)",
+      "highlight": "Discard this card"
+    }
+  ]
+}

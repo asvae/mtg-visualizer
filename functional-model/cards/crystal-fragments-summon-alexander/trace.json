@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 7 Plains(s); opp0: 1 Forest(s)",
       "action": "real engine playthrough: cast -> equip -> transform -> Saga chapters over real turns -> sacrifice",
-      "result": "Crystal Fragments enters, real Equipment attachment onto a real creature (+1/+1 — no continuous-effect pipeline in this engine recalculates the equipped creature, a real documented gap); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — real 714.2b/c, chapter I fires immediately (damage prevention — no resolvable effect in this model), chapter II fires on your next draw step (same), chapter III fires the turn after (taps the real opponent Coeurl), then the real \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the real turn-based engine.",
+      "result": "Crystal Fragments enters, Equipment attachment onto a creature genuinely recalculates its P/T live (a real +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, genuinely granting a real all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is actually prevented), chapter II fires on your next draw step (same real shield, re-granted), chapter III fires the turn after (taps the opponent's Coeurl), then the \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.",
       "raw": {
-        "result": "Crystal Fragments enters, real Equipment attachment onto a real creature (+1/+1 — no continuous-effect pipeline in this engine recalculates the equipped creature, a real documented gap); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — real 714.2b/c, chapter I fires immediately (damage prevention — no resolvable effect in this model), chapter II fires on your next draw step (same), chapter III fires the turn after (taps the real opponent Coeurl), then the real \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the real turn-based engine.",
+        "result": "Crystal Fragments enters, Equipment attachment onto a creature genuinely recalculates its P/T live (a real +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, genuinely granting a real all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is actually prevented), chapter II fires on your next draw step (same real shield, re-granted), chapter III fires the turn after (taps the opponent's Coeurl), then the \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.",
         "you": {
           "basicLands": [
             "Plains",
@@ -67,6 +67,12 @@
         "fn": "equip",
         "equipment": "Crystal Fragments",
         "target": "Dwarven Castle Guard"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Dwarven Castle Guard",
+        "power": 3,
+        "toughness": 2
       },
       {
         "fn": "phase",
@@ -144,14 +150,14 @@
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "id": 501,
+        "id": 33,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "id": 501,
+        "id": 33,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -171,6 +177,33 @@
         "card": "Summon: Alexander",
         "instanceId": 1,
         "name": "chapterI"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Dwarven Castle Guard",
+        "id": 31,
+        "keyword": "DamagePrevention",
+        "untilEndOfTurn": true
+      },
+      {
+        "fn": "damagePrevented",
+        "source": "Coeurl",
+        "sourceId": 32,
+        "target": "Dwarven Castle Guard",
+        "id": 31,
+        "amount": 3
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Dwarven Castle Guard",
+        "id": 31,
+        "keyword": "DamagePrevention",
+        "removed": true
       },
       {
         "fn": "phase",
@@ -235,10 +268,29 @@
         "name": "chapterII"
       },
       {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Dwarven Castle Guard",
+        "id": 31,
+        "keyword": "DamagePrevention",
+        "untilEndOfTurn": true
+      },
+      {
         "fn": "phase",
         "phase": "Main1",
         "turn": 5,
         "player": "you"
+      },
+      {
+        "fn": "grantKeyword",
+        "target": "Dwarven Castle Guard",
+        "id": 31,
+        "keyword": "DamagePrevention",
+        "removed": true
       },
       {
         "fn": "phase",
@@ -282,7 +334,7 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 500,
+        "id": 32,
         "controller": "opp0"
       },
       {
@@ -315,40 +367,48 @@
         "from": 5
       },
       {
-        "label": "Pass turn (you)",
+        "label": "Real layer-7c recalculation — Equipped creature gets +1/+1",
         "from": 6
       },
       {
+        "label": "Pass turn (you)",
+        "from": 7
+      },
+      {
         "label": "Pass turn (opp0)",
-        "from": 9
+        "from": 10
       },
       {
         "label": "Activate Crystal Fragments",
-        "from": 12
+        "from": 13
       },
       {
         "label": "Resolve",
-        "from": 20
+        "from": 21
+      },
+      {
+        "label": "Chapter I shield: a 3-damage hit against your own creature is prevented",
+        "from": 28
       },
       {
         "label": "Pass turn (you)",
-        "from": 25
+        "from": 30
       },
       {
         "label": "Pass turn (opp0)",
-        "from": 34
-      },
-      {
-        "label": "Pass turn (you)",
         "from": 39
       },
       {
+        "label": "Pass turn (you)",
+        "from": 47
+      },
+      {
         "label": "Pass turn (opp0)",
-        "from": 41
+        "from": 49
       },
       {
         "label": "Real \"Sacrifice after III\" (714.4/704.5x)",
-        "from": 48
+        "from": 56
       }
     ]
   }

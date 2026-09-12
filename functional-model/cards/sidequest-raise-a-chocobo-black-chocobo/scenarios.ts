@@ -5,7 +5,7 @@ export const scenarios: Scenario[] = [
   { result: 'the transform condition/consequence is text-only in this model — no board state is checked or mutated', trigger: 'onMainPhase' },
   {
     result:
-      'no land card available in library to search for (this harness has no land-typed library filler — see definition.ts\'s own comment on this real, untestable gap)',
+      'no land card available in library to search for (this harness has no land-typed library filler — see definition.ts\'s own comment on this untestable gap)',
     face: 'back',
     trigger: 'onTransform',
     you: { libraryCount: 1 },

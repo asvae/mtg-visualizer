@@ -1,15 +1,104 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onAttack\" trigger fires",
-      "result": "surveils 1",
+      "setup": "you: 2 Island(s); opp0: 1 Forest(s)",
+      "action": "real engine playthrough: cast -> turn passage -> real attack -> onAttack (real surveil)",
+      "result": "Il Mheg Pixie enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, surveiling 1.",
       "raw": {
-        "trigger": "onAttack",
-        "result": "surveils 1"
+        "result": "Il Mheg Pixie enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, surveiling 1.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "basicLands": [
+              "Forest"
+            ],
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Il Mheg Pixie",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Il Mheg Pixie"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Il Mheg Pixie"
+      },
+      {
+        "fn": "enters",
+        "card": "Il Mheg Pixie",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Il Mheg Pixie",
+        "id": 16
+      },
+      {
+        "fn": "attack",
+        "card": "Il Mheg Pixie",
+        "id": 16
+      },
       {
         "fn": "trigger",
         "card": "Il Mheg Pixie",
@@ -20,6 +109,40 @@
         "fn": "surveil",
         "player": "you",
         "qty": 1
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Il Mheg Pixie ({1}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 4
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 8
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 11
+      },
+      {
+        "label": "Declare Il Mheg Pixie as attacker",
+        "from": 12
+      },
+      {
+        "label": "Fire onAttack",
+        "from": 14
       }
     ]
   }

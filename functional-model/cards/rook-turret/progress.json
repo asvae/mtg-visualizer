@@ -2,10 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-12",
+  "notes": "Migrated to the unified Fact model (2026-09-12): baseline self-cast/self-enters SOURCE facts added (previously none at all), a real optional drawCard+discard loot SOURCE pair for the ETB trigger, and the real event-shaped SINK for the trigger condition itself (entersBattlefield, controller:you, types:has:['Artifact']) — same shape/precedent as loporrit-scout's/woodland-weavemaster's own 'another X enters' wants. Added TRIGGER_EVENT_MAP['onArtifactEnters'] = 'entersBattlefield' (verify-synergy.mjs), left unmapped until now on purpose. Consolidated to 1 scenario: dropped the old top-level `trigger: 'onArtifactEnters'` shortcut (which gave zero cast/enters evidence) for `sequence: ['onArtifactEnters']` after a real cast->resolve->enters lifecycle, same dwarven-castle-guard/cloudbound-moogle consolidation. Dropped the pre-migration file's own stray, unexplained {zone:'Graveyard'} source fact — no real basis in this card's oracle text. verify-synergy/vitest clean; see SYNERGY_DESIGN.md's own 2026-09-12 Rook Turret entry for the full writeup, including a real newly-surfaced (not caused by this migration) matcher gap: an event-shaped want's own bare `types` constraint is never actually read by factsInteract's event branch, so this card's own sink (and loporrit-scout's/woodland-weavemaster's identically-shaped ones) currently vacuously match all 13 of the pool's unconstrained entersBattlefield producers (all lands), not just real artifacts.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "onArtifactEnters want has zero read: evidence and only one scenario — left as wants:[], the real trigger condition is completely unverified/undeclared"
+    "The 'you MAY draw... if you do, discard' gating is documentary-only (same convention every other optional effect in this pool uses) — a legal draw/discard always happens once the trigger fires, no player-decision engine anywhere in this model.",
+    "This card's own SINK types:{has:['Artifact']} constraint is currently inert for matching — factsInteract's event-to-event branch never reads a bare `types` field (only `target`), so the sink vacuously matches any entersBattlefield producer, including the pool's 13 unconstrained land ETB facts. Shared, pre-existing matcher gap (also affects loporrit-scout/woodland-weavemaster identically), not fixed here — flagged in SYNERGY_DESIGN.md for a real future matcher decision."
   ]
 }

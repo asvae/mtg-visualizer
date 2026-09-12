@@ -112,7 +112,7 @@ export function runEngineScenarios(): TraceResult[] {
   pilotTransform(pilot, dionReal, dionBahamutsDominant, pilot.ctxFor(dionReal), actions);
 
   const result =
-    "Dion enters; real ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — real 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's real Coeurl, then exiles Bahamut and returns it as Dion) — all through the real turn-based engine.";
+    "Dion enters; ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's Coeurl, then exiles Bahamut and returns it as Dion) — all through the turn-based engine.";
 
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns', result)];
 }

@@ -60,14 +60,14 @@
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1221,
+        "id": 8,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1221,
+        "id": 8,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -97,7 +97,7 @@
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
-        "sourceId": 1224,
+        "sourceId": 11,
         "target": "opp0",
         "amount": 2
       },
@@ -133,7 +133,7 @@
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
-        "sourceId": 1227,
+        "sourceId": 14,
         "target": "opp0",
         "amount": 2
       },
@@ -175,39 +175,39 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1229,
+        "target": "Grizzly Bears",
+        "id": 16,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-1",
-        "id": 1230,
+        "target": "Grizzly Bears",
+        "id": 17,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
-        "id": 1231,
+        "id": 18,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
-        "id": 1231,
+        "id": 18,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -243,7 +243,7 @@
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
-        "sourceId": 1233,
+        "sourceId": 20,
         "target": "opp0",
         "amount": 3
       },
@@ -275,14 +275,14 @@
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1236,
+        "id": 23,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1236,
+        "id": 23,
         "zone": "Battlefield",
         "controller": "you"
       },

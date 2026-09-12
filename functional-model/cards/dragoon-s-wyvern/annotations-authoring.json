@@ -1,0 +1,19 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Drake",
+      "highlight": "Creature"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Creature — Drake",
+      "highlight": "Creature"
+    },
+    {
+      "sourceText": "When this creature enters, create a 1/1 colorless Hero creature token.",
+      "highlight": "create a 1/1 colorless Hero creature token"
+    }
+  ],
+  "sink": []
+}

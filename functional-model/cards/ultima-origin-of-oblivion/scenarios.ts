@@ -99,6 +99,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotFireTrigger(pilot, ultimaOriginOfOblivion, ctx, actions, 'onTapLandForC', "Ultima triggers: add an additional {C}");
 
   const result =
-    'Ultima enters, real turn passage clears summoning sickness, then really attacks (508.1), putting a real blight counter on the opponent\'s only land (whose granted "{T}: Add {C}" stays real printed text with no engine machinery behind it). Separately, a real Adventurer\'s Inn is tapped for its own real {C}, and Ultima\'s own mana-doubling trigger fires right after, adding a real additional {C}.';
+    'Ultima enters, turn passage clears summoning sickness, then attacks (508.1), putting a blight counter on the opponent\'s only land (whose granted "{T}: Add {C}" stays printed text with no engine machinery behind it). Separately, an Adventurer\'s Inn is tapped for its own {C}, and Ultima\'s own mana-doubling trigger fires right after, adding an additional {C}.';
   return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real attack -> onAttack -> real land tap -> onTapLandForC', result)];
 }

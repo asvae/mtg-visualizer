@@ -1,0 +1,40 @@
+{
+  "source": [
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Artifact",
+      "highlight": "Artifact"
+    },
+    {
+      "anchor": "typeLine",
+      "sourceText": "Legendary Artifact",
+      "highlight": "Artifact"
+    },
+    {
+      "sourceText": "{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn.",
+      "highlight": "{T}"
+    },
+    {
+      "sourceText": "{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn.",
+      "highlight": "flying"
+    },
+    {
+      "sourceText": "{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn.",
+      "highlight": "lifelink"
+    },
+    {
+      "sourceText": "White spells you cast cost {1} less to cast.",
+      "highlight": "White spells you cast cost {1} less to cast"
+    },
+    {
+      "sourceText": "If you would gain life, you gain twice that much life instead.",
+      "highlight": "you gain twice that much life instead"
+    }
+  ],
+  "sink": [
+    {
+      "sourceText": "{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn.",
+      "highlight": "Creatures you control"
+    }
+  ]
+}

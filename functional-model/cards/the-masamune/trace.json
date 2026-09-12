@@ -1,22 +1,165 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "activated ({2})",
-      "result": "attaches to the target creature you control",
+      "setup": "you: 8 Swamp(s)",
+      "action": "real engine playthrough: cast + equip Al Bhed Salvagers -> real lethal combat (SBA) -> its own dying trigger fires TWICE (The Masamune's own doubling static is now real)",
+      "result": "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while genuinely equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.",
       "raw": {
-        "result": "attaches to the target creature you control",
+        "result": "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while genuinely equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.",
         "you": {
-          "creaturesCount": 1
-        }
+          "basicLands": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ],
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8,
+            "creatureCards": [
+              {
+                "name": "Hill Gigas",
+                "subtypes": [
+                  "Giant"
+                ],
+                "power": 5,
+                "toughness": 4
+              }
+            ]
+          }
+        ]
       }
     },
     "log": [
+      {
+        "fn": "cast",
+        "card": "Al Bhed Salvagers",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{B}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Al Bhed Salvagers"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Al Bhed Salvagers"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Al Bhed Salvagers"
+      },
+      {
+        "fn": "enters",
+        "card": "Al Bhed Salvagers",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "cast",
+        "card": "The Masamune",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{3}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "The Masamune"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "The Masamune"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "The Masamune"
+      },
+      {
+        "fn": "enters",
+        "card": "The Masamune",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "untap",
+        "target": "Swamp"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
       {
         "fn": "activate",
         "card": "The Masamune",
         "instanceId": 1,
         "cost": "{2}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "The Masamune"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "The Masamune"
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -26,38 +169,149 @@
       {
         "fn": "equip",
         "equipment": "The Masamune",
-        "equipmentId": 2485,
-        "target": "Grizzly Bears",
-        "id": 2484
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({2}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "The Masamune",
-        "instanceId": 1,
-        "cost": "{2}"
+        "equipmentId": 29,
+        "target": "Al Bhed Salvagers",
+        "id": 28
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 0
-      },
-      {
-        "fn": "legendRule",
-        "card": "The Masamune",
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
         "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Al Bhed Salvagers",
+        "id": 28
+      },
+      {
+        "fn": "attack",
+        "card": "Al Bhed Salvagers",
+        "id": 28
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "block",
+        "blocker": "Hill Gigas",
+        "blockerId": 19,
+        "attacker": "Al Bhed Salvagers",
+        "attackerId": 28
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Al Bhed Salvagers",
+        "target": "Hill Gigas",
+        "amount": 2
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Hill Gigas",
+        "target": "Al Bhed Salvagers",
+        "amount": 5
+      },
+      {
+        "fn": "destroy",
+        "target": "Al Bhed Salvagers",
+        "controller": "you"
+      },
+      {
+        "fn": "trigger",
+        "card": "Al Bhed Salvagers",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 1
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1
+      },
+      {
+        "fn": "trigger",
+        "card": "Al Bhed Salvagers",
+        "instanceId": 1,
+        "name": "onDies"
+      },
+      {
+        "fn": "loseLife",
+        "player": "opp0",
+        "amount": 1
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Al Bhed Salvagers ({2}{B})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Cast The Masamune ({3})",
+        "from": 5
+      },
+      {
+        "label": "Resolve",
+        "from": 9
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 10
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 18
+      },
+      {
+        "label": "Equip {2}: attach The Masamune to Al Bhed Salvagers",
+        "from": 21
+      },
+      {
+        "label": "Resolve",
+        "from": 24
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 26
+      },
+      {
+        "label": "Declare Al Bhed Salvagers (equipped) as attacker",
+        "from": 27
+      },
+      {
+        "label": "Advance one step",
+        "from": 29
+      },
+      {
+        "label": "Declare Hill Gigas as blocker",
+        "from": 30
+      },
+      {
+        "label": "Resolve lethal combat damage (704.5g SBA)",
+        "from": 31
+      },
+      {
+        "label": "Al Bhed Salvagers's own dying trigger fires — doubled by The Masamune's own equipped static",
+        "from": 34
       }
     ]
   }

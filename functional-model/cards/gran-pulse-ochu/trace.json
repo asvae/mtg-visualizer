@@ -27,17 +27,17 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
@@ -49,23 +49,23 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-1",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-2",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "pump",
         "target": "Gran Pulse Ochu",
-        "id": 1030,
+        "id": 5,
         "power": 3,
         "toughness": 3
       }
@@ -107,7 +107,7 @@
       {
         "fn": "pump",
         "target": "Gran Pulse Ochu",
-        "id": 1032,
+        "id": 7,
         "power": 0,
         "toughness": 0
       }

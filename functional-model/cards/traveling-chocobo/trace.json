@@ -1,11 +1,26 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "enters the battlefield with no resolvable effect — all three abilities are continuous static permissions (see definition.ts)",
+      "setup": "you: 5 Plains(s)",
+      "action": "real engine playthrough: cast Traveling Chocobo + Ambrosia Whiteheart (a Bird, whose own ETB also doubles) -> a real land enters -> Ambrosia's own Landfall trigger fires TWICE (Traveling Chocobo's own doubling static is now real)",
+      "result": "Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a real cause Traveling Chocobo's own static recognizes — her own ETB (bounce \"another permanent you control\") genuinely doubles too, bouncing TWO of your own real basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is genuinely on the battlefield, Chocobo's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.",
       "raw": {
-        "result": "enters the battlefield with no resolvable effect — all three abilities are continuous static permissions (see definition.ts)"
+        "result": "Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a real cause Traveling Chocobo's own static recognizes — her own ETB (bounce \"another permanent you control\") genuinely doubles too, bouncing TWO of your own real basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is genuinely on the battlefield, Chocobo's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Forest",
+            "Plains",
+            "Forest",
+            "Plains"
+          ],
+          "libraryCount": 8
+        },
+        "opponents": [
+          {
+            "libraryCount": 8
+          }
+        ]
       }
     },
     "log": [
@@ -17,10 +32,198 @@
         "cost": "{2}{G}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Traveling Chocobo"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Traveling Chocobo"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Traveling Chocobo"
+      },
+      {
         "fn": "enters",
         "card": "Traveling Chocobo",
         "instanceId": 1,
         "zone": "Battlefield"
+      },
+      {
+        "fn": "cast",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ambrosia Whiteheart"
+      },
+      {
+        "fn": "enters",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 7,
+        "creatureCount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "Plains",
+        "id": 2,
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 6,
+        "creatureCount": 2
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "id": 3,
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "untap",
+        "target": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Plains"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Forest",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "pump",
+        "target": "Ambrosia Whiteheart",
+        "id": 25,
+        "power": 1,
+        "toughness": 0
+      },
+      {
+        "fn": "trigger",
+        "card": "Ambrosia Whiteheart",
+        "instanceId": 1,
+        "name": "onLandfall"
+      },
+      {
+        "fn": "pump",
+        "target": "Ambrosia Whiteheart",
+        "id": 25,
+        "power": 1,
+        "toughness": 0
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Traveling Chocobo ({2}{G})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Cast Ambrosia Whiteheart ({1}{W})",
+        "from": 5
+      },
+      {
+        "label": "Resolve",
+        "from": 8
+      },
+      {
+        "label": "Pass turn (you)",
+        "from": 15
+      },
+      {
+        "label": "Pass turn (opp0)",
+        "from": 20
+      },
+      {
+        "label": "A real land entering",
+        "from": 23
+      },
+      {
+        "label": "Ambrosia Whiteheart's own Landfall trigger fires — doubled by Traveling Chocobo's own static",
+        "from": 24
       }
     ]
   }

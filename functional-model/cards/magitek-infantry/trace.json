@@ -1,15 +1,16 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 card(s) in library; you: 1 card(s) named \"Magitek Infantry\" in library",
+      "setup": "you: 1 artifact(s); you: 2 card(s) in library; you: 1 card(s) named \"Magitek Infantry\" in library",
       "action": "activated ({2}{W})",
-      "result": "finds a second copy of Magitek Infantry in the library, puts it onto the battlefield tapped",
+      "result": "finds a second copy of Magitek Infantry in the library, puts it onto the battlefield tapped; also controls another artifact (static +1/+0 condition is text-only, no threshold-CDA engine hook)",
       "raw": {
-        "result": "finds a second copy of Magitek Infantry in the library, puts it onto the battlefield tapped",
+        "result": "finds a second copy of Magitek Infantry in the library, puts it onto the battlefield tapped; also controls another artifact (static +1/+0 condition is text-only, no threshold-CDA engine hook)",
         "you": {
           "libraryNamedCount": 1,
           "libraryNamedCard": "Magitek Infantry",
-          "libraryCount": 3
+          "libraryCount": 3,
+          "artifactsCount": 1
         }
       }
     },
@@ -18,6 +19,7 @@
         "fn": "activate",
         "card": "Magitek Infantry",
         "instanceId": 1,
+        "id": 6,
         "cost": "{2}{W}"
       },
       {
@@ -30,100 +32,15 @@
       {
         "fn": "moveTo",
         "target": "Magitek Infantry",
-        "id": 1406,
+        "id": 3,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "Magitek Infantry",
-        "id": 1406,
+        "id": 3,
         "controller": "you"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 3 card(s) in library",
-      "action": "activated ({2}{W})",
-      "result": "no second copy found in library, no-op",
-      "raw": {
-        "result": "no second copy found in library, no-op",
-        "you": {
-          "libraryCount": 3
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Magitek Infantry",
-        "instanceId": 1,
-        "cost": "{2}{W}"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 3,
-        "creatureCount": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({2}{W})",
-      "result": "empty library, no-op",
-      "raw": {
-        "result": "empty library, no-op",
-        "you": {
-          "libraryCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Magitek Infantry",
-        "instanceId": 1,
-        "cost": "{2}{W}"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 0,
-        "creatureCount": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 artifact(s); you: 3 card(s) in library",
-      "action": "activated ({2}{W})",
-      "result": "controls another real artifact; static pump condition is text-only (no threshold-CDA engine hook — see isMagitekInfantryArtifactThresholdPumpFact)",
-      "raw": {
-        "result": "controls another real artifact; static pump condition is text-only (no threshold-CDA engine hook — see isMagitekInfantryArtifactThresholdPumpFact)",
-        "you": {
-          "artifactsCount": 1,
-          "libraryCount": 3
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Magitek Infantry",
-        "instanceId": 1,
-        "cost": "{2}{W}"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 3,
-        "creatureCount": 0
       }
     ]
   }

@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 4 Plains(s)",
       "action": "real engine playthrough: cast -> turn passage -> real {2},{T} activation -> real gainControl -> real drawCard",
-      "result": "Stiltzkin, Moogle Merchant is cast, real turn passage clears summoning sickness, then its real {2},{T} ability activates: the opponent genuinely gains control of another real permanent you control (one of the same real Plains that helped pay for casting/activation), and because that real control change happened, you draw a real card.",
+      "result": "Stiltzkin, Moogle Merchant is cast, turn passage clears summoning sickness, then its {2},{T} ability activates: the opponent gains control of another permanent you control (one of the same Plains that helped pay for casting/activation), and because that control change happened, you draw a card.",
       "raw": {
-        "result": "Stiltzkin, Moogle Merchant is cast, real turn passage clears summoning sickness, then its real {2},{T} ability activates: the opponent genuinely gains control of another real permanent you control (one of the same real Plains that helped pay for casting/activation), and because that real control change happened, you draw a real card.",
+        "result": "Stiltzkin, Moogle Merchant is cast, turn passage clears summoning sickness, then its {2},{T} ability activates: the opponent gains control of another permanent you control (one of the same Plains that helped pay for casting/activation), and because that control change happened, you draw a card.",
         "you": {
           "basicLands": [
             "Plains",
@@ -40,6 +40,19 @@
         "card": "Stiltzkin, Moogle Merchant",
         "instanceId": 1,
         "zone": "Battlefield"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Stiltzkin, Moogle Merchant",
+        "sourceId": 17,
+        "target": "opp0",
+        "amount": 3
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 3,
+        "cause": "Lifelink"
       },
       {
         "fn": "phase",
@@ -82,7 +95,7 @@
       {
         "fn": "tap",
         "target": "Stiltzkin, Moogle Merchant",
-        "id": 2169,
+        "id": 17,
         "controller": "you"
       },
       {
@@ -106,7 +119,7 @@
         "fn": "gainControl",
         "controller": "opp0",
         "target": "Plains",
-        "id": 2154
+        "id": 2
       },
       {
         "fn": "drawCard",
@@ -128,20 +141,24 @@
         "from": 2
       },
       {
-        "label": "Pass turn (you)",
+        "label": "Real Lifelink: Stiltzkin deals 3 damage to the opponent, gains that much life",
         "from": 3
       },
       {
+        "label": "Pass turn (you)",
+        "from": 5
+      },
+      {
         "label": "Pass turn (opp0)",
-        "from": 6
+        "from": 8
       },
       {
         "label": "Activate {2}, {T}: give the opponent control of another permanent; draw a card",
-        "from": 9
+        "from": 11
       },
       {
         "label": "Resolve",
-        "from": 13
+        "from": 15
       }
     ]
   }

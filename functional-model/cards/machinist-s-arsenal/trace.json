@@ -1,12 +1,20 @@
 [
   {
     "scenario": {
-      "setup": "",
+      "setup": "you: 1 creature(s)",
       "action": "\"onEnter\" trigger fires",
-      "result": "creates a 1/1 Hero token and attaches itself to it",
+      "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
       "raw": {
-        "result": "creates a 1/1 Hero token and attaches itself to it",
-        "trigger": "onEnter"
+        "result": "Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {4} activation re-attaches it to the other creature already on the battlefield instead",
+        "trigger": "onEnter",
+        "you": {
+          "creaturesCount": 1
+        },
+        "sequence": [
+          {
+            "activate": true
+          }
+        ]
       }
     },
     "log": [
@@ -14,6 +22,7 @@
         "fn": "trigger",
         "card": "Machinist's Arsenal",
         "instanceId": 1,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -28,30 +37,15 @@
       {
         "fn": "equip",
         "equipment": "Machinist's Arsenal",
-        "equipmentId": 1377,
+        "equipmentId": 3,
         "target": "Hero",
-        "id": 1378
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 2 creature(s); you: 1 artifact(s)",
-      "action": "activated ({4})",
-      "result": "attaches to a creature you control",
-      "raw": {
-        "result": "attaches to a creature you control",
-        "you": {
-          "creaturesCount": 2,
-          "artifactsCount": 1
-        }
-      }
-    },
-    "log": [
+        "id": 4
+      },
       {
         "fn": "activate",
         "card": "Machinist's Arsenal",
         "instanceId": 1,
+        "id": 3,
         "cost": "{4}"
       },
       {
@@ -62,9 +56,9 @@
       {
         "fn": "equip",
         "equipment": "Machinist's Arsenal",
-        "equipmentId": 1383,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 1380
+        "id": 2
       }
     ]
   }

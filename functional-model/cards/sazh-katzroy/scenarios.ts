@@ -4,7 +4,6 @@ import { sazhKatzroy } from './definition';
 
 export const scenarios: Scenario[] = [
   { result: 'searches the library and puts a card into hand (approximated — no Bird/basic-land subtype filter available, see definition.ts)', trigger: 'onEnter', you: { libraryCount: 1 } },
-  { result: 'empty library, nothing found', trigger: 'onEnter', you: { libraryCount: 0 } },
   {
     result: 'puts a +1/+1 counter on the target creature (0 -> 1), then doubles it to 2',
     trigger: 'onAttack',

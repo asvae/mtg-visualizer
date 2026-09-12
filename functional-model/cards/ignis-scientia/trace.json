@@ -62,13 +62,13 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-gy-creature-0",
+        "target": "Grizzly Bears",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "you-gy-creature-0",
-        "id": 1115,
+        "target": "Grizzly Bears",
+        "id": 5,
         "zone": "Exile",
         "controller": "you"
       },
