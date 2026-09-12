@@ -28,7 +28,7 @@
 // Type-only — turn.ts imports FROM this file too (also type-only, see its
 // own header), so this is a type-level-only cycle: TS erases both sides
 // before anything runs, no runtime circular dependency.
-import type { Phase } from './turn';
+import type { Phase, PhaseGroup } from './turn';
 // Type-only, same erased-cycle reasoning as the `turn.ts` import above —
 // `card.ts` itself imports `play` (below) FROM this file.
 import type { CardDefinition } from './card';
@@ -303,6 +303,26 @@ export declare function gainControl(controller: Player, target: Card): void;
  * this file's other members).
  */
 export declare function delayUntil(phase: Phase, run: () => void): void;
+
+/**
+ * Real "insert one more occurrence of a phase GROUP into the CURRENT turn"
+ * (500-series turn structure, ENGINE_GAPS.md gap #17) — Y'shtola Rhul's own
+ * "there is an additional end step after this step," Balthier and Fran/
+ * Genji Glove's own "there is an additional combat phase." Forge's own real
+ * mechanism is `DB$ AddPhase` (`AddPhaseEffect.java`,
+ * forge-game/.../ability/effects/AddPhaseEffect.java), which pushes onto
+ * `PhaseHandler.extraPhases` (`PhaseHandler.java` line 74) keyed by the
+ * phase the new occurrence goes AFTER — mirrored here as
+ * `functional-model/turn.ts`'s own `TurnState.queuedExtraPhases`/
+ * `queueExtraPhase(TurnState, PhaseGroup)`, consumed by `advancePhase` the
+ * moment the current occurrence of that same group ends. Genuinely
+ * distinct from `delayUntil` above (that runs an arbitrary callback once a
+ * phase is reached; this repeats the phase/step ITSELF, including whatever
+ * OTHER triggers fire during it) and from a real extra TURN (500.7,
+ * `queueExtraTurn`, engine.ts) — see `turn.ts`'s own header for the full
+ * distinction.
+ */
+export declare function queueExtraPhase(phaseType: PhaseGroup): void;
 
 /**
  * Convenience wrapper over `Card.attachToEntity(GameEntity, SpellAbility)`

@@ -1,27 +1,153 @@
 [
   {
     "scenario": {
-      "setup": "you: 3 card(s) in hand; opp0: 5 card(s) in library",
-      "action": "activated ({4}{U}{U}, {T})",
-      "result": "each opponent mills 3 cards (equal to your hand size)",
+      "setup": "you: 10 Island(s)",
+      "action": "real engine playthrough: cast -> turn passage -> real activation of \"each opponent mills...\" with the mill-plus-4 replacement genuinely applying",
+      "result": "The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 real cards in hand the nominal amount is 3, but the real \"mill that many cards plus four instead\" replacement (now genuinely live on the resolved permanent) bumps the actually-milled count to 7.",
       "raw": {
-        "result": "each opponent mills 3 cards (equal to your hand size)",
+        "result": "The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 real cards in hand the nominal amount is 3, but the real \"mill that many cards plus four instead\" replacement (now genuinely live on the resolved permanent) bumps the actually-milled count to 7.",
         "you": {
-          "handCount": 3
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "handCount": 2,
+          "libraryCount": 1
         },
         "opponents": [
           {
-            "libraryCount": 5
+            "libraryCount": 10
           }
         ]
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "The Water Crystal",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{2}{U}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "enters",
+        "card": "The Water Crystal",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 2,
+        "player": "opp0"
+      },
+      {
+        "fn": "drawCard",
+        "player": "opp0",
+        "card": "Forest"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "untap",
+        "target": "Island"
+      },
+      {
+        "fn": "phase",
+        "phase": "Untap",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you",
+        "card": "Forest"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main1",
+        "turn": 3,
+        "player": "you"
+      },
+      {
         "fn": "activate",
         "card": "The Water Crystal",
         "instanceId": 1,
         "cost": "{4}{U}{U}, {T}"
+      },
+      {
+        "fn": "tap",
+        "target": "The Water Crystal",
+        "id": 26,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "The Water Crystal"
       },
       {
         "fn": "read:getCardsIn",
@@ -31,82 +157,40 @@
         "creatureCount": 0
       },
       {
-        "fn": "move",
+        "fn": "mill",
         "player": "opp0",
-        "from": "Library",
-        "to": "Graveyard",
-        "qty": 3
+        "qty": 7,
+        "requestedQty": 3
       }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "opp0: 5 card(s) in library",
-      "action": "activated ({4}{U}{U}, {T})",
-      "result": "no cards in your hand, opponent mills nothing",
-      "raw": {
-        "result": "no cards in your hand, opponent mills nothing",
-        "you": {
-          "handCount": 0
-        },
-        "opponents": [
-          {
-            "libraryCount": 5
-          }
-        ]
-      }
-    },
-    "log": [
+    ],
+    "actions": [
       {
-        "fn": "activate",
-        "card": "The Water Crystal",
-        "instanceId": 1,
-        "cost": "{4}{U}{U}, {T}"
+        "label": "Start",
+        "from": 0
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Hand",
-        "count": 0,
-        "creatureCount": 0
+        "label": "Cast The Water Crystal ({2}{U}{U})",
+        "from": 0
       },
       {
-        "fn": "move",
-        "player": "opp0",
-        "from": "Library",
-        "to": "Graveyard",
-        "qty": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "activated ({4}{U}{U}, {T}), a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "The Water Crystal",
-        "instanceId": 1,
-        "cost": "{4}{U}{U}, {T}"
+        "label": "Resolve",
+        "from": 5
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Hand",
-        "count": 0,
-        "creatureCount": 0
+        "label": "Pass turn (you)",
+        "from": 6
       },
       {
-        "fn": "legendRule",
-        "card": "The Water Crystal",
-        "player": "you"
+        "label": "Pass turn (opp0)",
+        "from": 12
+      },
+      {
+        "label": "Activate \"{4}{U}{U}, {T}\": each opponent mills cards equal to the number of cards in your hand — mill-plus-4 replacement live",
+        "from": 15
+      },
+      {
+        "label": "Resolve",
+        "from": 23
       }
     ]
   }

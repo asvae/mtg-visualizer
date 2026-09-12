@@ -2824,6 +2824,21 @@ history / PR this file ships with for the concrete diff.
   concurrent sessions per `git status`). `npx vitest run functional-model`:
   351/351 pass.
 
+- **Follow-up (2026-09-12, later same day): ENGINE_GAPS.md gap #17 closed
+  for real.** `turn.ts` now has a genuine `queueExtraPhase`/
+  `isFirstPhaseGroupOccurrenceThisTurn` primitive (see that file's own
+  header and `ENGINE_GAPS.md` gap #17's own closure writeup for the full
+  Forge citation). Y'shtola Rhul's own `definition.ts` was updated to
+  actually call `actions.queueExtraPhase('EndOfTurn')` when `ctx
+  .firstPhaseGroupOccurrenceThisTurn` is true — the "additional end step"
+  clause is REAL now, no longer documentary-only text. Still deliberately
+  NO synergy Fact for it, same as before and same as Ultimecia's own
+  `queueExtraTurn` (gap #3, closed long before this pass) never got one
+  either — a "insert/repeat a turn structure step" consequence isn't a
+  produce/consume-shaped board effect any SOURCE/SINK fact vocabulary
+  models, so this stays a real, working mechanism with zero synergy-graph
+  surface area, by design, not an oversight.
+
 ## Standing rule: scenario `result` text is user-facing prose — no "real"/"genuine"/"actual" emphasis (2026-09-12)
 
 A `Scenario`'s `result` string (`cards/<slug>/scenarios.ts`) is read

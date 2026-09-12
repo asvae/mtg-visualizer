@@ -22,44 +22,33 @@ export const theWaterCrystal: CardDefinition = {
   // cards plus four instead." — a genuine CR 614.2 replacement effect on
   // the MILL event (real Forge citation, same file: `R:Event$ Mill |
   // ActiveZones$ Battlefield | ValidPlayer$ Player.Opponent | ReplaceWith$
-  // MillPlus4 | ...`). UNMODELED — new engine gap, ENGINE_GAPS.md #19.
-  // Unlike gap #8b's lifegain-doubling (closed via a real, pre-existing
-  // `state.gainLife` chokepoint every lifegain call already funneled
-  // through), this engine has NO chokepoint to hook at all for mill: there
-  // is no `state.mill()` method anywhere in `state.ts` — `interfaces.ts`'s
-  // own `mill()` is a pure ambient Forge-signature mirror, never given a
-  // real body, same undone-mirror status as `scry`/`surveil`. Milling is
-  // only ever modeled ad hoc via the generic `move` Effect kind (library
-  // -> graveyard, an unchosen batch — see this card's own activated
-  // ability below), which every OTHER zone-change effect in the pool
-  // (bounce, sacrifice, exile, tutor, ...) also funnels through — there is
-  // no way to intercept "this specific move is a mill" without first
-  // building a real, dedicated mill action/chokepoint (analogous to what
-  // `gainLife` already was before gap #8b's replacement hooked into it).
-  // Real text only, not mechanically enforced.
-  staticAbilities: [
-    'If an opponent would mill one or more cards, they mill that many cards plus four instead.',
-  ],
+  // MillPlus4 | ...` + `SVar:MillPlus4:DB$ ReplaceEffect | VarName$ Number
+  // | VarValue$ X` + `SVar:X:ReplaceCount$Number/Plus.4`). Real, mechanical
+  // engine vocabulary now exists for this (ENGINE_GAPS.md gap #19, closed):
+  // `card.ts`'s `millModifierGrants`/`MillModifierGrant` — copied onto the
+  // resolved permanent at `resolveTop`, consumed by `state.ts`'s
+  // `activeMillModifier`, checked inside the new `GameState.mill` real
+  // chokepoint every mill effect in this pool now funnels through (instead
+  // of the generic `move` Effect kind, which has no way to intercept "this
+  // specific move is a mill").
+  millModifierGrants: [{ amount: 4 }],
 
   // "{4}{U}{U}, {T}: Each opponent mills cards equal to the number of
   // cards in your hand." Real Forge `A:AB$ Mill | Cost$ 4 U U T |
   // Defined$ Opponent | NumCards$ Y | SVar:Y:Count$ValidHand
   // Card.YouOwn` — a live read of your own hand size at resolution
-  // (`Computed<number>`). The BASE mill amount IS mechanically real,
-  // modeled as `move` (library -> graveyard, an unchosen batch — Forge
-  // itself dispatches this through a dedicated MillEffect this model
-  // doesn't mirror; see card.ts's own `move` doc comment for the same
-  // "unchosen batch" shape Malboro's own exile-top-three uses). The +4
-  // replacement above is NOT applied by this effect (see gap #19 above) —
-  // this only ever mills the printed, undoubled amount.
+  // (`Computed<number>`). Modeled as a real `kind: 'mill'` Effect (ENGINE_
+  // GAPS.md gap #19, closed) — routes through `state.mill` (via
+  // `Actions.mill`), the one real chokepoint the `millModifierGrants`
+  // clause above can now genuinely hook into: when this permanent is
+  // resolved for real (engine-piloted), the ability's own mill amount is
+  // mechanically bumped by +4, not just described in text.
   activationCost: '{4}{U}{U}, {T}',
   effects: [
     {
-      kind: 'move',
+      kind: 'mill',
       owner: 'opponents',
-      from: 'Library',
-      to: 'Graveyard',
-      qty: (ctx) => ctx.you.getCardsIn('Hand').length,
+      amount: (ctx) => ctx.you.getCardsIn('Hand').length,
     } satisfies Effect,
   ],
 };

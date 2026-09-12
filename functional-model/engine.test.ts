@@ -18,12 +18,15 @@ import {
   declareAttackers,
   canBlock,
   declareBlockers,
+  resolveFirstStrikeCombatDamage,
   resolveCombatDamage,
   queueExtraTurn,
+  queueExtraPhase,
   advance,
 } from './engine';
-import { PHASES } from './turn';
+import { PHASES, currentPhase } from './turn';
 import { loggingActions } from './harness';
+import { checkStateBasedActions } from './sba';
 
 // Same `{} as Actions` stub stack.test.ts/priority.test.ts already use —
 // none of this file's test cards declare real `effects`, so `resolveCard`
@@ -713,7 +716,28 @@ describe('resolveCombatDamage (510)', () => {
     expect(blockerEntry).toEqual({ card: blocker, damage: 1, lethal: true });
   });
 
-  it('First Strike: a blocker killed in the first-strike step deals no damage back', () => {
+  // Real ENGINE_GAPS.md gap #9 (closed 2026-09-12): CombatFirstStrikeDamage
+  // is now a genuinely distinct, separately-reachable `turn.ts` phase, not
+  // just internal math — every test below actually ADVANCES into it
+  // (asserting `currentPhase`) and calls `resolveFirstStrikeCombatDamage`
+  // there, THEN advances again into the real `CombatDamage` phase for
+  // `resolveCombatDamage`, running a real `checkStateBasedActions` sweep in
+  // between (same "caller runs it" convention this file's other combat
+  // tests already document) — matching how a real engine-piloted scenario
+  // (`keywords/first-strike-double-strike/scenarios.ts`) now walks this too.
+  it('a normal creature vs. a normal creature never even reaches CombatFirstStrikeDamage — the phase is skipped outright (510.5 conditionality)', () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', { name: 'Attacker', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Blocker', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    advance(engine); // CombatDeclareBlockers -> straight to CombatDamage, skipping CombatFirstStrikeDamage entirely
+    expect(currentPhase(engine.turn)).toBe('CombatDamage');
+  });
+
+  it('First Strike: the engine genuinely stops at CombatFirstStrikeDamage, and a blocker killed there deals no damage back in the regular step', () => {
     const { state, you, opp, engine } = setupGame();
     const attacker = state.addCard(you, 'Battlefield', { name: 'Fast Striker', types: ['Creature'], basePower: 3, baseToughness: 3, keywords: ['FirstStrike'] });
     const blocker = state.addCard(opp, 'Battlefield', { name: 'Slow Blocker', types: ['Creature'], basePower: 3, baseToughness: 2 });
@@ -721,6 +745,12 @@ describe('resolveCombatDamage (510)', () => {
     declareAttackers(engine, [attacker]);
     advance(engine);
     declareBlockers(engine, [{ blocker, attacker }]);
+    advance(engine); // CombatDeclareBlockers -> CombatFirstStrikeDamage (real: Fast Striker has First Strike)
+    expect(currentPhase(engine.turn)).toBe('CombatFirstStrikeDamage');
+    resolveFirstStrikeCombatDamage(engine);
+    checkStateBasedActions(state, engine.players);
+    advance(engine); // CombatFirstStrikeDamage -> CombatDamage
+    expect(currentPhase(engine.turn)).toBe('CombatDamage');
     const result = resolveCombatDamage(engine);
     const attackerEntry = result.entries.find((e) => e.card === attacker);
     expect(attackerEntry).toBeUndefined(); // took no damage at all — the blocker never got to swing
@@ -728,7 +758,7 @@ describe('resolveCombatDamage (510)', () => {
     expect(blockerEntry).toEqual({ card: blocker, damage: 3, lethal: true });
   });
 
-  it('Double Strike deals damage in both sub-steps against a blocker that survives the first', () => {
+  it('Double Strike deals damage in BOTH real steps against a blocker that survives the first', () => {
     const { state, you, opp, engine } = setupGame();
     const attacker = state.addCard(you, 'Battlefield', { name: 'Double Striker', types: ['Creature'], basePower: 2, baseToughness: 4, keywords: ['DoubleStrike'] });
     const blocker = state.addCard(opp, 'Battlefield', { name: 'Tough Blocker', types: ['Creature'], basePower: 2, baseToughness: 5 });
@@ -736,6 +766,13 @@ describe('resolveCombatDamage (510)', () => {
     declareAttackers(engine, [attacker]);
     advance(engine);
     declareBlockers(engine, [{ blocker, attacker }]);
+    advance(engine); // CombatFirstStrikeDamage (real: Double Striker has Double Strike)
+    expect(currentPhase(engine.turn)).toBe('CombatFirstStrikeDamage');
+    resolveFirstStrikeCombatDamage(engine);
+    expect(blocker.damageMarked).toBe(2); // only the FIRST strike hit so far
+    checkStateBasedActions(state, engine.players);
+    advance(engine);
+    expect(currentPhase(engine.turn)).toBe('CombatDamage');
     const result = resolveCombatDamage(engine);
     const blockerEntry = result.entries.find((e) => e.card === blocker)!;
     expect(blockerEntry).toEqual({ card: blocker, damage: 4, lethal: false }); // 2 (first strike) + 2 (regular) = 4, still short of 5 toughness
@@ -751,6 +788,12 @@ describe('resolveCombatDamage (510)', () => {
     declareAttackers(engine, [attacker]);
     advance(engine);
     declareBlockers(engine, [{ blocker, attacker }]);
+    advance(engine);
+    expect(currentPhase(engine.turn)).toBe('CombatFirstStrikeDamage');
+    resolveFirstStrikeCombatDamage(engine);
+    checkStateBasedActions(state, engine.players);
+    advance(engine);
+    expect(currentPhase(engine.turn)).toBe('CombatDamage');
     const before = opp.life;
     const result = resolveCombatDamage(engine);
     expect(opp.life).toBe(before); // no Trample — the second strike has nothing left to hit
@@ -828,6 +871,68 @@ describe('canActivateAbility / activateAbility (602.1)', () => {
     activateAbility(engine, you, permanent, TAP_ABILITY, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, noopActions);
     resolveTop(engine);
     expect(permanent.zone).toBe('Battlefield');
+  });
+});
+
+// ENGINE_GAPS.md gap #18 (closed 2026-09-12) — a real, query-time
+// "CantBeActivated" lock a static effect imposes on a DIFFERENT permanent's
+// own activated-ability activation (Stuck in Summoner's Sanctum's own real
+// "its activated abilities can't be activated" clause, fin/76) — checked at
+// `canActivateAbility` itself (`state.ts`'s new `isActivationLocked`), BEFORE
+// any cost-shape/affordability check, same as real Forge's own
+// `AbilityActivated.checkRestrictions`.
+describe('canActivateAbility — a static CantBeActivated lock on a DIFFERENT permanent (613/602.1, ENGINE_GAPS.md gap #18)', () => {
+  const TAP_ABILITY: CardDefinition = {
+    name: 'Test Tapper',
+    manaCost: '{1}{G}',
+    typeLine: 'Creature — Test',
+    activationCost: '{T}',
+    effects: [],
+  };
+
+  it("Stuck in Summoner's Sanctum-shaped: a locked permanent's own activated ability is correctly refused", () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Battlefield', { name: TAP_ABILITY.name, types: ['Creature'] });
+    state.addCard(you, 'Battlefield', {
+      name: "Stuck in Summoner's Sanctum",
+      types: ['Enchantment'],
+      activatedAbilityLock: [{ includeSelf: false, equippedBySelf: true }],
+    });
+    const aura = you.battlefield.find((c) => c.name === "Stuck in Summoner's Sanctum")!;
+    state.equip(aura, permanent);
+    expect(canActivateAbility(engine, you, permanent, TAP_ABILITY)).toEqual({
+      ok: false,
+      reason: expect.stringMatching(/can't be activated/),
+    });
+    expect(engine.stack.size).toBe(0);
+  });
+
+  it('removing the locking permanent (it leaves the battlefield) lifts the lock, live', () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Battlefield', { name: TAP_ABILITY.name, types: ['Creature'] });
+    const aura = state.addCard(you, 'Battlefield', {
+      name: "Stuck in Summoner's Sanctum",
+      types: ['Enchantment'],
+      activatedAbilityLock: [{ includeSelf: false, equippedBySelf: true }],
+    });
+    state.equip(aura, permanent);
+    expect(canActivateAbility(engine, you, permanent, TAP_ABILITY).ok).toBe(false);
+    state.move(aura, 'Graveyard'); // the Aura itself is destroyed/sacrificed
+    expect(canActivateAbility(engine, you, permanent, TAP_ABILITY).ok).toBe(true);
+  });
+
+  it('a DIFFERENT permanent (not the enchanted/locked one) remains unaffected', () => {
+    const { state, you, engine } = setupGame();
+    const locked = state.addCard(you, 'Battlefield', { name: TAP_ABILITY.name, types: ['Creature'] });
+    const bystander = state.addCard(you, 'Battlefield', { name: 'bystander', types: ['Creature'], subtypes: ['Test'] });
+    const aura = state.addCard(you, 'Battlefield', {
+      name: "Stuck in Summoner's Sanctum",
+      types: ['Enchantment'],
+      activatedAbilityLock: [{ includeSelf: false, equippedBySelf: true }],
+    });
+    state.equip(aura, locked);
+    expect(canActivateAbility(engine, you, locked, TAP_ABILITY).ok).toBe(false);
+    expect(canActivateAbility(engine, you, bystander, TAP_ABILITY).ok).toBe(true);
   });
 });
 
@@ -1428,6 +1533,90 @@ describe('fireOnPhaseEnterTriggers — real "at the beginning of your upkeep/end
     resolveTop(engine);
     toPhase(engine, 'EndOfTurn'); // still turn 1, `you` is active — this is `opp`'s permanent
     expect(order).toEqual([]);
+  });
+});
+
+describe('queueExtraPhase — real "insert one more occurrence of a phase group" wiring (500-series, ENGINE_GAPS.md gap #17)', () => {
+  function toPhase(engine: ReturnType<typeof setupGame>['engine'], phase: (typeof PHASES)[number]) {
+    while (PHASES[engine.turn.phaseIndex] !== phase) advance(engine);
+  }
+
+  /** Y'shtola Rhul's own real shape: an `onEndStep` trigger that queues one more End Step ONLY on the first occurrence this turn (`ctx.firstPhaseGroupOccurrenceThisTurn`, card.ts). */
+  function endStepQueueCard(order: string[]): CardDefinition {
+    return {
+      name: 'Test Y\'shtola-shaped',
+      manaCost: '{1}{G}',
+      typeLine: 'Creature — Test',
+      triggers: [
+        {
+          name: 'onEndStep',
+          on: 'endStep',
+          effects: [
+            {
+              kind: 'custom',
+              describe: 'tick, then queue an additional end step on the first occurrence this turn',
+              run: (ctx: EffectContext, actions: Actions) => {
+                order.push('tick');
+                if (ctx.firstPhaseGroupOccurrenceThisTurn) actions.queueExtraPhase('EndOfTurn');
+              },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  /** Just enough of `Actions` for this describe block's own test cards — a real `queueExtraPhase` wired to the SAME real `engine.ts` wrapper a pilot script/card effect would call, the rest unused (same `as Actions` narrowing pattern this file's own `sacActions`/`animateActions` already use). */
+  function queueActions(engine: ReturnType<typeof setupGame>['engine']): Actions {
+    return { queueExtraPhase: (phaseType) => queueExtraPhase(engine, phaseType) } as Actions;
+  }
+
+  it('the engine.ts wrapper mutates the real TurnState the same way turn.ts\'s own queueExtraPhase does', () => {
+    const { engine } = setupGame();
+    queueExtraPhase(engine, 'Combat');
+    expect(engine.turn.queuedExtraPhases).toEqual(['Combat']);
+  });
+
+  it('a real onEndStep trigger that queues on the first occurrence re-enters End Step ONCE (re-firing the trigger), then does not queue again, and Cleanup still runs normally afterward', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = endStepQueueCard(order);
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), queueActions(engine));
+    resolveTop(engine);
+    toPhase(engine, 'EndOfTurn'); // first end step this turn — fires once, queues a second
+    expect(order).toEqual(['tick']);
+    expect(engine.turn.queuedExtraPhases).toEqual(['EndOfTurn']);
+    advance(engine); // consumes the queued entry — re-enters EndOfTurn (same turn), re-fires the trigger
+    expect(currentPhase(engine.turn)).toBe('EndOfTurn');
+    expect(engine.turn.turnNumber).toBe(1); // still the SAME turn — genuinely distinct from a whole extra turn (gap #3)
+    expect(order).toEqual(['tick', 'tick']); // fired again
+    expect(engine.turn.queuedExtraPhases).toEqual([]); // NOT re-queued (this occurrence isn't the first anymore)
+    advance(engine); // nothing queued this time -> genuinely moves on
+    expect(currentPhase(engine.turn)).toBe('Cleanup'); // Cleanup's own real automatic actions still run untouched
+    expect(order).toEqual(['tick', 'tick']); // no third fire
+  });
+
+  it('with no queued extra phase, a full turn behaves identically to before this pass (regression check)', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    // Same card shape, but its own effect never reads ctx.firstPhaseGroupOccurrenceThisTurn — a plain onEndStep trigger.
+    const card: CardDefinition = {
+      name: 'Test Plain Ticker',
+      manaCost: '{1}{G}',
+      typeLine: 'Creature — Test',
+      triggers: [{ name: 'onEndStep', on: 'endStep', effects: [{ kind: 'custom', describe: 'tick', run: () => order.push('tick') }] }],
+    };
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    toPhase(engine, 'EndOfTurn');
+    expect(order).toEqual(['tick']);
+    advance(engine);
+    expect(currentPhase(engine.turn)).toBe('Cleanup'); // moves straight on, no repeat
+    expect(order).toEqual(['tick']);
   });
 });
 

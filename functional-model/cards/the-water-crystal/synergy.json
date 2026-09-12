@@ -73,6 +73,19 @@
           "end": 83
         }
       ]
+    },
+    {
+      "event": "millIncrease",
+      "controller": "opp",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 89
+        }
+      ]
     }
   ],
   "sink": [

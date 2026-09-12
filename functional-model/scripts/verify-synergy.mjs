@@ -103,6 +103,13 @@ function producedZone(entry, cardName) {
       return { zone: 'Graveyard', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'discard':
       return { zone: 'Graveyard', side: entry.player === 'you' ? 'you' : 'opp' };
+    case 'mill':
+      // Real, dedicated `state.mill` chokepoint (ENGINE_GAPS.md gap #19,
+      // closed) — distinct from `move` above (fn:'move' still backs a
+      // library->graveyard zone fact for every OTHER card's own generic
+      // batch move; `fn:'mill'` is now the one The Water Crystal's own
+      // activated ability produces).
+      return { zone: 'Graveyard', side: entry.player === 'you' ? 'you' : 'opp' };
     case 'destroy':
       return { zone: 'Graveyard', side: sideOf(entry, cardName) };
     case 'legendRule':
@@ -161,6 +168,22 @@ function producedEvents(entry, cardName) {
       // field (never a bare object name needing `sideOf`'s guess), same
       // shape `gainLife`/`loseLife` already use.
       return [{ event: 'discard', side: entry.player === 'you' ? 'you' : 'opp' }];
+    case 'mill': {
+      // The Water Crystal's own real CR 614.2 mill-modifier replacement
+      // (ENGINE_GAPS.md gap #19, closed) — same "log the real, post-
+      // replacement amount alongside the nominal requested one, only when
+      // they genuinely differ" convention `gainLife`'s own `requestedAmount`
+      // (case 'gainLife' above) already established for the lifegain-
+      // doubling case; `event:'millIncrease'` here is the additive-modifier
+      // sibling of that case's `event:'lifegainDouble'` (a flat "+N" instead
+      // of a "x2," per `card.ts`'s own `MillModifierGrant` doc comment on
+      // why this needed a different shape than a fixed-multiplier keyword).
+      const events = [];
+      if (entry.requestedQty !== undefined && entry.qty > entry.requestedQty) {
+        events.push({ event: 'millIncrease', side: entry.player === 'you' ? 'you' : 'opp' });
+      }
+      return events;
+    }
     case 'putCounter':
       return [{ event: 'putCounter', counterType: entry.counterType, side: undefined }];
     case 'dealDamage':
@@ -550,8 +573,23 @@ const PARKED_ACTION_FNS = new Set(['dig', 'copyPermanent', 'destroyPrevented']);
 // beginning of the next end step") — the actual EFFECT a delayed trigger
 // runs (Elrond's own `moveTo`, e.g.) still logs and still needs a produce,
 // same as any other action; only the scheduling/phase bookkeeping itself is
-// ignored here.
-const IGNORED_FNS = new Set(['cast', 'trigger', 'activate', 'phase', 'delayUntil']);
+// ignored here. `illegalAttempt` added 2026-09-12 (ENGINE_GAPS.md gap #18's
+// closure, Stuck in Summoner's Sanctum — the first real pool card to use
+// `engine-trace.ts`'s own `pilotExpectIllegal*` family) — by that family's
+// own doc comment ("Purely observational: never mutates anything"), an
+// illegal-attempt trace line is BY DEFINITION never produce-relevant (the
+// whole point is that nothing happened), so it belongs in this bucket, not
+// `PARKED_ACTION_FNS` (which is for actions that DO mutate/produce something
+// real but lack fact vocabulary yet).
+// `queueExtraPhase` added 2026-09-12 (ENGINE_GAPS.md gap #17's closure,
+// Y'shtola Rhul's own "additional end step") — same bucket as `phase`/
+// `delayUntil` just above, for the identical reason: it's real turn-
+// structure bookkeeping (which phase group repeats), never itself a
+// produce-relevant board effect a synergy Fact could model — same
+// treatment `queueExtraTurn` (gap #3, closed) never needed a `PARKED_
+// ACTION_FNS`/Fact entry for either, since `harness.ts`'s own plain path
+// never logs it at all (no engine-piloted turn passage there).
+const IGNORED_FNS = new Set(['cast', 'trigger', 'activate', 'phase', 'delayUntil', 'illegalAttempt', 'queueExtraPhase']);
 
 // Per-object predicate reads — corroborating evidence for a TYPE/CMC/etc.
 // constraint on some want/produce's target, never independently gated (see
@@ -2114,7 +2152,7 @@ async function verifyCard(slug) {
   // fn is already skipped by this loop's own guard below (`e.fn.startsWith
   // ('read:')`), same treatment every other low-level read already gets;
   // only `pump` (the real, non-`read:`-prefixed ACTION) needed adding.
-  const explainableFns = new Set(['enters', 'move', 'moveTo', 'ceasesToExist', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'damagePrevented', 'coinFlip', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter', 'playLand', 'play', 'pump', 'attack', 'tap', 'untap', 'animate', 'gainControl', 'surveil', 'equip']);
+  const explainableFns = new Set(['enters', 'move', 'mill', 'moveTo', 'ceasesToExist', 'createToken', 'sacrifice', 'discard', 'destroy', 'legendRule', 'gainLife', 'loseLife', 'putCounter', 'dealDamage', 'damagePrevented', 'coinFlip', 'grantKeyword', 'drawCard', 'drawCards', 'addMana', 'counter', 'playLand', 'play', 'pump', 'attack', 'tap', 'untap', 'animate', 'gainControl', 'surveil', 'equip']);
   for (const e of allEntries) {
     if (IGNORED_FNS.has(e.fn) || e.fn.startsWith('read:')) continue;
     if (!explainableFns.has(e.fn)) {

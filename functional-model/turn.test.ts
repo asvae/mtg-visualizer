@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GameState } from './state';
-import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn, PHASES } from './turn';
+import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn, queueExtraPhase, isFirstPhaseGroupOccurrenceThisTurn, PHASES } from './turn';
 
 describe('turn/phase structure', () => {
   it('starts at Untap, turn 1, player 0', () => {
@@ -38,7 +38,7 @@ describe('turn/phase structure', () => {
   it('Untap step actually untaps the active player’s tapped battlefield permanents', () => {
     // startGame() itself runs no entry action (nothing was "advanced into"
     // yet) — the untap action fires the first time Untap is genuinely
-    // RE-ENTERED via advancePhase, i.e. after a full lap of all 12 phases.
+    // RE-ENTERED via advancePhase, i.e. after a full lap of all 13 phases.
     const state = new GameState();
     const p1 = state.addPlayer('p1');
     const creature = state.addCard(p1, 'Battlefield', { name: 'creature' });
@@ -88,7 +88,7 @@ describe('turn/phase structure', () => {
     expect(p1.hand).toContain(lib1);
   });
 
-  it('combat steps are present and reachable in sequence (no damage assignment implemented)', () => {
+  it('combat steps (including the real, always-structurally-present CombatFirstStrikeDamage step, ENGINE_GAPS.md gap #9) are present and reachable in sequence — turn.ts itself has no notion of skipping it, that conditionality is engine.ts\'s own job (see engine.test.ts)', () => {
     const state = new GameState();
     const p1 = state.addPlayer('p1');
     let turn = startGame();
@@ -101,6 +101,8 @@ describe('turn/phase structure', () => {
     expect(currentPhase(turn)).toBe('CombatDeclareAttackers');
     turn = advancePhase(state, turn, [p1]);
     expect(currentPhase(turn)).toBe('CombatDeclareBlockers');
+    turn = advancePhase(state, turn, [p1]);
+    expect(currentPhase(turn)).toBe('CombatFirstStrikeDamage');
     turn = advancePhase(state, turn, [p1]);
     expect(currentPhase(turn)).toBe('CombatDamage');
     turn = advancePhase(state, turn, [p1]);
@@ -231,5 +233,76 @@ describe('turn/phase structure', () => {
     expect(activePlayer(turn, [p1, p2])).toBe(p1);
     for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 4 (queue empty, normal rotation from p1 -> p2)
     expect(activePlayer(turn, [p1, p2])).toBe(p2);
+  });
+
+  describe('queued extra phase group (500-series, ENGINE_GAPS.md gap #17)', () => {
+    it('a queued extra End Step genuinely re-enters End Step once, then moves on to Cleanup — not infinitely', () => {
+      const state = new GameState();
+      const p1 = state.addPlayer('p1');
+      const p2 = state.addPlayer('p2');
+      let turn = startGame();
+      for (let i = 0; i < PHASES.indexOf('EndOfTurn'); i++) turn = advancePhase(state, turn, [p1, p2]); // -> EndOfTurn
+      expect(currentPhase(turn)).toBe('EndOfTurn');
+      expect(isFirstPhaseGroupOccurrenceThisTurn(turn, 'EndOfTurn')).toBe(true);
+      queueExtraPhase(turn, 'EndOfTurn'); // same-turn effect (Y'shtola Rhul's own "additional end step") queues it
+      turn = advancePhase(state, turn, [p1, p2]); // consumes the queued entry — re-enters EndOfTurn instead of Cleanup
+      expect(currentPhase(turn)).toBe('EndOfTurn');
+      expect(turn.turnNumber).toBe(1); // still the SAME turn — not a whole extra turn (genuinely distinct from extraTurns/gap #3)
+      expect(isFirstPhaseGroupOccurrenceThisTurn(turn, 'EndOfTurn')).toBe(false); // this is the SECOND end step this turn now
+      expect(turn.queuedExtraPhases).toEqual([]); // consumed, not left queued
+      turn = advancePhase(state, turn, [p1, p2]); // nothing re-queued this time -> genuinely moves on
+      expect(currentPhase(turn)).toBe('Cleanup');
+    });
+
+    it('a queued extra Combat phase re-enters the whole 6-step combat sequence, without re-running Upkeep/Draw/Main1', () => {
+      const state = new GameState();
+      const p1 = state.addPlayer('p1');
+      const p2 = state.addPlayer('p2');
+      let turn = startGame();
+      for (let i = 0; i < PHASES.indexOf('CombatEnd'); i++) turn = advancePhase(state, turn, [p1, p2]); // -> CombatEnd
+      expect(currentPhase(turn)).toBe('CombatEnd');
+      expect(isFirstPhaseGroupOccurrenceThisTurn(turn, 'Combat')).toBe(true);
+      queueExtraPhase(turn, 'Combat'); // Balthier and Fran/Genji Glove's own "additional combat phase"
+      turn = advancePhase(state, turn, [p1, p2]); // consumes it — jumps back to CombatBegin, not Main2
+      expect(currentPhase(turn)).toBe('CombatBegin');
+      expect(turn.turnNumber).toBe(1);
+      expect(isFirstPhaseGroupOccurrenceThisTurn(turn, 'Combat')).toBe(false); // this is the SECOND combat phase this turn
+      // The whole 6-step combat sequence genuinely repeats (CR 500.1's own
+      // real special case) — no Upkeep/Draw/Main1 re-run in between.
+      const seen: string[] = [currentPhase(turn)];
+      for (let i = 0; i < 5; i++) {
+        turn = advancePhase(state, turn, [p1, p2]);
+        seen.push(currentPhase(turn));
+      }
+      expect(seen).toEqual(['CombatBegin', 'CombatDeclareAttackers', 'CombatDeclareBlockers', 'CombatFirstStrikeDamage', 'CombatDamage', 'CombatEnd']);
+      turn = advancePhase(state, turn, [p1, p2]); // nothing re-queued -> genuinely moves on to Main2
+      expect(currentPhase(turn)).toBe('Main2');
+    });
+
+    it('a turn with no queued extra phase behaves identically to before (regression check) — full lap, no repeats', () => {
+      const state = new GameState();
+      const p1 = state.addPlayer('p1');
+      const p2 = state.addPlayer('p2');
+      let turn = startGame();
+      const seen: string[] = [currentPhase(turn)];
+      for (let i = 0; i < PHASES.length - 1; i++) {
+        turn = advancePhase(state, turn, [p1, p2]);
+        seen.push(currentPhase(turn));
+      }
+      expect(seen).toEqual([...PHASES]);
+      expect(turn.queuedExtraPhases).toEqual([]);
+      expect(turn.phaseGroupEntryCount).toEqual({ EndOfTurn: 1, Combat: 1 });
+    });
+
+    it('phaseGroupEntryCount resets to empty at the next turn-wrap', () => {
+      const state = new GameState();
+      const p1 = state.addPlayer('p1');
+      const p2 = state.addPlayer('p2');
+      let turn = startGame();
+      for (let i = 0; i < PHASES.length; i++) turn = advancePhase(state, turn, [p1, p2]); // -> turn 2, Untap
+      expect(turn.turnNumber).toBe(2);
+      expect(turn.phaseGroupEntryCount).toEqual({});
+      expect(isFirstPhaseGroupOccurrenceThisTurn(turn, 'EndOfTurn')).toBe(false); // not yet entered THIS turn
+    });
   });
 });

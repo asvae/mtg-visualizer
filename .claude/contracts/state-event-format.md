@@ -137,6 +137,10 @@ through `ensure`'s name-only lookup. Not done as part of this change (out
 of `engine`'s own lane) — confirmed live the merge bug is still present
 pending that consumer-side fix.
 
+## `fn:'queueExtraPhase'` (2026-09-12, additive; ENGINE_GAPS.md gap #17)
+
+A new `fn:'queueExtraPhase'` entry (`{fn:'queueExtraPhase', phaseType: 'EndOfTurn'|'Combat'}`) logs a card's own real "insert one more occurrence of this phase group into the current turn" (Y'shtola Rhul's own "additional end step," e.g.) — genuinely distinct from the existing `fn:'phase'` entry (which marks the game actually TRANSITIONING to a new phase/step; `queueExtraPhase` marks the moment a card's effect QUEUES one, which may or may not be immediately followed by a `phase` entry showing the re-entry, depending on which trace path produced it). No renderer action required — same "describe generically off `fn`" contract as every other entry.
+
 ## `grantKeyword`'s own `untilEndOfTurn` field + real Cleanup removal (2026-09-12, additive)
 
 A `grantKeyword` entry now optionally carries `untilEndOfTurn: true` (only

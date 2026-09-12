@@ -21,16 +21,18 @@ export const yshtolaRhul: CardDefinition = {
           // just with a CHOSEN target instead of always `self`).
           //
           // "Then if it's the first end step of the turn, there is an
-          // additional end step after this step" — a real turn/phase-
-          // structure effect (Forge's own `DB$ AddPhase`). No Effect kind,
-          // action, or PlayerState field anywhere in this model represents
-          // adding an extra step/phase to the turn (state.ts's own header
-          // rules out turn-structure machinery beyond what turn.ts already
-          // builds elsewhere) — real text only, same "described but not
-          // executed" treatment moogles-valor's own keyword-grant gap gets.
+          // additional end step after this step" — real turn/phase-
+          // structure mechanism now exists (`turn.ts`'s own
+          // `queueExtraPhase`/`isFirstPhaseGroupOccurrenceThisTurn`,
+          // ENGINE_GAPS.md gap #17, closed 2026-09-12): `ctx
+          // .firstPhaseGroupOccurrenceThisTurn` is the real, caller-supplied
+          // fact (set for real by `engine.ts`'s own `fireOnPhaseEnterTriggers`
+          // when this fires through the real engine; set by `scenarios.ts`
+          // the same way `mode`/`castFrom` are for a plain harness trace),
+          // and `actions.queueExtraPhase('EndOfTurn')` is the real
+          // consequence — no longer documentary-only text.
           kind: 'custom',
-          describe:
-            "exile target creature you control, then return it to the battlefield under its owner's control. Then if it's the first end step of the turn, there is an additional end step after this step (extra-end-step part not mechanically enforced — no turn/phase-manipulation Effect kind exists)",
+          describe: "exile target creature you control, then return it to the battlefield under its owner's control. Then if it's the first end step of the turn, there is an additional end step after this step",
           run: (ctx: EffectContext, actions: Actions) => {
             const pool = ctx.you.getCreaturesInPlay();
             if (pool.length === 0) return;
@@ -43,6 +45,7 @@ export const yshtolaRhul: CardDefinition = {
             // never actually returns. Only a real (nontoken) card comes
             // back.
             if (!wasToken) actions.moveTo(target, 'Battlefield');
+            if (ctx.firstPhaseGroupOccurrenceThisTurn) actions.queueExtraPhase('EndOfTurn');
           },
         } satisfies Effect,
       ],

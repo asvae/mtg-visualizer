@@ -13,6 +13,10 @@
     {
       "sourceText": "When this Aura enters, tap enchanted permanent.",
       "highlight": "tap enchanted permanent"
+    },
+    {
+      "sourceText": "Enchanted permanent doesn't untap during its controller's untap step and its activated abilities can't be activated.",
+      "highlight": "its activated abilities can't be activated"
     }
   ],
   "sink": [

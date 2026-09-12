@@ -15998,3 +15998,415 @@ line/P-T confirmed directly against `data/fin/fin_scryfall.json` #78.
   **Open Forge-verification**: none needed — oracle text/mana cost/type
   line/P-T confirmed directly against `data/fin/fin_scryfall.json` #89 at
   the start of this task.
+
+## 2026-09-12: ENGINE_GAPS.md gap #9 (First/Double Strike combat sub-step) — CLOSED for real
+
+Was previously "folded into gap #1" with only the DAMAGE MATH already
+correct (two internal passes inside one `resolveCombatDamage` call, no
+real `turn.ts` phase). Closed for real this pass:
+
+- `turn.ts`: `PHASES` now literally includes `'CombatFirstStrikeDamage'`
+  between `'CombatDeclareBlockers'`/`'CombatDamage'` — unconditional,
+  structural mirror of real Forge's own 13-entry `PhaseType` enum
+  (`PhaseType.java` lines 16-28). `advancePhase` itself stays dumb/
+  unconditional (no new params) — turn.ts has no combat state to decide
+  real 510.5 conditionality with, by design (same reason combat logic
+  itself lives in engine.ts).
+- `engine.ts`: new `combatHasFirstOrDoubleStrike(engine)` (via
+  `effectiveKeywords`, so a GRANTED First Strike — Coral Sword's own Equip
+  trigger — counts) + `doAdvance` auto-skips `'CombatFirstStrikeDamage'`
+  outright when nothing qualifies (real Forge equivalent:
+  `PhaseHandler.isSkippingPhase`/`onPhaseBegin`, `combat
+  .assignCombatDamage(true)` returning false, `Combat.java` ~906-926 —
+  Forge always transitions through the phase and just withholds priority;
+  this engine skips presenting it at all instead, same observable result,
+  no hook to represent the distinction otherwise).
+- `resolveCombatDamage` SPLIT into two real exported functions instead of
+  two internal passes: `resolveFirstStrikeCombatDamage` (dealsFirst) for
+  the real `CombatFirstStrikeDamage` step, `resolveCombatDamage`
+  (dealsRegular — UNCHANGED predicate) for the real `CombatDamage` step.
+  Shared `runCombatDamageStep` now gates "already out of the fight" via
+  `isLethallyDamaged(engine.state, card)` (real, persistent
+  `damageMarked`/`deathtouchDamaged` state) instead of a local
+  same-call-only `Set` — this is what makes the split SAFE across two
+  separate real calls (no double-dealing, no need for an actual
+  `state.destroy` between them, though a caller SHOULD still run
+  `checkStateBasedActions` for realism/704.3 — same "caller-invoked SBA"
+  convention this codebase already established). A caller with no FS/DS
+  creature needs zero changes: `resolveCombatDamage` alone, once, is
+  byte-identical to its own pre-split behavior.
+- Real Forge citations: `Combat.java`'s own `dealDamageThisPhase` (~906-
+  916, EXACT match for the `dealsFirst`/`dealsRegular` predicates already
+  in this file, confirmed not guessed) and `PhaseHandler.java`'s own
+  `COMBAT_FIRST_STRIKE_DAMAGE`/`COMBAT_DAMAGE` cases (~321-344).
+- Updated 3 existing FS/DS-specific `engine.test.ts` tests to walk the
+  real two-phase sequence (`advance` + `currentPhase` assertions +
+  `checkStateBasedActions` between steps) instead of one bare
+  `resolveCombatDamage` call; added a 4th test proving a normal-vs-normal
+  combat never reaches `CombatFirstStrikeDamage` at all. `turn.test.ts`'s
+  fixed-phase-order test updated to expect the new phase in sequence
+  (fully generic against `PHASES.length` elsewhere — zero other turn.test
+  changes needed).
+- Real FIN card demonstration: REWROTE (not new) `keywords/first-strike-
+  double-strike/scenarios.ts` (Lightning, Army of One / Giott, King of the
+  Dwarves — both real FIN cards on this gap's own assigned list) to
+  genuinely advance through the real phase via new `engine-trace.ts`
+  helper `pilotResolveFirstStrikeCombatDamage`, asserting
+  `currentPhase(...) === 'CombatFirstStrikeDamage'` (throws if not reached
+  — a real trip-wire) with a real `checkStateBasedActions` sweep before
+  the regular step. Regenerated `trace.json` shows real separate
+  `{fn:'phase', phase:'CombatFirstStrikeDamage'}` entries.
+- Checked all OTHER 9 real FIN cards referencing First/Double Strike
+  (Tonberry, Coral Sword, Seifer Almasy, Sidequest: Play Blitzball //
+  World Champion Celestial Weapon, Squall SeeD Mercenary, Genji Glove, The
+  Masamune, Cloud Planet's Champion, Magitek Scythe) — regenerated every
+  one's `trace.json`, BYTE-IDENTICAL (zero regression), clean
+  `verify-synergy.mjs`. None of their own scenarios currently drive a
+  real FS/DS creature through combat (Tonberry's own First Strike is a
+  real but TURN-CONDITIONAL self-grant left as undemonstrated freeform
+  `staticAbilities` text — same real, not-yet-retrofitted gap
+  `continuousKeywordGrants`'s `onlyDuringYourTurn`/`includeSelf` shape
+  could close, flagged in ENGINE_GAPS.md gap #9's own writeup, NOT done
+  this pass; The Masamune's "first strike while attacking" is the same
+  kind of unmodeled freeform text, pre-existing/flagged in its own
+  definition.ts).
+- Real, still-open simplification (documented in ENGINE_GAPS.md #9, not a
+  new gap): multi-blocker damage ASSIGNMENT ORDERING (509.2) untouched,
+  same as gap #1's own pre-existing note; Forge's "always transition
+  through the phase, silently" vs. this engine's "never present it"
+  divergence is deliberate, not a bug.
+- `vitest run functional-model`: 366/366. Full-pool `verify-synergy.mjs`:
+  320 checked, 0 hard failures. Scoped verify-synergy on all 11 real FIN
+  FS/DS cards: 0 hard failures.
+- **Collision note**: gap #17 (extra-phase-within-a-turn) was flagged as a
+  concurrent, separate agent's own work on `turn.ts`'s phase machinery —
+  re-checked `turn.ts` fresh via `git status`/`git diff` immediately before
+  my own edit; it hadn't touched `turn.ts` at all by the time I landed
+  (only gap #18/#19, unrelated activation-lock/mill work, touched
+  `engine.ts`/`engine.test.ts` concurrently — merged cleanly, confirmed via
+  diff inspection, no corruption).
+- No further Forge verification needed for THIS gap — the two-step
+  split, conditional-skip mechanism, and per-step predicates were all
+  checked directly against real `Combat.java`/`PhaseHandler.java`/
+  `PhaseType.java` source (`tmp/mtg-forge`), not guessed.
+
+## 2026-09-12 (later still): ENGINE_GAPS.md gap #18 CLOSED — a static effect locking a DIFFERENT permanent's own activated-ability activation
+
+- Checked full FIN pool first (`data/fin/fin_scryfall.json`, grep every
+  "activated abilities can't be activated"-shaped clause): Stuck in
+  Summoner's Sanctum (fin/76) is the ONLY real card needing this,
+  confirmed not assumed.
+- Real Forge citation: `res/cardsfolder/s/stuck_in_summoners_sanctum.txt`
+  line 11 — `S:Mode$ CantBeActivated | ValidCard$ Permanent.EnchantedBy |
+  Secondary$ True | ...` (`StaticAbilityMode.CantBeActivated`,
+  `StaticAbilityMode.java` line 22), checked live at
+  `AbilityActivated.checkRestrictions` (line 109,
+  `!StaticAbilityCantBeCast.cantBeActivatedAbility(...)`), itself sweeping
+  every battlefield card's static abilities for a matching `ValidCard`
+  (`StaticAbilityCantBeCast.java` lines 55-71/156-160) — BEFORE any
+  cost-affordability check.
+- New general vocabulary, mirrors `continuousKeywordGrants`'s own shape
+  exactly (per the task's own explicit instruction to do so): `card.ts`'s
+  `CardDefinition.activatedAbilityLock?: ContinuousGrantTargeting[]` (no
+  extra payload beyond the shared `includeSelf`/`subtype`/
+  `onlyDuringYourTurn`/`equippedBySelf` targeting — presence in the array
+  already means "locked"); `state.ts`'s duck-typed `RealCard.
+  activatedAbilityLock` (copied at `resolveTop` time, same convention its
+  siblings use); `state.ts`'s new `isActivationLocked(state, card)` sweeps
+  the battlefield via the SAME shared `qualifiesForContinuousGrant` helper
+  `effectiveKeywords`/`effectivePT`/`effectiveSubtypes` already use.
+  `engine.ts`'s `canActivateAbility` calls it right after the controller
+  check, BEFORE any cost-shape/affordability check — same order Forge
+  itself checks it in.
+- Stuck in Summoner's Sanctum's own real shape: `{ includeSelf: false,
+  equippedBySelf: true }` — the lock follows this Aura's own live
+  `attachedToId` link.
+- **Two more real, necessary bugs found and fixed in this same card's own
+  `definition.ts`** while actually trying to demonstrate this end-to-end
+  (not assumed, not hypothetical — the card was otherwise structurally
+  incapable of ever setting a live `attachedToId` at all): (1) its
+  `onEnter` trigger was a bare declarative `{kind:'tapTarget', ...}` with
+  NO `actions.equip` call — this Aura never actually attached to
+  anything, ever, in this model, regardless of any grant field; fixed to
+  a real `custom` effect doing both the attach and the tap (mirrors
+  sleep-magic's own onEnter trigger, fin's other real Aura, which already
+  had this right). (2) the trigger was also missing `on: 'enter'` (present
+  on sleep-magic's identical trigger, absent here) — without it,
+  `engine.ts`'s real ETB auto-fire never picks the trigger up when cast
+  through the real engine path at all.
+- `cards/stuck-in-summoner-s-sanctum/scenarios.ts` migrated from a flat
+  `harness.ts` scenario to a real engine-piloted one (`runEngineScenarios`)
+  — casts the Aura (Flash) onto a real Coeurl (fin's own real `{1}{W},
+  {T}: Tap target creature.` creature, chosen specifically because it has
+  a real activated ability to lock), then uses `engine-trace.ts`'s
+  `pilotExpectIllegalActivate` (the FIRST real pool card to use the
+  `pilotExpectIllegal*` helper family at all) to show Coeurl's own ability
+  genuinely rejected — real `fn:'illegalAttempt'` trace evidence with the
+  actual CantBeActivated reason. `scripts/verify-synergy.mjs`'s
+  `IGNORED_FNS` gained `illegalAttempt` (purely observational by that
+  helper family's own doc comment, never produce-relevant by
+  construction — classified with `cast`/`trigger`/`phase`, not
+  `PARKED_ACTION_FNS`).
+- Real fact authored: `event:'grantKeyword'`, `keyword:
+  'CantActivateAbilities'`, `target:{equippedBySelf:true}`, `value:-1`
+  (a lockdown, not a boon — same `value:-1` convention sleep-magic's own
+  `CantUntap` fact established). `annotations-authoring.json`/
+  `synergy.json` both updated, annotations regenerated via
+  `compute-annotations.mjs` (this card is already in
+  `ANNOTATED_CARD_SLUGS`). `progress.json`'s `knownGaps` trimmed to just
+  the still-open "doesn't untap" half.
+- Tests: `state.test.ts`'s new `isActivationLocked` describe block (5
+  cases: locked permanent refused, a different permanent unaffected,
+  removing the locking permanent lifts the lock live, re-attaching moves
+  the lock live, no-lock negative baseline), `engine.test.ts`'s matching
+  `canActivateAbility` describe block (3 cases, same shape through the
+  real entry point).
+- `vitest run functional-model`: 366/366. Scoped + full-pool
+  `verify-synergy.mjs`: 320 v2 cards checked, 0 hard failures (the usual
+  pre-existing `equip`/`tapForMana` soft notes only, same as every other
+  Equipment/Aura-shaped and engine-piloted card in the pool already gets).
+- The "doesn't untap during its controller's untap step" half of this
+  same card's clause stays OPEN, unchanged, deliberately not attempted
+  (shared with sleep-magic — `state.ts`'s `untap()` only special-cases the
+  STUN-counter replacement, no general per-object "can't untap" lock).
+- **Concurrency note**: this session ran concurrently with at least two
+  other engine-agent sessions actively editing `engine.ts`/`state.ts`/
+  `card.ts`/`turn.ts`/`harness.ts` in the SAME working tree (gap #19 mill/
+  The Water Crystal work, gap #9 First/Double Strike combat sub-step
+  work — the latter's own notes entry above independently confirms
+  checking for and finding no collision with this gap's own changes). A
+  full-pool (unscoped) `run-scenarios.mjs` call made mid-task to
+  "sanity-check the whole pool" was a mistake — it's a WRITE, not
+  read-only, and it baked a concurrent session's mid-flight `.ts` edits
+  into this card's own `trace.json` as a side effect, which a later
+  (also-concurrent) `git commit` by another session then reset back to a
+  stale version in the shared working tree. Caught and fixed by
+  re-running the SCOPED `--slug=` regen at the end; no other card's
+  checked-in `trace.json` was actually altered by this (verified via
+  `git status` — only this card's own file, plus two files already known
+  to belong to the concurrent mill work, ever showed as modified).
+  Lesson for next time: prefer `verify-synergy.mjs` (read-only) over
+  `run-scenarios.mjs` (writes every card's `trace.json`) for a pool-wide
+  "did I break anything else" check when other sessions may be active.
+
+## 2026-09-12 (later still): ENGINE_GAPS.md gap #19 CLOSED — real `mill` mechanism/chokepoint + The Water Crystal's own +4 replacement
+
+- Closes the gap this same file's own earlier entry (line ~15484, "The
+  Water Crystal (fin/85) migrated... gap #19 opened") left open. Real
+  Forge citation unchanged from that entry: `res/cardsfolder/t/
+  the_water_crystal.txt`'s `R:Event$ Mill | ActiveZones$ Battlefield |
+  ValidPlayer$ Player.Opponent | ReplaceWith$ MillPlus4 | ...` +
+  `SVar:MillPlus4:DB$ ReplaceEffect | VarName$ Number | VarValue$ X` +
+  `SVar:X:ReplaceCount$Number/Plus.4`; real `Player.mill(int, ZoneType,
+  SpellAbility, Map)` at forge-game/.../player/Player.java ~line 1539; real
+  `MillEffect.resolve`'s own `numCards <= 0` early-return (forge-game/.../
+  ability/effects/MillEffect.java).
+- **New real chokepoint**: `state.ts`'s `GameState.mill(player, qty)` —
+  real per-card top-of-library->graveyard moves, capped at library size,
+  NO deck-out flag (checked: real Forge has no CR 104.3c analogue for
+  milling, only for drawing). Checks a NEW `activeMillModifier(state,
+  millingPlayer)` before finalizing the count.
+- **Design call made explicitly** (per the task's own prompt to reconsider
+  gap #8b's precedent): `LifegainDouble` sufficed as a bare boolean keyword
+  because that replacement was a FIXED 2x with no per-card parameter. This
+  replacement's own delta (+4) IS per-card data, so a generic `card.ts`
+  `CardDefinition.millModifierGrants?: MillModifierGrant[]` (`{amount:
+  number}`) was used instead of a card-specific `'MillPlus4'` keyword —
+  mirrors real Forge's OWN `ReplaceCount$ Number/Plus.N`, itself a generic
+  "add N" primitive, not a card-specific one. Copied onto `RealCard` at
+  `resolveTop`, same convention `spellCostReductionGrants` established.
+  `activeMillModifier` sums every OTHER player's battlefield grants (real
+  `ValidPlayer$ Player.Opponent` — opposite scoping from
+  `activeSpellCostDiscount`'s own `Activator$ You`).
+- **New `card.ts` `Effect` kind**: `{kind:'mill', owner: EffectOwner,
+  amount: Computed<number>}`, dispatching through a new `Actions.mill`
+  (mirrors `discard`'s `playersFor` shape) — genuinely distinct from the
+  generic `move` kind specifically so a replacement has something to hook;
+  `move` itself is UNCHANGED and still used by every other real mill-
+  referencing FIN card (see below).
+- `cards/the-water-crystal/definition.ts`: `millModifierGrants: [{amount:
+  4}]` replaces the old documentary `staticAbilities` text; its activated
+  ability now uses `kind:'mill'` instead of `kind:'move'`.
+  `scenarios.ts` fully migrated to ONE real `runEngineScenarios` pilot (the
+  old flat scenarios never resolved this permanent through `resolveTop`, so
+  `millModifierGrants` could never apply to them regardless of shape —
+  dropped as dead code, not kept alongside, matching diamond-weapon/
+  qiqirn-merchant's own full-migration precedent, since `run-scenarios.mjs`
+  picks `runEngineScenarios` EXCLUSIVELY when present): casts the card for
+  real, real turn passage (this engine's own broader-than-real-302.6 {T}-
+  cost sickness check applies to ANY permanent, not just creatures — an
+  existing, unrelated approximation, not touched), activates with 3 real
+  hand cards -> real trace shows `{fn:'mill', qty:7, requestedQty:3}`.
+  **Gotcha found while building this scenario**: `handCount` alone
+  undercounted — `advanceToPlayersNextMain1` crosses the caster's OWN draw
+  step too (not just the opponent's), so a real extra card lands in hand
+  before activation; used `handCount:2` + `libraryCount:1` to land on
+  exactly 3 at activation time, not 3+1=4.
+- New Fact: `event:'millIncrease'` (additive-delta sibling of gap #8b's own
+  `lifegainDouble`), backed by a new `verify-synergy.mjs` `case 'mill'` in
+  `producedEvents` (fires only when real `qty > requestedQty`) — plus
+  `case 'mill'` added to `producedZone`/`explainableFns` so the
+  PRE-EXISTING `event:'mill'` zone fact keeps its own evidence now that the
+  base ability's own log line is `fn:'mill'`, not `fn:'move'`.
+  `annotations-authoring.json`/`synergy.json` updated via
+  `compute-annotations.mjs` (this card's real oracle line 1, the "plus four
+  instead" clause itself).
+- Tests: `state.test.ts`'s new `GameState.mill` describe block (7 cases —
+  exact count, per-card top-of-library order, 0-qty no-op never consulting
+  the replacement, +4 applying to an opponent, the grant's OWN controller
+  milling themselves NOT affected, running out of library caps cleanly
+  with no deck-out flag, a replacement-bumped request ALSO capping at
+  library size).
+- **Scope check, confirmed not just assumed**: grepped all 10 real FIN
+  cards referencing mill (`data/fin/fin_scryfall.json`) — only The Water
+  Crystal touched. The other 9 (Shinra Reinforcements, Random Encounter,
+  Summon: Titan, Town Greeter, Vanille Cheerful l'Cie, Hope Estheim, Terra
+  Magical Adept // Esper Terra, Eden Seat of the Sanctum, Jidoor
+  Aristocratic Capital // Overture) all still use `kind:'move'` — left
+  alone, deliberately, per this task's own explicit scope (real mechanism
+  becoming real, not a sweep of every card that mentions mill).
+- `vitest run functional-model`: 366/366 (full suite, both this work and
+  the concurrent gap #9/#18 sessions' own changes included — none of those
+  touched anything this gap's own files depend on). Scoped
+  (`--slug=the-water-crystal`... actually `verify-synergy.mjs
+  the-water-crystal`) + full-pool `verify-synergy.mjs`: 320 v2 cards, 0
+  hard failures.
+- **Same accidental-full-pool-write mistake this file's own gap #18 entry
+  above independently made and caught** — `run-scenarios.mjs` (no
+  `--slug=`) was run once to sanity-check, silently baking a concurrent
+  session's mid-flight `.ts` edits into every OTHER card's own
+  `trace.json`. Caught via `git status` (308 files unexpectedly modified),
+  reverted everything except this card's own file via `git checkout --
+  <path>` for every OTHER modified trace.json, then re-ran scoped
+  (`--slug=the-water-crystal`) only. Lesson (same as gap #18's own entry):
+  always pass `--slug=` when another session may be active.
+- **No Forge verification still needed** — every citation above (`Player
+  .mill`, `MillEffect.resolve`, the real `R:Event$ Mill`/`ReplaceCount$
+  Number/Plus.4` script lines) was checked directly against
+  `tmp/mtg-forge` source, not assumed.
+
+## ENGINE_GAPS.md gap #17 closed for real (2026-09-12) — queued extra phase groups
+
+Closed "insert one more of this same step before the turn moves on" —
+structurally distinct from `extraTurns`/gap #3 (a whole extra TURN).
+Re-read `turn.ts`/`engine.ts` FRESH first per the task's own warning
+(gap #9/First-Double-Strike had just landed underneath this task, adding
+the real `CombatFirstStrikeDamage` phase) — confirmed the phase list is
+now 13 entries and `resolveCombatDamage` is split into two functions;
+neither affected this closure's own design.
+
+- **Real mechanism**: `turn.ts` gained `TurnState.queuedExtraPhases:
+  PhaseGroup[]` (`PhaseGroup = 'EndOfTurn' | 'Combat'`) and
+  `TurnState.phaseGroupEntryCount: Partial<Record<PhaseGroup, number>>`.
+  `advancePhase` checks `queuedExtraPhases` for a group whose LAST step
+  (`PHASE_GROUP_END`) is the phase currently ending, BEFORE its own
+  ordinary next-index/turn-wrap logic, jumping `phaseIndex` back to that
+  group's FIRST step (`PHASE_GROUP_START`) when queued, consuming (FIFO)
+  the entry. New exports: `queueExtraPhase(turn, group)`,
+  `isFirstPhaseGroupOccurrenceThisTurn(turn, group)`.
+  Cross-checked directly against `tmp/mtg-forge` (not assumed from card
+  scripts alone): `AddPhaseEffect.java` resolves `DB$ AddPhase` by pushing
+  onto `PhaseHandler.extraPhases: Map<PhaseType, Stack<ExtraPhase>>`
+  (`PhaseHandler.java` line 74), keyed by `AfterPhase$`;
+  `PhaseHandler.advanceToNextPhase` (lines 156-174) checks that map FIRST
+  the moment the current phase ends. `nCombatsThisTurn`/
+  `nEndOfTurnsThisTurn` (lines 76-80, bumped at lines 299/362) and
+  `isFirstCombat()`/`Count$FinishedEndOfTurnsThisTurn` (line 969;
+  `AbilityUtils.java` lines 2204-2207) are the real Forge counters
+  `phaseGroupEntryCount`/`isFirstPhaseGroupOccurrenceThisTurn` mirror.
+- **Card-facing vocabulary**: `card.ts`'s new `EffectContext
+  .firstPhaseGroupOccurrenceThisTurn?: boolean` (caller-supplied real fact,
+  same convention `castFrom`/`mode`/`xPaid` use) and `Actions
+  .queueExtraPhase(phaseType: PhaseGroup): void` (declared in
+  `interfaces.ts` alongside `delayUntil` — genuinely distinct: that one
+  runs an arbitrary callback once a phase is reached, this repeats the
+  phase/step ITSELF, re-firing whatever else fires during it too).
+  `engine.ts` gained a thin `queueExtraPhase(engine, phaseType)` wrapper
+  (same shape as `queueExtraTurn`) and now sets
+  `ctx.firstPhaseGroupOccurrenceThisTurn` inside `fireOnPhaseEnterTriggers`
+  right before an `'endStep'` trigger fires. `harness.ts`'s
+  `loggingActions.queueExtraPhase` just logs (no real `TurnState` in scope
+  on that flat path); `engine-trace.ts`'s `pilotActions` override
+  genuinely mutates `pilot.engine.turn` via the real wrapper, for a future
+  engine-piloted card. New `Scenario.firstPhaseGroupOccurrenceThisTurn`
+  field wires the fact into a plain harness trace the same way
+  `mode`/`xPaid` already do.
+- **Wired for real**: Y'shtola Rhul (`cards/y-shtola-rhul/definition.ts`) —
+  its `onEndStep` effect now calls `actions.queueExtraPhase('EndOfTurn')`
+  exactly when `ctx.firstPhaseGroupOccurrenceThisTurn` is true. Its own
+  `scenarios.ts` demonstrates both the positive case (2 existing scenarios
+  + explicit `true`) and a NEW negative-case scenario (`false` — a later
+  end step this turn does not re-queue, matching real Forge's own
+  `ConditionSVarCompare$ LT1` gate). `progress.json` updated (notes
+  appended, `knownGaps` cleared). `trace.json` regenerated via
+  `run-scenarios.mjs --slug=y-shtola-rhul` (5 scenarios now, confirmed
+  `queueExtraPhase` log lines present/absent exactly as expected).
+- **Genuinely NOT touched**: Balthier and Fran / Genji Glove (both already
+  exist as real `cards/` entries, migrated earlier — checked before
+  assuming otherwise) — their own "additional combat phase" clauses stay
+  honest `custom` no-ops. Real Forge citation confirms their OWN trigger
+  (not just the `AddPhase` sub-ability) is gated `FirstCombat$ True`
+  end-to-end (`genji_glove.txt`/`balthier_and_fran.txt`), and Balthier's
+  own clause additionally needs a real "you may pay {cost}. If you do,
+  ..." optional-payment gate (established pool convention per
+  seymour-flux's own doc comment: model as "always pays," no
+  legal-but-declined mechanism exists) — neither attempted here, out of
+  this task's scope; only the underlying phase-insertion PRIMITIVE their
+  own pre-existing comments already correctly flagged as missing is now
+  real. Tifa, Martial Artist (the 4th real card needing this shape) is
+  still NOT migrated into `cards/` at all (no `cards/tifa-*` directory) —
+  a future migration prerequisite, not created here.
+- **verify-synergy.mjs**: added `queueExtraPhase` to `IGNORED_FNS` (real
+  turn-structure bookkeeping, never produce-relevant — same bucket as
+  `phase`/`delayUntil`), so the new action produces no spurious soft note.
+  No new synergy Fact — same "never modeled" treatment `queueExtraTurn`
+  (gap #3) already established (a phase-repeat isn't a produce/consume-
+  shaped board effect).
+- **Tests**: `turn.test.ts`'s new `queued extra phase group` describe
+  block (5 cases — extra End Step re-enters once then Cleanup; extra
+  Combat re-enters the WHOLE 6-step sequence without re-running
+  Upkeep/Draw/Main1; a turn with nothing queued behaves identically to
+  before; `phaseGroupEntryCount` resets at turn-wrap).
+  `engine.test.ts`'s new `queueExtraPhase` describe block (3 cases) proves
+  the real end-to-end wiring: a real `onEndStep` trigger through
+  `castSpell`/`resolveTop`/`fireOnPhaseEnterTriggers` genuinely re-fires
+  once, does not re-queue a third time, Cleanup still runs afterward; plus
+  a regression case. Hit one real test-authoring bug along the way: first
+  draft used `manaCost: '{1}{U}'` for the test card, unpayable against
+  `setupGame()`'s fixed Forest/Forest/Mountain board (no Island) — fixed
+  to `'{1}{G}'`, same cost every other `engine.test.ts` fixture uses.
+- Docs: `ENGINE_GAPS.md` gap #17 marked CLOSED with the full Forge-cited
+  writeup (kept the original historical narrative, appended the closure
+  as a new paragraph, same convention gap #18's entry established).
+  `ENGINE_DESIGN.md` gained a new "Queued extra phase groups" subsection
+  (API-shape snippet, In-scope bullet, Tests-section paragraph — same
+  treatment every other closed gap gets). `SYNERGY_DESIGN.md` got a short
+  dated follow-up bullet after the original Y'shtola migration entry
+  (append-only log convention — did not rewrite the original entry's own
+  "no Fact/no mechanism yet" framing, which was true AT THE TIME).
+  `.claude/contracts/state-event-format.md` got a short additive note for
+  the new `fn:'queueExtraPhase'` trace-log entry.
+- `npx vitest run functional-model`: 373/373 pass (366 baseline + 7 new).
+  `verify-synergy.mjs` scoped (`y-shtola-rhul`): 0 hard failures, same
+  pre-existing `legendRule` soft note, `queueExtraPhase` note gone after
+  the `IGNORED_FNS` fix. Full pool: 320 checked, 0 hard failures (the 4
+  previously-reported concurrent-session hard failures are gone — those
+  sessions have since committed/fixed them).
+- **Caution note for future sessions**: this repo had at least 3 OTHER
+  concurrent sessions' uncommitted work in the tree throughout this task
+  (`stuck-in-summoner-s-sanctum`, `the-water-crystal`,
+  `keywords/first-strike-double-strike`, `state.ts`, `saga.ts`, etc., per
+  `git status` — none touched by me). Did one `git stash`/`git stash pop`
+  early on to diff a `tsc` baseline — immediately popped back, verified via
+  `git status` that nothing was lost, but this is a real risk with
+  concurrent sessions active; avoided any further stash/reset/checkout use
+  for the rest of the task. Always pass `--slug=`/positional slug args to
+  `run-scenarios.mjs`/`verify-synergy.mjs` rather than a bare full-pool run
+  when other sessions may be mid-edit (this task's own scoped runs were
+  fine; a concurrent session's own notes above already document the
+  accidental-full-pool-write failure mode to avoid).
+- **No further Forge verification needed** — every citation above
+  (`AddPhaseEffect.java`, `PhaseHandler.java` lines 74/156-174/76-80/
+  299/362/969-971, `AbilityUtils.java` lines 2204-2207,
+  `genji_glove.txt`/`balthier_and_fran.txt`/`yshtola_rhul.txt`) was
+  checked directly against `tmp/mtg-forge`, not assumed.

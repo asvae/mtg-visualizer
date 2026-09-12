@@ -95,6 +95,8 @@ export interface Scenario {
   mode?: number;
   /** A trigger's own fixed variable info (Kain's "that player"/"that much damage") — see card.ts's own `EffectContext.triggerInput`. */
   triggerInput?: Record<string, unknown>;
+  /** Real "if it's the first end step/combat phase of the turn" (ENGINE_GAPS.md gap #17) — see card.ts's own `EffectContext.firstPhaseGroupOccurrenceThisTurn` doc comment. Omit (or `false`) for a scenario demonstrating the "not the first occurrence" branch (Y'shtola Rhul's own second end step, e.g. — no additional end step queued). */
+  firstPhaseGroupOccurrenceThisTurn?: boolean;
   /**
    * Fires MULTIPLE named triggers in order, one `resolveCard` call each,
    * against ONE shared `GameState` — the "joint-scenario driver" this
@@ -406,6 +408,9 @@ function describeAction(card: CardDefinition, scenario: Scenario): string {
   if (scenario.dealsCombatDamage) parts.push(`deals ${scenario.dealsCombatDamage.amount} combat damage`);
   if (scenario.playerGainsLife) parts.push(`gains ${scenario.playerGainsLife.amount} life`);
   if (scenario.duplicateLegendaryEnters) parts.push('a duplicate legendary copy enters');
+  if (scenario.firstPhaseGroupOccurrenceThisTurn !== undefined) {
+    parts.push(scenario.firstPhaseGroupOccurrenceThisTurn ? "it's the first occurrence of this phase this turn" : 'a later occurrence of this phase this turn');
+  }
   return parts.join(', ');
 }
 
@@ -942,6 +947,21 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       const discarded = state.discard(playerOf(player), qty);
       log.push({ fn: 'discard', player: player.getName(), qty, cards: discarded.map((c) => c.name) });
     },
+    // `state.mill` (ENGINE_GAPS.md gap #19, closed) — a real, dedicated
+    // library->graveyard batch move, distinct from `move` above, and the
+    // one real chokepoint a genuine CR 614.2 mill-doubling replacement (The
+    // Water Crystal's own "mill that many plus four instead") can hook
+    // into. `requestedQty` mirrors `gainLife`'s own `requestedAmount`
+    // convention immediately below (additive, only present when the real
+    // applied qty differs from what was asked for — either a real
+    // replacement bump or a real library running out; both are genuine,
+    // checkable reasons, not distinguished further here).
+    mill: (player, qty) => {
+      const real = playerOf(player);
+      const milled = state.mill(real, qty);
+      log.push(milled.length !== qty ? { fn: 'mill', player: player.getName(), qty: milled.length, requestedQty: qty } : { fn: 'mill', player: player.getName(), qty });
+      return milled.map((c) => loggingCard(state, c, log));
+    },
     putCounter: (target, counterType, amount) => {
       const real = cardOf(target);
       state.putCounter(real, counterType, amount);
@@ -1089,6 +1109,19 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
     delayUntil: (phase, run) => {
       state.scheduleDelayedTrigger(phase, run);
       log.push({ fn: 'delayUntil', phase });
+    },
+    // Real "insert one more occurrence of this phase group into the CURRENT
+    // turn" (ENGINE_GAPS.md gap #17) — this plain harness path fires a named
+    // trigger flat, against a manufactured board, with no real `TurnState`
+    // in scope (same documented scope this file's own header already states
+    // for turn/stack/mana), so there's nothing to mutate here — logged as a
+    // real, honest fact of what the card's own effect did (same "no engine
+    // to check legality against, but still a real logged consequence" shape
+    // `play` above already uses); `engine-trace.ts`'s own `pilotActions`
+    // override is where this genuinely mutates a real `TurnState` (see its
+    // own comment there).
+    queueExtraPhase: (phaseType) => {
+      log.push({ fn: 'queueExtraPhase', phaseType });
     },
     // CR 601/305's own umbrella "play" (ENGINE_GAPS.md gap #16) — The Lunar
     // Whale's own "you may play the top card of your library." This plain
@@ -1291,6 +1324,7 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
     triggerInput: scenario.triggerInput,
     xPaid: scenario.xPaid,
     declineOptional: scenario.declineTriggers?.includes(scenario.trigger ?? '') ?? false,
+    firstPhaseGroupOccurrenceThisTurn: scenario.firstPhaseGroupOccurrenceThisTurn,
   };
   const actions = loggingActions(state, log, selfReal.id);
   // `scenario.forceCast` + `card.activationCost` together mean `card.effects`
@@ -1380,7 +1414,14 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
   // scenario that was never "at the start of a turn" to begin with.
   if (scenario.advanceToPhase) {
     const players = [you, ...opponents];
-    let turn: TurnState = { turnNumber: 1, activePlayerIndex: 0, phaseIndex: PHASES.indexOf('Main1'), extraTurns: [] };
+    let turn: TurnState = {
+      turnNumber: 1,
+      activePlayerIndex: 0,
+      phaseIndex: PHASES.indexOf('Main1'),
+      extraTurns: [],
+      queuedExtraPhases: [],
+      phaseGroupEntryCount: {},
+    };
     while (currentPhase(turn) !== scenario.advanceToPhase) {
       turn = advancePhase(state, turn, players);
       log.push({ fn: 'phase', phase: currentPhase(turn) });

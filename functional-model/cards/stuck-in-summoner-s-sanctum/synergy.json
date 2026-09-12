@@ -48,6 +48,22 @@
           "end": 46
         }
       ]
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "CantActivateAbilities",
+      "target": {
+        "equippedBySelf": true
+      },
+      "value": -1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 73,
+          "end": 115
+        }
+      ]
     }
   ],
   "sink": [

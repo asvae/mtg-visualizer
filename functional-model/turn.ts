@@ -7,10 +7,30 @@
 //
 // Explicit scope, agreed in conversation ("we want all of these present,
 // but we can simplify them"):
-//   - Real phase list/order for all 12 real phases EXCEPT
-//     `COMBAT_FIRST_STRIKE_DAMAGE` (a real 13th Forge phase, PhaseType.java
-//     line 23 — only matters for first/double-strike creatures, out of
-//     scope here).
+//   - Real phase list/order for all 13 real phases, INCLUDING
+//     `COMBAT_FIRST_STRIKE_DAMAGE` (PhaseType.java line 23,
+//     ENGINE_GAPS.md gap #9, closed 2026-09-12) — `PHASES` below is a
+//     structural, unconditional mirror of the real `PhaseType` enum (13
+//     entries, `COMBAT_FIRST_STRIKE_DAMAGE` between
+//     `COMBAT_DECLARE_BLOCKERS` and `COMBAT_DAMAGE`, exactly Forge's own
+//     order). This file's own `advancePhase` below ALWAYS walks through
+//     every one of these 13 phases in order — same as real Forge's
+//     `PhaseType` itself, which has no notion of "skip an index." The
+//     REAL conditionality (510.4/510.5: this step only matters when a
+//     creature in combat has First/Double Strike) is deliberately NOT
+//     this file's job to decide — it needs `engine.ts`'s own
+//     `attackers`/`blockers` combat state (this file has none, by design,
+//     same reason `resolveCombatDamage` itself lives in `engine.ts` — see
+//     below). `engine.ts`'s own `doAdvance` is the real equivalent of
+//     Forge's `PhaseHandler.isSkippingPhase`/`onPhaseBegin`
+//     (PhaseHandler.java lines 219-238, 321-332): it auto-advances PAST
+//     this phase (never presenting it to a caller at all) whenever no
+//     attacker or blocker this combat has First/Double Strike — Forge's
+//     own real behavior is slightly different in mechanism (it always
+//     transitions through the phase but gives no priority and assigns no
+//     damage, `combat.assignCombatDamage(true)` returning false,
+//     `Combat.java` ~line 918-926) but identical in what a player actually
+//     OBSERVES: the step might as well not have happened.
 //   - Untap (`Untap.java` ~line 86-90, `doUntap()`: untaps the active
 //     player's own battlefield), Draw (`PhaseHandler.java` ~line 268-273:
 //     `playerTurn.drawCard()`), and Cleanup (514.1's own discard-to-
@@ -32,16 +52,43 @@
 //   - The real first-turn draw skip IS implemented (`PhaseHandler.java`
 //     ~line 221-222: `case DRAW: return turn == 1 && players.size() == 2`
 //     — a real, checkable rule, not invented).
-//   - Combat's 5 steps (Begin/DeclareAttackers/DeclareBlockers/Damage/End)
-//     are present and reachable; attacking/blocking/damage assignment is
-//     `engine.ts`'s job (`declareAttackers`/`declareBlockers`/
-//     `resolveCombatDamage`), not this file's.
+//   - Combat's 6 steps (Begin/DeclareAttackers/DeclareBlockers/
+//     FirstStrikeDamage/Damage/End) are present and reachable; attacking/
+//     blocking/damage assignment (and, per above, the FirstStrikeDamage
+//     step's own real conditionality) is `engine.ts`'s job
+//     (`declareAttackers`/`declareBlockers`/
+//     `resolveFirstStrikeCombatDamage`/`resolveCombatDamage`), not this
+//     file's.
 //   - Real "take an extra turn" effects (`TurnState.extraTurns`, a FIFO
 //     queue of player indices `advancePhase`'s own turn-wrap branch
 //     consumes instead of blindly rotating) ARE modeled — a real, common
 //     FIN card needs it (Ultimecia, Time Sorceress's own "take an extra
 //     turn after this one"). Real "skip your next X step/phase" effects
 //     are NOT modeled — no FIN card in this pool needs one today (checked).
+//   - Real "insert one more occurrence of a phase GROUP into the CURRENT
+//     turn" (ENGINE_GAPS.md gap #17, closed 2026-09-12) IS modeled —
+//     `TurnState.queuedExtraPhases`/`phaseGroupEntryCount`, see their own
+//     doc comments below. Genuinely distinct from `extraTurns` above: this
+//     repeats/inserts ONE step-group (End of Turn, or a whole Combat
+//     sequence) within the SAME turn, never a fresh Untap/Upkeep/Draw/etc.
+//     Real Forge citation: `AddPhaseEffect.java` (forge-game/.../ability/
+//     effects/AddPhaseEffect.java) resolves `DB$ AddPhase` by pushing onto
+//     `PhaseHandler.extraPhases: Map<PhaseType, Stack<ExtraPhase>>`
+//     (`PhaseHandler.java` line 74) keyed by the real `AfterPhase$` —
+//     `PhaseHandler.advanceToNextPhase` (`PhaseHandler.java` lines 156-174)
+//     checks that map FIRST, before its own normal `PhaseType.getNext`,
+//     the moment the CURRENT phase is about to end, and pops (LIFO) an
+//     `ExtraPhase` to visit instead. `PhaseType.PHASE_GROUPS` (`PhaseType.java`
+//     lines 30-37) is the real grouping this mirrors: index 2
+//     (`COMBAT_BEGIN`..`COMBAT_END`, 6 steps) for Balthier and Fran/Genji
+//     Glove's own "additional combat phase," index 4 (`END_OF_TURN` alone)
+//     for Y'shtola Rhul's own "additional end step." `nCombatsThisTurn`/
+//     `nEndOfTurnsThisTurn` (`PhaseHandler.java` lines 76-80, incremented at
+//     lines 299/362 the moment each group's own FIRST step is entered) are
+//     the real per-turn counters `isFirstCombat()`/`Count$
+//     FinishedEndOfTurnsThisTurn` (`AbilityUtils.java` lines 2204-2207) read
+//     to gate "if it's the FIRST end step/combat phase of the turn" —
+//     mirrored here as `phaseGroupEntryCount`.
 //   - State-based actions and multiplayer turn order beyond simple
 //     round-robin are not modeled here (SBAs: `sba.ts`, a separate file).
 
@@ -55,6 +102,11 @@ export const PHASES = [
   'CombatBegin',
   'CombatDeclareAttackers',
   'CombatDeclareBlockers',
+  // Real 13th Forge phase (PhaseType.java line 23, ENGINE_GAPS.md gap #9) —
+  // see this file's own header for why its real CONDITIONALITY (only
+  // matters when First/Double Strike is in combat) lives in `engine.ts`,
+  // not here.
+  'CombatFirstStrikeDamage',
   'CombatDamage',
   'CombatEnd',
   'Main2',
@@ -62,6 +114,30 @@ export const PHASES = [
   'Cleanup',
 ] as const;
 export type Phase = (typeof PHASES)[number];
+
+/**
+ * Real `PhaseType.PHASE_GROUPS` (`PhaseType.java` lines 30-37) entries this
+ * engine's own cards actually need to repeat/insert — `EndOfTurn` (index 4,
+ * a lone step) for Y'shtola Rhul's own "additional end step," `Combat`
+ * (index 2, all 6 combat steps) for Balthier and Fran/Genji Glove's own
+ * "additional combat phase." Forge's own `AddPhaseEffect` also supports a
+ * `Beginning` group (index 0, Untap/Upkeep/Draw) — no real FIN card needs
+ * it, so it's not represented here (see ENGINE_GAPS.md gap #17's own
+ * closure writeup).
+ */
+export type PhaseGroup = 'EndOfTurn' | 'Combat';
+
+/** The real first step of each `PhaseGroup` — where `advancePhase` jumps `phaseIndex` back to when a queued extra occurrence of that group is consumed. */
+const PHASE_GROUP_START: Record<PhaseGroup, number> = {
+  EndOfTurn: PHASES.indexOf('EndOfTurn'),
+  Combat: PHASES.indexOf('CombatBegin'),
+};
+
+/** The real LAST step of each `PhaseGroup` — the phase index `advancePhase` checks `queuedExtraPhases` against (mirrors Forge's own `extraPhases` map being keyed by "the phase that's ending," `PhaseHandler.java` line 162: `if (extraPhases.containsKey(phase))`, checked at the moment THAT phase is about to end). */
+const PHASE_GROUP_END: Record<PhaseGroup, number> = {
+  EndOfTurn: PHASES.indexOf('EndOfTurn'),
+  Combat: PHASES.indexOf('CombatEnd'),
+};
 
 export interface TurnState {
   turnNumber: number;
@@ -79,6 +155,65 @@ export interface TurnState {
    * non-empty. Empty in the common case (every existing scenario/test).
    */
   extraTurns: number[];
+  /**
+   * Real "insert one more occurrence of THIS phase group before the turn
+   * moves on" (500-series turn structure, ENGINE_GAPS.md gap #17, closed
+   * 2026-09-12) — structurally distinct from `extraTurns` above (a whole
+   * EXTRA TURN, next player's Untap onward): this re-enters the SAME
+   * group's own first step, same turn, same active player, no Untap/
+   * Upkeep/Draw in between (Combat's own 6 sub-steps DO all repeat when
+   * `'Combat'` is queued — CR 500.1's own real special case for "an
+   * additional combat phase" — but Untap/Upkeep/Draw never do).
+   * `advancePhase`'s own group-boundary check (mirroring real Forge's
+   * `PhaseHandler.extraPhases`, `PhaseHandler.java` line 74, a
+   * `Map<PhaseType, Stack<ExtraPhase>>` keyed by "the phase that's ending")
+   * consumes ONE entry matching the group whose LAST step is currently
+   * ending, dequeuing it (FIFO here; real Forge's own equivalent is a
+   * per-key LIFO `Stack`, but no FIN card in this pool ever queues more
+   * than one at a time, so the two are observably identical). A card's own
+   * effect pushes via `queueExtraPhase` (below) when its trigger resolves.
+   */
+  queuedExtraPhases: PhaseGroup[];
+  /**
+   * Real per-turn "how many times has this phase GROUP been entered so far
+   * THIS turn" — the general primitive behind Forge's own
+   * `nCombatsThisTurn`/`nEndOfTurnsThisTurn` counters (`PhaseHandler.java`
+   * lines 76-80, incremented the moment each group's own first step is
+   * entered — lines 299/362) and the `isFirstCombat()`/`Count$
+   * FinishedEndOfTurnsThisTurn` reads (`PhaseHandler.java` line 969-971;
+   * `AbilityUtils.java` lines 2204-2207) real card scripts gate "if it's
+   * the FIRST end step/combat phase of the turn" on — Y'shtola Rhul's own
+   * "if it's the first end step of the turn," Balthier and Fran/Genji
+   * Glove's own "if it's the first combat phase of the turn." Reset to
+   * `{}` at each new turn (see `advancePhase`'s turn-wrap branch);
+   * incremented by `runPhaseEntryAction` the instant a group's own first
+   * step is entered — read via `isFirstPhaseGroupOccurrenceThisTurn`
+   * below, count `=== 1` meaning "this is the first entry this turn,"
+   * matching Forge's own `nCombatsThisTurn == 1`/`FinishedEndOfTurnsThisTurn
+   * < 1` shape exactly (a 1-based "entered" count vs. a 0-based "already
+   * finished" count are the same real fact, read from either side).
+   */
+  phaseGroupEntryCount: Partial<Record<PhaseGroup, number>>;
+}
+
+/** Which `PhaseGroup`, if any, `phaseIndex` is the FIRST step of — used by `runPhaseEntryAction` to know when to bump `phaseGroupEntryCount`. */
+function phaseGroupStartingAt(phaseIndex: number): PhaseGroup | undefined {
+  return (Object.keys(PHASE_GROUP_START) as PhaseGroup[]).find((g) => PHASE_GROUP_START[g] === phaseIndex);
+}
+
+/** Which `PhaseGroup`, if any, `phaseIndex` is the LAST step of — used by `advancePhase` to know when to check `queuedExtraPhases`. */
+function phaseGroupEndingAt(phaseIndex: number): PhaseGroup | undefined {
+  return (Object.keys(PHASE_GROUP_END) as PhaseGroup[]).find((g) => PHASE_GROUP_END[g] === phaseIndex);
+}
+
+/** Real "if it's the FIRST end step/combat phase of the turn" (see `TurnState.phaseGroupEntryCount`'s own doc comment) — `true` only the FIRST time `group` is entered this turn. Callers read this (via `EffectContext.firstPhaseGroupOccurrenceThisTurn`, engine.ts) to decide whether to call `queueExtraPhase`. */
+export function isFirstPhaseGroupOccurrenceThisTurn(turn: TurnState, group: PhaseGroup): boolean {
+  return (turn.phaseGroupEntryCount[group] ?? 0) === 1;
+}
+
+/** Queues one more occurrence of `group` to be inserted the moment the group currently ending finishes (500-series, ENGINE_GAPS.md gap #17) — see `TurnState.queuedExtraPhases`'s own doc comment. */
+export function queueExtraPhase(turn: TurnState, group: PhaseGroup): void {
+  turn.queuedExtraPhases.push(group);
 }
 
 /** Real rule 103.8a-shaped skip: the FIRST active player's very FIRST draw step is skipped, 2-player games only (`PhaseHandler.java` ~line 221-222). Multiplayer/later turns always draw. */
@@ -87,7 +222,7 @@ function shouldSkipDraw(turn: TurnState, playerCount: number): boolean {
 }
 
 export function startGame(): TurnState {
-  return { turnNumber: 1, activePlayerIndex: 0, phaseIndex: 0, extraTurns: [] };
+  return { turnNumber: 1, activePlayerIndex: 0, phaseIndex: 0, extraTurns: [], queuedExtraPhases: [], phaseGroupEntryCount: {} };
 }
 
 /** Queues `playerIndex` to take the NEXT turn once the current one's Cleanup ends, ahead of the normal round-robin rotation (500.7) — see `TurnState.extraTurns`'s own doc comment. Multiple queued extra turns are consumed FIFO, one per turn-wrap. */
@@ -171,15 +306,41 @@ function runPhaseEntryAction(state: GameState, turn: TurnState, players: RealPla
  * Draw's own case).
  */
 export function advancePhase(state: GameState, turn: TurnState, players: RealPlayer[]): TurnState {
-  const next: TurnState =
-    turn.phaseIndex + 1 < PHASES.length
-      ? { ...turn, phaseIndex: turn.phaseIndex + 1 }
-      : {
-          turnNumber: turn.turnNumber + 1,
-          activePlayerIndex: turn.extraTurns.length > 0 ? turn.extraTurns[0]! : (turn.activePlayerIndex + 1) % players.length,
-          phaseIndex: 0,
-          extraTurns: turn.extraTurns.length > 0 ? turn.extraTurns.slice(1) : turn.extraTurns,
-        };
+  // Real Forge order (`PhaseHandler.advanceToNextPhase`, `PhaseHandler.java`
+  // lines 156-174): a queued extra occurrence of the group that's ABOUT TO
+  // END is checked FIRST, before the ordinary next-index/turn-wrap logic —
+  // see `TurnState.queuedExtraPhases`'s own doc comment.
+  const endingGroup = phaseGroupEndingAt(turn.phaseIndex);
+  const queuedIdx = endingGroup ? turn.queuedExtraPhases.indexOf(endingGroup) : -1;
+  let next: TurnState;
+  if (queuedIdx !== -1) {
+    next = {
+      ...turn,
+      phaseIndex: PHASE_GROUP_START[endingGroup!],
+      queuedExtraPhases: [...turn.queuedExtraPhases.slice(0, queuedIdx), ...turn.queuedExtraPhases.slice(queuedIdx + 1)],
+      phaseGroupEntryCount: { ...turn.phaseGroupEntryCount },
+    };
+  } else if (turn.phaseIndex + 1 < PHASES.length) {
+    next = { ...turn, phaseIndex: turn.phaseIndex + 1, phaseGroupEntryCount: { ...turn.phaseGroupEntryCount } };
+  } else {
+    next = {
+      turnNumber: turn.turnNumber + 1,
+      activePlayerIndex: turn.extraTurns.length > 0 ? turn.extraTurns[0]! : (turn.activePlayerIndex + 1) % players.length,
+      phaseIndex: 0,
+      extraTurns: turn.extraTurns.length > 0 ? turn.extraTurns.slice(1) : turn.extraTurns,
+      // Real `extraPhases.clear()` on turn-wrap (`PhaseHandler.java` line
+      // 178/1239) — any still-queued extra phase or per-group entry count
+      // doesn't carry into a new turn.
+      queuedExtraPhases: [],
+      phaseGroupEntryCount: {},
+    };
+  }
+  // Real `nCombatsThisTurn++`/`nEndOfTurnsThisTurn++` (`PhaseHandler.java`
+  // lines 299/362) — bumped the instant a group's own FIRST step is
+  // entered, whether this is the group's ordinary occurrence or a queued
+  // extra one (Forge's own counter doesn't distinguish either).
+  const enteringGroup = phaseGroupStartingAt(next.phaseIndex);
+  if (enteringGroup) next.phaseGroupEntryCount[enteringGroup] = (next.phaseGroupEntryCount[enteringGroup] ?? 0) + 1;
   runPhaseEntryAction(state, next, players);
   return next;
 }

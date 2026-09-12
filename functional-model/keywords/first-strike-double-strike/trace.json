@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "",
-      "action": "real engine playthrough: declare First Strike attacker -> blocked -> real two-pass combat damage",
-      "result": "Real 510.5: Lightning's First Strike deals its 3 damage in the FIRST combat-damage sub-step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular sub-step ever runs — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-pass resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning is the real, observable proof First Strike's own ordering actually ran.",
+      "action": "real engine playthrough: declare First Strike attacker -> blocked -> real two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)",
+      "result": "Real 510.4/510.5: Lightning's First Strike deals its 3 damage in the real, separate CombatFirstStrikeDamage step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the real, separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering actually ran.",
       "raw": {
-        "result": "Real 510.5: Lightning's First Strike deals its 3 damage in the FIRST combat-damage sub-step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular sub-step ever runs — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-pass resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning is the real, observable proof First Strike's own ordering actually ran.",
+        "result": "Real 510.4/510.5: Lightning's First Strike deals its 3 damage in the real, separate CombatFirstStrikeDamage step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the real, separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering actually ran.",
         "you": {
           "libraryCount": 3
         },
@@ -40,11 +40,13 @@
       },
       {
         "fn": "tap",
-        "target": "Lightning, Army of One"
+        "target": "Lightning, Army of One",
+        "id": 24
       },
       {
         "fn": "attack",
-        "card": "Lightning, Army of One"
+        "card": "Lightning, Army of One",
+        "id": 24
       },
       {
         "fn": "phase",
@@ -55,7 +57,15 @@
       {
         "fn": "block",
         "blocker": "Shambling Cie'th",
-        "attacker": "Lightning, Army of One"
+        "blockerId": 25,
+        "attacker": "Lightning, Army of One",
+        "attackerId": 24
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatFirstStrikeDamage",
+        "turn": 1,
+        "player": "you"
       },
       {
         "fn": "dealDamage",
@@ -67,6 +77,12 @@
         "fn": "destroy",
         "target": "Shambling Cie'th",
         "controller": "opp0"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDamage",
+        "turn": 1,
+        "player": "you"
       }
     ],
     "actions": [
@@ -91,18 +107,30 @@
         "from": 6
       },
       {
-        "label": "Resolve combat damage — real First Strike (510.5) two-pass ordering",
+        "label": "Advance to the real CombatFirstStrikeDamage step (510.4)",
         "from": 7
+      },
+      {
+        "label": "Resolve first-strike combat damage",
+        "from": 8
+      },
+      {
+        "label": "Advance to the real CombatDamage step (510.4)",
+        "from": 10
+      },
+      {
+        "label": "Resolve combat damage",
+        "from": 11
       }
     ]
   },
   {
     "scenario": {
       "setup": "",
-      "action": "real engine playthrough: declare Double Strike attacker -> blocked -> real two-pass combat damage",
-      "result": "Real 510.5: Giott's Double Strike deals its 1 power in BOTH the first-strike AND the regular combat-damage sub-step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal. Giott also takes the blocker's 1 power back in the regular sub-step (real-lethal to its own 1 toughness) — both destroyed.",
+      "action": "real engine playthrough: declare Double Strike attacker -> blocked -> real two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)",
+      "result": "Real 510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the real, separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit in the SECOND real phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — real-lethal to its own 1 toughness — both destroyed.",
       "raw": {
-        "result": "Real 510.5: Giott's Double Strike deals its 1 power in BOTH the first-strike AND the regular combat-damage sub-step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal. Giott also takes the blocker's 1 power back in the regular sub-step (real-lethal to its own 1 toughness) — both destroyed.",
+        "result": "Real 510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the real, separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit in the SECOND real phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — real-lethal to its own 1 toughness — both destroyed.",
         "you": {
           "libraryCount": 3
         },
@@ -137,11 +165,13 @@
       },
       {
         "fn": "tap",
-        "target": "Giott, King of the Dwarves"
+        "target": "Giott, King of the Dwarves",
+        "id": 34
       },
       {
         "fn": "attack",
-        "card": "Giott, King of the Dwarves"
+        "card": "Giott, King of the Dwarves",
+        "id": 34
       },
       {
         "fn": "phase",
@@ -152,13 +182,33 @@
       {
         "fn": "block",
         "blocker": "Stiltzkin, Moogle Merchant",
-        "attacker": "Giott, King of the Dwarves"
+        "blockerId": 35,
+        "attacker": "Giott, King of the Dwarves",
+        "attackerId": 34
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatFirstStrikeDamage",
+        "turn": 1,
+        "player": "you"
       },
       {
         "fn": "dealDamage",
         "source": "Giott, King of the Dwarves",
         "target": "Stiltzkin, Moogle Merchant",
-        "amount": 2
+        "amount": 1
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDamage",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "dealDamage",
+        "source": "Giott, King of the Dwarves",
+        "target": "Stiltzkin, Moogle Merchant",
+        "amount": 1
       },
       {
         "fn": "dealDamage",
@@ -199,8 +249,20 @@
         "from": 6
       },
       {
-        "label": "Resolve combat damage — real Double Strike (510.5) two-pass damage",
+        "label": "Advance to the real CombatFirstStrikeDamage step (510.4)",
         "from": 7
+      },
+      {
+        "label": "Resolve first-strike combat damage",
+        "from": 8
+      },
+      {
+        "label": "Advance to the real CombatDamage step (510.5)",
+        "from": 9
+      },
+      {
+        "label": "Resolve combat damage",
+        "from": 10
       }
     ]
   }

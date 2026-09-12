@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GameState, effectiveTypes, effectivePT, effectiveKeywords, effectiveSubtypes, wrapCard } from './state';
+import { GameState, effectiveTypes, effectivePT, effectiveKeywords, effectiveSubtypes, isActivationLocked, wrapCard } from './state';
 
 describe('GameState.move', () => {
   it('genuinely splices a card out of one zone and into another (same object, never copied)', () => {
@@ -419,6 +419,77 @@ describe('effectiveKeywords / effectivePT / effectiveSubtypes — continuous, qu
   });
 });
 
+// ENGINE_GAPS.md gap #18 (closed 2026-09-12) — a real, query-time
+// "CantBeActivated" lock a static effect imposes on a DIFFERENT permanent's
+// own activated-ability activation (Stuck in Summoner's Sanctum's own
+// "its activated abilities can't be activated" clause) — same shared
+// `qualifiesForContinuousGrant` recipient resolution the grant family above
+// already uses, here with no payload at all (presence alone means "locked").
+describe('isActivationLocked — a static CantBeActivated lock on a DIFFERENT permanent (613/602.1, ENGINE_GAPS.md gap #18)', () => {
+  it("Stuck in Summoner's Sanctum-shaped: an Aura's equippedBySelf lock genuinely locks the enchanted permanent's own activation", () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const aura = state.addCard(you, 'Battlefield', {
+      name: 'stuck-in-summoners-sanctum',
+      activatedAbilityLock: [{ includeSelf: false, equippedBySelf: true }],
+    });
+    const enchanted = state.addCard(you, 'Battlefield', { name: 'enchanted-permanent' });
+    state.equip(aura, enchanted);
+    expect(isActivationLocked(state, enchanted)).toBe(true);
+  });
+
+  it('a DIFFERENT permanent (not the enchanted one) remains unaffected', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const aura = state.addCard(you, 'Battlefield', {
+      name: 'stuck-in-summoners-sanctum',
+      activatedAbilityLock: [{ includeSelf: false, equippedBySelf: true }],
+    });
+    const enchanted = state.addCard(you, 'Battlefield', { name: 'enchanted-permanent' });
+    const bystander = state.addCard(you, 'Battlefield', { name: 'unrelated-permanent' });
+    state.equip(aura, enchanted);
+    expect(isActivationLocked(state, bystander)).toBe(false);
+  });
+
+  it('removing the locking permanent (leaving the battlefield) lifts the lock, live', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const aura = state.addCard(you, 'Battlefield', {
+      name: 'stuck-in-summoners-sanctum',
+      activatedAbilityLock: [{ includeSelf: false, equippedBySelf: true }],
+    });
+    const enchanted = state.addCard(you, 'Battlefield', { name: 'enchanted-permanent' });
+    state.equip(aura, enchanted);
+    expect(isActivationLocked(state, enchanted)).toBe(true);
+    state.move(aura, 'Graveyard'); // the Aura itself dies (destroyed/sacrificed)
+    expect(isActivationLocked(state, enchanted)).toBe(false);
+  });
+
+  it('re-attaching to a different permanent genuinely moves the lock, live — the old target is freed', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const aura = state.addCard(you, 'Battlefield', {
+      name: 'stuck-in-summoners-sanctum',
+      activatedAbilityLock: [{ includeSelf: false, equippedBySelf: true }],
+    });
+    const creatureA = state.addCard(you, 'Battlefield', { name: 'creature-a' });
+    const creatureB = state.addCard(you, 'Battlefield', { name: 'creature-b' });
+    state.equip(aura, creatureA);
+    expect(isActivationLocked(state, creatureA)).toBe(true);
+    expect(isActivationLocked(state, creatureB)).toBe(false);
+    state.equip(aura, creatureB);
+    expect(isActivationLocked(state, creatureA)).toBe(false);
+    expect(isActivationLocked(state, creatureB)).toBe(true);
+  });
+
+  it('a permanent with no lock anywhere on the battlefield is never locked (negative baseline)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const plain = state.addCard(you, 'Battlefield', { name: 'plain-permanent' });
+    expect(isActivationLocked(state, plain)).toBe(false);
+  });
+});
+
 // ENGINE_GAPS.md gap #8 — real damage-prevention shields ('DamagePrevention'/
 // 'CombatDamagePrevention'), a narrow chokepoint check inside `state.dealDamage`
 // itself, same "narrow hook, not a general 614/616 dispatcher" shape the
@@ -560,6 +631,85 @@ describe('GameState.gainLife — lifegain-doubling replacement (614.2, ENGINE_GA
     const you = state.addPlayer('you');
     state.addCard(you, 'Battlefield', { name: 'The Wind Crystal', keywords: ['LifegainDouble'] });
     expect(state.gainLife(you, 0)).toBe(0);
+  });
+});
+
+// ENGINE_GAPS.md gap #19 — a real, dedicated library->graveyard mill
+// chokepoint (`state.mill`), plus The Water Crystal's own real
+// "mill that many cards plus four instead" CR 614.2 replacement.
+describe('GameState.mill (ENGINE_GAPS.md gap #19)', () => {
+  it('mills exactly the requested amount, one card at a time, with no replacement active', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    for (let i = 0; i < 5; i++) state.addCard(you, 'Library', { name: `card-${i}` });
+    const milled = state.mill(you, 3);
+    expect(milled.length).toBe(3);
+    expect(you.library.length).toBe(2);
+    expect(you.graveyard.length).toBe(3);
+    // Real top-of-library order, one card at a time (mirrors real Forge's
+    // own per-card `moveTo` loop inside `Player.mill`, not a bulk swap).
+    expect(milled.map((c) => c.name)).toEqual(['card-0', 'card-1', 'card-2']);
+  });
+
+  it('a mill of 0 (or fewer) cards is a real no-op — never even consults a replacement (mirrors real MillEffect.resolve\'s own `numCards <= 0` early return)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    // `millModifierGrants` is copied at real `resolveTop`/`engine.ts` time
+    // (never an `addCard` opt — same convention `spellCostReductionGrants`
+    // already established, see that field's own doc comment), so a test
+    // sets it directly on the returned card, same as `engine.test.ts`'s
+    // own `spellCostReductionGrants` fixtures do.
+    const crystal = state.addCard(opp, 'Battlefield', { name: 'The Water Crystal' });
+    crystal.millModifierGrants = [{ amount: 4 }];
+    for (let i = 0; i < 3; i++) state.addCard(you, 'Library', { name: `card-${i}` });
+    expect(state.mill(you, 0)).toEqual([]);
+    expect(you.library.length).toBe(3);
+  });
+
+  it("The Water Crystal-shaped 'millModifierGrants' bumps an OPPONENT's real mill amount by the real, board-computed delta", () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    const crystal = state.addCard(you, 'Battlefield', { name: 'The Water Crystal' });
+    crystal.millModifierGrants = [{ amount: 4 }];
+    for (let i = 0; i < 10; i++) state.addCard(opp, 'Library', { name: `card-${i}` });
+    const milled = state.mill(opp, 3);
+    expect(milled.length).toBe(7); // 3 requested + 4 real replacement
+    expect(opp.library.length).toBe(3);
+    expect(opp.graveyard.length).toBe(7);
+  });
+
+  it("the GRANT's OWN controller milling THEMSELVES is not affected (real `ValidPlayer$ Player.Opponent` scoping, not a self-buff)", () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const crystal = state.addCard(you, 'Battlefield', { name: 'The Water Crystal' });
+    crystal.millModifierGrants = [{ amount: 4 }];
+    for (let i = 0; i < 5; i++) state.addCard(you, 'Library', { name: `card-${i}` });
+    const milled = state.mill(you, 3);
+    expect(milled.length).toBe(3);
+  });
+
+  it('milling more cards than remain in the library mills only what remains — a real, smaller mill, NOT a deck-out/game-loss flag (unlike drawCards\' own attemptedDrawFromEmpty — real Forge has no milling analogue to CR 104.3c)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    for (let i = 0; i < 2; i++) state.addCard(you, 'Library', { name: `card-${i}` });
+    const milled = state.mill(you, 5);
+    expect(milled.length).toBe(2);
+    expect(you.library.length).toBe(0);
+    expect(you.graveyard.length).toBe(2);
+  });
+
+  it('running out of library ALSO caps a real replacement-bumped mill (the +4 still applies to the request, the cap is independent)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    const crystal = state.addCard(you, 'Battlefield', { name: 'The Water Crystal' });
+    crystal.millModifierGrants = [{ amount: 4 }];
+    for (let i = 0; i < 5; i++) state.addCard(opp, 'Library', { name: `card-${i}` }); // only 5 real cards, but 3+4=7 requested
+    const milled = state.mill(opp, 3);
+    expect(milled.length).toBe(5);
+    expect(opp.library.length).toBe(0);
   });
 });
 

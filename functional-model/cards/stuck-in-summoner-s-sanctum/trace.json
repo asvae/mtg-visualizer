@@ -1,52 +1,103 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "taps the enchanted permanent",
+      "setup": "you: 3 Island(s)",
+      "action": "real engine playthrough: cast (Flash) -> resolve (attaches + taps Coeurl) -> Coeurl's own activated ability is genuinely locked",
+      "result": "Stuck in Summoner's Sanctum is cast (Flash) and enters attached to the caster's own Coeurl, tapping it (the real onEnter trigger's genuine attach + tap). Coeurl's own real activated ability, which would otherwise be perfectly legal, is now genuinely LOCKED by this Aura's real 'activated abilities can't be activated' clause (`CardDefinition.activatedAbilityLock`, ENGINE_GAPS.md gap #18, closed) — the attempt is rejected by the real engine (`canActivateAbility`), logged as a real `illegalAttempt` with the actual CantBeActivated reason, not silently skipped. This card's own separate 'doesn't untap during its controller's untap step' clause remains a real, unrelated, still-open gap (ENGINE_GAPS.md) — not touched or exercised by this scenario.",
       "raw": {
-        "result": "taps the enchanted permanent",
-        "sequence": [
-          "onEnter"
-        ],
+        "result": "Stuck in Summoner's Sanctum is cast (Flash) and enters attached to the caster's own Coeurl, tapping it (the real onEnter trigger's genuine attach + tap). Coeurl's own real activated ability, which would otherwise be perfectly legal, is now genuinely LOCKED by this Aura's real 'activated abilities can't be activated' clause (`CardDefinition.activatedAbilityLock`, ENGINE_GAPS.md gap #18, closed) — the attempt is rejected by the real engine (`canActivateAbility`), logged as a real `illegalAttempt` with the actual CantBeActivated reason, not silently skipped. This card's own separate 'doesn't untap during its controller's untap step' clause remains a real, unrelated, still-open gap (ENGINE_GAPS.md) — not touched or exercised by this scenario.",
         "you": {
-          "creaturesCount": 1
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island"
+          ]
         }
       }
     },
     "log": [
       {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
         "fn": "cast",
         "card": "Stuck in Summoner's Sanctum",
         "instanceId": 1,
-        "id": 3,
         "from": "hand",
         "cost": "{2}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Stuck in Summoner's Sanctum"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Stuck in Summoner's Sanctum"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Stuck in Summoner's Sanctum"
       },
       {
         "fn": "enters",
         "card": "Stuck in Summoner's Sanctum",
         "instanceId": 1,
-        "id": 3,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Stuck in Summoner's Sanctum",
         "instanceId": 1,
-        "id": 3,
         "name": "onEnter"
       },
       {
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 2,
+        "count": 5,
         "creatureCount": 1
       },
       {
         "fn": "read:isCreature",
-        "target": "Grizzly Bears",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Island",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Coeurl",
         "result": true
       },
       {
@@ -60,10 +111,44 @@
         "result": false
       },
       {
+        "fn": "equip",
+        "equipment": "Stuck in Summoner's Sanctum",
+        "equipmentId": 6,
+        "target": "Coeurl",
+        "id": 5
+      },
+      {
         "fn": "tap",
-        "target": "Grizzly Bears",
-        "id": 2,
+        "target": "Coeurl",
+        "id": 5,
         "controller": "you"
+      },
+      {
+        "fn": "illegalAttempt",
+        "card": "Coeurl",
+        "reason": "\"Coeurl\"'s activated abilities can't be activated — locked by a static ability on another permanent (613/602.1, CantBeActivated)"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Stuck in Summoner's Sanctum ({2}{U})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 5
+      },
+      {
+        "label": "(scenario setup) Coeurl is untapped directly, isolating the activation-lock check from its own unrelated tapped-cost state",
+        "from": 19
+      },
+      {
+        "label": "Attempt (expected illegal): Coeurl's own {1}{W}, {T} ability, now locked by Stuck in Summoner's Sanctum",
+        "from": 19
       }
     ]
   }

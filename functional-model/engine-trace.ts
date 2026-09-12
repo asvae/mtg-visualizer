@@ -59,7 +59,9 @@ import {
   declareAttackers,
   declareBlockers,
   canAttack,
+  resolveFirstStrikeCombatDamage,
   resolveCombatDamage,
+  queueExtraPhase as engineQueueExtraPhase,
   type GameEngine,
   type CombatDamageResult,
 } from './engine';
@@ -241,6 +243,20 @@ export function pilotActions(pilot: EnginePilot, selfId: number): Actions {
       // resolve it (a no-op, safely, for the land branch, which never
       // touches the stack at all).
       logTappedForMana(pilot, card, result.tappedForMana);
+    },
+    /**
+     * Real "insert one more occurrence of this phase group" (ENGINE_GAPS.md
+     * gap #17) — unlike `loggingActions.queueExtraPhase`'s own log-only
+     * fallback (no `TurnState` in scope on that plain path), a real pilot
+     * script genuinely has one (`pilot.engine.turn`): this override queues
+     * for real via `engine.ts`'s own `queueExtraPhase`, so a LATER
+     * `advance`/`advanceOneStep` call in the same pilot script genuinely
+     * re-enters the queued phase group instead of just logging an inert
+     * intent.
+     */
+    queueExtraPhase: (phaseType) => {
+      engineQueueExtraPhase(pilot.engine, phaseType);
+      pilot.log.push({ fn: 'queueExtraPhase', phaseType });
     },
   };
 }
@@ -501,6 +517,25 @@ export function pilotDeclareBlockers(pilot: EnginePilot, assignments: Array<{ bl
 export function pilotResolveCombatDamage(pilot: EnginePilot, label?: string): CombatDamageResult {
   pilot.beginStep(label ?? 'Resolve combat damage');
   const result = resolveCombatDamage(pilot.engine);
+  for (const card of result.prevented) pilot.log.push({ fn: 'damagePrevented', target: card.name, id: card.id, cause: 'combat' });
+  return result;
+}
+
+/**
+ * Real `CombatFirstStrikeDamage` step (510.4/510.5, ENGINE_GAPS.md gap #9,
+ * closed 2026-09-12) — `engine.ts`'s own `resolveFirstStrikeCombatDamage`.
+ * Only ever call this once a pilot script has actually advanced to
+ * `currentPhase(pilot.engine.turn) === 'CombatFirstStrikeDamage'` (that
+ * phase is skipped outright by `advance`/`advanceOneStep` when no
+ * attacker/blocker this combat has First or Double Strike — a pilot
+ * script checks `currentPhase` after its own `advanceOneStep` call to know
+ * whether it was reached at all). Same `damagePrevented`-only logging
+ * shape as `pilotResolveCombatDamage` above, for the same reason (no
+ * single (source, target) pair to name).
+ */
+export function pilotResolveFirstStrikeCombatDamage(pilot: EnginePilot, label?: string): CombatDamageResult {
+  pilot.beginStep(label ?? 'Resolve first-strike combat damage');
+  const result = resolveFirstStrikeCombatDamage(pilot.engine);
   for (const card of result.prevented) pilot.log.push({ fn: 'damagePrevented', target: card.name, id: card.id, cause: 'combat' });
   return result;
 }

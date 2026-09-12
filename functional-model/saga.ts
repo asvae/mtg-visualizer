@@ -150,7 +150,7 @@ export function advanceSaga(engine: GameEngine, real: RealCard, registered: Reso
   }
 }
 
-/** Every Saga the ACTIVE player controls that's registered with `engine.resolvedPermanents` (714.2c's own controller-scoping — an opponent's Saga does not advance on this player's draw step). Called once per real turn, right after the draw step ends (structurally exact in this engine's fixed 12-phase list: entering `Main1` always means the Draw step just completed, whether or not a card was actually drawn — see `turn.ts`'s own `shouldSkipDraw`). */
+/** Every Saga the ACTIVE player controls that's registered with `engine.resolvedPermanents` (714.2c's own controller-scoping — an opponent's Saga does not advance on this player's draw step). Called once per real turn, right after the draw step ends (structurally exact in this engine's fixed 13-phase list: entering `Main1` always means the Draw step just completed, whether or not a card was actually drawn — see `turn.ts`'s own `shouldSkipDraw`). */
 export function advanceSagasAfterDrawStep(engine: GameEngine, active: RealPlayer): void {
   for (const real of active.battlefield) {
     const registered = engine.resolvedPermanents.get(real.id);

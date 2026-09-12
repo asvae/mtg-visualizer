@@ -51,6 +51,13 @@ activateAbility(engine, you, permanentReal, cardDef, ctx, actions, abilityName?)
 // Extra turns (500.7) — Ultimecia, Time Sorceress's own "take an extra
 // turn after this one" is the real FIN card that needs this:
 queueExtraTurn(engine, you);
+
+// Queued extra phase GROUPS (500-series, ENGINE_GAPS.md gap #17, closed
+// 2026-09-12) — genuinely distinct from a whole extra TURN above: repeats/
+// inserts one more occurrence of the CURRENT turn's own EndOfTurn or Combat
+// phase group. Y'shtola Rhul's own "additional end step" is the real FIN
+// card wired to this; see "Queued extra phase groups" below.
+queueExtraPhase(engine, 'EndOfTurn'); // or 'Combat'
 ```
 
 `advance`/`stepPriority` also auto-fire any real `on: 'upkeep'`/`'endStep'`
@@ -118,18 +125,41 @@ the defending player directly; blocked attackers assign damage among living
 blockers in declaration order, lethal-amount-first (Deathtouch: 1 point
 counts as lethal), with Trample overflow to the player; a blocked attacker
 whose blockers are ALL already gone (killed in an earlier sub-step) deals
-nothing UNLESS it has Trample. First/Double Strike's two-sub-step ordering
-(510.5) is modeled as two internal passes within this one call rather than a
-second `turn.ts` phase — a creature dealt lethal damage in the first pass is
-excluded from the second, same effective ordering a real SBA check between
-the two real sub-steps produces.
+nothing UNLESS it has Trample.
+
+First/Double Strike's real two-STEP ordering (510.4/510.5, ENGINE_GAPS.md
+gap #9, closed 2026-09-12) is a genuinely distinct `turn.ts` phase —
+`'CombatFirstStrikeDamage'`, between `'CombatDeclareBlockers'` and
+`'CombatDamage'` in `PHASES`, structurally mirroring Forge's own 13-entry
+`PhaseType` enum — not just internal math. `turn.ts`'s own `advancePhase`
+always walks through it unconditionally (it has no combat state to decide
+otherwise with); `engine.ts`'s `doAdvance` is the real conditionality layer
+(Forge's own `PhaseHandler.isSkippingPhase`/`onPhaseBegin` equivalent):
+when NO currently-declared attacker or blocker has First or Double Strike
+(`combatHasFirstOrDoubleStrike`, via `effectiveKeywords` so a GRANTED First
+Strike counts too), it auto-advances past the step without ever presenting
+it to a caller. Combat damage assignment is correspondingly split into two
+exported functions instead of two internal passes within one call —
+`resolveFirstStrikeCombatDamage` (First/Double Strike combatants only) for
+the real `CombatFirstStrikeDamage` step, `resolveCombatDamage` (Double
+Strike again, plus everyone without First Strike) for the real
+`CombatDamage` step. A creature already lethally damaged
+(`isLethallyDamaged`, read fresh on every call — real, persistent state,
+not cached across the two calls) deals no further damage and receives
+none, same effective ordering a real `checkStateBasedActions` sweep
+between the two real steps produces (a caller runs one there, same
+established "caller-invoked SBA" convention). A caller with no First/
+Double Strike creature in play needs no other change: `resolveCombatDamage`
+alone, once, at the single real `CombatDamage` step, behaves exactly as
+before this split.
 
 **What this does NOT do:** destroy anything. Real creature death from
 combat damage is a state-based action (704.5g/704.5h) — see the next
-section. Instead, `resolveCombatDamage` returns `CombatDamageResult` —
-every creature that took damage this call, and whether that damage was
-lethal — computed via the SAME shared `isLethallyDamaged` (state.ts) the
-next section's `checkStateBasedActions` uses, so the two never disagree.
+section. Instead, each of `resolveFirstStrikeCombatDamage`/
+`resolveCombatDamage` returns its own `CombatDamageResult` — every creature
+that took damage so far, and whether that damage is lethal — computed via
+the SAME shared `isLethallyDamaged` (state.ts) the next section's
+`checkStateBasedActions` uses, so the two never disagree.
 
 ### State-based actions (704) — `sba.ts`, a narrow real subset
 
@@ -202,6 +232,57 @@ Three real pieces, closing `ENGINE_GAPS.md`'s former gap #3:
 **Still explicitly deferred** (real, no FIN card in this pool needs them
 today — checked): "each player's"/"each opponent's" upkeep/end-step
 triggers (as opposed to "your own"); "skip your next X step/phase" effects.
+
+### Queued extra phase groups (500-series, ENGINE_GAPS.md gap #17, closed 2026-09-12)
+
+Genuinely distinct from `extraTurns` just above: "there is an additional end
+step after this step" (Y'shtola Rhul) or "there is an additional combat
+phase" (Balthier and Fran, Genji Glove — both real FIN cards, though their
+own OTHER unmodeled clauses — an optional mana payment, a `FirstCombat$
+True`-gated attack trigger — stay untouched by this closure, see
+ENGINE_GAPS.md gap #17's own writeup) repeats/inserts ONE step-group within
+the SAME turn — no fresh Untap/Upkeep/Draw, same active player. Real Forge
+citation: `AddPhaseEffect.java` (forge-game/.../ability/effects/
+AddPhaseEffect.java) resolves `DB$ AddPhase` by pushing onto
+`PhaseHandler.extraPhases: Map<PhaseType, Stack<ExtraPhase>>`
+(`PhaseHandler.java` line 74, keyed by the real `AfterPhase$`);
+`PhaseHandler.advanceToNextPhase` (lines 156-174) checks that map FIRST,
+the moment the phase that's ending would otherwise just advance normally,
+and pops (LIFO) an `ExtraPhase` to visit instead.
+
+`turn.ts`'s own `TurnState.queuedExtraPhases: PhaseGroup[]` (`PhaseGroup =
+'EndOfTurn' | 'Combat'`, the two real `PhaseType.PHASE_GROUPS` entries this
+pool needs) mirrors this — `advancePhase` checks it against whichever group
+the CURRENT phase is the last step of, jumping `phaseIndex` back to that
+group's first step instead of advancing/wrapping normally when a match is
+queued (FIFO here vs. Forge's own per-key LIFO — no FIN card ever queues
+more than one at a time, so this is observably identical).
+`TurnState.phaseGroupEntryCount` mirrors Forge's own `nCombatsThisTurn`/
+`nEndOfTurnsThisTurn` counters (`PhaseHandler.java` lines 76-80, 299, 362),
+read via `isFirstPhaseGroupOccurrenceThisTurn(turn, group)` — the real
+"if it's the FIRST end step/combat phase of the turn" gate every one of
+these cards' own oracle text needs (real Forge citation: `isFirstCombat()`/
+`Count$FinishedEndOfTurnsThisTurn`, `PhaseHandler.java` line 969;
+`AbilityUtils.java` lines 2204-2207).
+
+A card's own effect triggers this via two new, general primitives: `card
+.ts`'s `EffectContext.firstPhaseGroupOccurrenceThisTurn?: boolean` (same
+"caller-supplied real fact" convention `castFrom`/`mode`/`xPaid` already
+establish — set for real by `engine.ts`'s `fireOnPhaseEnterTriggers` the
+moment an `'endStep'` trigger auto-fires) and `Actions
+.queueExtraPhase(phaseType: PhaseGroup): void` (`interfaces.ts`'s own real
+Forge-cited declaration alongside `delayUntil`'s — genuinely distinct: that
+one runs an arbitrary callback once a phase is reached, this repeats the
+phase/step ITSELF). `engine.ts`'s `queueExtraPhase(engine, phaseType)` is a
+thin wrapper, same shape `queueExtraTurn` already has. Y'shtola Rhul's own
+`definition.ts` calls `actions.queueExtraPhase('EndOfTurn')` exactly when
+`ctx.firstPhaseGroupOccurrenceThisTurn` is true — real now, not documentary
+text. No synergy Fact represents this (same "never modeled" treatment
+`queueExtraTurn`/gap #3 already established) — real turn-structure
+bookkeeping isn't a produce/consume-shaped board effect any Fact vocabulary
+covers; `scripts/verify-synergy.mjs`'s own `IGNORED_FNS` set covers the new
+`fn:'queueExtraPhase'` trace line for the same reason `phase`/`delayUntil`
+already are.
 
 ### Saga lore-counter automation (714) — `saga.ts`
 
@@ -651,6 +732,11 @@ itself via a board-wide grant, when the card matches the grant's own
   `on: 'upkeep'`/`'endStep'` trigger auto-fire for the active player's own
   permanents, and extra turns (500.7) — see "Turn-structure completeness"
   above for the full scope and what's still deferred.
+- **Queued extra phase groups (500-series)** — a real "insert one more
+  occurrence of this turn's own End Step or Combat phase" primitive
+  (`turn.ts`'s `queueExtraPhase`/`isFirstPhaseGroupOccurrenceThisTurn`),
+  genuinely distinct from a whole extra turn above — see "Queued extra
+  phase groups" above.
 - **Saga lore-counter automation (714)** — `saga.ts`: real lore counters,
   chapter auto-fire on ETB and each subsequent controller draw step, and
   714.4's own completion-sacrifice (correctly skipped for a chapter that
@@ -826,6 +912,19 @@ permanent's own ETB does NOT double through the real `castSpell`->
 `resolveTop` path before anything is equipped to it; a LATER real
 upkeep/end-step auto-fire (`fireOnPhaseEnterTriggers`) DOES double once
 genuinely equipped; an unrelated permanent's own trigger does NOT double.
+
+New (2026-09-12, ENGINE_GAPS.md gap #17): `turn.test.ts`'s new `queued
+extra phase group` describe block covers a queued extra End Step
+genuinely re-entering End Step exactly once (not infinitely) before
+Cleanup, a queued extra Combat phase re-entering the WHOLE 6-step combat
+sequence without re-running Untap/Upkeep/Draw/Main1, a full turn with no
+queued extra phase behaving identically to before this pass (regression),
+and `phaseGroupEntryCount` resetting at the next turn-wrap. `engine.test
+.ts`'s new `queueExtraPhase` describe block proves the real `engine.ts`/
+`card.ts` wiring end-to-end: a real `onEndStep` trigger fired through
+`castSpell`/`resolveTop`/`fireOnPhaseEnterTriggers` genuinely re-fires once
+when it queues, does not re-queue a third time, and Cleanup still runs
+normally afterward — plus its own regression case.
 
 ## Gap analysis vs. real Forge
 

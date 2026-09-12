@@ -110,6 +110,21 @@ export interface RealCard {
   /** Real, query-time continuous creature-TYPE grant(s) (613.3, layer 4, ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12) — see `card.ts`'s own `CardDefinition.continuousTypeGrants` doc comment for the real Forge citation and the 6 real cards it covers (Dragoon's Lance/Machinist's Arsenal/Paladin's Arms/White Mage's Staff/Sage's Nouliths/Astrologian's Planisphere — a creature-subtype broadcast, e.g. 'Knight', not a card-type change). Same copy-at-resolve-time convention as `continuousKeywordGrants` above. Consumed by `effectiveSubtypes` below, not read directly anywhere else. */
   continuousTypeGrants?: { types: string[]; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
   /**
+   * Real, query-time activated-ability lock(s) this permanent BROADCASTS
+   * onto OTHER (or its own) permanents (613/602.1, ENGINE_GAPS.md gap #18,
+   * closed 2026-09-12) — see `card.ts`'s own `CardDefinition.
+   * activatedAbilityLock` doc comment for the real Forge citation (Stuck in
+   * Summoner's Sanctum's own `S:Mode$ CantBeActivated | ValidCard$
+   * Permanent.EnchantedBy` static ability) and scope. Same
+   * duck-typed-not-imported `ContinuousGrantTargeting` shape
+   * `continuousKeywordGrants`/`continuousPTGrants`/`continuousTypeGrants`
+   * above already establish (no extra payload — presence in this array
+   * already means "locked"). Copied from the resolving `CardDefinition` at
+   * `addCard` time, same convention as its siblings. Consumed by
+   * `isActivationLocked` below, not read directly anywhere else.
+   */
+  activatedAbilityLock?: { includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
+  /**
    * Real CR 601.2f cost-reduction this permanent BROADCASTS onto OTHER
    * spells its controller casts (ENGINE_GAPS.md gap #7's second real
    * example, The Wind Crystal's own "White spells you cast cost {1} less
@@ -122,6 +137,17 @@ export interface RealCard {
    * else.
    */
   spellCostReductionGrants?: { amount: number; colors: string[] }[];
+  /**
+   * Real CR 614.2 mill-event replacement this permanent BROADCASTS onto
+   * every OPPONENT's own mill event (ENGINE_GAPS.md gap #19, closed) — see
+   * `card.ts`'s own `CardDefinition.millModifierGrants`/`MillModifierGrant`
+   * doc comments for the real Forge citation and scope. Copied from the
+   * resolving `CardDefinition` at `resolveTop` time, same convention
+   * `spellCostReductionGrants` right above already establishes — `RealCard`
+   * never holds a live `CardDefinition` reference. Consumed by
+   * `activeMillModifier` below, not read directly anywhere else.
+   */
+  millModifierGrants?: { amount: number }[];
   /**
    * Real "Panharmonicon effect" static grant (ENGINE_GAPS.md gap #13,
    * closed 2026-09-12) — see `card.ts`'s own `CardDefinition.triggerDoubling`/
@@ -353,6 +379,33 @@ export function effectiveSubtypes(state: GameState, card: RealCard): string[] {
 }
 
 /**
+ * Real, LIVE activated-ability lock check (613/602.1, ENGINE_GAPS.md gap
+ * #18, closed 2026-09-12) — is there any real, currently-qualifying
+ * `activatedAbilityLock` entry anywhere on the battlefield that covers
+ * `card` (the permanent whose OWN activated ability a caller wants to
+ * activate)? Same shared `qualifiesForContinuousGrant` recipient resolution
+ * `effectiveKeywords`/`effectivePT`/`effectiveSubtypes` above already use
+ * (this is genuinely the SAME mechanism, again with a different — here,
+ * absent — payload: presence alone means "locked"), so a lock genuinely
+ * follows an Aura's own live `attachedToId` (`equippedBySelf`) the same way
+ * a keyword grant would, and turns off the instant the locking permanent
+ * leaves the battlefield or the Aura is no longer attached — never a fixed,
+ * one-time-computed delta. `engine.ts`'s `canActivateAbility` is the one
+ * real consumer, mirroring Forge's own `AbilityActivated.checkRestrictions`
+ * (`!StaticAbilityCantBeCast.cantBeActivatedAbility(...)`, checked BEFORE
+ * any cost-affordability check — this function is called the same way).
+ */
+export function isActivationLocked(state: GameState, card: RealCard): boolean {
+  for (const source of state.cards.values()) {
+    if (source.zone !== 'Battlefield' || !source.activatedAbilityLock) continue;
+    for (const grant of source.activatedAbilityLock) {
+      if (qualifiesForContinuousGrant(state, source, grant, card)) return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Real CR 601.2f cost-reduction total a `caster` currently benefits from
  * when casting a spell of `cardColors` (ENGINE_GAPS.md gap #7's second real
  * example, The Wind Crystal's own "White spells you cast cost {1} less to
@@ -369,6 +422,30 @@ export function activeSpellCostDiscount(caster: RealPlayer, cardColors: string[]
     for (const grant of permanent.spellCostReductionGrants ?? []) {
       if (grant.colors.some((c) => cardColors.includes(c))) total += grant.amount;
     }
+  }
+  return total;
+}
+
+/**
+ * Real CR 614.2 mill-event replacement total `millingPlayer` currently
+ * suffers (ENGINE_GAPS.md gap #19, closed) — The Water Crystal's own real
+ * "If an opponent would mill one or more cards, they mill that many cards
+ * plus four instead." Sums every `millModifierGrants` entry on every OTHER
+ * player's own battlefield permanents (real Forge: `ValidPlayer$
+ * Player.Opponent` — the OPPOSITE scoping from `activeSpellCostDiscount`
+ * above, which is `Activator$ You`-scoped to the GRANT's own controller;
+ * this replacement instead targets an OPPONENT of the grant's controller,
+ * i.e. every player OTHER than the grant's own controller — in this
+ * engine's 2-player-only scope, `turn.ts`'s own documented exclusion,
+ * "every other player" and "an opponent of the grant's controller" are the
+ * same set, so a plain `!== millingPlayer.id` check is exact, not an
+ * approximation). `GameState.mill` (below) is the one real call site.
+ */
+export function activeMillModifier(state: GameState, millingPlayer: RealPlayer): number {
+  let total = 0;
+  for (const source of state.cards.values()) {
+    if (source.zone !== 'Battlefield' || source.controllerId === millingPlayer.id || !source.millModifierGrants) continue;
+    for (const grant of source.millModifierGrants) total += grant.amount;
   }
   return total;
 }
@@ -565,6 +642,7 @@ export class GameState {
       continuousKeywordGrants: opts.continuousKeywordGrants,
       continuousPTGrants: opts.continuousPTGrants,
       continuousTypeGrants: opts.continuousTypeGrants,
+      activatedAbilityLock: opts.activatedAbilityLock,
       triggerDoubling: opts.triggerDoubling,
     };
     this.cards.set(card.id, card);
@@ -700,6 +778,53 @@ export class GameState {
       drawn.push(card);
     }
     return drawn;
+  }
+
+  /**
+   * `Player.mill(int, ZoneType, SpellAbility, Map)` (forge-game/.../player/
+   * Player.java ~line 1539, ENGINE_GAPS.md gap #19, closed) — real,
+   * per-card top-of-library -> graveyard moves (mirrors real Forge's own
+   * per-card `moveTo` loop inside `mill`, not a bulk zone-swap), capped at
+   * however many actually remain in the library (real Forge:
+   * `Iterables.limit(milledView, n)`). Real, checked directly against
+   * `MillEffect.resolve` (forge-game/.../ability/effects/MillEffect.java):
+   * `numCards <= 0` never even calls `Player.mill` at all (an ability
+   * milling 0 cards, e.g. an empty-handed Water Crystal activation, is a
+   * real no-event — no replacement runs, nothing moves), so this method
+   * mirrors that same early return rather than running a real replacement
+   * check on a request that was never a real mill event to begin with.
+   *
+   * Deliberately sets NO deck-out flag the way `drawCards` above sets
+   * `attemptedDrawFromEmpty` — checked directly, not assumed: real Forge's
+   * own `Player.mill` (above) has no equivalent check anywhere in its body;
+   * CR 104.3c's "draw more than remain -> lose the game" is a rule about
+   * DRAWING specifically, with no milling analogue anywhere in the
+   * Comprehensive Rules. Milling more cards than remain in the library is
+   * simply a smaller real mill (every remaining card moves, nothing else
+   * happens) — nothing to flag.
+   *
+   * Real CR 614.2 replacement, BEFORE the move (`Player.mill`'s own
+   * `ReplacementHandler.run(ReplacementType.Mill, ...)` call, same "check a
+   * replacement before applying the raw event" shape `gainLife`/
+   * `dealDamage` already establish above): The Water Crystal's own real
+   * script (`res/cardsfolder/t/the_water_crystal.txt`): `R:Event$ Mill |
+   * ActiveZones$ Battlefield | ValidPlayer$ Player.Opponent | ReplaceWith$
+   * MillPlus4 | ...` + `SVar:MillPlus4:DB$ ReplaceEffect | VarName$ Number |
+   * VarValue$ X` + `SVar:X:ReplaceCount$Number/Plus.4` — summed via
+   * `activeMillModifier` (above), which see for the real `ValidPlayer$
+   * Player.Opponent` scoping (relative to the GRANT's own controller, never
+   * to `player` itself).
+   */
+  mill(player: RealPlayer, qty: number): RealCard[] {
+    if (qty <= 0) return [];
+    const real = Math.max(0, qty + activeMillModifier(this, player));
+    const milled: RealCard[] = [];
+    for (let i = 0; i < real && player.library.length > 0; i++) {
+      const card = player.library[0]!;
+      this.move(card, 'Graveyard');
+      milled.push(card);
+    }
+    return milled;
   }
 
   /** `Card.addCounterInternal` (forge-game/.../card/Card.java ~line 1745) — real, persistent per-card counter count. */

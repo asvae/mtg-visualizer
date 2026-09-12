@@ -4,7 +4,8 @@
     { "anchor": "typeLine", "sourceText": "Legendary Artifact", "highlight": "Artifact" },
     { "sourceText": "{4}{U}{U}, {T}: Each opponent mills cards equal to the number of cards in your hand.", "highlight": "{T}" },
     { "sourceText": "Blue spells you cast cost {1} less to cast.", "highlight": "Blue spells you cast cost {1} less to cast" },
-    { "sourceText": "{4}{U}{U}, {T}: Each opponent mills cards equal to the number of cards in your hand.", "highlight": "Each opponent mills cards equal to the number of cards in your hand" }
+    { "sourceText": "{4}{U}{U}, {T}: Each opponent mills cards equal to the number of cards in your hand.", "highlight": "Each opponent mills cards equal to the number of cards in your hand" },
+    { "sourceText": "If an opponent would mill one or more cards, they mill that many cards plus four instead.", "highlight": "If an opponent would mill one or more cards, they mill that many cards plus four instead." }
   ],
   "sink": [
     { "sourceText": "{4}{U}{U}, {T}: Each opponent mills cards equal to the number of cards in your hand.", "highlight": "the number of cards in your hand" }

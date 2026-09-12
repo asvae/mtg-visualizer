@@ -76,6 +76,7 @@ import type {
   moveTo as realMoveTo,
   chooseTarget as realChooseTarget,
   move as realMove,
+  mill as realMill,
   sacrifice as realSacrifice,
   discard as realDiscard,
   putCounter as realPutCounter,
@@ -92,6 +93,7 @@ import type {
   grantKeyword as realGrantKeyword,
   copyPermanent as realCopyPermanent,
   delayUntil as realDelayUntil,
+  queueExtraPhase as realQueueExtraPhase,
   play as realPlay,
 } from './interfaces';
 
@@ -111,6 +113,7 @@ export interface Actions {
   moveTo: typeof realMoveTo;
   chooseTarget: typeof realChooseTarget;
   move: typeof realMove;
+  mill: typeof realMill;
   sacrifice: typeof realSacrifice;
   discard: typeof realDiscard;
   putCounter: typeof realPutCounter;
@@ -127,6 +130,7 @@ export interface Actions {
   grantKeyword: typeof realGrantKeyword;
   copyPermanent: typeof realCopyPermanent;
   delayUntil: typeof realDelayUntil;
+  queueExtraPhase: typeof realQueueExtraPhase;
   play: typeof realPlay;
 }
 
@@ -212,6 +216,23 @@ export interface EffectContext {
    * `dig`'s own "nothing there" case.
    */
   topLibraryCard?: CardDefinition;
+  /**
+   * Real "if it's the first end step/combat phase of the turn" (ENGINE_GAPS.md
+   * gap #17) — Y'shtola Rhul's own "Then if it's the first end step of the
+   * turn," Balthier and Fran/Genji Glove's own "if it's the first combat
+   * phase of the turn" (real Forge citation: `PhaseHandler.isFirstCombat()`/
+   * `Count$FinishedEndOfTurnsThisTurn`, `turn.ts`'s own
+   * `isFirstPhaseGroupOccurrenceThisTurn` doc comment for the full trail).
+   * Same "caller-supplied real fact, not something an effect computes"
+   * pattern `castFrom`/`mode`/`xPaid` already use above — `RealCard`/
+   * `CardDefinition` carry no live `TurnState` reference, so whoever fires
+   * this trigger (engine.ts's real per-turn count, or a scenario declaring
+   * the fact it wants to demonstrate) sets this explicitly before calling
+   * `resolveCard`/`fireTrigger`. An effect that queues an extra phase
+   * unconditionally on every occurrence (no "first" gating at all,
+   * genuinely different from these three cards) simply never reads this.
+   */
+  firstPhaseGroupOccurrenceThisTurn?: boolean;
   /**
    * The real object(s) chosen as THIS spell/ability's own target(s), locked
    * in at cast/activation time (CR 601.2c/602.1's own "choose targets" step,
@@ -337,6 +358,26 @@ export type Effect =
     }
   | { kind: 'loseLife'; owner: EffectOwner; amount: Computed<number> }
   | { kind: 'discard'; owner: EffectOwner; qty: Computed<number> }
+  | {
+      /**
+       * Real `Player.mill(int, ZoneType, ...)` (forge-game/.../player/
+       * Player.java ~line 1539, ENGINE_GAPS.md gap #19, closed) — a real,
+       * dedicated library->graveyard batch move, DISTINCT from a generic
+       * `move` (above): milling is its own CR glossary term/event (real
+       * Forge dispatches it through its own `MillEffect`/`Player.mill`, not
+       * the generic `ChangeZoneEffect` a plain `move` uses), and — the whole
+       * reason this needed its own `Effect` kind rather than staying folded
+       * into `move` — it's the one real chokepoint a CR 614.2 replacement
+       * (The Water Crystal's own "mill that many plus four instead") can
+       * actually hook into (`state.ts`'s `GameState.mill`). The Water
+       * Crystal's own "{4}{U}{U}, {T}: Each opponent mills cards equal to
+       * the number of cards in your hand" is the real FIN card that needs
+       * this.
+       */
+      kind: 'mill';
+      owner: EffectOwner;
+      amount: Computed<number>;
+    }
   | {
       /**
        * Real rule 701.16: sacrifice is its OWN action, distinct from "dies"
@@ -734,6 +775,31 @@ export interface SpellCostReductionGrant {
 }
 
 /**
+ * Real CR 614.2 mill-event replacement this permanent BROADCASTS onto every
+ * OPPONENT's own mill event (ENGINE_GAPS.md gap #19, closed) — The Water
+ * Crystal's own real shipped script (`res/cardsfolder/t/
+ * the_water_crystal.txt`): `R:Event$ Mill | ActiveZones$ Battlefield |
+ * ValidPlayer$ Player.Opponent | ReplaceWith$ MillPlus4 | ...` paired with
+ * `SVar:MillPlus4:DB$ ReplaceEffect | VarName$ Number | VarValue$ X` +
+ * `SVar:X:ReplaceCount$Number/Plus.4` — real Forge's OWN `ReplaceCount$
+ * Number/Plus.N` shape is ITSELF a generic "add N to the event's own Number"
+ * primitive, not a card-specific one, which is exactly why `amount` is a
+ * plain field here rather than a fixed, card-specific keyword the way
+ * `'LifegainDouble'` (a boolean, fixed-2x, gap #8b) sufficed — that shape had
+ * no per-card parameter to carry; a future "mill N more/fewer" card reuses
+ * this exact same field with a different `amount` instead of a new keyword
+ * per card. Deliberately scoped to a flat additive delta only (no
+ * multiplier, no player-choice-gated variant) — no real FIN card needs
+ * either of those broader shapes. `state.ts`'s `activeMillModifier` is the
+ * one real reader, scoped to every OTHER player's battlefield (`ValidPlayer$
+ * Player.Opponent` is relative to the GRANT's own controller, never to the
+ * player being milled — see that function's own doc comment).
+ */
+export interface MillModifierGrant {
+  amount: number;
+}
+
+/**
  * One NAMED triggered ability. A permanent commonly has more than one,
  * independent of each other (Namazu Trader's own ETB AND attack trigger) —
  * `CardDefinition.triggers` is a list of these rather than a single
@@ -998,6 +1064,8 @@ export interface CardDefinition {
   readonly costReduction?: CostReduction;
   /** Real CR 601.2f cost-reduction this permanent BROADCASTS onto OTHER spells its controller casts (The Wind Crystal's own real shape) — see `SpellCostReductionGrant`'s own doc comment. Omit for a card with no such static ability. */
   readonly spellCostReductionGrants?: SpellCostReductionGrant[];
+  /** Real CR 614.2 mill-event replacement this permanent BROADCASTS onto every opponent's own mill event (The Water Crystal's own real shape, ENGINE_GAPS.md gap #19, closed) — see `MillModifierGrant`'s own doc comment. Omit for a card with no such static ability. */
+  readonly millModifierGrants?: MillModifierGrant[];
   /**
    * Present only for an activated ability (Warren Elder's own "{3}{W}:
    * Creatures you control get +1/+1 until end of turn") — `effects` then
@@ -1141,6 +1209,52 @@ export interface CardDefinition {
    * ever grants exactly one.
    */
   readonly continuousTypeGrants?: (ContinuousGrantTargeting & { types: string[] })[];
+  /**
+   * Real, QUERY-TIME activated-ability LOCK (613/602.1, ENGINE_GAPS.md gap
+   * #18, closed 2026-09-12) — a static effect that makes some OTHER
+   * permanent's OWN activated abilities unactivatable, not a restriction on
+   * the granting permanent's own abilities (that's the ordinary,
+   * already-real case of just never declaring an `activationCost` at all).
+   * Real Forge citation, Stuck in Summoner's Sanctum's own second static
+   * ability (`res/cardsfolder/s/stuck_in_summoners_sanctum.txt`): `S:Mode$
+   * CantBeActivated | ValidCard$ Permanent.EnchantedBy | Secondary$ True |
+   * Description$ Enchanted permanent doesn't untap during its controller's
+   * untap step and its activated abilities can't be activated.` — a genuine
+   * `StaticAbilityMode.CantBeActivated` static ability
+   * (`StaticAbilityMode.java` line 22), checked LIVE at
+   * `AbilityActivated.checkRestrictions` time (forge-game/.../spellability/
+   * AbilityActivated.java line 109, `!StaticAbilityCantBeCast.
+   * cantBeActivatedAbility(...)`) by sweeping EVERY card with static
+   * abilities on the battlefield and testing `stAb.matchesValidParam
+   * ("ValidCard", card)` (`StaticAbilityCantBeCast.java` lines 55-71/156-160)
+   * — genuinely query-time, not a fixed delta computed once and cached, the
+   * same shape `continuousKeywordGrants`'s own live `effectiveKeywords`
+   * sweep already established for a keyword grant. Reuses the SAME
+   * `ContinuousGrantTargeting` recipient-resolution shape (no extra payload
+   * needed beyond "is this permanent currently a qualifying recipient at
+   * all" — presence in this array already means "locked") — Stuck in
+   * Summoner's Sanctum's own real shape is `{ includeSelf: false,
+   * equippedBySelf: true }` (Forge's `Permanent.EnchantedBy` is the
+   * Aura-flavored spelling of the identical "whatever this permanent is
+   * currently attached to" relationship `equippedBySelf`'s own doc comment
+   * already generalizes over both Equipment and Auras — `state.ts`'s
+   * `qualifiesForContinuousGrant` doesn't care which kind of attachment
+   * produced the `attachedToId` link). `state.ts`'s new
+   * `isActivationLocked` is this field's read-time counterpart, consulted by
+   * `engine.ts`'s `canActivateAbility` — a permanent currently qualifying
+   * for ANY entry in ANY battlefield permanent's own `activatedAbilityLock`
+   * array can't have its own activated ability activated at all (a whole-
+   * permanent lock, not a per-named-ability one — no real FIN card needs a
+   * narrower per-ability lock). Checked against the real pool: only Stuck in
+   * Summoner's Sanctum (fin/76) needs this (grepped every
+   * "activated abilities can't be activated"-shaped oracle-text clause
+   * across `data/fin/fin_scryfall.json` — exactly one hit). The "doesn't
+   * untap" HALF of this same card's clause stays a real, separate, still-OPEN
+   * gap (`state.ts`'s `untap()` only special-cases the STUN-counter
+   * replacement, no general per-object "can't untap" lock) — not touched by
+   * this field, not regressed either.
+   */
+  readonly activatedAbilityLock?: ContinuousGrantTargeting[];
   /**
    * Real "Panharmonicon effect" — a static ability making some OTHER
    * triggered ability trigger an ADDITIONAL time under a real, checkable
@@ -1337,6 +1451,11 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     case 'discard': {
       const qty = resolve(effect.qty, ctx);
       for (const player of playersFor(effect.owner, ctx)) actions.discard(player, qty);
+      return;
+    }
+    case 'mill': {
+      const qty = resolve(effect.amount, ctx);
+      for (const player of playersFor(effect.owner, ctx)) actions.mill(player, qty);
       return;
     }
     case 'sacrifice': {
@@ -1578,6 +1697,9 @@ export function synergyTags(card: CardDefinition): string[] {
         break;
       case 'discard':
         tags.push('discard');
+        break;
+      case 'mill':
+        tags.push('mill');
         break;
       case 'sacrifice':
         tags.push(`sacrifice:${effect.validType}`);

@@ -2,11 +2,12 @@
   {
     "scenario": {
       "setup": "",
-      "action": "\"onEndStep\" trigger fires",
-      "result": "exiles itself (the first pool candidate) and returns it to the battlefield",
+      "action": "\"onEndStep\" trigger fires, it's the first occurrence of this phase this turn",
+      "result": "exiles itself (the first pool candidate) and returns it to the battlefield; being the first end step of the turn, an additional end step is queued",
       "raw": {
-        "result": "exiles itself (the first pool candidate) and returns it to the battlefield",
-        "trigger": "onEndStep"
+        "result": "exiles itself (the first pool candidate) and returns it to the battlefield; being the first end step of the turn, an additional end step is queued",
+        "trigger": "onEndStep",
+        "firstPhaseGroupOccurrenceThisTurn": true
       }
     },
     "log": [
@@ -14,6 +15,7 @@
         "fn": "trigger",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
+        "id": 2,
         "name": "onEndStep"
       },
       {
@@ -24,23 +26,27 @@
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "id": 2892,
+        "id": 2,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "id": 2892,
+        "id": 2,
         "zone": "Battlefield",
         "controller": "you"
+      },
+      {
+        "fn": "queueExtraPhase",
+        "phaseType": "EndOfTurn"
       }
     ]
   },
   {
     "scenario": {
       "setup": "you: 1 creature(s), 1 nontoken",
-      "action": "\"onEndStep\" trigger fires",
+      "action": "\"onEndStep\" trigger fires, it's the first occurrence of this phase this turn",
       "result": "exiles the other (nontoken) creature it controls and returns it to the battlefield",
       "raw": {
         "result": "exiles the other (nontoken) creature it controls and returns it to the battlefield",
@@ -48,7 +54,8 @@
         "you": {
           "creaturesCount": 1,
           "nontokenCreaturesCount": 1
-        }
+        },
+        "firstPhaseGroupOccurrenceThisTurn": true
       }
     },
     "log": [
@@ -56,6 +63,7 @@
         "fn": "trigger",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
+        "id": 5,
         "name": "onEndStep"
       },
       {
@@ -66,30 +74,35 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 2894,
+        "id": 4,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 2894,
+        "id": 4,
         "zone": "Battlefield",
         "controller": "you"
+      },
+      {
+        "fn": "queueExtraPhase",
+        "phaseType": "EndOfTurn"
       }
     ]
   },
   {
     "scenario": {
       "setup": "you: 1 creature(s)",
-      "action": "\"onEndStep\" trigger fires",
+      "action": "\"onEndStep\" trigger fires, it's the first occurrence of this phase this turn",
       "result": "exiles the other (token) creature it controls; it ceases to exist and does not return",
       "raw": {
         "result": "exiles the other (token) creature it controls; it ceases to exist and does not return",
         "trigger": "onEndStep",
         "you": {
           "creaturesCount": 1
-        }
+        },
+        "firstPhaseGroupOccurrenceThisTurn": true
       }
     },
     "log": [
@@ -97,6 +110,7 @@
         "fn": "trigger",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
+        "id": 8,
         "name": "onEndStep"
       },
       {
@@ -107,8 +121,52 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 2897,
+        "id": 7,
         "zone": "Exile",
+        "controller": "you"
+      },
+      {
+        "fn": "queueExtraPhase",
+        "phaseType": "EndOfTurn"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "\"onEndStep\" trigger fires, a later occurrence of this phase this turn",
+      "result": "exiles itself and returns it to the battlefield; a later end step this turn does not queue another one",
+      "raw": {
+        "result": "exiles itself and returns it to the battlefield; a later end step this turn does not queue another one",
+        "trigger": "onEndStep",
+        "firstPhaseGroupOccurrenceThisTurn": false
+      }
+    },
+    "log": [
+      {
+        "fn": "trigger",
+        "card": "Y'shtola Rhul",
+        "instanceId": 1,
+        "id": 10,
+        "name": "onEndStep"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 1
+      },
+      {
+        "fn": "moveTo",
+        "target": "Y'shtola Rhul",
+        "id": 10,
+        "zone": "Exile",
+        "controller": "you"
+      },
+      {
+        "fn": "moveTo",
+        "target": "Y'shtola Rhul",
+        "id": 10,
+        "zone": "Battlefield",
         "controller": "you"
       }
     ]
@@ -128,6 +186,7 @@
         "fn": "cast",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
+        "id": 12,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -135,6 +194,7 @@
         "fn": "enters",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
+        "id": 12,
         "zone": "Battlefield"
       },
       {

@@ -34,6 +34,7 @@
 //   declareAttackers(engine, attackers) -> ActionResult
 //   canBlock(engine, blocker, attacker) -> ActionResult
 //   declareBlockers(engine, [{blocker, attacker}, ...]) -> ActionResult
+//   resolveFirstStrikeCombatDamage(engine) -> CombatDamageResult // ONLY when currentPhase(engine.turn) === 'CombatFirstStrikeDamage' is actually reached (ENGINE_GAPS.md gap #9) — see resolveCombatDamage's own doc comment
 //   resolveCombatDamage(engine) -> CombatDamageResult        // applies real damage; see its own doc comment for the lethal-flag/no-SBA caveat
 //   advance(engine) -> void                                 // pass to next phase directly
 //
@@ -130,11 +131,21 @@
 
 import type { CardDefinition, EffectContext, Actions, AlternateCost, ActivationCostReduction } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
-import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged, activeSpellCostDiscount, wrapCard } from './state';
+import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged, activeSpellCostDiscount, isActivationLocked, wrapCard } from './state';
 import { Stack, type StackObject } from './stack';
 import { fireTrigger } from './triggers';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
-import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn as turnQueueExtraTurn, type TurnState } from './turn';
+import {
+  startGame,
+  currentPhase,
+  activePlayer,
+  advancePhase,
+  queueExtraTurn as turnQueueExtraTurn,
+  queueExtraPhase as turnQueueExtraPhase,
+  isFirstPhaseGroupOccurrenceThisTurn,
+  type TurnState,
+  type PhaseGroup,
+} from './turn';
 import { parseManaCost, reduceGenericCost, resolveXCost, formatManaCost, type ParsedManaCost, canAfford, payMana, untappedManaSources, deriveManaAbility } from './mana';
 import { advanceSaga, advanceSagasAfterDrawStep } from './saga';
 import { checkStateBasedActions } from './sba';
@@ -770,7 +781,10 @@ export function effectiveActivationCost(engine: GameEngine, controller: RealPlay
 }
 
 /**
- * Real 602.1 activated-ability legality: controls the permanent, real
+ * Real 602.1 activated-ability legality: controls the permanent, a real
+ * query-time "CantBeActivated" lock imposed by a DIFFERENT permanent's own
+ * static ability (ENGINE_GAPS.md gap #18, closed 2026-09-12 — see
+ * `state.ts`'s own `isActivationLocked` doc comment), real
  * "activate only as a sorcery" timing (a free-text restriction — no
  * structured timing field exists on `CardDefinition.activationCost`, so
  * this is a real but narrow text-pattern check, not a parsed grammar; a
@@ -817,6 +831,17 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
   const cost = activationCostFor(card, abilityName);
   if (!cost) return { ok: false, reason: `"${card.name}" has no such activated ability${abilityName ? ` named "${abilityName}"` : ''}` };
   if (permanent.controllerId !== controller.id) return { ok: false, reason: 'you do not control this permanent (602.1)' };
+  // Real, query-time "CantBeActivated" lock (613/602.1, ENGINE_GAPS.md gap
+  // #18, closed 2026-09-12) — a static effect imposed by a DIFFERENT
+  // permanent (Stuck in Summoner's Sanctum's own "its activated abilities
+  // can't be activated"), not a restriction on the activator's own state.
+  // Checked BEFORE any cost-shape/affordability check below, mirroring real
+  // Forge's own `AbilityActivated.checkRestrictions` (forge-game/.../
+  // spellability/AbilityActivated.java line 109), which also runs before its
+  // own cost-payability check (line 102-103).
+  if (isActivationLocked(engine.state, permanent)) {
+    return { ok: false, reason: `"${card.name}"'s activated abilities can't be activated — locked by a static ability on another permanent (613/602.1, CantBeActivated)` };
+  }
   if (card.crewCost !== undefined && abilityName === undefined) {
     // Real Crew (702.121b/c): "Tap any number of untapped creatures you
     // control with total power N or greater" — a real, STRUCTURED cost
@@ -978,11 +1003,20 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       // (state.ts) are the real readers.
       real.continuousPTGrants = resolved.card.continuousPTGrants;
       real.continuousTypeGrants = resolved.card.continuousTypeGrants;
+      // Same "copy once at resolve time" treatment for `activatedAbilityLock`
+      // (ENGINE_GAPS.md gap #18, closed 2026-09-12, Stuck in Summoner's
+      // Sanctum's own real "activated abilities can't be activated" clause)
+      // — `isActivationLocked` (state.ts) is the one real reader.
+      real.activatedAbilityLock = resolved.card.activatedAbilityLock;
       // Same "copy once at resolve time" treatment for `spellCostReductionGrants`
       // (ENGINE_GAPS.md gap #7's second real example, The Wind Crystal's own
       // broadcast cost reduction) — `activeSpellCostDiscount` (state.ts) is
       // the one real reader.
       real.spellCostReductionGrants = resolved.card.spellCostReductionGrants;
+      // Same "copy once at resolve time" treatment for `millModifierGrants`
+      // (ENGINE_GAPS.md gap #19, closed) — `activeMillModifier` (state.ts)
+      // is the one real reader.
+      real.millModifierGrants = resolved.card.millModifierGrants;
       // Same "copy once at resolve time" treatment for `triggerDoubling`
       // (ENGINE_GAPS.md gap #13, closed 2026-09-12) — `shouldDoubleTrigger`
       // (state.ts) is the one real reader.
@@ -1026,16 +1060,65 @@ function fireOnPhaseEnterTriggers(engine: GameEngine): void {
     const registered = engine.resolvedPermanents.get(real.id);
     if (!registered) continue;
     const trigger = registered.card.triggers?.find((t) => t.on === on);
+    if (!trigger) continue;
+    // Real "if it's the first end step of the turn" (ENGINE_GAPS.md gap
+    // #17) — Y'shtola Rhul's own real card needs this fact set BEFORE its
+    // trigger's own effect runs, since it decides whether to call
+    // `actions.queueExtraPhase('EndOfTurn')` (see card.ts's own
+    // `EffectContext.firstPhaseGroupOccurrenceThisTurn` doc comment). Only
+    // `EndOfTurn` has an auto-fired trigger occasion mapped to a real
+    // `PhaseGroup` today — `Upkeep` isn't one of `turn.ts`'s own modeled
+    // groups (no FIN card needs "first upkeep of the turn"), so this stays
+    // unset (`undefined`) for an upkeep trigger, same as before this pass.
+    if (phase === 'EndOfTurn') registered.ctx.firstPhaseGroupOccurrenceThisTurn = isFirstPhaseGroupOccurrenceThisTurn(engine.turn, 'EndOfTurn');
     // No `cause` — real upkeep/end-step triggers aren't "caused by dying" or
     // "caused by a permanent entering," so only a cause-less doubling gate
     // (Cloud's own shape) could ever apply here; none of the 3 real FIN
     // cards needing gap #13 target this specific trigger occasion.
-    if (trigger) fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
+    fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
   }
+}
+
+/**
+ * Real 510.5 conditionality for the `CombatFirstStrikeDamage` step
+ * (ENGINE_GAPS.md gap #9) — true only when at least one currently-declared
+ * attacker OR blocker has First Strike or Double Strike (`effectiveKeywords`,
+ * not raw `.keywords`, so a granted First Strike — Coral Sword's own real
+ * Equip trigger, e.g. — counts too). Mirrors real Forge's own
+ * `Combat.dealDamageThisPhase`/`assignCombatDamage(true)` returning false
+ * when nobody in combat has either keyword (`Combat.java` ~lines 906-926) —
+ * see `doAdvance` below for how this engine uses it (skip the step outright)
+ * vs. how real Forge uses the equivalent check (still transition through the
+ * step, just give no priority and assign no damage, `PhaseHandler.java`
+ * ~lines 321-332).
+ */
+function combatHasFirstOrDoubleStrike(engine: GameEngine): boolean {
+  const hasEither = (c: RealCard) => {
+    const kws = effectiveKeywords(engine.state, c);
+    return kws.includes('FirstStrike') || kws.includes('DoubleStrike');
+  };
+  if (engine.attackers.some(hasEither)) return true;
+  for (const blockers of engine.blockers.values()) {
+    if (blockers.some(hasEither)) return true;
+  }
+  return false;
 }
 
 function doAdvance(engine: GameEngine): void {
   engine.turn = advancePhase(engine.state, engine.turn, engine.players);
+  if (currentPhase(engine.turn) === 'CombatFirstStrikeDamage' && !combatHasFirstOrDoubleStrike(engine)) {
+    // Real CR 510.5's own conditional step (ENGINE_GAPS.md gap #9): this
+    // engine never PRESENTS the step to a caller at all when it doesn't
+    // apply, rather than modeling Forge's own "always transition through it,
+    // just silently" shape (see `combatHasFirstOrDoubleStrike`'s own doc
+    // comment) — no hook here to represent "entered a phase with no
+    // priority" as a distinct thing from "never entered it," and nothing in
+    // this pool needs that distinction. `turn.ts`'s own `PHASES` array
+    // still lists it unconditionally — this skip is deliberately only ever
+    // applied here, at the `engine.ts` level, which is the one place combat
+    // state (`engine.attackers`/`engine.blockers`) actually lives.
+    engine.turn = advancePhase(engine.state, engine.turn, engine.players);
+  }
   // Real, live "whose turn is it" (`state.ts`'s own `activePlayerId`/
   // `effectiveKeywords` doc comments, ENGINE_GAPS.md gap #14) — kept in
   // sync here, right after every real phase/turn change, so a turn-
@@ -1046,7 +1129,7 @@ function doAdvance(engine: GameEngine): void {
   fireOnPhaseEnterTriggers(engine);
   // Real 714.2c: "after each of its controller's draw steps." Entering
   // Main1 always means the Draw step just ended in this engine's fixed
-  // 12-phase list (turn.ts's own PHASES), whether or not a card was
+  // 13-phase list (turn.ts's own PHASES), whether or not a card was
   // actually drawn (the first-turn draw-skip only skips the draw ACTION,
   // not the step itself — see turn.ts's own shouldSkipDraw) — so this is
   // a structurally exact stand-in, not an approximation with edge cases.
@@ -1096,6 +1179,21 @@ export function advance(engine: GameEngine): void {
 /** Queues `player` to take the next turn once the current one's Cleanup ends (500.7's own extra-turn priority over the normal rotation) — a thin `engine.players`-indexing wrapper over `turn.ts`'s own `queueExtraTurn(TurnState, playerIndex)`. Ultimecia, Time Sorceress's own "take an extra turn after this one" is the real FIN card that needs this. */
 export function queueExtraTurn(engine: GameEngine, player: RealPlayer): void {
   turnQueueExtraTurn(engine.turn, engine.players.indexOf(player));
+}
+
+/**
+ * Queues one more occurrence of `phaseType` to be inserted into the CURRENT
+ * turn the moment that same group's current occurrence ends (500-series
+ * turn structure, ENGINE_GAPS.md gap #17, closed 2026-09-12) — a thin
+ * wrapper over `turn.ts`'s own `queueExtraPhase(TurnState, PhaseGroup)`,
+ * same shape `queueExtraTurn` above already establishes for a whole extra
+ * TURN. Y'shtola Rhul's own "additional end step," Balthier and Fran/Genji
+ * Glove's own "additional combat phase" are the real FIN cards that need
+ * this — see `turn.ts`'s own header for the full Forge citation and why
+ * this is genuinely distinct from `queueExtraTurn`.
+ */
+export function queueExtraPhase(engine: GameEngine, phaseType: PhaseGroup): void {
+  turnQueueExtraPhase(engine.turn, phaseType);
 }
 
 /** Real 302.6 (summoning sickness) + 508.1a (a tapped creature can't attack) + 302.6's own Defender clause (302.6's "can't attack" companion rule, 302.6a). Read-only — same "check separately from the mutating action" shape as `canCastSpell`. */
@@ -1257,93 +1355,102 @@ export interface CombatDamageResult {
  * different from "unblocked," which always hits the player regardless of
  * Trample.
  *
- * Real 510.5's own first/double-strike ordering (two damage sub-steps
- * when at least one combatant has First/Double Strike) is modeled as two
- * internal passes within this ONE call, rather than a second real
- * `turn.ts` phase (`PhaseType.COMBAT_FIRST_STRIKE_DAMAGE`, excluded from
- * `turn.ts`'s own `PHASES` list per that file's header) — a creature dealt
- * lethal damage in the first pass is excluded from dealing OR receiving
- * damage in the second, same as a real 704-SBA check between the two real
- * sub-steps would produce, WITHOUT this function actually destroying it
- * (see below).
+ * Real 510.4/510.5's own first/double-strike ordering (a real, distinct
+ * `CombatFirstStrikeDamage` step BEFORE the regular `CombatDamage` step,
+ * `turn.ts`'s own `PHASES`, ENGINE_GAPS.md gap #9, closed 2026-09-12) is
+ * modeled as two SEPARATE exported functions, not two internal passes
+ * within one call — `resolveFirstStrikeCombatDamage` (below) for the
+ * FIRST real step (creatures with First OR Double Strike only), and THIS
+ * function for the regular step (creatures with Double Strike, dealing
+ * again, PLUS every creature WITHOUT First Strike — the common case where
+ * NOTHING in combat has either keyword is simply "everyone deals damage
+ * here, once," identical to this function's own pre-gap-#9 behavior, so a
+ * caller with no First/Double Strike creature in play needs no other
+ * change at all). A creature already lethally damaged (`isLethallyDamaged`
+ * — real, persistent `card.damageMarked`/`deathtouchDamaged` state, so this
+ * is genuinely read fresh on EVERY call, not cached across the two real
+ * steps) deals no further damage and receives none — same real 704-SBA-
+ * shaped exclusion a caller's own `checkStateBasedActions` sweep between
+ * the two steps would produce, whether or not that caller actually ran one
+ * (this engine still does NOT call `state.destroy` itself — see below).
+ *
+ * Real reference for the two-step split: `Combat.java`'s own
+ * `dealDamageThisPhase(combatant, firstStrikeDamage)` (~lines 906-916,
+ * "During first strike damage, double strike and first strike deal
+ * damage. During regular strike damage, double strike and anyone who
+ * hasn't dealt damage deal damage") — the exact `dealsFirst`/`dealsRegular`
+ * predicates below. `PhaseHandler.java`'s own `COMBAT_FIRST_STRIKE_DAMAGE`/
+ * `COMBAT_DAMAGE` cases (~lines 321-344) are the real per-step call sites
+ * (`combat.assignCombatDamage(firstStrikeDamage)` then
+ * `combat.dealAssignedDamage()`), one per real phase, exactly mirrored by
+ * `engine.ts`'s own two exported functions each being called once per real
+ * phase (see `doAdvance`'s own conditional-skip doc comment for the one
+ * real difference: Forge always transitions through the first-strike
+ * phase and merely withholds priority/damage when it doesn't apply, this
+ * engine skips presenting the phase to a caller at all in that case).
  *
  * This function does NOT call `state.destroy` on anything, even a
  * creature this pass computes as lethally damaged — real creature death
  * from combat damage is a state-based action (704.5g/704.5h), and general
  * SBAs are a separate gap (`sba.ts`'s `checkStateBasedActions`, not called
- * from here — a caller runs that itself once combat's over). What this
- * function DOES do: apply every real damage amount via `state.dealDamage`
- * (so player life totals, Lifelink, AND `card.damageMarked`/
- * `deathtouchDamaged` all take their real, correct effect — `state.ts`'s
- * own doc comment) and report, per creature that took any damage this
- * call, whether that accumulated damage is lethal (`isLethallyDamaged`,
- * the SAME shared read `sba.ts` uses, so the two never disagree).
+ * from here — a caller runs that itself, same "caller-invoked" convention
+ * every real FS/DS-piloting scenario in this pool now follows between the
+ * two real steps). What this function DOES do: apply every real damage
+ * amount via `state.dealDamage` (so player life totals, Lifelink, AND
+ * `card.damageMarked`/`deathtouchDamaged` all take their real, correct
+ * effect — `state.ts`'s own doc comment) and report, per creature that
+ * took any damage THIS FAR (a real, accumulated total — see above), whether
+ * that's lethal (`isLethallyDamaged`, the SAME shared read `sba.ts` uses,
+ * so the two never disagree).
  */
-export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
-  const lethalSoFar = new Set<number>();
+const dealsFirstStrikeDamage = (c: RealCard) => c.keywords.includes('FirstStrike') || c.keywords.includes('DoubleStrike');
+const dealsRegularDamage = (c: RealCard) => c.keywords.includes('DoubleStrike') || !c.keywords.includes('FirstStrike');
+
+function runCombatDamageStep(engine: GameEngine, include: (c: RealCard) => boolean): CombatDamageResult {
   const preventedIds = new Set<number>();
-
-  const dealsFirst = (c: RealCard) => c.keywords.includes('FirstStrike') || c.keywords.includes('DoubleStrike');
-  const dealsRegular = (c: RealCard) => c.keywords.includes('DoubleStrike') || !c.keywords.includes('FirstStrike');
-
+  const isOut = (c: RealCard) => isLethallyDamaged(engine.state, c);
   const defenderOf = (attacker: RealCard): RealPlayer => engine.players.find((p) => p.id !== attacker.controllerId)!;
 
-  function runStep(include: (c: RealCard) => boolean): void {
-    for (const attacker of engine.attackers) {
-      if (lethalSoFar.has(attacker.id)) continue;
-      const originalBlockers = engine.blockers.get(attacker.id) ?? [];
-      const isBlockedAtAll = originalBlockers.length > 0;
-      const livingBlockers = originalBlockers.filter((b) => !lethalSoFar.has(b.id));
-      const defender = defenderOf(attacker);
+  for (const attacker of engine.attackers) {
+    if (isOut(attacker)) continue;
+    const originalBlockers = engine.blockers.get(attacker.id) ?? [];
+    const isBlockedAtAll = originalBlockers.length > 0;
+    const livingBlockers = originalBlockers.filter((b) => !isOut(b));
+    const defender = defenderOf(attacker);
 
-      if (include(attacker)) {
-        const [power] = effectivePT(engine.state, attacker);
-        const deathtouch = attacker.keywords.includes('Deathtouch');
-        const trample = attacker.keywords.includes('Trample');
-        if (!isBlockedAtAll) {
-          engine.state.dealDamage(defender, power, attacker, { combat: true });
-        } else if (livingBlockers.length === 0) {
-          if (trample) engine.state.dealDamage(defender, power, attacker, { combat: true });
-        } else {
-          let remaining = power;
-          for (let i = 0; i < livingBlockers.length; i++) {
-            const blocker = livingBlockers[i]!;
-            const already = blocker.damageMarked ?? 0;
-            const [, toughness] = effectivePT(engine.state, blocker);
-            const lethalNeeded = deathtouch ? 1 : Math.max(toughness - already, 0);
-            const isLast = i === livingBlockers.length - 1;
-            const assign = trample ? Math.min(remaining, lethalNeeded) : isLast ? remaining : Math.min(remaining, lethalNeeded);
-            if (assign > 0) {
-              if (engine.state.dealDamage(blocker, assign, attacker, { combat: true }).prevented) preventedIds.add(blocker.id);
-              remaining -= assign;
-            }
+    if (include(attacker)) {
+      const [power] = effectivePT(engine.state, attacker);
+      const deathtouch = attacker.keywords.includes('Deathtouch');
+      const trample = attacker.keywords.includes('Trample');
+      if (!isBlockedAtAll) {
+        engine.state.dealDamage(defender, power, attacker, { combat: true });
+      } else if (livingBlockers.length === 0) {
+        if (trample) engine.state.dealDamage(defender, power, attacker, { combat: true });
+      } else {
+        let remaining = power;
+        for (let i = 0; i < livingBlockers.length; i++) {
+          const blocker = livingBlockers[i]!;
+          const already = blocker.damageMarked ?? 0;
+          const [, toughness] = effectivePT(engine.state, blocker);
+          const lethalNeeded = deathtouch ? 1 : Math.max(toughness - already, 0);
+          const isLast = i === livingBlockers.length - 1;
+          const assign = trample ? Math.min(remaining, lethalNeeded) : isLast ? remaining : Math.min(remaining, lethalNeeded);
+          if (assign > 0) {
+            if (engine.state.dealDamage(blocker, assign, attacker, { combat: true }).prevented) preventedIds.add(blocker.id);
+            remaining -= assign;
           }
-          if (trample && remaining > 0) engine.state.dealDamage(defender, remaining, attacker, { combat: true });
         }
+        if (trample && remaining > 0) engine.state.dealDamage(defender, remaining, attacker, { combat: true });
       }
+    }
 
-      for (const blocker of livingBlockers) {
-        if (include(blocker)) {
-          const [blockerPower] = effectivePT(engine.state, blocker);
-          if (engine.state.dealDamage(attacker, blockerPower, blocker, { combat: true }).prevented) preventedIds.add(attacker.id);
-        }
+    for (const blocker of livingBlockers) {
+      if (include(blocker)) {
+        const [blockerPower] = effectivePT(engine.state, blocker);
+        if (engine.state.dealDamage(attacker, blockerPower, blocker, { combat: true }).prevented) preventedIds.add(attacker.id);
       }
     }
   }
-
-  function markLethalPass(): void {
-    for (const attacker of engine.attackers) {
-      for (const card of [attacker, ...(engine.blockers.get(attacker.id) ?? [])]) {
-        if (lethalSoFar.has(card.id)) continue;
-        if (isLethallyDamaged(engine.state, card)) lethalSoFar.add(card.id);
-      }
-    }
-  }
-
-  runStep(dealsFirst);
-  markLethalPass();
-  runStep(dealsRegular);
-  markLethalPass();
 
   const entries: CombatDamageEntry[] = [];
   const seen = new Set<number>();
@@ -1352,7 +1459,7 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
       if (seen.has(card.id)) continue;
       seen.add(card.id);
       const damage = card.damageMarked ?? 0;
-      if (damage > 0) entries.push({ card, damage, lethal: lethalSoFar.has(card.id) });
+      if (damage > 0) entries.push({ card, damage, lethal: isOut(card) });
     }
   }
   const prevented: RealCard[] = [];
@@ -1366,4 +1473,21 @@ export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
     }
   }
   return { entries, prevented };
+}
+
+/**
+ * Real `CombatFirstStrikeDamage` step (510.4/510.5, ENGINE_GAPS.md gap #9)
+ * — a caller only ever needs to call this when `currentPhase(engine.turn)
+ * === 'CombatFirstStrikeDamage'` is actually reached (`doAdvance` skips
+ * presenting that phase at all when nothing qualifies, so a caller that
+ * never sees it never needs to call this either). See
+ * `resolveCombatDamage`'s own doc comment just below for the full real
+ * design/reference.
+ */
+export function resolveFirstStrikeCombatDamage(engine: GameEngine): CombatDamageResult {
+  return runCombatDamageStep(engine, dealsFirstStrikeDamage);
+}
+
+export function resolveCombatDamage(engine: GameEngine): CombatDamageResult {
+  return runCombatDamageStep(engine, dealsRegularDamage);
 }
