@@ -14,6 +14,7 @@
         "fn": "cast",
         "card": "Sorceress's Schemes",
         "instanceId": 1,
+        "id": 2281,
         "from": "hand",
         "cost": "{3}{R}"
       },
@@ -28,6 +29,7 @@
         "fn": "move",
         "card": "Sorceress's Schemes",
         "instanceId": 1,
+        "id": 2281,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

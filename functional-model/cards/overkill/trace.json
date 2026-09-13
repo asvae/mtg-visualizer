@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Overkill",
         "instanceId": 1,
+        "id": 1786,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -34,7 +35,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1681,
+        "id": 1785,
         "power": 0,
         "toughness": -9999
       },
@@ -42,6 +43,7 @@
         "fn": "move",
         "card": "Overkill",
         "instanceId": 1,
+        "id": 1786,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

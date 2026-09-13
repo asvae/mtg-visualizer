@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Exdeath, Void Warlock",
         "instanceId": 1,
+        "id": 857,
         "name": "onEnter"
       },
       {
@@ -41,6 +42,7 @@
         "fn": "trigger",
         "card": "Exdeath, Void Warlock",
         "instanceId": 1,
+        "id": 865,
         "name": "onEndStep"
       },
       {
@@ -83,14 +85,14 @@
       {
         "fn": "moveTo",
         "target": "Exdeath, Void Warlock",
-        "id": 10,
+        "id": 865,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Exdeath, Void Warlock",
-        "id": 10,
+        "id": 865,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -114,6 +116,7 @@
         "fn": "trigger",
         "card": "Exdeath, Void Warlock",
         "instanceId": 1,
+        "id": 869,
         "name": "onEndStep"
       },
       {
@@ -150,6 +153,7 @@
         "fn": "cast",
         "card": "Exdeath, Void Warlock",
         "instanceId": 1,
+        "id": 871,
         "from": "hand",
         "cost": "{1}{B}{G}"
       },
@@ -157,6 +161,7 @@
         "fn": "enters",
         "card": "Exdeath, Void Warlock",
         "instanceId": 1,
+        "id": 871,
         "zone": "Battlefield"
       },
       {

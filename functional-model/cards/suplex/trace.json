@@ -20,6 +20,7 @@
         "fn": "cast",
         "card": "Suplex",
         "instanceId": 1,
+        "id": 2573,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -36,15 +37,16 @@
       {
         "fn": "dealDamage",
         "source": "Suplex",
-        "sourceId": 2383,
+        "sourceId": 2573,
         "target": "Grizzly Bears",
-        "id": 2382,
+        "id": 2572,
         "amount": 3
       },
       {
         "fn": "move",
         "card": "Suplex",
         "instanceId": 1,
+        "id": 2573,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -72,6 +74,7 @@
         "fn": "cast",
         "card": "Suplex",
         "instanceId": 1,
+        "id": 2577,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -91,13 +94,13 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "opp0-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "moveTo",
-        "target": "opp0-artifact-0",
-        "id": 2386,
+        "target": "Mind Stone",
+        "id": 2576,
         "zone": "Exile",
         "controller": "opp0"
       },
@@ -105,6 +108,7 @@
         "fn": "move",
         "card": "Suplex",
         "instanceId": 1,
+        "id": 2577,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 8 Swamp(s)",
-      "action": "real engine playthrough: cast + equip Al Bhed Salvagers -> real lethal combat (SBA) -> its own dying trigger fires TWICE (The Masamune's own doubling static is now real)",
-      "result": "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while genuinely equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.",
+      "action": "engine playthrough: cast + equip Al Bhed Salvagers -> lethal combat (SBA) -> its own dying trigger fires TWICE (The Masamune's own doubling static)",
+      "result": "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.",
       "raw": {
-        "result": "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while genuinely equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.",
+        "result": "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.",
         "you": {
           "basicLands": [
             "Swamp",
@@ -169,9 +169,9 @@
       {
         "fn": "equip",
         "equipment": "The Masamune",
-        "equipmentId": 29,
+        "equipmentId": 2715,
         "target": "Al Bhed Salvagers",
-        "id": 28
+        "id": 2714
       },
       {
         "fn": "phase",
@@ -182,12 +182,12 @@
       {
         "fn": "tap",
         "target": "Al Bhed Salvagers",
-        "id": 28
+        "id": 2714
       },
       {
         "fn": "attack",
         "card": "Al Bhed Salvagers",
-        "id": 28
+        "id": 2714
       },
       {
         "fn": "phase",
@@ -198,9 +198,9 @@
       {
         "fn": "block",
         "blocker": "Hill Gigas",
-        "blockerId": 19,
+        "blockerId": 2705,
         "attacker": "Al Bhed Salvagers",
-        "attackerId": 28
+        "attackerId": 2714
       },
       {
         "fn": "dealDamage",

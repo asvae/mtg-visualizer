@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 5 Plains(s)",
-      "action": "real engine playthrough: cast Traveling Chocobo + Ambrosia Whiteheart (a Bird, whose own ETB also doubles) -> a real land enters -> Ambrosia's own Landfall trigger fires TWICE (Traveling Chocobo's own doubling static is now real)",
-      "result": "Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a real cause Traveling Chocobo's own static recognizes — her own ETB (bounce \"another permanent you control\") genuinely doubles too, bouncing TWO of your own real basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is genuinely on the battlefield, Chocobo's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.",
+      "action": "engine playthrough: cast Traveling Chocobo + Ambrosia Whiteheart (a Bird, whose own ETB also doubles) -> a land enters -> Ambrosia's own Landfall trigger fires TWICE (Traveling Chocobo's own doubling static)",
+      "result": "Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a cause Traveling Chocobo's own static recognizes — her own ETB (bounce \"another permanent you control\") doubles too, bouncing TWO of your own basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is on the battlefield, Chocobo's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.",
       "raw": {
-        "result": "Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a real cause Traveling Chocobo's own static recognizes — her own ETB (bounce \"another permanent you control\") genuinely doubles too, bouncing TWO of your own real basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is genuinely on the battlefield, Chocobo's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.",
+        "result": "Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a cause Traveling Chocobo's own static recognizes — her own ETB (bounce \"another permanent you control\") doubles too, bouncing TWO of your own basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is on the battlefield, Chocobo's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.",
         "you": {
           "basicLands": [
             "Plains",
@@ -97,7 +97,7 @@
       {
         "fn": "moveTo",
         "target": "Plains",
-        "id": 2,
+        "id": 2897,
         "zone": "Hand",
         "controller": "you"
       },
@@ -111,7 +111,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 3,
+        "id": 2898,
         "zone": "Hand",
         "controller": "you"
       },
@@ -170,7 +170,7 @@
       {
         "fn": "pump",
         "target": "Ambrosia Whiteheart",
-        "id": 25,
+        "id": 2920,
         "power": 1,
         "toughness": 0
       },
@@ -183,7 +183,7 @@
       {
         "fn": "pump",
         "target": "Ambrosia Whiteheart",
-        "id": 25,
+        "id": 2920,
         "power": 1,
         "toughness": 0
       }
@@ -218,7 +218,7 @@
         "from": 20
       },
       {
-        "label": "A real land entering",
+        "label": "A land entering",
         "from": 23
       },
       {

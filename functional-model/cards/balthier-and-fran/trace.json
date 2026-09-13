@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Balthier and Fran",
         "instanceId": 1,
+        "id": 202,
         "name": "onCrewedVehicleAttacksFirstCombat"
       }
     ]
@@ -33,6 +34,7 @@
         "fn": "cast",
         "card": "Balthier and Fran",
         "instanceId": 1,
+        "id": 204,
         "from": "hand",
         "cost": "{1}{R}{G}"
       },
@@ -40,6 +42,7 @@
         "fn": "enters",
         "card": "Balthier and Fran",
         "instanceId": 1,
+        "id": 204,
         "zone": "Battlefield"
       },
       {

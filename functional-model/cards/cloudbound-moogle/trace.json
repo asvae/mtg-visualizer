@@ -19,6 +19,7 @@
         "fn": "cast",
         "card": "Cloudbound Moogle",
         "instanceId": 1,
+        "id": 448,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -26,12 +27,14 @@
         "fn": "enters",
         "card": "Cloudbound Moogle",
         "instanceId": 1,
+        "id": 448,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Cloudbound Moogle",
         "instanceId": 1,
+        "id": 448,
         "name": "onEnter"
       },
       {
@@ -54,7 +57,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 447,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

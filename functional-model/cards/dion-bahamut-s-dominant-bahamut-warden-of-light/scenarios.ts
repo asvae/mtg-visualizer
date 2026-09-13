@@ -73,7 +73,7 @@ export function runEngineScenarios(): TraceResult[] {
   // line already establishes. It's genuinely your own turn right now (turn
   // 1, right after Dion resolves), so this is real, true evidence, not
   // fabricated.
-  pilot.beginStep("Real query: Dragonfire Dive's own grant, during your turn");
+  pilot.beginStep("Query: Dragonfire Dive's own grant, during your turn");
   pilot.log.push({ fn: 'read:hasKeyword', target: dionReal.name, keyword: 'Flying', result: effectiveKeywords(pilot.state, dionReal).includes('Flying') });
 
   // Real turn passage — summoning sickness (302.6) clears
@@ -114,5 +114,5 @@ export function runEngineScenarios(): TraceResult[] {
   const result =
     "Dion enters; ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's Coeurl, then exiles Bahamut and returns it as Dion) — all through the turn-based engine.";
 
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> ETB -> transform -> Saga chapters over turns', result)];
 }

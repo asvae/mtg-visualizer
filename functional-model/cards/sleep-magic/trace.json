@@ -19,7 +19,7 @@
         "fn": "cast",
         "card": "Sleep Magic",
         "instanceId": 1,
-        "id": 2265,
+        "id": 2273,
         "from": "hand",
         "cost": "{U}"
       },
@@ -27,14 +27,14 @@
         "fn": "enters",
         "card": "Sleep Magic",
         "instanceId": 1,
-        "id": 2265,
+        "id": 2273,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Sleep Magic",
         "instanceId": 1,
-        "id": 2265,
+        "id": 2273,
         "name": "onEnter"
       },
       {
@@ -57,14 +57,14 @@
       {
         "fn": "equip",
         "equipment": "Sleep Magic",
-        "equipmentId": 2265,
+        "equipmentId": 2273,
         "target": "Grizzly Bears",
-        "id": 2264
+        "id": 2272
       },
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2264,
+        "id": 2272,
         "controller": "you"
       }
     ]
@@ -84,7 +84,7 @@
         "fn": "trigger",
         "card": "Sleep Magic",
         "instanceId": 1,
-        "id": 2267,
+        "id": 2275,
         "name": "onEnchantedDealtDamage"
       },
       {

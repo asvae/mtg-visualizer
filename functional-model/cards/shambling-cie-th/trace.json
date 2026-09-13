@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Shambling Cie'th",
         "instanceId": 1,
+        "id": 2173,
         "name": "onEnter"
       },
       {
@@ -31,7 +32,7 @@
       {
         "fn": "tap",
         "target": "Shambling Cie'th",
-        "id": 2043,
+        "id": 2173,
         "controller": "you"
       }
     ]
@@ -51,12 +52,13 @@
         "fn": "trigger",
         "card": "Shambling Cie'th",
         "instanceId": 1,
+        "id": 2175,
         "name": "onNoncreatureSpellCast"
       },
       {
         "fn": "moveTo",
         "target": "Shambling Cie'th",
-        "id": 2045,
+        "id": 2175,
         "zone": "Hand",
         "controller": "you"
       }

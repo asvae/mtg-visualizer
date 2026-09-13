@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 3 Plains(s); opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> turn passage -> real attack -> onAttack (real dig)",
-      "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them (Phoenix Down) to hand.",
+      "action": "engine playthrough: cast -> turn passage -> attack -> onAttack (dig)",
+      "result": "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.",
       "raw": {
-        "result": "Ashe enters, real turn passage clears summoning sickness, then really attacks (508.1) — onAttack fires manually, digging through the top 5 real library cards and taking the one real artifact among them (Phoenix Down) to hand.",
+        "result": "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.",
         "you": {
           "basicLands": [
             "Plains",
@@ -102,12 +102,12 @@
       {
         "fn": "tap",
         "target": "Ashe, Princess of Dalmasca",
-        "id": 159
+        "id": 176
       },
       {
         "fn": "attack",
         "card": "Ashe, Princess of Dalmasca",
-        "id": 159
+        "id": 176
       },
       {
         "fn": "trigger",
@@ -146,7 +146,7 @@
       {
         "fn": "moveTo",
         "target": "Phoenix Down",
-        "id": 158,
+        "id": 175,
         "zone": "Hand",
         "controller": "you"
       }

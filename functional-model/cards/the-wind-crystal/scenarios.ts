@@ -23,7 +23,7 @@ export const scenarios: Scenario[] = [
     you: { creaturesCount: 2 },
   },
   {
-    result: 'a real lifegain event (3 life) is genuinely DOUBLED to 6 by this card\'s own presence on the battlefield (CR 614.2)',
+    result: 'a lifegain event (3 life) is DOUBLED to 6 by this card\'s own presence on the battlefield (CR 614.2)',
     playerGainsLife: { amount: 3 },
   },
   ...keywordScenarios(theWindCrystal),

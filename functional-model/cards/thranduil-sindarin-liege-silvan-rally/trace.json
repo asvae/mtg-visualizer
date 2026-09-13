@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Thranduil, Sindarin Liege",
         "instanceId": 1,
+        "id": 2810,
         "name": "onLandfall"
       },
       {
@@ -42,6 +43,7 @@
         "fn": "cast",
         "card": "Thranduil, Sindarin Liege",
         "instanceId": 1,
+        "id": 2813,
         "from": "hand",
         "cost": "{2}{G/U}{G/U}"
       },
@@ -49,6 +51,7 @@
         "fn": "enters",
         "card": "Thranduil, Sindarin Liege",
         "instanceId": 1,
+        "id": 2813,
         "zone": "Battlefield"
       },
       {
@@ -77,6 +80,7 @@
         "fn": "cast",
         "card": "Silvan Rally",
         "instanceId": 1,
+        "id": 2820,
         "from": "hand",
         "cost": "{1}{G/U}{G/U}"
       },
@@ -117,14 +121,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-land-0",
-        "id": 2559,
+        "id": 2816,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-library-land-1",
-        "id": 2560,
+        "id": 2817,
         "zone": "Hand",
         "controller": "you"
       },
@@ -132,6 +136,7 @@
         "fn": "move",
         "card": "Silvan Rally",
         "instanceId": 1,
+        "id": 2820,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"
@@ -156,6 +161,7 @@
         "fn": "cast",
         "card": "Silvan Rally",
         "instanceId": 1,
+        "id": 2826,
         "from": "hand",
         "cost": "{1}{G/U}{G/U}"
       },
@@ -196,14 +202,14 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2565,
+        "id": 2822,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2566,
+        "id": 2823,
         "zone": "Hand",
         "controller": "you"
       },
@@ -211,6 +217,7 @@
         "fn": "move",
         "card": "Silvan Rally",
         "instanceId": 1,
+        "id": 2826,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

@@ -12,7 +12,12 @@
           "start": 0,
           "end": 18
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "entersBattlefield",
@@ -28,7 +33,12 @@
           "start": 0,
           "end": 18
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "drawCard",
@@ -42,7 +52,12 @@
           "start": 37,
           "end": 48
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'drawCard-effect-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "to": "Exile",

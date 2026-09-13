@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Prompto Argentum",
         "instanceId": 1,
+        "id": 1820,
         "name": "onNoncreatureSpellCast4Mana"
       },
       {
@@ -40,6 +41,7 @@
         "fn": "cast",
         "card": "Prompto Argentum",
         "instanceId": 1,
+        "id": 1823,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -47,6 +49,7 @@
         "fn": "enters",
         "card": "Prompto Argentum",
         "instanceId": 1,
+        "id": 1823,
         "zone": "Battlefield"
       },
       {

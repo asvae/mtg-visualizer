@@ -17,12 +17,13 @@
         "fn": "trigger",
         "card": "Shantotto, Tactician Magician",
         "instanceId": 1,
+        "id": 2177,
         "name": "onCastNoncreatureSpell"
       },
       {
         "fn": "pump",
         "target": "Shantotto, Tactician Magician",
-        "id": 2047,
+        "id": 2177,
         "power": 4,
         "toughness": 0
       },
@@ -50,12 +51,13 @@
         "fn": "trigger",
         "card": "Shantotto, Tactician Magician",
         "instanceId": 1,
+        "id": 2179,
         "name": "onCastNoncreatureSpell"
       },
       {
         "fn": "pump",
         "target": "Shantotto, Tactician Magician",
-        "id": 2049,
+        "id": 2179,
         "power": 2,
         "toughness": 0
       }
@@ -76,6 +78,7 @@
         "fn": "cast",
         "card": "Shantotto, Tactician Magician",
         "instanceId": 1,
+        "id": 2181,
         "from": "hand",
         "cost": "{1}{U}{R}"
       },
@@ -83,6 +86,7 @@
         "fn": "enters",
         "card": "Shantotto, Tactician Magician",
         "instanceId": 1,
+        "id": 2181,
         "zone": "Battlefield"
       },
       {

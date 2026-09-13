@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
+        "id": 2643,
         "name": "onNoncreatureSpellCast"
       }
     ]
@@ -42,12 +43,13 @@
         "fn": "trigger",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
+        "id": 2645,
         "name": "onNoncreatureSpellCast"
       },
       {
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
-        "id": 2445,
+        "id": 2645,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -61,14 +63,14 @@
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
-        "id": 2445,
+        "id": 2645,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
-        "id": 2445,
+        "id": 2645,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -92,12 +94,13 @@
         "fn": "trigger",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
+        "id": 2647,
         "name": "onNoncreatureSpellCast"
       },
       {
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
-        "id": 2447,
+        "id": 2647,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -129,6 +132,7 @@
         "fn": "trigger",
         "card": "The Lord Master of Hell",
         "instanceId": 1,
+        "id": 2650,
         "name": "onAttacks"
       },
       {
@@ -141,7 +145,7 @@
       {
         "fn": "dealDamage",
         "source": "The Lord Master of Hell",
-        "sourceId": 2450,
+        "sourceId": 2650,
         "target": "opp0",
         "amount": 0
       }
@@ -162,6 +166,7 @@
         "fn": "cast",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
+        "id": 2652,
         "from": "hand",
         "cost": "{U}{R}"
       },
@@ -169,6 +174,7 @@
         "fn": "enters",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
+        "id": 2652,
         "zone": "Battlefield"
       },
       {

@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 3 Island(s)",
-      "action": "real engine playthrough: cast (Flash) -> resolve (attaches + taps Coeurl) -> Coeurl's own activated ability is genuinely locked",
-      "result": "Stuck in Summoner's Sanctum is cast (Flash) and enters attached to the caster's own Coeurl, tapping it (the real onEnter trigger's genuine attach + tap). Coeurl's own real activated ability, which would otherwise be perfectly legal, is now genuinely LOCKED by this Aura's real 'activated abilities can't be activated' clause (`CardDefinition.activatedAbilityLock`, ENGINE_GAPS.md gap #18, closed) — the attempt is rejected by the real engine (`canActivateAbility`), logged as a real `illegalAttempt` with the actual CantBeActivated reason, not silently skipped. This card's own separate 'doesn't untap during its controller's untap step' clause remains a real, unrelated, still-open gap (ENGINE_GAPS.md) — not touched or exercised by this scenario.",
+      "action": "engine playthrough: cast (Flash) -> resolve (attaches + taps Coeurl) -> Coeurl's own activated ability is locked",
+      "result": "Stuck in Summoner's Sanctum is cast (Flash) and enters attached to the caster's own Coeurl, tapping it (the onEnter trigger's attach + tap). Coeurl's own activated ability, which would otherwise be perfectly legal, is now LOCKED by this Aura's 'activated abilities can't be activated' clause (`CardDefinition.activatedAbilityLock`, ENGINE_GAPS.md gap #18, closed) — the attempt is rejected by the engine (`canActivateAbility`), logged as an `illegalAttempt` with the CantBeActivated reason, not silently skipped. This card's own separate 'doesn't untap during its controller's untap step' clause remains an unrelated, still-open gap (ENGINE_GAPS.md) — not touched or exercised by this scenario.",
       "raw": {
-        "result": "Stuck in Summoner's Sanctum is cast (Flash) and enters attached to the caster's own Coeurl, tapping it (the real onEnter trigger's genuine attach + tap). Coeurl's own real activated ability, which would otherwise be perfectly legal, is now genuinely LOCKED by this Aura's real 'activated abilities can't be activated' clause (`CardDefinition.activatedAbilityLock`, ENGINE_GAPS.md gap #18, closed) — the attempt is rejected by the real engine (`canActivateAbility`), logged as a real `illegalAttempt` with the actual CantBeActivated reason, not silently skipped. This card's own separate 'doesn't untap during its controller's untap step' clause remains a real, unrelated, still-open gap (ENGINE_GAPS.md) — not touched or exercised by this scenario.",
+        "result": "Stuck in Summoner's Sanctum is cast (Flash) and enters attached to the caster's own Coeurl, tapping it (the onEnter trigger's attach + tap). Coeurl's own activated ability, which would otherwise be perfectly legal, is now LOCKED by this Aura's 'activated abilities can't be activated' clause (`CardDefinition.activatedAbilityLock`, ENGINE_GAPS.md gap #18, closed) — the attempt is rejected by the engine (`canActivateAbility`), logged as an `illegalAttempt` with the CantBeActivated reason, not silently skipped. This card's own separate 'doesn't untap during its controller's untap step' clause remains an unrelated, still-open gap (ENGINE_GAPS.md) — not touched or exercised by this scenario.",
         "you": {
           "basicLands": [
             "Island",
@@ -113,14 +113,14 @@
       {
         "fn": "equip",
         "equipment": "Stuck in Summoner's Sanctum",
-        "equipmentId": 6,
+        "equipmentId": 2321,
         "target": "Coeurl",
-        "id": 5
+        "id": 2320
       },
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 5,
+        "id": 2320,
         "controller": "you"
       },
       {

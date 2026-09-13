@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Namazu Trader",
         "instanceId": 1,
+        "id": 1720,
         "name": "onEnter"
       },
       {
@@ -52,6 +53,7 @@
         "fn": "trigger",
         "card": "Namazu Trader",
         "instanceId": 1,
+        "id": 1726,
         "name": "onAttack"
       },
       {
@@ -66,12 +68,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": false
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
@@ -108,6 +110,7 @@
         "fn": "trigger",
         "card": "Namazu Trader",
         "instanceId": 1,
+        "id": 1728,
         "name": "onAttack"
       },
       {

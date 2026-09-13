@@ -20,6 +20,7 @@
         "fn": "cast",
         "card": "Overture",
         "instanceId": 1,
+        "id": 1290,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -41,52 +42,7 @@
         "fn": "move",
         "card": "Overture",
         "instanceId": 1,
-        "from": "stack",
-        "to": "Exile",
-        "cardType": "Sorcery"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, back face",
-      "result": "mills 0 cards (opponent has an empty library)",
-      "raw": {
-        "result": "mills 0 cards (opponent has an empty library)",
-        "face": "back",
-        "castFrom": "hand",
-        "opponents": [
-          {}
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Overture",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{4}{U}{U}"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Library",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "move",
-        "player": "opp0",
-        "from": "Library",
-        "to": "Graveyard",
-        "qty": 0
-      },
-      {
-        "fn": "move",
-        "card": "Overture",
-        "instanceId": 1,
+        "id": 1290,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

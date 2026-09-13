@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 6 Plains(s); opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns",
-      "result": "Dion enters; real ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — real 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's real Coeurl, then exiles Bahamut and returns it as Dion) — all through the real turn-based engine.",
+      "action": "engine playthrough: cast -> ETB -> transform -> Saga chapters over turns",
+      "result": "Dion enters; ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's Coeurl, then exiles Bahamut and returns it as Dion) — all through the turn-based engine.",
       "raw": {
-        "result": "Dion enters; real ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — real 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's real Coeurl, then exiles Bahamut and returns it as Dion) — all through the real turn-based engine.",
+        "result": "Dion enters; ETB (603.6b) creates a 2/2 white Knight token. Once summoning sickness clears, {4}{W}{W}, {T} exiles Dion and returns it transformed as Bahamut, Warden of Light — 714.2b/c, chapter I fires immediately (Wings of Light: +1/+1 counter and flying on the Knight token). Chapter II fires on your next draw step (Wings of Light again). Chapter III fires the turn after (Gigaflare: destroys the opponent's Coeurl, then exiles Bahamut and returns it as Dion) — all through the turn-based engine.",
         "you": {
           "basicLands": [
             "Plains",
@@ -143,7 +143,7 @@
       {
         "fn": "tap",
         "target": "Dion, Bahamut's Dominant",
-        "id": 36,
+        "id": 660,
         "controller": "you"
       },
       {
@@ -179,14 +179,14 @@
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 36,
+        "id": 660,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 36,
+        "id": 660,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -215,7 +215,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
-        "id": 37,
+        "id": 661,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -228,14 +228,14 @@
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 37,
+        "id": 661,
         "keyword": "Flying",
         "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 37,
+        "id": 661,
         "keyword": "Flying",
         "removed": true
       },
@@ -305,7 +305,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
-        "id": 37,
+        "id": 661,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -318,7 +318,7 @@
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 37,
+        "id": 661,
         "keyword": "Flying",
         "untilEndOfTurn": true
       },
@@ -331,7 +331,7 @@
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 37,
+        "id": 661,
         "keyword": "Flying",
         "removed": true
       },
@@ -386,20 +386,20 @@
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 35,
+        "id": 659,
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 36,
+        "id": 660,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 36,
+        "id": 660,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -429,7 +429,7 @@
         "from": 6
       },
       {
-        "label": "Real query: Dragonfire Dive's own grant, during your turn",
+        "label": "Query: Dragonfire Dive's own grant, during your turn",
         "from": 9
       },
       {

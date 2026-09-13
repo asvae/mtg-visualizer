@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Tonberry",
         "instanceId": 1,
+        "id": 2868,
         "name": "onEnter"
       },
       {
@@ -31,13 +32,13 @@
       {
         "fn": "tap",
         "target": "Tonberry",
-        "id": 2611,
+        "id": 2868,
         "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "Tonberry",
-        "id": 2611,
+        "id": 2868,
         "counterType": "stun",
         "amount": 1,
         "controller": "you"

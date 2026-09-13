@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Ultimecia, Time Sorceress",
         "instanceId": 1,
+        "id": 2997,
         "name": "onEnterOrAttacks"
       },
       {
@@ -41,6 +42,7 @@
         "fn": "trigger",
         "card": "Ultimecia, Time Sorceress",
         "instanceId": 1,
+        "id": 3007,
         "name": "onEndStep"
       },
       {
@@ -54,14 +56,14 @@
       {
         "fn": "moveTo",
         "target": "Ultimecia, Time Sorceress",
-        "id": 12,
+        "id": 3007,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Ultimecia, Time Sorceress",
-        "id": 12,
+        "id": 3007,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -82,6 +84,7 @@
         "fn": "cast",
         "card": "Ultimecia, Omnipotent",
         "instanceId": 1,
+        "id": 3009,
         "from": "hand",
         "cost": ""
       },
@@ -89,6 +92,7 @@
         "fn": "enters",
         "card": "Ultimecia, Omnipotent",
         "instanceId": 1,
+        "id": 3009,
         "zone": "Battlefield"
       }
     ]
@@ -108,6 +112,7 @@
         "fn": "cast",
         "card": "Ultimecia, Time Sorceress",
         "instanceId": 1,
+        "id": 3011,
         "from": "hand",
         "cost": "{3}{U}{B}"
       },
@@ -115,6 +120,7 @@
         "fn": "enters",
         "card": "Ultimecia, Time Sorceress",
         "instanceId": 1,
+        "id": 3011,
         "zone": "Battlefield"
       },
       {

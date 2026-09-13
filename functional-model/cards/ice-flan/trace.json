@@ -21,6 +21,7 @@
         "fn": "cast",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1192,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -28,12 +29,14 @@
         "fn": "enters",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1192,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1192,
         "name": "onEnter"
       },
       {
@@ -51,7 +54,7 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 3,
+        "id": 1191,
         "controller": "opp0"
       },
       {
@@ -69,7 +72,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 3,
+        "id": 1191,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -98,6 +101,7 @@
         "fn": "cast",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1195,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -105,12 +109,14 @@
         "fn": "enters",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1195,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1195,
         "name": "onEnter"
       },
       {
@@ -154,6 +160,7 @@
         "fn": "cast",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1200,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -161,12 +168,14 @@
         "fn": "enters",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1200,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Ice Flan",
         "instanceId": 1,
+        "id": 1200,
         "name": "onEnter"
       },
       {
@@ -184,7 +193,7 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 11,
+        "id": 1199,
         "controller": "opp0"
       },
       {
@@ -202,7 +211,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 11,
+        "id": 1199,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"

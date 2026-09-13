@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Squall, SeeD Mercenary",
         "instanceId": 1,
+        "id": 2284,
         "name": "onAttacksAlone"
       },
       {
@@ -39,7 +40,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 2283,
         "keyword": "DoubleStrike"
       }
     ]
@@ -62,6 +63,7 @@
         "fn": "trigger",
         "card": "Squall, SeeD Mercenary",
         "instanceId": 1,
+        "id": 2288,
         "name": "onDealsCombatDamageToPlayer"
       },
       {
@@ -84,7 +86,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 5,
+        "id": 2286,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -108,6 +110,7 @@
         "fn": "trigger",
         "card": "Squall, SeeD Mercenary",
         "instanceId": 1,
+        "id": 2290,
         "name": "onDealsCombatDamageToPlayer"
       },
       {
@@ -134,6 +137,7 @@
         "fn": "cast",
         "card": "Squall, SeeD Mercenary",
         "instanceId": 1,
+        "id": 2292,
         "from": "hand",
         "cost": "{2}{W}{B}"
       },
@@ -141,6 +145,7 @@
         "fn": "enters",
         "card": "Squall, SeeD Mercenary",
         "instanceId": 1,
+        "id": 2292,
         "zone": "Battlefield"
       },
       {

@@ -16,6 +16,59 @@
       "zone": "Graveyard",
       "controller": "you",
       "value": 1
+    },
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 10,
+          "end": 18
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 132,
+          "end": 143
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      }
     }
   ],
   "sink": []

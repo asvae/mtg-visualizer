@@ -63,7 +63,7 @@ export function runEngineScenarios(): TraceResult[] {
   // rather than a trivial self-only pool), and a real Equipment (Buster
   // Sword) already attached to Zack Fair — both required for the
   // activation below to demonstrate its fullest real behavior.
-  pilot.beginStep(`Real second creature (${GENERIC_FILLER_CREATURE}) and a real Equipment (Buster Sword) already attached to Zack Fair`);
+  pilot.beginStep(`Second creature (${GENERIC_FILLER_CREATURE}) and an Equipment (Buster Sword) already attached to Zack Fair`);
   const otherCreature = pilot.state.addCard(pilot.you, 'Battlefield', { name: GENERIC_FILLER_CREATURE, types: ['Creature'], subtypes: ['Bear'], basePower: 2, baseToughness: 2, cmc: 2 });
   pilot.log.push({ fn: 'enters', card: otherCreature.name, zone: 'Battlefield', power: otherCreature.basePower, toughness: otherCreature.baseToughness, controller: pilot.you.name });
   const busterSword = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Buster Sword', types: ['Artifact'], subtypes: ['Equipment'], cmc: 3 });
@@ -87,7 +87,7 @@ export function runEngineScenarios(): TraceResult[] {
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: cast -> ETB counter -> real board-state filler (second creature, attached Equipment) -> sacrifice ability fires directly, granting indestructible, transferring counters, and re-attaching the Equipment',
+      'engine playthrough: cast -> ETB counter -> board-state filler (second creature, attached Equipment) -> sacrifice ability fires directly, granting indestructible, transferring counters, and re-attaching the Equipment',
       result,
     ),
   ];

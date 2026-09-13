@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Instant Ramen",
         "instanceId": 1,
+        "id": 1241,
         "name": "onEnter"
       },
       {
@@ -40,6 +41,7 @@
         "fn": "activate",
         "card": "Instant Ramen",
         "instanceId": 1,
+        "id": 1243,
         "cost": "{2}, {T}, Sacrifice this artifact"
       },
       {

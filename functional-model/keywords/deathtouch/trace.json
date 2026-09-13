@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "",
-      "action": "real engine playthrough: declare Deathtouch attacker -> blocked -> real lethal-by-Deathtouch SBA",
-      "result": "Real 702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its real printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own real SBA sweep (`isLethallyDamaged`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a genuine mutual kill, not a one-sided effect.",
+      "action": "engine playthrough: declare Deathtouch attacker -> blocked -> lethal-by-Deathtouch SBA",
+      "result": "702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own SBA sweep (`isLethallyDamaged`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a mutual kill, not a one-sided effect.",
       "raw": {
-        "result": "Real 702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its real printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own real SBA sweep (`isLethallyDamaged`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a genuine mutual kill, not a one-sided effect.",
+        "result": "702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own SBA sweep (`isLethallyDamaged`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a mutual kill, not a one-sided effect.",
         "you": {
           "libraryCount": 3
         },
@@ -40,11 +40,13 @@
       },
       {
         "fn": "tap",
-        "target": "Gran Pulse Ochu"
+        "target": "Gran Pulse Ochu",
+        "id": 9
       },
       {
         "fn": "attack",
-        "card": "Gran Pulse Ochu"
+        "card": "Gran Pulse Ochu",
+        "id": 9
       },
       {
         "fn": "phase",
@@ -55,7 +57,9 @@
       {
         "fn": "block",
         "blocker": "Gigantoad",
-        "attacker": "Gran Pulse Ochu"
+        "blockerId": 10,
+        "attacker": "Gran Pulse Ochu",
+        "attackerId": 9
       },
       {
         "fn": "dealDamage",
@@ -102,7 +106,7 @@
         "from": 6
       },
       {
-        "label": "Resolve combat damage — real Deathtouch (702.2e)",
+        "label": "Resolve combat damage — Deathtouch (702.2e)",
         "from": 7
       }
     ]

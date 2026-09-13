@@ -59,5 +59,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.";
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real attack -> onAttack (real dig)', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> turn passage -> attack -> onAttack (dig)', result)];
 }

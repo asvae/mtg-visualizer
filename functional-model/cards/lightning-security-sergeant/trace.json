@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Lightning, Security Sergeant",
         "instanceId": 1,
+        "id": 1443,
         "name": "onDealsDamage"
       },
       {
@@ -43,6 +44,7 @@
         "fn": "cast",
         "card": "Lightning, Security Sergeant",
         "instanceId": 1,
+        "id": 1445,
         "from": "hand",
         "cost": "{2}{R}"
       },
@@ -50,6 +52,7 @@
         "fn": "enters",
         "card": "Lightning, Security Sergeant",
         "instanceId": 1,
+        "id": 1445,
         "zone": "Battlefield"
       },
       {

@@ -22,6 +22,7 @@
         "fn": "activate",
         "card": "Ring of the Lucii",
         "instanceId": 1,
+        "id": 1982,
         "cost": "{2}, {T}, Pay 1 life",
         "ability": "tapNonland"
       },
@@ -46,12 +47,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": false
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
@@ -66,18 +67,18 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "opp0-artifact-0",
+        "target": "Mind Stone",
         "result": false
       },
       {
         "fn": "read:isArtifact",
-        "target": "opp0-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "tap",
-        "target": "you-artifact-0",
-        "id": 1858,
+        "target": "Mind Stone",
+        "id": 1979,
         "controller": "you"
       }
     ]
@@ -97,6 +98,7 @@
         "fn": "cast",
         "card": "Ring of the Lucii",
         "instanceId": 1,
+        "id": 1984,
         "from": "hand",
         "cost": "{4}"
       },
@@ -104,6 +106,7 @@
         "fn": "enters",
         "card": "Ring of the Lucii",
         "instanceId": 1,
+        "id": 1984,
         "zone": "Battlefield"
       },
       {

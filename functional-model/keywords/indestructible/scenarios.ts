@@ -34,18 +34,18 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   // Real 702.12b — a plain destroy effect is REPLACED; Zodiark survives.
-  pilot.beginStep('Attempt a real destroy effect (702.12b)');
+  pilot.beginStep('Attempt a destroy effect (702.12b)');
   actions.destroy(wrapCard(pilot.state, zodiarkReal));
 
   // Real 704.5f — toughness <= 0 kills UNCONDITIONALLY, bypassing
   // Indestructible entirely; a real -10/-10 pump does it here.
-  pilot.beginStep('Real -10/-10 pump drops toughness to 0 or below (704.5f)');
+  pilot.beginStep('-10/-10 pump drops toughness to 0 or below (704.5f)');
   actions.pump(wrapCard(pilot.state, zodiarkReal), 0, -10);
   const sbaResult = checkStateBasedActions(pilot.state, pilot.engine.players);
   if (sbaResult.putIntoGraveyard.some((c) => c.id === zodiarkReal.id)) {
     pilot.log.push({ fn: 'destroy', target: zodiarkReal.name, controller: pilot.you.name });
   }
 
-  const result = `Real 702.12b: a plain destroy effect against Zodiark is replaced — nothing happens, logged as \`destroyPrevented\`, not silently ignored. Real 704.5f is a genuinely DIFFERENT rule: once its toughness is 0 or below, the engine's own real SBA sweep puts it into the graveyard unconditionally, with no Indestructible check at all — the same permanent that just survived a destroy effect dies anyway once its toughness bottoms out.`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> destroy replaced (702.12b) -> 0-toughness SBA death bypasses it (704.5f)', result)];
+  const result = `702.12b: a plain destroy effect against Zodiark is replaced — nothing happens, logged as \`destroyPrevented\`, not silently ignored. 704.5f is a DIFFERENT rule: once its toughness is 0 or below, the engine's own SBA sweep puts it into the graveyard unconditionally, with no Indestructible check at all — the same permanent that just survived a destroy effect dies anyway once its toughness bottoms out.`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> destroy replaced (702.12b) -> 0-toughness SBA death bypasses it (704.5f)', result)];
 }

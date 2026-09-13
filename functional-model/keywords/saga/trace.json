@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 8 Plains(s)",
-      "action": "real engine playthrough: cast -> automatic Saga lore-counter ticks across 5 real turns -> chapters I-V -> real 714.4 sacrifice",
-      "result": "Summon: Knights of Round enters and real 714.2b immediately puts its first lore counter on, firing chapter I (three real 2/2 Knight tokens) — each of the next three real turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth real turn ticks chapter V (Ultimate End: the other real Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the real 714.4 sacrifice removes it automatically.",
+      "action": "engine playthrough: cast -> automatic Saga lore-counter ticks across 5 turns -> chapters I-V -> 714.4 sacrifice",
+      "result": "Summon: Knights of Round enters and 714.2b immediately puts its first lore counter on, firing chapter I (three 2/2 Knight tokens) — each of the next three turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth turn ticks chapter V (Ultimate End: the other Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the 714.4 sacrifice removes it automatically.",
       "raw": {
-        "result": "Summon: Knights of Round enters and real 714.2b immediately puts its first lore counter on, firing chapter I (three real 2/2 Knight tokens) — each of the next three real turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth real turn ticks chapter V (Ultimate End: the other real Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the real 714.4 sacrifice removes it automatically.",
+        "result": "Summon: Knights of Round enters and 714.2b immediately puts its first lore counter on, firing chapter I (three 2/2 Knight tokens) — each of the next three turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth turn ticks chapter V (Ultimate End: the other Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the 714.4 sacrifice removes it automatically.",
         "you": {
           "basicLands": [
             "Plains",
@@ -273,72 +273,84 @@
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 147,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 148,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 149,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 150,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 151,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 152,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 153,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 154,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 155,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 156,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 157,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Knight",
+        "id": 158,
         "power": 2,
         "toughness": 2
       },
@@ -350,6 +362,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 147,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -357,6 +370,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 148,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -364,6 +378,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 149,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -371,6 +386,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 150,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -378,6 +394,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 151,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -385,6 +402,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 152,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -392,6 +410,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 153,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -399,6 +418,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 154,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -406,6 +426,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 155,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -413,6 +434,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 156,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -420,6 +442,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 157,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -427,6 +450,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
+        "id": 158,
         "counterType": "Indestructible",
         "amount": 1,
         "controller": "you"
@@ -473,7 +497,7 @@
         "from": 39
       },
       {
-        "label": "Real 714.4 sacrifice — greatest chapter (V) reached",
+        "label": "714.4 sacrifice — greatest chapter (V) reached",
         "from": 70
       }
     ]

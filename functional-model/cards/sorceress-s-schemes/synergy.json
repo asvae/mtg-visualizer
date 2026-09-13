@@ -7,6 +7,40 @@
       "subject": "self",
       "value": 1,
       "sourceText": "(baseline — sorcery resolves then goes to graveyard, no special ability text — also its own Flashback {4}{R} recasts it from there)"
+    },
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
     }
   ],
   "sink": [
@@ -15,7 +49,10 @@
       "zone": "Graveyard",
       "controller": "you",
       "types": {
-        "hasAny": ["Instant", "Sorcery"]
+        "hasAny": [
+          "Instant",
+          "Sorcery"
+        ]
       },
       "value": 1,
       "sourceText": "Return target instant or sorcery card from your graveyard or exiled card with flashback you own to your hand.",

@@ -13,6 +13,95 @@
       "keyword": "Trample",
       "controller": "you",
       "value": 1
+    },
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
+    },
+    {
+      "event": "sacrifice",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     }
   ],
   "sink": [

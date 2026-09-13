@@ -22,6 +22,7 @@
         "fn": "trigger",
         "card": "Zenos yae Galvus",
         "instanceId": 1,
+        "id": 3226,
         "name": "onEnter"
       },
       {
@@ -42,14 +43,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2942,
+        "id": 3222,
         "power": -2,
         "toughness": -2
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2945,
+        "id": 3225,
         "power": -2,
         "toughness": -2
       }
@@ -75,6 +76,7 @@
         "fn": "trigger",
         "card": "Zenos yae Galvus",
         "instanceId": 1,
+        "id": 3229,
         "name": "onEnter"
       },
       {
@@ -99,19 +101,20 @@
         "fn": "trigger",
         "card": "Zenos yae Galvus",
         "instanceId": 1,
+        "id": 3231,
         "name": "onChosenCreatureLeaves"
       },
       {
         "fn": "moveTo",
         "target": "Zenos yae Galvus",
-        "id": 2951,
+        "id": 3231,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Zenos yae Galvus",
-        "id": 2951,
+        "id": 3231,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -133,6 +136,7 @@
         "fn": "trigger",
         "card": "Shinryu, Transcendent Rival",
         "instanceId": 1,
+        "id": 3233,
         "name": "onChosenPlayerLosesGame"
       }
     ]
@@ -152,6 +156,7 @@
         "fn": "cast",
         "card": "Zenos yae Galvus",
         "instanceId": 1,
+        "id": 3235,
         "from": "hand",
         "cost": "{3}{B}{B}"
       },
@@ -159,6 +164,7 @@
         "fn": "enters",
         "card": "Zenos yae Galvus",
         "instanceId": 1,
+        "id": 3235,
         "zone": "Battlefield"
       },
       {

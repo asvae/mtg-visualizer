@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 2 Cleric creature(s)",
       "action": "cast from hand, deals 3 combat damage",
-      "result": "puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life for real via Lifelink",
+      "result": "puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life via Lifelink",
       "raw": {
-        "result": "puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life for real via Lifelink",
+        "result": "puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life via Lifelink",
         "you": {
           "creaturesCount": 2,
           "creatureSubtypes": [
@@ -25,7 +25,7 @@
         "fn": "cast",
         "card": "Minwu, White Mage",
         "instanceId": 1,
-        "id": 4,
+        "id": 1698,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -33,13 +33,13 @@
         "fn": "enters",
         "card": "Minwu, White Mage",
         "instanceId": 1,
-        "id": 4,
+        "id": 1698,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Minwu, White Mage",
-        "sourceId": 4,
+        "sourceId": 1698,
         "target": "opp0",
         "amount": 3
       },
@@ -53,7 +53,7 @@
         "fn": "trigger",
         "card": "Minwu, White Mage",
         "instanceId": 1,
-        "id": 4,
+        "id": 1698,
         "name": "onLifeGained"
       },
       {
@@ -70,7 +70,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 1696,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -84,7 +84,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 3,
+        "id": 1697,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -98,7 +98,7 @@
       {
         "fn": "putCounter",
         "target": "Minwu, White Mage",
-        "id": 4,
+        "id": 1698,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

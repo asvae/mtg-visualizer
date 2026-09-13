@@ -17,6 +17,7 @@
         "fn": "cast",
         "card": "Combat Tutorial",
         "instanceId": 1,
+        "id": 466,
         "from": "hand",
         "cost": "{2}{U}"
       },
@@ -43,7 +44,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 440,
+        "id": 465,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -52,52 +53,7 @@
         "fn": "move",
         "card": "Combat Tutorial",
         "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Sorcery"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "draws 2 cards; no legal creature to target, no counter placed",
-      "raw": {
-        "result": "draws 2 cards; no legal creature to target, no counter placed",
-        "castFrom": "hand",
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Combat Tutorial",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{2}{U}"
-      },
-      {
-        "fn": "drawCard",
-        "player": "you"
-      },
-      {
-        "fn": "drawCard",
-        "player": "you"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "move",
-        "card": "Combat Tutorial",
-        "instanceId": 1,
+        "id": 466,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

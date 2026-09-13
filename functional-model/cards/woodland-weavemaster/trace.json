@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Woodland Weavemaster",
         "instanceId": 1,
+        "id": 3160,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Woodland Weavemaster",
         "instanceId": 1,
+        "id": 3160,
         "zone": "Battlefield"
       }
     ]
@@ -39,12 +41,13 @@
         "fn": "trigger",
         "card": "Woodland Weavemaster",
         "instanceId": 1,
+        "id": 3162,
         "name": "onOtherElfEnters"
       },
       {
         "fn": "pump",
         "target": "Woodland Weavemaster",
-        "id": 2877,
+        "id": 3162,
         "power": 1,
         "toughness": 1
       }

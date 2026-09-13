@@ -23,6 +23,11 @@ export const joshuaPhoenixsDominant: CardDefinition = {
       // back, which no Effect chaining supports (same class of loss Locke
       // Cole/Rook Turret's own fixed-count discard-then-draw pairs already
       // accept) — fixed `2` on both sides is the honest approximation.
+      // recognizer-exception: drawCard-effect-structural — the real oracle
+      // text reads "then draw THAT MANY cards" (a variable readback of the
+      // discard count), never the fixed "draw two cards" this recognizer
+      // looks for; a confirmed mismatch (this fixed-count approximation, not
+      // a recognizer bug), see the comment above.
       name: 'onEnter',
       effects: [{ kind: 'discard', owner: 'you', qty: 2 } satisfies Effect, { kind: 'drawCard', amount: 2 } satisfies Effect],
     },

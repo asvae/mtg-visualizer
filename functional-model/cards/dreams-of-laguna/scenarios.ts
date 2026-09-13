@@ -50,5 +50,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Dreams of Laguna is cast from hand for {1}{U} and resolves: surveils 1 (log-only, no library mutation), then draws a card, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {3}{U}: surveils 1, draws another card, then the spell itself is exiled instead of returning to the graveyard.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast from hand -> surveil -> draw -> graveyard -> Flashback cast -> surveil -> draw -> exile', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast from hand -> surveil -> draw -> graveyard -> Flashback cast -> surveil -> draw -> exile', result)];
 }

@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Noctis, Prince of Lucis",
         "instanceId": 1,
+        "id": 1751,
         "from": "hand",
         "cost": "{1}{W}{U}{B}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Noctis, Prince of Lucis",
         "instanceId": 1,
+        "id": 1751,
         "zone": "Battlefield"
       }
     ]
@@ -41,6 +43,7 @@
         "fn": "cast",
         "card": "Noctis, Prince of Lucis",
         "instanceId": 1,
+        "id": 1753,
         "from": "hand",
         "cost": "{1}{W}{U}{B}"
       },
@@ -48,12 +51,13 @@
         "fn": "enters",
         "card": "Noctis, Prince of Lucis",
         "instanceId": 1,
+        "id": 1753,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Noctis, Prince of Lucis",
-        "sourceId": 1649,
+        "sourceId": 1753,
         "target": "opp0",
         "amount": 3
       },
@@ -80,6 +84,7 @@
         "fn": "cast",
         "card": "Noctis, Prince of Lucis",
         "instanceId": 1,
+        "id": 1756,
         "from": "hand",
         "cost": "{1}{W}{U}{B}"
       },
@@ -87,6 +92,7 @@
         "fn": "enters",
         "card": "Noctis, Prince of Lucis",
         "instanceId": 1,
+        "id": 1756,
         "zone": "Battlefield"
       },
       {

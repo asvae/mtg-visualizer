@@ -46,5 +46,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Retrieve the Esper is cast from hand for {3}{U} and resolves: creates a 3/3 blue Robot Warrior artifact creature token with no bonus counters, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {5}{U}: creates a second Robot Warrior token, this time putting two +1/+1 counters on it (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast from hand -> create token (no counters) -> graveyard -> Flashback cast -> create token + 2 counters -> exile', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast from hand -> create token (no counters) -> graveyard -> Flashback cast -> create token + 2 counters -> exile', result)];
 }

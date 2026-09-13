@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Jenova, Ancient Calamity",
         "instanceId": 1,
+        "id": 1269,
         "name": "onBeginCombat"
       },
       {
@@ -32,7 +33,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1152,
+        "id": 1268,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -40,7 +41,7 @@
       {
         "fn": "animate",
         "target": "Grizzly Bears",
-        "id": 1152,
+        "id": 1268,
         "types": [
           "Mutant"
         ]
@@ -65,6 +66,7 @@
         "fn": "trigger",
         "card": "Jenova, Ancient Calamity",
         "instanceId": 1,
+        "id": 1271,
         "name": "onBeginCombat"
       },
       {
@@ -95,6 +97,7 @@
         "fn": "trigger",
         "card": "Jenova, Ancient Calamity",
         "instanceId": 1,
+        "id": 1277,
         "name": "onMutantDies"
       },
       {
@@ -134,6 +137,7 @@
         "fn": "cast",
         "card": "Jenova, Ancient Calamity",
         "instanceId": 1,
+        "id": 1279,
         "from": "hand",
         "cost": "{2}{B}{G}"
       },
@@ -141,6 +145,7 @@
         "fn": "enters",
         "card": "Jenova, Ancient Calamity",
         "instanceId": 1,
+        "id": 1279,
         "zone": "Battlefield"
       },
       {

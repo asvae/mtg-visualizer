@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 7 Island(s); opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> Job select ETB -> equip recalculation -> re-equip via Equip {4} -> granted combat-damage draw",
-      "result": "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero genuinely recalculates to a 2/2 Rogue the instant it's equipped (real read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant genuinely follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires for real, drawing a card.",
+      "action": "engine playthrough: cast -> Job select ETB -> equip recalculation -> re-equip via Equip {4} -> granted combat-damage draw",
+      "result": "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero recalculates to a 2/2 Rogue the instant it's equipped (read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires, drawing a card.",
       "raw": {
-        "result": "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero genuinely recalculates to a 2/2 Rogue the instant it's equipped (real read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant genuinely follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires for real, drawing a card.",
+        "result": "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero recalculates to a 2/2 Rogue the instant it's equipped (read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires, drawing a card.",
         "you": {
           "basicLands": [
             "Island",
@@ -83,9 +83,9 @@
       {
         "fn": "equip",
         "equipment": "Thief's Knife",
-        "equipmentId": 32,
+        "equipmentId": 2807,
         "target": "Hero",
-        "id": 33
+        "id": 2808
       },
       {
         "fn": "read:getNetPower",
@@ -133,9 +133,9 @@
       {
         "fn": "equip",
         "equipment": "Thief's Knife",
-        "equipmentId": 32,
+        "equipmentId": 2807,
         "target": "Qiqirn Merchant",
-        "id": 31
+        "id": 2806
       },
       {
         "fn": "read:getNetPower",
@@ -191,7 +191,7 @@
         "from": 6
       },
       {
-        "label": "Real layer-7c/layer-4 recalculation — Equipped creature gets +1/+1 and is a Rogue",
+        "label": "Layer-7c/layer-4 recalculation — Equipped creature gets +1/+1 and is a Rogue",
         "from": 9
       },
       {
@@ -203,7 +203,7 @@
         "from": 16
       },
       {
-        "label": "Real re-equip: the grant follows the live attachment, off the Hero token and onto Qiqirn Merchant",
+        "label": "Re-equip: the grant follows the live attachment, off the Hero token and onto Qiqirn Merchant",
         "from": 18
       },
       {

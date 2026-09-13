@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Doppelgang",
         "instanceId": 1,
+        "id": 665,
         "from": "hand",
         "cost": "{X}{X}{X}{G}{U}"
       },
@@ -52,6 +53,7 @@
         "fn": "move",
         "card": "Doppelgang",
         "instanceId": 1,
+        "id": 665,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -73,6 +75,7 @@
         "fn": "cast",
         "card": "Doppelgang",
         "instanceId": 1,
+        "id": 671,
         "from": "hand",
         "cost": "{X}{X}{X}{G}{U}"
       },
@@ -87,6 +90,7 @@
         "fn": "move",
         "card": "Doppelgang",
         "instanceId": 1,
+        "id": 671,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

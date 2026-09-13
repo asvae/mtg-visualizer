@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "",
-      "action": "real engine playthrough: declare Vigilance attacker (no tap) -> blocked -> real Trample overflow damage",
-      "result": "Real 508.1f: Iron Giant's own Vigilance means declaring it as an attacker never taps it (no `tap` entry — compare a non-Vigilance attacker's trace, which always has one). Real 702.19c: blocked by a 1-toughness creature, only the real lethal amount (1) goes to the blocker (a genuine 704.5g destruction) — the remaining 5 of its 6 power overflows past the dead blocker straight to the defending player, exactly Trample's own rule, not a full-6-to-blocker or full-6-to-player shortcut.",
+      "action": "engine playthrough: declare Vigilance attacker (no tap) -> blocked -> Trample overflow damage",
+      "result": "508.1f: Iron Giant's own Vigilance means declaring it as an attacker never taps it (no `tap` entry — compare a non-Vigilance attacker's trace, which always has one). 702.19c: blocked by a 1-toughness creature, only the lethal amount (1) goes to the blocker (a 704.5g destruction) — the remaining 5 of its 6 power overflows past the dead blocker straight to the defending player, exactly Trample's own rule, not a full-6-to-blocker or full-6-to-player shortcut.",
       "raw": {
-        "result": "Real 508.1f: Iron Giant's own Vigilance means declaring it as an attacker never taps it (no `tap` entry — compare a non-Vigilance attacker's trace, which always has one). Real 702.19c: blocked by a 1-toughness creature, only the real lethal amount (1) goes to the blocker (a genuine 704.5g destruction) — the remaining 5 of its 6 power overflows past the dead blocker straight to the defending player, exactly Trample's own rule, not a full-6-to-blocker or full-6-to-player shortcut.",
+        "result": "508.1f: Iron Giant's own Vigilance means declaring it as an attacker never taps it (no `tap` entry — compare a non-Vigilance attacker's trace, which always has one). 702.19c: blocked by a 1-toughness creature, only the lethal amount (1) goes to the blocker (a 704.5g destruction) — the remaining 5 of its 6 power overflows past the dead blocker straight to the defending player, exactly Trample's own rule, not a full-6-to-blocker or full-6-to-player shortcut.",
         "you": {
           "libraryCount": 3
         },
@@ -40,7 +40,8 @@
       },
       {
         "fn": "attack",
-        "card": "Iron Giant"
+        "card": "Iron Giant",
+        "id": 167
       },
       {
         "fn": "phase",
@@ -51,7 +52,9 @@
       {
         "fn": "block",
         "blocker": "Magitek Infantry",
-        "attacker": "Iron Giant"
+        "blockerId": 168,
+        "attacker": "Iron Giant",
+        "attackerId": 167
       },
       {
         "fn": "dealDamage",
@@ -99,7 +102,7 @@
         "from": 5
       },
       {
-        "label": "Resolve combat damage — real Trample (702.19c) overflow",
+        "label": "Resolve combat damage — Trample (702.19c) overflow",
         "from": 6
       }
     ]

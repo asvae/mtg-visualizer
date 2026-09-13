@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Faith & Grief",
         "instanceId": 1,
+        "id": 1249,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -52,6 +53,7 @@
         "fn": "move",
         "card": "Faith & Grief",
         "instanceId": 1,
+        "id": 1249,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

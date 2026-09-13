@@ -57,7 +57,9 @@
       "event": "sacrifice",
       "controller": "you",
       "types": {
-        "has": ["Artifact"]
+        "has": [
+          "Artifact"
+        ]
       },
       "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
       "highlight": "Sacrifice two artifacts",
@@ -69,7 +71,12 @@
       "controller": "you",
       "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
       "highlight": "Draw a card",
-      "value": 1
+      "value": 1,
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'drawCard-effect-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     }
   ],
   "sink": [
@@ -77,7 +84,9 @@
       "zone": "Battlefield",
       "controller": "you",
       "types": {
-        "has": ["Artifact"]
+        "has": [
+          "Artifact"
+        ]
       },
       "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
       "highlight": "two artifacts",

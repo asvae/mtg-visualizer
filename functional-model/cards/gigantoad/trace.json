@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is real text, not mechanically enforced — see definition.ts comment)",
+      "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is printed text, not mechanically enforced — see definition.ts comment)",
       "raw": {
-        "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is real text, not mechanically enforced — see definition.ts comment)"
+        "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is printed text, not mechanically enforced — see definition.ts comment)"
       }
     },
     "log": [
@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Gigantoad",
         "instanceId": 1,
+        "id": 1072,
         "from": "hand",
         "cost": "{3}{G}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Gigantoad",
         "instanceId": 1,
+        "id": 1072,
         "zone": "Battlefield"
       }
     ]

@@ -93,8 +93,8 @@ function destroysTappedAttacker(): TraceResult {
   pilotResolveTop(pilot);
 
   const result =
-    "Destroys the opponent's Coeurl while it's tapped (attacked and got tapped via 508.1f, still a declared attacker at the moment it's targeted) — the real condition this card's own \"costs {2} less to cast if it targets a tapped creature\" clause checks for. The discount IS mechanically applied here (`card.ts`'s `CostReduction`, ENGINE_GAPS.md gap #7 — closed for this shape): the `cast` log entry's own `cost` field reads {2}{W}, and only 3 real lands are tapped for mana (`tapForMana`), not the full printed {4}{W}/5 lands the other scenario below pays for the identical destroy effect against the same card, untapped.";
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: opponent attacks (508.1f tap) -> cast (real {2} discount applies) targeting the tapped attacker -> resolve (Destroy target nonland permanent)', result);
+    "Destroys the opponent's Coeurl while it's tapped (attacked and got tapped via 508.1f, still a declared attacker at the moment it's targeted) — the condition this card's own \"costs {2} less to cast if it targets a tapped creature\" clause checks for. The discount IS mechanically applied here (`card.ts`'s `CostReduction`, ENGINE_GAPS.md gap #7 — closed for this shape): the `cast` log entry's own `cost` field reads {2}{W}, and only 3 lands are tapped for mana (`tapForMana`), not the full printed {4}{W}/5 lands the other scenario below pays for the identical destroy effect against the same card, untapped.";
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: opponent attacks (508.1f tap) -> cast ({2} discount applies) targeting the tapped attacker -> resolve (Destroy target nonland permanent)', result);
 }
 
 function destroysUntappedCreature(): TraceResult {
@@ -121,8 +121,8 @@ function destroysUntappedCreature(): TraceResult {
   pilotResolveTop(pilot);
 
   const result =
-    "Destroys the opponent's Coeurl while it's untapped — the same destroy effect as the other scenario, but this card's own \"...if it targets a tapped creature\" condition genuinely evaluates false here, so the engine correctly pays the full printed {4}{W} (5 lands tapped for mana, per the log's own `tapForMana` count) rather than applying the discount — the same real `costReduction` check as the other scenario, just against an untapped target this time.";
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast (no discount — untapped target) targeting an untapped creature -> resolve (Destroy target nonland permanent)', result);
+    "Destroys the opponent's Coeurl while it's untapped — the same destroy effect as the other scenario, but this card's own \"...if it targets a tapped creature\" condition evaluates false here, so the engine correctly pays the full printed {4}{W} (5 lands tapped for mana, per the log's own `tapForMana` count) rather than applying the discount — the same `costReduction` check as the other scenario, just against an untapped target this time.";
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast (no discount — untapped target) targeting an untapped creature -> resolve (Destroy target nonland permanent)', result);
 }
 
 // Real CR 608.2b "fizzle" (ENGINE_GAPS.md gap #4, closed 2026-09-12) — a
@@ -170,8 +170,8 @@ function fizzlesWhenTargetDiesBeforeResolution(): TraceResult {
   pilotResolveTop(pilot);
 
   const result =
-    "Casts Fate of the Sun-Cryst targeting the opponent's Coeurl (a real, legal target at cast time, CR 601.2c) — but Coeurl is destroyed by something else before this spell resolves, so its own only target is illegal by then (CR 115). The spell still genuinely resolves (it's NOT countered) but does nothing — real CR 608.2b's \"fizzle\": no destroy happens (no `destroy` log entry — contrast the other two scenarios above, which each log one), while the spell itself still correctly moves to its owner's graveyard afterward, same as any other resolved instant.";
-  return finishEnginePilotTrace(pilot, setup, "real engine playthrough: cast (locks in Coeurl as the real target, 601.2c) -> Coeurl destroyed by something else in response -> resolve (fizzles, 608.2b — no destroy, spell still resolves)", result);
+    "Casts Fate of the Sun-Cryst targeting the opponent's Coeurl (a legal target at cast time, CR 601.2c) — but Coeurl is destroyed by something else before this spell resolves, so its own only target is illegal by then (CR 115). The spell still resolves (it's NOT countered) but does nothing — CR 608.2b's \"fizzle\": no destroy happens (no `destroy` log entry — contrast the other two scenarios above, which each log one), while the spell itself still correctly moves to its owner's graveyard afterward, same as any other resolved instant.";
+  return finishEnginePilotTrace(pilot, setup, "engine playthrough: cast (locks in Coeurl as target, 601.2c) -> Coeurl destroyed by something else in response -> resolve (fizzles, 608.2b — no destroy, spell still resolves)", result);
 }
 
 export function runEngineScenarios(): TraceResult[] {

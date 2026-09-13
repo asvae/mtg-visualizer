@@ -13,19 +13,20 @@
         "fn": "activate",
         "card": "Clive, Ifrit's Dominant",
         "instanceId": 1,
+        "id": 395,
         "cost": "{4}{R}{R}, {T} (activate only as a sorcery)"
       },
       {
         "fn": "moveTo",
         "target": "Clive, Ifrit's Dominant",
-        "id": 384,
+        "id": 395,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Clive, Ifrit's Dominant",
-        "id": 384,
+        "id": 395,
         "zone": "Battlefield",
         "controller": "you"
       }

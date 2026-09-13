@@ -2,7 +2,7 @@
   {
     "scenario": {
       "setup": "you: 3 Plains(s)",
-      "action": "real engine playthrough: 2 real artifacts present -> cast -> real condition/CDA reads (gap documented)",
+      "action": "engine playthrough: 2 artifacts present -> cast -> condition/CDA reads (gap documented)",
       "result": "Gaelicat enters with 2 Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
       "raw": {
         "result": "Gaelicat enters with 2 Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=true/true) already on the battlefield, meeting the printed \"two or more artifacts\" threshold — but layer-7a effectivePT still reports Gaelicat's unmodified printed 1/3, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).",
@@ -83,7 +83,7 @@
         "from": 0
       },
       {
-        "label": "Real artifacts already on the battlefield (2, meets the printed threshold)",
+        "label": "Artifacts already on the battlefield (2, meets the printed threshold)",
         "from": 0
       },
       {
@@ -95,11 +95,11 @@
         "from": 6
       },
       {
-        "label": "Real condition check — 'you control two or more artifacts'",
+        "label": "Condition check — 'you control two or more artifacts'",
         "from": 7
       },
       {
-        "label": "Real layer-7a read — no threshold-CDA machinery, so the +2/+0 does not apply",
+        "label": "Layer-7a read — no threshold-CDA machinery, so the +2/+0 does not apply",
         "from": 9
       }
     ]

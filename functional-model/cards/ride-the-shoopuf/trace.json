@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Ride the Shoopuf",
         "instanceId": 1,
+        "id": 1973,
         "name": "onLandfall"
       },
       {
@@ -39,7 +40,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1851,
+        "id": 1972,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -64,6 +65,7 @@
         "fn": "trigger",
         "card": "Ride the Shoopuf",
         "instanceId": 1,
+        "id": 1975,
         "name": "onLandfall"
       },
       {
@@ -94,12 +96,13 @@
         "fn": "activate",
         "card": "Ride the Shoopuf",
         "instanceId": 1,
+        "id": 1977,
         "cost": "{5}{G}{G}"
       },
       {
         "fn": "animate",
         "target": "Ride the Shoopuf",
-        "id": 1856,
+        "id": 1977,
         "types": [
           "Creature",
           "Beast"
@@ -118,7 +121,7 @@
       {
         "fn": "pump",
         "target": "Ride the Shoopuf",
-        "id": 1856,
+        "id": 1977,
         "power": 6,
         "toughness": 6
       }

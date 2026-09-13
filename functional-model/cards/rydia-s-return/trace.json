@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2014,
         "from": "hand",
         "cost": "{3}{G}{G}"
       },
@@ -29,14 +30,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 2012,
         "power": 3,
         "toughness": 3
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 3,
+        "id": 2013,
         "power": 3,
         "toughness": 3
       },
@@ -44,6 +45,7 @@
         "fn": "move",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2014,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -69,6 +71,7 @@
         "fn": "cast",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2018,
         "from": "hand",
         "cost": "{3}{G}{G}"
       },
@@ -82,14 +85,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 6,
+        "id": 2016,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 7,
+        "id": 2017,
         "zone": "Hand",
         "controller": "you"
       },
@@ -97,6 +100,7 @@
         "fn": "move",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2018,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -122,6 +126,7 @@
         "fn": "cast",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2021,
         "from": "hand",
         "cost": "{3}{G}{G}"
       },
@@ -135,7 +140,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 10,
+        "id": 2020,
         "zone": "Hand",
         "controller": "you"
       },
@@ -143,6 +148,7 @@
         "fn": "move",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2021,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -168,6 +174,7 @@
         "fn": "cast",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2023,
         "from": "hand",
         "cost": "{3}{G}{G}"
       },
@@ -182,6 +189,7 @@
         "fn": "move",
         "card": "Rydia's Return",
         "instanceId": 1,
+        "id": 2023,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

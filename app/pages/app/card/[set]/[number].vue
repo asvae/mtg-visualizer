@@ -336,6 +336,33 @@ function factKey(fact: Fact): string {
 }
 const hoveredFactKey = ref<string | null>(null);
 
+// Parser-derived facts (`Fact.provenance?.origin === 'parser'` —
+// functional-model/PRD_AUTOMATED_AUTHORING.md, see .claude/contracts/
+// card-schema.md's "Parser-derived facts" section) are boilerplate an agent
+// didn't have to author by hand (e.g. "this permanent enters the
+// battlefield normally" on nearly every permanent) — real, correct facts,
+// just not ones a reviewer needs to see by default. Default OFF so the
+// normal per-card Facts view stays exactly as uncluttered as before this
+// wiring landed; toggling shows them inline in the SAME text-ordered list
+// (never a separate section — `feedback_facts_text_order_role_icon_only`),
+// with a small provenance badge per row (see the Facts tab template).
+// Lives on the shared store now (survives navigating away and back, and
+// persists to localStorage — same treatment as store.functionalModelTab
+// just below), not a local ref — see useGraphStore.ts's own comment on
+// showParserFacts for why.
+const showParserFacts = store.showParserFacts;
+function isParserFact(fact: Fact): boolean {
+  return fact.provenance?.origin === 'parser';
+}
+
+// Recognizer-source lookup for a parser fact's own provenance popover used
+// to live here — removed 2026-09-13 when the Facts-tab wand-sparkles icon
+// (see the template below) was inverted to mark agent/AI-authored facts
+// instead of parser-derived ones. Reintroduced the same day, same-day
+// follow-up, as its own dedicated button in the debug column instead of a
+// hover popover on the role icon — see `openRecognizerSourceModal` below
+// (near `openFactDebugModal`) and the debug-column template.
+
 // `describeFact()` (functional-model/synergy.ts, engine-owned) always
 // returns its label lowercase. Capitalizing via CSS `::first-letter` on the
 // label cell is fragile: it only targets the first TEXT NODE, so rows whose
@@ -379,6 +406,62 @@ function factDebugJsonPretty(fact: Fact): string {
 }
 function openFactDebugModal(fact: Fact) {
   openDebugModal(`Fact JSON — ${factKey(fact)}`, factDebugJsonPretty(fact));
+}
+
+// Recognizer-source modal for a parser-derived fact's own provenance — a
+// dedicated third debug-column button (`isParserFact(row.fact)` gates it in
+// the template, so it only ever renders for a fact that actually names a
+// `provenance.rule`), separate from the plain JSON modal above and from the
+// role column's own `wand-sparkles` icon (which marks the OPPOSITE case, an
+// agent-authored fact with no rule to show at all — the two never appear on
+// the same row). Fetches the recognizer's real TypeScript source from
+// `GET /api/recognizer-source/:rule` (server/api/recognizer-source/
+// [rule].get.ts, allowlist-gated) and renders it via `FunctionalModelScript`
+// — same highlighter the card's own Script tab already uses below. Cached
+// per-rule in a plain module-scope-adjacent `Map` (not a `ref`, since the
+// cache itself never needs to be reactive — only the currently-displayed
+// code/error/loading refs below do) so re-opening the same rule's modal
+// within this page's lifetime never re-fetches.
+const recognizerSourceCache = new Map<string, string>();
+const recognizerSourceModalOpen = ref(false);
+const recognizerSourceModalRule = ref('');
+const recognizerSourceModalCode = ref('');
+const recognizerSourceModalError = ref('');
+const recognizerSourceModalLoading = ref(false);
+async function openRecognizerSourceModal(rule: string) {
+  recognizerSourceModalRule.value = rule;
+  recognizerSourceModalOpen.value = true;
+  recognizerSourceModalError.value = '';
+  const cached = recognizerSourceCache.get(rule);
+  if (cached !== undefined) {
+    recognizerSourceModalCode.value = cached;
+    recognizerSourceModalLoading.value = false;
+    return;
+  }
+  recognizerSourceModalCode.value = '';
+  recognizerSourceModalLoading.value = true;
+  try {
+    const res = await $fetch<{ rule: string; content: string }>(`/api/recognizer-source/${rule}`);
+    recognizerSourceCache.set(rule, res.content);
+    recognizerSourceModalCode.value = res.content;
+  } catch (err) {
+    // A rule missing from the server's own allowlist, or a genuinely
+    // missing file on disk, both 404 via `createError({statusMessage})`
+    // server-side — but ofetch's own `FetchError.statusMessage` is the raw
+    // HTTP status TEXT ("Not Found"), not that JSON body; the real message
+    // lives on `err.data.statusMessage`/`err.data.message` (`err.data` is
+    // ofetch's parsed response body). Fall back through both plus the
+    // generic `Error.message` for a network-level failure with no response
+    // at all (offline, CORS, etc).
+    const data = err && typeof err === 'object' ? (err as { data?: { statusMessage?: unknown; message?: unknown } }).data : undefined;
+    const message =
+      (typeof data?.statusMessage === 'string' && data.statusMessage) ||
+      (typeof data?.message === 'string' && data.message) ||
+      (err instanceof Error ? err.message : 'Unknown error');
+    recognizerSourceModalError.value = `Could not load recognizer source for "${rule}": ${message}`;
+  } finally {
+    recognizerSourceModalLoading.value = false;
+  }
 }
 
 // Copy-fact-context button, sitting next to the debug-JSON braces icon in the
@@ -519,25 +602,37 @@ function factFaceIndex(fact: Fact): number {
 // a separate, non-served `annotations-authoring.json`; see
 // `.claude/contracts/card-schema.md`'s "Fact-to-oracle-text pointers"
 // section) — so this derives equivalent full-sentence text straight off the
-// fact's own first baked `annotations` entry against the real served
-// `annotatedCard`. `target: 'oracle'` shows the WHOLE line the span lives
-// on (not just the exact highlighted substring — a full sentence reads
-// better as a tooltip than a bare phrase, matching what the old
-// `sourceText` tooltip used to show); `target: 'typeLine'` has no line
-// structure to speak of, so it's just the exact `start`/`end` slice of the
-// face's own single-line `typeLine`. Falls back to `describeFact(fact)` if
-// this ever comes up empty (shouldn't happen — `annotations` is required
-// with a minimum of one entry — but a raw pointer into a face that doesn't
-// exist should never crash the row).
+// fact's own baked `annotations` against the real served `annotatedCard`.
+// `target: 'oracle'` shows the WHOLE line a span lives on (not just the
+// exact highlighted substring — a full sentence reads better as a tooltip
+// than a bare phrase, matching what the old `sourceText` tooltip used to
+// show); `target: 'typeLine'` has no line structure to speak of, so it's
+// just the exact `start`/`end` slice of the face's own single-line
+// `typeLine`. A fact's `annotations` array can now have more than one real
+// entry (2026-09-13 dedup-retagging pass, e.g. qiqirn-merchant/fin-65's
+// merged `drawCard` fact unions a `cantrip` span and a `bigDraw` span into
+// one fact) — every entry gets resolved and shown, not just the first, so
+// the tooltip doesn't silently drop a real second clause the same file's
+// `FunctionalModelText.vue` already highlights inline. Lines are joined
+// with `\n` (a native `title` attribute renders embedded newlines fine) and
+// deduped in case two annotations happen to resolve to the identical line/
+// slice. Falls back to `describeFact(fact)` if this ever comes up empty
+// (shouldn't happen — `annotations` is required with a minimum of one
+// entry — but a raw pointer into a face that doesn't exist should never
+// crash the row).
 function factSourceText(fact: Fact): string {
-  const ann = fact.annotations?.[0];
   const face = annotatedFaces.value[factFaceIndex(fact)];
-  if (!ann || !face) return describeFact(fact);
-  if (ann.target === 'typeLine') {
-    return face.typeLine.slice(ann.start, ann.end) || describeFact(fact);
+  const anns = fact.annotations ?? [];
+  if (!anns.length || !face) return describeFact(fact);
+  const texts: string[] = [];
+  for (const ann of anns) {
+    const text =
+      ann.target === 'typeLine'
+        ? face.typeLine.slice(ann.start, ann.end)
+        : face.oracleText.split('\n')[ann.line];
+    if (text && !texts.includes(text)) texts.push(text);
   }
-  const line = face.oracleText.split('\n')[ann.line];
-  return line ?? describeFact(fact);
+  return texts.length ? texts.join('\n') : describeFact(fact);
 }
 function isMainFaceFact(row: FactRow): boolean {
   return factFaceIndex(row.fact) === 0;
@@ -605,22 +700,49 @@ function scrollToHeaderName(faceIndex: number) {
 // (2026-09-11 `Fact.annotations` pointer rework) — each row's own fact
 // already carries its own (line, start) position directly, no server-built
 // segment tree left to walk; see that function's own doc comment.
-const factRowGroups = computed<{ label: string | null; rows: FactRow[] }[]>(() => {
-  if (!isMultiFace.value) return [{ label: null, rows: orderByTextPosition(factRows.value) }];
+// Full text-ordered row list, independent of the `showParserFacts` toggle —
+// this (not the toggle-filtered render below) is what `factOrderIndex` is
+// built from, since the Interactions panel sorts against that same index
+// for EVERY interaction group, including ones whose fact happens to be a
+// currently-hidden parser fact; hiding a row from the Facts tab's own
+// render must not scramble that shared ordering for a still-listed
+// interaction that references it.
+const orderedAllFactRows = computed<FactRow[]>(() => {
+  if (!isMultiFace.value) return orderByTextPosition(factRows.value);
   const main: FactRow[] = [];
   const other: FactRow[] = [];
   for (const row of factRows.value) (isMainFaceFact(row) ? main : other).push(row);
+  return [...orderByTextPosition(main), ...orderByTextPosition(other)];
+});
+// `showParserFacts` toggle applies here only — hidden rows never reach the
+// Facts tab's own render at all (not just visually collapsed), but visible
+// rows keep the exact same single, text-ordered list either way: hiding a
+// row never changes where its neighbors land (`orderedAllFactRows` above is
+// already in final order; filtering it preserves that order).
+const factRowGroups = computed<{ label: string | null; rows: FactRow[] }[]>(() => {
+  const visible = orderedAllFactRows.value.filter((row) => showParserFacts.value || !isParserFact(row.fact));
+  if (!isMultiFace.value) return [{ label: null, rows: visible }];
+  const main: FactRow[] = [];
+  const other: FactRow[] = [];
+  for (const row of visible) (isMainFaceFact(row) ? main : other).push(row);
   return [
-    { label: 'Main card', rows: orderByTextPosition(main) },
-    { label: 'Other faces/functions', rows: orderByTextPosition(other) },
+    { label: 'Main card', rows: main },
+    { label: 'Other faces/functions', rows: other },
   ].filter((g) => g.rows.length > 0);
 });
+// Total count of parser-derived facts on this card, independent of the
+// toggle's own current state (unlike a "how many are hidden right now"
+// count, which would go to 0 the moment the toggle is switched on and make
+// its own guard/label disappear or read oddly).
+const parserFactsCount = computed(() => factRows.value.filter((row) => isParserFact(row.fact)).length);
 
-// Every displayed fact-row key's position in the Facts tab's own FINAL
-// rendered order (factRowGroups, flattened across whichever group(s) it
-// has — "Main card" then "Other faces/functions") — the single source of
-// truth the Interactions panel below now sorts against too (see
-// `orderedInteractions`), rather than maintaining its own independent sort.
+// Every fact-key's position in the card's own text order (`orderedAllFactRows`,
+// "Main card" then "Other faces/functions" — deliberately the UNFILTERED
+// list, not `factRowGroups`'s toggle-filtered render, so a currently-hidden
+// parser fact's own real interactions still sort correctly below rather
+// than silently dropping to the end) — the single source of truth the
+// Interactions panel below sorts against too (see `orderedInteractions`),
+// rather than maintaining its own independent sort.
 // Previously `findInteractionsForCard` (functional-model/synergy.ts) shipped
 // interaction groups in plain sink-then-source authored order — the same
 // order the Facts tab ITSELF used before `orderByTextPosition` was
@@ -634,7 +756,7 @@ const factRowGroups = computed<{ label: string | null; rows: FactRow[] }[]>(() =
 const factOrderIndex = computed(() => {
   const map = new Map<string, number>();
   let i = 0;
-  for (const group of factRowGroups.value) for (const row of group.rows) map.set(row.key, i++);
+  for (const row of orderedAllFactRows.value) map.set(row.key, i++);
   return map;
 });
 
@@ -1011,6 +1133,27 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
 
         <template v-if="store.functionalModelTab.value === 'facts'">
+          <!-- Parser-derived facts (`Fact.provenance?.origin === 'parser'` —
+               functional-model/PRD_AUTOMATED_AUTHORING.md) are real,
+               correct boilerplate an agent didn't have to author by hand;
+               default OFF keeps the normal per-card view exactly as
+               uncluttered as before this wiring landed. Toggling them on
+               never splits the list — they render inline, in the same
+               single text-ordered table below (factRowGroups already
+               filters/reorders for this). The wand-sparkles icon in the
+               role cell below marks the OPPOSITE set (agent/AI-authored
+               facts, i.e. no `provenance` at all) — a parser-derived row
+               gets no icon there. -->
+          <UCheckbox
+            v-if="synergy && parserFactsCount > 0"
+            v-model="showParserFacts"
+            class="mb-1.5 ml-[0.5em]"
+            :ui="{ label: 'flex items-center gap-1.5 text-xs text-muted' }"
+          >
+            <template #label>
+              <span>Show parser-derived facts ({{ parserFactsCount }})</span>
+            </template>
+          </UCheckbox>
           <div v-if="synergy" class="overflow-x-auto">
             <table class="border-collapse text-xs whitespace-nowrap">
               <tbody v-for="group in factRowGroups" :key="group.label ?? 'flat'">
@@ -1036,12 +1179,38 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                 >
                   <td v-if="SHOW_FACT_VALUE_COLUMN" class="py-1 px-2"><ValueBar :value="row.fact.value" /></td>
                   <td class="py-1 px-2">
-                    <Icon
-                      :name="row.fact.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
-                      :class="row.fact.role === 'source' ? 'text-blue-400' : 'text-emerald-500'"
-                      class="h-3.5 w-3.5"
-                      :title="row.fact.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
-                    />
+                    <span class="inline-flex items-center gap-1">
+                      <Icon
+                        :name="row.fact.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
+                        :class="row.fact.role === 'source' ? 'text-blue-400' : 'text-emerald-500'"
+                        class="h-3.5 w-3.5"
+                        :title="row.fact.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
+                      />
+                      <!-- Inverted from this icon's original meaning
+                           (2026-09-13): it now marks a fact WITHOUT
+                           `Fact.provenance` — i.e. agent/AI-authored, never
+                           run through a recognizer — not a parser-derived
+                           one. (Absence of `provenance` is the only
+                           agent-authored signal; there's no explicit
+                           `origin: 'agent'` marker, see .claude/contracts/
+                           card-schema.md.) A parser-derived row (has
+                           `provenance`) now gets no icon here at all — its
+                           "how was this derived" detail lives in the
+                           recognizer catalog itself, not per-row, now that
+                           the icon no longer singles those rows out.
+                           There's no `rule`/recognizer source to show for
+                           an agent-authored fact, so this is a plain
+                           `title` tooltip, not the hover popover the old,
+                           parser-facing icon used (that popover's own
+                           rule-name + source-code content made sense only
+                           attached to a parser fact). -->
+                      <Icon
+                        v-if="!row.fact.provenance"
+                        name="lucide:wand-sparkles"
+                        class="h-3 w-3 cursor-help text-violet-400"
+                        title="Agent-derived — no parser recognizer produced this fact"
+                      />
+                    </span>
                   </td>
                   <td
                     class="py-1 px-2 text-[13px] whitespace-pre-wrap text-muted"
@@ -1088,6 +1257,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                         class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
                         title="View this fact's raw JSON"
                         @click="openFactDebugModal(row.fact)"
+                      />
+                      <!-- Parser-derived facts only (`Fact.provenance.origin
+                           === 'parser'`, see isParserFact) — an
+                           agent-authored fact has no recognizer to show, so
+                           it gets no button here at all rather than a
+                           disabled one. -->
+                      <Icon
+                        v-if="isParserFact(row.fact)"
+                        name="lucide:scroll"
+                        class="h-3.5 w-3.5 cursor-pointer text-muted/50 hover:text-text"
+                        :title="`View recognizer source: ${row.fact.provenance?.rule ?? ''}`"
+                        @click="openRecognizerSourceModal(row.fact.provenance?.rule ?? '')"
                       />
                     </span>
                   </td>
@@ -1193,6 +1374,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
   <UModal v-model:open="debugModalOpen" :close="false" :ui="{ content: 'max-w-3xl' }">
     <template #body>
       <JsonHighlight :json="debugModalContent" class="max-h-[70vh] overflow-auto rounded border border-border bg-panel p-2" />
+    </template>
+  </UModal>
+
+  <UModal v-model:open="recognizerSourceModalOpen" :close="false" :ui="{ content: 'max-w-3xl' }">
+    <template #body>
+      <div class="mb-2 text-[10px] font-semibold tracking-wide text-muted uppercase">Recognizer: {{ recognizerSourceModalRule }}</div>
+      <div v-if="recognizerSourceModalLoading" class="text-xs text-muted italic">Loading recognizer source…</div>
+      <div v-else-if="recognizerSourceModalError" class="text-xs text-red-400">{{ recognizerSourceModalError }}</div>
+      <FunctionalModelScript v-else :code="recognizerSourceModalCode" />
     </template>
   </UModal>
 </template>

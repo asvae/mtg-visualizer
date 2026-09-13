@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand",
-      "result": "creature enters, no resolvable effect (the P/T bonus is a real CDA with no matching ptFormula shape — see definition.ts comment)",
+      "result": "creature enters, no resolvable effect (the P/T bonus is a CDA with no matching ptFormula shape — see definition.ts comment)",
       "raw": {
-        "result": "creature enters, no resolvable effect (the P/T bonus is a real CDA with no matching ptFormula shape — see definition.ts comment)"
+        "result": "creature enters, no resolvable effect (the P/T bonus is a CDA with no matching ptFormula shape — see definition.ts comment)"
       }
     },
     "log": [
@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Xande, Dark Mage",
         "instanceId": 1,
+        "id": 3172,
         "from": "hand",
         "cost": "{2}{U}{B}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Xande, Dark Mage",
         "instanceId": 1,
+        "id": 3172,
         "zone": "Battlefield"
       }
     ]
@@ -39,6 +41,7 @@
         "fn": "cast",
         "card": "Xande, Dark Mage",
         "instanceId": 1,
+        "id": 3174,
         "from": "hand",
         "cost": "{2}{U}{B}"
       },
@@ -46,6 +49,7 @@
         "fn": "enters",
         "card": "Xande, Dark Mage",
         "instanceId": 1,
+        "id": 3174,
         "zone": "Battlefield"
       },
       {

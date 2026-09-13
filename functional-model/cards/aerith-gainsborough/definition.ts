@@ -11,9 +11,16 @@ export const aerithGainsborough: CardDefinition = {
     {
       name: 'onLifeGained',
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
+      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial) — whole trigger
+      // line, cause+effect together.
+      annotation: { highlight: 'Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.', line: 1 },
     },
     {
       name: 'onDies',
+      annotation: {
+        highlight: 'When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.',
+        line: 2,
+      },
       effects: [
         {
           kind: 'custom',

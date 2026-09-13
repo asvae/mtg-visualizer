@@ -48,7 +48,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // A real land entering (no land-drop action exists in this engine — added
   // straight to the battlefield, the only real way to model one entering)
-  pilot.beginStep('A real land entering');
+  pilot.beginStep('A land entering');
   const forest = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   pilot.log.push({ fn: 'enters', card: forest.name, zone: 'Battlefield', controller: pilot.you.name });
   // Landfall fired manually — no "another permanent entered" auto-detection in this engine
@@ -56,5 +56,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0.";
-  return [finishEnginePilotTrace(pilot, setup, "real engine playthrough: Flash cast on opponent's turn -> real ETB bounce -> real Landfall pump", result)];
+  return [finishEnginePilotTrace(pilot, setup, "engine playthrough: Flash cast on opponent's turn -> ETB bounce -> Landfall pump", result)];
 }

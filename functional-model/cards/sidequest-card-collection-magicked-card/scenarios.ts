@@ -103,12 +103,12 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot); // resolves the real `animate` effect
 
   const result =
-    'Sidequest: Card Collection is cast; its real ETB draws 3 cards then discards 2, bringing the graveyard to 8 (6 already there + 2 just discarded). Turn passage to the real end step auto-fires the "if eight or more cards are in your graveyard" trigger for real, genuinely reading the graveyard count — the condition holds, so the pilot represents the real transform into Magicked Card. Magicked Card is then crewed for real (Crew 1, tapping Ahriman) and becomes an artifact creature.';
+    'Sidequest: Card Collection is cast; its ETB draws 3 cards then discards 2, bringing the graveyard to 8 (6 already there + 2 just discarded). Turn passage to the end step auto-fires the "if eight or more cards are in your graveyard" trigger, reading the graveyard count — the condition holds, so the pilot represents the transform into Magicked Card. Magicked Card is then crewed (Crew 1, tapping Ahriman) and becomes an artifact creature.';
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: cast -> real ETB draw/discard -> turn passage to end step (real graveyard-count check) -> transform -> real Crew 1 activation',
+      'engine playthrough: cast -> ETB draw/discard -> turn passage to end step (graveyard-count check) -> transform -> Crew 1 activation',
       result,
     ),
   ];

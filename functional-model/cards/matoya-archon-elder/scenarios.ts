@@ -62,7 +62,7 @@ export function runEngineScenarios(): TraceResult[] {
   // caused it). `actions.surveil` is real, wired engine machinery
   // (`state.ts`, exercised for real by Dreams of Laguna/fin-50 elsewhere in
   // this pool) — this call genuinely runs it, not a bare log fabrication.
-  pilot.beginStep('Surveil 1 (a real surveil effect resolves)');
+  pilot.beginStep('Surveil 1 (the surveil effect resolves)');
   actions.surveil(ctx.you, 1);
 
   // Matoya's own real trigger — fired manually once the real surveil has
@@ -72,5 +72,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Matoya, Archon Elder is cast and enters the battlefield; a surveil 1 resolves, then her own "Whenever you scry or surveil, draw a card" trigger fires, drawing a card.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real surveil -> onSurveil draws a card', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> surveil -> onSurveil draws a card', result)];
 }

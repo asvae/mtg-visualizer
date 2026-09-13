@@ -11,6 +11,57 @@
       "controller": "you",
       "subject": "self",
       "value": 1
+    },
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 14
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      }
     }
   ],
   "sink": []

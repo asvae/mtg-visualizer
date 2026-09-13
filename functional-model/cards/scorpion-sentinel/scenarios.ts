@@ -32,7 +32,7 @@ export function runEngineScenarios(): TraceResult[] {
   };
   const pilot = setupEnginePilot(setup);
 
-  pilot.beginStep('Real condition check — 7 real lands already on the battlefield (meets the printed threshold)');
+  pilot.beginStep('Condition check — 7 lands already on the battlefield (meets the printed threshold)');
   const landsCount = loggingPlayer(pilot.state, pilot.you, pilot.log).getLandsInPlay().length;
 
   const scorpionSentinelReal = pilot.state.addCard(pilot.you, 'Hand', {
@@ -54,10 +54,10 @@ export function runEngineScenarios(): TraceResult[] {
   // 1/4: this engine has no threshold-gated `ptFormula` variant, so the
   // printed "+3/+0" never actually applies here — a real, documented gap,
   // not fabricated evidence of a bonus that doesn't happen.
-  pilot.beginStep('Real layer-7a read — no threshold-CDA machinery, so the +3/+0 does not apply');
+  pilot.beginStep('Layer-7a read — no threshold-CDA machinery, so the +3/+0 does not apply');
   const [power, toughness] = effectivePT(pilot.state, scorpionSentinelReal);
   pilot.log.push({ fn: 'read:getNetPower', card: scorpionSentinel.name, power, toughness });
 
-  const result = `Scorpion Sentinel enters with ${landsCount} real lands already on the battlefield, meeting the printed "seven or more lands" threshold — but layer-7a effectivePT still reports Scorpion Sentinel's unmodified printed ${power}/${toughness}, since this engine has no threshold-gated CDA machinery to apply the printed +3/+0 (a documented gap, same class as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: 7 real lands present -> cast -> real condition/CDA reads (gap documented)', result)];
+  const result = `Scorpion Sentinel enters with ${landsCount} lands already on the battlefield, meeting the printed "seven or more lands" threshold — but layer-7a effectivePT still reports Scorpion Sentinel's unmodified printed ${power}/${toughness}, since this engine has no threshold-gated CDA machinery to apply the printed +3/+0 (a documented gap, same class as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: 7 lands present -> cast -> condition/CDA reads (gap documented)', result)];
 }

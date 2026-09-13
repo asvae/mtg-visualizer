@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 5 Plains(s)",
-      "action": "real engine playthrough: cast -> real other-creature combat death -> onOtherPermanentsDie",
-      "result": "G'raha Tia is cast and enters the battlefield; a real separate creature you control (Town Greeter) attacks, is blocked by a real 2/2 (Coeurl) and dies in genuine lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires for real, drawing a card.",
+      "action": "engine playthrough: cast -> other-creature combat death -> onOtherPermanentsDie",
+      "result": "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires, drawing a card.",
       "raw": {
-        "result": "G'raha Tia is cast and enters the battlefield; a real separate creature you control (Town Greeter) attacks, is blocked by a real 2/2 (Coeurl) and dies in genuine lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires for real, drawing a card.",
+        "result": "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires, drawing a card.",
         "you": {
           "basicLands": [
             "Plains",
@@ -135,12 +135,12 @@
       {
         "fn": "tap",
         "target": "Town Greeter",
-        "id": 905
+        "id": 1007
       },
       {
         "fn": "attack",
         "card": "Town Greeter",
-        "id": 905
+        "id": 1007
       },
       {
         "fn": "phase",
@@ -151,9 +151,9 @@
       {
         "fn": "block",
         "blocker": "Coeurl",
-        "blockerId": 906,
+        "blockerId": 1008,
         "attacker": "Town Greeter",
-        "attackerId": 905
+        "attackerId": 1007
       },
       {
         "fn": "dealDamage",

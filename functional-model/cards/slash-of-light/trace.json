@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> resolve (damage = creatures you control + Equipment you control) -> target creature",
-      "result": "Slash of Light is cast for {1}{W} targeting the opponent's real Ahriman — its damage (equal to the 2 real creatures plus 1 real Equipment you control, a total of 3) is dealt for real to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).",
+      "action": "engine playthrough: cast -> resolve (damage = creatures you control + Equipment you control) -> target creature",
+      "result": "Slash of Light is cast for {1}{W} targeting the opponent's Ahriman — its damage (equal to the 2 creatures plus 1 Equipment you control, a total of 3) is dealt to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).",
       "raw": {
-        "result": "Slash of Light is cast for {1}{W} targeting the opponent's real Ahriman — its damage (equal to the 2 real creatures plus 1 real Equipment you control, a total of 3) is dealt for real to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).",
+        "result": "Slash of Light is cast for {1}{W} targeting the opponent's Ahriman — its damage (equal to the 2 creatures plus 1 Equipment you control, a total of 3) is dealt to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).",
         "you": {
           "basicLands": [
             "Plains",
@@ -120,9 +120,9 @@
       {
         "fn": "dealDamage",
         "source": "Slash of Light",
-        "sourceId": 2129,
+        "sourceId": 2270,
         "target": "Ahriman",
-        "id": 2128,
+        "id": 2269,
         "amount": 3
       },
       {

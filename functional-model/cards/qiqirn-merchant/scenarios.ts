@@ -120,7 +120,7 @@ export function runEngineScenarios(): TraceResult[] {
   // self-sacrifice cost has), so its own real "sacrifice this creature"
   // cost act is modeled as a fact with zero possible trace evidence,
   // exactly like Zack Fair's.
-  pilot.beginStep('Activate "bigDraw" ({7}, {T}, Sacrifice Qiqirn Merchant, discounted {1} per Town you control — real cost computed via effectiveActivationCost, fired directly since self-sacrifice-as-cost is not payable through canActivateAbility, see this file\'s own header)');
+  pilot.beginStep('Activate "bigDraw" ({7}, {T}, Sacrifice Qiqirn Merchant, discounted {1} per Town you control — cost computed via effectiveActivationCost, fired directly since self-sacrifice-as-cost is not payable through canActivateAbility, see this file\'s own header)');
   const { costString: bigDrawCost } = effectiveActivationCost(pilot.engine, pilot.you, qiqirnMerchant, 'bigDraw');
   pilot.log.push({ fn: 'activate', card: qiqirnMerchant.name, cost: bigDrawCost, ability: 'bigDraw' });
   resolveCard(qiqirnMerchant, ctx, actions, undefined, 'bigDraw');
@@ -131,7 +131,7 @@ export function runEngineScenarios(): TraceResult[] {
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: cast -> turn passage -> real "cantrip" activation (draw, discard) -> real "bigDraw" activation (draw 3)',
+      'engine playthrough: cast -> turn passage -> "cantrip" activation (draw, discard) -> "bigDraw" activation (draw 3)',
       result,
     ),
   ];

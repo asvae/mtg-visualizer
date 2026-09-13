@@ -21,6 +21,7 @@
         "fn": "trigger",
         "card": "Locke Cole",
         "instanceId": 1,
+        "id": 1465,
         "name": "onDealsCombatDamageToPlayer"
       },
       {
@@ -55,6 +56,7 @@
         "fn": "cast",
         "card": "Locke Cole",
         "instanceId": 1,
+        "id": 1467,
         "from": "hand",
         "cost": "{1}{U}{B}"
       },
@@ -62,12 +64,13 @@
         "fn": "enters",
         "card": "Locke Cole",
         "instanceId": 1,
+        "id": 1467,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Locke Cole",
-        "sourceId": 1354,
+        "sourceId": 1467,
         "target": "opp0",
         "amount": 3
       },
@@ -94,6 +97,7 @@
         "fn": "cast",
         "card": "Locke Cole",
         "instanceId": 1,
+        "id": 1470,
         "from": "hand",
         "cost": "{1}{U}{B}"
       },
@@ -101,6 +105,7 @@
         "fn": "enters",
         "card": "Locke Cole",
         "instanceId": 1,
+        "id": 1470,
         "zone": "Battlefield"
       },
       {

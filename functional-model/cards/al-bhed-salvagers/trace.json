@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 3 Swamp(s)",
-      "action": "real engine playthrough: cast -> real lethal combat (SBA) -> onDies",
-      "result": "Al Bhed Salvagers is cast, enters the battlefield, then attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires off its own death: target opponent loses 1 life, you gain 1 life.",
+      "action": "engine playthrough: cast -> lethal combat (SBA) -> onDies",
+      "result": "Al Bhed Salvagers is cast, enters the battlefield, then attacks and is lethally blocked by Hill Gigas (a one-sided 704.5g death). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires off its own death: target opponent loses 1 life, you gain 1 life.",
       "raw": {
-        "result": "Al Bhed Salvagers is cast, enters the battlefield, then attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires off its own death: target opponent loses 1 life, you gain 1 life.",
+        "result": "Al Bhed Salvagers is cast, enters the battlefield, then attacks and is lethally blocked by Hill Gigas (a one-sided 704.5g death). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires off its own death: target opponent loses 1 life, you gain 1 life.",
         "you": {
           "basicLands": [
             "Swamp",
@@ -109,12 +109,12 @@
       {
         "fn": "tap",
         "target": "Al Bhed Salvagers",
-        "id": 23
+        "id": 117
       },
       {
         "fn": "attack",
         "card": "Al Bhed Salvagers",
-        "id": 23
+        "id": 117
       },
       {
         "fn": "phase",
@@ -125,9 +125,9 @@
       {
         "fn": "block",
         "blocker": "Hill Gigas",
-        "blockerId": 14,
+        "blockerId": 108,
         "attacker": "Al Bhed Salvagers",
-        "attackerId": 23
+        "attackerId": 117
       },
       {
         "fn": "dealDamage",

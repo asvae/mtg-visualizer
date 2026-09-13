@@ -57,7 +57,7 @@ export function runEngineScenarios(): TraceResult[] {
   // own Lifelink check), demonstrating it without needing a full combat
   // sub-sequence (Stiltzkin's own {T} activation below already uses up its
   // one real tap this turn).
-  pilot.beginStep('Real Lifelink: Stiltzkin deals 3 damage to the opponent, gains that much life');
+  pilot.beginStep('Lifelink: Stiltzkin deals 3 damage to the opponent, gains that much life');
   actions.dealDamage(ctx.self, ctx.opponents[0]!, 3);
 
   // Real turn passage — summoning sickness (302.6) clears, so the {T} half
@@ -76,5 +76,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Stiltzkin, Moogle Merchant is cast, turn passage clears summoning sickness, then its {2},{T} ability activates: the opponent gains control of another permanent you control (one of the same Plains that helped pay for casting/activation), and because that control change happened, you draw a card.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real {2},{T} activation -> real gainControl -> real drawCard', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> turn passage -> {2},{T} activation -> gainControl -> drawCard', result)];
 }

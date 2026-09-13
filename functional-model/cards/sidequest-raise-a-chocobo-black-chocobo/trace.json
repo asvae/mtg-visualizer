@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Sidequest: Raise a Chocobo",
         "instanceId": 1,
+        "id": 2241,
         "name": "onEnter"
       },
       {
@@ -42,6 +43,7 @@
         "fn": "trigger",
         "card": "Sidequest: Raise a Chocobo",
         "instanceId": 1,
+        "id": 2244,
         "name": "onMainPhase"
       }
     ]
@@ -50,9 +52,9 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "\"onTransform\" trigger fires, back face",
-      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap)",
+      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this untestable gap)",
       "raw": {
-        "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap)",
+        "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this untestable gap)",
         "face": "back",
         "trigger": "onTransform",
         "you": {
@@ -65,6 +67,7 @@
         "fn": "trigger",
         "card": "Black Chocobo",
         "instanceId": 1,
+        "id": 2247,
         "name": "onTransform"
       },
       {
@@ -104,6 +107,7 @@
         "fn": "trigger",
         "card": "Black Chocobo",
         "instanceId": 1,
+        "id": 2251,
         "name": "onLandfall"
       },
       {
@@ -120,7 +124,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2108,
+        "id": 2249,
         "power": 1,
         "toughness": 0
       },
@@ -133,7 +137,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2109,
+        "id": 2250,
         "power": 1,
         "toughness": 0
       },
@@ -146,7 +150,7 @@
       {
         "fn": "pump",
         "target": "Black Chocobo",
-        "id": 2110,
+        "id": 2251,
         "power": 1,
         "toughness": 0
       }
@@ -171,6 +175,7 @@
         "fn": "trigger",
         "card": "Black Chocobo",
         "instanceId": 1,
+        "id": 2255,
         "name": "onLandfall"
       },
       {
@@ -199,7 +204,7 @@
       {
         "fn": "pump",
         "target": "Black Chocobo",
-        "id": 2114,
+        "id": 2255,
         "power": 1,
         "toughness": 0
       }

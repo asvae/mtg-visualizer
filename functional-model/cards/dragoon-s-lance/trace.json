@@ -23,7 +23,7 @@
         "fn": "cast",
         "card": "Dragoon's Lance",
         "instanceId": 1,
-        "id": 3,
+        "id": 674,
         "from": "hand",
         "cost": "{1}{W}"
       },
@@ -31,14 +31,14 @@
         "fn": "enters",
         "card": "Dragoon's Lance",
         "instanceId": 1,
-        "id": 3,
+        "id": 674,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Dragoon's Lance",
         "instanceId": 1,
-        "id": 3,
+        "id": 674,
         "name": "onEnter"
       },
       {
@@ -53,15 +53,15 @@
       {
         "fn": "equip",
         "equipment": "Dragoon's Lance",
-        "equipmentId": 3,
+        "equipmentId": 674,
         "target": "Hero",
-        "id": 4
+        "id": 675
       },
       {
         "fn": "activate",
         "card": "Dragoon's Lance",
         "instanceId": 1,
-        "id": 3,
+        "id": 674,
         "cost": "{4}"
       },
       {
@@ -72,9 +72,9 @@
       {
         "fn": "equip",
         "equipment": "Dragoon's Lance",
-        "equipmentId": 3,
+        "equipmentId": 674,
         "target": "Grizzly Bears",
-        "id": 2
+        "id": 673
       }
     ]
   }

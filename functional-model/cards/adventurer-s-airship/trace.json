@@ -18,6 +18,7 @@
         "fn": "trigger",
         "card": "Adventurer's Airship",
         "instanceId": 1,
+        "id": 28,
         "name": "onAttacks"
       },
       {

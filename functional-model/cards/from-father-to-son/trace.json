@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 9 Plains(s)",
-      "action": "real engine playthrough: cast from hand -> search to hand -> graveyard -> Flashback cast -> search to battlefield -> exile",
-      "result": "From Father to Son is cast from hand for {1}{W} and resolves for real: searches the real library for a real Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the real library for another real Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
+      "action": "engine playthrough: cast from hand -> search to hand -> graveyard -> Flashback cast -> search to battlefield -> exile",
+      "result": "From Father to Son is cast from hand for {1}{W} and resolves: searches the library for a Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the library for another Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
       "raw": {
-        "result": "From Father to Son is cast from hand for {1}{W} and resolves for real: searches the real library for a real Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the real library for another real Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
+        "result": "From Father to Son is cast from hand for {1}{W} and resolves: searches the library for a Vehicle card (Magitek Armor) and puts it into hand, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {4}{W}{W}{W}: searches the library for another Vehicle card (Cargo Ship) and puts it directly onto the battlefield this time (cast from a graveyard), then the spell itself is exiled instead of returning to the graveyard.",
         "you": {
           "basicLands": [
             "Plains",
@@ -70,7 +70,7 @@
       {
         "fn": "moveTo",
         "target": "Magitek Armor",
-        "id": 878,
+        "id": 980,
         "zone": "Hand",
         "controller": "you"
       },
@@ -148,7 +148,7 @@
       {
         "fn": "moveTo",
         "target": "Cargo Ship",
-        "id": 879,
+        "id": 981,
         "zone": "Battlefield",
         "controller": "you"
       },

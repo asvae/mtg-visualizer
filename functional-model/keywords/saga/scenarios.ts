@@ -39,17 +39,17 @@ export function runEngineScenarios(): TraceResult[] {
   // A fifth real turn — chapter V (Ultimate End) auto-fires, then real 714.4 sacrifice
   advanceToPlayersNextMain1(pilot, pilot.you, knightsReal);
   if (knightsReal.zone === 'Graveyard') {
-    pilot.beginStep('Real 714.4 sacrifice — greatest chapter (V) reached');
+    pilot.beginStep('714.4 sacrifice — greatest chapter (V) reached');
     pilot.log.push({ fn: 'sacrifice', player: pilot.you.name, card: summonKnightsOfRound.name });
   }
 
   const result =
-    "Summon: Knights of Round enters and real 714.2b immediately puts its first lore counter on, firing chapter I (three real 2/2 Knight tokens) — each of the next three real turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth real turn ticks chapter V (Ultimate End: the other real Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the real 714.4 sacrifice removes it automatically.";
+    "Summon: Knights of Round enters and 714.2b immediately puts its first lore counter on, firing chapter I (three 2/2 Knight tokens) — each of the next three turns' own draw steps (714.2c) automatically ticks another lore counter and fires the next chapter (II, III each another three tokens; IV likewise), with zero scenario-side scripting of when a chapter fires. A fifth turn ticks chapter V (Ultimate End: the other Knights get +2/+2 and an indestructible counter), and since its own greatest chapter number is now reached, the 714.4 sacrifice removes it automatically.";
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: cast -> automatic Saga lore-counter ticks across 5 real turns -> chapters I-V -> real 714.4 sacrifice',
+      'engine playthrough: cast -> automatic Saga lore-counter ticks across 5 turns -> chapters I-V -> 714.4 sacrifice',
       result
     ),
   ];

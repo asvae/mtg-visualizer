@@ -60,5 +60,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Memories Returning is cast from hand for {2}{U}{U} and resolves: reveals the top 5 library cards, moves 3 of them to hand and the other 2 to the bottom (the engine has no player-choice machinery, so it takes the first 3 rather than modeling the alternating you/opponent picks — same net zone outcome), then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {7}{U}{U}: same dig against the remaining library, then the spell itself is exiled instead of returning to the graveyard.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast from hand -> dig (5, take 3) -> graveyard -> Flashback cast -> dig (5, take 3) -> exile', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast from hand -> dig (5, take 3) -> graveyard -> Flashback cast -> dig (5, take 3) -> exile', result)];
 }

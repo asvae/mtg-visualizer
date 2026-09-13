@@ -28,7 +28,7 @@ function normalCast(): TraceResult {
 
   const result =
     "Auron's Inspiration is cast from hand and resolves ({2}{W} paid), then goes to the graveyard; its own +2/+0-to-attackers effect is an intentional no-op in this model (no attacking-creature state tracked).";
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast from hand -> resolve -> graveyard', result);
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast from hand -> resolve -> graveyard', result);
 }
 
 function flashbackCast(): TraceResult {
@@ -50,7 +50,7 @@ function flashbackCast(): TraceResult {
 
   const result =
     "Auron's Inspiration is cast from the graveyard via Flashback ({2}{W}{W} paid instead of {2}{W}) and resolves, then is exiled instead of returning to the graveyard (its own \"Then exile it\" clause); its own +2/+0-to-attackers effect is again an intentional no-op in this model.";
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: Flashback cast from graveyard -> resolve -> exile', result);
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: Flashback cast from graveyard -> resolve -> exile', result);
 }
 
 export function runEngineScenarios(): TraceResult[] {

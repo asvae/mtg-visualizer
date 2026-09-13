@@ -19,6 +19,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2858,
         "from": "hand",
         "cost": "{G}"
       },
@@ -30,7 +31,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2600,
+        "id": 2857,
         "power": 2,
         "toughness": 2
       },
@@ -38,6 +39,7 @@
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2858,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -64,6 +66,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2861,
         "from": "hand",
         "cost": "{G}"
       },
@@ -85,7 +88,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2603,
+        "id": 2860,
         "power": 3,
         "toughness": 3
       },
@@ -93,6 +96,7 @@
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2861,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -119,6 +123,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2864,
         "from": "hand",
         "cost": "{G}"
       },
@@ -140,7 +145,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2606,
+        "id": 2863,
         "power": 4,
         "toughness": 4
       },
@@ -148,6 +153,7 @@
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2864,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -170,6 +176,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2866,
         "from": "hand",
         "cost": "{G}"
       },
@@ -182,6 +189,7 @@
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
+        "id": 2866,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

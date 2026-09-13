@@ -101,5 +101,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in blocked combat against a 2/2 (a mutual 704.5g state-based destruction) — it leaves the battlefield for the graveyard, then its onDies trigger fires, creating a 1/1 colorless Hero creature token.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real lethal combat (SBA) -> onDies', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> lethal combat (SBA) -> onDies', result)];
 }

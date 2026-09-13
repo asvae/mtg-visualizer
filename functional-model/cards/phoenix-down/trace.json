@@ -17,6 +17,7 @@
         "fn": "activate",
         "card": "Phoenix Down",
         "instanceId": 1,
+        "id": 1798,
         "cost": "{1}{W}, {T}, Exile this artifact"
       },
       {
@@ -39,14 +40,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 1796,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 1796,
         "controller": "you"
       }
     ]
@@ -81,6 +82,7 @@
         "fn": "activate",
         "card": "Phoenix Down",
         "instanceId": 1,
+        "id": 1802,
         "cost": "{1}{W}, {T}, Exile this artifact"
       },
       {
@@ -114,7 +116,7 @@
       {
         "fn": "moveTo",
         "target": "Qutrub Forayer",
-        "id": 7,
+        "id": 1801,
         "zone": "Exile",
         "controller": "opp0"
       }

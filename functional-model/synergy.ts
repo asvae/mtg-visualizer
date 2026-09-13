@@ -631,6 +631,76 @@ export interface Fact extends Constraints {
    * `.claude/contracts/card-schema.md`).
    */
   face?: 'front' | 'back';
+  /**
+   * Which finite catalog entry produced this fact — omitted entirely for
+   * every hand-authored fact in the pool today (an implicit, unmarked
+   * "agent" default; nothing on disk has ever tagged agent-authored facts,
+   * so there's no explicit `origin: 'agent'` case to represent), present
+   * only on a fact a recognizer (`functional-model/recognizers/`,
+   * `PRD_AUTOMATED_AUTHORING.md`) mechanically derived from the card's own
+   * printed text. Same treatment as `AnnotationRef`/`Fact.annotations` —
+   * a real, structured side-channel that rides ALONGSIDE a fact's actual
+   * matching vocabulary (`event`/`to`/`from`/`target`/etc.) without forking
+   * it: `factsInteract` never reads this field, two facts that are
+   * otherwise identical still match/interact identically regardless of who
+   * or what produced them, and `themeOf` (this file, above) does not add
+   * it either — same "purely informational" bucket as `targeted`/
+   * `untilEndOfTurn`/`costReductionPerControlled`/`oncePerTurn` already
+   * establish.
+   *
+   * Unlike `Fact.annotations` (which needs a real derivation step —
+   * `annotations-authoring.json` + `compute-annotations.mjs` — because a
+   * human's authored intent has to be matched against real text after the
+   * fact), a recognizer already knows its own verdict and its own matched
+   * span at the moment it runs, so there is no separate
+   * "provenance-authoring.json" file for this: `scripts/
+   * apply-recognizers.mjs` builds this object directly from a recognizer's
+   * own `RecognizedFact.provenance` (`functional-model/recognizers/
+   * types.ts`) and bakes it straight into the fact object it appends to
+   * `cards/<slug>/synergy.json`, same "computed once, checked in" treatment
+   * `annotations` itself gets, just with one fewer intermediate file.
+   *
+   * `rule` is a plain `string`, not `recognizers/types.ts`'s own narrower
+   * `RecognizerId` union — this file (the actual Fact vocabulary the engine
+   * simulates against) deliberately does not import from `recognizers/`,
+   * the same direction every other dependency between the two already
+   * runs (recognizers import `Fact`/`AnnotationRef`/`toLineOffset` FROM
+   * here, never the reverse) — widening the exhaustive catalog of real
+   * recognizer names lives in `recognizers/types.ts`'s own `RecognizerId`,
+   * which is still assignable into this field (a string-literal union is a
+   * subtype of `string`).
+   */
+  provenance?: FactProvenance;
+}
+
+/**
+ * See `Fact.provenance`'s own doc comment — `origin: 'parser'` is the only
+ * real value today (nothing on disk marks agent-authored facts explicitly),
+ * kept as a literal union of one rather than a bare `string` so a future
+ * second non-agent origin (if one is ever needed) is a real, deliberate
+ * type change here, not a silent typo risk.
+ */
+export interface FactProvenance {
+  origin: 'parser';
+  rule: string;
+  /**
+   * Short, human-readable documentary note — same "not consulted by
+   * matching logic" bucket as `provenance` itself (see `Fact.provenance`'s
+   * own doc comment), never read by `factsInteract`/`themeOf`/anything else
+   * that actually matches facts. Present ONLY on the one real case
+   * `scripts/apply-recognizers.mjs` uses it for: a recognizer's derived
+   * fact deduped (on `coreKey`) against an ALREADY hand-authored fact
+   * rather than originating a brand-new one — that existing fact gets
+   * retagged with this same `provenance` shape in place (its own real
+   * `value`/`annotations`/every other field byte-for-byte untouched — a
+   * recognizer confirms a fact's existence/shape, never its magnitude), and
+   * this field records, in plain words, that the fact predates the
+   * recognizer and was independently reconciled/confirmed by it, not
+   * originated by it. Absent on a brand-new recognizer-originated fact
+   * (nothing to reconcile against yet) — `rule` alone already says who
+   * produced those.
+   */
+  note?: string;
 }
 
 /**
@@ -771,11 +841,36 @@ export interface SynergyFile {
  *   this: a baseline "this creature was cast as a creature spell"/"this
  *   permanent enters the battlefield" claim is true because of what's
  *   PRINTED ON THE TYPE LINE, not the oracle-text body).
+ * - `line` — (2026-09-13, closes a real, previously-admitted gap — see the
+ *   git history of this doc comment / `rawHighlightRange`'s pre-fix version
+ *   for the original "not resolved" wording) an optional 0-indexed line
+ *   number (`oracleText.split('\n')[line]`, same convention `AnnotationRef
+ *   .line` already uses) that, when present, scopes `rawHighlightRange`'s
+ *   own `sourceText`/`highlight` search to ONLY that one physical line of
+ *   the anchored text, rather than the whole multi-line blob. Plain
+ *   substring search (`indexOf`) has no way to tell apart two genuinely
+ *   different real occurrences of the same (or a same-prefixed) phrase on
+ *   DIFFERENT lines of the same card — `line` eliminates that class of
+ *   ambiguity outright rather than relying on every phrase happening to be
+ *   unique pool-wide. Omit for the old, still-supported whole-text search
+ *   (every `annotations-authoring.json` authored before this field existed
+ *   keeps working unchanged — `compute-annotations.mjs` doesn't require
+ *   `line` on anything).
  */
 export interface FactAnnotationAuthoring {
   anchor?: 'oracle' | 'typeLine';
-  sourceText: string;
+  /**
+   * Required when `line` is omitted (the original whole-text-search mode,
+   * where this is the only thing narrowing the match before `highlight` is
+   * found within it). Optional when `line` is set — `line` already narrows
+   * the search to one physical line, so a separate `sourceText` is only
+   * useful there as EXTRA within-line narrowing (e.g. the same `highlight`
+   * substring appearing twice on that one line), not required for
+   * disambiguation the way it was before.
+   */
+  sourceText?: string;
   highlight: string;
+  line?: number;
 }
 
 /**
@@ -1423,15 +1518,45 @@ export function describeFact(fact: Fact): string {
  * before calling this. Same "first match, best effort" tolerance the
  * original had: `text.indexOf` and `sourceText.indexOf` both return the
  * FIRST occurrence — a `sourceText`/`highlight` pair repeated verbatim
- * elsewhere in the same text (not observed anywhere in the pool as of
- * 2026-09-11) is a real ambiguity this silently resolves by picking the
- * earliest. Returns `undefined` (not a hard failure by itself) when there's
- * no authoring entry at all, or the match fails — `computeFactAnnotations`'s
- * caller decides what a failed match means (a hard authoring failure for an
- * opted-in card, per `Fact.annotations`'s own required-field doc comment).
+ * elsewhere in the same text was, for a while, a real ambiguity this
+ * silently resolved by picking the earliest match — closed 2026-09-13 by
+ * `authoring.line` (see `FactAnnotationAuthoring`'s own doc comment): when
+ * present, the search is scoped to that one physical line only, so a
+ * repeated phrase on a DIFFERENT line can no longer be mismatched for the
+ * intended one. `line` is optional, though — omitted (any authoring entry
+ * predating this fix), this still falls back to the original whole-text
+ * `indexOf` behavior, ambiguity and all, unchanged. Returns `undefined` (not
+ * a hard failure by itself) when there's no authoring entry at all, or the
+ * match fails — `computeFactAnnotations`'s caller decides what a failed
+ * match means (a hard authoring failure for an opted-in card, per
+ * `Fact.annotations`'s own required-field doc comment).
  */
 function rawHighlightRange(text: string, authoring: FactAnnotationAuthoring | null | undefined): { start: number; end: number } | undefined {
-  if (!authoring?.sourceText || !authoring.highlight) return undefined;
+  if (!authoring?.highlight) return undefined;
+  if (typeof authoring.line === 'number') {
+    // Line-scoped resolution (2026-09-13) — compute this one line's own
+    // absolute offset within `text` (same split-on-'\n'-and-re-add-the-
+    // separator convention `toLineOffset` below uses), then search for
+    // `highlight` (narrowed further by `sourceText` first, if given) only
+    // within that line's own substring, never the whole multi-line blob.
+    const lines = text.split('\n');
+    const targetLine = lines[authoring.line];
+    if (targetLine === undefined) return undefined;
+    let lineOffset = 0;
+    for (let i = 0; i < authoring.line; i++) lineOffset += lines[i]!.length + 1; // +1 for the '\n' split() consumed
+    let searchText = targetLine;
+    let searchOffset = lineOffset;
+    if (authoring.sourceText) {
+      const sourceIdx = targetLine.indexOf(authoring.sourceText);
+      if (sourceIdx === -1) return undefined;
+      searchText = authoring.sourceText;
+      searchOffset = lineOffset + sourceIdx;
+    }
+    const highlightIdx = searchText.indexOf(authoring.highlight);
+    if (highlightIdx === -1) return undefined;
+    return { start: searchOffset + highlightIdx, end: searchOffset + highlightIdx + authoring.highlight.length };
+  }
+  if (!authoring.sourceText) return undefined;
   const sourceIdx = text.indexOf(authoring.sourceText);
   if (sourceIdx === -1) return undefined;
   const highlightIdx = authoring.sourceText.indexOf(authoring.highlight);
@@ -1447,8 +1572,17 @@ function rawHighlightRange(text: string, authoring: FactAnnotationAuthoring | nu
  * phrase crossing a `\n` would mean "line" alone can't describe it, and no
  * real fact in the pool needs that today; flag rather than silently pick a
  * line if one ever does.
+ *
+ * Exported (2026-09-13) so `functional-model/recognizers/*` (the
+ * `PRD_AUTOMATED_AUTHORING.md` "annotation as a byproduct of matching"
+ * prototype) can convert a regex match's own already-known absolute offset
+ * straight into a real `AnnotationRef`, without going through
+ * `computeFactAnnotations`'s `sourceText`/`highlight`-indirection — a
+ * recognizer already knows exactly which characters it matched, so it
+ * doesn't need the two-step "record the phrase, re-find it later" dance
+ * `annotations-authoring.json` exists for on the agent-authored side.
  */
-function toLineOffset(oracleText: string, start: number, end: number): AnnotationRef | undefined {
+export function toLineOffset(oracleText: string, start: number, end: number): AnnotationRef | undefined {
   const lines = oracleText.split('\n');
   let offset = 0;
   for (let line = 0; line < lines.length; line++) {

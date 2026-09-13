@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Lightning, Army of One",
         "instanceId": 1,
+        "id": 1434,
         "name": "onDealsCombatDamageToPlayer"
       }
     ]
@@ -38,6 +39,7 @@
         "fn": "cast",
         "card": "Lightning, Army of One",
         "instanceId": 1,
+        "id": 1436,
         "from": "hand",
         "cost": "{1}{R}{W}"
       },
@@ -45,12 +47,13 @@
         "fn": "enters",
         "card": "Lightning, Army of One",
         "instanceId": 1,
+        "id": 1436,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Lightning, Army of One",
-        "sourceId": 1323,
+        "sourceId": 1436,
         "target": "opp0",
         "amount": 3
       },
@@ -77,6 +80,7 @@
         "fn": "cast",
         "card": "Lightning, Army of One",
         "instanceId": 1,
+        "id": 1439,
         "from": "hand",
         "cost": "{1}{R}{W}"
       },
@@ -84,6 +88,7 @@
         "fn": "enters",
         "card": "Lightning, Army of One",
         "instanceId": 1,
+        "id": 1439,
         "zone": "Battlefield"
       },
       {

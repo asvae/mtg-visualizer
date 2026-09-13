@@ -12,7 +12,7 @@ import type { Scenario } from '../../harness';
 // one real trace, still exactly one scenario.
 export const scenarios: Scenario[] = [
   {
-    result: "is cast and enters the battlefield, then puts a +1/+1 counter on itself and gains Unblockable until end of turn (triggered by casting a real 4+-mana noncreature spell)",
+    result: "is cast and enters the battlefield, then puts a +1/+1 counter on itself and gains Unblockable until end of turn (triggered by casting a 4+-mana noncreature spell)",
     sequence: ['onCastNoncreatureSpell4Mana'],
   },
 ];

@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "A Realm Reborn",
         "instanceId": 1,
+        "id": 2,
         "from": "hand",
         "cost": "{4}{G}{G}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "A Realm Reborn",
         "instanceId": 1,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]

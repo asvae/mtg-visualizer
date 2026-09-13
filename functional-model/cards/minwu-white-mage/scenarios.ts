@@ -12,7 +12,7 @@ import type { Scenario } from '../../harness';
 // exactly one scenario, no separate keyword/legend-rule probes.
 export const scenarios: Scenario[] = [
   {
-    result: 'puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life for real via Lifelink',
+    result: 'puts a +1/+1 counter on self and both other Clerics (3 total); also deals 3 combat damage, gaining that much life via Lifelink',
     you: { creaturesCount: 2, creatureSubtypes: ['Cleric'] },
     sequence: ['onLifeGained'],
     dealsCombatDamage: { amount: 3 },

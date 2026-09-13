@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Rinoa Heartilly",
         "instanceId": 1,
+        "id": 1987,
         "name": "onEnter"
       },
       {
@@ -45,6 +46,7 @@
         "fn": "trigger",
         "card": "Rinoa Heartilly",
         "instanceId": 1,
+        "id": 1991,
         "name": "onAttacks"
       },
       {
@@ -65,7 +67,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1869,
+        "id": 1990,
         "power": 2,
         "toughness": 2
       }
@@ -86,6 +88,7 @@
         "fn": "cast",
         "card": "Rinoa Heartilly",
         "instanceId": 1,
+        "id": 1993,
         "from": "hand",
         "cost": "{3}{G}{W}"
       },
@@ -93,6 +96,7 @@
         "fn": "enters",
         "card": "Rinoa Heartilly",
         "instanceId": 1,
+        "id": 1993,
         "zone": "Battlefield"
       },
       {

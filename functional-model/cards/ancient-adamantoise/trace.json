@@ -14,12 +14,13 @@
         "fn": "trigger",
         "card": "Ancient Adamantoise",
         "instanceId": 1,
+        "id": 141,
         "name": "onDies"
       },
       {
         "fn": "moveTo",
         "target": "Ancient Adamantoise",
-        "id": 121,
+        "id": 141,
         "zone": "Exile",
         "controller": "you"
       },

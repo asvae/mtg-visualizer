@@ -84,11 +84,11 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(libraryPilot);
 
   const libraryResult =
-    'Delivery Moogle enters; real ETB (603.6b) searches your real library for an artifact card with mana value 2 or less (real getCMC() check), puts it into hand.';
+    'Delivery Moogle enters; ETB (603.6b) searches your library for an artifact card with mana value 2 or less (getCMC() check), puts it into hand.';
   const libraryTrace = finishEnginePilotTrace(
     libraryPilot,
     librarySetup,
-    'real engine playthrough: cast -> real ETB library search',
+    'engine playthrough: cast -> ETB library search',
     libraryResult,
   );
 
@@ -109,11 +109,11 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(graveyardPilot);
 
   const graveyardResult =
-    "Delivery Moogle enters with no artifact in library; real ETB (603.6b) falls through to the real artifact card sitting in your graveyard (mana value 2 or less, real getCMC() check), puts it into hand.";
+    "Delivery Moogle enters with no artifact in library; ETB (603.6b) falls through to the artifact card sitting in your graveyard (mana value 2 or less, getCMC() check), puts it into hand.";
   const graveyardTrace = finishEnginePilotTrace(
     graveyardPilot,
     graveyardSetup,
-    'real engine playthrough: cast -> real ETB graveyard search',
+    'engine playthrough: cast -> ETB graveyard search',
     graveyardResult,
   );
 

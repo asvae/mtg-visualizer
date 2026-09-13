@@ -109,16 +109,16 @@ function scenarioA(): TraceResult {
   // nothing reset its lore counters first.
   advanceToPlayersNextMain1(pilot, pilot.you, shivaReal);
   if (shivaReal.zone === 'Graveyard') {
-    pilot.beginStep('Real 714.4 sacrifice — lore counters were never reset');
+    pilot.beginStep('714.4 sacrifice — lore counters were never reset');
     pilot.log.push({ fn: 'sacrifice', player: pilot.you.name, card: summonShiva.name });
   }
 
   const result =
-    "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent genuinely attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are genuinely tapped — a real, live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.";
+    "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are tapped — a live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.";
   return finishEnginePilotTrace(
     pilot,
     setup,
-    'real engine playthrough: cast -> Saga chapters over real turns -> real stun-counter timing + a real attack keep two creatures tapped for chapter III',
+    'engine playthrough: cast -> Saga chapters over turns -> stun-counter timing + an attack keep two creatures tapped for chapter III',
     result
   );
 }

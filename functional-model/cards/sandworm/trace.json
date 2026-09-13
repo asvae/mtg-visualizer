@@ -20,6 +20,7 @@
         "fn": "trigger",
         "card": "Sandworm",
         "instanceId": 1,
+        "id": 2060,
         "name": "onEnter"
       },
       {
@@ -49,20 +50,20 @@
       {
         "fn": "destroy",
         "target": "opp0-land-0",
-        "id": 1942,
+        "id": 2056,
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 1943,
+        "id": 2057,
         "zone": "Battlefield",
         "controller": "opp0"
       },
       {
         "fn": "tap",
         "target": "Forest",
-        "id": 1943,
+        "id": 2057,
         "controller": "opp0"
       }
     ]
@@ -87,6 +88,7 @@
         "fn": "trigger",
         "card": "Sandworm",
         "instanceId": 1,
+        "id": 2064,
         "name": "onEnter"
       },
       {
@@ -116,7 +118,7 @@
       {
         "fn": "destroy",
         "target": "opp0-land-0",
-        "id": 1949,
+        "id": 2063,
         "controller": "opp0"
       }
     ]

@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Tellah, Great Sage",
         "instanceId": 1,
+        "id": 2589,
         "name": "onCastNoncreatureSpell"
       },
       {
@@ -51,6 +52,7 @@
         "fn": "trigger",
         "card": "Tellah, Great Sage",
         "instanceId": 1,
+        "id": 2594,
         "name": "onCastNoncreatureSpell"
       },
       {
@@ -98,6 +100,7 @@
         "fn": "trigger",
         "card": "Tellah, Great Sage",
         "instanceId": 1,
+        "id": 2600,
         "name": "onCastNoncreatureSpell"
       },
       {
@@ -122,14 +125,14 @@
       {
         "fn": "moveTo",
         "target": "Tellah, Great Sage",
-        "id": 2400,
+        "id": 2600,
         "zone": "Graveyard",
         "controller": "you"
       },
       {
         "fn": "dealDamage",
         "source": "Tellah, Great Sage",
-        "sourceId": 2400,
+        "sourceId": 2600,
         "target": "opp0",
         "amount": 8
       }
@@ -150,6 +153,7 @@
         "fn": "cast",
         "card": "Tellah, Great Sage",
         "instanceId": 1,
+        "id": 2603,
         "from": "hand",
         "cost": "{3}{U}{R}"
       },
@@ -157,6 +161,7 @@
         "fn": "enters",
         "card": "Tellah, Great Sage",
         "instanceId": 1,
+        "id": 2603,
         "zone": "Battlefield"
       },
       {

@@ -14,6 +14,7 @@
         "fn": "cast",
         "card": "The Final Days",
         "instanceId": 1,
+        "id": 2655,
         "from": "hand",
         "cost": "{2}{B}{B}"
       },
@@ -30,6 +31,7 @@
         "fn": "move",
         "card": "The Final Days",
         "instanceId": 1,
+        "id": 2655,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -54,6 +56,7 @@
         "fn": "cast",
         "card": "The Final Days",
         "instanceId": 1,
+        "id": 2662,
         "from": "graveyard",
         "cost": "{4}{B}{B}"
       },
@@ -92,6 +95,7 @@
         "fn": "move",
         "card": "The Final Days",
         "instanceId": 1,
+        "id": 2662,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"
@@ -116,6 +120,7 @@
         "fn": "cast",
         "card": "The Final Days",
         "instanceId": 1,
+        "id": 2667,
         "from": "graveyard",
         "cost": "{4}{B}{B}"
       },
@@ -139,6 +144,7 @@
         "fn": "move",
         "card": "The Final Days",
         "instanceId": 1,
+        "id": 2667,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

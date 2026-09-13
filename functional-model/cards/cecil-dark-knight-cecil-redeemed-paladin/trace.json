@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 2,
+        "id": 329,
         "name": "onDealsDamage"
       },
       {
@@ -53,7 +53,7 @@
         "fn": "trigger",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 4,
+        "id": 331,
         "name": "onDealsDamage"
       },
       {
@@ -69,19 +69,19 @@
       {
         "fn": "untap",
         "target": "Cecil, Dark Knight",
-        "id": 4
+        "id": 331
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
-        "id": 4,
+        "id": 331,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
-        "id": 4,
+        "id": 331,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -106,7 +106,7 @@
         "fn": "trigger",
         "card": "Cecil, Redeemed Paladin",
         "instanceId": 1,
-        "id": 7,
+        "id": 334,
         "name": "onAttacks"
       }
     ]
@@ -129,7 +129,7 @@
         "fn": "cast",
         "card": "Cecil, Redeemed Paladin",
         "instanceId": 1,
-        "id": 9,
+        "id": 336,
         "from": "hand",
         "cost": ""
       },
@@ -137,13 +137,13 @@
         "fn": "enters",
         "card": "Cecil, Redeemed Paladin",
         "instanceId": 1,
-        "id": 9,
+        "id": 336,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Cecil, Redeemed Paladin",
-        "sourceId": 9,
+        "sourceId": 336,
         "target": "opp0",
         "amount": 3
       },
@@ -170,7 +170,7 @@
         "fn": "cast",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 12,
+        "id": 339,
         "from": "hand",
         "cost": "{B}"
       },
@@ -178,7 +178,7 @@
         "fn": "enters",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 12,
+        "id": 339,
         "zone": "Battlefield"
       },
       {

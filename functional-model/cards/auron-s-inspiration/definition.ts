@@ -7,6 +7,11 @@ export const auronSInspiration: CardDefinition = {
 
   alternateCosts: [{ name: 'Flashback', cost: '{2}{W}{W}', from: 'graveyard', thenExile: true }],
 
+  // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial) — the top-level
+  // `effects` here is a real cast effect (an honest no-op custom, per the
+  // comment below), whole-line annotation is straightforward: one clean
+  // single-sentence line, no modal/multi-line split to worry about.
+  effectsAnnotation: { highlight: 'Attacking creatures get +2/+0 until end of turn.', line: 0 },
   effects: [
     {
       // "Attacking creatures get +2/+0" is symmetric (ANY player's

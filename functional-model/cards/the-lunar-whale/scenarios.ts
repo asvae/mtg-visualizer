@@ -142,12 +142,12 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot); // resolves the real cast — Barret Wallace enters the battlefield
 
   const result =
-    'The Lunar Whale is crewed (Item Shopkeep taps, real 702.121b/c) and becomes a real Artifact Creature; it attacks (508.1f), genuinely setting RealCard.attackedThisTurn. That real flag is what The Lunar Whale\'s own "as long as it attacked this turn" clause reads. The top card of the library is played twice: first a real Forest (dispatches to the real playLand — direct Battlefield move, no stack), then — once the Forest is gone — the real Barret Wallace underneath it (dispatches to the real castSpell — {3}{R} genuinely paid, pushed onto and resolved off the real stack). Both dispatches reuse engine.ts\'s existing playLand/canPlayLand and castSpell/canCastSpell pairs via the new canPlayFromLibraryTop/playFromLibraryTop primitive — no fabricated hybrid action.';
+    'The Lunar Whale is crewed (Item Shopkeep taps, 702.121b/c) and becomes an Artifact Creature; it attacks (508.1f), setting RealCard.attackedThisTurn. That flag is what The Lunar Whale\'s own "as long as it attacked this turn" clause reads. The top card of the library is played twice: first a Forest (dispatches to playLand — direct Battlefield move, no stack), then — once the Forest is gone — Barret Wallace underneath it (dispatches to castSpell — {3}{R} paid, pushed onto and resolved off the stack). Both dispatches reuse engine.ts\'s existing playLand/canPlayLand and castSpell/canCastSpell pairs via the new canPlayFromLibraryTop/playFromLibraryTop primitive — no fabricated hybrid action.';
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: crew The Lunar Whale -> real attack (sets attackedThisTurn) -> play a real land off the library top -> play a real spell off the library top',
+      'engine playthrough: crew The Lunar Whale -> attack (sets attackedThisTurn) -> play a land off the library top -> play a spell off the library top',
       result,
     ),
   ];

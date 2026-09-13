@@ -23,6 +23,7 @@
         "fn": "cast",
         "card": "Nibelheim Aflame",
         "instanceId": 1,
+        "id": 1734,
         "from": "hand",
         "cost": "{2}{R}{R}"
       },
@@ -49,17 +50,17 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 1626,
+        "sourceId": 1730,
         "target": "Grizzly Bears",
-        "id": 1628,
+        "id": 1732,
         "amount": 3
       },
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 1626,
+        "sourceId": 1730,
         "target": "Grizzly Bears",
-        "id": 1629,
+        "id": 1733,
         "amount": 3
       },
       {
@@ -72,6 +73,7 @@
         "fn": "move",
         "card": "Nibelheim Aflame",
         "instanceId": 1,
+        "id": 1734,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -103,6 +105,7 @@
         "fn": "cast",
         "card": "Nibelheim Aflame",
         "instanceId": 1,
+        "id": 1742,
         "from": "graveyard",
         "cost": "{5}{R}{R}"
       },
@@ -129,9 +132,9 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 1632,
+        "sourceId": 1736,
         "target": "Grizzly Bears",
-        "id": 1637,
+        "id": 1741,
         "amount": 2
       },
       {
@@ -171,6 +174,7 @@
         "fn": "move",
         "card": "Nibelheim Aflame",
         "instanceId": 1,
+        "id": 1742,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

@@ -19,6 +19,7 @@
         "fn": "trigger",
         "card": "Ultimecia, Temporal Threat",
         "instanceId": 1,
+        "id": 2989,
         "name": "onEnter"
       },
       {
@@ -29,13 +30,13 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2693,
+        "id": 2987,
         "controller": "opp0"
       },
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2694,
+        "id": 2988,
         "controller": "opp0"
       }
     ]
@@ -58,6 +59,7 @@
         "fn": "trigger",
         "card": "Ultimecia, Temporal Threat",
         "instanceId": 1,
+        "id": 2992,
         "name": "onDealsCombatDamage"
       },
       {
@@ -81,6 +83,7 @@
         "fn": "cast",
         "card": "Ultimecia, Temporal Threat",
         "instanceId": 1,
+        "id": 2994,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -88,6 +91,7 @@
         "fn": "enters",
         "card": "Ultimecia, Temporal Threat",
         "instanceId": 1,
+        "id": 2994,
         "zone": "Battlefield"
       },
       {

@@ -22,6 +22,7 @@
         "fn": "trigger",
         "card": "Reno and Rude",
         "instanceId": 1,
+        "id": 1921,
         "name": "onDealsDamage"
       },
       {
@@ -75,6 +76,7 @@
         "fn": "trigger",
         "card": "Reno and Rude",
         "instanceId": 1,
+        "id": 1927,
         "name": "onDealsDamage"
       },
       {
@@ -109,6 +111,7 @@
         "fn": "cast",
         "card": "Reno and Rude",
         "instanceId": 1,
+        "id": 1929,
         "from": "hand",
         "cost": "{1}{B}"
       },
@@ -116,6 +119,7 @@
         "fn": "enters",
         "card": "Reno and Rude",
         "instanceId": 1,
+        "id": 1929,
         "zone": "Battlefield"
       },
       {

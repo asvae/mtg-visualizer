@@ -1,59 +1,6 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "target creature gets +2/+2 until end of turn",
-      "raw": {
-        "result": "target creature gets +2/+2 until end of turn",
-        "castFrom": "hand",
-        "you": {
-          "creaturesCount": 1
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "You're Not Alone",
-        "instanceId": 1,
-        "from": "hand",
-        "cost": "{W}"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
-      },
-      {
-        "fn": "pump",
-        "target": "Grizzly Bears",
-        "id": 2903,
-        "power": 2,
-        "toughness": 2
-      },
-      {
-        "fn": "move",
-        "card": "You're Not Alone",
-        "instanceId": 1,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
-      }
-    ]
-  },
-  {
-    "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "cast from hand",
       "result": "you control 3+ creatures: target creature gets +4/+4 until end of turn instead",
@@ -70,6 +17,7 @@
         "fn": "cast",
         "card": "You're Not Alone",
         "instanceId": 1,
+        "id": 3193,
         "from": "hand",
         "cost": "{W}"
       },
@@ -91,7 +39,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2906,
+        "id": 3190,
         "power": 4,
         "toughness": 4
       },
@@ -99,6 +47,7 @@
         "fn": "move",
         "card": "You're Not Alone",
         "instanceId": 1,
+        "id": 3193,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

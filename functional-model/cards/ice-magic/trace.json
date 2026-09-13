@@ -20,6 +20,7 @@
         "fn": "cast",
         "card": "Ice Magic",
         "instanceId": 1,
+        "id": 1204,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -45,7 +46,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 1101,
+        "id": 1203,
         "zone": "Hand",
         "controller": "opp0"
       },
@@ -53,6 +54,7 @@
         "fn": "move",
         "card": "Ice Magic",
         "instanceId": 1,
+        "id": 1204,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -80,6 +82,7 @@
         "fn": "cast",
         "card": "Ice Magic",
         "instanceId": 1,
+        "id": 1208,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -105,7 +108,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 1105,
+        "id": 1207,
         "zone": "Library",
         "controller": "opp0"
       },
@@ -113,6 +116,7 @@
         "fn": "move",
         "card": "Ice Magic",
         "instanceId": 1,
+        "id": 1208,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -140,6 +144,7 @@
         "fn": "cast",
         "card": "Ice Magic",
         "instanceId": 1,
+        "id": 1212,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -165,7 +170,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 1109,
+        "id": 1211,
         "zone": "Library",
         "controller": "opp0"
       },
@@ -173,6 +178,7 @@
         "fn": "move",
         "card": "Ice Magic",
         "instanceId": 1,
+        "id": 1212,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

@@ -19,6 +19,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Planet's Heir",
         "instanceId": 1,
+        "id": 2145,
         "name": "onEnter"
       },
       {
@@ -29,14 +30,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2013,
+        "id": 2143,
         "power": -2,
         "toughness": -2
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2014,
+        "id": 2144,
         "power": -2,
         "toughness": -2
       }
@@ -57,12 +58,13 @@
         "fn": "trigger",
         "card": "Sephiroth, Planet's Heir",
         "instanceId": 1,
+        "id": 2147,
         "name": "onOpponentCreatureDies"
       },
       {
         "fn": "putCounter",
         "target": "Sephiroth, Planet's Heir",
-        "id": 2017,
+        "id": 2147,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -84,6 +86,7 @@
         "fn": "cast",
         "card": "Sephiroth, Planet's Heir",
         "instanceId": 1,
+        "id": 2149,
         "from": "hand",
         "cost": "{4}{U}{B}"
       },
@@ -91,6 +94,7 @@
         "fn": "enters",
         "card": "Sephiroth, Planet's Heir",
         "instanceId": 1,
+        "id": 2149,
         "zone": "Battlefield"
       },
       {

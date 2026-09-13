@@ -47,13 +47,13 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   // Real Equipment attachment (301.5c)
-  pilot.beginStep('Real Equipment attachment (301.5c)');
+  pilot.beginStep('Equipment attachment (301.5c)');
   const sword = pilot.you.battlefield.find((c) => c.name === 'Sword')!;
   pilot.state.equip(sword, steinerReal);
   pilot.log.push({ fn: 'equip', equipment: sword.name, target: steinerReal.name });
 
   // Real layer-7a CDA recalculation — printed 2/1 +1/+1 for one Equipment
-  pilot.beginStep('Real layer-7a CDA recalculation');
+  pilot.beginStep('Layer-7a CDA recalculation');
   const [power, toughness] = effectivePT(pilot.state, steinerReal);
   pilot.log.push({ fn: 'read:getNetPower', card: adelbertSteiner.name, power, toughness });
 
@@ -65,7 +65,7 @@ export function runEngineScenarios(): TraceResult[] {
   pilotDeclareAttackers(pilot, [steinerReal], 'Declare Steiner as attacker');
   advanceOneStep(pilot);
   pilotDeclareBlockers(pilot, []);
-  pilot.beginStep('Resolve combat damage — real Lifelink');
+  pilot.beginStep('Resolve combat damage — Lifelink');
   const opp = pilot.opponents[0]!;
   const beforeOppLife = opp.life;
   const beforeYouLife = pilot.you.life;
@@ -77,7 +77,7 @@ export function runEngineScenarios(): TraceResult[] {
   if (lifeGained > 0) pilot.log.push({ fn: 'gainLife', player: pilot.you.name, amount: lifeGained, cause: 'Lifelink' });
 
   // Real 704.5j legend rule — a second real copy enters, one is removed
-  pilot.beginStep('Real 704.5j legend rule — second copy enters, one is removed');
+  pilot.beginStep('704.5j legend rule — second copy enters, one is removed');
   const secondCopy = pilot.state.addCard(pilot.you, 'Battlefield', {
     name: adelbertSteiner.name,
     types: ['Creature'],
@@ -93,5 +93,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Steiner enters, an Equipment (Sword) attaches — the printed "+1/+1 for each Equipment" CDA recalculates (layer 7a) to 3/2; turn passage clears summoning sickness, then it attacks unblocked, dealing combat damage and gaining its controller life via Lifelink; a second copy of Steiner enters, and the legend rule (704.5j) removes one of the two.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> equip -> CDA recalculation -> real combat -> Lifelink', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> equip -> CDA recalculation -> combat -> Lifelink', result)];
 }

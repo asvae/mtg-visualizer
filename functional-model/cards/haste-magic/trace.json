@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Haste Magic",
         "instanceId": 1,
+        "id": 1144,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -29,7 +30,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1040,
+        "id": 1142,
         "power": 3,
         "toughness": 1
       },
@@ -48,7 +49,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1040,
+        "id": 1142,
         "keyword": "Haste"
       },
       {
@@ -61,7 +62,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 1041,
+        "id": 1143,
         "zone": "Exile",
         "controller": "you"
       },
@@ -69,6 +70,7 @@
         "fn": "move",
         "card": "Haste Magic",
         "instanceId": 1,
+        "id": 1144,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -94,6 +96,7 @@
         "fn": "cast",
         "card": "Haste Magic",
         "instanceId": 1,
+        "id": 1146,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -120,6 +123,7 @@
         "fn": "move",
         "card": "Haste Magic",
         "instanceId": 1,
+        "id": 1146,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

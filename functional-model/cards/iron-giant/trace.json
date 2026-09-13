@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Iron Giant",
         "instanceId": 1,
+        "id": 1245,
         "from": "hand",
         "cost": "{7}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Iron Giant",
         "instanceId": 1,
+        "id": 1245,
         "zone": "Battlefield"
       }
     ]

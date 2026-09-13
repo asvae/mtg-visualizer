@@ -25,6 +25,7 @@
         "fn": "trigger",
         "card": "Gaius van Baelsar",
         "instanceId": 1,
+        "id": 1033,
         "name": "onEnter"
       },
       {
@@ -81,6 +82,7 @@
         "fn": "trigger",
         "card": "Gaius van Baelsar",
         "instanceId": 1,
+        "id": 1040,
         "name": "onEnter"
       },
       {
@@ -140,6 +142,7 @@
         "fn": "trigger",
         "card": "Gaius van Baelsar",
         "instanceId": 1,
+        "id": 1045,
         "name": "onEnter"
       },
       {

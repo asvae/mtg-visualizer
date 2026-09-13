@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Commune with Beavers",
         "instanceId": 1,
+        "id": 468,
         "from": "hand",
         "cost": "{G}"
       },
@@ -28,6 +29,7 @@
         "fn": "move",
         "card": "Commune with Beavers",
         "instanceId": 1,
+        "id": 468,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

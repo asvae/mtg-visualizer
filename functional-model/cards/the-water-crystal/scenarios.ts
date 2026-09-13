@@ -98,12 +98,12 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   const result =
-    'The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 real cards in hand the nominal amount is 3, but the real "mill that many cards plus four instead" replacement (now genuinely live on the resolved permanent) bumps the actually-milled count to 7.';
+    'The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 cards in hand the nominal amount is 3, but the "mill that many cards plus four instead" replacement (now live on the resolved permanent) bumps the milled count to 7.';
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: cast -> turn passage -> real activation of "each opponent mills..." with the mill-plus-4 replacement genuinely applying',
+      'engine playthrough: cast -> turn passage -> activation of "each opponent mills..." with the mill-plus-4 replacement applying',
       result,
     ),
   ];

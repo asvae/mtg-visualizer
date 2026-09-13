@@ -1,12 +1,22 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "surveils 1, then draws a card",
+      "setup": "you: 6 Island(s)",
+      "action": "engine playthrough: cast from hand -> surveil -> draw -> graveyard -> Flashback cast -> surveil -> draw -> exile",
+      "result": "Dreams of Laguna is cast from hand for {1}{U} and resolves: surveils 1 (log-only, no library mutation), then draws a card, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {3}{U}: surveils 1, draws another card, then the spell itself is exiled instead of returning to the graveyard.",
       "raw": {
-        "result": "surveils 1, then draws a card",
-        "castFrom": "hand"
+        "result": "Dreams of Laguna is cast from hand for {1}{U} and resolves: surveils 1 (log-only, no library mutation), then draws a card, then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {3}{U}: surveils 1, draws another card, then the spell itself is exiled instead of returning to the graveyard.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 3
+        }
       }
     },
     "log": [
@@ -18,35 +28,32 @@
         "cost": "{1}{U}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dreams of Laguna"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dreams of Laguna"
+      },
+      {
         "fn": "surveil",
         "player": "you",
         "qty": 1
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "move",
         "card": "Dreams of Laguna",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from graveyard",
-      "result": "cast via Flashback from the graveyard; surveils 1, then draws a card; exiled afterward instead of going to the graveyard",
-      "raw": {
-        "result": "cast via Flashback from the graveyard; surveils 1, then draws a card; exiled afterward instead of going to the graveyard",
-        "castFrom": "graveyard"
-      }
-    },
-    "log": [
+        "to": "Graveyard"
+      },
       {
         "fn": "cast",
         "card": "Dreams of Laguna",
@@ -55,21 +62,63 @@
         "cost": "{3}{U}"
       },
       {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dreams of Laguna"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dreams of Laguna"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dreams of Laguna"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Dreams of Laguna"
+      },
+      {
         "fn": "surveil",
         "player": "you",
         "qty": 1
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "move",
         "card": "Dreams of Laguna",
         "instanceId": 1,
         "from": "stack",
-        "to": "Exile",
-        "cardType": "Instant"
+        "to": "Exile"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Dreams of Laguna ({1}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 3
+      },
+      {
+        "label": "Cast Dreams of Laguna via Flashback ({3}{U})",
+        "from": 6
+      },
+      {
+        "label": "Resolve",
+        "from": 11
       }
     ]
   }

@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Firion, Wild Rose Warrior",
         "instanceId": 1,
+        "id": 944,
         "name": "onEquipmentEnters"
       },
       {
@@ -43,6 +44,7 @@
         "fn": "cast",
         "card": "Firion, Wild Rose Warrior",
         "instanceId": 1,
+        "id": 947,
         "from": "hand",
         "cost": "{2}{R}"
       },
@@ -50,6 +52,7 @@
         "fn": "enters",
         "card": "Firion, Wild Rose Warrior",
         "instanceId": 1,
+        "id": 947,
         "zone": "Battlefield"
       },
       {

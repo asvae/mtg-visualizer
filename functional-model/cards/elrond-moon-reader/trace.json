@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Elrond, Moon-Reader",
         "instanceId": 1,
+        "id": 766,
         "name": "onActivateCreatureAbility"
       },
       {
@@ -41,6 +42,7 @@
         "fn": "activate",
         "card": "Elrond, Moon-Reader",
         "instanceId": 1,
+        "id": 770,
         "cost": "{5}{U}{U}"
       },
       {
@@ -68,14 +70,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 700,
+        "id": 768,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 701,
+        "id": 769,
         "zone": "Exile",
         "controller": "you"
       },
@@ -97,6 +99,10 @@
       },
       {
         "fn": "phase",
+        "phase": "CombatFirstStrikeDamage"
+      },
+      {
+        "fn": "phase",
         "phase": "CombatDamage"
       },
       {
@@ -110,14 +116,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 700,
+        "id": 768,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 701,
+        "id": 769,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -144,6 +150,7 @@
         "fn": "activate",
         "card": "Elrond, Moon-Reader",
         "instanceId": 1,
+        "id": 772,
         "cost": "{5}{U}{U}"
       },
       {

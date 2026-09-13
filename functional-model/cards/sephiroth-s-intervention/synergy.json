@@ -21,6 +21,64 @@
       "event": "lifegain",
       "controller": "you",
       "value": 4
+    },
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
+    },
+    {
+      "event": "destroy",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 23
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      }
     }
   ],
   "sink": [

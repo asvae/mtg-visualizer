@@ -55,7 +55,7 @@ export function runEngineScenarios(): TraceResult[] {
   advanceOneStep(pilot, 'Advance to Declare Blockers');
   pilotDeclareBlockers(pilot, [{ blocker: smallBlocker, attacker: ironGiantReal }], `Declare ${smallBlocker.name} as blocker`);
 
-  pilot.beginStep('Resolve combat damage — real Trample (702.19c) overflow');
+  pilot.beginStep('Resolve combat damage — Trample (702.19c) overflow');
   const opp = pilot.opponents[0]!;
   const beforeOppLife = opp.life;
   const beforeBlockerDamage = smallBlocker.damageMarked ?? 0;
@@ -75,8 +75,8 @@ export function runEngineScenarios(): TraceResult[] {
   }
 
   const result =
-    `Real 508.1f: Iron Giant's own Vigilance means declaring it as an attacker never taps it (no \`tap\` entry — compare a non-Vigilance attacker's trace, which always has one). Real 702.19c: blocked by a 1-toughness creature, only the real lethal amount (1) goes to the blocker (a genuine 704.5g destruction) — the remaining 5 of its 6 power overflows past the dead blocker straight to the defending player, exactly Trample's own rule, not a full-6-to-blocker or full-6-to-player shortcut.`;
+    `508.1f: Iron Giant's own Vigilance means declaring it as an attacker never taps it (no \`tap\` entry — compare a non-Vigilance attacker's trace, which always has one). 702.19c: blocked by a 1-toughness creature, only the lethal amount (1) goes to the blocker (a 704.5g destruction) — the remaining 5 of its 6 power overflows past the dead blocker straight to the defending player, exactly Trample's own rule, not a full-6-to-blocker or full-6-to-player shortcut.`;
   return [
-    finishEnginePilotTrace(pilot, setup, 'real engine playthrough: declare Vigilance attacker (no tap) -> blocked -> real Trample overflow damage', result),
+    finishEnginePilotTrace(pilot, setup, 'engine playthrough: declare Vigilance attacker (no tap) -> blocked -> Trample overflow damage', result),
   ];
 }

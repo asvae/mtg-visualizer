@@ -11,7 +11,12 @@
           "start": 12,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "entersBattlefield",
@@ -24,7 +29,12 @@
           "start": 0,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "damage",
@@ -105,7 +115,12 @@
           "start": 67,
           "end": 86
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'saga-lore-and-sacrifice-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "dies",
@@ -122,7 +137,29 @@
           "start": 67,
           "end": 86
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'saga-lore-and-sacrifice-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     }
   ],
   "sink": [

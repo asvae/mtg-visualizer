@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Kuja, Genome Sorcerer",
         "instanceId": 1,
+        "id": 1410,
         "name": "onEndStep"
       },
       {
@@ -68,6 +69,7 @@
         "fn": "trigger",
         "card": "Kuja, Genome Sorcerer",
         "instanceId": 1,
+        "id": 1416,
         "name": "onEndStep"
       },
       {
@@ -117,14 +119,14 @@
       {
         "fn": "moveTo",
         "target": "Kuja, Genome Sorcerer",
-        "id": 1303,
+        "id": 1416,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Kuja, Genome Sorcerer",
-        "id": 1303,
+        "id": 1416,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -145,6 +147,7 @@
         "fn": "cast",
         "card": "Kuja, Genome Sorcerer",
         "instanceId": 1,
+        "id": 1419,
         "from": "hand",
         "cost": "{2}{B}{R}"
       },
@@ -152,6 +155,7 @@
         "fn": "enters",
         "card": "Kuja, Genome Sorcerer",
         "instanceId": 1,
+        "id": 1419,
         "zone": "Battlefield"
       },
       {

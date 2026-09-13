@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Terra, Magical Adept",
         "instanceId": 1,
+        "id": 2611,
         "name": "onEnter"
       },
       {
@@ -68,19 +69,20 @@
         "fn": "activate",
         "card": "Terra, Magical Adept",
         "instanceId": 1,
+        "id": 2613,
         "cost": "{4}{R}{G}, {T} (activate only as a sorcery)"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "id": 2413,
+        "id": 2613,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "id": 2413,
+        "id": 2613,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -90,9 +92,9 @@
     "scenario": {
       "setup": "",
       "action": "cast from hand, back face",
-      "result": "back face: Flying only, no resolvable chapters (see definition.ts for the real gap — copyPermanent not wired, mana production out of scope)",
+      "result": "back face: Flying only, no resolvable chapters (see definition.ts for the gap — copyPermanent not wired, mana production out of scope)",
       "raw": {
-        "result": "back face: Flying only, no resolvable chapters (see definition.ts for the real gap — copyPermanent not wired, mana production out of scope)",
+        "result": "back face: Flying only, no resolvable chapters (see definition.ts for the gap — copyPermanent not wired, mana production out of scope)",
         "face": "back"
       }
     },
@@ -101,6 +103,7 @@
         "fn": "cast",
         "card": "Esper Terra",
         "instanceId": 1,
+        "id": 2615,
         "from": "hand",
         "cost": ""
       },
@@ -108,6 +111,7 @@
         "fn": "enters",
         "card": "Esper Terra",
         "instanceId": 1,
+        "id": 2615,
         "zone": "Battlefield"
       }
     ]
@@ -127,19 +131,20 @@
         "fn": "activate",
         "card": "Terra, Magical Adept",
         "instanceId": 1,
+        "id": 2617,
         "cost": "{4}{R}{G}, {T} (activate only as a sorcery)"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "id": 2417,
+        "id": 2617,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Terra, Magical Adept",
-        "id": 2417,
+        "id": 2617,
         "zone": "Battlefield",
         "controller": "you"
       },

@@ -56,7 +56,7 @@ export function runEngineScenarios(): TraceResult[] {
   // (the real "if you control an Equipment" condition), and one real other
   // creature you control (the real "target creature you control" the
   // Equipment attaches to, rather than a trivial self-attach).
-  pilot.beginStep("Real Equipment (Dragoon's Lance) and a real second creature (Coeurl) already on the battlefield");
+  pilot.beginStep("Equipment (Dragoon's Lance) and a second creature (Coeurl) already on the battlefield");
   const equipment = pilot.state.addCard(pilot.you, 'Battlefield', { name: "Dragoon's Lance", types: ['Artifact'], subtypes: ['Equipment'], cmc: 2 });
   pilot.log.push({ fn: 'enters', card: equipment.name, zone: 'Battlefield', controller: pilot.you.name });
   const otherCreature = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Coeurl', types: ['Creature'], subtypes: ['Cat', 'Beast'], basePower: 2, baseToughness: 2, cmc: 2 });
@@ -75,5 +75,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     "Weapons Vendor is cast for {3}{W} and resolves, drawing a card on ETB; an Equipment (Dragoon's Lance) and a second creature (Coeurl) are already on the battlefield when turn passage reaches the beginning of combat on your turn, so the optional pay-{1} ability fires and attaches the Equipment to Coeurl.";
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB draw -> real turn passage to beginning of combat -> pay {1}, attach Equipment to a creature', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> ETB draw -> turn passage to beginning of combat -> pay {1}, attach Equipment to a creature', result)];
 }

@@ -17,6 +17,7 @@
         "fn": "cast",
         "card": "Evil Reawakened",
         "instanceId": 1,
+        "id": 844,
         "from": "hand",
         "cost": "{4}{B}"
       },
@@ -35,14 +36,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 843,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 843,
         "counterType": "+1/+1",
         "amount": 2,
         "controller": "you"
@@ -51,6 +52,7 @@
         "fn": "move",
         "card": "Evil Reawakened",
         "instanceId": 1,
+        "id": 844,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -75,6 +77,7 @@
         "fn": "cast",
         "card": "Evil Reawakened",
         "instanceId": 1,
+        "id": 846,
         "from": "hand",
         "cost": "{4}{B}"
       },
@@ -89,6 +92,7 @@
         "fn": "move",
         "card": "Evil Reawakened",
         "instanceId": 1,
+        "id": 846,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

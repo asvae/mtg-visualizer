@@ -14,12 +14,13 @@
         "fn": "trigger",
         "card": "Judge Magister Gabranth",
         "instanceId": 1,
+        "id": 1352,
         "name": "onCreatureOrArtifactDies"
       },
       {
         "fn": "putCounter",
         "target": "Judge Magister Gabranth",
-        "id": 1239,
+        "id": 1352,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -41,6 +42,7 @@
         "fn": "cast",
         "card": "Judge Magister Gabranth",
         "instanceId": 1,
+        "id": 1354,
         "from": "hand",
         "cost": "{W}{B}"
       },
@@ -48,6 +50,7 @@
         "fn": "enters",
         "card": "Judge Magister Gabranth",
         "instanceId": 1,
+        "id": 1354,
         "zone": "Battlefield"
       },
       {

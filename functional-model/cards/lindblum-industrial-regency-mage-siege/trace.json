@@ -15,6 +15,7 @@
         "fn": "cast",
         "card": "Mage Siege",
         "instanceId": 1,
+        "id": 1448,
         "from": "hand",
         "cost": "{2}{R}"
       },
@@ -31,6 +32,7 @@
         "fn": "move",
         "card": "Mage Siege",
         "instanceId": 1,
+        "id": 1448,
         "from": "stack",
         "to": "Exile",
         "cardType": "Instant"

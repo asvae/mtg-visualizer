@@ -12,7 +12,12 @@
           "start": 11,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "entersBattlefield",
@@ -28,7 +33,12 @@
           "start": 0,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "pump",
@@ -159,6 +169,24 @@
           "end": 86
         }
       ]
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     }
   ],
   "sink": [

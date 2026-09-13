@@ -18,6 +18,11 @@ export const ambrosiaWhiteheart: CardDefinition = {
       name: 'onEnter',
       on: 'enter',
       effects: [{ kind: 'move', owner: 'you', from: 'Battlefield', to: 'Hand', qty: 1, target: true, notSelf: true, optional: true } satisfies Effect],
+      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial).
+      annotation: {
+        highlight: 'When Ambrosia Whiteheart enters, you may return another permanent you control to its owner\'s hand.',
+        line: 1,
+      },
     },
     {
       // Landfall — real Forge fires this off ANOTHER permanent (a land)
@@ -28,6 +33,13 @@ export const ambrosiaWhiteheart: CardDefinition = {
       // on cue rather than auto-detected.
       name: 'onLandfall',
       effects: [{ kind: 'pumpSelf', power: 1, toughness: 0 } satisfies Effect],
+      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial). Real oracle
+      // text uses an ability-word lead-in ("Landfall — Whenever...") — the
+      // whole ability-word + trigger clause is one line, highlighted whole.
+      annotation: {
+        highlight: 'Landfall — Whenever a land you control enters, Ambrosia Whiteheart gets +1/+0 until end of turn.',
+        line: 2,
+      },
     },
   ],
 };

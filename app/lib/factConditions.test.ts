@@ -218,6 +218,21 @@ describe('factConditions', () => {
     });
   });
 
+  describe('`Fact.provenance` (parser-derived facts, 2026-09-13 PRD_AUTOMATED_AUTHORING.md wiring)', () => {
+    it('does not leak into the notes column at all — already shown as its own dedicated badge+tooltip in the Facts tab, not this generic fallback column', () => {
+      const fact: Fact = {
+        role: 'source',
+        annotations: [{ target: 'typeLine', start: 0, end: 11 }],
+        event: 'cast',
+        from: 'Hand',
+        target: 'self',
+        value: 1,
+        provenance: { origin: 'parser', rule: 'permanent-enters-battlefield-normally' },
+      };
+      expect(factConditions(fact)).toBe('self');
+    });
+  });
+
   it('never emits raw JSON syntax for any of the cases above', () => {
     const facts: Fact[] = [
       { role: 'source', annotations: [{ target: 'oracle', line: 0, start: 0, end: 1 }], zone: 'Battlefield', controller: 'opp', types: { not: ['Land'] }, value: 1 },

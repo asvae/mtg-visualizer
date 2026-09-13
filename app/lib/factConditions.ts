@@ -294,6 +294,14 @@ const HANDLED_OR_LABEL_KEYS = new Set([
   'tapped',
   'oncePerTurn',
   'untilEndOfTurn',
+  // `Fact.provenance` (`functional-model/synergy.ts`, 2026-09-13 —
+  // `PRD_AUTOMATED_AUTHORING.md`) already gets its own dedicated small
+  // badge+tooltip in the Facts tab's role cell (app/pages/app/card/
+  // [set]/[number].vue) — omitted here so a parser-derived fact's notes
+  // column doesn't ALSO spell out `provenance: origin parser, rule ...`
+  // via the generic fallback below, right next to that same info already
+  // shown as a badge on the same row.
+  'provenance',
 ]);
 
 /** Best-effort, still-never-raw-JSON rendering for a field this file

@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Summon: Brynhildr",
         "instanceId": 1,
+        "id": 2375,
         "name": "chapterI"
       },
       {
@@ -43,6 +44,7 @@
         "fn": "trigger",
         "card": "Summon: Brynhildr",
         "instanceId": 1,
+        "id": 2377,
         "name": "chapterII"
       }
     ]
@@ -62,6 +64,7 @@
         "fn": "trigger",
         "card": "Summon: Brynhildr",
         "instanceId": 1,
+        "id": 2379,
         "name": "chapterIII"
       }
     ]

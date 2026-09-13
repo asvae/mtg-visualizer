@@ -23,6 +23,7 @@
         "fn": "cast",
         "card": "Poison the Waters",
         "instanceId": 1,
+        "id": 1807,
         "from": "hand",
         "cost": "{1}{B}"
       },
@@ -39,14 +40,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1699,
+        "id": 1804,
         "power": -1,
         "toughness": -1
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1701,
+        "id": 1806,
         "power": -1,
         "toughness": -1
       },
@@ -54,6 +55,7 @@
         "fn": "move",
         "card": "Poison the Waters",
         "instanceId": 1,
+        "id": 1807,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -64,9 +66,9 @@
     "scenario": {
       "setup": "opp0: 1 card(s) in hand",
       "action": "cast from hand, mode 1 chosen",
-      "result": "the opponent discards a card (front of hand — no real player choice of which)",
+      "result": "the opponent discards a card (front of hand — no player choice of which)",
       "raw": {
-        "result": "the opponent discards a card (front of hand — no real player choice of which)",
+        "result": "the opponent discards a card (front of hand — no player choice of which)",
         "castFrom": "hand",
         "mode": 1,
         "opponents": [
@@ -81,6 +83,7 @@
         "fn": "cast",
         "card": "Poison the Waters",
         "instanceId": 1,
+        "id": 1811,
         "from": "hand",
         "cost": "{1}{B}"
       },
@@ -96,6 +99,7 @@
         "fn": "move",
         "card": "Poison the Waters",
         "instanceId": 1,
+        "id": 1811,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

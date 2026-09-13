@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Adventurer's Inn",
         "instanceId": 1,
+        "id": 30,
         "name": "onEnter"
       },
       {

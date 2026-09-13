@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Garland, Knight of Cornelia",
         "instanceId": 1,
+        "id": 1050,
         "name": "onNoncreatureSpellCast"
       },
       {
@@ -38,6 +39,7 @@
         "fn": "activate",
         "card": "Garland, Knight of Cornelia",
         "instanceId": 1,
+        "id": 1052,
         "cost": "{3}{B}{B}{R}{R}, Activate only as a sorcery",
         "ability": "returnTransformed"
       }
@@ -59,12 +61,13 @@
         "fn": "trigger",
         "card": "Chaos, the Endless",
         "instanceId": 1,
+        "id": 1054,
         "name": "onDies"
       },
       {
         "fn": "moveTo",
         "target": "Chaos, the Endless",
-        "id": 952,
+        "id": 1054,
         "zone": "Library",
         "controller": "you"
       }
@@ -85,6 +88,7 @@
         "fn": "cast",
         "card": "Garland, Knight of Cornelia",
         "instanceId": 1,
+        "id": 1056,
         "from": "hand",
         "cost": "{B}{R}"
       },
@@ -92,6 +96,7 @@
         "fn": "enters",
         "card": "Garland, Knight of Cornelia",
         "instanceId": 1,
+        "id": 1056,
         "zone": "Battlefield"
       },
       {

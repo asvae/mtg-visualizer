@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> real lethal combat (SBA) -> onDies",
-      "result": "Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in real blocked combat against a real 2/2 (a genuine mutual 704.5g state-based destruction) — it actually leaves the battlefield for the graveyard, then its onDies trigger fires for real, creating a 1/1 colorless Hero creature token.",
+      "action": "engine playthrough: cast -> lethal combat (SBA) -> onDies",
+      "result": "Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in blocked combat against a 2/2 (a mutual 704.5g state-based destruction) — it leaves the battlefield for the graveyard, then its onDies trigger fires, creating a 1/1 colorless Hero creature token.",
       "raw": {
-        "result": "Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in real blocked combat against a real 2/2 (a genuine mutual 704.5g state-based destruction) — it actually leaves the battlefield for the graveyard, then its onDies trigger fires for real, creating a 1/1 colorless Hero creature token.",
+        "result": "Dwarven Castle Guard is cast, enters the battlefield, then attacks and trades in blocked combat against a 2/2 (a mutual 704.5g state-based destruction) — it leaves the battlefield for the graveyard, then its onDies trigger fires, creating a 1/1 colorless Hero creature token.",
         "you": {
           "basicLands": [
             "Plains",
@@ -97,12 +97,12 @@
       {
         "fn": "tap",
         "target": "Dwarven Castle Guard",
-        "id": 657
+        "id": 717
       },
       {
         "fn": "attack",
         "card": "Dwarven Castle Guard",
-        "id": 657
+        "id": 717
       },
       {
         "fn": "phase",
@@ -113,9 +113,9 @@
       {
         "fn": "block",
         "blocker": "Coeurl",
-        "blockerId": 656,
+        "blockerId": 716,
         "attacker": "Dwarven Castle Guard",
-        "attackerId": 657
+        "attackerId": 717
       },
       {
         "fn": "dealDamage",

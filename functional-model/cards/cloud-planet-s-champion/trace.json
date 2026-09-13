@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Cloud, Planet's Champion",
         "instanceId": 1,
+        "id": 442,
         "from": "hand",
         "cost": "{3}{R}{W}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Cloud, Planet's Champion",
         "instanceId": 1,
+        "id": 442,
         "zone": "Battlefield"
       }
     ]
@@ -39,6 +41,7 @@
         "fn": "cast",
         "card": "Cloud, Planet's Champion",
         "instanceId": 1,
+        "id": 444,
         "from": "hand",
         "cost": "{3}{R}{W}"
       },
@@ -46,6 +49,7 @@
         "fn": "enters",
         "card": "Cloud, Planet's Champion",
         "instanceId": 1,
+        "id": 444,
         "zone": "Battlefield"
       },
       {

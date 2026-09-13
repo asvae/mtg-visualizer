@@ -20,6 +20,7 @@
         "fn": "cast",
         "card": "Vayne's Treachery",
         "instanceId": 1,
+        "id": 3056,
         "from": "hand",
         "cost": "{1}{B}"
       },
@@ -36,7 +37,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2764,
+        "id": 3055,
         "power": -2,
         "toughness": -2
       },
@@ -44,6 +45,7 @@
         "fn": "move",
         "card": "Vayne's Treachery",
         "instanceId": 1,
+        "id": 3056,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -74,17 +76,18 @@
         "fn": "cast",
         "card": "Vayne's Treachery",
         "instanceId": 1,
+        "id": 3061,
         "from": "hand",
         "cost": "{1}{B}"
       },
       {
         "fn": "read:isCreature",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": false
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
@@ -108,7 +111,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2769,
+        "id": 3060,
         "power": -6,
         "toughness": -6
       },
@@ -116,6 +119,7 @@
         "fn": "move",
         "card": "Vayne's Treachery",
         "instanceId": 1,
+        "id": 3061,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

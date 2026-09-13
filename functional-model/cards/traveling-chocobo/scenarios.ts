@@ -101,7 +101,7 @@ export function runEngineScenarios(): TraceResult[] {
   // demonstration — added straight to the battlefield, same real "the only
   // way to model one entering without a dedicated land-drop pilot helper"
   // convention ambrosia-whiteheart's own scenario already establishes).
-  pilot.beginStep('A real land entering');
+  pilot.beginStep('A land entering');
   const forest = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   pilot.log.push({ fn: 'enters', card: forest.name, zone: 'Battlefield', controller: pilot.you.name });
 
@@ -117,12 +117,12 @@ export function runEngineScenarios(): TraceResult[] {
   });
 
   const result =
-    'Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a real cause Traveling Chocobo\'s own static recognizes — her own ETB (bounce "another permanent you control") genuinely doubles too, bouncing TWO of your own real basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is genuinely on the battlefield, Chocobo\'s own "triggers an additional time" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.';
+    'Traveling Chocobo and Ambrosia Whiteheart both resolve. Ambrosia Whiteheart is herself a Bird, so her own entering is ALSO a cause Traveling Chocobo\'s own static recognizes — her own ETB (bounce "another permanent you control") doubles too, bouncing TWO of your own basic lands, not one. A land later enters the battlefield under your control, triggering Landfall on Ambrosia Whiteheart — and, because a LAND entering caused it while Traveling Chocobo is on the battlefield, Chocobo\'s own "triggers an additional time" static (ENGINE_GAPS.md gap #13) doubles it too: Ambrosia Whiteheart gets +1/+0 TWICE.';
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      "real engine playthrough: cast Traveling Chocobo + Ambrosia Whiteheart (a Bird, whose own ETB also doubles) -> a real land enters -> Ambrosia's own Landfall trigger fires TWICE (Traveling Chocobo's own doubling static is now real)",
+      "engine playthrough: cast Traveling Chocobo + Ambrosia Whiteheart (a Bird, whose own ETB also doubles) -> a land enters -> Ambrosia's own Landfall trigger fires TWICE (Traveling Chocobo's own doubling static)",
       result
     ),
   ];

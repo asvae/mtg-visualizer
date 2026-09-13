@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 6 Island(s)",
-      "action": "real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice",
-      "result": "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both real, non-token permanents — while Sahagin (a real Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a real, still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.",
+      "action": "engine playthrough: cast -> ETB Saga tick -> chapters over turns -> 714.4 sacrifice",
+      "result": "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both non-token permanents — while Sahagin (a Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.",
       "raw": {
-        "result": "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both real, non-token permanents — while Sahagin (a real Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a real, still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.",
+        "result": "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both non-token permanents — while Sahagin (a Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.",
         "you": {
           "libraryCount": 15,
           "basicLands": [
@@ -165,7 +165,7 @@
       {
         "fn": "moveTo",
         "target": "Ahriman",
-        "id": 35,
+        "id": 2490,
         "zone": "Hand",
         "controller": "you"
       },
@@ -214,7 +214,7 @@
       {
         "fn": "moveTo",
         "target": "Coeurl",
-        "id": 36,
+        "id": 2491,
         "zone": "Hand",
         "controller": "opp0"
       },
@@ -358,7 +358,7 @@
         "from": 47
       },
       {
-        "label": "Real 714.4 sacrifice — lore counters were never reset",
+        "label": "714.4 sacrifice — lore counters were never reset",
         "from": 52
       }
     ]

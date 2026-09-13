@@ -47,7 +47,7 @@ export function runEngineScenarios(): TraceResult[] {
   advanceOneStep(pilot, 'Advance to Declare Blockers');
   pilotDeclareBlockers(pilot, []);
 
-  pilot.beginStep('Resolve unblocked combat damage — real Lifelink');
+  pilot.beginStep('Resolve unblocked combat damage — Lifelink');
   const opp = pilot.opponents[0]!;
   const beforeOppLife = opp.life;
   const beforeYouLife = pilot.you.life;
@@ -57,6 +57,6 @@ export function runEngineScenarios(): TraceResult[] {
   const lifeGained = pilot.you.life - beforeYouLife;
   if (lifeGained > 0) pilot.log.push({ fn: 'gainLife', player: pilot.you.name, amount: lifeGained, cause: 'Lifelink' });
 
-  const result = `Real Lifelink (state.ts's own \`dealDamage\`): every point of combat damage Steiner deals to the opponent (${damageDealt}) is genuinely mirrored as life gain for its controller (${lifeGained}) — not a separate scripted "and also gain life" step, the SAME real damage call does both.`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real turn passage -> unblocked combat -> real Lifelink life gain', result)];
+  const result = `Lifelink (state.ts's own \`dealDamage\`): every point of combat damage Steiner deals to the opponent (${damageDealt}) is mirrored as life gain for its controller (${lifeGained}) — not a separate scripted "and also gain life" step, the SAME damage call does both.`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> turn passage -> unblocked combat -> Lifelink life gain', result)];
 }

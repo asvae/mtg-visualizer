@@ -16,6 +16,7 @@
         "fn": "cast",
         "card": "Snow Villiers",
         "instanceId": 1,
+        "id": 2279,
         "from": "hand",
         "cost": "{2}{W}"
       },
@@ -23,6 +24,7 @@
         "fn": "enters",
         "card": "Snow Villiers",
         "instanceId": 1,
+        "id": 2279,
         "zone": "Battlefield"
       },
       {

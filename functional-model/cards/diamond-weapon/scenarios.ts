@@ -59,7 +59,7 @@ export function runEngineScenarios(): TraceResult[] {
   // (never cast), same "no sickness on a directly-seeded creature"
   // convention every other engine-piloted scenario's own filler already
   // relies on (`engine.enteredThisTurn` has no entry for it either way).
-  pilot.beginStep('Real opponent attacker: Hill Gigas (5/4, Trample/Haste)');
+  pilot.beginStep('Opponent attacker: Hill Gigas (5/4, Trample/Haste)');
   const oppAttacker = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', {
     name: 'Hill Gigas',
     types: ['Creature'],
@@ -89,13 +89,13 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveCombatDamage(pilot);
 
   const result =
-    "Diamond Weapon is cast for {7}{G}{G}; a real opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — real 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield genuinely PREVENTS the 5 combat damage it would otherwise take (a real fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's real 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a real, documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.";
+    "Diamond Weapon is cast for {7}{G}{G}; an opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield PREVENTS the 5 combat damage it would otherwise take (a fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.";
 
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: cast -> opponent attacks -> Diamond Weapon blocks -> real combat damage, combat-damage-prevention shield genuinely fires',
+      'engine playthrough: cast -> opponent attacks -> Diamond Weapon blocks -> combat damage, combat-damage-prevention shield fires',
       result
     ),
   ];

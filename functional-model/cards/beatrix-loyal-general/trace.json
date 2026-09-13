@@ -18,6 +18,7 @@
         "fn": "trigger",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
+        "id": 259,
         "name": "onBeginCombat"
       },
       {
@@ -67,16 +68,16 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "equipmentId": 247,
+        "equipmentId": 257,
         "target": "Grizzly Bears",
-        "id": 246
+        "id": 256
       },
       {
         "fn": "equip",
         "equipment": "you-equipment-1",
-        "equipmentId": 248,
+        "equipmentId": 258,
         "target": "Grizzly Bears",
-        "id": 246
+        "id": 256
       }
     ]
   },
@@ -98,6 +99,7 @@
         "fn": "trigger",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
+        "id": 263,
         "name": "onBeginCombat"
       },
       {
@@ -142,16 +144,16 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "equipmentId": 251,
+        "equipmentId": 261,
         "target": "Beatrix, Loyal General",
-        "id": 253
+        "id": 263
       },
       {
         "fn": "equip",
         "equipment": "you-equipment-1",
-        "equipmentId": 252,
+        "equipmentId": 262,
         "target": "Beatrix, Loyal General",
-        "id": 253
+        "id": 263
       }
     ]
   },
@@ -170,6 +172,7 @@
         "fn": "cast",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
+        "id": 265,
         "from": "hand",
         "cost": "{4}{W}{W}"
       },
@@ -177,6 +180,7 @@
         "fn": "enters",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
+        "id": 265,
         "zone": "Battlefield"
       },
       {

@@ -95,13 +95,13 @@ function scenarioA(): TraceResult {
   // then 714.4's real sacrifice (nothing reset lore counters first)
   advanceToPlayersNextMain1(pilot, pilot.you, bahamutReal);
   if (bahamutReal.zone === 'Graveyard') {
-    pilot.beginStep('Real 714.4 sacrifice — lore counters were never reset');
+    pilot.beginStep('714.4 sacrifice — lore counters were never reset');
     pilot.log.push({ fn: 'sacrifice', player: pilot.you.name, card: summonBahamut.name });
   }
 
   const result =
     "Bahamut enters, chapter I fires (714.2b) and destroys the opponent's Coeurl (a choice between it and Bahamut itself — a non-token permanent, so it's a 701.6 destroy, not a token ceasing to exist); chapter II fires again next turn but only Bahamut itself remains as a legal target, so it declines rather than destroying itself; chapter III draws two cards; chapter IV deals damage equal to the total mana value of the other permanent you control (Ahriman, mana value 3 — your lands are all 0), then Bahamut is sacrificed (714.4) since nothing reset its lore counters first.";
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice', result);
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> ETB Saga tick -> chapters over turns -> 714.4 sacrifice', result);
 }
 
 export function runEngineScenarios(): TraceResult[] {

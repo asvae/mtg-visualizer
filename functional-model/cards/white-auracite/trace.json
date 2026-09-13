@@ -2,7 +2,7 @@
   {
     "scenario": {
       "setup": "you: 4 Plains(s)",
-      "action": "real engine playthrough: cast -> real ETB exile of an opponent nonland permanent",
+      "action": "engine playthrough: cast -> ETB exile of an opponent nonland permanent",
       "result": "White Auracite is cast for {2}{W}{W} and resolves; its ETB trigger exiles a nonland permanent an opponent controls (Coeurl). Its own \"{T}: Add {W}.\" mana ability has no scenario evidence — this model has no way to pilot a plain mana ability at all (see this card's own definition.ts comment).",
       "raw": {
         "result": "White Auracite is cast for {2}{W}{W} and resolves; its ETB trigger exiles a nonland permanent an opponent controls (Coeurl). Its own \"{T}: Add {W}.\" mana ability has no scenario evidence — this model has no way to pilot a plain mana ability at all (see this card's own definition.ts comment).",
@@ -82,7 +82,7 @@
       {
         "fn": "moveTo",
         "target": "Coeurl",
-        "id": 8,
+        "id": 3154,
         "zone": "Exile",
         "controller": "opp0"
       }
@@ -93,7 +93,7 @@
         "from": 0
       },
       {
-        "label": "A real opponent's nonland permanent (Coeurl) already on the battlefield",
+        "label": "An opponent's nonland permanent (Coeurl) already on the battlefield",
         "from": 0
       },
       {

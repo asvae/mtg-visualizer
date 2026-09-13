@@ -23,6 +23,11 @@ export const combatTutorial: CardDefinition = {
     // omitted `controller` still matches that evidence (an unset `controller`
     // is satisfied by any real `side`), it just can't ALSO be verified
     // against a hypothetical `player:'opp'` trace this engine can't produce.
+    // recognizer-exception: drawCard-effect-structural — the real oracle
+    // text reads "target player DRAWS two cards" (third person, any player),
+    // never the built imperative "Draw two cards" this recognizer looks for;
+    // a confirmed mismatch (this engine-side simplification, not a bug in
+    // the recognizer), see the comment above.
     { kind: 'drawCard', amount: 2 } satisfies Effect,
     // "up to one target creature you control" — TargetMin$0/TargetMax$1,
     // same pool-exhaustion shape Ashe's own optional dig already uses;

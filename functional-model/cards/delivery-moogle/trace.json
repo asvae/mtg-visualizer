@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 4 Plains(s); opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> real ETB library search",
-      "result": "Delivery Moogle enters; real ETB (603.6b) searches your real library for an artifact card with mana value 2 or less (real getCMC() check), puts it into hand.",
+      "action": "engine playthrough: cast -> ETB library search",
+      "result": "Delivery Moogle enters; ETB (603.6b) searches your library for an artifact card with mana value 2 or less (getCMC() check), puts it into hand.",
       "raw": {
-        "result": "Delivery Moogle enters; real ETB (603.6b) searches your real library for an artifact card with mana value 2 or less (real getCMC() check), puts it into hand.",
+        "result": "Delivery Moogle enters; ETB (603.6b) searches your library for an artifact card with mana value 2 or less (getCMC() check), puts it into hand.",
         "you": {
           "basicLands": [
             "Plains",
@@ -103,7 +103,7 @@
       {
         "fn": "moveTo",
         "target": "you-library-artifact-0",
-        "id": 538,
+        "id": 561,
         "zone": "Hand",
         "controller": "you"
       }
@@ -126,10 +126,10 @@
   {
     "scenario": {
       "setup": "you: 4 Plains(s); opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> real ETB graveyard search",
-      "result": "Delivery Moogle enters with no artifact in library; real ETB (603.6b) falls through to the real artifact card sitting in your graveyard (mana value 2 or less, real getCMC() check), puts it into hand.",
+      "action": "engine playthrough: cast -> ETB graveyard search",
+      "result": "Delivery Moogle enters with no artifact in library; ETB (603.6b) falls through to the artifact card sitting in your graveyard (mana value 2 or less, getCMC() check), puts it into hand.",
       "raw": {
-        "result": "Delivery Moogle enters with no artifact in library; real ETB (603.6b) falls through to the real artifact card sitting in your graveyard (mana value 2 or less, real getCMC() check), puts it into hand.",
+        "result": "Delivery Moogle enters with no artifact in library; ETB (603.6b) falls through to the artifact card sitting in your graveyard (mana value 2 or less, getCMC() check), puts it into hand.",
         "you": {
           "basicLands": [
             "Plains",
@@ -232,7 +232,7 @@
       {
         "fn": "moveTo",
         "target": "you-gy-artifact-0",
-        "id": 554,
+        "id": 577,
         "zone": "Hand",
         "controller": "you"
       }

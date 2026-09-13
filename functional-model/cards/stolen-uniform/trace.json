@@ -22,6 +22,7 @@
         "fn": "cast",
         "card": "Stolen Uniform",
         "instanceId": 1,
+        "id": 2315,
         "from": "hand",
         "cost": "{U}"
       },
@@ -60,19 +61,20 @@
         "fn": "gainControl",
         "controller": "you",
         "target": "opp0-equipment-0",
-        "id": 2173
+        "id": 2314
       },
       {
         "fn": "equip",
         "equipment": "opp0-equipment-0",
-        "equipmentId": 2173,
+        "equipmentId": 2314,
         "target": "Grizzly Bears",
-        "id": 2171
+        "id": 2312
       },
       {
         "fn": "move",
         "card": "Stolen Uniform",
         "instanceId": 1,
+        "id": 2315,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

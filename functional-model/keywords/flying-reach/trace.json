@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "",
-      "action": "real engine playthrough: declare Flying attacker -> illegal block rejected (509.1b) -> legal Reach block -> real combat damage",
-      "result": "Real 509.1b: Coeurl (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
+      "action": "engine playthrough: declare Flying attacker -> illegal block rejected (509.1b) -> legal Reach block -> combat damage",
+      "result": "509.1b: Coeurl (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own reason is logged, not a scripted assumption. Iron Giant's printed Reach then legally blocks the same attacker instead, and combat damage resolves: Iron Giant's 6 power is lethal damage against Ahriman's 2 toughness (a 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
       "raw": {
-        "result": "Real 509.1b: Coeurl (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own real reason is logged, not a scripted assumption. Iron Giant's real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
+        "result": "509.1b: Coeurl (no Flying/Reach) is rejected outright from blocking the Flying Ahriman — the engine's own reason is logged, not a scripted assumption. Iron Giant's printed Reach then legally blocks the same attacker instead, and combat damage resolves: Iron Giant's 6 power is lethal damage against Ahriman's 2 toughness (a 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.",
         "you": {
           "libraryCount": 3
         },
@@ -48,11 +48,13 @@
       },
       {
         "fn": "tap",
-        "target": "Ahriman"
+        "target": "Ahriman",
+        "id": 61
       },
       {
         "fn": "attack",
-        "card": "Ahriman"
+        "card": "Ahriman",
+        "id": 61
       },
       {
         "fn": "phase",
@@ -68,7 +70,9 @@
       {
         "fn": "block",
         "blocker": "Iron Giant",
-        "attacker": "Ahriman"
+        "blockerId": 62,
+        "attacker": "Ahriman",
+        "attackerId": 61
       },
       {
         "fn": "dealDamage",

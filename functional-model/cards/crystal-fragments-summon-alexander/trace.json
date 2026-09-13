@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 7 Plains(s); opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> equip -> transform -> Saga chapters over real turns -> sacrifice",
-      "result": "Crystal Fragments enters, Equipment attachment onto a creature genuinely recalculates its P/T live (a real +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, genuinely granting a real all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is actually prevented), chapter II fires on your next draw step (same real shield, re-granted), chapter III fires the turn after (taps the opponent's Coeurl), then the \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.",
+      "action": "engine playthrough: cast -> equip -> transform -> Saga chapters over turns -> sacrifice",
+      "result": "Crystal Fragments enters, Equipment attachment onto a creature recalculates its P/T live (a +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, granting an all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is prevented), chapter II fires on your next draw step (same shield, re-granted), chapter III fires the turn after (taps the opponent's Coeurl), then the \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.",
       "raw": {
-        "result": "Crystal Fragments enters, Equipment attachment onto a creature genuinely recalculates its P/T live (a real +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, genuinely granting a real all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is actually prevented), chapter II fires on your next draw step (same real shield, re-granted), chapter III fires the turn after (taps the opponent's Coeurl), then the \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.",
+        "result": "Crystal Fragments enters, Equipment attachment onto a creature recalculates its P/T live (a +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, granting an all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is prevented), chapter II fires on your next draw step (same shield, re-granted), chapter III fires the turn after (taps the opponent's Coeurl), then the \"Sacrifice after III\" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.",
         "you": {
           "basicLands": [
             "Plains",
@@ -150,14 +150,14 @@
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "id": 33,
+        "id": 524,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "id": 33,
+        "id": 524,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -186,22 +186,22 @@
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 31,
+        "id": 522,
         "keyword": "DamagePrevention",
         "untilEndOfTurn": true
       },
       {
         "fn": "damagePrevented",
         "source": "Coeurl",
-        "sourceId": 32,
+        "sourceId": 523,
         "target": "Dwarven Castle Guard",
-        "id": 31,
+        "id": 522,
         "amount": 3
       },
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 31,
+        "id": 522,
         "keyword": "DamagePrevention",
         "removed": true
       },
@@ -275,7 +275,7 @@
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 31,
+        "id": 522,
         "keyword": "DamagePrevention",
         "untilEndOfTurn": true
       },
@@ -288,7 +288,7 @@
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 31,
+        "id": 522,
         "keyword": "DamagePrevention",
         "removed": true
       },
@@ -334,7 +334,7 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 32,
+        "id": 523,
         "controller": "opp0"
       },
       {
@@ -363,11 +363,11 @@
         "from": 4
       },
       {
-        "label": "Real Equipment attachment (301.5c)",
+        "label": "Equipment attachment (301.5c)",
         "from": 5
       },
       {
-        "label": "Real layer-7c recalculation — Equipped creature gets +1/+1",
+        "label": "Layer-7c recalculation — Equipped creature gets +1/+1",
         "from": 6
       },
       {
@@ -407,7 +407,7 @@
         "from": 49
       },
       {
-        "label": "Real \"Sacrifice after III\" (714.4/704.5x)",
+        "label": "\"Sacrifice after III\" (714.4/704.5x)",
         "from": 56
       }
     ]

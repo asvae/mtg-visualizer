@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 10 Island(s)",
-      "action": "real engine playthrough: cast -> turn passage -> real activation of \"each opponent mills...\" with the mill-plus-4 replacement genuinely applying",
-      "result": "The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 real cards in hand the nominal amount is 3, but the real \"mill that many cards plus four instead\" replacement (now genuinely live on the resolved permanent) bumps the actually-milled count to 7.",
+      "action": "engine playthrough: cast -> turn passage -> activation of \"each opponent mills...\" with the mill-plus-4 replacement applying",
+      "result": "The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 cards in hand the nominal amount is 3, but the \"mill that many cards plus four instead\" replacement (now live on the resolved permanent) bumps the milled count to 7.",
       "raw": {
-        "result": "The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 real cards in hand the nominal amount is 3, but the real \"mill that many cards plus four instead\" replacement (now genuinely live on the resolved permanent) bumps the actually-milled count to 7.",
+        "result": "The Water Crystal is cast, turn passage clears summoning sickness, then its own activated ability mills the opponent: with 3 cards in hand the nominal amount is 3, but the \"mill that many cards plus four instead\" replacement (now live on the resolved permanent) bumps the milled count to 7.",
         "you": {
           "basicLands": [
             "Island",
@@ -116,7 +116,7 @@
       {
         "fn": "tap",
         "target": "The Water Crystal",
-        "id": 26,
+        "id": 2766,
         "controller": "you"
       },
       {

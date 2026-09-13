@@ -24,6 +24,7 @@
         "fn": "cast",
         "card": "Clash of the Eikons",
         "instanceId": 1,
+        "id": 387,
         "from": "hand",
         "cost": "{G}"
       },
@@ -45,9 +46,9 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 373,
+        "sourceId": 384,
         "target": "Grizzly Bears",
-        "id": 375,
+        "id": 386,
         "amount": 3
       },
       {
@@ -58,15 +59,16 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 375,
+        "sourceId": 386,
         "target": "Grizzly Bears",
-        "id": 373,
+        "id": 384,
         "amount": 2
       },
       {
         "fn": "move",
         "card": "Clash of the Eikons",
         "instanceId": 1,
+        "id": 387,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -91,6 +93,7 @@
         "fn": "cast",
         "card": "Clash of the Eikons",
         "instanceId": 1,
+        "id": 390,
         "from": "hand",
         "cost": "{G}"
       },
@@ -104,7 +107,7 @@
       {
         "fn": "putCounter",
         "target": "you-enchantment-0",
-        "id": 378,
+        "id": 389,
         "counterType": "LORE",
         "amount": -1,
         "controller": "you"
@@ -113,6 +116,7 @@
         "fn": "move",
         "card": "Clash of the Eikons",
         "instanceId": 1,
+        "id": 390,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -137,6 +141,7 @@
         "fn": "cast",
         "card": "Clash of the Eikons",
         "instanceId": 1,
+        "id": 393,
         "from": "hand",
         "cost": "{G}"
       },
@@ -150,7 +155,7 @@
       {
         "fn": "putCounter",
         "target": "you-enchantment-0",
-        "id": 381,
+        "id": 392,
         "counterType": "LORE",
         "amount": 1,
         "controller": "you"
@@ -159,6 +164,7 @@
         "fn": "move",
         "card": "Clash of the Eikons",
         "instanceId": 1,
+        "id": 393,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

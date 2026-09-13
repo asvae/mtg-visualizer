@@ -13,6 +13,7 @@
         "fn": "activate",
         "card": "Ether",
         "instanceId": 1,
+        "id": 841,
         "cost": "{T}, Exile this artifact"
       },
       {

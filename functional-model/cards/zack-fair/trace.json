@@ -2,7 +2,7 @@
   {
     "scenario": {
       "setup": "you: 1 Plains(s)",
-      "action": "real engine playthrough: cast -> ETB counter -> real board-state filler (second creature, attached Equipment) -> sacrifice ability fires directly, granting indestructible, transferring counters, and re-attaching the Equipment",
+      "action": "engine playthrough: cast -> ETB counter -> board-state filler (second creature, attached Equipment) -> sacrifice ability fires directly, granting indestructible, transferring counters, and re-attaching the Equipment",
       "result": "Zack Fair is cast for {W} and enters with a +1/+1 counter; with a second creature and a Buster Sword already attached, activating {1}, Sacrifice Zack Fair fires the ability directly, granting the target indestructible, moving Zack Fair's own +1/+1 counter onto it, and re-attaching the Buster Sword to it — all three consequences, on the same target.",
       "raw": {
         "result": "Zack Fair is cast for {W} and enters with a +1/+1 counter; with a second creature and a Buster Sword already attached, activating {1}, Sacrifice Zack Fair fires the ability directly, granting the target indestructible, moving Zack Fair's own +1/+1 counter onto it, and re-attaching the Buster Sword to it — all three consequences, on the same target.",
@@ -44,7 +44,7 @@
       {
         "fn": "putCounter",
         "target": "Zack Fair",
-        "id": 4,
+        "id": 3203,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -81,7 +81,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 5,
+        "id": 3204,
         "keyword": "Indestructible"
       },
       {
@@ -93,7 +93,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 5,
+        "id": 3204,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -108,9 +108,9 @@
       {
         "fn": "equip",
         "equipment": "Buster Sword",
-        "equipmentId": 6,
+        "equipmentId": 3205,
         "target": "Grizzly Bears",
-        "id": 5
+        "id": 3204
       }
     ],
     "actions": [
@@ -127,7 +127,7 @@
         "from": 2
       },
       {
-        "label": "Real second creature (Grizzly Bears) and a real Equipment (Buster Sword) already attached to Zack Fair",
+        "label": "Second creature (Grizzly Bears) and an Equipment (Buster Sword) already attached to Zack Fair",
         "from": 5
       },
       {

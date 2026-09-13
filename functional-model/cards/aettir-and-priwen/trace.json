@@ -16,6 +16,7 @@
         "fn": "activate",
         "card": "Aettir and Priwen",
         "instanceId": 1,
+        "id": 76,
         "cost": "{5}"
       },
       {
@@ -47,6 +48,7 @@
         "fn": "activate",
         "card": "Aettir and Priwen",
         "instanceId": 1,
+        "id": 78,
         "cost": "{5}"
       },
       {

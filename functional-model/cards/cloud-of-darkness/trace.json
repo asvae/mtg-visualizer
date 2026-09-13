@@ -22,6 +22,7 @@
         "fn": "trigger",
         "card": "Cloud of Darkness",
         "instanceId": 1,
+        "id": 433,
         "name": "onEnter"
       },
       {
@@ -76,7 +77,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 6,
+        "id": 432,
         "power": -3,
         "toughness": -3
       }
@@ -102,6 +103,7 @@
         "fn": "trigger",
         "card": "Cloud of Darkness",
         "instanceId": 1,
+        "id": 437,
         "name": "onEnter"
       },
       {
@@ -126,7 +128,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 10,
+        "id": 436,
         "power": 0,
         "toughness": 0
       }
@@ -147,6 +149,7 @@
         "fn": "cast",
         "card": "Cloud of Darkness",
         "instanceId": 1,
+        "id": 439,
         "from": "hand",
         "cost": "{2}{B}{G}{G}"
       },
@@ -154,6 +157,7 @@
         "fn": "enters",
         "card": "Cloud of Darkness",
         "instanceId": 1,
+        "id": 439,
         "zone": "Battlefield"
       },
       {

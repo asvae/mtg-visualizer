@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Queen Brahne",
         "instanceId": 1,
+        "id": 1850,
         "name": "onAttack"
       },
       {
@@ -42,6 +43,7 @@
         "fn": "cast",
         "card": "Queen Brahne",
         "instanceId": 1,
+        "id": 1853,
         "from": "hand",
         "cost": "{2}{R}"
       },
@@ -49,6 +51,7 @@
         "fn": "enters",
         "card": "Queen Brahne",
         "instanceId": 1,
+        "id": 1853,
         "zone": "Battlefield"
       },
       {

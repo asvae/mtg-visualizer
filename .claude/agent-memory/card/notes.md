@@ -1,6 +1,173 @@
 # card agent notes
 
-- 2026-09-12 (latest, Previous/Next walks unique cards only + header row
+- 2026-09-13 (latest #3, recognizer-source viewer reintroduced as a
+  dedicated debug-column button, after the icon-inversion pass below (#2's
+  hover-popover-on-the-wand-sparkles-badge design) was itself later
+  inverted and its popover machinery deleted): the wand-sparkles icon in
+  the role column now marks the OPPOSITE thing (agent-authored, no
+  provenance — plain `title`, no popover, see the icon-inversion commit),
+  which left parser-derived facts with no UI at all for "show me the
+  recognizer." Rebuilt as a **third icon in the `SHOW_FACT_DEBUG_COLUMN`
+  cell** (`app/pages/app/card/[set]/[number].vue`, next to the existing
+  copy/braces icons), `lucide:scroll`, `v-if="isParserFact(row.fact)"` only
+  (no icon at all for an agent-authored row — not disabled/greyed, per the
+  task's own instruction not to clutter those rows).
+  - Click opens a **new, separate `UModal`** (not the existing
+    `debugModalOpen`/JSON one — that one is JSON-only via `JsonHighlight`;
+    this one renders real TS source via `FunctionalModelScript`, wrong
+    content type for the JSON modal to grow a mode-switch for) —
+    `recognizerSourceModalOpen`/`recognizerSourceModalRule`/
+    `recognizerSourceModalCode`/`recognizerSourceModalError`/
+    `recognizerSourceModalLoading` refs, `openRecognizerSourceModal(rule)`
+    fetches `GET /api/recognizer-source/${rule}` via `$fetch`, cached in a
+    plain (non-reactive) per-page-lifetime `Map<string,string>`
+    (`recognizerSourceCache`) keyed by rule — confirmed live via Playwright
+    that a second open of the same rule issues zero network requests.
+  - **ofetch error-shape gotcha, worth remembering**: a `FetchError`'s own
+    `.statusMessage`/`.statusText` fields are the raw HTTP status TEXT
+    ("Not Found"), NOT the JSON error body's `statusMessage` field h3's
+    `createError()` sets server-side ("Unknown recognizer" etc) — that
+    real message is under `err.data.statusMessage`/`err.data.message`
+    instead (`err.data` = ofetch's parsed response body). Got this wrong on
+    a first pass (extracted `err.statusMessage`, silently showed the
+    useless generic "Not Found" for every error), caught via a
+    route-mocked Playwright check simulating a real 404 body, fixed to read
+    `err.data` first.
+  - Verified live on fin/1 (Summon: Bahamut, 7 real parser-tagged facts
+    once the "Show parser-derived facts" checkbox is on): scroll icon
+    appears on exactly the 7 parser rows and is absent from the 3
+    agent-authored rows with duplicate-looking labels ("Dies"/"Card
+    draw"-adjacent/"Battlefield presence"/"Damage" — the ones carrying the
+    wand-sparkles icon instead); clicking shows real, correctly-matched
+    recognizer source (`destroy-effect-structural`, confirmed by content,
+    not just by title) with hljs syntax highlighting; error path verified
+    via a mocked 404 response, shows an in-modal message, no throw/silent
+    failure. `npx nuxi typecheck`: same 2 pre-existing baseline errors
+    (`functional-model/mana.ts`, `server/api/tokens/by-key.ts`), nothing
+    new from this change.
+
+- 2026-09-13 (recognizer-source popover on the parser-fact
+  badge + showParserFacts persistence, follow-up to the entry just below —
+  **superseded by the entry above**, this popover/badge design was itself
+  later removed when the wand-sparkles icon's meaning was inverted; kept
+  here only as history):
+  - **Filename convention confirmed for real**: both existing recognizers
+    (`functional-model/recognizers/instant-sorcery-resolves-to-graveyard.ts`,
+    `.../permanent-enters-battlefield-normally.ts`) have a filename that is
+    exactly their `RecognizerId`/`Fact.provenance.rule` string + `.ts` — no
+    exceptions found. New `RecognizerId` values must keep this invariant or
+    the new server route below silently 404s them (allowlist is hand-kept,
+    not derived from the filesystem).
+  - **New `server/api/recognizer-source/[rule].get.ts`**: same
+    explicit-allowlist shape as `server/api/docs/[slug].get.ts` (a
+    hand-maintained `RECOGNIZER_IDS: RecognizerId[]` array, not a directory
+    listing/glob) — `GET /api/recognizer-source/:rule` → `{ rule, content }`
+    (raw file text) or 404 for anything not on the list, verified live
+    (unknown rule id, and a `..`-path attempt — router itself already
+    doesn't hand a literal `..` through as a clean `:rule` segment, but the
+    allowlist check is what actually gates it either way, not string
+    shape). Read-only, dev-and-prod both (no `NODE_ENV` gate unlike
+    `docs/*` — recognizer source isn't sensitive and the badge/toggle it
+    backs isn't dev-only either, so gating this alone would just break the
+    feature in production for no real benefit).
+  - **Badge → real popover**: the old plain `title="Parser-derived — rule:
+    ..."` on the `lucide:wand-sparkles` icon is now a `UPopover
+    mode="hover"` (`openDelay=200` to avoid flashing while scanning the
+    column) whose `#content` renders the rule name plus a
+    `FunctionalModelScript` instance (same component/hljs styling the
+    Script tab and `/docs` already use — no new CSS) fed by a small
+    per-rule fetch-once cache (`recognizerSourceCache`/
+    `recognizerSourceError` refs, `ensureRecognizerSource(rule)` called from
+    `@update:open`). Verified live via Playwright against fin/212 (Absolute
+    Virtue, `permanent-enters-battlefield-normally`): hovering the badge
+    shows the real recognizer source, syntax-highlighted, matched to the
+    correct rule.
+  - Template narrowing gotcha under this repo's
+    `noUncheckedIndexedAccess: true`: bare `cache[rule]` bracket access in
+    two separate template spots (`v-if` + `:code`) doesn't narrow away
+    `undefined` reliably — used plain wrapper functions
+    (`recognizerSource(rule)`/`recognizerSourceErrorFor(rule)`) instead of
+    direct index expressions, which narrow cleanly.
+  - **`showParserFacts` moved from a page-local `ref` onto the shared
+    store** (`app/composables/useGraphStore.ts`, mirrors
+    `functionalModelTab`'s own existing pattern exactly): new
+    `SHOW_PARSER_FACTS_STORAGE_KEY = 'mtg-visualizer-show-parser-facts'`
+    (not set-namespaced — same "standing UI habit" reasoning as the tab
+    key), persisted via `watch` + `localStorage`, restored on store init.
+    The page now does `const showParserFacts = store.showParserFacts;`
+    (still a plain ref, template auto-unwraps it same as any other
+    top-level `<script setup>` binding) instead of owning its own ref.
+    Verified live: toggling writes `'true'` to
+    `mtg-visualizer-show-parser-facts` immediately, survives a full page
+    reload within the same browser session.
+  - Checkbox nudged `ml-[0.5em]` per direct ask (was flush against the
+    table's own left edge).
+  - `npm run typecheck`: same 2 pre-existing baseline errors
+    (`functional-model/mana.ts`, `server/api/tokens/by-key.ts`), nothing
+    new. Relevant vitest suites (`factConditions.test.ts`,
+    `functional-model/recognizers`) pass unchanged.
+
+- 2026-09-13 (Facts tab parser-derived-fact toggle +
+  provenance badge, `PRD_AUTOMATED_AUTHORING.md`): new optional
+  `Fact.provenance?: { origin: 'parser'; rule: string }` (engine-owned,
+  `functional-model/synergy.ts` — see `.claude/contracts/card-schema.md`'s
+  "Parser-derived facts" section) now rides on 435 real facts across
+  202/323 pool cards; server already passed it through as-is
+  (`server/api/card/[set]/[number].ts` untouched, verified live against
+  fin/196 A Realm Reborn).
+  - `app/pages/app/card/[set]/[number].vue`: new `showParserFacts` ref
+    (default `false`), `isParserFact()`, `parserFactsCount` (total count,
+    NOT "currently hidden" — a hidden-count would go to 0 the instant the
+    toggle flips on and make its own guard/label vanish, a real bug caught
+    during this task). A `UCheckbox` above the Facts table (only rendered
+    when `parserFactsCount > 0`) reads "Show parser-derived facts (N)".
+  - Filtering lives in `factRowGroups` (toggle-filtered render only) —
+    split out a separate `orderedAllFactRows` (unfiltered, text-ordered)
+    that `factOrderIndex` now reads instead, so the Interactions panel
+    below (which sorts against `factOrderIndex`) doesn't silently
+    mis-sort/drop-to-end a real interaction whose own fact happens to be a
+    currently-hidden parser fact. Toggling never splits the Facts list
+    into two sections — parser facts interleave into the SAME
+    text-ordered table (`feedback_facts_text_order_role_icon_only`
+    convention held, verified live via Playwright: row order unchanged
+    before/after, one `<tbody>`, no new group header).
+  - Provenance detail: small `lucide:wand-sparkles` badge (violet) next to
+    the existing source/sink role icon, `title="Parser-derived — rule:
+    <rule>"`, only ever rendered on a row that's already visible (a parser
+    row doesn't reach the table at all while hidden, so no extra
+    conditional needed there).
+  - `app/lib/factConditions.ts`: added `'provenance'` to
+    `HANDLED_OR_LABEL_KEYS` — without this, the generic "unknown field"
+    fallback loop (`formatUnknown`) rendered a redundant raw
+    `provenance: origin parser, rule ...` string in the same row's notes
+    column, right next to the new badge (caught live, not just by
+    reasoning about the code — first Playwright pass showed the
+    duplication before this fix). New test in
+    `app/lib/factConditions.test.ts` locks this down.
+  - No per-fact human-review affordance exists anywhere today to exclude
+    parser facts from — `progress.json`'s `review` field
+    (`server/api/card/review-status.ts`) is per-CARD only
+    (`'ai'|'human'`), confirmed via the contract file and this file's own
+    review-status code; nothing invented, per the task's own instruction
+    not to build one if none exists.
+  - Verified live (dev server + Playwright, fin/196 A Realm Reborn):
+    toggle off -> 1 row (hand-authored `Battlefield presence` only, its 2
+    parser siblings `Cast a spell`/`Enters the battlefield` hidden);
+    toggle on -> all 3 rows, badge+tooltip present, conditions column
+    clean. `npx vitest run` unaffected (same 5 pre-existing
+    `scripts/relations.test.mjs` failures with or without this change,
+    confirmed via `git stash`; unrelated tagging-sweep fixture files
+    absent from this checkout, not a regression). `npm run typecheck`:
+    same 2 pre-existing baseline errors (`functional-model/mana.ts`,
+    `server/api/tokens/by-key.ts`), none new.
+  - `FunctionalModelText.vue`'s oracle-text overlay was deliberately left
+    untouched — it sits above the tabs, not part of the Facts tab itself,
+    so a parser fact's annotation still highlights inline regardless of
+    the toggle. Flagging in case a future task wants that overlay to
+    respect the toggle too — not requested this time, scope was
+    Facts-tab-only.
+
+- 2026-09-12 (Previous/Next walks unique cards only + header row
   never hides behind the loading spinner): Two related asks against
   `app/pages/app/card/[set]/[number].vue`.
   - **Task 1 — Previous/Next skip bonus/variant collector numbers.** FIN
@@ -4023,3 +4190,128 @@ before I started; nothing to correct there.
   committed, per task instructions — left for approval. No contract
   mismatch — this was a card-owned rendering bug, not a `card-schema.md`
   shape issue.
+
+- 2026-09-13 (bug fix: Card Definition tab leaking scenario content):
+  reported on fin/1 — Card Definition tab (`FunctionalModelScript.vue`,
+  fed by `data.functionalModel.source`) showed `definition.ts` followed by
+  the ENTIRE raw text of `scenarios.ts` (setup/action/result prose,
+  `runEngineScenarios` function body). Root cause: served-payload shaping,
+  card-owned, NOT a Vue-component bug — both `server/api/card/[set]/
+  [number].ts`'s dev-path `loadFunctionalModel` and `scripts/
+  build-fm-bundle.mjs` (the prod bundle builder) had matching logic that
+  detected the real-engine-piloted `scenarios.ts` shape (`/export\s+
+  function\s+runEngineScenarios\b/` text match) and deliberately
+  concatenated its raw source onto the SAME `source` string field the
+  Definition tab reads — a prior, apparently intentional decision (own
+  comment cited "otherwise invisible on disk," and explicitly chose
+  concatenation over a new field "to keep the Card Definition tab's
+  existing single-`source` shape unchanged"). fin/1 (summon-bahamut) uses
+  exactly this `runEngineScenarios` shape, so it tripped the concat.
+  Fix: removed the concatenation outright in both places (dev path +
+  bundle builder) — `source` is now always just `definition.ts`'s raw
+  content, full stop. Did not add any new "raw scenario source" viewer
+  elsewhere (Scenarios tab already fully shows real scenario CONTENT via
+  `ScenarioReplay.vue`/`traces` — setup/action/result prose + the full
+  interactive replay board — just never the raw TS source text; that was
+  only ever visible via this leak, nowhere else, so removing it doesn't
+  regress any other feature). Did NOT touch `functional-model/cards/
+  summon-bahamut/{definition,scenarios}.ts` content itself, per task
+  constraint — pure server-shaping fix.
+  Verified live (real dev server, Playwright, not just code reading):
+  - `curl localhost:3000/api/card/fin/1` before fix: `functionalModel.source`
+    9151 chars, contained `runEngineScenarios`/`scenarios.ts` marker; after
+    fix: 1981 chars, neither string present (dev path re-reads on
+    signature/cache miss, no restart needed).
+  - Browser: Card Definition tab on fin/1 renders only `definition.ts`
+    code, no scenario prose/marker. Scenarios tab (separately verified,
+    same session) still fully renders the setup/action/result summary +
+    interactive turn-by-turn replay board, completely unaffected.
+  - `npx vue-tsc --noEmit` clean; `npx vitest run app/lib` 71/71 pass;
+    full `npx vitest run` 479/5 (the 5 failures are pre-existing,
+    unrelated `tagging/sets/*` ENOENT failures from the separate
+    historical-sets sweep project's own missing data files, not caused by
+    this change — confirmed these paths were never touched here).
+  No contract mismatch to flag — `card-schema.md` doesn't describe
+  `functionalModel.source` at all (it's a `card`-owned served-shape
+  field, not part of the engine↔card boundary), so nothing there was
+  stale; this was purely an internal card-side bug.
+
+- 2026-09-13 (Facts tab wand-sparkles icon convention INVERTED, per task):
+  the icon used to mark a fact WITH `Fact.provenance.origin === 'parser'`
+  (recognizer-derived), with a hover `UPopover` showing "Parser-derived —
+  rule: ..." + the recognizer's own source code
+  (`ensureRecognizerSource`/`recognizerSource`/`recognizerSourceErrorFor`,
+  `GET /api/recognizer-source/:rule`). Flipped so the icon now marks a
+  fact WITHOUT `provenance` (agent/AI-authored — absence is still the only
+  such signal, no `origin: 'agent'` marker exists) — `v-if="!row.fact.
+  provenance"` — and a parser-derived row now gets NO icon at all, per
+  the task's explicit "recognizer/scripted facts get nothing." Decided
+  (task left it to judgment) that the old rule+source-code popover made
+  no sense once attached to an agent-authored fact (no `rule`, nothing to
+  show) — replaced with a plain `title` tooltip ("Agent-derived — no
+  parser recognizer produced this fact"), no popover at all. Since the
+  icon no longer appears on any parser-fact row, the popover's own
+  hover-trigger/fetch machinery (`ensureRecognizerSource` + its two cache
+  refs + `recognizerSource`/`recognizerSourceErrorFor`) had no remaining
+  caller — deleted as dead code rather than left orphaned; left a comment
+  pointing at this decision in case a later pass wants "how was this
+  parser fact derived" back (would need a new affordance since the icon
+  itself moved).
+  Did NOT touch `showParserFacts`/`isParserFact`/`parserFactsCount`/
+  `factRowGroups`/`orderedAllFactRows` — the show/hide toggle and its
+  filtering behavior are unchanged, confirmed via diff (that whole
+  toggle/ordering block was pre-existing uncommitted work from an earlier
+  session, not something this task touched).
+  Verified live (real dev server, Playwright) on `/app/card/fin/1`: with
+  "Show parser-derived facts" off, the only 4 visible rows (entersBattlefield,
+  dies, Battlefield presence, Damage — all lack `provenance` per the real
+  `synergy.json`) all show the wand icon; with the toggle on, all 7
+  parser-derived rows (cast, the other entersBattlefield, destroy,
+  drawCard, putCounter, sacrifice, the other dies) show NO icon, and the
+  same 4 non-parser rows still do. Hovered the icon: correct title text,
+  no popover, no console/page errors. `npx vue-tsc --noEmit` clean.
+  No contract mismatch found — `card-schema.md`'s "Parser-derived facts"
+  section already documents `Fact.provenance` shape accurately; this was
+  a pure card-side presentation-convention flip, nothing about the
+  underlying data changed.
+
+- **2026-09-13, multi-annotation tooltip gap fixed** (flagged by `engine`
+  in `card-schema.md`'s "Fact-to-oracle-text pointers" section after its
+  own dedup-retagging pass produced the first real fact with
+  `annotations.length > 1`): `factSourceText` (`app/pages/app/card/[set]/
+  [number].vue`, ~line 615) used to read only `fact.annotations?.[0]`, so
+  qiqirn-merchant/fin-65's merged `drawCard` fact (unions its `cantrip`
+  ability's span with its `bigDraw` ability's span into one fact) showed
+  only the first clause on hover. Now iterates the FULL `annotations`
+  array, resolves each entry's own line/typeLine slice, dedupes exact
+  string repeats, and joins with `\n` (a native `title` attribute renders
+  embedded newlines fine as a real multi-line OS tooltip). Deliberately
+  did NOT touch `factKey` (~line 335) — it already only reads
+  `annotations?.[0]` and the comment right above it says this mirrors
+  engine's own `factIdentity()` in `functional-model/synergy.ts` (which
+  also only used the first annotation pre-merge); since merging happens at
+  the fact level (two real clauses collapse into ONE served fact, not two
+  facts sharing a first annotation), there's no live case where two
+  distinct facts share `role`+`describeFact`+`annotations[0]` but differ
+  in a later entry — changing `factKey`'s formula unilaterally on the card
+  side without engine also changing `factIdentity()` would just be a
+  divergence from the mirror for no real benefit, so left it alone.
+  `FunctionalModelText.vue`'s own inline highlighting was untouched (it
+  already iterated the full array correctly, confirmed by engine before
+  flagging this).
+  Verified live (real dev server, Playwright) on `/app/card/fin/65` with
+  "Show parser-derived facts" on: the "Card draw" row's tooltip now reads
+  two lines — `{1}, {T}: Draw a card, then discard a card.` (the cantrip
+  span) and `{7}, {T}, Sacrifice this creature: Draw three cards. This
+  ability costs {1} less to activate for each Town you control.` (the
+  bigDraw span) — both real, nothing invented. Every single-annotation row
+  on the same page (Cast a spell, Enters the battlefield, Tap, Discard,
+  Sacrifice) still shows exactly its own one line, no duplication. Also
+  spot-checked `/app/card/fin/1` (summon-bahamut, all single-annotation
+  facts, including a `typeLine`-targeted one) — no regression, one line
+  each. `npm run typecheck` shows 2 pre-existing failures
+  (`functional-model/mana.ts`, `server/api/tokens/by-key.ts`) unrelated to
+  and unchanged by this edit; the edited file itself introduces no new
+  errors. No contract mismatch found — `card-schema.md` already documents
+  the multi-annotation case accurately (it's the same section that
+  flagged this gap in the first place).

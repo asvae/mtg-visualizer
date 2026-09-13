@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 5 Island(s)",
-      "action": "real engine playthrough: cast -> Saga chapters over real turns -> real stun-counter timing + a real attack keep two creatures tapped for chapter III",
-      "result": "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent genuinely attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are genuinely tapped — a real, live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.",
+      "action": "engine playthrough: cast -> Saga chapters over turns -> stun-counter timing + an attack keep two creatures tapped for chapter III",
+      "result": "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are tapped — a live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.",
       "raw": {
-        "result": "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent genuinely attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are genuinely tapped — a real, live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.",
+        "result": "Shiva enters, chapter I fires (714.2b) — taps the opponent's Coeurl and puts a stun counter on it; chapter II fires next turn — taps the opponent's Hill Gigas and puts a stun counter on it too. Coeurl's own stun counter wears off two turns later (a stun counter only delays ONE untap), so the opponent attacks with it once it's untapped again — which taps it right back, independent of the Saga; Hill Gigas, stunned more recently, is still held tapped by its own counter. By chapter III, both are tapped — a live-counted 2, not a hardcoded amount — so Diamond Dust draws two cards; Shiva is then sacrificed (714.4) since nothing reset its lore counters first.",
         "you": {
           "libraryCount": 15,
           "basicLands": [
@@ -110,7 +110,7 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 2529,
+        "id": 2540,
         "controller": "opp0"
       },
       {
@@ -133,7 +133,7 @@
       {
         "fn": "putCounter",
         "target": "Coeurl",
-        "id": 2529,
+        "id": 2540,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -212,7 +212,7 @@
       {
         "fn": "tap",
         "target": "Hill Gigas",
-        "id": 2530,
+        "id": 2541,
         "controller": "opp0"
       },
       {
@@ -235,7 +235,7 @@
       {
         "fn": "putCounter",
         "target": "Hill Gigas",
-        "id": 2530,
+        "id": 2541,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -276,12 +276,12 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 2529
+        "id": 2540
       },
       {
         "fn": "attack",
         "card": "Coeurl",
-        "id": 2529
+        "id": 2540
       },
       {
         "fn": "phase",
@@ -399,7 +399,7 @@
         "from": 47
       },
       {
-        "label": "Real 714.4 sacrifice — lore counters were never reset",
+        "label": "714.4 sacrifice — lore counters were never reset",
         "from": 57
       }
     ]

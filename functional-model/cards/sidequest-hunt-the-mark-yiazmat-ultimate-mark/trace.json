@@ -19,6 +19,7 @@
         "fn": "trigger",
         "card": "Sidequest: Hunt the Mark",
         "instanceId": 1,
+        "id": 2218,
         "name": "onEnter"
       },
       {
@@ -48,7 +49,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 2076,
+        "id": 2217,
         "zone": "Graveyard",
         "controller": "opp0"
       }
@@ -74,6 +75,7 @@
         "fn": "trigger",
         "card": "Sidequest: Hunt the Mark",
         "instanceId": 1,
+        "id": 2221,
         "name": "onEnter"
       },
       {
@@ -112,6 +114,7 @@
         "fn": "trigger",
         "card": "Sidequest: Hunt the Mark",
         "instanceId": 1,
+        "id": 2223,
         "name": "onEndStep"
       },
       {
@@ -160,6 +163,7 @@
         "fn": "activate",
         "card": "Yiazmat, Ultimate Mark",
         "instanceId": 1,
+        "id": 2227,
         "cost": "{1}{B}, Sacrifice another creature or artifact"
       },
       {
@@ -178,7 +182,7 @@
       {
         "fn": "grantKeyword",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2086,
+        "id": 2227,
         "keyword": "Indestructible"
       },
       {
@@ -196,7 +200,7 @@
       {
         "fn": "tap",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2086,
+        "id": 2227,
         "controller": "you"
       }
     ]
@@ -217,6 +221,7 @@
         "fn": "activate",
         "card": "Yiazmat, Ultimate Mark",
         "instanceId": 1,
+        "id": 2229,
         "cost": "{1}{B}, Sacrifice another creature or artifact"
       },
       {
@@ -230,7 +235,7 @@
       {
         "fn": "grantKeyword",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2088,
+        "id": 2229,
         "keyword": "Indestructible"
       },
       {
@@ -248,7 +253,7 @@
       {
         "fn": "tap",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2088,
+        "id": 2229,
         "controller": "you"
       },
       {

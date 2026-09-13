@@ -51,5 +51,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Il Mheg Pixie enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, surveiling 1.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real attack -> onAttack (real surveil)', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> turn passage -> attack -> onAttack (surveil)', result)];
 }

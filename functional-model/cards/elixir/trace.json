@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Elixir",
         "instanceId": 1,
+        "id": 758,
         "name": "onEnter"
       },
       {
@@ -31,7 +32,7 @@
       {
         "fn": "tap",
         "target": "Elixir",
-        "id": 2,
+        "id": 758,
         "controller": "you"
       }
     ]
@@ -53,6 +54,7 @@
         "fn": "activate",
         "card": "Elixir",
         "instanceId": 1,
+        "id": 762,
         "cost": "{5}, {T}, Exile this artifact"
       },
       {
@@ -75,14 +77,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 4,
+        "id": 760,
         "zone": "Library",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 5,
+        "id": 761,
         "zone": "Library",
         "controller": "you"
       },
@@ -110,6 +112,7 @@
         "fn": "activate",
         "card": "Elixir",
         "instanceId": 1,
+        "id": 764,
         "cost": "{5}, {T}, Exile this artifact"
       },
       {

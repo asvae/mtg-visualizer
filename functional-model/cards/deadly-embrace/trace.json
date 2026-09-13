@@ -19,6 +19,7 @@
         "fn": "cast",
         "card": "Deadly Embrace",
         "instanceId": 1,
+        "id": 549,
         "from": "hand",
         "cost": "{3}{B}{B}"
       },
@@ -37,7 +38,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 3,
+        "id": 548,
         "zone": "Graveyard",
         "controller": "opp0"
       },
@@ -59,6 +60,7 @@
         "fn": "move",
         "card": "Deadly Embrace",
         "instanceId": 1,
+        "id": 549,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -88,6 +90,7 @@
         "fn": "cast",
         "card": "Deadly Embrace",
         "instanceId": 1,
+        "id": 555,
         "from": "hand",
         "cost": "{3}{B}{B}"
       },
@@ -106,7 +109,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 9,
+        "id": 554,
         "zone": "Graveyard",
         "controller": "opp0"
       },
@@ -146,6 +149,7 @@
         "fn": "move",
         "card": "Deadly Embrace",
         "instanceId": 1,
+        "id": 555,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

@@ -77,8 +77,8 @@ export function runEngineScenarios(): TraceResult[] {
   }
 
   const result =
-    `Real 509.1b/702.111b: a single blocker is rejected outright against Xande's real printed Menace — the engine's own real reason is logged, not a scripted assumption. Two blockers satisfy Menace's real minimum and the block is declared legally; real combat damage then splits Xande's 3 power lethally across both 1-toughness blockers (both destroyed, 704.5g) while their combined 2 power back doesn't kill Xande's own 3 toughness.`;
+    `509.1b/702.111b: a single blocker is rejected outright against Xande's printed Menace — the engine's own reason is logged, not a scripted assumption. Two blockers satisfy Menace's minimum and the block is declared legally; combat damage then splits Xande's 3 power lethally across both 1-toughness blockers (both destroyed, 704.5g) while their combined 2 power back doesn't kill Xande's own 3 toughness.`;
   return [
-    finishEnginePilotTrace(pilot, setup, 'real engine playthrough: declare Menace attacker -> single-blocker rejected -> two-blocker block legal -> real combat', result),
+    finishEnginePilotTrace(pilot, setup, 'engine playthrough: declare Menace attacker -> single-blocker rejected -> two-blocker block legal -> combat', result),
   ];
 }

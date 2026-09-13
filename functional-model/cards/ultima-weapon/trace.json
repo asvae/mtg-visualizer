@@ -13,6 +13,7 @@
         "fn": "activate",
         "card": "Ultima Weapon",
         "instanceId": 1,
+        "id": 2977,
         "cost": "Equip {7}"
       },
       {
@@ -39,6 +40,7 @@
         "fn": "activate",
         "card": "Ultima Weapon",
         "instanceId": 1,
+        "id": 2980,
         "cost": "Equip {7}"
       },
       {
@@ -49,9 +51,9 @@
       {
         "fn": "equip",
         "equipment": "Ultima Weapon",
-        "equipmentId": 2686,
+        "equipmentId": 2980,
         "target": "Grizzly Bears",
-        "id": 2685
+        "id": 2979
       }
     ]
   },
@@ -75,6 +77,7 @@
         "fn": "trigger",
         "card": "Ultima Weapon",
         "instanceId": 1,
+        "id": 2984,
         "name": "onEquippedAttacks"
       },
       {
@@ -92,7 +95,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 2689,
+        "id": 2983,
         "zone": "Graveyard",
         "controller": "opp0"
       }

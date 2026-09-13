@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "The Wandering Minstrel",
         "instanceId": 1,
+        "id": 2733,
         "name": "onBeginCombat"
       },
       {
@@ -92,6 +93,7 @@
         "fn": "activate",
         "card": "The Wandering Minstrel",
         "instanceId": 1,
+        "id": 2737,
         "cost": "{3}{W}{U}{B}{R}{G}"
       },
       {
@@ -146,14 +148,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2508,
+        "id": 2735,
         "power": 0,
         "toughness": 0
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2509,
+        "id": 2736,
         "power": 0,
         "toughness": 0
       }
@@ -174,6 +176,7 @@
         "fn": "activate",
         "card": "The Wandering Minstrel",
         "instanceId": 1,
+        "id": 2739,
         "cost": "{3}{W}{U}{B}{R}{G}"
       },
       {

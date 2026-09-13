@@ -23,6 +23,40 @@
         }
       },
       "value": 5
+    },
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 7
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
     }
   ],
   "sink": [

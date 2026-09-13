@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Rosa, Resolute White Mage",
         "instanceId": 1,
+        "id": 2001,
         "name": "onBeginCombat"
       },
       {
@@ -39,7 +40,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1879,
+        "id": 2000,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -64,7 +65,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1879,
+        "id": 2000,
         "keyword": "Lifelink"
       }
     ]
@@ -84,6 +85,7 @@
         "fn": "cast",
         "card": "Rosa, Resolute White Mage",
         "instanceId": 1,
+        "id": 2003,
         "from": "hand",
         "cost": "{3}{W}"
       },
@@ -91,6 +93,7 @@
         "fn": "enters",
         "card": "Rosa, Resolute White Mage",
         "instanceId": 1,
+        "id": 2003,
         "zone": "Battlefield"
       },
       {

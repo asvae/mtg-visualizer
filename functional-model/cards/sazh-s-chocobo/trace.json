@@ -14,12 +14,13 @@
         "fn": "trigger",
         "card": "Sazh's Chocobo",
         "instanceId": 1,
+        "id": 2077,
         "name": "onLandfall"
       },
       {
         "fn": "putCounter",
         "target": "Sazh's Chocobo",
-        "id": 1965,
+        "id": 2077,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

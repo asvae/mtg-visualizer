@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Coral Sword",
         "instanceId": 1,
+        "id": 471,
         "name": "onEnter"
       },
       {
@@ -27,9 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Coral Sword",
-        "equipmentId": 448,
+        "equipmentId": 471,
         "target": "Grizzly Bears",
-        "id": 447
+        "id": 470
       },
       {
         "fn": "read:getCardsIn",
@@ -51,7 +52,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 447,
+        "id": 470,
         "keyword": "FirstStrike"
       }
     ]
@@ -73,6 +74,7 @@
         "fn": "activate",
         "card": "Coral Sword",
         "instanceId": 1,
+        "id": 474,
         "cost": "Equip {1}"
       },
       {
@@ -83,9 +85,9 @@
       {
         "fn": "equip",
         "equipment": "Coral Sword",
-        "equipmentId": 451,
+        "equipmentId": 474,
         "target": "Grizzly Bears",
-        "id": 450
+        "id": 473
       }
     ]
   }

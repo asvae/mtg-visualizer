@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Barret Wallace",
         "instanceId": 1,
+        "id": 213,
         "from": "hand",
         "cost": "{3}{R}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Barret Wallace",
         "instanceId": 1,
+        "id": 213,
         "zone": "Battlefield"
       }
     ]
@@ -39,6 +41,7 @@
         "fn": "cast",
         "card": "Barret Wallace",
         "instanceId": 1,
+        "id": 215,
         "from": "hand",
         "cost": "{3}{R}"
       },
@@ -46,6 +49,7 @@
         "fn": "enters",
         "card": "Barret Wallace",
         "instanceId": 1,
+        "id": 215,
         "zone": "Battlefield"
       },
       {

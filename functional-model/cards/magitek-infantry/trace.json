@@ -19,7 +19,7 @@
         "fn": "activate",
         "card": "Magitek Infantry",
         "instanceId": 1,
-        "id": 6,
+        "id": 1510,
         "cost": "{2}{W}"
       },
       {
@@ -32,14 +32,14 @@
       {
         "fn": "moveTo",
         "target": "Magitek Infantry",
-        "id": 3,
+        "id": 1507,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "Magitek Infantry",
-        "id": 3,
+        "id": 1507,
         "controller": "you"
       }
     ]

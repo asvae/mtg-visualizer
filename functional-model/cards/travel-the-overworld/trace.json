@@ -1,33 +1,84 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "draws 4 cards",
+      "setup": "you: 7 Island(s)",
+      "action": "engine playthrough: cast ({2} discount from 2 Towns) -> resolve (draw four cards)",
+      "result": "Travel the Overworld is cast from hand while controlling 2 Town lands (Capital City, Gongaga, Reactor Town) — Affinity for Towns discounts the printed {5}{U}{U} down to {3}{U}{U} (`card.ts`'s `CostReduction.perControlled`, ENGINE_GAPS.md gap #7): the `cast` log entry's own `cost` field reads {3}{U}{U}, and only 5 lands are tapped for mana (`tapForMana`), not the full printed {5}{U}{U}/7 lands. It then resolves, drawing 4 cards.",
       "raw": {
-        "castFrom": "hand",
-        "result": "draws 4 cards"
+        "result": "Travel the Overworld is cast from hand while controlling 2 Town lands (Capital City, Gongaga, Reactor Town) — Affinity for Towns discounts the printed {5}{U}{U} down to {3}{U}{U} (`card.ts`'s `CostReduction.perControlled`, ENGINE_GAPS.md gap #7): the `cast` log entry's own `cost` field reads {3}{U}{U}, and only 5 lands are tapped for mana (`tapForMana`), not the full printed {5}{U}{U}/7 lands. It then resolves, drawing 4 cards.",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 4
+        }
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Capital City",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Gongaga, Reactor Town",
+        "zone": "Battlefield",
+        "controller": "you"
+      },
       {
         "fn": "cast",
         "card": "Travel the Overworld",
         "instanceId": 1,
         "from": "hand",
-        "cost": "{5}{U}{U}"
+        "cost": "{3}{U}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Travel the Overworld"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Travel the Overworld"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Travel the Overworld"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Travel the Overworld"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Travel the Overworld"
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
-        "player": "you"
+        "player": "you",
+        "card": "Forest"
       },
       {
         "fn": "drawCard",
@@ -38,8 +89,21 @@
         "card": "Travel the Overworld",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Sorcery"
+        "to": "Graveyard"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Travel the Overworld ({3}{U}{U})",
+        "from": 2
+      },
+      {
+        "label": "Resolve",
+        "from": 8
       }
     ]
   }

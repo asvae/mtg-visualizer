@@ -42,6 +42,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotCast(pilot, ambrosiaReal, ambrosiaWhiteheart, ambrosiaCtx, ambrosiaActions, `Cast ${ambrosiaWhiteheart.name} via Flash during the opponent's turn`);
   pilotResolveTop(pilot);
 
-  const result = `Real 307.1a/117.1a: Gran Pulse Ochu, a plain sorcery-speed creature, is correctly rejected when cast during the opponent's own turn — the engine's own real reason is logged. Ambrosia Whiteheart's real printed Flash exempts it from that same check (\`isInstantSpeed\` in engine.ts), so the identical cast attempt succeeds for real at the exact same moment.`;
-  return [finishEnginePilotTrace(pilot, setup, "real engine playthrough: opponent's turn -> sorcery-speed cast rejected -> Flash cast succeeds", result)];
+  const result = `307.1a/117.1a: Gran Pulse Ochu, a plain sorcery-speed creature, is correctly rejected when cast during the opponent's own turn — the engine's own reason is logged. Ambrosia Whiteheart's printed Flash exempts it from that same check (\`isInstantSpeed\` in engine.ts), so the identical cast attempt succeeds at the exact same moment.`;
+  return [finishEnginePilotTrace(pilot, setup, "engine playthrough: opponent's turn -> sorcery-speed cast rejected -> Flash cast succeeds", result)];
 }

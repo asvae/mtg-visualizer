@@ -81,7 +81,7 @@ export function runEngineScenarios(): TraceResult[] {
   // (pump-only) precedent already establish, extended here to ALSO cover the
   // type-grant half via a real read:hasSubtype line: the printed 1/1 Hero
   // genuinely becomes a live 2/2 Rogue the instant it's equipped.
-  pilot.beginStep('Real layer-7c/layer-4 recalculation — Equipped creature gets +1/+1 and is a Rogue');
+  pilot.beginStep('Layer-7c/layer-4 recalculation — Equipped creature gets +1/+1 and is a Rogue');
   {
     const [power, toughness] = effectivePT(pilot.state, heroToken);
     pilot.log.push({ fn: 'read:getNetPower', card: heroToken.name, power, toughness });
@@ -102,7 +102,7 @@ export function runEngineScenarios(): TraceResult[] {
   // original attachment: the Hero token drops back to its printed 1/1
   // non-Rogue now that Thief's Knife has moved on, and Qiqirn Merchant picks
   // up both grants in its place.
-  pilot.beginStep('Real re-equip: the grant follows the live attachment, off the Hero token and onto Qiqirn Merchant');
+  pilot.beginStep('Re-equip: the grant follows the live attachment, off the Hero token and onto Qiqirn Merchant');
   {
     const [heroPower, heroToughness] = effectivePT(pilot.state, heroToken);
     pilot.log.push({ fn: 'read:getNetPower', card: heroToken.name, power: heroPower, toughness: heroToughness });
@@ -122,13 +122,13 @@ export function runEngineScenarios(): TraceResult[] {
   pilotFireTrigger(pilot, thiefsKnife, ctx, actions, 'onEquippedDealsDamage');
 
   const result =
-    "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero genuinely recalculates to a 2/2 Rogue the instant it's equipped (real read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant genuinely follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires for real, drawing a card.";
+    "Thief's Knife enters, Job select creates a 1/1 colorless Hero token and attaches itself to it — the Hero recalculates to a 2/2 Rogue the instant it's equipped (read:getNetPower/read:hasSubtype evidence); Equip {4} then re-attaches it to Qiqirn Merchant instead, and the grant follows: the Hero drops back to a 1/1 non-Rogue, Qiqirn Merchant picks up +1/+1 and Rogue in its place; the granted 'whenever this creature deals combat damage to a player, draw a card' then fires, drawing a card.";
 
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: cast -> Job select ETB -> equip recalculation -> re-equip via Equip {4} -> granted combat-damage draw',
+      'engine playthrough: cast -> Job select ETB -> equip recalculation -> re-equip via Equip {4} -> granted combat-damage draw',
       result,
     ),
   ];

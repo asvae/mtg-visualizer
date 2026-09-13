@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 5 Swamp(s)",
-      "action": "real engine playthrough: cast -> destroy replaced (702.12b) -> 0-toughness SBA death bypasses it (704.5f)",
-      "result": "Real 702.12b: a plain destroy effect against Zodiark is replaced — nothing happens, logged as `destroyPrevented`, not silently ignored. Real 704.5f is a genuinely DIFFERENT rule: once its toughness is 0 or below, the engine's own real SBA sweep puts it into the graveyard unconditionally, with no Indestructible check at all — the same permanent that just survived a destroy effect dies anyway once its toughness bottoms out.",
+      "action": "engine playthrough: cast -> destroy replaced (702.12b) -> 0-toughness SBA death bypasses it (704.5f)",
+      "result": "702.12b: a plain destroy effect against Zodiark is replaced — nothing happens, logged as `destroyPrevented`, not silently ignored. 704.5f is a DIFFERENT rule: once its toughness is 0 or below, the engine's own SBA sweep puts it into the graveyard unconditionally, with no Indestructible check at all — the same permanent that just survived a destroy effect dies anyway once its toughness bottoms out.",
       "raw": {
-        "result": "Real 702.12b: a plain destroy effect against Zodiark is replaced — nothing happens, logged as `destroyPrevented`, not silently ignored. Real 704.5f is a genuinely DIFFERENT rule: once its toughness is 0 or below, the engine's own real SBA sweep puts it into the graveyard unconditionally, with no Indestructible check at all — the same permanent that just survived a destroy effect dies anyway once its toughness bottoms out.",
+        "result": "702.12b: a plain destroy effect against Zodiark is replaced — nothing happens, logged as `destroyPrevented`, not silently ignored. 704.5f is a DIFFERENT rule: once its toughness is 0 or below, the engine's own SBA sweep puts it into the graveyard unconditionally, with no Indestructible check at all — the same permanent that just survived a destroy effect dies anyway once its toughness bottoms out.",
         "you": {
           "basicLands": [
             "Swamp",
@@ -60,11 +60,13 @@
       {
         "fn": "destroyPrevented",
         "target": "Zodiark, Umbral God",
+        "id": 90,
         "cause": "Indestructible"
       },
       {
         "fn": "pump",
         "target": "Zodiark, Umbral God",
+        "id": 90,
         "power": 0,
         "toughness": -10
       },
@@ -88,11 +90,11 @@
         "from": 6
       },
       {
-        "label": "Attempt a real destroy effect (702.12b)",
+        "label": "Attempt a destroy effect (702.12b)",
         "from": 7
       },
       {
-        "label": "Real -10/-10 pump drops toughness to 0 or below (704.5f)",
+        "label": "-10/-10 pump drops toughness to 0 or below (704.5f)",
         "from": 8
       }
     ]

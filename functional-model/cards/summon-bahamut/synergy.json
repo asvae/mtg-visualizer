@@ -4,27 +4,37 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
           "start": 12,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "entersBattlefield",
       "to": "Battlefield",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
           "start": 0,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "destroy",
@@ -36,7 +46,7 @@
         }
       },
       "targeted": true,
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -44,7 +54,12 @@
           "start": 8,
           "end": 50
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'destroy-effect-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "dies",
@@ -58,7 +73,7 @@
         }
       },
       "targeted": true,
-      "value": 4,
+      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -71,7 +86,7 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 4,
+      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -79,7 +94,12 @@
           "start": 6,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'drawCard-effect-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "damage",
@@ -100,7 +120,7 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -108,12 +128,17 @@
           "start": 47,
           "end": 65
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'saga-lore-and-sacrifice-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "sacrifice",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -121,7 +146,12 @@
           "start": 67,
           "end": 85
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'saga-lore-and-sacrifice-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     },
     {
       "event": "dies",
@@ -138,7 +168,12 @@
           "start": 67,
           "end": 85
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural",
+        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'saga-lore-and-sacrifice-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+      }
     }
   ],
   "sink": [

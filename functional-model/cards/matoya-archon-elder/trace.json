@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 3 Island(s)",
-      "action": "real engine playthrough: cast -> real surveil -> onSurveil draws a card",
-      "result": "Matoya, Archon Elder is cast and enters the battlefield; a real surveil 1 resolves, then her own \"Whenever you scry or surveil, draw a card\" trigger fires for real, drawing a card.",
+      "action": "engine playthrough: cast -> surveil -> onSurveil draws a card",
+      "result": "Matoya, Archon Elder is cast and enters the battlefield; a surveil 1 resolves, then her own \"Whenever you scry or surveil, draw a card\" trigger fires, drawing a card.",
       "raw": {
-        "result": "Matoya, Archon Elder is cast and enters the battlefield; a real surveil 1 resolves, then her own \"Whenever you scry or surveil, draw a card\" trigger fires for real, drawing a card.",
+        "result": "Matoya, Archon Elder is cast and enters the battlefield; a surveil 1 resolves, then her own \"Whenever you scry or surveil, draw a card\" trigger fires, drawing a card.",
         "you": {
           "basicLands": [
             "Island",
@@ -81,7 +81,7 @@
         "from": 4
       },
       {
-        "label": "Surveil 1 (a real surveil effect resolves)",
+        "label": "Surveil 1 (the surveil effect resolves)",
         "from": 5
       },
       {

@@ -17,6 +17,7 @@
         "fn": "activate",
         "card": "Phantom Train",
         "instanceId": 1,
+        "id": 1794,
         "cost": "Sacrifice another artifact or creature"
       },
       {
@@ -26,12 +27,12 @@
       },
       {
         "fn": "read:isCreature",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": false
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
@@ -45,7 +46,7 @@
       {
         "fn": "putCounter",
         "target": "Phantom Train",
-        "id": 1689,
+        "id": 1794,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -53,7 +54,7 @@
       {
         "fn": "animate",
         "target": "Phantom Train",
-        "id": 1689,
+        "id": 1794,
         "types": [
           "Artifact",
           "Creature",

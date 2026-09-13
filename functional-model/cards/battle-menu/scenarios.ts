@@ -16,7 +16,7 @@ function attackMode(): TraceResult {
   pilotCast(pilot, cardReal, battleMenu, ctx, actions);
   pilotResolveTop(pilot);
   const result = 'Attack — creates a 2/2 white Knight creature token.';
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 0 (Attack)', result);
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> mode 0 (Attack)', result);
 }
 
 function abilityMode(): TraceResult {
@@ -28,7 +28,7 @@ function abilityMode(): TraceResult {
   pilotCast(pilot, cardReal, battleMenu, ctx, actions);
   pilotResolveTop(pilot);
   const result = 'Ability — a target creature gets +0/+4 until end of turn.';
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 1 (Ability)', result);
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> mode 1 (Ability)', result);
 }
 
 function magicMode(): TraceResult {
@@ -58,7 +58,7 @@ function magicMode(): TraceResult {
   pilotCast(pilot, cardReal, battleMenu, ctx, actions);
   pilotResolveTop(pilot);
   const result = `Magic — destroys ${bigCreature.name}, a creature with power 4 or greater.`;
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 2 (Magic)', result);
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> mode 2 (Magic)', result);
 }
 
 function itemMode(): TraceResult {
@@ -70,7 +70,7 @@ function itemMode(): TraceResult {
   pilotCast(pilot, cardReal, battleMenu, ctx, actions);
   pilotResolveTop(pilot);
   const result = 'Item — you gain 4 life.';
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> mode 3 (Item)', result);
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> mode 3 (Item)', result);
 }
 
 export function runEngineScenarios(): TraceResult[] {

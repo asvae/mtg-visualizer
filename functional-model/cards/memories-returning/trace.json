@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 13 Island(s)",
-      "action": "real engine playthrough: cast from hand -> dig (5, take 3) -> graveyard -> Flashback cast -> dig (5, take 3) -> exile",
-      "result": "Memories Returning is cast from hand for {2}{U}{U} and resolves for real: reveals the top 5 real library cards, moves 3 of them to hand and the other 2 to the bottom (the engine has no player-choice machinery, so it takes the first 3 rather than modeling the real alternating you/opponent picks — same net zone outcome), then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {7}{U}{U}: same real dig against the remaining library, then the spell itself is exiled instead of returning to the graveyard.",
+      "action": "engine playthrough: cast from hand -> dig (5, take 3) -> graveyard -> Flashback cast -> dig (5, take 3) -> exile",
+      "result": "Memories Returning is cast from hand for {2}{U}{U} and resolves: reveals the top 5 library cards, moves 3 of them to hand and the other 2 to the bottom (the engine has no player-choice machinery, so it takes the first 3 rather than modeling the alternating you/opponent picks — same net zone outcome), then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {7}{U}{U}: same dig against the remaining library, then the spell itself is exiled instead of returning to the graveyard.",
       "raw": {
-        "result": "Memories Returning is cast from hand for {2}{U}{U} and resolves for real: reveals the top 5 real library cards, moves 3 of them to hand and the other 2 to the bottom (the engine has no player-choice machinery, so it takes the first 3 rather than modeling the real alternating you/opponent picks — same net zone outcome), then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {7}{U}{U}: same real dig against the remaining library, then the spell itself is exiled instead of returning to the graveyard.",
+        "result": "Memories Returning is cast from hand for {2}{U}{U} and resolves: reveals the top 5 library cards, moves 3 of them to hand and the other 2 to the bottom (the engine has no player-choice machinery, so it takes the first 3 rather than modeling the alternating you/opponent picks — same net zone outcome), then goes to the graveyard. It is then cast AGAIN from the graveyard via Flashback for {7}{U}{U}: same dig against the remaining library, then the spell itself is exiled instead of returning to the graveyard.",
         "you": {
           "basicLands": [
             "Island",
@@ -64,21 +64,21 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 16,
+        "id": 1681,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 17,
+        "id": 1682,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 18,
+        "id": 1683,
         "zone": "Hand",
         "controller": "you"
       },
@@ -151,21 +151,21 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 21,
+        "id": 1686,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 22,
+        "id": 1687,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 23,
+        "id": 1688,
         "zone": "Hand",
         "controller": "you"
       },

@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 1 creature(s); you: 1 card(s) in library",
       "action": "cast from hand",
-      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap); the +1/+1 counter is still placed on the target creature you control",
+      "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this untestable gap); the +1/+1 counter is still placed on the target creature you control",
       "raw": {
-        "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this real, untestable gap); the +1/+1 counter is still placed on the target creature you control",
+        "result": "no land card available in library to search for (this harness has no land-typed library filler — see definition.ts's own comment on this untestable gap); the +1/+1 counter is still placed on the target creature you control",
         "castFrom": "hand",
         "you": {
           "libraryCount": 1,
@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
+        "id": 1815,
         "from": "hand",
         "cost": "{2}{G}"
       },
@@ -54,7 +55,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1708,
+        "id": 1813,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -63,6 +64,7 @@
         "fn": "move",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
+        "id": 1815,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -88,6 +90,7 @@
         "fn": "cast",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
+        "id": 1818,
         "from": "hand",
         "cost": "{2}{G}"
       },
@@ -120,6 +123,7 @@
         "fn": "move",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
+        "id": 1818,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

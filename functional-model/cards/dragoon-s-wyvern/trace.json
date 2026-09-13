@@ -2,7 +2,7 @@
   {
     "scenario": {
       "setup": "you: 3 Island(s)",
-      "action": "real engine playthrough: cast -> real ETB -> onEnter auto-fires -> creates a 1/1 colorless Hero creature token",
+      "action": "engine playthrough: cast -> ETB -> onEnter auto-fires -> creates a 1/1 colorless Hero creature token",
       "result": "Dragoon's Wyvern is cast for {2}{U} and resolves, entering the battlefield; its onEnter trigger auto-fires, creating a 1/1 colorless Hero creature token.",
       "raw": {
         "result": "Dragoon's Wyvern is cast for {2}{U} and resolves, entering the battlefield; its onEnter trigger auto-fires, creating a 1/1 colorless Hero creature token.",

@@ -17,6 +17,7 @@
         "fn": "cast",
         "card": "Call the Mountain Chocobo",
         "instanceId": 1,
+        "id": 306,
         "from": "hand",
         "cost": "{3}{R}"
       },
@@ -73,6 +74,7 @@
         "fn": "move",
         "card": "Call the Mountain Chocobo",
         "instanceId": 1,
+        "id": 306,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -94,6 +96,7 @@
         "fn": "cast",
         "card": "Call the Mountain Chocobo",
         "instanceId": 1,
+        "id": 309,
         "from": "graveyard",
         "cost": "{5}{R}"
       },
@@ -117,6 +120,7 @@
         "fn": "move",
         "card": "Call the Mountain Chocobo",
         "instanceId": 1,
+        "id": 309,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

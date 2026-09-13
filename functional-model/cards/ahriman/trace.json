@@ -16,6 +16,7 @@
         "fn": "activate",
         "card": "Ahriman",
         "instanceId": 1,
+        "id": 82,
         "cost": "{3}, Sacrifice another creature or artifact"
       },
       {
@@ -54,16 +55,17 @@
         "fn": "activate",
         "card": "Ahriman",
         "instanceId": 1,
+        "id": 85,
         "cost": "{3}, Sacrifice another creature or artifact"
       },
       {
         "fn": "read:isCreature",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": false
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {

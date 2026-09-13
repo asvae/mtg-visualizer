@@ -100,5 +100,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Ultima enters, turn passage clears summoning sickness, then attacks (508.1), putting a blight counter on the opponent\'s only land (whose granted "{T}: Add {C}" stays printed text with no engine machinery behind it). Separately, an Adventurer\'s Inn is tapped for its own {C}, and Ultima\'s own mana-doubling trigger fires right after, adding an additional {C}.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> turn passage -> real attack -> onAttack -> real land tap -> onTapLandForC', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> turn passage -> attack -> onAttack -> land tap -> onTapLandForC', result)];
 }

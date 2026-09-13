@@ -33,6 +33,17 @@ export const ultimaOriginOfOblivion: CardDefinition = {
     {
       name: 'onAttack',
       effects: [{ kind: 'putCounterTarget', validType: 'land', counterType: 'blight', amount: 1, qty: 1 } satisfies Effect],
+      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, fin/1-10 trial). Whole
+      // trigger+continuous-consequence clause as printed, one real oracle
+      // line (data/fin/fin_scryfall.json) — the continuous "loses all land
+      // types..." half stays text-only (staticAbilities above), but the
+      // whole printed line is what a future recognizer would need to anchor
+      // to, same coarse-span convention every other card in this trial uses.
+      annotation: {
+        highlight:
+          'Whenever Ultima attacks, put a blight counter on target land. For as long as that land has a blight counter on it, it loses all land types and abilities and has "{T}: Add {C}."',
+        line: 1,
+      },
     },
     {
       // Fired manually right after a scenario pilots a real land being
@@ -41,6 +52,12 @@ export const ultimaOriginOfOblivion: CardDefinition = {
       // addMana line, not this trigger's job to reproduce.
       name: 'onTapLandForC',
       effects: [{ kind: 'addMana', color: 'C', amount: 1 } satisfies Effect],
+      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, fin/1-10 trial) — real
+      // printed line, its own separate sentence in the oracle text.
+      annotation: {
+        highlight: 'Whenever you tap a land for {C}, add an additional {C}.',
+        line: 2,
+      },
     },
   ],
 };

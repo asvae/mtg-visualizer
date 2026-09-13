@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: a c_1_1_hero; you: 5 Island(s); opp0: a c_a_treasure_sac; opp0: 1 Forest(s)",
-      "action": "real engine playthrough: cast -> ETB -> transform -> Saga chapters over real turns",
-      "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the real turn-based engine.",
+      "action": "engine playthrough: cast -> ETB -> transform -> Saga chapters over turns",
+      "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the turn-based engine.",
       "raw": {
-        "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the real turn-based engine.",
+        "result": "Jill enters, ETB returns the opponent's Treasure to hand; once summoning sickness clears, {3}{U}{U}, {T} exiles Jill and returns it transformed as Shiva, Warden of Ice; chapter I fires immediately (grants your Hero unblockable), chapter II fires on your next draw step, chapter III fires the turn after (taps all the opponent's lands, then exiles Shiva and returns it as Jill) — all through the turn-based engine.",
         "you": {
           "tokens": [
             "c_1_1_hero"
@@ -124,7 +124,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Treasure",
-        "id": 1201,
+        "id": 1314,
         "zone": "Hand",
         "controller": "opp0"
       },
@@ -177,7 +177,7 @@
       {
         "fn": "tap",
         "target": "Jill, Shiva's Dominant",
-        "id": 1213,
+        "id": 1326,
         "controller": "you"
       },
       {
@@ -208,14 +208,14 @@
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1213,
+        "id": 1326,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1213,
+        "id": 1326,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -293,7 +293,7 @@
       {
         "fn": "grantKeyword",
         "target": "Hero",
-        "id": 1179,
+        "id": 1292,
         "keyword": "Unblockable"
       },
       {
@@ -407,7 +407,7 @@
       {
         "fn": "grantKeyword",
         "target": "Hero",
-        "id": 1179,
+        "id": 1292,
         "keyword": "Unblockable"
       },
       {
@@ -458,20 +458,20 @@
       {
         "fn": "tap",
         "target": "Forest",
-        "id": 1202,
+        "id": 1315,
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1213,
+        "id": 1326,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1213,
+        "id": 1326,
         "zone": "Battlefield",
         "controller": "you"
       },

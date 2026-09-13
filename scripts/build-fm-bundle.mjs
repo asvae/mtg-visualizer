@@ -100,15 +100,13 @@ for (const slug of slugs) {
   const interactionsReview = progress?.interactionsReview === 'reviewed' ? 'reviewed' : 'draft';
 
   // Source text for the Card Definition tab (FunctionalModelScript.vue) —
-  // same definition.ts (+ scenarios.ts, when it's the real-engine-piloted
-  // runEngineScenarios shape) concatenation loadFunctionalModel's dev path
-  // already builds, done once here instead of at request time.
-  let source = await readFile(definitionPath, 'utf8');
-  const scenariosPath = join(dir, 'scenarios.ts');
-  const scenariosSource = existsSync(scenariosPath) ? await readFile(scenariosPath, 'utf8') : '';
-  if (/export\s+function\s+runEngineScenarios\b/.test(scenariosSource)) {
-    source += `\n\n// ============================================================\n// scenarios.ts — this card's own real engine-piloted trace\n// ============================================================\n\n${scenariosSource}`;
-  }
+  // this card's own definition.ts ONLY. Used to also concatenate
+  // scenarios.ts's raw source when it used the real-engine-piloted
+  // runEngineScenarios shape, mirroring loadFunctionalModel's dev path —
+  // removed (here and there) since that leaked scenario content into the
+  // Definition tab; scenario content belongs exclusively under the
+  // Scenarios tab (`traces`, above).
+  const source = await readFile(definitionPath, 'utf8');
 
   bundle[slug] = {
     name: card.name,

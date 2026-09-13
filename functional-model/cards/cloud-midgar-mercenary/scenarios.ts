@@ -133,12 +133,12 @@ export function runEngineScenarios(): TraceResult[] {
   pilotFireTrigger(pilot, ultimaWeapon, ultimaCtx, ultimaActions, 'onEquippedAttacks', "Ultima Weapon's own attack trigger fires (equipped creature attacks) — doubled by Cloud's own equipped static");
 
   const result =
-    "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is genuinely equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it, so it fires TWICE, destroying BOTH real opponent creatures (Coeurl, then Hill Gigas).";
+    "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it, so it fires TWICE, destroying both opponent creatures (Coeurl, then Hill Gigas).";
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      "real engine playthrough: cast Cloud -> real ETB tutor -> cast+equip Ultima Weapon -> real attack -> Ultima Weapon's own destroy trigger fires TWICE (Cloud's own doubling static is now real)",
+      "engine playthrough: cast Cloud -> ETB tutor -> cast+equip Ultima Weapon -> attack -> Ultima Weapon's own destroy trigger fires TWICE (Cloud's own doubling static)",
       result,
     ),
   ];

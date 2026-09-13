@@ -236,7 +236,201 @@ under `app/`/`server/` and have been deleted outright from `synergy.ts`.
   updating to match — see the `engine` agent's own handoff notes for the
   exact call sites.
 
-## What each side must not assume
+## Parser-derived facts (`Fact.provenance`) — 2026-09-13, `PRD_AUTOMATED_AUTHORING.md` wiring
+
+`functional-model/recognizers/` (two real recognizers so far —
+`instant-sorcery-resolves-to-graveyard`, `permanent-enters-battlefield-normally`
+— see `functional-model/PRD_AUTOMATED_AUTHORING.md`) is now wired into real
+per-card generated data via `functional-model/scripts/apply-recognizers.mjs`.
+Real, checked-in `cards/<slug>/synergy.json` files now carry a mix of
+hand-authored facts (unmarked, as always) and parser-derived facts —
+**same `Fact` shape either way**, no fork of the vocabulary.
+
+- **New optional field: `Fact.provenance?: { origin: 'parser'; rule: string }`**
+  (`synergy.ts`) — present ONLY on a fact a recognizer produced; absent
+  entirely on every hand-authored fact (there is still no explicit
+  `origin: 'agent'` marker — absence IS the agent-authored signal). `rule`
+  names which recognizer (`'instant-sorcery-resolves-to-graveyard'` /
+  `'permanent-enters-battlefield-normally'` today — a plain `string` on the
+  `Fact` type itself, not a closed union, since `synergy.ts` deliberately
+  doesn't import from `recognizers/`; the exhaustive catalog lives in that
+  directory's own `RecognizerId`).
+- **Purely informational, same bucket as `targeted`/`untilEndOfTurn`/
+  `costReductionPerControlled`** — not consulted by `factsInteract`, not
+  added to `themeOf`. A parser fact interacts/matches identically to a
+  hand-authored one with the same shape; `provenance` never changes
+  matching behavior, only who gets credit for having authored the claim.
+- **PRD's own acceptance criteria for the `card` side, not yet built**:
+  a Facts-tab show/hide toggle for parser-derived facts, and — when
+  shown — a small provenance detail (which rule) per row. Until that
+  toggle exists, a parser fact will render exactly like any other fact
+  (same `describeFact`/`annotations` path — recognizers already produce
+  real `Fact.annotations`, computed as a byproduct of the match itself, so
+  there is nothing missing for a parser fact to render normally today).
+  Per-card human review scope is meant to narrow to agent-authored facts
+  only (PRD's Design section) — not implemented on the card side yet
+  either; `progress.json`'s `review` field is untouched by this wiring
+  pass (still means what it always meant).
+- **Real state as of this wiring**: 202 real pool cards' `synergy.json`
+  gained new parser-derived facts (435 facts total, additive only — every
+  pre-existing hand-authored fact byte-for-byte unchanged, `progress.json`
+  untouched anywhere). Two specific cards the user asked to inspect
+  personally: `zack-fair` and `ultima` BOTH end up with **zero** new
+  parser facts and zero diff at all — both recognizers correctly decline
+  them (Zack Fair's own "enters with a counter" is a real CR 614.12
+  replacement effect the permanent-recognizer's own criteria excludes on
+  purpose; Ultima's own "exile ... including this card" is a real
+  self-referential override the instant/sorcery-recognizer declines under)
+  — see `PRD_AUTOMATED_AUTHORING.md`'s "Prototype findings" section for
+  the full reasoning trail on both; this wiring pass did not change either
+  card, on purpose, and did not touch Ultima's own pre-existing (arguably
+  wrong, per that same section) hand-authored self-graveyard fact either.
+- **`scripts/verify-synergy.mjs` got one small, principled behavior
+  change** alongside this wiring: a `provenance.origin === 'parser'` fact
+  that has no supporting trace evidence is now a soft NOTE, not a hard
+  FAIL (still visible in the report, never silently dropped) — see that
+  script's own inline comment at both evidence-check sites for the full
+  rationale (in short: many real cards' own `scenarios.ts` only ever
+  exercise that card's own distinguishing ability and never bother casting
+  it from hand first, which is a pre-existing scenario-coverage gap, not a
+  wrong parser verdict, and this PRD's own Design section already
+  supersedes any hard trace-verification gate for a parser fact). Every
+  hand-authored fact's own hard-failure bar is completely unchanged.
+- **Not done in this pass, explicitly out of scope**: the Facts-tab
+  toggle/provenance-detail UI, narrowing per-card review scope to exclude
+  parser facts, and the separate "rule review" lane for auditing the
+  recognizer catalog itself — all still open PRD acceptance criteria,
+  `card`-owned (the first two) or not-yet-designed (the third).
+- **Third recognizer wired (2026-09-13)**: `destroy-effect-structural`
+  (reads a face's structured `Effect[]`, not oracle text) is now also wired
+  into `apply-recognizers.mjs` — same `rule` string on `Fact.provenance`,
+  no new served-shape field. At the time this bullet was written,
+  `summon-bahamut` (fin/1) itself got NO new provenance-tagged fact from
+  this recognizer (dedup against its own already-identical hand-authored
+  `event:'destroy'` fact left it untouched/unprovenanced) — **superseded by
+  the dedup-retagging bullet immediately below; left here only as a
+  historical record of that specific pass, not current behavior.**
+- **Dedup-match retagging (2026-09-13, follow-up pass)** — the "already-
+  covered, leaves it untouched/unprovenanced" behavior described above (and
+  in `apply-recognizers.mjs`'s own pre-existing `coreKey` dedup) is gone.
+  When a recognizer's derived fact dedups against an ALREADY hand-authored
+  fact that has no `provenance` yet, that existing fact is now RETAGGED IN
+  PLACE: same `Fact.provenance` shape, plus a new optional
+  `FactProvenance.note?: string` (`synergy.ts`) — a short documentary string
+  explaining the fact predates the recognizer and was independently
+  reconciled/confirmed by it. Same "not consulted by matching logic" bucket
+  as `provenance` itself; not surfaced anywhere in the served UI beyond
+  existing off-the-shelf JSON/debug views (the Facts-tab popover still only
+  shows `rule` + recognizer source, unchanged). Every other field on the
+  retagged fact (`value`, `annotations`, `controller`, everything) is left
+  byte-for-byte untouched — a recognizer confirms a fact's existence/shape,
+  never its magnitude. **`summon-bahamut` (fin/1) now DOES show a
+  provenance-tagged destroy fact** (its own real `value: -1` placeholder
+  preserved, not overwritten) — the bullet above is stale as of this one.
+  Pool-wide this pass: 163 existing facts retagged (`permanent-enters-
+  battlefield-normally`: 113, `instant-sorcery-resolves-to-graveyard`: 46,
+  `destroy-effect-structural`: 4). Idempotent (re-running retags 0
+  additional facts) — see `PRD_AUTOMATED_AUTHORING.md`'s "Dedup-match
+  retagging closed" section for the full breakdown and live-browser
+  verification notes.
+- **Real bug found+fixed alongside this same pass, `card`-owned file**:
+  `server/api/recognizer-source/[rule].get.ts`'s hand-kept `RECOGNIZER_IDS`
+  runtime array had not been widened to include `'destroy-effect-
+  structural'` when that recognizer was wired, even though the engine-owned
+  `RecognizerId` type it mirrors already had it — every `destroy`-fact
+  provenance popover 404'd until this was fixed (one array literal, `engine`
+  fixed it directly since it was blocking this same pass's own live-browser
+  verification; flagged here since the file is `card`-owned).
+- **Fourth recognizer added (2026-09-13): `drawCard-effect-structural`** —
+  same structural-Effect-reading approach as `destroy-effect-structural`
+  (see `functional-model/recognizers/drawCard-effect-structural.ts`'s own
+  module doc comment and `PRD_AUTOMATED_AUTHORING.md`'s new section for the
+  full reasoning trail), now reading `kind: 'drawCard'` `Effect`s instead of
+  `kind: 'destroy'`. Same served `Fact` shape, no new field —
+  `Fact.provenance.rule` is now one of 4 strings. `RECOGNIZER_IDS` in
+  `server/api/recognizer-source/[rule].get.ts` was updated ALONGSIDE this
+  wiring pass this time (not as a follow-up fix) specifically to avoid
+  repeating the exact `destroy-effect-structural` 404 above — confirmed via
+  live-browser hover on `/app/card/fin/1`'s own "Card draw" row: the
+  provenance popover returns the real recognizer source, no 404.
+  `summon-bahamut` (fin/1)'s own chapter III `drawCard` fact is now
+  provenance-tagged (retagged in place — its own real `value: 4` untouched).
+- **Real, narrow fix alongside this pass, `functional-model/scripts/
+  apply-recognizers.mjs`** (engine-owned, not a `card`-side change, noted
+  here only because it affects what a served `Fact.provenance` can now
+  cover pool-wide): the dedup/retag path's `existingByKey` lookup used to
+  assume at most one existing fact could ever share a bare `coreKey` — real,
+  false for `qiqirn-merchant` (2 genuinely different `event:'drawCard'`
+  facts reducing to the same key) and `matoya-archon-elder` (2 facts
+  sharing a key that are NOT the same real claim — one anchored to its real
+  ability text, one to its own reminder-text parenthesis). Fixed to store a
+  `Fact[]` per key, requiring an exact `annotations` match to disambiguate
+  whenever more than one candidate shares a key (falls back to the
+  single-candidate behavior, unchanged, when only one exists) — see that
+  script's own updated header comment for the full reasoning and the
+  matoya-archon-elder case that forced the annotation-match requirement (a
+  naive "first unprovenanced candidate" policy was tried and reverted after
+  it non-idempotently retagged the wrong fact on a second run).
+- **Fifth recognizer added (2026-09-13): `saga-lore-and-sacrifice-
+  structural`** — genuinely different input shape from the other two
+  structural recognizers: reads a face's own `typeLine` + named
+  `triggers` (never `Effect[]` shapes, never oracle text at all — see
+  `functional-model/recognizers/saga-lore-and-sacrifice-structural.ts`'s
+  own module doc comment and `PRD_AUTOMATED_AUTHORING.md`'s new section
+  for the full reasoning trail), mirroring the real engine's own
+  `functional-model/saga.ts` derivation. Produces an unconditional
+  `putCounter`(LORE)/self fact for every real Saga, PLUS a conditional
+  `sacrifice`+`dies` self-pair (declined whenever the Saga's own final
+  chapter has any `kind:'custom'` effect — see that file's doc comment for
+  the real per-card reasoning, including two deliberate divergences from
+  existing hand-authored data: `summon-leviathan` and `crystal-fragments-
+  summon-alexander`). Same served `Fact` shape, no new field —
+  `Fact.provenance.rule` is now one of 5 strings. `RECOGNIZER_IDS` in
+  `server/api/recognizer-source/[rule].get.ts` was updated ALONGSIDE this
+  wiring pass (not a follow-up fix) — confirmed via live-browser hover on
+  `/app/card/fin/1`'s "Counters"/"Sacrifice"/"Dies" rows (200, not a 404)
+  and on `/app/card/fin/58` (Jill, Shiva's Dominant // Shiva, Warden of
+  Ice)'s back face, which correctly shows only the "Counters" row
+  provenance-tagged (no sacrifice/dies row at all — the lore-only, real
+  transform-back outcome). `summon-bahamut` (fin/1)'s own `putCounter`/
+  `sacrifice`/`dies` facts are now all 3 provenance-tagged (retagged in
+  place — their own real legacy `-1`/`-1`/`1` values untouched).
+- **Duplicate-fact handling moved from each recognizer to one shared
+  runner-level pass, and generalized (2026-09-13, follow-up)** — 3 of the 5
+  structural/text recognizers used to each keep their own bespoke per-face
+  `seen` Set (exact `JSON.stringify(fact)` match, `annotations` included);
+  that's gone now, replaced by `apply-recognizers.mjs`'s own
+  `mergeRecognizedFactsByIdentity` (fresh recognizer output, grouped by the
+  same reduced identity `coreKey` already uses) plus a second, narrower
+  existing-on-disk self-heal (`mergeSameRuleExistingFacts`, for a pool
+  already retagged by a PRIOR run before this generalization existed). Net
+  effect, real and intentional: **`Fact.annotations` can now legitimately
+  have length > 1 where two genuinely different real clauses assert the
+  identical claim** — first real, checked-in example is `qiqirn-merchant`
+  (fin/65)'s own `event:'drawCard'` fact, unioning its `cantrip` ability's
+  span and its `bigDraw` ability's span into one fact (previously served as
+  2 separate `drawCard` facts). Confirmed via live `/api/card/fin/65` —
+  `functionalModel.synergy` now serves exactly one `drawCard` fact with a
+  2-entry `annotations` array. Pool-wide re-run confirmed this is the ONLY
+  card whose on-disk `synergy.json` changed as a result (idempotent, 2
+  further runs write 0 files).
+  - `card`-side spot-check done as part of this same pass (engine-owned
+    check, not a fix): `FunctionalModelText.vue`'s own inline oracle-text
+    highlighting already iterates a fact's FULL `annotations` array (`for
+    (const ann of f.annotations ?? [])`, both the `'oracle'` and `'typeLine'`
+    branches), so it already highlights BOTH real spans correctly for a
+    merged fact like this one — no gap there.
+  - **Real, narrow gap found, NOT fixed (out of scope for this pass,
+    flagged for `card`)**: the Facts-table row's own hover tooltip
+    (`factSourceText`, `app/pages/app/card/[set]/[number].vue` around line
+    616) and its `factKey` (same file, ~line 335) both only ever read
+    `fact.annotations?.[0]` — for `qiqirn-merchant`'s own merged fact this
+    means the row tooltip shows only the `cantrip` ability's own line text,
+    never surfacing the `bigDraw` ability's own second span at all. Every
+    fact before this pass had at most one real annotation, so this was
+    never previously reachable; now that a merged fact can carry more than
+    one, `card` may want `factSourceText` to represent all of them (e.g.
+    joined text, or the row's own key not silently ignoring later entries).
 
 - `card` agent must not assume anything about `Effect` kinds or
   `resolveCard()` internals beyond what's in `synergy.json`/`trace.json` —

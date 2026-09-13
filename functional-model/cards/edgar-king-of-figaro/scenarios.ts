@@ -24,7 +24,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real board-state filler: two real artifacts already under your control
   // before Edgar resolves.
-  pilot.beginStep("Real artifacts already on the battlefield: Astrologian's Planisphere and Ether");
+  pilot.beginStep("Artifacts already on the battlefield: Astrologian's Planisphere and Ether");
   const planisphere = pilot.state.addCard(pilot.you, 'Battlefield', { name: "Astrologian's Planisphere", types: ['Artifact'], subtypes: ['Equipment'], cmc: 2 });
   pilot.log.push({ fn: 'enters', card: planisphere.name, zone: 'Battlefield', controller: pilot.you.name });
   const ether = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Ether', types: ['Artifact'], cmc: 4 });
@@ -65,14 +65,14 @@ export function runEngineScenarios(): TraceResult[] {
   // (`false`) — Edgar's own Two-Headed Coin replacement forces a WIN
   // anyway, genuinely overriding the caller's own supplied outcome, real
   // proof this is a mechanical replacement and not just a label.
-  pilot.beginStep('A real coin flip resolves — Two-Headed Coin forces the win (CR-614-style replacement)');
+  pilot.beginStep('A coin flip resolves — Two-Headed Coin forces the win (CR-614-style replacement)');
   const requestedWin = false;
   const won = pilot.state.flipCoin(pilot.you, requestedWin);
   pilot.log.push({ fn: 'coinFlip', player: pilot.you.name, won, requestedWin, forced: won !== requestedWin });
 
   const result =
-    "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A real coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement genuinely forces a WIN instead (the first flip this turn), proving the mechanism is real, not just descriptive text.";
+    "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement forces a WIN instead (the first flip this turn), proving the mechanism runs, not just descriptive text.";
   return [
-    finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real ETB draw scaled by real artifact count -> real coin flip, forced win', result),
+    finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> ETB draw scaled by artifact count -> coin flip, forced win', result),
   ];
 }

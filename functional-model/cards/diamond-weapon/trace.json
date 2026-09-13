@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 9 Forest(s); opp0: 1 Mountain(s)",
-      "action": "real engine playthrough: cast -> opponent attacks -> Diamond Weapon blocks -> real combat damage, combat-damage-prevention shield genuinely fires",
-      "result": "Diamond Weapon is cast for {7}{G}{G}; a real opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — real 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield genuinely PREVENTS the 5 combat damage it would otherwise take (a real fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's real 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a real, documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.",
+      "action": "engine playthrough: cast -> opponent attacks -> Diamond Weapon blocks -> combat damage, combat-damage-prevention shield fires",
+      "result": "Diamond Weapon is cast for {7}{G}{G}; an opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield PREVENTS the 5 combat damage it would otherwise take (a fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.",
       "raw": {
-        "result": "Diamond Weapon is cast for {7}{G}{G}; a real opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — real 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield genuinely PREVENTS the 5 combat damage it would otherwise take (a real fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's real 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a real, documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.",
+        "result": "Diamond Weapon is cast for {7}{G}{G}; an opponent attacker (Hill Gigas, 5/4 Trample) attacks and is blocked by Diamond Weapon — 510 combat damage resolves, and Diamond Weapon's own 'Immune' shield PREVENTS the 5 combat damage it would otherwise take (a fn:'damagePrevented' trace line, not fn:'dealDamage'), while Hill Gigas itself still takes Diamond Weapon's 8 power back, unshielded. Its own separate 'costs {1} less to cast for each permanent card in your graveyard' clause remains a documented, unrelated engine gap (ENGINE_GAPS.md gap #7) — not closed by this pass.",
         "you": {
           "basicLands": [
             "Forest",
@@ -123,12 +123,12 @@
       {
         "fn": "tap",
         "target": "Hill Gigas",
-        "id": 34
+        "id": 624
       },
       {
         "fn": "attack",
         "card": "Hill Gigas",
-        "id": 34
+        "id": 624
       },
       {
         "fn": "phase",
@@ -139,14 +139,14 @@
       {
         "fn": "block",
         "blocker": "Diamond Weapon",
-        "blockerId": 33,
+        "blockerId": 623,
         "attacker": "Hill Gigas",
-        "attackerId": 34
+        "attackerId": 624
       },
       {
         "fn": "damagePrevented",
         "target": "Diamond Weapon",
-        "id": 33,
+        "id": 623,
         "cause": "combat"
       }
     ],
@@ -164,7 +164,7 @@
         "from": 10
       },
       {
-        "label": "Real opponent attacker: Hill Gigas (5/4, Trample/Haste)",
+        "label": "Opponent attacker: Hill Gigas (5/4, Trample/Haste)",
         "from": 11
       },
       {

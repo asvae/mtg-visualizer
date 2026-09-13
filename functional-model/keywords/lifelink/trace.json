@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> real turn passage -> unblocked combat -> real Lifelink life gain",
-      "result": "Real Lifelink (state.ts's own `dealDamage`): every point of combat damage Steiner deals to the opponent (2) is genuinely mirrored as life gain for its controller (2) — not a separate scripted \"and also gain life\" step, the SAME real damage call does both.",
+      "action": "engine playthrough: cast -> turn passage -> unblocked combat -> Lifelink life gain",
+      "result": "Lifelink (state.ts's own `dealDamage`): every point of combat damage Steiner deals to the opponent (2) is mirrored as life gain for its controller (2) — not a separate scripted \"and also gain life\" step, the SAME damage call does both.",
       "raw": {
-        "result": "Real Lifelink (state.ts's own `dealDamage`): every point of combat damage Steiner deals to the opponent (2) is genuinely mirrored as life gain for its controller (2) — not a separate scripted \"and also gain life\" step, the SAME real damage call does both.",
+        "result": "Lifelink (state.ts's own `dealDamage`): every point of combat damage Steiner deals to the opponent (2) is mirrored as life gain for its controller (2) — not a separate scripted \"and also gain life\" step, the SAME damage call does both.",
         "you": {
           "basicLands": [
             "Plains",
@@ -88,11 +88,13 @@
       },
       {
         "fn": "tap",
-        "target": "Adelbert Steiner"
+        "target": "Adelbert Steiner",
+        "id": 115
       },
       {
         "fn": "attack",
-        "card": "Adelbert Steiner"
+        "card": "Adelbert Steiner",
+        "id": 115
       },
       {
         "fn": "phase",
@@ -151,7 +153,7 @@
         "from": 15
       },
       {
-        "label": "Resolve unblocked combat damage — real Lifelink",
+        "label": "Resolve unblocked combat damage — Lifelink",
         "from": 15
       }
     ]

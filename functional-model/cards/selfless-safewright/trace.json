@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Selfless Safewright",
         "instanceId": 1,
+        "id": 2115,
         "from": "hand",
         "cost": "{3}{G}{G}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Selfless Safewright",
         "instanceId": 1,
+        "id": 2115,
         "zone": "Battlefield"
       }
     ]

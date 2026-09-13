@@ -33,7 +33,7 @@ export function runEngineScenarios(): TraceResult[] {
 
   // Real opponent's nonland permanent already on the battlefield — the
   // legal target the ETB exile effect needs.
-  pilot.beginStep("A real opponent's nonland permanent (Coeurl) already on the battlefield");
+  pilot.beginStep("An opponent's nonland permanent (Coeurl) already on the battlefield");
   const oppCreature = pilot.state.addCard(pilot.opponents[0]!, 'Battlefield', { name: 'Coeurl', types: ['Creature'], subtypes: ['Cat', 'Beast'], basePower: 2, baseToughness: 2, cmc: 2 });
   pilot.log.push({ fn: 'enters', card: oppCreature.name, zone: 'Battlefield', power: 2, toughness: 2, controller: pilot.opponents[0]!.name });
 
@@ -45,5 +45,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     "White Auracite is cast for {2}{W}{W} and resolves; its ETB trigger exiles a nonland permanent an opponent controls (Coeurl). Its own \"{T}: Add {W}.\" mana ability has no scenario evidence — this model has no way to pilot a plain mana ability at all (see this card's own definition.ts comment).";
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real ETB exile of an opponent nonland permanent', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> ETB exile of an opponent nonland permanent', result)];
 }

@@ -30,7 +30,7 @@ export function runEngineScenarios(): TraceResult[] {
   // Two real named fin Artifacts (any real printing works — same "a real
   // named card, not a synthetic placeholder" convention ashe-princess-of-
   // dalmasca's own scenario already establishes for a single real artifact).
-  pilot.beginStep('Real artifacts already on the battlefield (2, meets the printed threshold)');
+  pilot.beginStep('Artifacts already on the battlefield (2, meets the printed threshold)');
   const phoenixDown = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Phoenix Down', types: ['Artifact'] });
   const elixir = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Elixir', types: ['Artifact'] });
   // A real `enters` entry for each bystander (aerith-gainsborough/
@@ -61,7 +61,7 @@ export function runEngineScenarios(): TraceResult[] {
   // Real, per-object type reads — the condition ("you control two or more
   // artifacts") is genuinely observable board state, same logging wrapper
   // (`loggingCard`) every real Card query in this engine goes through.
-  pilot.beginStep("Real condition check — 'you control two or more artifacts'");
+  pilot.beginStep("Condition check — 'you control two or more artifacts'");
   const phoenixIsArtifact = loggingCard(pilot.state, phoenixDown, pilot.log).isArtifact();
   const elixirIsArtifact = loggingCard(pilot.state, elixir, pilot.log).isArtifact();
 
@@ -70,10 +70,10 @@ export function runEngineScenarios(): TraceResult[] {
   // engine has no threshold-gated `ptFormula` variant, so the printed
   // "+2/+0" never actually applies here — a real, documented gap, not
   // fabricated evidence of a bonus that doesn't happen.
-  pilot.beginStep('Real layer-7a read — no threshold-CDA machinery, so the +2/+0 does not apply');
+  pilot.beginStep('Layer-7a read — no threshold-CDA machinery, so the +2/+0 does not apply');
   const [power, toughness] = effectivePT(pilot.state, gaelicatReal);
   pilot.log.push({ fn: 'read:getNetPower', card: gaelicat.name, power, toughness });
 
   const result = `Gaelicat enters with 2 Artifacts (Phoenix Down, Elixir; confirmed isArtifact()=${phoenixIsArtifact}/${elixirIsArtifact}) already on the battlefield, meeting the printed "two or more artifacts" threshold — but layer-7a effectivePT still reports Gaelicat's unmodified printed ${power}/${toughness}, since this engine has no threshold-gated CDA machinery to apply the printed +2/+0 (a documented gap, same class as scorpion-sentinel/gigantoad's own identically-shaped land-count buffs).`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: 2 real artifacts present -> cast -> real condition/CDA reads (gap documented)', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: 2 artifacts present -> cast -> condition/CDA reads (gap documented)', result)];
 }

@@ -58,6 +58,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   const result =
-    'Travel the Overworld is cast from hand while controlling 2 real Town lands (Capital City, Gongaga, Reactor Town) — Affinity for Towns genuinely discounts the printed {5}{U}{U} down to {3}{U}{U} (`card.ts`\'s `CostReduction.perControlled`, ENGINE_GAPS.md gap #7): the `cast` log entry\'s own `cost` field reads {3}{U}{U}, and only 5 real lands are tapped for mana (`tapForMana`), not the full printed {5}{U}{U}/7 lands. It then resolves, drawing 4 real cards.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast (real {2} discount from 2 Towns) -> resolve (draw four cards)', result)];
+    'Travel the Overworld is cast from hand while controlling 2 Town lands (Capital City, Gongaga, Reactor Town) — Affinity for Towns discounts the printed {5}{U}{U} down to {3}{U}{U} (`card.ts`\'s `CostReduction.perControlled`, ENGINE_GAPS.md gap #7): the `cast` log entry\'s own `cost` field reads {3}{U}{U}, and only 5 lands are tapped for mana (`tapForMana`), not the full printed {5}{U}{U}/7 lands. It then resolves, drawing 4 cards.';
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast ({2} discount from 2 Towns) -> resolve (draw four cards)', result)];
 }

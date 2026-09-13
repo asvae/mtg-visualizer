@@ -24,6 +24,10 @@ export const qutrubForayer: CardDefinition = {
               // (broader than real — any creature, not just a damaged one),
               // same category of approximation `minPower`/etc. already
               // accept elsewhere.
+              // recognizer-exception: destroy-effect-structural — the real
+              // oracle text has a trailing "that was dealt damage this turn"
+              // qualifier no Constraints field represents (see recognizer's
+              // own module doc comment); a confirmed mismatch, not a bug.
               describe: 'Destroy target creature that was dealt damage this turn.',
               effects: [{ kind: 'destroy', validType: 'creature', qty: 1 } satisfies Effect],
             },

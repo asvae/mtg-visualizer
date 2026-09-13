@@ -17,12 +17,13 @@
         "fn": "trigger",
         "card": "Vincent Valentine",
         "instanceId": 1,
+        "id": 3110,
         "name": "onOpponentCreatureDies"
       },
       {
         "fn": "putCounter",
         "target": "Vincent Valentine",
-        "id": 2819,
+        "id": 3110,
         "counterType": "+1/+1",
         "amount": 3,
         "controller": "you"
@@ -44,19 +45,20 @@
         "fn": "trigger",
         "card": "Vincent Valentine",
         "instanceId": 1,
+        "id": 3112,
         "name": "onAttacks"
       },
       {
         "fn": "moveTo",
         "target": "Vincent Valentine",
-        "id": 2821,
+        "id": 3112,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Vincent Valentine",
-        "id": 2821,
+        "id": 3112,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -78,19 +80,20 @@
         "fn": "trigger",
         "card": "Galian Beast",
         "instanceId": 1,
+        "id": 3114,
         "name": "onDies"
       },
       {
         "fn": "moveTo",
         "target": "Galian Beast",
-        "id": 2823,
+        "id": 3114,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "Galian Beast",
-        "id": 2823,
+        "id": 3114,
         "controller": "you"
       }
     ]
@@ -113,6 +116,7 @@
         "fn": "cast",
         "card": "Galian Beast",
         "instanceId": 1,
+        "id": 3116,
         "from": "hand",
         "cost": ""
       },
@@ -120,12 +124,13 @@
         "fn": "enters",
         "card": "Galian Beast",
         "instanceId": 1,
+        "id": 3116,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Galian Beast",
-        "sourceId": 2825,
+        "sourceId": 3116,
         "target": "opp0",
         "amount": 3
       },
@@ -152,6 +157,7 @@
         "fn": "cast",
         "card": "Vincent Valentine",
         "instanceId": 1,
+        "id": 3119,
         "from": "hand",
         "cost": "{2}{B}{B}"
       },
@@ -159,6 +165,7 @@
         "fn": "enters",
         "card": "Vincent Valentine",
         "instanceId": 1,
+        "id": 3119,
         "zone": "Battlefield"
       },
       {

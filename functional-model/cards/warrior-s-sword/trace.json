@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Warrior's Sword",
         "instanceId": 1,
+        "id": 3133,
         "name": "onEnter"
       },
       {
@@ -28,9 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Warrior's Sword",
-        "equipmentId": 2844,
+        "equipmentId": 3133,
         "target": "Hero",
-        "id": 2845
+        "id": 3134
       }
     ]
   },
@@ -51,6 +52,7 @@
         "fn": "activate",
         "card": "Warrior's Sword",
         "instanceId": 1,
+        "id": 3137,
         "cost": "{5}"
       },
       {
@@ -61,9 +63,9 @@
       {
         "fn": "equip",
         "equipment": "Warrior's Sword",
-        "equipmentId": 2848,
+        "equipmentId": 3137,
         "target": "Grizzly Bears",
-        "id": 2847
+        "id": 3136
       }
     ]
   }

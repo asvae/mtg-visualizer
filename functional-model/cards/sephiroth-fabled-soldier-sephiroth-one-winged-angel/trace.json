@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
+        "id": 2118,
         "name": "onEnterOrAttacks"
       },
       {
@@ -56,6 +57,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
+        "id": 2120,
         "name": "onEnterOrAttacks"
       },
       {
@@ -93,6 +95,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
+        "id": 2123,
         "name": "onCreatureDies"
       },
       {
@@ -128,6 +131,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
+        "id": 2126,
         "name": "onCreatureDies"
       },
       {
@@ -143,14 +147,14 @@
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
-        "id": 1996,
+        "id": 2126,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
-        "id": 1996,
+        "id": 2126,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -175,6 +179,7 @@
         "fn": "trigger",
         "card": "Sephiroth, One-Winged Angel",
         "instanceId": 1,
+        "id": 2129,
         "name": "onAnyCreatureDies"
       },
       {
@@ -211,6 +216,7 @@
         "fn": "trigger",
         "card": "Sephiroth, One-Winged Angel",
         "instanceId": 1,
+        "id": 2133,
         "name": "onAttack"
       },
       {
@@ -263,6 +269,7 @@
         "fn": "trigger",
         "card": "Sephiroth, One-Winged Angel",
         "instanceId": 1,
+        "id": 2137,
         "name": "onAttack"
       },
       {
@@ -300,6 +307,7 @@
         "fn": "cast",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
+        "id": 2139,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -307,6 +315,7 @@
         "fn": "enters",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
+        "id": 2139,
         "zone": "Battlefield"
       },
       {

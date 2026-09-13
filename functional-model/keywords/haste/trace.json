@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 2 Mountain(s)",
-      "action": "real engine playthrough: cast -> same-turn attack declaration succeeds via real Haste",
-      "result": "Real 302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and `pilotDeclareAttackers` throws on any illegal declaration — but its real printed Haste exempts it in the engine's own `canAttack` check, so the declaration succeeds for real.",
+      "action": "engine playthrough: cast -> same-turn attack declaration succeeds via Haste",
+      "result": "302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and `pilotDeclareAttackers` throws on any illegal declaration — but its printed Haste exempts it in the engine's own `canAttack` check, so the declaration succeeds.",
       "raw": {
-        "result": "Real 302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and `pilotDeclareAttackers` throws on any illegal declaration — but its real printed Haste exempts it in the engine's own `canAttack` check, so the declaration succeeds for real.",
+        "result": "302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and `pilotDeclareAttackers` throws on any illegal declaration — but its printed Haste exempts it in the engine's own `canAttack` check, so the declaration succeeds.",
         "you": {
           "basicLands": [
             "Mountain",
@@ -52,11 +52,13 @@
       },
       {
         "fn": "tap",
-        "target": "Prompto Argentum"
+        "target": "Prompto Argentum",
+        "id": 78
       },
       {
         "fn": "attack",
-        "card": "Prompto Argentum"
+        "card": "Prompto Argentum",
+        "id": 78
       }
     ],
     "actions": [

@@ -85,13 +85,13 @@ function scenarioA(): TraceResult {
   // sacrifice follows immediately (nothing reset its lore counters first)
   advanceToPlayersNextMain1(pilot, pilot.you, leviathanReal);
   if (leviathanReal.zone === 'Graveyard') {
-    pilot.beginStep('Real 714.4 sacrifice — lore counters were never reset');
+    pilot.beginStep('714.4 sacrifice — lore counters were never reset');
     pilot.log.push({ fn: 'sacrifice', player: pilot.you.name, card: summonLeviathan.name });
   }
 
   const result =
-    "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both real, non-token permanents — while Sahagin (a real Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a real, still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.";
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> ETB Saga tick -> chapters over real turns -> 714.4 sacrifice', result);
+    "Summon: Leviathan enters; chapter I fires (714.2b) and returns every non-tribal creature to its owner's hand — Ahriman (yours) and Coeurl (the opponent's), both non-token permanents — while Sahagin (a Merfolk) stays put, proving the Kraken/Leviathan/Merfolk/Octopus/Serpent exclusion. Chapter II fires on your next draw step, chapter III the turn after (both grant a temporary 'whenever a [tribal type] attacks, draw a card' ability — a still-open engine gap, correctly inert here); chapter III is this card's own greatest chapter number, so Summon: Leviathan is sacrificed (714.4) right after.";
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> ETB Saga tick -> chapters over turns -> 714.4 sacrifice', result);
 }
 
 export function runEngineScenarios(): TraceResult[] {

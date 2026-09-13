@@ -19,6 +19,7 @@
         "fn": "trigger",
         "card": "Formidable Speaker",
         "instanceId": 1,
+        "id": 953,
         "name": "onEnter"
       },
       {
@@ -49,7 +50,7 @@
       {
         "fn": "moveTo",
         "target": "you-library-subtype-0",
-        "id": 849,
+        "id": 951,
         "zone": "Hand",
         "controller": "you"
       }
@@ -74,6 +75,7 @@
         "fn": "trigger",
         "card": "Formidable Speaker",
         "instanceId": 1,
+        "id": 958,
         "name": "onEnter"
       },
       {
@@ -121,6 +123,7 @@
         "fn": "activate",
         "card": "Formidable Speaker",
         "instanceId": 1,
+        "id": 961,
         "cost": "{1}, {T}"
       },
       {
@@ -133,7 +136,7 @@
       {
         "fn": "untap",
         "target": "Grizzly Bears",
-        "id": 858
+        "id": 960
       }
     ]
   }

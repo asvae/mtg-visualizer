@@ -24,7 +24,7 @@ export function runEngineScenarios(): TraceResult[] {
   pilotCast(pilot, ambrosiaReal, ambrosiaWhiteheart, ctx, actions);
   pilotResolveTop(pilot);
 
-  pilot.beginStep('A real land enters');
+  pilot.beginStep('A land enters');
   const forest = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Forest', types: ['Land'], subtypes: ['Forest'] });
   pilot.log.push({ fn: 'enters', card: forest.name, zone: 'Battlefield', controller: pilot.you.name });
 
@@ -32,6 +32,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotFireTrigger(pilot, ambrosiaWhiteheart, ctx, actions, 'onLandfall');
   const afterPower = effectivePT(pilot.state, ambrosiaReal)[0];
 
-  const result = `Landfall isn't auto-detected in this engine (a real, documented gap — see this file's own header), so the land's real entrance is played for real, then the SAME real "+1/+0 until end of turn" effect the card is printed with fires manually — Ambrosia's real power genuinely goes from ${beforePower} to ${afterPower} via the same \`pump\` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real land ETB -> onLandfall fired manually -> real pump', result)];
+  const result = `Landfall isn't auto-detected in this engine (a documented gap — see this file's own header), so the land enters, then the same "+1/+0 until end of turn" effect the card is printed with fires manually — Ambrosia's power goes from ${beforePower} to ${afterPower} via the same \`pump\` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> land ETB -> onLandfall fired manually -> pump', result)];
 }

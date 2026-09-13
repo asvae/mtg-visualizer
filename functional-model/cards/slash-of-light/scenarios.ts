@@ -51,5 +51,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     "Slash of Light is cast for {1}{W} targeting the opponent's Ahriman — its damage (equal to the 2 creatures plus 1 Equipment you control, a total of 3) is dealt to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).";
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> resolve (damage = creatures you control + Equipment you control) -> target creature', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> resolve (damage = creatures you control + Equipment you control) -> target creature', result)];
 }

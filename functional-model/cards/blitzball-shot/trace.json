@@ -16,6 +16,7 @@
         "fn": "cast",
         "card": "Blitzball Shot",
         "instanceId": 1,
+        "id": 289,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -27,7 +28,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 281,
+        "id": 288,
         "power": 3,
         "toughness": 3
       },
@@ -46,13 +47,14 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 281,
+        "id": 288,
         "keyword": "Trample"
       },
       {
         "fn": "move",
         "card": "Blitzball Shot",
         "instanceId": 1,
+        "id": 289,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

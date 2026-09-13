@@ -2,7 +2,7 @@
   {
     "scenario": {
       "setup": "you: 4 Island(s)",
-      "action": "real engine playthrough: cast -> turn passage -> real \"cantrip\" activation (draw, discard) -> real \"bigDraw\" activation (draw 3)",
+      "action": "engine playthrough: cast -> turn passage -> \"cantrip\" activation (draw, discard) -> \"bigDraw\" activation (draw 3)",
       "result": "Qiqirn Merchant is cast, turn passage clears summoning sickness, then both of its activated abilities fire in sequence against the same board: \"cantrip\" ({1}, {T}) draws a card and discards a card, then \"bigDraw\" ({7}, {T}, Sacrifice this creature) draws three more cards.",
       "raw": {
         "result": "Qiqirn Merchant is cast, turn passage clears summoning sickness, then both of its activated abilities fire in sequence against the same board: \"cantrip\" ({1}, {T}) draws a card and discards a card, then \"bigDraw\" ({7}, {T}, Sacrifice this creature) draws three more cards.",
@@ -113,7 +113,7 @@
       {
         "fn": "tap",
         "target": "Qiqirn Merchant",
-        "id": 17,
+        "id": 1846,
         "controller": "you"
       },
       {
@@ -186,7 +186,7 @@
         "from": 18
       },
       {
-        "label": "Activate \"bigDraw\" ({7}, {T}, Sacrifice Qiqirn Merchant, discounted {1} per Town you control — real cost computed via effectiveActivationCost, fired directly since self-sacrifice-as-cost is not payable through canActivateAbility, see this file's own header)",
+        "label": "Activate \"bigDraw\" ({7}, {T}, Sacrifice Qiqirn Merchant, discounted {1} per Town you control — cost computed via effectiveActivationCost, fired directly since self-sacrifice-as-cost is not payable through canActivateAbility, see this file's own header)",
         "from": 20
       }
     ]

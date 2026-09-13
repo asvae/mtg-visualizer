@@ -22,6 +22,7 @@
         "fn": "trigger",
         "card": "Omega, Heartless Evolution",
         "instanceId": 1,
+        "id": 1763,
         "name": "onEnter"
       },
       {
@@ -39,7 +40,7 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 1658,
+        "id": 1762,
         "controller": "opp0"
       },
       {
@@ -62,7 +63,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1658,
+        "id": 1762,
         "counterType": "Stun",
         "amount": 2,
         "controller": "opp0"
@@ -94,6 +95,7 @@
         "fn": "cast",
         "card": "Omega, Heartless Evolution",
         "instanceId": 1,
+        "id": 1765,
         "from": "hand",
         "cost": "{5}{G}{U}"
       },
@@ -101,6 +103,7 @@
         "fn": "enters",
         "card": "Omega, Heartless Evolution",
         "instanceId": 1,
+        "id": 1765,
         "zone": "Battlefield"
       },
       {

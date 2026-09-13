@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 1 card(s) in library",
       "action": "\"onEnter\" trigger fires",
-      "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)",
+      "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to match, see definition.ts)",
       "raw": {
-        "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to actually match, see definition.ts)",
+        "result": "searches for a land and puts it onto the battlefield (no land-typed library filler exists in this model to match, see definition.ts)",
         "trigger": "onEnter",
         "you": {
           "libraryCount": 1
@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
+        "id": 1090,
         "name": "onEnter"
       },
       {
@@ -52,6 +53,7 @@
         "fn": "trigger",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
+        "id": 1093,
         "name": "onLandfall"
       },
       {
@@ -62,7 +64,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 990,
+        "id": 1092,
         "power": 2,
         "toughness": 2
       },
@@ -86,7 +88,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 990,
+        "id": 1092,
         "keyword": "Trample"
       }
     ]
@@ -106,6 +108,7 @@
         "fn": "cast",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
+        "id": 1095,
         "from": "hand",
         "cost": "{4}{R}{G}"
       },
@@ -113,6 +116,7 @@
         "fn": "enters",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
+        "id": 1095,
         "zone": "Battlefield"
       },
       {

@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 1 card(s) in hand",
       "action": "\"landDrop\" activated",
-      "result": "no land-typed hand filler exists in this model to actually match (see definition.ts), so nothing is put onto the battlefield",
+      "result": "no land-typed hand filler exists in this model to match (see definition.ts), so nothing is put onto the battlefield",
       "raw": {
-        "result": "no land-typed hand filler exists in this model to actually match (see definition.ts), so nothing is put onto the battlefield",
+        "result": "no land-typed hand filler exists in this model to match (see definition.ts), so nothing is put onto the battlefield",
         "ability": "landDrop",
         "you": {
           "handCount": 1
@@ -17,6 +17,7 @@
         "fn": "activate",
         "card": "PuPu UFO",
         "instanceId": 1,
+        "id": 1827,
         "cost": "{T}",
         "ability": "landDrop"
       },
@@ -50,6 +51,7 @@
         "fn": "activate",
         "card": "PuPu UFO",
         "instanceId": 1,
+        "id": 1829,
         "cost": "{3}",
         "ability": "becomePowerOfTowns"
       }

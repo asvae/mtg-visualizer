@@ -17,6 +17,7 @@
         "fn": "cast",
         "card": "Random Encounter",
         "instanceId": 1,
+        "id": 1879,
         "from": "hand",
         "cost": "{4}{R}{R}"
       },
@@ -52,6 +53,7 @@
         "fn": "move",
         "card": "Random Encounter",
         "instanceId": 1,
+        "id": 1879,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -76,6 +78,7 @@
         "fn": "trigger",
         "card": "Random Encounter",
         "instanceId": 1,
+        "id": 1883,
         "name": "atNextEndStep"
       },
       {

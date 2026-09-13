@@ -23,7 +23,7 @@
         "fn": "cast",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3,
+        "id": 3157,
         "from": "hand",
         "cost": "{1}{W}"
       },
@@ -31,14 +31,14 @@
         "fn": "enters",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3,
+        "id": 3157,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3,
+        "id": 3157,
         "name": "onEnter"
       },
       {
@@ -53,15 +53,15 @@
       {
         "fn": "equip",
         "equipment": "White Mage's Staff",
-        "equipmentId": 3,
+        "equipmentId": 3157,
         "target": "Hero",
-        "id": 4
+        "id": 3158
       },
       {
         "fn": "activate",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3,
+        "id": 3157,
         "cost": "{3}"
       },
       {
@@ -72,9 +72,9 @@
       {
         "fn": "equip",
         "equipment": "White Mage's Staff",
-        "equipmentId": 3,
+        "equipmentId": 3157,
         "target": "Grizzly Bears",
-        "id": 2
+        "id": 3156
       }
     ]
   }

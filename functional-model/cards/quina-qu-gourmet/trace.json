@@ -19,6 +19,7 @@
         "fn": "activate",
         "card": "Quina, Qu Gourmet",
         "instanceId": 1,
+        "id": 1857,
         "cost": "{2}, Sacrifice a Frog"
       },
       {
@@ -37,7 +38,7 @@
       {
         "fn": "putCounter",
         "target": "Quina, Qu Gourmet",
-        "id": 1742,
+        "id": 1857,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -59,6 +60,7 @@
         "fn": "activate",
         "card": "Quina, Qu Gourmet",
         "instanceId": 1,
+        "id": 1859,
         "cost": "{2}, Sacrifice a Frog"
       },
       {
@@ -72,7 +74,7 @@
       {
         "fn": "putCounter",
         "target": "Quina, Qu Gourmet",
-        "id": 1744,
+        "id": 1859,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 5 Plains(s)",
-      "action": "real engine playthrough: cast -> resolve (Destroy all artifacts and creatures)",
-      "result": "Destroys all four real artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a genuinely symmetric, untargeted wipe (no controller restriction in the real text). Both real Plains survive untouched. \"End the turn\" is real text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.",
+      "action": "engine playthrough: cast -> resolve (Destroy all artifacts and creatures)",
+      "result": "Destroys all four artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a symmetric, untargeted wipe (no controller restriction in the printed text). Both Plains survive untouched. \"End the turn\" is printed text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.",
       "raw": {
-        "result": "Destroys all four real artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a genuinely symmetric, untargeted wipe (no controller restriction in the real text). Both real Plains survive untouched. \"End the turn\" is real text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.",
+        "result": "Destroys all four artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a symmetric, untargeted wipe (no controller restriction in the printed text). Both Plains survive untouched. \"End the turn\" is printed text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.",
         "you": {
           "basicLands": [
             "Plains",
@@ -198,25 +198,25 @@
       {
         "fn": "destroy",
         "target": "Dragoon's Lance",
-        "id": 2654,
+        "id": 2948,
         "controller": "you"
       },
       {
         "fn": "destroy",
         "target": "Dwarven Castle Guard",
-        "id": 2655,
+        "id": 2949,
         "controller": "you"
       },
       {
         "fn": "destroy",
         "target": "Phoenix Down",
-        "id": 2656,
+        "id": 2950,
         "controller": "opp0"
       },
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 2657,
+        "id": 2951,
         "controller": "opp0"
       },
       {

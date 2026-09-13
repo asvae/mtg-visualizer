@@ -2861,3 +2861,50 @@ words are legitimately used to mean something different (an engineering
 claim like "confirmed via a real trace, not fabricated" is about
 verification rigor for another agent's benefit, not user-facing
 description, and stays as-is).
+
+## `Fact.provenance` — parser-derived facts wired into real `synergy.json` (2026-09-13)
+
+`PRD_AUTOMATED_AUTHORING.md`'s recognizer-library prototype
+(`functional-model/recognizers/`) is now wired into real per-card data,
+not just in-memory/test-proven — see that PRD's own new "Wired into real
+per-card data" section and `.claude/contracts/card-schema.md`'s new
+section for the full writeup; this entry is the design-doc pointer, not a
+duplicate of either.
+
+- New optional `Fact.provenance?: { origin: 'parser'; rule: string }`
+  (this file, above, alongside every other "purely informational, not
+  consulted by `factsInteract`, not added to `themeOf`" field —
+  `targeted`/`untilEndOfTurn`/`costReductionPerControlled`/`oncePerTurn`).
+  Absent = hand-authored (today's implicit, unmarked default); present =
+  which recognizer produced it. Deliberately a plain `string` for `rule`,
+  not `recognizers/types.ts`'s own narrower `RecognizerId` union — this
+  file's own `Fact` vocabulary does not import from `recognizers/` (the
+  dependency already only ran the other direction: recognizers import
+  `Fact`/`AnnotationRef`/`toLineOffset` from here).
+- New `functional-model/scripts/apply-recognizers.mjs` — additive,
+  idempotent, whole-pool. Appends a recognizer's matched fact to a card's
+  own `source` array only when no existing fact (hand-authored OR a prior
+  run of this same script) already covers the identical real claim,
+  compared on a reduced key deliberately excluding `value`/`controller`
+  (both genuinely inconsistent across today's existing hand-authored pool
+  for these two specific fact shapes — see that script's own header) and
+  `annotations`/`provenance` (metadata, not part of what a fact claims).
+  202 of 323 real pool cards gained at least one new fact this way (435
+  total) — NOT a cherry-picked handful; ~200 cards turned out to be
+  genuinely missing this exact self-cast/self-enters boilerplate pair
+  entirely (not merely "already covered", which the prototype's own small
+  spot-checked sample had suggested was the norm).
+- `scripts/verify-synergy.mjs` downgrades a `provenance.origin==='parser'`
+  produce fact's missing trace-evidence from a hard FAIL to a soft note
+  (both evidence-check sites — zone-shaped and event-shaped) — see that
+  script's own inline comments. Real trigger: 43 pool cards whose own
+  `scenarios.ts` never actually casts them from hand (only exercises the
+  card's own distinguishing ability) would otherwise hard-fail on a
+  boilerplate claim that's true by construction. Confirmed via `git
+  stash`-isolated before/after: 0 hard failures both before and after this
+  whole task; every one of the 43 was on a card this task's own wiring
+  touched (checked, not assumed).
+- `zack-fair`/`ultima` — the two cards the user asked to inspect
+  personally — both come out of the real whole-pool run with **zero**
+  new facts and zero diff, confirming the prototype's own side-findings
+  hold for real, not just in `recognizers.test.ts`.

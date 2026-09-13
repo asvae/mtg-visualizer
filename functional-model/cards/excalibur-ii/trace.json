@@ -14,12 +14,13 @@
         "fn": "trigger",
         "card": "Excalibur II",
         "instanceId": 1,
+        "id": 848,
         "name": "onLifeGained"
       },
       {
         "fn": "putCounter",
         "target": "Excalibur II",
-        "id": 778,
+        "id": 848,
         "counterType": "CHARGE",
         "amount": 1,
         "controller": "you"
@@ -43,6 +44,7 @@
         "fn": "activate",
         "card": "Excalibur II",
         "instanceId": 1,
+        "id": 852,
         "cost": "{3}"
       },
       {
@@ -53,9 +55,9 @@
       {
         "fn": "equip",
         "equipment": "Excalibur II",
-        "equipmentId": 782,
+        "equipmentId": 852,
         "target": "Grizzly Bears",
-        "id": 780
+        "id": 850
       }
     ]
   },
@@ -74,6 +76,7 @@
         "fn": "activate",
         "card": "Excalibur II",
         "instanceId": 1,
+        "id": 854,
         "cost": "{3}"
       },
       {

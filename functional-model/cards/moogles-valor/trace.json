@@ -17,6 +17,7 @@
         "fn": "cast",
         "card": "Moogles' Valor",
         "instanceId": 1,
+        "id": 1710,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -42,43 +43,44 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1603,
+        "id": 1707,
         "keyword": "Indestructible"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1604,
+        "id": 1708,
         "keyword": "Indestructible"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1605,
+        "id": 1709,
         "keyword": "Indestructible"
       },
       {
         "fn": "grantKeyword",
         "target": "Moogle",
-        "id": 1607,
+        "id": 1711,
         "keyword": "Indestructible"
       },
       {
         "fn": "grantKeyword",
         "target": "Moogle",
-        "id": 1608,
+        "id": 1712,
         "keyword": "Indestructible"
       },
       {
         "fn": "grantKeyword",
         "target": "Moogle",
-        "id": 1609,
+        "id": 1713,
         "keyword": "Indestructible"
       },
       {
         "fn": "move",
         "card": "Moogles' Valor",
         "instanceId": 1,
+        "id": 1710,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -103,6 +105,7 @@
         "fn": "cast",
         "card": "Moogles' Valor",
         "instanceId": 1,
+        "id": 1715,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -129,6 +132,7 @@
         "fn": "move",
         "card": "Moogles' Valor",
         "instanceId": 1,
+        "id": 1715,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

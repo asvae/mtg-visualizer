@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 6 Island(s)",
-      "action": "real engine playthrough: cast -> real ETB draw scaled by real artifact count -> real coin flip, forced win",
-      "result": "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A real coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement genuinely forces a WIN instead (the first flip this turn), proving the mechanism is real, not just descriptive text.",
+      "action": "engine playthrough: cast -> ETB draw scaled by artifact count -> coin flip, forced win",
+      "result": "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement forces a WIN instead (the first flip this turn), proving the mechanism runs, not just descriptive text.",
       "raw": {
-        "result": "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A real coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement genuinely forces a WIN instead (the first flip this turn), proving the mechanism is real, not just descriptive text.",
+        "result": "Edgar, King of Figaro is cast for {4}{U}{U} with two artifacts (Astrologian's Planisphere, Ether) already on the battlefield; resolving him auto-fires his onEnter trigger, drawing a card for each of the 2 artifacts you control. A coin flip is then resolved with the caller requesting a LOSS — Edgar's own Two-Headed Coin replacement forces a WIN instead (the first flip this turn), proving the mechanism runs, not just descriptive text.",
         "you": {
           "basicLands": [
             "Island",
@@ -160,7 +160,7 @@
         "from": 0
       },
       {
-        "label": "Real artifacts already on the battlefield: Astrologian's Planisphere and Ether",
+        "label": "Artifacts already on the battlefield: Astrologian's Planisphere and Ether",
         "from": 0
       },
       {
@@ -172,7 +172,7 @@
         "from": 9
       },
       {
-        "label": "A real coin flip resolves — Two-Headed Coin forces the win (CR-614-style replacement)",
+        "label": "A coin flip resolves — Two-Headed Coin forces the win (CR-614-style replacement)",
         "from": 23
       }
     ]

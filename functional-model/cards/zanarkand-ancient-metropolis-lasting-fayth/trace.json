@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Lasting Fayth",
         "instanceId": 1,
+        "id": 3210,
         "from": "hand",
         "cost": "{4}{G}{G}"
       },
@@ -38,7 +39,7 @@
       {
         "fn": "putCounter",
         "target": "Hero",
-        "id": 2931,
+        "id": 3211,
         "counterType": "+1/+1",
         "amount": 3,
         "controller": "you"
@@ -47,6 +48,7 @@
         "fn": "move",
         "card": "Lasting Fayth",
         "instanceId": 1,
+        "id": 3210,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"
@@ -69,6 +71,7 @@
         "fn": "cast",
         "card": "Lasting Fayth",
         "instanceId": 1,
+        "id": 3213,
         "from": "hand",
         "cost": "{4}{G}{G}"
       },
@@ -90,6 +93,7 @@
         "fn": "move",
         "card": "Lasting Fayth",
         "instanceId": 1,
+        "id": 3213,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

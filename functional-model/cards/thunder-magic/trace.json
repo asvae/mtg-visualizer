@@ -20,6 +20,7 @@
         "fn": "cast",
         "card": "Thunder Magic",
         "instanceId": 1,
+        "id": 2830,
         "from": "hand",
         "cost": "{R}"
       },
@@ -36,15 +37,16 @@
       {
         "fn": "dealDamage",
         "source": "Thunder Magic",
-        "sourceId": 2573,
+        "sourceId": 2830,
         "target": "Grizzly Bears",
-        "id": 2572,
+        "id": 2829,
         "amount": 2
       },
       {
         "fn": "move",
         "card": "Thunder Magic",
         "instanceId": 1,
+        "id": 2830,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -72,6 +74,7 @@
         "fn": "cast",
         "card": "Thunder Magic",
         "instanceId": 1,
+        "id": 2834,
         "from": "hand",
         "cost": "{R}"
       },
@@ -88,15 +91,16 @@
       {
         "fn": "dealDamage",
         "source": "Thunder Magic",
-        "sourceId": 2577,
+        "sourceId": 2834,
         "target": "Grizzly Bears",
-        "id": 2576,
+        "id": 2833,
         "amount": 4
       },
       {
         "fn": "move",
         "card": "Thunder Magic",
         "instanceId": 1,
+        "id": 2834,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -124,6 +128,7 @@
         "fn": "cast",
         "card": "Thunder Magic",
         "instanceId": 1,
+        "id": 2838,
         "from": "hand",
         "cost": "{R}"
       },
@@ -140,15 +145,16 @@
       {
         "fn": "dealDamage",
         "source": "Thunder Magic",
-        "sourceId": 2581,
+        "sourceId": 2838,
         "target": "Grizzly Bears",
-        "id": 2580,
+        "id": 2837,
         "amount": 8
       },
       {
         "fn": "move",
         "card": "Thunder Magic",
         "instanceId": 1,
+        "id": 2838,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

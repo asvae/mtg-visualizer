@@ -1,39 +1,6 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "activated ({3}{W})",
-      "result": "no creatures to pump, no-op",
-      "raw": {
-        "result": "no creatures to pump, no-op",
-        "you": {
-          "creaturesCount": 0
-        }
-      }
-    },
-    "log": [
-      {
-        "fn": "activate",
-        "card": "Warren Elder",
-        "instanceId": 1,
-        "cost": "{3}{W}"
-      },
-      {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 1
-      },
-      {
-        "fn": "pump",
-        "target": "Warren Elder",
-        "id": 2837,
-        "power": 1,
-        "toughness": 1
-      }
-    ]
-  },
-  {
-    "scenario": {
       "setup": "you: 3 creature(s)",
       "action": "activated ({3}{W})",
       "result": "creatures you control get +1/+1",
@@ -49,6 +16,7 @@
         "fn": "activate",
         "card": "Warren Elder",
         "instanceId": 1,
+        "id": 3131,
         "cost": "{3}{W}"
       },
       {
@@ -59,28 +27,28 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2839,
+        "id": 3128,
         "power": 1,
         "toughness": 1
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2840,
+        "id": 3129,
         "power": 1,
         "toughness": 1
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2841,
+        "id": 3130,
         "power": 1,
         "toughness": 1
       },
       {
         "fn": "pump",
         "target": "Warren Elder",
-        "id": 2842,
+        "id": 3131,
         "power": 1,
         "toughness": 1
       }

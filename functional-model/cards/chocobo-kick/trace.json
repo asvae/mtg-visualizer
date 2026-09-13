@@ -23,6 +23,7 @@
         "fn": "cast",
         "card": "Chocobo Kick",
         "instanceId": 1,
+        "id": 361,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -44,15 +45,16 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 347,
+        "sourceId": 358,
         "target": "Grizzly Bears",
-        "id": 349,
+        "id": 360,
         "amount": 2
       },
       {
         "fn": "move",
         "card": "Chocobo Kick",
         "instanceId": 1,
+        "id": 361,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -84,6 +86,7 @@
         "fn": "cast",
         "card": "Chocobo Kick",
         "instanceId": 1,
+        "id": 367,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -107,7 +110,7 @@
       {
         "fn": "moveTo",
         "target": "you-land-0",
-        "id": 353,
+        "id": 364,
         "zone": "Hand",
         "controller": "you"
       },
@@ -129,15 +132,16 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 352,
+        "sourceId": 363,
         "target": "Grizzly Bears",
-        "id": 355,
+        "id": 366,
         "amount": 4
       },
       {
         "fn": "move",
         "card": "Chocobo Kick",
         "instanceId": 1,
+        "id": 367,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

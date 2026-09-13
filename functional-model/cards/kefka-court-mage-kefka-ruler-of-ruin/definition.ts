@@ -24,6 +24,12 @@ export const kefkaCourtMage: CardDefinition = {
       // typically two different card types), same fixed-count-
       // approximation class joshua-phoenix-s-dominant's own "draw that
       // many" already accepts.
+      // recognizer-exception: drawCard-effect-structural — the real oracle
+      // text reads "you draw a card FOR EACH CARD TYPE among cards
+      // discarded this way" (variable), never the fixed "draw two cards"
+      // this recognizer looks for; a confirmed mismatch (this fixed-count
+      // approximation, not a recognizer bug), see the comment above. Applies
+      // to both this trigger and `onAttacks` below (same shared effects).
       name: 'onEnter',
       effects: [{ kind: 'discard', owner: 'each', qty: 1 } satisfies Effect, { kind: 'drawCard', amount: 2 } satisfies Effect],
     },

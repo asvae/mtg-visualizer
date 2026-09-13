@@ -132,7 +132,7 @@ function heroicSunderingThenBlessingOfLight(): TraceResult {
   const result =
     "Venat enters; Freya Crescent (a second legendary spell) is cast while Venat is on the battlefield, firing \"Whenever you cast a legendary spell, draw a card.\" Turn passage clears summoning sickness; Hero's Sundering ({7}, {T}) exiles the opponent's Coeurl, then transforms Venat into Hydaelyn, the Mothercrystal. At the subsequent beginning of combat, Blessing of Light puts a +1/+1 counter on Freya Crescent, grants it Indestructible, and — since Freya is legendary — draws another card.";
 
-  return finishEnginePilotTrace(pilot, setup, "real engine playthrough: cast -> cast (legendary trigger) -> transform (Hero's Sundering) -> beginning of combat (Blessing of Light)", result);
+  return finishEnginePilotTrace(pilot, setup, "engine playthrough: cast -> cast (legendary trigger) -> transform (Hero's Sundering) -> beginning of combat (Blessing of Light)", result);
 }
 
 export function runEngineScenarios(): TraceResult[] {

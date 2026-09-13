@@ -40,5 +40,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     "Dragoon's Wyvern is cast for {2}{U} and resolves, entering the battlefield; its onEnter trigger auto-fires, creating a 1/1 colorless Hero creature token.";
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real ETB -> onEnter auto-fires -> creates a 1/1 colorless Hero creature token', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> ETB -> onEnter auto-fires -> creates a 1/1 colorless Hero creature token', result)];
 }

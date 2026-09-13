@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Dark Knight's Greatsword",
         "instanceId": 1,
+        "id": 540,
         "name": "onEnter"
       },
       {
@@ -28,9 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Dark Knight's Greatsword",
-        "equipmentId": 517,
+        "equipmentId": 540,
         "target": "Hero",
-        "id": 518
+        "id": 541
       }
     ]
   },
@@ -51,6 +52,7 @@
         "fn": "activate",
         "card": "Dark Knight's Greatsword",
         "instanceId": 1,
+        "id": 545,
         "cost": "Equip—Pay 3 life (activate only once each turn)"
       },
       {
@@ -66,9 +68,9 @@
       {
         "fn": "equip",
         "equipment": "Dark Knight's Greatsword",
-        "equipmentId": 522,
+        "equipmentId": 545,
         "target": "Grizzly Bears",
-        "id": 520
+        "id": 543
       }
     ]
   }

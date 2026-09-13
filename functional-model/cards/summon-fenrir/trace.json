@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
+        "id": 2409,
         "name": "chapterI"
       },
       {
@@ -44,7 +45,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2262,
+        "id": 2406,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -54,9 +55,9 @@
     "scenario": {
       "setup": "",
       "action": "\"chapterII\" trigger fires",
-      "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (real text: the next creature spell cast this turn would enter with an extra +1/+1 counter)",
+      "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (printed text: the next creature spell cast this turn would enter with an extra +1/+1 counter)",
       "raw": {
-        "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (real text: the next creature spell cast this turn would enter with an extra +1/+1 counter)",
+        "result": "no mechanism here creates a new triggered ability at runtime — no observable effect (printed text: the next creature spell cast this turn would enter with an extra +1/+1 counter)",
         "trigger": "chapterII"
       }
     },
@@ -65,6 +66,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
+        "id": 2411,
         "name": "chapterII"
       }
     ]
@@ -90,6 +92,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
+        "id": 2415,
         "name": "chapterIII"
       },
       {
@@ -139,6 +142,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
+        "id": 2419,
         "name": "chapterIII"
       },
       {
@@ -188,6 +192,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
+        "id": 2423,
         "name": "chapterIII"
       },
       {

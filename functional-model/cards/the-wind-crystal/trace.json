@@ -16,7 +16,7 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
-        "id": 4,
+        "id": 2770,
         "cost": "{4}{W}{W}, {T}"
       },
       {
@@ -27,13 +27,13 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 2768,
         "keyword": "Flying"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 3,
+        "id": 2769,
         "keyword": "Flying"
       },
       {
@@ -44,13 +44,13 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 2768,
         "keyword": "Lifelink"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 3,
+        "id": 2769,
         "keyword": "Lifelink"
       }
     ]
@@ -59,9 +59,9 @@
     "scenario": {
       "setup": "",
       "action": "activated ({4}{W}{W}, {T}), gains 3 life",
-      "result": "a real lifegain event (3 life) is genuinely DOUBLED to 6 by this card's own presence on the battlefield (CR 614.2)",
+      "result": "a lifegain event (3 life) is DOUBLED to 6 by this card's own presence on the battlefield (CR 614.2)",
       "raw": {
-        "result": "a real lifegain event (3 life) is genuinely DOUBLED to 6 by this card's own presence on the battlefield (CR 614.2)",
+        "result": "a lifegain event (3 life) is DOUBLED to 6 by this card's own presence on the battlefield (CR 614.2)",
         "playerGainsLife": {
           "amount": 3
         }
@@ -72,7 +72,7 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
-        "id": 6,
+        "id": 2772,
         "cost": "{4}{W}{W}, {T}"
       },
       {
@@ -108,7 +108,7 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
-        "id": 8,
+        "id": 2774,
         "cost": "{4}{W}{W}, {T}"
       },
       {

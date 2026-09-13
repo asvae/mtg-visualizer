@@ -23,6 +23,7 @@
         "fn": "cast",
         "card": "Fire Magic",
         "instanceId": 1,
+        "id": 932,
         "from": "hand",
         "cost": "{R}"
       },
@@ -39,23 +40,24 @@
       {
         "fn": "dealDamage",
         "source": "Fire Magic",
-        "sourceId": 830,
+        "sourceId": 932,
         "target": "Grizzly Bears",
-        "id": 827,
+        "id": 929,
         "amount": 1
       },
       {
         "fn": "dealDamage",
         "source": "Fire Magic",
-        "sourceId": 830,
+        "sourceId": 932,
         "target": "Grizzly Bears",
-        "id": 829,
+        "id": 931,
         "amount": 1
       },
       {
         "fn": "move",
         "card": "Fire Magic",
         "instanceId": 1,
+        "id": 932,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -86,6 +88,7 @@
         "fn": "cast",
         "card": "Fire Magic",
         "instanceId": 1,
+        "id": 937,
         "from": "hand",
         "cost": "{R}"
       },
@@ -102,23 +105,24 @@
       {
         "fn": "dealDamage",
         "source": "Fire Magic",
-        "sourceId": 835,
+        "sourceId": 937,
         "target": "Grizzly Bears",
-        "id": 832,
+        "id": 934,
         "amount": 2
       },
       {
         "fn": "dealDamage",
         "source": "Fire Magic",
-        "sourceId": 835,
+        "sourceId": 937,
         "target": "Grizzly Bears",
-        "id": 834,
+        "id": 936,
         "amount": 2
       },
       {
         "fn": "move",
         "card": "Fire Magic",
         "instanceId": 1,
+        "id": 937,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -149,6 +153,7 @@
         "fn": "cast",
         "card": "Fire Magic",
         "instanceId": 1,
+        "id": 942,
         "from": "hand",
         "cost": "{R}"
       },
@@ -165,23 +170,24 @@
       {
         "fn": "dealDamage",
         "source": "Fire Magic",
-        "sourceId": 840,
+        "sourceId": 942,
         "target": "Grizzly Bears",
-        "id": 837,
+        "id": 939,
         "amount": 3
       },
       {
         "fn": "dealDamage",
         "source": "Fire Magic",
-        "sourceId": 840,
+        "sourceId": 942,
         "target": "Grizzly Bears",
-        "id": 839,
+        "id": 941,
         "amount": 3
       },
       {
         "fn": "move",
         "card": "Fire Magic",
         "instanceId": 1,
+        "id": 942,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

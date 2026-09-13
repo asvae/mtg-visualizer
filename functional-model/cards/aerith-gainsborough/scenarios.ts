@@ -92,7 +92,7 @@ export function runEngineScenarios(): TraceResult[] {
   pilotDeclareAttackers(pilot, [aerithReal], 'Declare Aerith as attacker');
   advanceOneStep(pilot);
   pilotDeclareBlockers(pilot, []);
-  pilot.beginStep('Resolve unblocked combat damage — real Lifelink');
+  pilot.beginStep('Resolve unblocked combat damage — Lifelink');
   const opp = pilot.opponents[0]!;
   const beforeOppLife = opp.life;
   const beforeYouLife = pilot.you.life;
@@ -146,5 +146,5 @@ export function runEngineScenarios(): TraceResult[] {
 
   const result =
     'Aerith enters; turn passage clears summoning sickness, then attacks unblocked, gaining Lifelink life — onLifeGained fires manually, putting a +1/+1 counter on herself; another turn later she attacks again, blocked by a creature that deals lethal damage back (a 704.5g SBA destruction) — onDies then fires manually, spreading X +1/+1 counters onto the other legendary creature on the battlefield.';
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> real Lifelink -> onLifeGained -> real lethal combat (SBA) -> onDies', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> Lifelink -> onLifeGained -> lethal combat (SBA) -> onDies', result)];
 }

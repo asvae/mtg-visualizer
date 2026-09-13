@@ -104,12 +104,12 @@ export function runEngineScenarios(): TraceResult[] {
   }
 
   const result =
-    `Real 509.1b: ${groundedBlocker.name} (no Flying/Reach) is rejected outright from blocking the Flying ${ahriman.name} — the engine's own real reason is logged, not a scripted assumption. ${ironGiant.name}'s real printed Reach then legally blocks the same attacker instead, and real combat damage resolves: Iron Giant's 6 power is real lethal damage against Ahriman's 2 toughness (a genuine 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.`;
+    `509.1b: ${groundedBlocker.name} (no Flying/Reach) is rejected outright from blocking the Flying ${ahriman.name} — the engine's own reason is logged, not a scripted assumption. ${ironGiant.name}'s printed Reach then legally blocks the same attacker instead, and combat damage resolves: Iron Giant's 6 power is lethal damage against Ahriman's 2 toughness (a 704.5g SBA destruction), while Ahriman's 2 damage back barely dents Iron Giant's 6 toughness.`;
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      'real engine playthrough: declare Flying attacker -> illegal block rejected (509.1b) -> legal Reach block -> real combat damage',
+      'engine playthrough: declare Flying attacker -> illegal block rejected (509.1b) -> legal Reach block -> combat damage',
       result
     ),
   ];

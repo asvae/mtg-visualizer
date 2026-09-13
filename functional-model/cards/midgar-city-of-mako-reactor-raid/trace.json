@@ -19,6 +19,7 @@
         "fn": "cast",
         "card": "Reactor Raid",
         "instanceId": 1,
+        "id": 1694,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -49,6 +50,7 @@
         "fn": "move",
         "card": "Reactor Raid",
         "instanceId": 1,
+        "id": 1694,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

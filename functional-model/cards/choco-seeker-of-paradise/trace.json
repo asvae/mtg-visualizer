@@ -20,6 +20,7 @@
         "fn": "trigger",
         "card": "Choco, Seeker of Paradise",
         "instanceId": 1,
+        "id": 351,
         "name": "onBirdsAttack"
       },
       {
@@ -32,7 +33,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 338,
+        "id": 349,
         "zone": "Hand",
         "controller": "you"
       }
@@ -53,12 +54,13 @@
         "fn": "trigger",
         "card": "Choco, Seeker of Paradise",
         "instanceId": 1,
+        "id": 353,
         "name": "onLandfall"
       },
       {
         "fn": "pump",
         "target": "Choco, Seeker of Paradise",
-        "id": 342,
+        "id": 353,
         "power": 1,
         "toughness": 0
       }
@@ -79,6 +81,7 @@
         "fn": "cast",
         "card": "Choco, Seeker of Paradise",
         "instanceId": 1,
+        "id": 355,
         "from": "hand",
         "cost": "{1}{G}{W}{U}"
       },
@@ -86,6 +89,7 @@
         "fn": "enters",
         "card": "Choco, Seeker of Paradise",
         "instanceId": 1,
+        "id": 355,
         "zone": "Battlefield"
       },
       {

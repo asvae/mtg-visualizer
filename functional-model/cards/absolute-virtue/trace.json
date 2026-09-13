@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Absolute Virtue",
         "instanceId": 1,
+        "id": 4,
         "from": "hand",
         "cost": "{6}{W}{U}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Absolute Virtue",
         "instanceId": 1,
+        "id": 4,
         "zone": "Battlefield"
       }
     ]
@@ -39,6 +41,7 @@
         "fn": "cast",
         "card": "Absolute Virtue",
         "instanceId": 1,
+        "id": 6,
         "from": "hand",
         "cost": "{6}{W}{U}"
       },
@@ -46,6 +49,7 @@
         "fn": "enters",
         "card": "Absolute Virtue",
         "instanceId": 1,
+        "id": 6,
         "zone": "Battlefield"
       },
       {

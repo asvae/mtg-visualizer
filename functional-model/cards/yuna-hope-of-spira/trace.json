@@ -17,6 +17,7 @@
         "fn": "trigger",
         "card": "Yuna, Hope of Spira",
         "instanceId": 1,
+        "id": 3196,
         "name": "onEndStep"
       },
       {
@@ -48,6 +49,7 @@
         "fn": "cast",
         "card": "Yuna, Hope of Spira",
         "instanceId": 1,
+        "id": 3198,
         "from": "hand",
         "cost": "{3}{G}{W}"
       },
@@ -55,6 +57,7 @@
         "fn": "enters",
         "card": "Yuna, Hope of Spira",
         "instanceId": 1,
+        "id": 3198,
         "zone": "Battlefield"
       },
       {

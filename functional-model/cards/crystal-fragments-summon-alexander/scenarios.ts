@@ -87,7 +87,7 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   // Real Equipment attachment (301.5c) — see this file's own header comment
-  pilot.beginStep('Real Equipment attachment (301.5c)');
+  pilot.beginStep('Equipment attachment (301.5c)');
   pilot.state.equip(cfReal, yourCreature);
   pilot.log.push({ fn: 'equip', equipment: cfReal.name, target: yourCreature.name });
 
@@ -98,7 +98,7 @@ export function runEngineScenarios(): TraceResult[] {
   // equip-broadcast grant instead: Dwarven Castle Guard's printed 2/1
   // becomes a live 3/2 the instant it's equipped, re-read from
   // `effectivePT`, not a fixed/timestamped delta.
-  pilot.beginStep('Real layer-7c recalculation — Equipped creature gets +1/+1');
+  pilot.beginStep('Layer-7c recalculation — Equipped creature gets +1/+1');
   const [power, toughness] = effectivePT(pilot.state, yourCreature);
   pilot.log.push({ fn: 'read:getNetPower', card: yourCreature.name, power, toughness });
 
@@ -139,12 +139,12 @@ export function runEngineScenarios(): TraceResult[] {
   // performs it explicitly, same manual technique harness.ts's own
   // `sacrificeSelfAfter` flag already uses under the hood (a real
   // `state.move` to Graveyard plus a real `fn:'sacrifice'` log line).
-  pilot.beginStep('Real "Sacrifice after III" (714.4/704.5x)');
+  pilot.beginStep('"Sacrifice after III" (714.4/704.5x)');
   pilot.state.move(cfReal, 'Graveyard');
   pilot.log.push({ fn: 'sacrifice', player: pilot.you.name, card: backFace.name });
 
   const result =
-    'Crystal Fragments enters, Equipment attachment onto a creature genuinely recalculates its P/T live (a real +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, genuinely granting a real all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is actually prevented), chapter II fires on your next draw step (same real shield, re-granted), chapter III fires the turn after (taps the opponent\'s Coeurl), then the "Sacrifice after III" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.';
+    'Crystal Fragments enters, Equipment attachment onto a creature recalculates its P/T live (a +1/+1 continuous grant, 2/1 becomes 3/2); once a turn passes, {5}{W}{W} exiles it and returns it transformed as Summon: Alexander — 714.2b/c, chapter I fires immediately, granting an all-damage-prevention shield to creatures you control this turn (a 3-damage hit against your own creature is prevented), chapter II fires on your next draw step (same shield, re-granted), chapter III fires the turn after (taps the opponent\'s Coeurl), then the "Sacrifice after III" rule (714.4/704.5x) sacrifices it — all through the turn-based engine.';
 
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> equip -> transform -> Saga chapters over real turns -> sacrifice', result)];
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> equip -> transform -> Saga chapters over turns -> sacrifice', result)];
 }

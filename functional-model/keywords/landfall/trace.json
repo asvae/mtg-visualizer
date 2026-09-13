@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> real land ETB -> onLandfall fired manually -> real pump",
-      "result": "Landfall isn't auto-detected in this engine (a real, documented gap — see this file's own header), so the land's real entrance is played for real, then the SAME real \"+1/+0 until end of turn\" effect the card is printed with fires manually — Ambrosia's real power genuinely goes from 1 to 2 via the same `pump` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.",
+      "action": "engine playthrough: cast -> land ETB -> onLandfall fired manually -> pump",
+      "result": "Landfall isn't auto-detected in this engine (a documented gap — see this file's own header), so the land enters, then the same \"+1/+0 until end of turn\" effect the card is printed with fires manually — Ambrosia's power goes from 1 to 2 via the same `pump` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.",
       "raw": {
-        "result": "Landfall isn't auto-detected in this engine (a real, documented gap — see this file's own header), so the land's real entrance is played for real, then the SAME real \"+1/+0 until end of turn\" effect the card is printed with fires manually — Ambrosia's real power genuinely goes from 1 to 2 via the same `pump` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.",
+        "result": "Landfall isn't auto-detected in this engine (a documented gap — see this file's own header), so the land enters, then the same \"+1/+0 until end of turn\" effect the card is printed with fires manually — Ambrosia's power goes from 1 to 2 via the same `pump` primitive every other stat-changing effect in this model uses, not a special-cased Landfall counter.",
         "you": {
           "basicLands": [
             "Plains",
@@ -55,6 +55,7 @@
       {
         "fn": "moveTo",
         "target": "Plains",
+        "id": 92,
         "zone": "Hand",
         "controller": "you"
       },
@@ -73,6 +74,7 @@
       {
         "fn": "pump",
         "target": "Ambrosia Whiteheart",
+        "id": 99,
         "power": 1,
         "toughness": 0
       }
@@ -91,7 +93,7 @@
         "from": 3
       },
       {
-        "label": "A real land enters",
+        "label": "A land enters",
         "from": 7
       },
       {

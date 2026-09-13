@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "",
-      "action": "real engine playthrough: declare First Strike attacker -> blocked -> real two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)",
-      "result": "Real 510.4/510.5: Lightning's First Strike deals its 3 damage in the real, separate CombatFirstStrikeDamage step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the real, separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering actually ran.",
+      "action": "engine playthrough: declare First Strike attacker -> blocked -> two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)",
+      "result": "510.4/510.5: Lightning's First Strike deals its 3 damage in the separate CombatFirstStrikeDamage step, lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering ran.",
       "raw": {
-        "result": "Real 510.4/510.5: Lightning's First Strike deals its 3 damage in the real, separate CombatFirstStrikeDamage step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the real, separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering actually ran.",
+        "result": "510.4/510.5: Lightning's First Strike deals its 3 damage in the separate CombatFirstStrikeDamage step, lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering ran.",
         "you": {
           "libraryCount": 3
         },
@@ -107,7 +107,7 @@
         "from": 6
       },
       {
-        "label": "Advance to the real CombatFirstStrikeDamage step (510.4)",
+        "label": "Advance to the CombatFirstStrikeDamage step (510.4)",
         "from": 7
       },
       {
@@ -115,7 +115,7 @@
         "from": 8
       },
       {
-        "label": "Advance to the real CombatDamage step (510.4)",
+        "label": "Advance to the CombatDamage step (510.4)",
         "from": 10
       },
       {
@@ -127,10 +127,10 @@
   {
     "scenario": {
       "setup": "",
-      "action": "real engine playthrough: declare Double Strike attacker -> blocked -> real two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)",
-      "result": "Real 510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the real, separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit in the SECOND real phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — real-lethal to its own 1 toughness — both destroyed.",
+      "action": "engine playthrough: declare Double Strike attacker -> blocked -> two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)",
+      "result": "510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, lethal (704.5g) only because of that second hit in the SECOND phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — lethal to its own 1 toughness — both destroyed.",
       "raw": {
-        "result": "Real 510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the real, separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit in the SECOND real phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — real-lethal to its own 1 toughness — both destroyed.",
+        "result": "510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, lethal (704.5g) only because of that second hit in the SECOND phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — lethal to its own 1 toughness — both destroyed.",
         "you": {
           "libraryCount": 3
         },
@@ -249,7 +249,7 @@
         "from": 6
       },
       {
-        "label": "Advance to the real CombatFirstStrikeDamage step (510.4)",
+        "label": "Advance to the CombatFirstStrikeDamage step (510.4)",
         "from": 7
       },
       {
@@ -257,7 +257,7 @@
         "from": 8
       },
       {
-        "label": "Advance to the real CombatDamage step (510.5)",
+        "label": "Advance to the CombatDamage step (510.5)",
         "from": 9
       },
       {

@@ -35,6 +35,6 @@ export function runEngineScenarios(): TraceResult[] {
   advanceToDeclareAttackersStep(pilot);
   pilotDeclareAttackers(pilot, [promptoReal], `Declare ${promptoArgentum.name} as attacker (same turn it entered)`);
 
-  const result = `Real 302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and \`pilotDeclareAttackers\` throws on any illegal declaration — but its real printed Haste exempts it in the engine's own \`canAttack\` check, so the declaration succeeds for real.`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: cast -> same-turn attack declaration succeeds via real Haste', result)];
+  const result = `302.6: Prompto is declared as an attacker the SAME turn it entered the battlefield — ordinarily illegal (summoning sickness), and \`pilotDeclareAttackers\` throws on any illegal declaration — but its printed Haste exempts it in the engine's own \`canAttack\` check, so the declaration succeeds.`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> same-turn attack declaration succeeds via Haste', result)];
 }

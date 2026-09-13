@@ -26,6 +26,6 @@ export function runEngineScenarios(): TraceResult[] {
   advanceToDeclareAttackersStep(pilot);
   pilotExpectIllegalAttack(pilot, [demonWallReal], `Attempt (expected illegal): declare ${demonWall.name} as attacker`);
 
-  const result = `Real 302.6a: Demon Wall's real printed Defender rejects its own attacker declaration outright — the engine's own real reason (canAttack) is logged, not a scripted assumption. (Demon Wall's own real text has a conditional exception — "as long as this creature has a counter on it, it can attack as though it didn't have defender" — that clause is plain descriptive text in this model, since there is no attack-legality hook a counter-count condition could plug into; see that card's own definition.ts comment.)`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: declare Defender creature as attacker -> real rejection (302.6a)', result)];
+  const result = `302.6a: Demon Wall's printed Defender rejects its own attacker declaration outright — the engine's own reason (canAttack) is logged, not a scripted assumption. (Demon Wall's own text has a conditional exception — "as long as this creature has a counter on it, it can attack as though it didn't have defender" — that clause is plain descriptive text in this model, since there is no attack-legality hook a counter-count condition could plug into; see that card's own definition.ts comment.)`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: declare Defender creature as attacker -> rejection (302.6a)', result)];
 }

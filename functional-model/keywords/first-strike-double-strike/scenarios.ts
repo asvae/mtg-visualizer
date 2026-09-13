@@ -63,9 +63,9 @@ function firstStrikeScenario(): TraceResult {
   // creature vs. normal creature combat would skip straight past it (see
   // this same directory's own `vigilance-trample`/`menace` scenarios, which
   // never even mention this phase).
-  advanceOneStep(pilot, 'Advance to the real CombatFirstStrikeDamage step (510.4)');
+  advanceOneStep(pilot, 'Advance to the CombatFirstStrikeDamage step (510.4)');
   if (currentPhase(pilot.engine.turn) !== 'CombatFirstStrikeDamage') {
-    throw new Error('expected to reach the real CombatFirstStrikeDamage step — Lightning has First Strike');
+    throw new Error('expected to reach the CombatFirstStrikeDamage step — Lightning has First Strike');
   }
   const beforeBlockerDamage = blocker.damageMarked ?? 0;
   const beforeLightningDamage = lightningReal.damageMarked ?? 0;
@@ -89,12 +89,12 @@ function firstStrikeScenario(): TraceResult {
   // conditionally skipped, only CombatFirstStrikeDamage is) — but produces
   // nothing here: Lightning has ONLY First Strike (already dealt), and the
   // blocker is already gone.
-  advanceOneStep(pilot, 'Advance to the real CombatDamage step (510.4)');
+  advanceOneStep(pilot, 'Advance to the CombatDamage step (510.4)');
   pilotResolveCombatDamage(pilot);
 
   const result =
-    `Real 510.4/510.5: Lightning's First Strike deals its 3 damage in the real, separate CombatFirstStrikeDamage step, real-lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the real, separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering actually ran.`;
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: declare First Strike attacker -> blocked -> real two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)', result);
+    `510.4/510.5: Lightning's First Strike deals its 3 damage in the separate CombatFirstStrikeDamage step, lethally destroying the 3-toughness blocker (704.5g) BEFORE the regular CombatDamage step is even reached — the blocker deals zero damage back (no dealDamage entry from it at all), so Lightning survives fully undamaged. A naive single-step resolution would have traded both creatures simultaneously instead; the absence of any damage TO Lightning, and the separate phase transition into CombatFirstStrikeDamage itself, are the observable proof First Strike's own two-step ordering ran.`;
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: declare First Strike attacker -> blocked -> two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)', result);
 }
 
 function doubleStrikeScenario(): TraceResult {
@@ -126,9 +126,9 @@ function doubleStrikeScenario(): TraceResult {
 
   // Real, genuinely distinct `CombatFirstStrikeDamage` phase (ENGINE_GAPS.md
   // gap #9) — reached here because Giott has Double Strike.
-  advanceOneStep(pilot, 'Advance to the real CombatFirstStrikeDamage step (510.4)');
+  advanceOneStep(pilot, 'Advance to the CombatFirstStrikeDamage step (510.4)');
   if (currentPhase(pilot.engine.turn) !== 'CombatFirstStrikeDamage') {
-    throw new Error('expected to reach the real CombatFirstStrikeDamage step — Giott has Double Strike');
+    throw new Error('expected to reach the CombatFirstStrikeDamage step — Giott has Double Strike');
   }
   const beforeFirstStep = blocker.damageMarked ?? 0;
   pilotResolveFirstStrikeCombatDamage(pilot);
@@ -147,7 +147,7 @@ function doubleStrikeScenario(): TraceResult {
   // Real, separate CombatDamage step (510.5): Giott's own Double Strike
   // deals its power a SECOND time here (the blocker, lacking either
   // keyword, only ever deals its own power once, in THIS step).
-  advanceOneStep(pilot, 'Advance to the real CombatDamage step (510.5)');
+  advanceOneStep(pilot, 'Advance to the CombatDamage step (510.5)');
   const beforeBlockerRegular = blocker.damageMarked ?? 0;
   const beforeGiottRegular = giottReal.damageMarked ?? 0;
   pilotResolveCombatDamage(pilot);
@@ -163,8 +163,8 @@ function doubleStrikeScenario(): TraceResult {
   }
 
   const result =
-    `Real 510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the real, separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, real-lethal (704.5g) only because of that second hit in the SECOND real phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — real-lethal to its own 1 toughness — both destroyed.`;
-  return finishEnginePilotTrace(pilot, setup, 'real engine playthrough: declare Double Strike attacker -> blocked -> real two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)', result);
+    `510.4/510.5: Giott's Double Strike deals its 1 power in BOTH the separate CombatFirstStrikeDamage step AND the regular CombatDamage step — 2 total damage marked against a 2-toughness blocker, lethal (704.5g) only because of that second hit in the SECOND phase. A plain single-strike creature of the same power would have only ever dealt 1, non-lethal, and the game would never have reached CombatFirstStrikeDamage at all. Giott also takes the blocker's 1 power back, but only in the regular step (the blocker itself has neither keyword) — lethal to its own 1 toughness — both destroyed.`;
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: declare Double Strike attacker -> blocked -> two-STEP combat damage (CombatFirstStrikeDamage then CombatDamage)', result);
 }
 
 export function runEngineScenarios(): TraceResult[] {

@@ -13,6 +13,7 @@
         "fn": "cast",
         "card": "Freya Crescent",
         "instanceId": 1,
+        "id": 963,
         "from": "hand",
         "cost": "{R}"
       },
@@ -20,6 +21,7 @@
         "fn": "enters",
         "card": "Freya Crescent",
         "instanceId": 1,
+        "id": 963,
         "zone": "Battlefield"
       }
     ]
@@ -39,6 +41,7 @@
         "fn": "cast",
         "card": "Freya Crescent",
         "instanceId": 1,
+        "id": 965,
         "from": "hand",
         "cost": "{R}"
       },
@@ -46,6 +49,7 @@
         "fn": "enters",
         "card": "Freya Crescent",
         "instanceId": 1,
+        "id": 965,
         "zone": "Battlefield"
       },
       {

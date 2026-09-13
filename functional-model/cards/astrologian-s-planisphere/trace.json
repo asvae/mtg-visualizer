@@ -23,7 +23,7 @@
         "fn": "cast",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
-        "id": 3,
+        "id": 179,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -31,14 +31,14 @@
         "fn": "enters",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
-        "id": 3,
+        "id": 179,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
-        "id": 3,
+        "id": 179,
         "name": "onEnter"
       },
       {
@@ -53,15 +53,15 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "equipmentId": 3,
+        "equipmentId": 179,
         "target": "Hero",
-        "id": 4
+        "id": 180
       },
       {
         "fn": "activate",
         "card": "Astrologian's Planisphere",
         "instanceId": 1,
-        "id": 3,
+        "id": 179,
         "cost": "{2}"
       },
       {
@@ -72,9 +72,9 @@
       {
         "fn": "equip",
         "equipment": "Astrologian's Planisphere",
-        "equipmentId": 3,
+        "equipmentId": 179,
         "target": "Grizzly Bears",
-        "id": 2
+        "id": 178
       }
     ]
   }

@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 2 creature(s)",
       "action": "cast from hand",
-      "result": "Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same real way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.",
+      "result": "Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.",
       "raw": {
-        "result": "Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same real way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.",
+        "result": "Choco/Mog enters (714.2b/c fires chapter I immediately); chapters II-IV fire the same way on later draw steps, each pumping the other 2 creatures you control +1/+0 until end of turn; once chapter IV resolves, 714.4 sacrifices it.",
         "sequence": [
           "chapterI",
           "chapterII",
@@ -23,6 +23,7 @@
         "fn": "cast",
         "card": "Summon: Choco/Mog",
         "instanceId": 1,
+        "id": 2383,
         "from": "hand",
         "cost": "{2}{W}"
       },
@@ -30,12 +31,14 @@
         "fn": "enters",
         "card": "Summon: Choco/Mog",
         "instanceId": 1,
+        "id": 2383,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
         "instanceId": 1,
+        "id": 2383,
         "name": "chapterI"
       },
       {
@@ -46,14 +49,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2237,
+        "id": 2381,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2238,
+        "id": 2382,
         "power": 1,
         "toughness": 0
       },
@@ -61,6 +64,7 @@
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
         "instanceId": 1,
+        "id": 2383,
         "name": "chapterII"
       },
       {
@@ -71,14 +75,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2237,
+        "id": 2381,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2238,
+        "id": 2382,
         "power": 1,
         "toughness": 0
       },
@@ -86,6 +90,7 @@
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
         "instanceId": 1,
+        "id": 2383,
         "name": "chapterIII"
       },
       {
@@ -96,14 +101,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2237,
+        "id": 2381,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2238,
+        "id": 2382,
         "power": 1,
         "toughness": 0
       },
@@ -111,6 +116,7 @@
         "fn": "trigger",
         "card": "Summon: Choco/Mog",
         "instanceId": 1,
+        "id": 2383,
         "name": "chapterIV"
       },
       {
@@ -121,14 +127,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2237,
+        "id": 2381,
         "power": 1,
         "toughness": 0
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2238,
+        "id": 2382,
         "power": 1,
         "toughness": 0
       },

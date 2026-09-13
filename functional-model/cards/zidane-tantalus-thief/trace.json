@@ -19,6 +19,7 @@
         "fn": "trigger",
         "card": "Zidane, Tantalus Thief",
         "instanceId": 1,
+        "id": 3240,
         "name": "onEnter"
       },
       {
@@ -30,23 +31,23 @@
         "fn": "gainControl",
         "controller": "you",
         "target": "Grizzly Bears",
-        "id": 2959
+        "id": 3239
       },
       {
         "fn": "untap",
         "target": "Grizzly Bears",
-        "id": 2959
+        "id": 3239
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2959,
+        "id": 3239,
         "keyword": "Lifelink"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2959,
+        "id": 3239,
         "keyword": "Haste"
       }
     ]
@@ -71,6 +72,7 @@
         "fn": "trigger",
         "card": "Zidane, Tantalus Thief",
         "instanceId": 1,
+        "id": 3243,
         "name": "onEnter"
       },
       {
@@ -95,6 +97,7 @@
         "fn": "trigger",
         "card": "Zidane, Tantalus Thief",
         "instanceId": 1,
+        "id": 3245,
         "name": "onOpponentGainsControlFromYou"
       },
       {
@@ -121,6 +124,7 @@
         "fn": "cast",
         "card": "Zidane, Tantalus Thief",
         "instanceId": 1,
+        "id": 3248,
         "from": "hand",
         "cost": "{3}{R}{W}"
       },
@@ -128,6 +132,7 @@
         "fn": "enters",
         "card": "Zidane, Tantalus Thief",
         "instanceId": 1,
+        "id": 3248,
         "zone": "Battlefield"
       },
       {

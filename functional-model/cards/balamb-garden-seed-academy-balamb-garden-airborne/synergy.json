@@ -20,6 +20,24 @@
       "target": "self",
       "value": 1,
       "face": "front"
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 43
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      }
     }
   ],
   "sink": []

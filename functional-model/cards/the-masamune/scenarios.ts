@@ -144,12 +144,12 @@ export function runEngineScenarios(): TraceResult[] {
   }
 
   const result =
-    "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a genuine, one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while genuinely equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.";
+    "Al Bhed Salvagers is cast, then equipped with The Masamune (Equip {2}). It attacks and is lethally blocked by Hill Gigas (a one-sided 704.5g death — only Al Bhed Salvagers dies). Its own \"whenever this creature or another creature or artifact you control dies\" trigger fires — and, because a creature's OWN death caused it while equipped by Masamune, Masamune's own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it: the opponent loses 1 life and you gain 1 life, TWICE.";
   return [
     finishEnginePilotTrace(
       pilot,
       setup,
-      "real engine playthrough: cast + equip Al Bhed Salvagers -> real lethal combat (SBA) -> its own dying trigger fires TWICE (The Masamune's own doubling static is now real)",
+      "engine playthrough: cast + equip Al Bhed Salvagers -> lethal combat (SBA) -> its own dying trigger fires TWICE (The Masamune's own doubling static)",
       result
     ),
   ];

@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 9 Plains(s)",
-      "action": "real engine playthrough: cast Cloud -> real ETB tutor -> cast+equip Ultima Weapon -> real attack -> Ultima Weapon's own destroy trigger fires TWICE (Cloud's own doubling static is now real)",
-      "result": "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is genuinely equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it, so it fires TWICE, destroying BOTH real opponent creatures (Coeurl, then Hill Gigas).",
+      "action": "engine playthrough: cast Cloud -> ETB tutor -> cast+equip Ultima Weapon -> attack -> Ultima Weapon's own destroy trigger fires TWICE (Cloud's own doubling static)",
+      "result": "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it, so it fires TWICE, destroying both opponent creatures (Coeurl, then Hill Gigas).",
       "raw": {
-        "result": "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is genuinely equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13, now real machinery) doubles it, so it fires TWICE, destroying BOTH real opponent creatures (Coeurl, then Hill Gigas).",
+        "result": "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it, so it fires TWICE, destroying both opponent creatures (Coeurl, then Hill Gigas).",
         "you": {
           "basicLands": [
             "Plains",
@@ -290,9 +290,9 @@
       {
         "fn": "equip",
         "equipment": "Ultima Weapon",
-        "equipmentId": 31,
+        "equipmentId": 426,
         "target": "Cloud, Midgar Mercenary",
-        "id": 30
+        "id": 425
       },
       {
         "fn": "phase",
@@ -303,12 +303,12 @@
       {
         "fn": "tap",
         "target": "Cloud, Midgar Mercenary",
-        "id": 30
+        "id": 425
       },
       {
         "fn": "attack",
         "card": "Cloud, Midgar Mercenary",
-        "id": 30
+        "id": 425
       },
       {
         "fn": "trigger",
@@ -336,7 +336,7 @@
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 20,
+        "id": 415,
         "controller": "opp0"
       },
       {
@@ -360,7 +360,7 @@
       {
         "fn": "destroy",
         "target": "Hill Gigas",
-        "id": 21,
+        "id": 416,
         "controller": "opp0"
       }
     ],

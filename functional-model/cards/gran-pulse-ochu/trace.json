@@ -16,6 +16,7 @@
         "fn": "activate",
         "card": "Gran Pulse Ochu",
         "instanceId": 1,
+        "id": 1132,
         "cost": "{8}"
       },
       {
@@ -65,7 +66,7 @@
       {
         "fn": "pump",
         "target": "Gran Pulse Ochu",
-        "id": 5,
+        "id": 1132,
         "power": 3,
         "toughness": 3
       }
@@ -88,6 +89,7 @@
         "fn": "activate",
         "card": "Gran Pulse Ochu",
         "instanceId": 1,
+        "id": 1134,
         "cost": "{8}"
       },
       {
@@ -107,7 +109,7 @@
       {
         "fn": "pump",
         "target": "Gran Pulse Ochu",
-        "id": 7,
+        "id": 1134,
         "power": 0,
         "toughness": 0
       }

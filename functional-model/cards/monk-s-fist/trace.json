@@ -14,6 +14,7 @@
         "fn": "trigger",
         "card": "Monk's Fist",
         "instanceId": 1,
+        "id": 1701,
         "name": "onEnter"
       },
       {
@@ -28,9 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Monk's Fist",
-        "equipmentId": 1597,
+        "equipmentId": 1701,
         "target": "Hero",
-        "id": 1598
+        "id": 1702
       }
     ]
   },
@@ -51,6 +52,7 @@
         "fn": "activate",
         "card": "Monk's Fist",
         "instanceId": 1,
+        "id": 1705,
         "cost": "{2}"
       },
       {
@@ -61,9 +63,9 @@
       {
         "fn": "equip",
         "equipment": "Monk's Fist",
-        "equipmentId": 1601,
+        "equipmentId": 1705,
         "target": "Grizzly Bears",
-        "id": 1600
+        "id": 1704
       }
     ]
   }

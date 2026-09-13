@@ -56,6 +56,23 @@
 // `sacrifice`, `move`, `putCounter`, `equip`, `animate`).
 
 import type { Card, Player, TokenInfo, ZoneType } from './interfaces';
+// Type-only, and circular (synergy.ts already imports `CardDefinition` from
+// THIS file) — safe because both sides are `import type` only, erased before
+// emit; no runtime cycle exists. Reused here (rather than re-declaring an
+// equivalent shape) for PRD_AUTOMATED_AUTHORING.md's "definition-level
+// annotation" prototype (2026-09-13, scoped trial, fin/1-10 only) — see
+// `CardDefinition.triggers[].annotation`/`.abilities[].annotation`/
+// `.effectsAnnotation`/`.ptFormula`'s own `annotation`/the `modal` Effect
+// kind's own `modes[].annotation`/`TriggerDoublingGrant.annotation` below.
+// Deliberately the SAME `{anchor?, sourceText?, highlight, line?}` shape
+// `cards/<slug>/annotations-authoring.json` already uses, so
+// `compute-annotations.mjs`'s existing `computeFactAnnotations` matching
+// logic can resolve either source without modification. `line` (added
+// 2026-09-13 alongside these fin/1-10 entries) scopes a `highlight` match to
+// one physical oracle-text line, closing a real cross-line-ambiguity gap
+// `synergy.ts`'s own `rawHighlightRange` doc comment used to admit as
+// unresolved — every annotation in this prototype sets it.
+import type { FactAnnotationAuthoring } from './synergy';
 // Type-only — interfaces.ts's own header is explicit that these are ambient
 // `declare function` signatures with NO body, kept purely so a card
 // definition reads as code written against Forge's real shape; nothing here
@@ -613,7 +630,26 @@ export type Effect =
        * the card, not just whichever branch happened to run.
        */
       kind: 'modal';
-      modes: { describe: string; effects: Effect[] }[];
+      modes: {
+        describe: string;
+        effects: Effect[];
+        /**
+         * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, 2026-09-13, scoped trial —
+         * fin/1-10 only). Same `Trigger.annotation`/`effectsAnnotation`
+         * shape/semantics, applied to ONE mode of a "Choose one —" modal
+         * spell rather than the whole card — added specifically because
+         * `effectsAnnotation` on the OWNING `Effect`/`CardDefinition` can
+         * only point at the shared modal header line (e.g. "Choose one —"),
+         * losing every individual mode's own real printed clause (Aerith
+         * Rescue Mission/Battle Menu both real "Choose one —" spells whose
+         * modes each print on their OWN oracle-text line — see those two
+         * cards' own `definition.ts` for the real populated example). Same
+         * "purely additive, inert data, not wired into
+         * `apply-recognizers.mjs`/`synergy.json`/any recognizer" scope as
+         * every other field in this prototype.
+         */
+        annotation?: FactAnnotationAuthoring;
+      }[];
     }
   | {
       /**
@@ -810,6 +846,24 @@ export interface Trigger {
   /** Short label — 'onEnter'/'onAttack'/'onDealsDamage'/etc. Matches a scenario's own `trigger` field. */
   name: string;
   effects: Effect[];
+  /**
+   * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, 2026-09-13, scoped trial —
+   * fin/1-10 only, not a production field yet). Points at the WHOLE printed
+   * trigger-condition + effect clause together (e.g. "When this creature
+   * enters, destroy target creature." as ONE span) — deliberately coarser
+   * than the per-`Effect` precision `annotations-authoring.json` uses for
+   * hand-authored Facts today; this is a co-located, easier-to-maintain
+   * authoring surface for a whole ability line, not a replacement for
+   * per-fact precision. Same exact `{anchor?, sourceText, highlight}` shape
+   * as `FactAnnotationAuthoring` (`synergy.ts`) and resolved by the SAME
+   * `computeFactAnnotations`/`rawHighlightRange` logic
+   * `compute-annotations.mjs` already runs for the authoring-file path — no
+   * new resolution code exists for this field, only a new place to author
+   * the input. NOT wired into `apply-recognizers.mjs`'s real Fact-generation
+   * pipeline, `synergy.json`, or any recognizer — purely additive, inert
+   * data as of this trial.
+   */
+  annotation?: FactAnnotationAuthoring;
   /**
    * Marks this as a real auto-fired trigger event `engine.ts` fires
    * without a player/scenario having to name it explicitly — real MTG
@@ -1028,6 +1082,18 @@ export interface TriggerDoublingGrant {
   causedBy?: 'dying' | 'entersBattlefield';
   /** OR list — any one match qualifies (Traveling Chocobo's own "a land OR Bird," `[{isLand:true},{subtype:'Bird'}]`). Only consulted when `causedBy === 'entersBattlefield'`. */
   entersMatch?: { isLand?: boolean; subtype?: string }[];
+  /**
+   * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, 2026-09-13, scoped trial —
+   * fin/1-10 only). Same `Trigger.annotation`/`effectsAnnotation` shape/
+   * semantics, applied to this static "Panharmonicon effect" grant — its own
+   * real, standalone printed static-ability sentence (Cloud, Midgar
+   * Mercenary's own "As long as Cloud is equipped, if a triggered ability of
+   * Cloud or an Equipment attached to it triggers, that ability triggers an
+   * additional time." — see that card's own `definition.ts`), separate from
+   * whatever `triggers`/`effects` it doubles. Same "purely additive, inert
+   * data" scope as every other field in this prototype.
+   */
+  annotation?: FactAnnotationAuthoring;
 }
 
 /**
@@ -1081,7 +1147,14 @@ export interface CardDefinition {
    * Selected the same way `triggers` is (by name — see `Scenario.ability`,
    * functional-model/harness.ts), not by array position.
    */
-  readonly abilities?: { name: string; cost: string; effects: Effect[]; costReduction?: ActivationCostReduction }[];
+  readonly abilities?: {
+    name: string;
+    cost: string;
+    effects: Effect[];
+    costReduction?: ActivationCostReduction;
+    /** PROTOTYPE — see `Trigger.annotation`'s own doc comment (identical shape/semantics, applied to a named activated ability instead of a triggered one). */
+    annotation?: FactAnnotationAuthoring;
+  }[];
   /** A Vehicle's own real "Crew N" cost (Phantom Train has none printed — its own ability is a sacrifice-cost activated ability instead — but the field exists for the general case). Distinct from `activationCost`: crewing doesn't pay mana, it taps creatures with total power >= N. */
   readonly crewCost?: number;
   /**
@@ -1093,6 +1166,16 @@ export interface CardDefinition {
    * lives entirely in `triggers`.
    */
   readonly effects?: Effect[];
+  /**
+   * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, 2026-09-13, scoped trial —
+   * fin/1-10 only) — see `Trigger.annotation`'s own doc comment for the
+   * shape/semantics; applied here to the top-level `effects` above (an
+   * Instant/Sorcery's cast effect, OR a single activated ability's effect
+   * when paired with `activationCost` — whichever meaning `effects` has for
+   * this card). Named `effectsAnnotation` (not bare `annotation`) to avoid
+   * reading as "annotates the whole card" at this top level.
+   */
+  readonly effectsAnnotation?: FactAnnotationAuthoring;
   /** Zero or more independent named triggered abilities — see `Trigger` above. */
   readonly triggers?: Trigger[];
   /**
@@ -1129,7 +1212,26 @@ export interface CardDefinition {
    * Anything else (a conditional CDA, a formula over a different
    * subtype/count) stays `staticAbilities` text until a real card needs it.
    */
-  readonly ptFormula?: { kind: 'addPerEquipmentControlled'; power: number; toughness: number } | { kind: 'setToCreaturesControlled' };
+  readonly ptFormula?:
+    | {
+        kind: 'addPerEquipmentControlled';
+        power: number;
+        toughness: number;
+        /**
+         * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, 2026-09-13, scoped trial —
+         * fin/1-10 only). Same `Trigger.annotation`/`effectsAnnotation`
+         * shape/semantics, applied to a layer-7a CDA printed as its own
+         * standalone static-ability line (Adelbert Steiner's own real
+         * "Adelbert Steiner gets +1/+1 for each Equipment you control." —
+         * see that card's own `definition.ts`) rather than a
+         * trigger/activated-ability/cast-effect clause. Same "purely
+         * additive, inert data, not wired into `apply-recognizers.mjs`/
+         * `synergy.json`/any recognizer" scope as every other field in this
+         * prototype.
+         */
+        annotation?: FactAnnotationAuthoring;
+      }
+    | { kind: 'setToCreaturesControlled'; annotation?: FactAnnotationAuthoring };
   /**
    * A real, QUERY-TIME continuous keyword grant (613, ENGINE_GAPS.md gap
    * #14, closed 2026-09-12) — "Dion and other Knights you control have

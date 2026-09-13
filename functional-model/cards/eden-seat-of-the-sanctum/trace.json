@@ -17,6 +17,7 @@
         "fn": "activate",
         "card": "Eden, Seat of the Sanctum",
         "instanceId": 1,
+        "id": 724,
         "cost": "{5}, {T}"
       },
       {
@@ -29,7 +30,7 @@
       {
         "fn": "moveTo",
         "target": "Eden, Seat of the Sanctum",
-        "id": 6,
+        "id": 724,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -43,7 +44,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 2,
+        "id": 720,
         "zone": "Hand",
         "controller": "you"
       }
@@ -66,6 +67,7 @@
         "fn": "activate",
         "card": "Eden, Seat of the Sanctum",
         "instanceId": 1,
+        "id": 728,
         "cost": "{5}, {T}"
       },
       {
@@ -78,7 +80,7 @@
       {
         "fn": "moveTo",
         "target": "Eden, Seat of the Sanctum",
-        "id": 10,
+        "id": 728,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -92,7 +94,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 8,
+        "id": 726,
         "zone": "Hand",
         "controller": "you"
       }

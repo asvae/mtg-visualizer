@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 4 Plains(s)",
-      "action": "real engine playthrough: cast -> ETB draw -> real turn passage to beginning of combat -> pay {1}, attach Equipment to a creature",
-      "result": "Weapons Vendor is cast for {3}{W} and resolves, drawing a card for real on ETB; a real Equipment (Dragoon's Lance) and a real second creature (Coeurl) are already on the battlefield when real turn passage reaches the beginning of combat on your turn, so the optional pay-{1} ability fires for real and attaches the Equipment to Coeurl.",
+      "action": "engine playthrough: cast -> ETB draw -> turn passage to beginning of combat -> pay {1}, attach Equipment to a creature",
+      "result": "Weapons Vendor is cast for {3}{W} and resolves, drawing a card on ETB; an Equipment (Dragoon's Lance) and a second creature (Coeurl) are already on the battlefield when turn passage reaches the beginning of combat on your turn, so the optional pay-{1} ability fires and attaches the Equipment to Coeurl.",
       "raw": {
-        "result": "Weapons Vendor is cast for {3}{W} and resolves, drawing a card for real on ETB; a real Equipment (Dragoon's Lance) and a real second creature (Coeurl) are already on the battlefield when real turn passage reaches the beginning of combat on your turn, so the optional pay-{1} ability fires for real and attaches the Equipment to Coeurl.",
+        "result": "Weapons Vendor is cast for {3}{W} and resolves, drawing a card on ETB; an Equipment (Dragoon's Lance) and a second creature (Coeurl) are already on the battlefield when turn passage reaches the beginning of combat on your turn, so the optional pay-{1} ability fires and attaches the Equipment to Coeurl.",
         "you": {
           "basicLands": [
             "Plains",
@@ -146,9 +146,9 @@
       {
         "fn": "equip",
         "equipment": "Dragoon's Lance",
-        "equipmentId": 2856,
+        "equipmentId": 3145,
         "target": "Coeurl",
-        "id": 2857
+        "id": 3146
       }
     ],
     "actions": [
@@ -165,7 +165,7 @@
         "from": 5
       },
       {
-        "label": "Real Equipment (Dragoon's Lance) and a real second creature (Coeurl) already on the battlefield",
+        "label": "Equipment (Dragoon's Lance) and a second creature (Coeurl) already on the battlefield",
         "from": 8
       },
       {

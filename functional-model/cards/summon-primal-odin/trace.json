@@ -19,6 +19,7 @@
         "fn": "trigger",
         "card": "Summon: Primal Odin",
         "instanceId": 1,
+        "id": 2502,
         "name": "chapterI"
       },
       {
@@ -36,7 +37,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 2333,
+        "id": 2501,
         "zone": "Graveyard",
         "controller": "opp0"
       }
@@ -57,6 +58,7 @@
         "fn": "trigger",
         "card": "Summon: Primal Odin",
         "instanceId": 1,
+        "id": 2504,
         "name": "chapterII"
       }
     ]
@@ -79,6 +81,7 @@
         "fn": "trigger",
         "card": "Summon: Primal Odin",
         "instanceId": 1,
+        "id": 2507,
         "name": "chapterIII"
       },
       {

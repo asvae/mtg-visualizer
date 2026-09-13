@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 3 Plains(s)",
-      "action": "real engine playthrough: cast -> real Lifelink -> onLifeGained -> real lethal combat (SBA) -> onDies",
-      "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life — onLifeGained fires manually, putting a real +1/+1 counter on herself; another real turn later she attacks again, blocked by a creature that deals real lethal damage back (a genuine 704.5g SBA destruction) — onDies then fires manually, spreading X real +1/+1 counters onto the other legendary creature on the battlefield.",
+      "action": "engine playthrough: cast -> Lifelink -> onLifeGained -> lethal combat (SBA) -> onDies",
+      "result": "Aerith enters; turn passage clears summoning sickness, then attacks unblocked, gaining Lifelink life — onLifeGained fires manually, putting a +1/+1 counter on herself; another turn later she attacks again, blocked by a creature that deals lethal damage back (a 704.5g SBA destruction) — onDies then fires manually, spreading X +1/+1 counters onto the other legendary creature on the battlefield.",
       "raw": {
-        "result": "Aerith enters; real turn passage clears summoning sickness, then attacks unblocked, gaining real Lifelink life — onLifeGained fires manually, putting a real +1/+1 counter on herself; another real turn later she attacks again, blocked by a creature that deals real lethal damage back (a genuine 704.5g SBA destruction) — onDies then fires manually, spreading X real +1/+1 counters onto the other legendary creature on the battlefield.",
+        "result": "Aerith enters; turn passage clears summoning sickness, then attacks unblocked, gaining Lifelink life — onLifeGained fires manually, putting a +1/+1 counter on herself; another turn later she attacks again, blocked by a creature that deals lethal damage back (a 704.5g SBA destruction) — onDies then fires manually, spreading X +1/+1 counters onto the other legendary creature on the battlefield.",
         "you": {
           "basicLands": [
             "Plains",
@@ -301,7 +301,7 @@
         "from": 19
       },
       {
-        "label": "Resolve unblocked combat damage — real Lifelink",
+        "label": "Resolve unblocked combat damage — Lifelink",
         "from": 19
       },
       {

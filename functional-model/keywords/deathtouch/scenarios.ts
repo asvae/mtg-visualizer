@@ -54,7 +54,7 @@ export function runEngineScenarios(): TraceResult[] {
   advanceOneStep(pilot, 'Advance to Declare Blockers');
   pilotDeclareBlockers(pilot, [{ blocker: bigBlocker, attacker: ochuReal }], `Declare ${bigBlocker.name} as blocker`);
 
-  pilot.beginStep('Resolve combat damage — real Deathtouch (702.2e)');
+  pilot.beginStep('Resolve combat damage — Deathtouch (702.2e)');
   const beforeBlockerDamage = bigBlocker.damageMarked ?? 0;
   const beforeOchuDamage = ochuReal.damageMarked ?? 0;
   resolveCombatDamage(pilot.engine);
@@ -70,6 +70,6 @@ export function runEngineScenarios(): TraceResult[] {
   }
 
   const result =
-    `Real 702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its real printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own real SBA sweep (\`isLethallyDamaged\`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a genuine mutual kill, not a one-sided effect.`;
-  return [finishEnginePilotTrace(pilot, setup, 'real engine playthrough: declare Deathtouch attacker -> blocked -> real lethal-by-Deathtouch SBA', result)];
+    `702.2e/704.5h: Gran Pulse Ochu deals only 1 damage to a 4-toughness blocker — nowhere near enough under a plain lethal-damage check — but its printed Deathtouch marks that 1 damage as lethal regardless, and the engine's own SBA sweep (\`isLethallyDamaged\`) destroys the blocker for it. Ochu itself also dies (the blocker's 4 power is separately, ordinarily lethal to Ochu's 1 toughness) — a mutual kill, not a one-sided effect.`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: declare Deathtouch attacker -> blocked -> lethal-by-Deathtouch SBA', result)];
 }

@@ -3,9 +3,9 @@
     "scenario": {
       "setup": "you: 2 creature(s); you: 1 artifact(s) in library",
       "action": "cast from hand",
-      "result": "casts and enters; real upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
+      "result": "casts and enters; upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
       "raw": {
-        "result": "casts and enters; real upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
+        "result": "casts and enters; upkeep trigger reveals the library-top artifact, puts it into hand, creates a Food token (transforms into Cooking Campsite — not itself tracked as state, see definition.ts); the back face's own activated ability then puts a +1/+1 counter on each of your creatures",
         "you": {
           "libraryCount": 1,
           "libraryArtifactCount": 1,
@@ -25,6 +25,7 @@
         "fn": "cast",
         "card": "Sidequest: Catch a Fish",
         "instanceId": 1,
+        "id": 2213,
         "from": "hand",
         "cost": "{2}{W}"
       },
@@ -32,12 +33,14 @@
         "fn": "enters",
         "card": "Sidequest: Catch a Fish",
         "instanceId": 1,
+        "id": 2213,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Sidequest: Catch a Fish",
         "instanceId": 1,
+        "id": 2213,
         "name": "onUpkeep"
       },
       {
@@ -60,7 +63,7 @@
       {
         "fn": "moveTo",
         "target": "you-library-artifact-0",
-        "id": 2071,
+        "id": 2212,
         "zone": "Hand",
         "controller": "you"
       },
@@ -75,6 +78,7 @@
         "fn": "activate",
         "card": "Cooking Campsite",
         "instanceId": 1,
+        "id": 2213,
         "cost": "{3}, {T}, Sacrifice an artifact (activate only as a sorcery)"
       },
       {
@@ -85,7 +89,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2069,
+        "id": 2210,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -93,7 +97,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2070,
+        "id": 2211,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

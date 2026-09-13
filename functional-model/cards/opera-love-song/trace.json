@@ -18,6 +18,7 @@
         "fn": "cast",
         "card": "Opera Love Song",
         "instanceId": 1,
+        "id": 1772,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -33,6 +34,7 @@
         "fn": "move",
         "card": "Opera Love Song",
         "instanceId": 1,
+        "id": 1772,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -63,6 +65,7 @@
         "fn": "cast",
         "card": "Opera Love Song",
         "instanceId": 1,
+        "id": 1777,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -79,14 +82,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1670,
+        "id": 1774,
         "power": 2,
         "toughness": 0
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1672,
+        "id": 1776,
         "power": 2,
         "toughness": 0
       },
@@ -94,6 +97,7 @@
         "fn": "move",
         "card": "Opera Love Song",
         "instanceId": 1,
+        "id": 1777,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -119,6 +123,7 @@
         "fn": "cast",
         "card": "Opera Love Song",
         "instanceId": 1,
+        "id": 1780,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -130,7 +135,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1675,
+        "id": 1779,
         "power": 2,
         "toughness": 0
       },
@@ -138,6 +143,7 @@
         "fn": "move",
         "card": "Opera Love Song",
         "instanceId": 1,
+        "id": 1780,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

@@ -16,6 +16,7 @@
         "fn": "cast",
         "card": "Airship Crash",
         "instanceId": 1,
+        "id": 88,
         "from": "hand",
         "cost": "{2}{G}"
       },
@@ -28,12 +29,12 @@
       },
       {
         "fn": "read:isArtifact",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "result": true
       },
       {
         "fn": "destroy",
-        "target": "you-artifact-0",
+        "target": "Mind Stone",
         "id": 87,
         "controller": "you"
       },
@@ -41,6 +42,7 @@
         "fn": "move",
         "card": "Airship Crash",
         "instanceId": 1,
+        "id": 88,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -64,6 +66,7 @@
         "fn": "cast",
         "card": "Airship Crash",
         "instanceId": 1,
+        "id": 91,
         "from": "hand",
         "cost": "{2}{G}"
       },
@@ -94,6 +97,7 @@
         "fn": "move",
         "card": "Airship Crash",
         "instanceId": 1,
+        "id": 91,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -118,6 +122,7 @@
         "fn": "cast",
         "card": "Airship Crash",
         "instanceId": 1,
+        "id": 94,
         "from": "hand",
         "cost": "{2}{G}"
       },
@@ -139,6 +144,7 @@
         "fn": "move",
         "card": "Airship Crash",
         "instanceId": 1,
+        "id": 94,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

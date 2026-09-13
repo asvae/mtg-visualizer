@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> mode 0 (Attack)",
-      "result": "Attack — creates a real 2/2 white Knight creature token.",
+      "action": "engine playthrough: cast -> mode 0 (Attack)",
+      "result": "Attack — creates a 2/2 white Knight creature token.",
       "raw": {
-        "result": "Attack — creates a real 2/2 white Knight creature token.",
+        "result": "Attack — creates a 2/2 white Knight creature token.",
         "you": {
           "basicLands": [
             "Plains",
@@ -67,10 +67,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s); opp0: a w_1_1_cat",
-      "action": "real engine playthrough: cast -> mode 1 (Ability)",
-      "result": "Ability — a real target creature gets +0/+4 until end of turn.",
+      "action": "engine playthrough: cast -> mode 1 (Ability)",
+      "result": "Ability — a target creature gets +0/+4 until end of turn.",
       "raw": {
-        "result": "Ability — a real target creature gets +0/+4 until end of turn.",
+        "result": "Ability — a target creature gets +0/+4 until end of turn.",
         "you": {
           "basicLands": [
             "Plains",
@@ -117,7 +117,7 @@
       {
         "fn": "pump",
         "target": "Cat",
-        "id": 233,
+        "id": 243,
         "power": 0,
         "toughness": 4
       },
@@ -147,10 +147,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> mode 2 (Magic)",
-      "result": "Magic — destroys Coliseum Behemoth, a real creature with power 4 or greater.",
+      "action": "engine playthrough: cast -> mode 2 (Magic)",
+      "result": "Magic — destroys Coliseum Behemoth, a creature with power 4 or greater.",
       "raw": {
-        "result": "Magic — destroys Coliseum Behemoth, a real creature with power 4 or greater.",
+        "result": "Magic — destroys Coliseum Behemoth, a creature with power 4 or greater.",
         "you": {
           "basicLands": [
             "Plains",
@@ -225,7 +225,7 @@
       {
         "fn": "destroy",
         "target": "Coliseum Behemoth",
-        "id": 240,
+        "id": 250,
         "controller": "opp0"
       },
       {
@@ -254,10 +254,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "real engine playthrough: cast -> mode 3 (Item)",
-      "result": "Item — you gain 4 real life.",
+      "action": "engine playthrough: cast -> mode 3 (Item)",
+      "result": "Item — you gain 4 life.",
       "raw": {
-        "result": "Item — you gain 4 real life.",
+        "result": "Item — you gain 4 life.",
         "you": {
           "basicLands": [
             "Plains",
