@@ -1,18 +1,9 @@
 <script setup lang="ts">
 import type { RelationColumn } from '../lib/relations';
 
-withDefaults(
-  defineProps<{
-    columns: RelationColumn[];
-    // ReviewSession's "relations to remove" list — reads as a removal, not
-    // just another relations list, so it needs to look distinct even though
-    // it's the exact same column/chip markup.
-    removed?: boolean;
-  }>(),
-  {
-    removed: false,
-  }
-);
+defineProps<{
+  columns: RelationColumn[];
+}>();
 </script>
 
 <template>
@@ -24,8 +15,7 @@ withDefaults(
     <div
       v-for="col in columns"
       :key="col.verb"
-      class="flex max-w-full shrink-0 basis-[220px] flex-col items-start gap-0.5 rounded-md border bg-bg px-2 py-1.5"
-      :class="removed ? 'border-dashed border-[#c0392b]' : 'border-border'"
+      class="flex max-w-full shrink-0 basis-[220px] flex-col items-start gap-0.5 rounded-md border border-border bg-bg px-2 py-1.5"
     >
       <div class="mb-px flex items-center gap-1.5 text-[11px] text-muted">
         <span class="size-2 shrink-0 rounded-full" :style="{ background: col.color }"></span>
@@ -48,7 +38,7 @@ withDefaults(
             :class="[level === 1 ? 'h-[7px]' : level === 2 ? 'h-[10px]' : 'h-[13px]', level <= theme.weight ? 'bg-muted' : 'bg-transparent']"
           ></i>
         </span>
-        <span :class="{ 'line-through opacity-75': removed }">{{ theme.label }}</span>
+        <span>{{ theme.label }}</span>
       </span>
     </div>
   </div>

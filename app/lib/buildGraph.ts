@@ -51,9 +51,6 @@ export interface ScryfallCard {
   all_parts?: { id: string; component: string }[];
   set?: string;
   collector_number?: string;
-  // Deck-import mode only (see server/api/cards/by-names.ts) — how many
-  // copies are in the active deck. Absent in every other mode.
-  qty?: number;
 }
 
 export type TokensById = Record<string, { name: string; image: string | null }>;
@@ -216,20 +213,19 @@ export interface NameLink {
   reasons: GraphReason[];
 }
 
-export function buildGraph(setCode: string, allRaw: ScryfallCard[], tokensById: TokensById, links: NameLink[]): GraphFile {
-  // Basic lands carry no synergy text and are numerous — pure clutter across a
-  // whole set, drop them entirely there. A real decklist is a different case:
-  // its basics are actual deck content the user just pasted in (and, with the
-  // qty merge, exactly where a "×17 Island" badge is most worth seeing) — not
-  // clutter at that scale, so deck mode keeps them. Digital-only Alchemy
-  // rebalances still never belong (not part of the actual paper set, deck
-  // mode or not — a decklist naming one is a name collision with a real card,
-  // not an intentional pick).
-  const raw = allRaw.filter((c) => (setCode === 'deck' || !(c.type_line || '').includes('Basic')) && !c.digital);
-
-  const idByName = new Map(raw.map((c) => [c.name, c.id]));
-
-  const cards: CardData[] = raw.map((c) => ({
+// One card's own raw Scryfall JSON -> this app's CardData shape. Extracted
+// out of buildGraph()'s own per-card map (which still just calls this, with
+// its own tokensById in hand) so the same mapping is available to a single
+// bulk-resolved card outside a whole-corpus load too — see
+// useGraphStore.ts's `importDeckFromText` (bulk deck-paste import, resolves
+// several cards at once via `/api/cards/by-names`, which returns this same
+// raw ScryfallCard shape, not already-built CardData the way the single-
+// card `/api/card/[set]/[number]` route does). `tokensById` defaults to `{}`
+// for a caller with no token-image map in hand (that bulk-import path never
+// fetches one, same as the old deck-import branch this replaces never did
+// either) — just means no token hover art for that card, not a broken card.
+export function scryfallCardToCardData(c: ScryfallCard, tokensById: TokensById = {}): CardData {
+  return {
     id: c.id,
     name: c.name,
     cmc: c.cmc ?? 0,
@@ -260,23 +256,50 @@ export function buildGraph(setCode: string, allRaw: ScryfallCard[], tokensById: 
     keywords: [...new Set([...cardKeywords(c).filter((k) => BADGE_KEYWORDS.has(k)), ...keywordMentions(c, BADGE_KEYWORDS)])],
     set: c.set || '',
     collectorNumber: c.collector_number || '',
-    qty: c.qty,
-  }));
+  };
+}
 
-  // A link whose name doesn't resolve (basic land / digital card filtered out
-  // above, or a functional-model card this corpus doesn't have — e.g. a BLB
-  // card in query mode) is dropped rather than rendered dangling.
-  const resolvedLinks: CardLink[] = [];
+// Resolves a whole-pool NameLink[] (keyed by card name — functional-model's
+// own vocabulary, see NameLink's own comment) down to the CardLink[] a
+// GraphFile actually carries, against whichever cards[] are in hand right
+// now. Extracted out of buildGraph() so useGraphStore.ts's own Scope∪Deck
+// union (PRD 01 "Core concepts") can re-resolve links against the CURRENT
+// effective card set — which includes individually added Scope cards and
+// Deck entries buildGraph() itself never sees — using the SAME whole-pool
+// NameLink[] retained from the one `/api/graph-links` fetch, rather than
+// duplicating this resolution logic. A link whose name doesn't resolve
+// (dropped from cards[] entirely, or a functional-model card this corpus
+// doesn't have at all — e.g. a BLB card in query mode) is dropped rather
+// than rendered dangling.
+export function resolveCardLinks(cards: { id: string; name: string }[], links: NameLink[]): CardLink[] {
+  const idByName = new Map(cards.map((c) => [c.name, c.id]));
+  const resolved: CardLink[] = [];
   for (const l of links) {
     const a = idByName.get(l.a);
     const b = idByName.get(l.b);
     if (!a || !b) continue;
-    resolvedLinks.push({ a, b, reasons: l.reasons });
+    resolved.push({ a, b, reasons: l.reasons });
   }
+  return resolved;
+}
+
+export function buildGraph(setCode: string, allRaw: ScryfallCard[], tokensById: TokensById, links: NameLink[]): GraphFile {
+  // Basic lands carry no synergy text and are numerous — pure clutter across
+  // a whole bulk-loaded set, drop them entirely there. A Deck/Scope card
+  // added individually (useGraphStore.ts's own addCardToScope/addCardToDeck/
+  // importDeckFromText) bypasses this filter by construction — it's never
+  // built via this function at all, so a genuinely-wanted basic land added
+  // one-by-one, or a deck's own "×17 Island," is never at risk of being
+  // silently dropped the way it would be if it came in through THIS bulk
+  // path. Digital-only Alchemy rebalances never belong here either way (not
+  // part of the actual paper set).
+  const raw = allRaw.filter((c) => !(c.type_line || '').includes('Basic') && !c.digital);
+
+  const cards: CardData[] = raw.map((c) => scryfallCardToCardData(c, tokensById));
 
   return {
     set: setCode,
     cards,
-    links: resolvedLinks,
+    links: resolveCardLinks(cards, links),
   };
 }

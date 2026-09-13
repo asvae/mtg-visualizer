@@ -20,7 +20,6 @@
     "postinstall": "nuxt prepare",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
-    "review-server": "node scripts/review-server.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

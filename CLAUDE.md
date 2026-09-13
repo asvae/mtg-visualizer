@@ -7,12 +7,19 @@ relations as edges. Default corpus: Final Fantasy (`FIN`) set, off checked-in
 assembles client-side (`app/lib/buildGraph.ts`), no server-side merge step.
 Nuxt 4 + Nuxt UI, SPA-only for `/app` (graph), prerendered landing page.
 
-**Scope, deliberately not**: deck builder, stats/win-rate analyzer, card
-print/style catalog, price/marketplace tool, account/user-data service.
+**Scope, deliberately not**: stats/win-rate analyzer, card print/style
+catalog, price/marketplace tool. **In flux, not yet decided/built**: deck
+builder and accounts were non-goals here too, but a 2026-09-13 planning
+pass concluded the app should grow into a real deck builder (see
+`docs/prds/`) — draft PRDs only, this line updates for real once any of
+them ship.
 
-Full detail: `README.md` (architecture/scope), `NEXT_STEPS.md` (near-term
-plan), `WISHLIST.md` (longer-term ideas), `SET_STATUS.md` (per-set tagging
-progress), `functional-model/ENGINE_DESIGN.md` + `ENGINE_GAPS.md` +
+Full detail: `README.md` (architecture/scope, still states the old
+deck-builder/no-accounts non-goals — stale pending the PRDs above),
+`NEXT_STEPS.md` (near-term plan), `WISHLIST.md` (longer-term ideas),
+`SET_STATUS.md` (per-set tagging progress), `docs/prds/` (draft PRD set
+for the deck-builder/UI rework, not yet implemented),
+`functional-model/ENGINE_DESIGN.md` + `ENGINE_GAPS.md` +
 `SYNERGY_DESIGN.md` (engine internals — `engine` agent's own primer,
 don't duplicate here).
 

@@ -135,6 +135,25 @@ export interface GraphFile {
   links: CardLink[];
 }
 
+// PRD 01 "Core concepts" (docs/prds/01-core-concepts.md) — a Deck is a
+// fully independent, unconstrained collection: no format, no legality, no
+// quantity caps, ever (a deliberate sandbox — usable for a cube just as
+// well as a real deck). `card` is the full CardData, not just an id, so a
+// Deck entry renders as a graph node on its own, without depending on
+// whatever else happens to be loaded into Scope right now. `useGraphStore.ts`'s
+// own `graph` computed is what actually combines this with Scope, at render
+// time only (rendered set = Scope ∪ {entries with quantity > 0}) — a Deck
+// never replaces or narrows Scope the way the old paste-a-decklist feature
+// used to.
+export interface DeckEntry {
+  card: CardData;
+  quantity: number;
+}
+export interface Deck {
+  name: string;
+  entries: DeckEntry[];
+}
+
 export const ROLES: Role[] = ['produce', 'consume', 'atypical', 'grant', 'magnifier'];
 
 // synergy-model card-synergy decomposition effort (synergy-model/),

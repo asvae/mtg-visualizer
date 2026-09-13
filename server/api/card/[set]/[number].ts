@@ -326,22 +326,17 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
 
   let data: FunctionalModelData | null;
   try {
-    let source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
-    // A card's own scenarios.ts is one of two shapes (see run-one-card.mjs's
-    // own header) — a plain `scenarios` array (the common case, already
-    // fully captured by `traces` below, nothing extra worth showing) or a
-    // real engine-piloted `runEngineScenarios()` pilot script, worth showing
-    // right alongside the definition since it's otherwise invisible on disk.
-    // Appended, not a separate field, to keep the Card Definition tab's
-    // existing single-`source` shape (FunctionalModelScript) unchanged.
-    // Detected by a text match rather than importing the module (execution
-    // already happens in run-one-card.mjs's own subprocess below) — cheap,
-    // and this is a display-only decision.
-    const scenariosPath = join(process.cwd(), `functional-model/cards/${slug}/scenarios.ts`);
-    const scenariosSource = existsSync(scenariosPath) ? readFileSync(scenariosPath, 'utf8') : '';
-    if (/export\s+function\s+runEngineScenarios\b/.test(scenariosSource)) {
-      source += `\n\n// ============================================================\n// scenarios.ts — this card's own real engine-piloted trace\n// ============================================================\n\n${scenariosSource}`;
-    }
+    // Card Definition tab (FunctionalModelScript.vue) shows ONLY this card's
+    // own definition.ts — scenario content (whether a plain `scenarios`
+    // array or a real engine-piloted `runEngineScenarios()` pilot script)
+    // belongs exclusively under the Scenarios tab (`traces` below, rendered
+    // by ScenarioReplay.vue), never appended here. A prior version of this
+    // function concatenated scenarios.ts's raw source onto `source` whenever
+    // it used the runEngineScenarios shape — that leaked scenario prose
+    // (setup/action/result strings, the pilot function itself) into the
+    // Definition tab; removed outright, not just hidden client-side, since
+    // the leak was in this served payload, not the Vue component.
+    const source = readFileSync(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`), 'utf8');
     const traces = await computeTracesLive(slug);
     const synergy = loadCardSynergy(slug);
     const annotatedCard = buildAnnotatedCard(faces, synergy);

@@ -142,7 +142,7 @@ strength) rather than a number, so reviewers can judge it at a glance.
 ## Review workflow
 
 Cards get tagged and reviewed by hand against their real oracle text, one at
-a time, either cold via the CLI:
+a time. Inspect a card cold via the CLI:
 
 ```
 node scripts/review-card.mjs "<card name>"
@@ -150,14 +150,14 @@ node scripts/review-card.mjs "<card name>"
 
 (prints the card's full oracle text — both faces, for DFCs — alongside its
 current theme edges, so a tagging call can be made against the actual rules
-text instead of guessing from the graph alone) — or interactively, through the
-in-app review panel (🧾 icon) driven by an agent session against
-`scripts/review-server.mjs`'s control-plane protocol. The 🧾 icon only renders
-when `NUXT_PUBLIC_ENABLE_REVIEW=true` is set (see `.env.example`) — a tagging
-tool, not something a deployed/public copy of the app should expose; set it
-in a local `.env` and leave it unset wherever the app is actually hosted. **See
-`scripts/REVIEW_PROCESS.md` for the full runbook** (protocol reference,
-card-selection order, the confirm/feedback loop, tags file format).
+text instead of guessing from the graph alone), or just look at it in the app
+itself (the card page, or the graph). An agent session proposes the relations
+it believes are correct directly in chat; the user confirms or corrects, also
+in chat — there's no separate in-app review UI (an earlier interactive
+🧾-icon panel + relay/queue mechanism was retired 2026-09-13 in favor of this
+simpler chat-based loop). **See `scripts/REVIEW_PROCESS.md` for the full
+runbook** (card-selection order, the confirm/feedback loop, tags file
+format).
 
 Once a card's tagging is confirmed correct it gets written to
 `data/fin/fin_relations.json` —
@@ -234,6 +234,6 @@ tokens (`--color-produce`, `--color-panel`, etc.) and the Tailwind/Nuxt UI
 imports. Two deliberate exceptions stay as plain CSS instead of Tailwind
 classes, both referencing those same `--color-*` custom properties directly:
 `GraphCanvas.vue`'s unscoped `<style>` (its SVG content is D3-appended, not
-Vue-templated, so there's nowhere to put a `class="..."` attribute) and a
-small `:deep()` block in `ReviewSession.vue` styling agent-authored `v-html`
-content the same way.
+Vue-templated, so there's nowhere to put a `class="..."` attribute) and the
+dev-only docs page's (`app/pages/docs/[[slug]].vue`) `:deep()` block styling
+its rendered-markdown `v-html` content the same way.

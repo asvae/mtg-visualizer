@@ -47,10 +47,6 @@ export default defineNuxtConfig({
     public: {
       appVersion: packageJson.version,
       buildCommit: getBuildCommit(),
-      // The review panel is a tagging-workflow tool, not something an end
-      // visitor to a deployed copy of the app should see — override locally
-      // via NUXT_PUBLIC_ENABLE_REVIEW=true in .env; unset (false) in prod.
-      enableReview: false,
     },
   },
   routeRules: {

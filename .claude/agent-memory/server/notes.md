@@ -26,6 +26,21 @@ resume alone (session transcripts are swept after ~30 days).
 - Not committed/pushed per task scope — orchestrator/user to commit and
   trigger redeploy.
 
+- 2026-09-13: Review-panel retirement (user's explicit call) — removed the
+  build/config surface: `nuxt.config.ts` `runtimeConfig.public.enableReview`
+  field + its comment deleted (appVersion/buildCommit untouched);
+  `package.json` `review-server` script entry deleted (target
+  `scripts/review-server.mjs` already gone); `.env.example` deleted outright
+  (its only content was documenting `NUXT_PUBLIC_ENABLE_REVIEW`, nothing
+  else worth keeping). Repo-wide grep for `enableReview`/
+  `NUXT_PUBLIC_ENABLE_REVIEW` (excluding node_modules/.git/.netlify) now
+  only turns up: `app/components/AppHeader.vue`, `app/pages/app/index.vue`
+  (ui agent's parallel cleanup, not mine), `app/components/ReviewSession.vue`
+  (being deleted by ui agent), and two doc mentions —
+  `docs/prds/02-navigation.md:38` and `app/pages/docs/[[slug]].vue:10` —
+  left untouched per task scope, flagged for orchestrator to route if docs
+  need updating.
+
 ## Open questions
 
 - Verify after next deploy: hit `https://mtg-synergy-map.asva.pro/api/card/fin/1`

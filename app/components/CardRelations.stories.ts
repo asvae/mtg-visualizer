@@ -28,15 +28,6 @@ export const WeightLevels: Story = {
   },
 };
 
-// Same data, but marked "removed" (ReviewSession's relations-to-remove
-// styling: dashed border, struck-through labels) — for comparing both states.
-export const Removed: Story = {
-  args: {
-    ...WeightLevels.args,
-    removed: true,
-  },
-};
-
 // Multiple relation-type columns side by side, matching how a real card's
 // tooltip/review panel actually renders more than one verb at once.
 export const MultipleColumns: Story = {
