@@ -1,5 +1,5 @@
 import { computed, onMounted, reactive, ref, shallowRef, watch, type InjectionKey } from 'vue';
-import type { CardData, GraphFile, GraphReason } from '../types';
+import type { CardData, Deck, DeckEntry, GraphFile, GraphReason } from '../types';
 import { COLOR_ORDER, RARITY_ORDER } from '../lib/constants';
 import {
   availableRarities as computeAvailableRarities,
@@ -7,47 +7,89 @@ import {
   availableKeywords as computeAvailableKeywords,
 } from '../lib/filters';
 import { DEFAULT_FORCES, type ForceConfig, type GravityMode } from '../lib/graphRenderer';
-import { buildGraph, type NameLink, type ScryfallCard, type TokensById } from '../lib/buildGraph';
+import { buildGraph, resolveCardLinks, scryfallCardToCardData, type NameLink, type ScryfallCard, type TokensById } from '../lib/buildGraph';
+import { fetchCardBySetNumber } from '../lib/cardCache';
 import { parseDecklist, type ParsedDeckCard } from '../lib/deckImport';
 
 // Storage keys referenced by the shareable-link restore block below, so
 // declared before it rather than in their original historical order.
 //
-// Deck mode has no URL flag at all — unlike `sf` (real, shareable query
-// content), "am I in deck mode" is pure UI state with nothing worth putting
-// in an address bar, so it's a sticky localStorage bit instead: it stays set
-// across a plain `/app` visit or refresh until AppHeader.vue's "Clear
-// filter" explicitly clears it, rather than resetting the moment the URL
-// doesn't repeat a flag. Only one active deck import at a time — unlike
-// `sf`'s own per-query storage bucket, a fresh paste always overwrites the
-// previous one rather than accumulating buckets nothing will revisit.
-export const DECK_TEXT_STORAGE_KEY = 'mtg-visualizer-deck-import-text';
-export const DECK_ACTIVE_KEY = 'mtg-visualizer-deck-active';
+// PRD 01 "Core concepts" (docs/prds/01-core-concepts.md) reworked how a
+// pasted decklist fits into this app: it used to BE a whole alternate Scope
+// (`SET_CODE = 'deck'`, replacing whatever set/query was loaded, gated by
+// AppHeader.vue's own "Global filter by deck" checkbox) — that mode, and the
+// two storage keys that drove it (`mtg-visualizer-deck-import-text`,
+// `mtg-visualizer-deck-active`), are gone entirely, not just renamed. A Deck
+// is now its own persistent, independent collection (`DECK_STORAGE_KEY`
+// below) that's UNIONED with Scope at render time (`graph` computed further
+// down), never a Scope-replacing mode — pasting a decklist now just resolves
+// and merges into that Deck (`importDeckFromText` below) instead of
+// navigating anywhere. See this file's own `graph` computed and
+// `DeckEntry`/`Deck` (app/types.ts) for the actual union mechanics.
+//
+// Not namespaced by SET_CODE (unlike STORAGE_KEY/FORCES_STORAGE_KEY below) —
+// a Deck is deliberately independent of whichever Scope (fin/query) happens
+// to be loaded, same "your deck stays visible regardless of what's currently
+// in scope" framing the PRD itself uses.
+const DECK_STORAGE_KEY = 'mtg-visualizer-deck';
 // Query mode's own sticky breadcrumb — see its fuller comment further down
 // this file, by getActiveFilterMode. Declared here (rather than in its
 // original spot) only so the shareable-link restore block below can write
 // it before that comment's own read sites run.
 export const QUERY_ACTIVE_KEY = 'mtg-visualizer-active-query';
 
+// Deck persistence — module-scope (not just inside useGraphStore()) since
+// the standalone card detail page's own getKnownDeckCards()/
+// getActiveFilterMode() below need to read the SAME persisted shape without
+// a live store instance in hand (that page doesn't share this store — see
+// getActiveFilterMode's own comment).
+interface PersistedDeck {
+  name: string;
+  entries: DeckEntry[];
+}
+function loadPersistedDeck(): PersistedDeck | null {
+  try {
+    const raw = localStorage.getItem(DECK_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null; // corrupt/blocked storage — caller falls back to an empty deck
+  }
+}
+function savePersistedDeck(deck: PersistedDeck) {
+  try {
+    localStorage.setItem(DECK_STORAGE_KEY, JSON.stringify(deck));
+  } catch {
+    // storage full/blocked — deck just won't persist across a reload
+  }
+}
+
 // --- Shareable link restore --------------------------------------------
 // AppHeader.vue's Share button (see buildShareUrl below) encodes the whole
-// visualizer state — mode, query/decklist, colors/rarities/types, search —
-// as plain, readable `share_*` query params (nothing secret here, no reason
-// to obscure it behind a base64 blob). Restoring it has to happen here, at
-// the very top of this module, BEFORE `scryfallQuery`/`deckImportActive`
-// below read anything: those are computed once, straight off the
-// URL/localStorage, at module-eval time — exactly like a real navigation or
-// a manual paste into the filter modal would leave things, which is
-// deliberately what this block produces (seeds localStorage, and for query
-// mode rewrites the address bar to the same `?sf=` shape
-// submitScryfallQuery already navigates to) rather than inventing a
-// parallel "restored" code path elsewhere in this file. The `share_*`
-// params themselves are stripped immediately after (history.replaceState,
-// no reload, no history entry added) — a share link is a one-time seed, not
-// something that should linger in the address bar or get re-applied on
-// every future refresh of this tab.
+// visualizer state — mode/query, deck contents, colors/rarities/types,
+// search — as plain, readable `share_*` query params (nothing secret here,
+// no reason to obscure it behind a base64 blob). Restoring it has to happen
+// here, at the very top of this module, BEFORE `scryfallQuery` below reads
+// anything: that's computed once, straight off the URL, at module-eval time
+// — exactly like a real navigation would have left things, which is
+// deliberately what this block produces (for query mode, rewrites the
+// address bar to the same `?sf=` shape submitScryfallQuery already
+// navigates to) rather than inventing a parallel "restored" code path
+// elsewhere in this file. The `share_*` params themselves are stripped
+// immediately after (history.replaceState, no reload, no history entry
+// added) — a share link is a one-time seed, not something that should
+// linger in the address bar or get re-applied on every future refresh of
+// this tab.
+//
+// `deckText` (a plain decklist-shaped string, same grammar deckImport.ts
+// parses) rides independently of `mode` now — PRD 01 made Deck a persistent
+// collection unioned with Scope, not a third Scope-replacing mode
+// alongside 'fin'/'query', so a shared link's deck content has to merge
+// into the live Deck via `importDeckFromText` (an async network call) once
+// the store actually mounts, rather than being seeded into localStorage
+// synchronously here the way `mode`/`query` still are. See the onMounted
+// block inside useGraphStore() below for where that merge actually happens.
 export interface ShareState {
-  mode: 'fin' | 'deck' | 'query';
+  mode: 'fin' | 'query';
   query?: string;
   deckText?: string;
   colors?: string[];
@@ -59,8 +101,14 @@ export interface ShareState {
 function decodeShareParams(): ShareState | null {
   if (typeof window === 'undefined') return null;
   const params = new URLSearchParams(window.location.search);
-  const mode = params.get('share_mode');
-  if (mode !== 'fin' && mode !== 'deck' && mode !== 'query') return null;
+  const rawMode = params.get('share_mode');
+  if (rawMode !== 'fin' && rawMode !== 'deck' && rawMode !== 'query') return null;
+  // A link shared before this PRD's rework may still carry the old
+  // `share_mode=deck` (Deck-as-a-Scope-mode) value — best-effort compat:
+  // collapse it to plain 'fin' Scope, its `deckText` (read unconditionally
+  // below regardless of mode) still merges into the real Deck the same as
+  // any other shared deck content would.
+  const mode: 'fin' | 'query' = rawMode === 'query' ? 'query' : 'fin';
   const csv = (key: string) => {
     const v = params.get(key);
     return v ? v.split(',') : undefined;
@@ -85,15 +133,9 @@ function decodeShareParams(): ShareState | null {
 const sharedState = decodeShareParams();
 if (sharedState && typeof window !== 'undefined') {
   try {
-    if (sharedState.mode === 'deck' && sharedState.deckText) {
-      localStorage.setItem(DECK_TEXT_STORAGE_KEY, sharedState.deckText);
-      localStorage.setItem(DECK_ACTIVE_KEY, '1');
-      localStorage.removeItem(QUERY_ACTIVE_KEY);
-    } else if (sharedState.mode === 'query' && sharedState.query) {
+    if (sharedState.mode === 'query' && sharedState.query) {
       localStorage.setItem(QUERY_ACTIVE_KEY, sharedState.query);
-      localStorage.removeItem(DECK_ACTIVE_KEY);
     } else {
-      localStorage.removeItem(DECK_ACTIVE_KEY);
       localStorage.removeItem(QUERY_ACTIVE_KEY);
     }
   } catch {
@@ -120,68 +162,40 @@ if (sharedState && typeof window !== 'undefined') {
 // its own afterwards; see readUrlParam's own comment.
 const scryfallQuery = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('sf') : null;
 
-function readDeckActive(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    return localStorage.getItem(DECK_ACTIVE_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-// An explicit `sf=` URL always wins over a lingering deck-active flag — a
-// real link you just followed is a more deliberate statement of intent than
-// whatever mode a previous visit left switched on.
-const deckImportActive = scryfallQuery === null && readDeckActive();
-// Namespaces every distinct query (or the deck import) into its own storage
-// bucket instead of clobbering the main "fin" explorer's saved filters, or
-// having every query share one "query" bucket and stomp on each other's saved
-// state.
-const SET_CODE = deckImportActive ? 'deck' : scryfallQuery ? `q:${scryfallQuery}` : 'fin';
+// Namespaces every distinct query into its own storage bucket instead of
+// clobbering the main "fin" explorer's saved filters, or having every query
+// share one "query" bucket and stomp on each other's saved state. No more
+// 'deck' SET_CODE value (see this file's own header comment) — a Deck no
+// longer replaces Scope, so it never changes what SET_CODE names for this
+// purpose.
+const SET_CODE = scryfallQuery ? `q:${scryfallQuery}` : 'fin';
 
-// Whatever decklist is currently pasted, regardless of whether it's also
-// the active GLOBAL filter (see getActiveDeckCards below) — the "Global
-// filter by deck" checkbox in AppHeader.vue's Import tab decides that part
-// separately. This is the one used for qty badges (main graph nodes via
-// stampKnownQty below, and the card detail page's own ×N badge): a pasted
-// deck stays "known" for that purpose even while just browsing the normal
-// set/query with it left unchecked. `null` whenever nothing's pasted,
-// never an empty array (an empty deck isn't a thing `load()` below lets
-// through either — see its own "No cards recognized" error).
+// Whatever's currently in the persistent Deck (see DECK_STORAGE_KEY above),
+// as the flat `{name, qty}[]` shape both this file's own getActiveFilterMode
+// below and the standalone card-detail page (which imports this directly —
+// see app/pages/app/card/[set]/[number].vue) already expect. `null` for an
+// empty/nonexistent deck, never an empty array — same "absent, not empty"
+// convention the old deck-import version of this function used. Reads
+// straight off localStorage (module-scope, no live store instance needed)
+// so the standalone card page can call this with no store injected.
 export function getKnownDeckCards(): ParsedDeckCard[] | null {
-  try {
-    const text = localStorage.getItem(DECK_TEXT_STORAGE_KEY) ?? '';
-    const parsed = parseDecklist(text);
-    return parsed.length ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-// Gated to only when the pasted deck is ALSO the active global filter (the
-// checkbox above was checked at import time, persisted via DECK_ACTIVE_KEY)
-// — used by load()'s own mode decision (SET_CODE/raw source below) and
-// getActiveFilterMode()'s Previous/Next scoping, both of which are
-// specifically about "the whole app shows only these cards," not "this
-// deck happens to be known." Shared with the card-detail page
-// (server/api/card/[set]/[number].ts's optional `deckNames` scoping) so
-// both places can't drift on what counts as "active."
-export function getActiveDeckCards(): ParsedDeckCard[] | null {
-  return deckImportActive ? getKnownDeckCards() : null;
+  const persisted = loadPersistedDeck();
+  if (!persisted) return null;
+  const list = persisted.entries.filter((e) => e.quantity > 0).map((e) => ({ name: e.card.name, qty: e.quantity }));
+  return list.length ? list : null;
 }
 
 // Query mode's own sticky breadcrumb (QUERY_ACTIVE_KEY, declared near the
-// top of this file alongside DECK_ACTIVE_KEY) — unlike `sf` itself (real,
-// shareable URL content, read fresh above), a query-mode session otherwise
-// has NO way to signal itself outside that URL param. That's fine for the
-// main graph page (it re-reads `sf` every load anyway) but breaks the
-// standalone card detail page below: GraphCanvas.vue opens it via
-// `window.open` with a bare `/app/card/<set>/<number>` URL, no query string
-// carried over, so without this it has no way to even know a query filter
-// is active elsewhere, let alone what it was. AppHeader.vue writes/clears
-// this right alongside DECK_ACTIVE_KEY (see submitScryfallQuery/
-// submitDeckImport) — same sticky, explicit-clear-only contract
-// DECK_ACTIVE_KEY already has, not auto-cleared by a bare `/app` visit
-// either.
+// top of this file) — unlike `sf` itself (real, shareable URL content, read
+// fresh above), a query-mode session otherwise has NO way to signal itself
+// outside that URL param. That's fine for the main graph page (it re-reads
+// `sf` every load anyway) but breaks the standalone card detail page below:
+// GraphCanvas.vue opens it via `window.open` with a bare
+// `/app/card/<set>/<number>` URL, no query string carried over, so without
+// this it has no way to even know a query filter is active elsewhere, let
+// alone what it was. AppHeader.vue writes/clears this (see
+// submitScryfallQuery below) — sticky, explicit-clear-only, not auto-cleared
+// by a bare `/app` visit.
 
 export type ActiveFilter = { mode: 'deck'; cards: { name: string; qty: number }[] } | { mode: 'query'; query: string } | null;
 
@@ -190,11 +204,17 @@ export type ActiveFilter = { mode: 'deck'; cards: { name: string; qty: number }[
 // own Previous/Next to whichever filter's card list, since that page has no
 // access to the main graph's own already-loaded `store.graph.value.cards`
 // (a deliberately standalone route — see that page's own header comment).
-// Deck wins if both were somehow set at once (shouldn't happen — the two
-// AppHeader.vue submit functions keep them mutually exclusive) since it's
-// the more specific commitment of the two.
+// Deck wins whenever it has any entries at all — PRD 01 dropped the old
+// "Global filter by deck" checkbox that used to gate this (Deck no longer
+// competes with Scope for what the MAIN graph shows, so there's nothing left
+// to opt into there), but this page's own Previous/Next and Interactions-
+// panel scoping is still a genuinely useful "browse just my deck" mode, and
+// having any Deck entries at all is the closest still-meaningful signal for
+// it. Flagged for `card` lane to sanity-check: this makes that scoping
+// switch on automatically the moment a Deck is non-empty, where it used to
+// require an explicit opt-in.
 export function getActiveFilterMode(): ActiveFilter {
-  const deck = getActiveDeckCards();
+  const deck = getKnownDeckCards();
   if (deck) return { mode: 'deck', cards: deck };
   try {
     const q = localStorage.getItem(QUERY_ACTIVE_KEY);
@@ -215,6 +235,38 @@ const GRAVITY_MODE_STORAGE_KEY = `mtg-visualizer-gravity-mode-${SET_CODE}`;
 // the four functional-model views you last looked at" isn't really a
 // per-set preference, just a standing UI habit.
 const FUNCTIONAL_MODEL_TAB_STORAGE_KEY = 'mtg-visualizer-functional-model-tab';
+// Same "standing UI habit, not a per-set preference" reasoning as the tab key
+// above — the Facts tab's "show parser-derived facts" checkbox
+// (functional-model/PRD_AUTOMATED_AUTHORING.md).
+const SHOW_PARSER_FACTS_STORAGE_KEY = 'mtg-visualizer-show-parser-facts';
+// PRD 04 "List view" — same "standing UI habit, not a per-set preference"
+// reasoning as the two keys just above: which renderer (graph nodes vs. a
+// sortable table) you last looked at isn't a statement about a particular
+// Scope/set, so this isn't namespaced by SET_CODE either.
+const VIEW_MODE_STORAGE_KEY = 'mtg-visualizer-view-mode';
+// CardPeekPanel.vue's own drag-to-resize width — same "standing UI habit, not
+// a per-set preference" reasoning as the two keys above: how wide someone
+// likes the peek panel isn't a statement about a particular Scope/set either.
+const PANEL_WIDTH_STORAGE_KEY = 'mtg-visualizer-card-panel-width';
+// Exported so CardPeekPanel.vue's own drag handle clamps against the exact
+// same numbers this file uses to sanitize a restored value — one source of
+// truth, not two copies that could drift apart. Min keeps card art +
+// CardRelations chips usable; max leaves most of the viewport for the
+// graph/list behind it on a typical laptop-width screen (a raw vw-based cap
+// is layered on top of this in the component itself, for a narrow window).
+export const PANEL_WIDTH_MIN = 280;
+export const PANEL_WIDTH_MAX = 720;
+export const PANEL_WIDTH_DEFAULT = 360; // matches CardPeekPanel.vue's pre-resize fixed width
+export function clampPanelWidth(w: number): number {
+  return Math.min(PANEL_WIDTH_MAX, Math.max(PANEL_WIDTH_MIN, w));
+}
+// PRD 01 "Core concepts" — Scope's own per-card add/remove overlay (see
+// `scopeAdded`/`scopeRemoved` inside useGraphStore() below), namespaced by
+// SET_CODE same as the filter/force state above: an individually-added or
+// -removed card is a statement about THIS particular bulk pool (this FIN
+// visit, or this specific `?sf=` query), not a global preference that should
+// leak into an unrelated one.
+const SCOPE_EDITS_STORAGE_KEY = `mtg-visualizer-scope-edits-${SET_CODE}`;
 
 // Second half of the shareable-link restore started near the top of this
 // file — colors/rarities/types/search couldn't be applied there since
@@ -343,10 +395,32 @@ export function useGraphStore() {
       const url = new URL(window.location.href);
       url.search = sharedState.mode === 'query' && sharedState.query ? `?sf=${encodeURIComponent(sharedState.query)}` : '';
       window.history.replaceState(null, '', url.toString());
+      // A shared link's own deck content (see ShareState's own comment) is
+      // an async merge into the real Deck, not a synchronous localStorage
+      // seed the way mode/query/colors/etc. are above — `importDeckFromText`
+      // isn't defined until further down this function, but by the time this
+      // callback actually RUNS (after mount, not during this synchronous
+      // setup pass) it already is; swallow a failure here the same way a
+      // network hiccup anywhere else in this file is swallowed rather than
+      // crashing the whole page over a share-link's deck half.
+      if (sharedState.deckText) importDeckFromText(sharedState.deckText, 'merge').catch(() => {});
     });
   }
 
-  const graph = shallowRef<GraphFile | null>(null);
+  // The bulk-loaded pool only — see the `graph` computed further down for
+  // the actual Scope∪Deck union every consumer (GraphCanvas, FilterPanel,
+  // ...) reads. Kept internal (not returned from this composable) since
+  // nothing outside this file should ever read the pre-union graph.
+  const baseGraph = shallowRef<GraphFile | null>(null);
+  // The FULL card<->card NameLink[] pool from `/api/graph-links` (keyed by
+  // card name, not id — see NameLink's own comment in buildGraph.ts),
+  // retained across the whole session (not just used once inside
+  // buildGraph() the way it was before PRD 01) so the `graph` computed below
+  // can re-resolve links against whatever the CURRENT effective card set is
+  // — including individually added Scope cards and Deck entries buildGraph()
+  // itself never sees, since it only ever runs once, on the bulk pool, at
+  // load() time.
+  const graphLinksPool = shallowRef<NameLink[]>([]);
   const loadError = ref<string | null>(null);
   // True from just before load()'s first fetch until it settles (success or
   // error) — App.vue shows a loading overlay while this is true. Starts true
@@ -354,9 +428,240 @@ export function useGraphStore() {
   // onMounted() calls load() a tick later.
   const loading = ref(true);
   // Non-blocking, distinct from loadError: the graph still loaded fine, this
-  // just says the "sf" query matched more cards than /api/cards will return,
-  // or (deck-import mode) that some pasted card names weren't found.
+  // just says the "sf" query matched more cards than /api/cards will return.
   const dataWarning = ref<string | null>(null);
+
+  // --- Scope edits (PRD 01 "Core concepts") --------------------------------
+  // Scope stays the perf-bounded bulk pool `load()` below fetches (whichever
+  // of 'fin'/a Scryfall query), but is now individually editable on top of
+  // that: `scopeAdded` holds cards fetched one at a time (addCardToScope,
+  // reusing the same `/api/card/[set]/[number]` route + frontend cache the
+  // Deck side below uses) that AREN'T part of the bulk pool; `scopeRemoved`
+  // hides a card (bulk-loaded or individually added, doesn't matter) from
+  // view without literally "un-fetching" it. Both namespaced by SET_CODE
+  // (SCOPE_EDITS_STORAGE_KEY above) — an edit is a statement about THIS
+  // particular bulk pool, not a standing global preference.
+  const savedScopeEdits = ((): { added: CardData[]; removed: string[] } | null => {
+    try {
+      const raw = localStorage.getItem(SCOPE_EDITS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const scopeAdded = reactive(new Map<string, CardData>((savedScopeEdits?.added ?? []).map((c) => [c.id, c])));
+  const scopeRemoved = reactive(new Set<string>(savedScopeEdits?.removed ?? []));
+  const scopeEditsPayload = computed(() => ({ added: [...scopeAdded.values()], removed: [...scopeRemoved] }));
+  watch(scopeEditsPayload, (payload) => {
+    try {
+      localStorage.setItem(SCOPE_EDITS_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // storage full/blocked — scope edits just won't persist across a reload
+    }
+  });
+
+  // PRD 03 "Search" — Scope's own perf cap (same 500 server/api/cards.ts's
+  // own MAX_CARDS already enforces for a bulk `?sf=` query) applies here too,
+  // now that a card can be added one at a time via a discover search result.
+  // Deliberately NOT the union `graph` computed's own card count (that also
+  // includes Deck, which is an explicit unconstrained sandbox per PRD 01 —
+  // this cap is a statement about Scope alone) — the same dedupe-by-id
+  // logic the `graph` computed uses for its own Scope half, just without the
+  // Deck union folded in.
+  const SCOPE_CAP = 500;
+  // PRD 04 "List view" — the actual Scope MEMBERSHIP (not just its count),
+  // exposed so a renderer that already has a card's full CardData in hand
+  // (a list row, sourced from the Scope∪Deck union `graph` below) can tell
+  // "is this specific card in Scope right now" apart from "is it merely
+  // visible via Deck" — the union itself doesn't carry that distinction on
+  // the card object. `scopeCardCount` now derives from this instead of
+  // duplicating the same loop.
+  const scopeCardIds = computed(() => {
+    const base = baseGraph.value;
+    const ids = new Set<string>();
+    if (!base) return ids;
+    for (const c of base.cards) if (!scopeRemoved.has(c.id)) ids.add(c.id);
+    for (const c of scopeAdded.values()) if (!scopeRemoved.has(c.id)) ids.add(c.id);
+    return ids;
+  });
+  const scopeCardCount = computed(() => scopeCardIds.value.size);
+
+  // Adds ONE card to Scope via a single targeted request for that card
+  // (server/api/card/[set]/[number].ts, the same route the card detail page
+  // uses) — never a re-fetch of the whole bulk pool. Repeat calls for a
+  // card already fetched this session (by anyone — Scope, Deck, a search
+  // discover result) are served from app/lib/cardCache.ts instead of hitting
+  // the network again. Re-adding a previously-removed card un-hides it.
+  // Refuses (no partial/silent add — state is untouched on a `{ok: false}`
+  // return) if this card is genuinely NEW to Scope and Scope is already at
+  // SCOPE_CAP; re-adding a card Scope already effectively has (bulk pool or
+  // a previous scopeAdded entry) never counts against the cap, since it
+  // doesn't grow Scope's size at all.
+  //
+  // `presetCard` (PRD 04 "List view" addition) — a list row already holds
+  // this exact card's full CardData (it came FROM the Scope∪Deck union in
+  // the first place, e.g. re-adding a Deck-only card back into Scope), so
+  // forcing another `fetchCardBySetNumber` round trip would be a pointless
+  // network call most of that time it's not already cache-warm. When
+  // provided, skips the fetch entirely and reuses it directly; every other
+  // caller (SearchBox's discover rows, which never have the card in hand
+  // ahead of the fetch) omits it and keeps the original fetch-then-add path
+  // unchanged.
+  async function addCardToScope(set: string, number: string, presetCard?: CardData): Promise<{ ok: true } | { ok: false; error: string }> {
+    const card = presetCard ?? (await fetchCardBySetNumber(set, number));
+    if (!card) return { ok: false, error: 'Card not found' };
+    const alreadyCounted = !scopeRemoved.has(card.id) && ((baseGraph.value?.cards.some((c) => c.id === card.id) ?? false) || scopeAdded.has(card.id));
+    if (!alreadyCounted && scopeCardCount.value >= SCOPE_CAP) {
+      return { ok: false, error: `Scope is already at its ${SCOPE_CAP}-card limit — remove a card before adding another.` };
+    }
+    scopeRemoved.delete(card.id);
+    scopeAdded.set(card.id, card);
+    return { ok: true };
+  }
+  // Hides a card from view regardless of whether it came from the bulk pool
+  // or was individually added — "remove from view" is just "not in either
+  // side of the union anymore" (see the `graph` computed below), so this
+  // never needs to distinguish the two.
+  function removeCardFromScope(cardId: string) {
+    scopeAdded.delete(cardId);
+    scopeRemoved.add(cardId);
+  }
+
+  // --- Deck (PRD 01 "Core concepts") ---------------------------------------
+  // `{ name, entries: [{ card, quantity }] }` — no format, no legality, no
+  // quantity caps, ever (a deliberate sandbox, see app/types.ts's own
+  // Deck/DeckEntry doc comment). Persisted globally (DECK_STORAGE_KEY, NOT
+  // namespaced by SET_CODE) since a Deck is independent of whatever Scope
+  // happens to be loaded. `deckEntries` is keyed by card id for cheap
+  // add/set/remove; `deck` below is the plain `{name, entries: DeckEntry[]}`
+  // shape other code (and, soon, PRD 03/04's own UI) actually wants.
+  const savedDeck = loadPersistedDeck();
+  const deckName = ref(savedDeck?.name ?? 'My Deck');
+  const deckEntries = reactive(new Map<string, DeckEntry>((savedDeck?.entries ?? []).map((e) => [e.card.id, e])));
+  const deck = computed<Deck>(() => ({ name: deckName.value, entries: [...deckEntries.values()] }));
+  watch(deck, (d) => savePersistedDeck(d));
+
+  // Adds ONE card to the Deck via the same single targeted request/cache
+  // addCardToScope above uses — a genuinely new card (not currently in the
+  // Deck) starts at `quantity`; an already-present one just adds to its
+  // existing quantity. No validation/cap of any kind, per the PRD.
+  async function addCardToDeck(set: string, number: string, quantity = 1): Promise<{ ok: true } | { ok: false; error: string }> {
+    const card = await fetchCardBySetNumber(set, number);
+    if (!card) return { ok: false, error: 'Card not found' };
+    const existing = deckEntries.get(card.id);
+    deckEntries.set(card.id, { card, quantity: (existing?.quantity ?? 0) + quantity });
+    return { ok: true };
+  }
+  // Dropping to (or below) 0 removes the entry entirely — per PRD 01's own
+  // design note, that's the WHOLE mechanism for "this card leaves view
+  // unless Scope separately still has it," not a separate rule layered on
+  // top (see the `graph` computed below, which simply never sees a
+  // quantity-0 entry in the first place).
+  //
+  // `presetCard` (PRD 04 "List view" addition) — before this, there was no
+  // caller that could hit the "no existing entry yet" branch with quantity >
+  // 0 at all (this function silently no-op'd for a genuinely new card,
+  // since only addCardToDeck — a separate, always-fetches path — could
+  // create one). A list row's own quantity stepper needs to go straight
+  // from 0 to N for a card that isn't in the Deck yet, and already has that
+  // card's full CardData in hand (it came from the Scope∪Deck union in the
+  // first place) — so a NEW entry can now be created here directly, with no
+  // network round trip, as long as the caller supplies it. Omitted, this
+  // keeps its original "only ever touches an existing entry" behavior
+  // exactly as before.
+  function setDeckEntryQuantity(cardId: string, quantity: number, presetCard?: CardData) {
+    if (quantity <= 0) {
+      deckEntries.delete(cardId);
+      return;
+    }
+    const existing = deckEntries.get(cardId);
+    if (existing) deckEntries.set(cardId, { ...existing, quantity });
+    else if (presetCard) deckEntries.set(cardId, { card: presetCard, quantity });
+  }
+  function removeDeckEntry(cardId: string) {
+    deckEntries.delete(cardId);
+  }
+  function renameDeck(name: string) {
+    deckName.value = name;
+  }
+  function clearDeck() {
+    deckEntries.clear();
+  }
+
+  // Bulk-resolves a whole pasted decklist in ONE request (app/lib/
+  // deckImport.ts's parseDecklist, same permissive multi-format grammar the
+  // old Scope-replacing "Import deck" feature already used) and merges every
+  // recognized line into the Deck — this is a deliberate bulk action (a
+  // paste is inherently "many cards at once"), distinct from the single-card
+  // targeted fetch addCardToScope/addCardToDeck above use; PRD 01's "single
+  // targeted request" constraint is about an individual add/remove, not this.
+  // 'merge' (default) adds to whatever's already in the Deck (an existing
+  // entry's quantity increases by the pasted line's own qty, same as
+  // addCardToDeck above); 'replace' empties the Deck first. Returns
+  // `unmatched` (names /api/cards/by-names couldn't resolve) for the caller
+  // to surface, same "recognized N, missed these" feedback the old feature
+  // gave.
+  async function importDeckFromText(text: string, mode: 'merge' | 'replace' = 'merge'): Promise<{ importedCount: number; unmatched: string[] }> {
+    const parsed = parseDecklist(text);
+    if (!parsed.length) return { importedCount: 0, unmatched: [] };
+    const res = await fetch('/api/cards/by-names', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names: [...new Set(parsed.map((c) => c.name))] }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || `deck import failed (${res.status})`);
+    // Keyed by every name a decklist might reference a card by — its own
+    // top-level name (a DFC's is both faces joined by " // ") AND each
+    // individual face's name, same front-face fallback the rest of this
+    // file already uses for the same reason.
+    const byName = new Map<string, ScryfallCard>();
+    for (const c of body.cards as ScryfallCard[]) {
+      byName.set(c.name, c);
+      for (const f of c.card_faces ?? []) if (f.name) byName.set(f.name, c);
+    }
+    if (mode === 'replace') deckEntries.clear();
+    const unmatched: string[] = [];
+    for (const { name, qty } of parsed) {
+      const raw = byName.get(name);
+      if (!raw) {
+        unmatched.push(name);
+        continue;
+      }
+      const card = scryfallCardToCardData(raw);
+      const existing = deckEntries.get(card.id);
+      deckEntries.set(card.id, { card, quantity: (existing?.quantity ?? 0) + qty });
+    }
+    return { importedCount: parsed.length - unmatched.length, unmatched };
+  }
+
+  // The Scope∪Deck union PRD 01 calls for, computed fresh whenever any of
+  // its inputs change (the bulk pool itself, an individual Scope add/remove,
+  // or a Deck entry's quantity) — every real consumer (GraphCanvas,
+  // FilterPanel, TooltipView via `hovered`) reads THIS, never `baseGraph`
+  // directly. A Deck entry's own `quantity` is stamped onto its card as
+  // `qty` (the same field the existing ×N badge/qty-boost-physics code
+  // already reads — see graphRenderer.ts/TooltipView.vue — unchanged by this
+  // PRD) so it renders correctly regardless of whether that card ALSO
+  // happens to be in Scope. Links are re-resolved from the full
+  // `graphLinksPool` against whatever this union's cards actually are —
+  // `baseGraph.links` itself is never read here (buildGraph() still
+  // computes it, harmlessly unused, since dropping it would mean forking
+  // buildGraph() into two variants for no real benefit).
+  const graph = computed<GraphFile | null>(() => {
+    const base = baseGraph.value;
+    if (!base) return null;
+    const cardsById = new Map<string, CardData>();
+    for (const c of base.cards) if (!scopeRemoved.has(c.id)) cardsById.set(c.id, c);
+    for (const c of scopeAdded.values()) if (!scopeRemoved.has(c.id)) cardsById.set(c.id, c);
+    for (const entry of deckEntries.values()) {
+      if (entry.quantity <= 0) continue;
+      const existing = cardsById.get(entry.card.id);
+      cardsById.set(entry.card.id, { ...(existing ?? entry.card), qty: entry.quantity });
+    }
+    const cards = [...cardsById.values()];
+    return { set: base.set, cards, links: resolveCardLinks(cards, graphLinksPool.value) };
+  });
 
   const selectedColors = reactive(new Set<string>());
   const selectedRarities = reactive(new Set<string>());
@@ -412,6 +717,45 @@ export function useGraphStore() {
     }
   }
 
+  // --- Card peek panel (PRD 02 "Navigation") -------------------------------
+  // The panel's own open/closed state (and which card) IS the `?card=`
+  // query param — not a separate ref kept in sync with it. `router.replace`
+  // (never `push`) on every open/switch/close: this is a "peek," and a
+  // person exploring the graph will click through many nodes in a row —
+  // `push`ing one history entry per peek would mean many "back" presses just
+  // to leave the page at all, which doesn't match the "lightweight glance"
+  // the PRD is going for. `useRoute`/`useRouter` (Nuxt/vue-router
+  // auto-imports — same as every other `.vue` file in this app already uses
+  // bare, see e.g. `app/layouts/graph.vue`) rather than this file's own
+  // usual raw `window.location`/`URLSearchParams` reads: those are one-way,
+  // read-once-at-module-eval reads (share links, `sf`/`colors`/...); this
+  // needs live, two-way, reactive sync while the app is already running, which
+  // is exactly what `useRoute`/`useRouter` are for. Only usable here (inside
+  // the `useGraphStore()` function body), not at this file's module scope,
+  // same reason `onMounted` above is inside this function and not up there.
+  //
+  // Deliberately does NOT gate itself to the graph page here — the actual
+  // "never shows on a direct full-page visit" guarantee comes from
+  // `CardPeekPanel.vue` only ever being MOUNTED from `app/pages/app/index.vue`
+  // (never from the card detail page's own route), not from this state
+  // itself refusing to hold a value elsewhere. A `?card=` param that somehow
+  // survived onto some other route is simply inert there — nothing reads it.
+  const route = useRoute();
+  const router = useRouter();
+  const panelCardKey = computed<string | null>(() => {
+    const raw = route.query.card;
+    return typeof raw === 'string' && raw ? raw : null;
+  });
+  function openCardPanel(set: string, collectorNumber: string) {
+    router.replace({ query: { ...route.query, card: `${set}/${collectorNumber}` } });
+  }
+  function closeCardPanel() {
+    if (!route.query.card) return; // already closed — avoid a no-op history entry
+    const query = { ...route.query };
+    delete query.card;
+    router.replace({ query });
+  }
+
   // Restored synchronously, same as the physics sliders below — no graph dependency,
   // so the search box shows its saved value from the very first render instead of
   // flashing empty then re-populating once the graph loads.
@@ -433,12 +777,6 @@ export function useGraphStore() {
   const panelOpen = ref(false);
   const legendOpen = ref(false);
   const physicsOpen = ref(false);
-  const reviewSessionOpen = ref(false);
-
-  // Set by the review panel to whichever card it's currently showing — GraphCanvas
-  // watches this and highlights that card on the graph, same mechanism search
-  // uses. Ephemeral (not persisted): null whenever nothing's under review.
-  const lookupHighlightCardId = ref<string | null>(null);
 
   // Restored synchronously (no graph/network dependency, unlike the filter Sets),
   // so sliders reflect the saved values from the very first render.
@@ -547,6 +885,66 @@ export function useGraphStore() {
     }
   });
 
+  // Facts tab's "show parser-derived facts" checkbox — same
+  // survive-navigation-and-persist treatment as functionalModelTab just
+  // above (default OFF, same as the card page's own prior local-ref default).
+  let savedShowParserFacts = false;
+  try {
+    savedShowParserFacts = localStorage.getItem(SHOW_PARSER_FACTS_STORAGE_KEY) === 'true';
+  } catch {
+    // storage blocked — just start hidden
+  }
+  const showParserFacts = ref(savedShowParserFacts);
+  watch(showParserFacts, (shown) => {
+    try {
+      localStorage.setItem(SHOW_PARSER_FACTS_STORAGE_KEY, shown ? 'true' : 'false');
+    } catch {
+      // storage full/blocked — toggle just won't persist
+    }
+  });
+
+  // PRD 04 "List view" — which renderer (graph nodes vs. a sortable table)
+  // is currently shown; AppHeader.vue's own view-mode toggle is the only
+  // writer. Restored synchronously (no graph/network dependency), same
+  // sanitize-against-a-stale-value treatment as gravityMode/functionalModelTab
+  // above.
+  let savedViewMode: 'graph' | 'list' = 'graph';
+  try {
+    if (localStorage.getItem(VIEW_MODE_STORAGE_KEY) === 'list') savedViewMode = 'list';
+  } catch {
+    // storage blocked — just start on 'graph'
+  }
+  const viewMode = ref<'graph' | 'list'>(savedViewMode);
+  watch(viewMode, (mode) => {
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      // storage full/blocked — mode just won't persist
+    }
+  });
+
+  // CardPeekPanel.vue's own drag-to-resize width. Restored synchronously, same
+  // sanitize-against-a-stale-value treatment as gravityMode/viewMode above —
+  // an out-of-range or corrupt saved number (a manually-edited localStorage
+  // value, or PANEL_WIDTH_MIN/MAX shrinking in a future change) is clamped
+  // back into range rather than handed straight to the panel's own inline
+  // width style.
+  let savedPanelWidth = PANEL_WIDTH_DEFAULT;
+  try {
+    const raw = Number(localStorage.getItem(PANEL_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(raw) && raw > 0) savedPanelWidth = clampPanelWidth(raw);
+  } catch {
+    // storage blocked — just start at the default width
+  }
+  const panelWidth = ref(savedPanelWidth);
+  watch(panelWidth, (w) => {
+    try {
+      localStorage.setItem(PANEL_WIDTH_STORAGE_KEY, String(w));
+    } catch {
+      // storage full/blocked — width just won't persist
+    }
+  });
+
   const availableRarities = ref<string[]>([]);
   const availableTypes = ref<string[]>([]);
 
@@ -642,82 +1040,23 @@ export function useGraphStore() {
     return true;
   }
 
-  // Stamps client-side-only qty onto matching raw cards from whatever deck
-  // is currently KNOWN (see getKnownDeckCards above) — applied uniformly
-  // across all three load() branches below, regardless of which one is
-  // active, so the ×N badge shows up on a pasted deck's cards even while
-  // just browsing the normal set/query with "Global filter by deck" left
-  // unchecked. A no-op (returns `cards` untouched) whenever nothing's
-  // pasted. A DFC's own top-level name is both faces joined by " // ", so a
-  // decklist naming just the front face falls back to checking each face's
-  // own name, same as server/api/card/[set]/[number].ts's
-  // resolveFinCardMeta already does for its own (unrelated) purpose.
-  function stampKnownQty(cards: ScryfallCard[]): ScryfallCard[] {
-    const known = getKnownDeckCards();
-    if (!known) return cards;
-    const qtyByName = new Map(known.map((c) => [c.name, c.qty]));
-    return cards.map((c) => {
-      const face = c.card_faces?.find((f) => f.name && qtyByName.has(f.name));
-      const qty = qtyByName.get(c.name) ?? (face ? qtyByName.get(face.name!) : undefined);
-      return qty != null ? { ...c, qty } : c;
-    });
-  }
-
   async function load() {
     loading.value = true;
     try {
       // Raw pieces only — no pre-built graph file. The visualizer assembles
       // cards/links itself (see app/lib/buildGraph.ts); tokens are optional (a
       // missing fetch:tokens run just means no hover images, not a load failure).
+      // Only two bulk-pool shapes left (plain 'fin', or a Scryfall query) —
+      // the old third 'deck' branch is gone; a Deck no longer replaces this
+      // pool at all (see this file's own header comment and the `graph`
+      // computed above, which unions it in at render time instead).
       let raw: ScryfallCard[];
       let links: NameLink[];
       let tokensById: TokensById;
-      if (deckImportActive) {
-        // Deck-import mode: the pasted decklist text (written by AppHeader.vue
-        // right before it navigated here) is the source of truth, not the URL —
-        // parse it fresh on every load so an edited/re-pasted deck under the
-        // same `?deck=1` flag always reflects what's actually in storage right
-        // now. Real synergy links via /api/graph-links below — no token hover
-        // art though (this endpoint doesn't fetch token images either).
-        const parsed = getActiveDeckCards();
-        if (!parsed) {
-          loadError.value = 'No cards recognized in the pasted decklist.';
-          return;
-        }
-        // graph-links is the whole functional-model pool's synergy edges,
-        // fetched in parallel with the deck's own card lookup — buildGraph
-        // already drops any link whose name isn't in this deck's `raw` (see
-        // its own resolvedLinks loop), so no client-side filtering needed
-        // here; same whole-pool-then-resolve shape the plain (no filter)
-        // branch below already uses.
-        const [res, linksRes] = await Promise.all([
-          fetch('/api/cards/by-names', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ names: [...new Set(parsed.map((c) => c.name))] }),
-          }),
-          fetch('/api/graph-links'),
-        ]);
-        const body = await res.json();
-        if (!res.ok) {
-          loadError.value = body.error || `deck import failed (${res.status})`;
-          return;
-        }
-        // Quantity is client-side-only — the server never sees it (see
-        // server/api/cards/by-names.ts's own header comment) — merged back
-        // in via the same stampKnownQty every other branch uses below.
-        raw = stampKnownQty(body.cards as ScryfallCard[]);
-        links = linksRes.ok ? ((await linksRes.json()).links as NameLink[]) : [];
-        tokensById = {};
-        dataWarning.value = body.unmatched?.length
-          ? `${body.unmatched.length} card${body.unmatched.length === 1 ? '' : 's'} not found: ${body.unmatched.join(', ')}`
-          : null;
-      } else if (scryfallQuery !== null) {
+      if (scryfallQuery !== null) {
         // Query mode: resolve against the Netlify function instead of the
         // static per-set files — see netlify/functions/cards.mts. No token
         // images in this mode (function doesn't fetch them), so no hover art.
-        // Real synergy links via /api/graph-links, same whole-pool-then-let-
-        // buildGraph-resolve shape the deck branch above uses.
         const [res, linksRes] = await Promise.all([
           fetch('/api/cards', {
             method: 'POST',
@@ -731,7 +1070,7 @@ export function useGraphStore() {
           loadError.value = body.error || `query failed (${res.status})`;
           return;
         }
-        raw = stampKnownQty(body.cards);
+        raw = body.cards;
         links = linksRes.ok ? ((await linksRes.json()).links as NameLink[]) : [];
         tokensById = {};
         dataWarning.value = body.truncated
@@ -745,10 +1084,10 @@ export function useGraphStore() {
           fetch(`/${SET_CODE}/${SET_CODE}_tokens_scryfall.json`).then((r) => (r.ok ? r.json() : {})),
         ]);
         links = graphLinks.links;
-        raw = stampKnownQty(raw);
       }
       const data: GraphFile = buildGraph(SET_CODE, raw, tokensById, links);
-      graph.value = data;
+      baseGraph.value = data;
+      graphLinksPool.value = links;
 
       const rarities = computeAvailableRarities(data, RARITY_ORDER);
       const types = computeAvailableTypes(data);
@@ -773,6 +1112,32 @@ export function useGraphStore() {
     }
   }
 
+  // Colors/Rarity/Type/Keyword facets recomputed whenever the EFFECTIVE
+  // (Scope∪Deck) graph changes, not just once at load() time — an
+  // individually-added Scope card or Deck entry can introduce a rarity/type
+  // the base bulk pool never had at all, which would otherwise render fine
+  // but sit permanently hidden behind Colors/Rarity/Type with no checkbox
+  // ever able to turn it back on (Colors itself doesn't have this problem —
+  // COLOR_ORDER/selectAllColors are a fixed, non-corpus-dependent list
+  // already). Only ever WIDENS selectedRarities/selectedTypes for a value
+  // that's genuinely new since the last check (never narrows — a value the
+  // user deliberately deselected stays deselected). Gated on readyToPersist
+  // purely defensively (see its own declaration) — load()'s own initial
+  // availableRarities/Types assignment always happens-before this watcher's
+  // first run in practice, so this never actually overrides a restored
+  // saved-filter selection.
+  watch(graph, (g) => {
+    if (!g || !readyToPersist) return;
+    const rarities = computeAvailableRarities(g, RARITY_ORDER);
+    const types = computeAvailableTypes(g);
+    const prevRarities = new Set(availableRarities.value);
+    const prevTypes = new Set(availableTypes.value);
+    availableRarities.value = rarities;
+    availableTypes.value = types;
+    for (const r of rarities) if (!prevRarities.has(r)) selectedRarities.add(r);
+    for (const t of types) if (!prevTypes.has(t)) selectedTypes.add(t);
+  });
+
   // Called synchronously during setup (not inside the async load()), so this watcher
   // is properly tied to the component's effect scope. Gated on readyToPersist so
   // nothing writes to localStorage mid-load before selections have settled.
@@ -792,6 +1157,24 @@ export function useGraphStore() {
     loading,
     dataWarning,
     load,
+    // Scope edits (PRD 01) — add/remove a single card on top of the bulk
+    // `load()`-fetched pool; see the `graph` computed above for how these
+    // combine with it (and with Deck) at render time.
+    addCardToScope,
+    removeCardFromScope,
+    // PRD 04 "List view" — real Scope membership (distinct from the
+    // Scope∪Deck union `graph` itself), so a list row can tell whether ITS
+    // own add/remove-from-scope control should read "in scope" or not.
+    scopeCardIds,
+    // Deck (PRD 01) — a fully independent, unconstrained collection; see
+    // app/types.ts's own Deck/DeckEntry doc comment.
+    deck,
+    addCardToDeck,
+    setDeckEntryQuantity,
+    removeDeckEntry,
+    renameDeck,
+    clearDeck,
+    importDeckFromText,
     selectedColors,
     selectedRarities,
     selectedTypes,
@@ -801,6 +1184,10 @@ export function useGraphStore() {
     relationHubThreshold,
     cardSelection,
     toggleCardSelection,
+    // Card peek panel (PRD 02) — see this file's own section comment above.
+    panelCardKey,
+    openCardPanel,
+    closeCardPanel,
     availableRarities,
     availableTypes,
     resetFilters,
@@ -808,8 +1195,6 @@ export function useGraphStore() {
     panelOpen,
     legendOpen,
     physicsOpen,
-    reviewSessionOpen,
-    lookupHighlightCardId,
     cardCharge,
     gravity,
     linkStrength,
@@ -828,33 +1213,37 @@ export function useGraphStore() {
     mouseX,
     mouseY,
     functionalModelTab,
+    showParserFacts,
+    // PRD 04 "List view" — Graph/List renderer toggle (AppHeader.vue).
+    viewMode,
+    // CardPeekPanel.vue's own drag-to-resize width.
+    panelWidth,
   };
 }
 
 export type Store = ReturnType<typeof useGraphStore>;
 
 // AppHeader.vue's Share button: the inverse of the restore block near the
-// top of this file — reads whichever mode/query/deck is currently active
-// straight off the URL/localStorage (same sources that block reads from),
-// plus the live filter/search state off `store`, and encodes all of it as
-// one `?share=` param. Deliberately re-reads the URL/localStorage rather
-// than trusting SET_CODE/scryfallQuery (module-scope consts, frozen at
-// whatever they were on THIS load) — not that it'd differ in practice
-// (nothing in this file changes them after load), but this keeps "what gets
-// shared" honestly sourced from the same place a fresh page load would
-// re-derive it from, not from a value that merely happened to match at
-// import time.
+// top of this file — reads whichever query mode is currently active
+// straight off the URL, plus the live filter/search/Deck state off `store`,
+// and encodes all of it as one `?share=` param. Deliberately re-reads the
+// URL rather than trusting `scryfallQuery` (a module-scope const, frozen at
+// whatever it was on THIS load) — not that it'd differ in practice (nothing
+// in this file changes it after load), but this keeps "what gets shared"
+// honestly sourced from the same place a fresh page load would re-derive it
+// from, not from a value that merely happened to match at import time.
+//
+// Deck content rides along independently of `mode` (see ShareState's own
+// comment) — serialized as a plain decklist-shaped string
+// (`${quantity} ${name}` per line, deckImport.ts's own parseable grammar)
+// straight off the LIVE store, not localStorage, since `store.deck` is
+// already the reactive, up-to-date source of truth.
 export function buildShareUrl(store: Store): string {
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const sf = params?.get('sf') ?? null;
-  let deckActive = false;
-  let deckText = '';
-  try {
-    deckActive = localStorage.getItem(DECK_ACTIVE_KEY) === '1';
-    deckText = deckActive ? (localStorage.getItem(DECK_TEXT_STORAGE_KEY) ?? '') : '';
-  } catch {
-    // storage blocked — share as plain fin/query mode, no deck
-  }
+
+  const deckEntries = store.deck.value.entries;
+  const deckText = deckEntries.length ? deckEntries.map((e) => `${e.quantity} ${e.card.name}`).join('\n') : undefined;
 
   const shared: Omit<ShareState, 'mode' | 'query' | 'deckText'> = {
     colors: [...store.selectedColors],
@@ -862,12 +1251,7 @@ export function buildShareUrl(store: Store): string {
     types: [...store.selectedTypes],
     search: store.searchQuery.value || undefined,
   };
-  const state: ShareState =
-    deckActive && deckText
-      ? { mode: 'deck', deckText, ...shared }
-      : sf
-        ? { mode: 'query', query: sf, ...shared }
-        : { mode: 'fin', ...shared };
+  const state: ShareState = sf ? { mode: 'query', query: sf, deckText, ...shared } : { mode: 'fin', deckText, ...shared };
 
   const out = new URLSearchParams();
   out.set('share_mode', state.mode);

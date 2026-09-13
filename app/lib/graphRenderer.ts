@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { CardData, GraphFile, GraphReason } from '../types';
+import type { CardData, CardLink, GraphFile, GraphReason } from '../types';
 import { COLOR_MAP, COLORLESS } from './constants';
 import { passesAttrFilters, reasonSource, reasonTarget, type AttrFilters } from './filters';
 import { parseManaSegments } from './manaSegments';
@@ -457,6 +457,29 @@ function renderCardArt(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
     // ART specifically (not the combined node) keeps using `artY`.
     const titleY = -TOTAL_HEIGHT / 2;
     const artY = titleY + TITLE_BAR_HEIGHT;
+
+    // Invisible padded hit-area, appended FIRST (bottom of paint order, so
+    // every other visible shape below still paints on top of/reports before
+    // it at any pixel they also cover) — a few px wider than the visible
+    // card on every side. This graph's force simulation never fully settles
+    // (low alphaDecay, continuous jitter — see this file's other "never
+    // fully settle" comments), so a node can drift a handful of px between
+    // when a user visually lines up their cursor and when the actual
+    // mousedown/click dispatches; without this margin that drift alone was
+    // enough to miss the node's own hit-test entirely (confirmed live via
+    // Playwright: real hover+click on a fixed screen point intermittently
+    // landed on an empty sibling <g> instead, silently falling through to
+    // the background-click handler and never opening CardPeekPanel — see
+    // drag()'s own comment below for the other half of this fix).
+    const HIT_PADDING = 10 * NODE_SCALE;
+    g.append('rect')
+      .attr('class', 'card-hit-area')
+      .attr('x', x - HIT_PADDING)
+      .attr('y', titleY - HIT_PADDING)
+      .attr('width', RECT_WIDTH + HIT_PADDING * 2)
+      .attr('height', TOTAL_HEIGHT + HIT_PADDING * 2)
+      .attr('fill', 'transparent')
+      .style('pointer-events', 'all');
 
     // Blurred glow drawn UNDER everything — the opaque node covers its
     // inward half, so only the outward-blurred edge shows, like a soft glow
@@ -1407,22 +1430,79 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   // stomp that pin with the raw cursor x, letting a dragged card wander off
   // its rail. `fy` behaves the same in both modes: pin while dragging, free
   // on release so the node re-settles under collide/gravity.
+  // BUGFIX (regression repro, not a redesign): a plain click on a card node
+  // intermittently failed to open CardPeekPanel — reported as "clicking a
+  // card opens some old dropdown instead," which was actually the pre-PRD-02
+  // hover tooltip (TooltipView.vue) left stuck on screen because the click
+  // silently missed. Root cause, confirmed live via Playwright (instrumented
+  // `history.replaceState` + real click-event target logging): this graph's
+  // simulation never fully settles (alphaDecay 0.02, see this file's own
+  // "never fully settle" comments elsewhere), so a node's <g> can drift a few
+  // px between the mouseover that showed it and the mouseup that clicks it.
+  // The browser's native `click` event re-resolves its OWN target against
+  // whatever is CURRENTLY under that screen point at mouseup — if the node
+  // drifted out from under a stationary cursor, that's an empty wrapper <g>
+  // instead of this node, so the click silently fell through to the
+  // background-click handler (a no-op close) instead of this node's own
+  // `.on('click', ...)`. A synthetic Playwright repro that logs
+  // `elementFromPoint`/`history.replaceState` calls confirmed a 100%
+  // correlation: click target NOT inside `.node-card` <=> panel never opens.
+  //
+  // Fix: derive "was this a click, not a drag" from the SAME datum `d` and
+  // the raw pointer displacement since mousedown (immune to the node's own
+  // drift, since it never re-hit-tests the DOM), and call handlers.onCardClick
+  // directly from dragended — the separate native `.on('click', ...)`
+  // binding below is REMOVED (would otherwise sometimes double-fire: once
+  // from here, once from a native click that happens to still correctly
+  // land on the node) rather than left dead alongside this.
+  const CLICK_DRAG_THRESHOLD_SQ = 16; // 4px — matches typical click-vs-drag conventions
   function drag() {
+    let startClientX = 0;
+    let startClientY = 0;
+    let movedPastClickThreshold = false;
     function dragstarted(event: any, d: CardNode) {
       if (!event.active) simulation.alphaTarget(0.2).restart();
       d.fx = gravityMode === 'manaCost' ? manaCostColumnX(d.cmc) : d.x;
       d.fy = d.y;
+      const se = event.sourceEvent as MouseEvent | undefined;
+      startClientX = se?.clientX ?? 0;
+      startClientY = se?.clientY ?? 0;
+      movedPastClickThreshold = false;
     }
     function dragged(event: any, d: CardNode) {
       if (gravityMode !== 'manaCost') d.fx = event.x;
       d.fy = event.y;
+      const se = event.sourceEvent as MouseEvent | undefined;
+      if (se) {
+        const dx = se.clientX - startClientX;
+        const dy = se.clientY - startClientY;
+        if (dx * dx + dy * dy > CLICK_DRAG_THRESHOLD_SQ) movedPastClickThreshold = true;
+      }
     }
     function dragended(event: any, d: CardNode) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = gravityMode === 'manaCost' ? manaCostColumnX(d.cmc) : null;
       d.fy = null;
+      if (!movedPastClickThreshold) handlers.onCardClick(d, event.sourceEvent as MouseEvent);
     }
-    return d3.drag<any, CardNode>().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+    return d3
+      .drag<any, CardNode>()
+      // Deliberately NOT d3.drag's own default filter (which also excludes
+      // ctrlKey) — Ctrl/Cmd-click needs to still reach onCardClick below (its
+      // own ctrlKey/metaKey branch is what opens the full page in a new tab
+      // instead of the peek panel), so only the primary-button check is kept
+      // here. Additionally never starts this gesture at all for a mousedown
+      // that originated on the Scryfall shortcut icon (see its own
+      // `.scryfall-link` click handler/comment above renderCardArt) — that
+      // icon used to rely on a native click event's `stopPropagation()` to
+      // keep its own click from ALSO opening this node's peek panel; now that
+      // card-open lives in dragended rather than a native `click` listener,
+      // stopPropagation alone no longer reaches it, so it's excluded here
+      // instead.
+      .filter((event: MouseEvent) => event.button === 0 && !(event.target as Element)?.closest?.('.scryfall-link'))
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended);
   }
 
   let link = linkLayer.selectAll<SVGPathElement, VisualEdge>('path.link');
@@ -1461,7 +1541,25 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       .style('opacity', (d) => 0.15 + qualityNorm(linkQuality(d.parent, forces)) * 0.65);
   }
 
-  function render(filters: AttrFilters, options: RenderOptions = {}) {
+  // `soft` — when true, the final simulation reheat at the bottom of this
+  // function is clamped to the simulation's own current alpha (floor 0.05)
+  // instead of a flat `alpha(0.6)`. Used whenever a call only narrows/widens
+  // WHICH already-known cards/links are active (a Colors/Rarity/Type filter
+  // toggle in GraphCanvas.vue's own watcher, or the tail end of
+  // addCards()/removeCards() below) rather than changing the render's own
+  // SHAPE (a keyword-hub toggle, showSynergyEdges, the relation-hub
+  // prototype, search, the very first render, resetLayout) — those still
+  // want/get the full flat reheat, unaffected by this parameter (all keep
+  // calling render() with it omitted). See addCards()'s own original comment
+  // (now folded into this one) for why a real filter/shape change deserves a
+  // full resettle but "one more/fewer node in an already-settled graph"
+  // doesn't: this app's alphaDecay is slow by design (PhysicsControls.vue),
+  // so the simulation is rarely fully idle — clamping to
+  // `Math.max(currentAlpha, 0.05)` never SUPPRESSES energy already in
+  // flight, it only adds the minimum floor needed for a newly-
+  // shown/newly-added node to actually settle in when the simulation had
+  // mostly cooled down.
+  function render(filters: AttrFilters, options: RenderOptions = {}, soft = false) {
     lastFilters = filters;
     lastOptions = options;
     const {
@@ -1566,8 +1664,13 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
             handlers.onCardHover(d, neighbors, event);
           })
           .on('mousemove', (event) => handlers.onHoverMove(event))
-          .on('mouseleave', () => handlers.onHoverEnd())
-          .on('click', (event, d) => handlers.onCardClick(d, event));
+          .on('mouseleave', () => handlers.onHoverEnd());
+        // No separate native `.on('click', ...)` here — see drag()'s own
+        // comment just above: onCardClick is now invoked from dragended
+        // whenever the raw pointer stayed under the click-threshold, which
+        // is immune to the node's own simulation-driven drift. Binding both
+        // would sometimes double-fire (once from here, once from drag()) for
+        // the cases where the native click still happens to land correctly.
         renderCardArt(g);
         return g;
       });
@@ -1737,7 +1840,11 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
 
     simulation.nodes(activeCardNodes);
     (simulation.force('link') as d3.ForceLink<CardNode, SimLink>).links(activeLinks);
-    simulation.alpha(0.6).restart();
+    if (soft) {
+      simulation.alpha(Math.max(simulation.alpha(), 0.05)).restart();
+    } else {
+      simulation.alpha(0.6).restart();
+    }
 
     refreshHighlight();
   }
@@ -1754,17 +1861,15 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     if (lastFilters) render(lastFilters, lastOptions);
   }
 
-  // Search text and a single pinned "lookup" card (the card-lookup dropdown) feed
-  // the same highlight pass — they compound rather than fight each other: matches
-  // from any source (and their direct neighbors) glow, everything else dims.
-  let lookupCardId: string | null = null;
+  // Search text and a pinned card selection feed the same highlight pass — they
+  // compound rather than fight each other: matches from any source (and their
+  // direct neighbors) glow, everything else dims.
   function refreshHighlight() {
     const q = searchQuery.trim().toLowerCase();
     const hasSearch = q.length > 0;
-    const hasLookup = lookupCardId != null;
     const hasCardSelection = cardSelection.size > 0;
 
-    if (!hasSearch && !hasLookup && !hasCardSelection) {
+    if (!hasSearch && !hasCardSelection) {
       cardG.classed('search-match', false).classed('search-dim', false);
       link.classed('search-dim', false);
       return;
@@ -1774,7 +1879,6 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     if (hasSearch) {
       for (const c of graph.cards) if (c.name.toLowerCase().includes(q)) matchedCardIds.add(c.id);
     }
-    if (lookupCardId) matchedCardIds.add(lookupCardId);
 
     // A matched card shows all of its links, including to non-matched neighbors —
     // the point of matching a card is seeing everything it connects to.
@@ -1801,9 +1905,124 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     refreshHighlight();
   }
 
-  function setLookupHighlight(cardId: string | null) {
-    lookupCardId = cardId;
-    refreshHighlight();
+  // PRD 03 "Search" (discover-add), generalized by a later task to sit
+  // alongside removeCards() below — patches one or more new cards (plus any
+  // links touching them) into THIS SAME renderer instance instead of a full
+  // destroy+recreate. GraphCanvas.vue's own `graph` prop watcher calls this
+  // for the ADDED side of its own diff against the previously-known graph
+  // (see that file's own comment) — a Scope/Deck edit can add and remove in
+  // the SAME tick (a Deck replace-import, in particular), in which case the
+  // watcher calls removeCards() too; the two are independent and order
+  // between them doesn't matter (their id sets are always disjoint). The
+  // OLD full-rebuild path (`createGraphRenderer` called fresh) reseeds EVERY
+  // node with no explicit x/y, which forfeits every already-settled
+  // position — an acceptable "start over" trade-off only for something this
+  // renderer structurally cannot express any other way (switching sets
+  // entirely; see GraphCanvas.vue's own watcher comment for why that's
+  // otherwise unreachable here), never for an ordinary Scope/Deck edit. A
+  // card already known to this renderer is left untouched (shouldn't happen
+  // given the caller's own diffing, but defensive — never re-seeds/
+  // repositions an existing node).
+  function addCards(newCards: CardData[], extraLinks: CardLink[]) {
+    const actuallyNew = newCards.filter((c) => !cardNodeById.has(c.id));
+    if (!actuallyNew.length && !extraLinks.length) return;
+
+    // Seeded near the current settled cluster's own centroid (not the
+    // canvas corner, nor d3's own index-based spiral default for a
+    // position-less node) so an added card doesn't pop in somewhere
+    // visually disconnected from the rest of the graph — plus a small
+    // random jitter so several simultaneous adds don't stack exactly on
+    // top of one another.
+    let cx = width / 2;
+    let cy = height / 2;
+    const positioned = [...cardNodeById.values()].filter((n) => n.x != null && n.y != null);
+    if (positioned.length) {
+      cx = positioned.reduce((sum, n) => sum + n.x!, 0) / positioned.length;
+      cy = positioned.reduce((sum, n) => sum + n.y!, 0) / positioned.length;
+    }
+    for (const c of actuallyNew) {
+      cardNodeById.set(c.id, {
+        ...c,
+        kind: 'card',
+        x: cx + (Math.random() - 0.5) * 80,
+        y: cy + (Math.random() - 0.5) * 80,
+      });
+    }
+
+    for (const l of extraLinks) {
+      if (!linksByCard.has(l.a)) linksByCard.set(l.a, []);
+      linksByCard.get(l.a)!.push({ card: l.b, reasons: l.reasons });
+      if (!linksByCard.has(l.b)) linksByCard.set(l.b, []);
+      linksByCard.get(l.b)!.push({ card: l.a, reasons: l.reasons });
+    }
+
+    // Keeps this closure's own `graph.cards`/`graph.links` (read fresh by
+    // render()/refreshHighlight() every call — see their own bodies) in
+    // sync, so a LATER unrelated re-render (a filter toggle, a search
+    // keystroke) still sees this card too, not just the render() call this
+    // function triggers below.
+    graph = {
+      ...graph,
+      cards: [...graph.cards, ...actuallyNew],
+      links: [...graph.links, ...extraLinks],
+    };
+
+    // soft: true — see render()'s own comment on its third parameter.
+    if (lastFilters) render(lastFilters, lastOptions, true);
+  }
+
+  // Symmetric to addCards() above, and reached the same way: GraphCanvas.vue's
+  // own `graph` prop watcher calls this whenever the diff against its
+  // `knownGraph` shows one or more ids genuinely GONE (a Scope remove, a Deck
+  // quantity dropping to 0, a Deck clear/replace-import dropping entries) —
+  // patches THIS SAME renderer instance instead of a full destroy+recreate,
+  // so every other already-settled node's position, zoom/pan, and active
+  // filters survive untouched, same as an add does. A card not actually known
+  // to this renderer is silently ignored (shouldn't happen given the caller's
+  // own diffing, but defensive, same posture addCards takes for an already-
+  // known card).
+  function removeCards(removedIds: string[]) {
+    const removedSet = new Set(removedIds.filter((id) => cardNodeById.has(id)));
+    if (!removedSet.size) return;
+
+    for (const id of removedSet) {
+      cardNodeById.delete(id);
+      linksByCard.delete(id);
+    }
+    // A surviving card's own neighbor list can still mention a now-removed
+    // id (linksByCard is bidirectional — see its own construction above) —
+    // pruned here so a later mouseenter/refreshHighlight lookup never hands
+    // back a dangling `cardNodeById.get(...)!` for an id that no longer
+    // exists.
+    for (const [id, neighbors] of linksByCard) {
+      const filtered = neighbors.filter((n) => !removedSet.has(n.card));
+      if (filtered.length !== neighbors.length) linksByCard.set(id, filtered);
+    }
+
+    // Same "keep this closure's own graph.cards/graph.links in sync" reasoning
+    // as addCards() above — read fresh by render()/refreshHighlight() every
+    // call, so a LATER unrelated re-render still sees the removal too.
+    graph = {
+      ...graph,
+      cards: graph.cards.filter((c) => !removedSet.has(c.id)),
+      links: graph.links.filter((l) => !removedSet.has(l.a) && !removedSet.has(l.b)),
+    };
+
+    // A removed card can't stay "selected"/highlighted once it's gone —
+    // GraphCanvas.vue re-syncs the real store-owned set on its own next
+    // unrelated change regardless, but pruning the renderer's own working
+    // copy here defensively keeps refreshHighlight() (called at the end of
+    // the render() below) from ever matching against a dead id in the
+    // meantime.
+    for (const id of removedSet) cardSelection.delete(id);
+
+    // Keyword-hub / relation-hub membership (`updateKeywordHubs`/
+    // `updateRelationHubs`, both called from render() below) is recomputed
+    // fresh from `activeCardNodes` every call, so a hub that only had removed
+    // members self-heals (shrinks or disappears) on the very next render — no
+    // manual purge needed here, same as addCards needs none for a new card
+    // joining one.
+    if (lastFilters) render(lastFilters, lastOptions, true);
   }
 
   // Straight line for a pair's only relation; a quadratic curve, offset
@@ -1905,6 +2124,6 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     svg.selectAll('*').remove();
   }
 
-  return { render, applySearch, setCardSelection, setLookupHighlight, setForces, getForces, setGravityMode, getGravityMode, resetLayout, destroy };
+  return { render, applySearch, setCardSelection, addCards, removeCards, setForces, getForces, setGravityMode, getGravityMode, resetLayout, destroy };
 }
 

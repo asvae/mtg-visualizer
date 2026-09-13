@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue';
-import { StoreKey, DECK_TEXT_STORAGE_KEY, DECK_ACTIVE_KEY, QUERY_ACTIVE_KEY, buildShareUrl } from '../composables/useGraphStore';
+import { StoreKey, QUERY_ACTIVE_KEY, buildShareUrl } from '../composables/useGraphStore';
 import { parseDecklist } from '../lib/deckImport';
 
 const store = inject(StoreKey)!;
 const config = useRuntimeConfig();
-const reviewEnabled = config.public.enableReview;
 const appVersion = config.public.appVersion;
 const buildCommit = config.public.buildCommit;
 const toast = useToast();
 
 // Copies a `?share=` link encoding the whole current visualizer state
-// (mode/query/deck, colors/rarities/types, search — see buildShareUrl in
-// useGraphStore.ts) so it can be pasted anywhere; the recipient's own load
-// restores it and immediately cleans the URL back down (see that file's own
-// restore block).
+// (Scope mode/query, Deck contents, colors/rarities/types, search — see
+// buildShareUrl in useGraphStore.ts) so it can be pasted anywhere; the
+// recipient's own load restores it and immediately cleans the URL back down
+// (see that file's own restore block).
 async function copyShareLink() {
   const url = buildShareUrl(store);
   try {
@@ -25,11 +24,16 @@ async function copyShareLink() {
   }
 }
 
-// Card-filter modal — two modes sharing one dialog, both a real navigation
-// on submit (SET_CODE/scryfallQuery/deckImportActive in useGraphStore.ts are
-// all fixed at module-load time), so `submitting` just covers the brief
-// window between clicking Apply/Import and the browser actually unloading
-// this page.
+// Card-filter modal — two tabs sharing one dialog. Only the "Scryfall query"
+// tab is still a real navigation (Scope's own bulk pool, SET_CODE/
+// scryfallQuery in useGraphStore.ts, is fixed at module-load time, same as
+// before PRD 01). "Import deck" no longer is — since PRD 01 made Deck an
+// independent collection unioned with Scope rather than a Scope-replacing
+// mode, pasting a decklist just resolves it and merges straight into the
+// live, reactive `store.deck` (see submitDeckImport below) — no reload, the
+// graph updates immediately. `submitting` covers the query tab's brief
+// pre-navigation window, and the deck tab's own in-flight
+// `/api/cards/by-names` resolve.
 const filterOpen = ref(false);
 const filterMode = ref<'scryfall' | 'deck'>('scryfall');
 const filterModeTabs = [
@@ -38,15 +42,6 @@ const filterModeTabs = [
 ];
 const scryfallQuery = ref('');
 const deckText = ref('');
-// "Global filter by deck" — off by default. On: importing replaces the
-// whole app's card set with just the deck (today's only prior behavior,
-// same as a Scryfall query). Off: the deck is still "known" (see
-// getKnownDeckCards in useGraphStore.ts) so matching cards still get their
-// ×N badge everywhere — main graph nodes and the card detail page's own
-// title badge — but nothing else is hidden or restricted; Previous/Next on
-// the card page stays scoped to whatever WAS already active (a real
-// Scryfall query, or nothing) rather than jumping to the deck.
-const deckGlobalFilter = ref(false);
 const submitting = ref(false);
 
 // Live "N cards recognized" feedback as the user pastes/edits — parsing is
@@ -57,19 +52,14 @@ const parsedDeckCount = computed(() => parsedDeckCards.value.reduce((n, c) => n 
 
 function openFilterDialog() {
   scryfallQuery.value = new URLSearchParams(window.location.search).get('sf') ?? '';
-  let deckActive = false;
-  try {
-    deckActive = localStorage.getItem(DECK_ACTIVE_KEY) === '1';
-    deckText.value = localStorage.getItem(DECK_TEXT_STORAGE_KEY) ?? '';
-  } catch {
-    deckText.value = '';
-  }
-  deckGlobalFilter.value = deckActive;
-  // Reopen on whichever mode is currently active/known, so editing an
-  // existing deck import (global filter or not) or Scryfall query lands you
-  // back on the same tab you set it from, rather than always defaulting to
-  // "Scryfall query".
-  filterMode.value = deckActive || deckText.value.trim() ? 'deck' : 'scryfall';
+  // Always starts blank — pasting is now an additive "add these to my deck"
+  // action each time (see submitDeckImport below), not editing a single
+  // persisted blob the way the old Scope-replacing import used to be.
+  deckText.value = '';
+  // Land on whichever tab is more likely to be what's wanted right now: the
+  // Deck tab if there's already a Deck to add more to, Scryfall query
+  // otherwise.
+  filterMode.value = store.deck.value.entries.length ? 'deck' : 'scryfall';
   submitting.value = false;
   filterOpen.value = true;
 }
@@ -77,15 +67,6 @@ function openFilterDialog() {
 function submitScryfallQuery(clear = false) {
   if (submitting.value) return;
   submitting.value = true;
-  // Applying (or clearing) a Scryfall query is a deliberate switch away from
-  // deck mode either way — without this, a later plain `/app` visit would
-  // resurrect the deck-active flag and land back in deck mode instead of the
-  // base set, since that flag has no URL of its own to naturally expire.
-  try {
-    localStorage.removeItem(DECK_ACTIVE_KEY);
-  } catch {
-    // storage blocked — nothing to clean up either way
-  }
   const q = clear ? '' : scryfallQuery.value.trim();
   // Sticky breadcrumb for the standalone card detail page (see
   // QUERY_ACTIVE_KEY's own comment in useGraphStore.ts) — kept in sync with
@@ -100,52 +81,35 @@ function submitScryfallQuery(clear = false) {
   window.location.href = q ? `/app?sf=${encodeURIComponent(q)}` : '/app';
 }
 
-function submitDeckImport(clear = false) {
+async function submitDeckImport(clear = false) {
   if (submitting.value) return;
-  submitting.value = true;
   if (clear) {
-    try {
-      localStorage.removeItem(DECK_TEXT_STORAGE_KEY);
-      localStorage.removeItem(DECK_ACTIVE_KEY);
-    } catch {
-      // storage blocked — reload on its own still clears the known deck
-    }
-    // Reload wherever you already are rather than forcing `/app` — clearing
-    // the deck is just forgetting it (no more ×N badges anywhere), not
-    // necessarily also meaning "go back to the main graph." If it WAS the
-    // active global filter, useGraphStore.ts's own SET_CODE logic (driven by
-    // DECK_ACTIVE_KEY, now gone) falls back to plain FIN browsing on this
-    // same reload, same end state the old forced `/app` reached.
-    window.location.reload();
+    store.clearDeck();
+    filterOpen.value = false;
+    toast.add({ title: 'Deck cleared', color: 'neutral', icon: 'i-lucide-trash-2' });
     return;
   }
+  submitting.value = true;
   try {
-    localStorage.setItem(DECK_TEXT_STORAGE_KEY, deckText.value);
-    if (deckGlobalFilter.value) {
-      localStorage.setItem(DECK_ACTIVE_KEY, '1');
-      // Becoming the active global filter is a deliberate switch away from
-      // query mode, same as the reverse in submitScryfallQuery — otherwise
-      // the card detail page (whose getActiveFilterMode() checks deck
-      // first, but shouldn't need to rely on that tiebreak) would still see
-      // a stale query alongside the new deck. Left untouched when the
-      // checkbox is OFF — a known-but-not-global deck shouldn't knock out
-      // whatever query the user is actually browsing.
-      localStorage.removeItem(QUERY_ACTIVE_KEY);
-    } else {
-      localStorage.removeItem(DECK_ACTIVE_KEY);
-    }
-  } catch {
-    // storage full/blocked — the navigation below will just find nothing
-    // saved and useGraphStore.ts's load() will surface "no cards recognized"
-    // (global-filter case) or simply show no badges (known-only case)
+    const { importedCount, unmatched } = await store.importDeckFromText(deckText.value, 'merge');
+    deckText.value = '';
+    filterOpen.value = false;
+    toast.add({
+      title: `Added ${importedCount} card${importedCount === 1 ? '' : 's'} to your deck`,
+      description: unmatched.length ? `${unmatched.length} not found: ${unmatched.join(', ')}` : undefined,
+      color: unmatched.length ? 'warning' : 'success',
+      icon: unmatched.length ? 'i-lucide-triangle-alert' : 'i-lucide-check',
+    });
+  } catch (err) {
+    toast.add({
+      title: 'Could not import deck',
+      description: err instanceof Error ? err.message : String(err),
+      color: 'error',
+      icon: 'i-lucide-triangle-alert',
+    });
+  } finally {
+    submitting.value = false;
   }
-  // Global filter: same "go to the main graph" behavior a Scryfall query
-  // apply already has — no `?deck=1` needed, SET_CODE picks DECK_ACTIVE_KEY
-  // back up on its own (see useGraphStore.ts). Known-only: just reload
-  // wherever you are so the newly-known deck's badges show up right away,
-  // without discarding whatever set/query you were actually looking at.
-  if (deckGlobalFilter.value) window.location.href = '/app';
-  else window.location.reload();
 }
 </script>
 
@@ -171,25 +135,11 @@ function submitDeckImport(clear = false) {
       </svg>
     </NuxtLink>
 
-    <UInput
-      v-model="store.searchQuery.value"
-      class="w-56"
-      placeholder="Search cards or themes…"
-      icon="i-lucide-search"
-      autocomplete="off"
-      size="sm"
-    >
-      <template v-if="store.searchQuery.value" #trailing>
-        <UButton
-          icon="i-lucide-x"
-          color="neutral"
-          variant="link"
-          size="xs"
-          aria-label="Clear search"
-          @click="store.searchQuery.value = ''"
-        />
-      </template>
-    </UInput>
+    <!-- PRD 03 "Search: find & discover" — SearchBox.vue owns the input +
+         results dropdown (find rows already in Scope∪Deck, discover rows
+         from a live Scryfall lookup with their own add-to-Scope action);
+         this header only ever mounted a plain UInput before. -->
+    <SearchBox />
 
     <div class="flex shrink-0 items-baseline gap-1.5">
       <h1 class="m-0 text-sm font-medium text-muted">MtG Synergy Map</h1>
@@ -197,6 +147,10 @@ function submitDeckImport(clear = false) {
     </div>
 
     <div class="ml-auto flex shrink-0 items-center gap-1.5">
+      <!-- PRD 04 "List view" — the Graph/List renderer toggle itself now
+           lives as a floating control over the view area
+           (app/pages/app/index.vue), not here; it's a property of the
+           graph/list view, not header chrome. -->
       <UButton
         icon="i-lucide-search-code"
         color="neutral"
@@ -212,15 +166,6 @@ function submitDeckImport(clear = false) {
         square
         aria-label="Copy a shareable link to this exact view"
         @click="copyShareLink"
-      />
-      <UButton
-        v-if="reviewEnabled"
-        icon="i-lucide-clipboard-list"
-        color="neutral"
-        variant="subtle"
-        square
-        aria-label="Card review session"
-        @click="store.reviewSessionOpen.value = !store.reviewSessionOpen.value"
       />
       <NuxtLink to="/app/keywords">
         <UButton icon="i-lucide-list-checks" color="neutral" variant="subtle" square aria-label="Keyword & mechanic coverage suite" />
@@ -312,7 +257,10 @@ function submitDeckImport(clear = false) {
 
       <template v-else>
         <div class="mb-3 flex items-center gap-1.5 text-xs leading-relaxed text-muted">
-          <span>Paste a decklist from anywhere — matching cards get a ×N badge wherever they show up.</span>
+          <span
+            >Paste a decklist from anywhere — added cards join your Deck and stay visible in the graph (with a ×N badge) regardless of your current
+            Scope.</span
+          >
           <UPopover :content="{ side: 'top' }" mode="hover">
             <UIcon name="i-lucide-info" class="shrink-0 text-muted" />
             <template #content>
@@ -344,15 +292,13 @@ function submitDeckImport(clear = false) {
         />
         <div class="mt-1.5 text-[11px] text-muted">
           <template v-if="deckText.trim()">{{ parsedDeckCount }} card{{ parsedDeckCount === 1 ? '' : 's' }} recognized</template>
+          <template v-else-if="store.deck.value.entries.length">
+            Your deck currently has {{ store.deck.value.entries.reduce((n, e) => n + e.quantity, 0) }} card{{
+              store.deck.value.entries.reduce((n, e) => n + e.quantity, 0) === 1 ? '' : 's'
+            }}.
+          </template>
           <template v-else>&nbsp;</template>
         </div>
-        <UCheckbox
-          v-model="deckGlobalFilter"
-          class="mt-2.5"
-          label="Global filter by deck"
-          description="Hide everything else — the graph (and Previous/Next on a card page) only shows these cards, same as a Scryfall query."
-          :disabled="submitting"
-        />
       </template>
       </div>
     </template>
@@ -368,7 +314,15 @@ function submitDeckImport(clear = false) {
         >
           Clear filter
         </UButton>
-        <UButton v-else color="neutral" variant="subtle" :disabled="submitting" @click="submitDeckImport(true)">Clear filter</UButton>
+        <UButton
+          v-else
+          color="neutral"
+          variant="subtle"
+          :disabled="submitting || !store.deck.value.entries.length"
+          @click="submitDeckImport(true)"
+        >
+          Clear deck
+        </UButton>
         <UButton
           v-if="filterMode === 'scryfall'"
           color="primary"
@@ -378,7 +332,7 @@ function submitDeckImport(clear = false) {
           {{ submitting ? 'Applying…' : 'Apply' }}
         </UButton>
         <UButton v-else color="primary" :loading="submitting" :disabled="parsedDeckCount === 0" @click="submitDeckImport()">
-          {{ submitting ? 'Importing…' : 'Import' }}
+          {{ submitting ? 'Adding…' : 'Add to deck' }}
         </UButton>
       </div>
     </template>
