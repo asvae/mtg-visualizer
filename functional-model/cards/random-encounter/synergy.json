@@ -20,34 +20,36 @@
     },
     {
       "event": "cast",
-      "from": "Hand",
+      "from": "Graveyard",
       "target": "self",
       "annotations": [
         {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
+          "target": "oracle",
+          "line": 1,
+          "start": 29,
+          "end": 86
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
+        "rule": "flashback-alternateCost-structural"
       }
     },
     {
-      "to": "Graveyard",
+      "to": "Exile",
       "controller": "you",
       "subject": "self",
       "annotations": [
         {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
+          "target": "oracle",
+          "line": 1,
+          "start": 88,
+          "end": 101
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
+        "rule": "flashback-alternateCost-structural"
       }
     }
   ],

@@ -17,40 +17,18 @@
     {
       "event": "putCounter",
       "counterType": "+1/+1",
-      "target": "self"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
       "target": "self",
       "annotations": [
         {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
+          "target": "oracle",
+          "line": 2,
+          "start": 47,
+          "end": 79
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
+        "rule": "putCounterSelf-effect-structural"
       }
     }
   ],

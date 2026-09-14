@@ -26,6 +26,29 @@ export const aerithRescueMission: CardDefinition = {
         {
           // Own annotation: `definition-annotations.json`, keyed
           // `"effects[0].modes[0]"`.
+          //
+          // Mechanization pass (2026-09-14): this real `kind:'createToken'`
+          // Effect's own resulting `entersBattlefield` SOURCE fact (this
+          // card's own `synergy.json`) stays hand-authored, NOT covered by a
+          // new recognizer — checked the whole pool first (34 real
+          // `kind:'createToken'` occurrences). A general "token creation"
+          // recognizer would need to re-derive the token's own printed
+          // English descriptor (color word, P/T, subtype) from `tokens.ts`'s
+          // `TOKENS` registry and verbatim-match it against this card's real
+          // oracle text — a dedicated prototype already explored exactly
+          // this (`recognizers/token-creation-from-forge-script.prototype
+          // .ts`, reading Forge's own token scripts instead) and documented
+          // real, confirmed fragility: printed word ORDER varies card to
+          // card (`retrieve-the-esper`'s own "3/3 blue Robot Warrior
+          // ARTIFACT creature token" vs. its own script's differently-
+          // ordered `Types:` field), printed word PRESENCE varies too
+          // (`ancient-adamantoise`'s own Treasure token never prints
+          // "artifact" at all), and `tokens.ts`'s own registry has NO
+          // explicit color field (only inferable from an id-prefix
+          // convention, another guessing layer) — genuinely more fragile
+          // than the single-verb "destroy"/"draw" templates this catalog's
+          // other structural recognizers already safely generalize. Not
+          // attempted here; a dedicated future pass, not this 7-card one.
           describe: 'Take the Elevator — create three 1/1 colorless Hero creature tokens',
           effects: [{ kind: 'createToken', token: TOKENS.c_1_1_hero, amount: 3 } satisfies Effect],
         },
@@ -69,6 +92,20 @@ export const aerithRescueMission: CardDefinition = {
               // `apply-recognizers.mjs`/`synergy.json` generation. Each
               // entry's own annotation: `definition-annotations.json`, keyed
               // `"effects[0].modes[1].effects[0].authoredFact[<i>]"`.
+              //
+              // Mechanization pass (2026-09-14): both facts stay
+              // hand-authored, declined for a new recognizer — this whole
+              // effect is a `kind:'custom'` closure (see the comment above
+              // `run`), so there is no structured `putCounterTarget`/
+              // `tapTarget` `Effect` object anywhere on this card for a
+              // recognizer to read in the first place (the SAME reasoning
+              // `putCounterTarget-effect-structural.ts`'s own module doc
+              // comment already gives for declining a DIFFERENT card's
+              // "put a counter on it" pronoun-carryover case — here the
+              // pronoun problem is even more fundamental: there is no
+              // separate Effect object to check a "preceding tapTarget"
+              // structural signal against at all, since both the tap and
+              // the counter placement live inside the SAME opaque closure).
               authoredFact: [
                 {
                   // [0]

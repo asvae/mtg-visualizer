@@ -1,49 +1,20 @@
 {
   "source": [
     {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
       "event": "pump",
       "target": "self",
       "annotations": [
         {
           "target": "oracle",
           "line": 1,
-          "start": 17,
-          "end": 27
+          "start": 0,
+          "end": 58
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
     }
   ],
   "sink": [
@@ -59,10 +30,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 17,
+          "start": 0,
           "end": 58
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
     }
   ]
 }

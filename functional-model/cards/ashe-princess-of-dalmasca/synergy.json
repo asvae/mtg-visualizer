@@ -1,40 +1,6 @@
 {
   "source": [
     {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
       "to": "Hand",
       "from": "Library",
       "controller": "you",
@@ -50,7 +16,11 @@
           "start": 75,
           "end": 140
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "digReveal-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -69,7 +39,11 @@
           "start": 75,
           "end": 98
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "digReveal-effect-structural"
+      }
     },
     {
       "event": "attacks",

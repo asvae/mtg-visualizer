@@ -20068,3 +20068,706 @@ failures excluded as unrelated). `npx nuxt typecheck` — zero new errors
 (only the 2 pre-existing, unrelated ones above remain). `verify-synergy.mjs`
 full pool — 320 checked, 0 hard failures. `verify-annotation-coverage.mjs`
 — OK.
+
+## 2026-09-14 (later still): `rawHighlightRange` silent-highlight-miss bug closed + recognizer size-heuristic doc
+
+User explicitly declined switching the whole annotation-authoring
+convention to coarser line-only/definition-level annotation (the
+alternative this task floated) — granular substring `{sourceText,
+highlight, line?}` matching stays project-wide. Two safeguards added
+instead.
+
+**Part 1 (real code, `synergy.ts`).** `rawHighlightRange` used to return
+bare `undefined` for EVERY failure mode, including the one that's a real
+authoring bug rather than "nothing to annotate": a `{line, highlight}` (or
+`{sourceText, highlight}`) entry whose anchor (the named `line`, and
+`sourceText` when given) resolves to real, concrete text, but whose
+`highlight` substring genuinely isn't found within THAT already-resolved
+text (typo, stale text, wrong line index — all produce the identical
+symptom). Both `indexOf(authoring.highlight) === -1` sites (line-scoped
+branch, whole-text fallback branch) now `throw new Error(...)` instead,
+naming the actual highlight/sourceText/line text in the message. Every
+OTHER failure mode (`!authoring?.highlight`, `line` out of range,
+`sourceText` not found at all) is UNCHANGED — still legitimately silent
+`undefined`, per the task's own explicit scoping. `computeFactAnnotations`
+itself does not catch this new throw — it's meant to propagate.
+
+Chose to fix this at the `rawHighlightRange`/`computeFactAnnotations`
+level itself (not a narrower build-script-only check) specifically because
+this same real bug class exists across ALL THREE real authoring sources
+(`annotations-authoring.json` via `compute-annotations.mjs`,
+`definition-annotations.json` via `check-fact-parity.mjs` +
+`prototype-index-path-annotations-fin1-5.mjs`, and in principle any future
+embedded `FactAnnotationAuthoring` field on `definition.ts` — confirmed
+zero real instances of the latter exist in the pool today, migrated out to
+`definition-annotations.json` per `card.ts`'s own 2026-09-13 doc comment,
+so nothing to fix there) — a fix scoped to just `compute-annotations.mjs`
+would have left the same silent-swallow bug live in the other two. Callers
+that legitimately need to keep scanning past one bad entry now catch this
+specific throw locally instead of letting it abort the whole run:
+- `scripts/compute-annotations.mjs` (the real build/bake step) does NOT
+  catch it — lets it crash the script, loudly, with slug/side/index/event
+  context added via a wrapping `try/catch` that rethrows.
+- `scripts/check-fact-parity.mjs` catches it via a new local
+  `resolveAnnotations()` wrapper, records it in a NEW distinct
+  `hardHighlightFailures` list (kept separate from the pre-existing
+  `resolutionFailures`, which means "anchor didn't resolve at all," a
+  different, already-tolerated condition), prints them under their own
+  "HARD HIGHLIGHT FAILURES" heading, and sets `process.exitCode = 1` if any
+  are found (this script previously always exited 0 regardless of
+  findings).
+- `scripts/prototype-index-path-annotations-fin1-5.mjs` (throwaway
+  diagnostic) catches it per-site and records a `HARD HIGHLIGHT FAILURE:
+  <message>` status string, which already trips its own pre-existing
+  `!status.startsWith('OK')` bad-tracking.
+
+**Real-pool verification run (as the task required) — zero broken entries
+found, nothing needed fixing**: `npx vite-node functional-model/scripts/
+compute-annotations.mjs` (whole pool, no args) — 85 cards with a real
+`annotations-authoring.json`, 545 facts (re-)annotated, exit 0, zero
+throws. (This run DOES rewrite `synergy.json` for cards whose baked
+annotations had drifted from the currently-authored `annotations-
+authoring.json`/oracle text since they were last baked — found ~33 files
+with such drift, unrelated to this task, `git checkout --` reverted that
+regeneration rather than committing it as an unreviewed side effect; not
+something this task's own check surfaced as broken, just staleness.)
+`npx vite-node functional-model/scripts/check-fact-parity.mjs` (fin/1-100,
+`definition-annotations.json`) — exit 0, 0 `hardHighlightFailures`, 0
+pre-existing `resolutionFailures` either. `prototype-index-path-
+annotations-fin1-5.mjs` — exit 0, no `HARD HIGHLIGHT FAILURE` statuses
+(only pre-existing, unrelated "STALE KEYS" notes for 2 cards).
+
+**New tests** (`synergy.test.ts`, +14): a dedicated `describe` block
+covering every legitimate-silent case (no authoring, missing text, `line`
+out of range, `sourceText` not found whole-text/within-a-named-line) still
+returning `undefined`, all 4 happy-path shapes (whole-text, line-scoped,
+line+sourceText, typeLine anchor) still resolving correctly and
+unchanged, and 3 new throw cases (highlight missing within a resolved
+line/sourceText-in-line/sourceText-whole-text) plus one asserting the
+thrown message actually names the real highlight/sourceText/line values
+(attributability, not just "something failed").
+
+**Verification, final**: `npx vitest run functional-model` 584/584 (+10
+from the new describe block). `npx nuxt typecheck` — same 2 pre-existing,
+unrelated errors only (`mana.ts` TS2538, `server/api/tokens/by-key.ts`
+TS2739). `verify-synergy.mjs` full pool — 320 checked, 0 hard failures.
+`verify-annotation-coverage.mjs` — OK. `git status` after reverting the
+unrelated drift — only the intended files touched (`synergy.ts`,
+`synergy.test.ts`, `scripts/compute-annotations.mjs`, `scripts/
+check-fact-parity.mjs`, `scripts/prototype-index-path-annotations-
+fin1-5.mjs`, `PRD_AUTOMATED_AUTHORING.md`).
+
+**Part 2 (doc-only)**: added a new "Recognizer annotation-logic size
+heuristic (2026-09-14)" section to `PRD_AUTOMATED_AUTHORING.md` (plus a
+one-line cross-reference bullet under "## Design") — the ~200-real-line
+(excluding comments/blank lines) judgment-call heuristic for a
+recognizer's own SPAN-COMPUTATION logic specifically (not its match-or-not
+logic), explicitly framed as non-automatable/no-linter, a signal to
+consider a coarser definition-level line annotation for that one hard
+case instead of pushing more special-case regex branches further.
+Confirmed `functional-model/recognizers/` has no README/conventions file
+of its own — this PRD remains the sole right home, no new doc created.
+
+**Open, no further Forge-verification needed**: this task was pure
+authoring-pipeline/tooling hygiene (annotation resolution error handling +
+a documentation heuristic) — no `Effect`/`Trigger`/engine-behavior change,
+nothing new to check against `tmp/mtg-forge`.
+
+## Retired `permanent-enters-battlefield-normally` — same pattern as printed
+## Lifelink (2026-09-14)
+
+Same real-production task as the Lifelink cleanup above, applied to the
+OTHER pool-wide boilerplate fact pair: `permanent-enters-battlefield-
+normally`'s own two SOURCE facts (`{event:'cast', from:'Hand',
+target:'self'}` + `{event:'entersBattlefield', to:'Battlefield',
+controller:'you', subject:'self', target:'self'}`) on nearly every normal
+permanent.
+
+**Design**: `synergy.ts` gets `isNormalPermanent(card)` (permanent-type
+gate on `typeLine`, mirroring `PERMANENT_TYPE_WORDS` — Land excluded,
+"played not cast") + `syntheticCastFact()`/
+`syntheticEntersBattlefieldFact()`, injected in `findInteractionsForCard`'s
+existing per-call pool augmentation (same `augmentedPool` map as
+`hasPrintedLifelink`/`syntheticLifelinkFact`, extended rather than
+duplicated) — synthesized only when the card doesn't already declare its
+own real self-cast/self-entersBattlefield fact. Never written to
+`synergy.json`.
+
+**Real, deliberate broadening flagged hard (not silently absorbed)**: the
+retired recognizer used to DECLINE this pair for a card whose own oracle
+text says its own entrance is modified (enters tapped/with a
+counter/as a copy/face down, CR 614.12) — `CardDefinition` has no
+structured field for this at all. Checked whether the 3 real such cards
+(`tonberry`, `shambling-cie-th`, `elixir` — all model it as an `onEnter`
+trigger tapping/counter-ing a pool-filtered candidate) could be
+structurally distinguished from a genuinely different card's own
+ETB-trigger-targeting-something-else (`cloudbound-moogle`/`ice-flan`) —
+confirmed they CAN'T be told apart from the effect's own fields alone (both
+shapes are `{kind:'tapTarget'/'putCounterTarget', validType:'creature',
+owner:'you'}` with no explicit self-marker). Decided to accept the
+broadening rather than invent a fragile heuristic: the CAST/ENTERS events
+are still literally true for these cards either way, only the OPTIONAL
+`tapped` field is left unconstrained (never claimed false), and
+`factsInteract`'s own `tapped` check only rejects a match when BOTH sides
+specify it and disagree. 20 cards total newly get the pair (3 "enters
+tapped" + 17 that simply predate `apply-recognizers.mjs` ever running on
+them — not-yet-migrated empty `synergy.json`s or real cards outside its
+oracle-text lookup, e.g. historical-sets-sweep cards; all 17 confirmed
+ordinary permanents by direct inspection). Documented in full in
+`.claude/contracts/card-schema.md`'s own dated entry — orchestrator/user
+should know this is a real behavior change, not purely mechanical.
+
+**No genuine special case found among the 210 recognizer-tagged cards** —
+pool-wide field scan of all 420 tagged facts found zero with any extra
+constraint (`tapped`/`colors`/`cmc`/`types`/`power`/`toughness`/a narrower
+`counterType`) beyond the canonical shape; the only variance was harmless
+schema drift (a stale pre-`subject`-field `entersBattlefield`, a redundant
+`controller:'you'` on `cast`). `zack-fair`'s own real, hand-authored
+"enters with a counter" pair (CR 614.12, no `provenance` tag, recognizer
+always declined it) is untouched and never double-synthesized (same
+"already declared, skip" check Lifelink already established).
+
+**Mechanics**: recognizer file deleted outright
+(`recognizers/permanent-enters-battlefield-normally.ts`), removed from
+`apply-recognizers.mjs`'s `RECOGNIZERS` + `recognizers/types.ts`'s
+`RecognizerId` union, `recognizers.test.ts`'s "Recognizer B" describe block
+removed (replaced by a pointer comment to `synergy.test.ts`'s mirrored
+coverage). Also deleted the throwaway, unwired `scripts/
+prototype-3tier-reconstruct-fin1-10.mjs` (direct-imported the retired
+recognizer function, would have been a dead broken import otherwise — its
+own proof is already recorded in `PRD_AUTOMATED_AUTHORING.md`'s text, not
+lost). One-off script stripped the 420 tagged facts from 210
+`cards/*/synergy.json` files (diffs spot-checked, verified none of the
+5-with-insertions files collapsed to a `source:[]`+`sink:[]` pair that
+would flip `functionalModelPool.ts`'s `isV2Shaped` gate to "not migrated" —
+confirmed via a direct scan, only 3 pre-existing already-empty cards exist
+pool-wide, untouched by this strip).
+
+**Card-schema.md-owned file engine fixed directly (same precedent as the
+`destroy-effect-structural` miss earlier)**: `server/api/recognizer-
+source/[rule].get.ts`'s hand-kept `RECOGNIZER_IDS` mirror — removing the
+retired id from `RecognizerId` broke its typecheck, fixed with one line
+removed + a comment. Left `server/api/recognizers/index.get.ts` alone even
+though it still has a stale display-label entry for the retired rule —
+that file was mid-edit by a DIFFERENT, concurrent session at the time
+(visible via `git status`/`git stash` round-trip mid-task — flagged for
+the orchestrator, not touched).
+
+**Live-verified, not just JSON-level** (per standing convention): started
+a real `nuxt dev` instance, curled `/api/card/fin/87` (Ahriman, one of the
+210 stripped cards) — `functionalModel.synergy.source` no longer lists
+`cast`/`entersBattlefield`, but `interactions` still shows a real,
+populated synthesized `entersBattlefield` produce group (127 matches), and
+`/api/graph-links?set=fin` shows 261 real "enters the battlefield" edges
+touching Ahriman. Dev server stopped after (confirmed port free); a
+DIFFERENT, unrelated `nuxt dev` process was already running under some
+other session/port — left alone, not mine.
+
+**Verification, final**: `npx vitest run functional-model app server` —
+643/643. `npx nuxt typecheck` — same 2 pre-existing, unrelated errors only
+(`mana.ts` TS2538, `server/api/tokens/by-key.ts` TS2739 — present
+identically before this task too, per this file's own immediately-prior
+entry). `verify-synergy.mjs` full pool — 320 checked, 0 hard failures
+(identical note/OK counts before and after, confirmed via a HEAD
+comparison). `verify-annotation-coverage.mjs` — OK.
+
+**Mid-task environment note**: this session's own `git stash`/`git stash
+pop` (used briefly to diff against HEAD) revealed a DIFFERENT, concurrent
+orchestrator/session actively editing `app/components/
+RecognizerEntryCard.vue`, `server/api/recognizers/index.get.ts`, and a new
+untracked `functional-model/recognizers/move-effect-structural.ts` at the
+same time — none of these were touched by this task, and the stash
+round-trip completed cleanly (no conflicts), but future work in this repo
+should assume concurrent sessions may be live and avoid `git stash` on a
+shared working tree where avoidable.
+
+**Open, no further Forge-verification needed**: this task was a pure
+data-model/tooling refactor (move stored boilerplate facts to match-time
+synthesis) with one flagged, reasoned behavior broadening already
+documented above — no new `Effect`/`Trigger`/engine-behavior surface to
+check against `tmp/mtg-forge`.
+
+**2026-09-14, `addMana-effect-structural.ts` sink-annotation bug fix**: its
+paired SINK fact (Ultima, Origin of Oblivion's own `on: 'tapLandForMana'`
+trigger — "this ability depends on a land you control being tapped for
+{C}") was wrongly reusing the SOURCE fact's own annotation (the
+consequence clause, "add an additional {C}", oracle line 2 chars 33-54)
+instead of pointing at its own real trigger-CONDITION clause ("Whenever
+you tap a land for {C}", chars 0-31). Fixed by adding a second anchor
+pattern, `buildTriggerConditionPattern(color)` — `/\bwhenever\b[^\n]*?
+\btap\b[^\n]*?\bland\b[^\n]*?\{color\}/i`, same non-greedy/newline-excluded
+convention as every other anchor in this file, reusing
+`matchesOutsideQuotes` and the same 0-match/2+-match `mismatch`-decline
+discipline the source anchor already uses — computed independently per
+trigger and used ONLY for the sink fact's own annotation, never mixed with
+`annotationByEffect` (the source-fact map) again.
+
+**Scope-checked, not Ultima-specific**: grepped every recognizer-matched
+card (`addMana-effect-structural.test.ts`'s own list — Cargo Ship, Ether,
+Ultima); only Ultima has an `on: 'tapLandForMana'` trigger at all (Cargo
+Ship/Ether are plain unconditional activated abilities, no paired sink
+ever produced for them), so only Ultima's `synergy.json` needed
+regenerating. The fix is structural (any future card using the same
+trigger shape gets a correct, independently-derived sink annotation, not
+a copy-paste), not hand-patched.
+
+**Verified directly, not just script output**: re-ran `npx vite-node
+functional-model/scripts/apply-recognizers.mjs ultima-origin-of-oblivion`
+(note: must run via `vite-node`, not plain `node` — the script imports
+`.ts` recognizer modules directly) and read the resulting `synergy.json`
+by hand — source `addMana` fact still `{line:2, start:33, end:54}` =
+`"add an additional {C}"`; sink `addMana` fact now `{line:2, start:0,
+end:31}` = `"Whenever you tap a land for {C}"`. Added a same-shape
+byproduct assertion to the test file (`facts[1]` sink-slice check,
+`sinkAnn.line === sourceAnn.line`, `sinkAnn !== sourceAnn`).
+
+**Pre-existing, unrelated dirty tree at session start** (not mine, not
+touched): ~210 `cards/*/synergy.json` files (incl. Ultima's own, before my
+edit) already had a `permanent-enters-battlefield-normally` retirement
+diff pending from an earlier/concurrent session (matches this file's own
+prior entry above re: match-time `entersBattlefield` synthesis). My
+`apply-recognizers.mjs` run on Ultima additionally "retagged 1 existing
+fact" as a side effect of touching that file — harmless, same pre-existing
+retirement, not a new claim.
+
+**Verification, full**: `npx vitest run functional-model` — 572/572 green
+(27 files). `npx nuxt typecheck` — same 2 pre-existing, unrelated errors
+only (`mana.ts` TS2538, `server/api/tokens/by-key.ts` TS2739 — confirmed
+neither file touched by this task via `git status`/`git diff --stat`).
+`verify-synergy.mjs` full pool — 320 checked, 0 hard failures (Ultima's
+own trace notes unchanged, informational only, pre-existing). `verify-
+annotation-coverage.mjs` — OK. No further Forge-verification needed: this
+was a pure annotation-anchoring bug in existing, already-Forge-cited
+structural vocabulary (`Trigger.on: 'tapLandForMana'`, `card.ts`), not a
+new `Effect`/`Trigger` shape.
+
+## Read-only research: implicit-synthetic-fact candidates + Land-ETB (2026-09-14)
+
+Orchestrator asked for keyword/type/subtype popularity (full Scryfall
+`data/cards.db`, `is_normal=1`, unique CARD NAMES not print count) cross-
+referenced against `data/fin/fin_scryfall.json` presence, to inform
+whether any OTHER keyword deserves the same `hasPrintedLifelink`/
+`isNormalPermanent`/`isNormalInstantOrSorcery`-style implicit-fact
+synthesis in `synergy.ts`. Redirected mid-task (twice) to just hand back
+the raw combined table, not per-keyword verdicts — orchestrator does the
+eyeball pass itself. Script: `/tmp/.../scratchpad/combined_freq.py` +
+`fin_words.py` + `make_table2.py` (session-scoped scratchpad, not
+checked in) — reads `cards.db`'s `raw_json` per row, unions
+`keywords`/`type_line` (split on em dash, both sides) per card, keyed by
+unique name.
+
+**Real, checked finding worth keeping regardless of the table itself —
+Land-ETB**: no bare/generic "this land enters the battlefield" fact
+exists anywhere in the pool today (confirmed: none of Eden/Starting
+Town/Cavern of Souls/Willowrush Verge/Breeding Pool have ANY
+`entersBattlefield`/`to:'Battlefield'` fact). The 12 real Town-cycle
+lands that DO have one (crossroads-village, gohn-town-of-ruin,
+gongaga-reactor-town, insomnia-crown-city, baron-airship-kingdom,
+guadosalam-farplane-gateway, rabanastre-royal-city,
+sharlayan-nation-of-scholars, treno-dark-city, windurst-federation-center,
+vector-imperial-capital, the-gold-saucer-is-different-shape) are ALL the
+specific "enters TAPPED" nuance (`{event:'entersBattlefield',
+controller:'you', subject:'self', tapped:true, ...}`), never a bare
+presence fact — real per-card variation exists (Eden enters untapped;
+Starting Town enters tapped conditionally on turn count, unmodeled;
+Breeding Pool's pay-2-life-or-tapped is modeled as always-untapped) so a
+bare synthetic ETB fact would correctly leave `tapped` unasserted, same
+"leave the field unconstrained" treatment `isNormalPermanent`'s own doc
+comment already uses for entering-tapped/with-a-counter permanents.
+
+**Real implementation gotcha if this is ever built**: those 12 lands'
+own hand-authored `entersBattlefield` facts set `subject:'self'` but do
+NOT set `target:'self'` — `isNormalPermanent`'s existing dedup guard
+checks `f.event === 'entersBattlefield' && f.target === 'self'` only, so
+naively adding `Land` to that guard's own already-declared check would
+NOT recognize these 12 real facts as "already declared" and would
+wrongly stack a duplicate bare synthetic fact on top of each. A real
+Land-ETB synthesis needs its own dedup check keyed on `subject === 'self'
+|| target === 'self'`, not a verbatim copy of the existing one.
+
+Not yet done, if this becomes a real dispatch: any actual `synergy.ts`
+code change, and picking which (if any) of the combined-frequency table
+entries beyond Land-ETB get the same treatment (deferred to the
+orchestrator's own eyeball pass per its redirect).
+
+## Retired `instant-sorcery-resolves-to-graveyard` — third instance of the printed-Lifelink/normal-permanent pattern (2026-09-14)
+
+Same real-production task as the Lifelink and normal-permanent cleanups
+above, applied to the third pool-wide boilerplate fact pair: a normal,
+non-Adventure Instant/Sorcery's own `{event:'cast', from:'Hand',
+target:'self'}` + `{to:'Graveyard', controller:'you', subject:'self'}`
+pair (62 real pool cards, 124 tagged facts).
+
+**Design**: `synergy.ts` gets `isNormalInstantOrSorcery(card)` (typeLine
+primary-type check for Instant/Sorcery, Adventure-subtype exclusion —
+mirrors the retired recognizer's own `isAdventure`) + a NEW
+`syntheticInstantSorceryGraveyardFact()`, but REUSES the existing
+`syntheticCastFact()` verbatim for the cast half — the fact shape
+(`{event:'cast', from:'Hand', target:'self'}`) is byte-identical to a
+normal permanent's own cast fact, so no duplicate sibling function was
+needed. Injected in `findInteractionsForCard`'s existing per-call pool
+augmentation (same `augmentedPool` map, extended again). Never written to
+`synergy.json`.
+
+**Real, deliberate broadening flagged hard**: the retired recognizer used
+to DECLINE for a card whose own oracle text names a self-referential
+exile/shuffle override (`ultima`'s own "including this card" reminder
+text) — `isNormalInstantOrSorcery` can't replicate this (`CardDefinition`
+carries no oracle text at all). Checked: `ultima` already carries this
+pair hand-authored (untagged), a pre-existing latent gap the retired
+recognizer's own module comment already called out — not a new
+regression.
+
+**Real narrower dedup guard than the normal-permanent case, load-bearing
+for a real pool shape**: Flashback cards (`auron-s-inspiration`,
+`from-father-to-son`, `dreams-of-laguna`, `retrieve-the-esper`, and
+siblings) genuinely keep BOTH their own distinct `{event:'cast',
+from:'Graveyard', ...}` recast fact AND the synthetic `from:'Hand'` one —
+`isNormalPermanent`'s own dedup check (`f.event === 'cast' && f.target
+=== 'self'`, no `from` check) would have WRONGLY suppressed the synthetic
+fact for these cards (the existing Graveyard-cast fact would satisfy that
+lax check). Fixed by making the instant/sorcery cast-fact dedup check
+`from: 'Hand'`-specific. **Not observable via `findInteractionsForCard`'s
+own group output** (a `from`-only fact is genuinely zone-shaped but has
+no resolvable `effectiveZone`, so `factsInteract` always returns `false`
+regardless — same blind spot the normal-permanent case's own cast fact
+already has, documented in `synergy.test.ts`) — verified by direct code
+reading + the real pool state (both Flashback cards keep their own
+distinct fact post-strip), not an executable assertion.
+
+**Mechanics**: recognizer file deleted outright
+(`recognizers/instant-sorcery-resolves-to-graveyard.ts`), removed from
+`apply-recognizers.mjs`'s `RECOGNIZERS` + `recognizers/types.ts`'s
+`RecognizerId` union. `recognizers/recognizers.test.ts` — the dedicated
+test file for BOTH original text-only prototype recognizers (Recognizer
+A/B) — is now DELETED OUTRIGHT (not left with an inert comment-only
+body): Recognizer B's own earlier retirement had already reduced it to
+"one real describe block (A) + one retirement comment (B)"; retiring A
+too left zero real tests, which Vitest hard-fails on ("No test suite
+found in file"), confirmed by actually running it before fixing. A small
+number of other files' own comments referencing `recognizers.test.ts` as
+a precedent for the `.mjs`-import convention or the `faceOf` helper were
+left as historical artifacts (still directionally true — the convention
+now lives in `dies-trigger-structural.test.ts`/etc. instead), except
+`recognizers/types.ts`'s own `isBackFace` doc comment, which explicitly
+named `recognizers.test.ts`'s `faceOf` helper and was updated to point at
+a still-live example instead. One-off script stripped the 124 tagged
+facts from 62 `cards/*/synergy.json` files (diffs spot-checked, verified
+none collapsed to a `source:[]`+`sink:[]` pair).
+
+**Card-schema.md-owned file fixed directly (same precedent)**:
+`server/api/recognizer-source/[rule].get.ts`'s hand-kept `RECOGNIZER_IDS`
+mirror — one line removed + a comment, same reason (typed
+`RecognizerId[]` would fail to compile otherwise). **Not fixed, flagged
+instead** (non-blocking, untyped): `server/api/recognizers/index.get.ts`'s
+own separate `TITLES` display-label map still has a stale
+`'instant-sorcery-resolves-to-graveyard'` entry — that file is
+concurrently being edited by a different session (confirmed via a
+`git stash` round-trip mid-task: `RecognizerEntryCard.vue`, `server/api/
+recognizers/index.get.ts`, and an untracked `move-effect-structural.ts`
+were all live-changing under a different session at the time), same
+situation the `permanent-enters-battlefield-normally` retirement already
+flagged and left alone for that exact file.
+
+**Real gap found and fixed in `verify-synergy.mjs` itself** (not present
+for the prior two retirements' own note/OK parity, which held by
+accident rather than design): its reverse "every produce-relevant ACTION
+must be explained" check reads each card's raw on-disk `source` array
+only, with no visibility into `synergy.ts`'s own match-time synthesis.
+`harness.ts`'s scenario runner naturally logs a real `{fn:'move',
+from:'stack', to:'Graveyard'}` trace entry for nearly every plain
+Instant/Sorcery scenario — stripping the stored fact pool-wide surfaced
+~20 brand-new soft notes across the 62 cards before this was caught
+(confirmed via an explicit before/after comparison, `git stash`-scoped to
+just those 62 files — NOT assumed clean). Fixed by adding
+`isNormalInstantOrSorceryGraveyardMove` (structural mirror of
+`isNormalInstantOrSorcery`, same "note-not-fail, now correctly
+suppressed" treatment the file's own pre-existing `moveTo`-to-Exile
+promotion comment already established for an analogous case) to that
+reverse-check loop. Reverified after the fix: the scoped 62-card
+before/after AND the full 320-card pool's own before/after output are
+now byte-identical — a real, deliberately-checked bar, not just "0 hard
+failures."
+
+**Live-verified, not just JSON-level**: started a real `nuxt dev`
+instance on a different port (another session already held :3000),
+curled `/api/card/fin/5` (Aerith Rescue Mission) — `functionalModel
+.synergy.source` no longer lists `cast`/the bare graveyard fact, but
+`interactions` shows a real, populated synthesized `{to:'Graveyard',
+subject:'self'}` source group (13 matches), and `/api/graph-links?
+set=fin` shows 176 total edges touching the card, 13 of them
+graveyard-presence edges via the synthesized fact. Dev server stopped
+after (confirmed port free).
+
+**Verification, final**: `npx vitest run functional-model app server` —
+636/636. `npx nuxt typecheck` — same 2 pre-existing, unrelated errors
+only (`mana.ts` TS2538, `server/api/tokens/by-key.ts` TS2739). `verify-
+synergy.mjs` full pool — 320 checked, 0 hard failures, byte-identical
+note/OK output vs. pre-strip baseline (see above). `verify-annotation-
+coverage.mjs` — OK.
+
+**Open, no further Forge-verification needed**: pure data-model/tooling
+refactor (move stored boilerplate facts to match-time synthesis) plus one
+`verify-synergy.mjs` tooling fix — no new `Effect`/`Trigger`/engine-
+behavior surface to check against `tmp/mtg-forge`.
+
+## 2026-09-14 (later still): printed-Lifelink synthetic-fact pattern PARKED (disabled, not deleted) + its 12 real cards' lifegain fact restored
+
+Explicit user decision, reversing part of the Lifelink cleanup two entries
+above: that specific implicit/synthetic-fact pattern is being reconsidered
+and may come back, so it's now dead/draft code, not gone. The OTHER two
+synthetic patterns from the same day (`isNormalPermanent`/
+`isNormalInstantOrSorcery`) are NOT in question and stay fully active —
+this only touches the Lifelink one.
+
+**Mechanics (`synergy.ts`)**: `hasPrintedLifelink`/`syntheticLifelinkFact`
+kept verbatim (both doc comments updated to point at the new parked
+state). The injection call site in `findInteractionsForCard`'s
+`augmentedPool` map now reads `if (LIFELINK_SYNTHETIC_FACT_ENABLED && ...)`
+— a new `const LIFELINK_SYNTHETIC_FACT_ENABLED = false` just above
+`syntheticLifelinkFact()`'s own doc comment, with its own doc comment
+explaining the park and how to un-park it later (flip to `true` + re-strip
+the 12 cards' own fact again). `synergy.test.ts`'s whole "printed Lifelink
+implicitly counts..." describe block is `describe.skip`, not deleted (5
+tests), with a short comment pointing at the flag.
+
+**Data (12 real cards)**: restored each one's own real, explicit
+`{event:'lifegain', controller:'you', ...}` SOURCE fact to `synergy.json`
+(same shape the original hand-authored fact had before 86437fd1 stripped
+it, MINUS `value` — that field stays permanently gone project-wide, a
+separate unrelated decision from the same session, not reversed here).
+Exact object + exact reinsertion position for each came from
+`git show 86437fd1 -- <slug>/synergy.json` (ground truth over the
+dispatching task's own paraphrase — one card's transcription in the task
+was in fact slightly off in claimed field list, verified independently
+per-card rather than trusted). Position was re-derived relative to
+CURRENT file content, not the commit's pre-image directly — these 12
+files carry a separate, still-uncommitted in-flight change (the
+`isNormalPermanent` cast/entersBattlefield fact strip) that already
+removed some of the original neighboring facts; inserted each restored
+lifegain fact adjacent to whichever of its original neighbors still
+exists in the current file, preserving relative order. Cards: adelbert-
+steiner, aerith-gainsborough, cecil-dark-knight-cecil-redeemed-paladin,
+garnet-princess-of-alexandria, hope-estheim, joshua-phoenix-s-dominant-
+phoenix-warden-of-fire, lightning-army-of-one, locke-cole, minwu-white-
+mage, noctis-prince-of-lucis, stiltzkin-moogle-merchant, vincent-valentine-
+galian-beast.
+
+**Two cards keep a SECOND, genuinely separate lifegain fact untouched**:
+aerith-gainsborough (its own real SINK `lifegain-trigger-structural` fact,
+"Whenever you gain life, put a +1/+1 counter...") and minwu-white-mage
+(same shape, its own anthem trigger's SINK). Neither was part of the
+Lifelink-dedup removal in the first place (confirmed via the same
+`git show` per-card check) — cross-checked directly, not assumed from the
+task's own list, since the task itself flagged this exact ambiguity as
+unverified.
+
+**Not touched, confirmed no double-counting possible**: with
+`LIFELINK_SYNTHETIC_FACT_ENABLED` hard `false`, no card can ever receive
+both its own real fact AND the synthetic one — verified by direct code
+read (short-circuit on the const) and by a pool grep (`grep -c
+'"event": "lifegain"'` per restored file — 1 each, or 2 only where a
+second, genuinely distinct fact already existed as noted above).
+
+**card-schema.md**: new dated bullet appended to the existing Lifelink
+section (not a rewrite) documenting the park, referencing the flag name
+and confirming the other two patterns are unaffected.
+
+**`progress.json`**: only touched aerith-gainsborough's own `notes` field
+(the one card the original removal had flagged as `review:"human"`,
+already reset to `"ai"` by that earlier pass) — appended a short dated
+note that the pattern is now parked and its fact restored; `review` stays
+`"ai"` (no further reset needed, it was already reset by the removal).
+The other 11 cards' `progress.json` notes still describe the OLD
+(now-superseded) removal reasoning verbatim — left as historical record,
+not rewritten card-by-card; only flagging here in case a future card-agent
+task reads one of those notes and is confused by the stale "dropped this
+fact" framing without checking `synergy.json` itself.
+
+**Verification**: `npx vitest run functional-model` — 560 passed, 5
+skipped (the parked describe block), 26 files. `npx tsc --noEmit` — zero
+output. `npx nuxt typecheck` — same 2 pre-existing, unrelated errors only
+(`mana.ts` TS2538, `server/api/tokens/by-key.ts` TS2739). `verify-
+synergy.mjs` full pool — 320 checked, 0 hard failures; spot-checked all 12
+cards' own notes no longer show an unexplained `gainLife`/Lifelink note
+(the restored explicit fact satisfies the reverse-check again).
+
+**Open, no further Forge-verification needed**: pure data-model reversal
+(re-enable stored facts, disable match-time synthesis) — no new
+`Effect`/`Trigger`/engine-behavior surface to check against
+`tmp/mtg-forge`. If/when this pattern is un-parked later, re-run the same
+strip-and-flip-the-flag round-trip in reverse.
+
+## 2026-09-14 (later still): 2 new recognizers close Aerith Gainsborough's last 2 unprovenanced facts
+
+`putCounterSelf-effect-structural.ts` (structural — reads always-`target:
+'self'` `kind:'putCounter'` Effect directly) + `putCounterMagnitude-clause-
+structural.ts` (plain TEXT, `lifegain-trigger-structural.ts`'s family —
+never reads `Effect[]` at all). Both wired into the REAL pipeline
+(`recognizers/types.ts`'s `RecognizerId`, `scripts/apply-recognizers.mjs`'s
+`RECOGNIZERS` array, `server/api/recognizer-source/[rule].get.ts`'s
+`RECOGNIZER_IDS`, `server/api/recognizers/index.get.ts`'s `TITLES` — all
+4 touched proactively this time, a recurring past miss).
+
+**Recognizer 1 whole-pool check**: 19 real `kind:'putCounter'` (self-
+target) occurrences, 18 distinct cards. 15 matched "put <anything>
+<counterType> counter(s) on <self-subject>" (own name/short-name-before-
+comma/permanent-supertype word — reused `dies-trigger-structural.ts`'s own
+vetted subject vocabulary verbatim, deliberately did NOT invent a new
+"this <printed subtype>" template). 4 genuine mismatches, each given a new
+`// recognizer-exception:` marker (none existed before, brand-new rule
+id): Zack Fair/Tonberry/Relentless X-ATM092 all use a real, different
+English idiom for the identical underlying effect ("enters/returns ...
+with a counter on it," never the verb "put"); Phantom Train self-
+references via its own printed SUBTYPE ("this Vehicle"), not its name nor
+a vetted supertype word.
+
+**A real regex bug found+fixed while building recognizer 1**: an
+unbounded gap between "put" and the counterType let Aerith's own line 2
+(which prints the counterType `+1/+1` TWICE in one sentence — the
+broadcast clause and the magnitude clause right after it) produce a
+spurious second match by backtracking past the first correctly-failing
+occurrence to the second, unrelated one — false "matched 2 times" decline.
+Fixed by bounding the quantity-word gap to at most 5 tokens (real max
+needed: Vincent Valentine's 3-word "a number of").
+
+**Recognizer 2 whole-pool check**: grepped every real `AuthoredFact` of
+this task's own named shape (`role:'sink', event:'putCounter',
+counterType, target:'self'`, tier-3, magnitude-dependency reasoning) —
+Aerith Gainsborough is the ONLY real occurrence (`aerith-rescue-mission`'s
+own similar-looking entries are a different shape, chosen TAPPED target,
+not self). Separately checked all 8 real cards using the broader "where X
+is the number of ..." template to confirm none of the other 7 is a near-
+miss for this narrower one (each counts something unrelated).
+
+**`cards/aerith-gainsborough/definition.ts`**: the one remaining
+`authoredFact` entry removed (comments updated MECHANIZED, not STAYS
+TIER-3), unused `AuthoredFact` import removed, its own
+`definition-annotations.json`'s now-orphaned `authoredFact[0]` key
+removed. `PRD_AUTOMATED_AUTHORING.md` got a new dated section (chronology
+convention, not a rewrite of the earlier "STAYS TIER-3" table entry).
+
+**Verification**: `apply-recognizers.mjs` full pool — 15 cards retagged
+`putCounterSelf-effect-structural`, 1 (Aerith) retagged
+`putCounterMagnitude-clause-structural`, 0 new facts appended (pure
+retagging of pre-existing hand-authored facts), all 4 mismatches
+correctly suppressed via their own new exception markers, 0 unresolved
+mismatches. `npx vitest run functional-model` — 584 passed, 5 skipped (24
+new tests, both recognizers' own `.test.ts`). `npx tsc --noEmit` — clean,
+exit 0. `verify-synergy.mjs` — 320 checked, 0 hard failures.
+`check-fact-parity.mjs` — Aerith now `2 containers (script:2 agent:0
+unverif:0 gaps:0) — 2 effects (script:2 agent:0 unverif:0 gaps:0)`, exit
+0 pool-wide.
+
+**Open, no further Forge-verification needed**: pure text/structural
+recognizer additions over already-real `Effect`/`AuthoredFact` shapes
+(`kind:'putCounter'` itself already Forge-cited via `card.ts`'s own
+`AbilityManaPart`-style field naming precedent elsewhere in this file) —
+no new engine behavior, no new `interfaces.ts` mirror.
+
+**Pre-existing, inherited, NOT part of this task** (found via `git diff
+--stat` while double-checking my own work — flagging so a future read of
+this session's diff isn't surprised): a much larger, already-uncommitted
+diff was sitting in the tree at session start — the `permanent-enters-
+battlefield-normally`/`instant-sorcery-resolves-to-graveyard` retirement
+(~272 `synergy.json` files, ~9000 deletions) and the Lifelink-synthetic-
+fact park-and-restore (12 cards) documented in the entry immediately
+above this one. Neither touched by this task; confirmed by checking which
+files my own `apply-recognizers.mjs` run actually reported writing (15,
+matching this task's own card list exactly) vs. the full `git status`.
+
+- **2026-09-14 (latest+56) — fin/3-10 mechanization pass: 6 new
+  recognizers, 1 extended, 43 facts retagged.** Sibling task to the
+  Aerith Gainsborough closure immediately above, same discipline, across
+  Adelbert Steiner/Aerith Rescue Mission/Ambrosia Whiteheart/Ashe, Princess
+  of Dalmasca/Auron's Inspiration/Battle Menu/Cloud, Midgar Mercenary.
+
+  **New, wired into the real pipeline**: `ptFormula-scalingPump-
+  structural.ts` (reads `CardDefinition.ptFormula.kind:
+  'addPerEquipmentControlled'`, 1 real card, Adelbert Steiner —
+  `setToCreaturesControlled`/Snow Villiers is a different template, out of
+  scope), `digReveal-effect-structural.ts` (`kind:'dig'` +
+  `validType:'artifact'` + `optional:true` + literal `take:1`, 1 real
+  card, Ashe — `validType:'any'` cards, Commune with Beavers/Esper
+  Origins, are confirmed approximations/no-`optional`, correctly declined),
+  `flashback-alternateCost-structural.ts` (Magic's own fixed Flashback
+  reminder template off `alternateCosts`, 13/14 real cards clean —
+  Memories Returning's own checked-in oracle text is missing the reminder
+  parenthetical entirely, a real data quirk, suppressed via a new
+  exception marker), `gainLife-effect-structural.ts` (`kind:'gainLife'`
+  literal amount, "you gain N life" tight adjacency, 13/14 clean —
+  Restoration Magic's own 2 different amounts on one face correctly merge
+  into 2 separate facts, Al Bhed Salvagers' same-clause loseLife+gainLife
+  pair only matches the gain half, Omega's Computed amount declines),
+  `landfall-trigger-structural.ts` (Magic's own fixed Landfall ability-word
+  template, plain text, 10/13 real "Landfall" mentions clean — 3 are
+  comment-only mentions in `definition.ts`, no real printed clause,
+  correctly declined for free), `triggerDoubling-selfAndAttachedEquipment-
+  structural.ts` (`CardDefinition.triggerDoubling.scope:
+  'selfAndAttachedEquipment'`, 1 real card, Cloud — the other 2 real
+  `scope` values, The Masamune/Traveling Chocobo, are genuinely different
+  sentences, no single template covers all 3).
+
+  **Extended**: `destroy-effect-structural.ts` now also emits a paired
+  "wants a matching target present" SINK (only when `target` narrows to a
+  real type filter) — closes Battle Menu's own destroy-mode sink. Surfaced
+  a real, narrow `apply-recognizers.mjs` bug: `coreKey`'s own reduced-
+  identity key list excluded `types`/`power` entirely, letting Battle
+  Menu's two genuinely distinct pre-existing sinks (pumpTarget's bare
+  "wants a creature," destroy's narrower "wants power 4+") collide under
+  one bare `{to:'Battlefield'}` key — fixed by adding both fields to
+  `coreKey`'s key list, reverified pool-wide this only changes Battle
+  Menu's own outcome.
+
+  **Real, whole-pool-checked, DECLINED (left hand-authored, each with an
+  explicit reason recorded in that card's own `definition.ts`)**: token
+  creation (`kind:'createToken'`, 34 real occurrences — a dedicated prior
+  prototype, `token-creation-from-forge-script.prototype.ts`, already
+  found real word-order/word-presence/color-field fragility, not safely
+  generalizable the way `destroy`/`drawCard`'s single-verb templates are);
+  "fixed pump" (`pumpSelf`/`pumpTarget`/`pumpAll` literal amounts, 34 real
+  occurrences across ~27 cards — at least 6 distinct real English subject
+  templates plus Vayne's Treachery's own kicker-conditional "that
+  creature" pronoun-carryover with no clean structural gate, genuinely
+  bigger/riskier than this pass's other recognizers); Aerith Rescue
+  Mission's own tap-then-counter-one-of-them clause (no structural Effect
+  exists at all — both actions share ONE opaque `custom` closure, an even
+  more fundamental version of `putCounterTarget-effect-structural.ts`'s "it"
+  pronoun decline); Ambrosia Whiteheart's own "return another permanent"
+  (already covered by `move-effect-structural.ts`'s own module doc comment
+  — present in the working tree, unwired, a different concurrent task's
+  in-flight work, not touched here); Cloud's own "search library for an
+  Equipment card" (the closed "search your library for a[n] <type> card,
+  reveal it, put it into hand, then shuffle" template IS real pool-wide,
+  but every real candidate including Cloud has a confirmed `validType`-
+  vs-printed-word divergence — Equipment/"Bird or basic land"/"basic
+  land" — no safe bridge with today's data model).
+
+  **Verification**: `apply-recognizers.mjs` full pool — 43 existing facts
+  retagged across the 6 new + 1 extended recognizer, 14 brand-new facts
+  appended pool-wide (other cards sharing the same real templates), 1
+  genuine mismatch (Memories Returning) correctly suppressed via its own
+  exception marker, 0 unresolved, fully idempotent (2nd run: 0 changes).
+  `npx vitest run functional-model` — 605 passed, 5 skipped (33 new tests).
+  `npx tsc --noEmit` — same pre-existing baseline categories, 0 new.
+  `verify-synergy.mjs` — 320 checked, 0 hard failures.
+  `check-fact-parity.mjs` — exit 0, no new gaps for any of the 7 cards.
+
+  **`.claude/contracts/card-schema.md`/`functional-model/
+  PRD_AUTOMATED_AUTHORING.md`** both got new dated entries (same
+  convention as the Aerith Gainsborough pass). `server/api/recognizer-
+  source/[rule].get.ts`'s `RECOGNIZER_IDS` updated this pass, not left as
+  a follow-up miss.
+
+  **Open, no further Forge-verification needed**: same as the sibling
+  Aerith Gainsborough pass — pure text/structural recognizer additions
+  over already-real `Effect`/`CardDefinition` field shapes, no new engine
+  behavior, no new `interfaces.ts` mirror. One real, flagged, NOT decided
+  by me: `recognizers/move-effect-structural.ts` sits in the working tree
+  fully built (with its own extensive module doc comment and real pool
+  check) but is NOT wired into `apply-recognizers.mjs`/`types.ts`'s
+  `RecognizerId` union, and has no `.test.ts` of its own — looks like
+  complete, abandoned-or-still-in-flight work from a concurrent session,
+  not touched/wired by me (out of my assigned scope this task). Whoever
+  owns that file next should either finish wiring it or fold it in
+  explicitly.

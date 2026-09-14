@@ -8,7 +8,19 @@
     {
       "event": "putCounter",
       "counterType": "+1/+1",
-      "target": "self"
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 39,
+          "end": 75
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterSelf-effect-structural"
+      }
     },
     {
       "event": "damage",
@@ -34,40 +46,6 @@
     {
       "event": "dies",
       "target": "self"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
     }
   ],
   "sink": []

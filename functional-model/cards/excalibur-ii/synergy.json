@@ -3,7 +3,19 @@
     {
       "event": "putCounter",
       "counterType": "CHARGE",
-      "target": "self"
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 24,
+          "end": 60
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterSelf-effect-structural"
+      }
     },
     {
       "zone": "Graveyard",
@@ -13,40 +25,6 @@
     {
       "event": "dies",
       "target": "self"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
     }
   ],
   "sink": [

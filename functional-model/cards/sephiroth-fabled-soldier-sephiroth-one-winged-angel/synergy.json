@@ -19,48 +19,24 @@
     {
       "event": "lifegain",
       "controller": "you",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 65,
+          "end": 80
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "gainLife-effect-structural"
+      }
     },
     {
       "event": "lifeloss",
       "controller": "opp",
       "face": "front"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "face": "front",
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "face": "front",
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
     },
     {
       "event": "drawCard",
@@ -77,6 +53,23 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
+      }
+    },
+    {
+      "event": "lifegain",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 158,
+          "end": 173
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "gainLife-effect-structural"
       }
     }
   ],

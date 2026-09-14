@@ -81,6 +81,23 @@ function buildPattern(color: string): RegExp {
   return new RegExp(`\\badd\\b[^\\n]*?\\{${escapeRegExp(color)}\\}`, 'i');
 }
 
+/** "whenever ... tap ... land ... {<color>}" — the printed TRIGGER CONDITION
+ * clause for a real `Trigger.on: 'tapLandForMana'` (Forge's own `TapsForMana`
+ * trigger mode, e.g. Ultima, Origin of Oblivion's own real oracle line,
+ * "Whenever you tap a land for {C}, add an additional {C}."), never the
+ * consequence clause after the comma — that's the SOURCE `addMana` Effect's
+ * own clause, already matched by `buildPattern` above. This is what the
+ * paired SINK fact (below) actually represents: "this card depends on a land
+ * you control being tapped for this color," which is what the trigger
+ * CONDITION describes, not what the trigger's own consequence produces. Same
+ * non-greedy `[^\n]*?` convention as `buildPattern`; stops at the first
+ * `{<color>}` on the line, which is exactly the condition's own mana symbol
+ * (the consequence's later `{<color>}`, if the same color, sits further
+ * right and is never reached since the match isn't global here). */
+function buildTriggerConditionPattern(color: string): RegExp {
+  return new RegExp(`\\bwhenever\\b[^\\n]*?\\btap\\b[^\\n]*?\\bland\\b[^\\n]*?\\{${escapeRegExp(color)}\\}`, 'i');
+}
+
 /**
  * Same `pattern`, but excludes any match sitting inside a double-quoted
  * span of ITS OWN line — real, necessary for Ultima, Origin of Oblivion's
@@ -161,15 +178,47 @@ export function recognizeAddManaEffectStructural(input: StructuralRecognizerInpu
   }
 
   // Paired SINK, narrowly scoped to a real `on: 'tapLandForMana'` trigger —
-  // see module doc comment.
+  // see module doc comment. Anchored on the TRIGGER'S OWN condition clause
+  // ("Whenever you tap a land for {C}"), never the source fact's own
+  // consequence-clause annotation — the sink represents what this trigger
+  // DEPENDS ON (a land being tapped for this color), which is what the
+  // condition clause describes, not what the consequence produces.
   for (const trigger of input.triggers ?? []) {
     if (trigger.on !== 'tapLandForMana' || !trigger.tapLandForManaColor) continue;
     const triggerEffects: Effect[] = [];
     collectEffects(trigger.effects, triggerEffects);
-    for (const effect of triggerEffects.filter(isAddManaEffect)) {
-      if (effect.color !== trigger.tapLandForManaColor) continue;
-      const annotation = annotationByEffect.get(effect);
-      if (!annotation) continue; // this effect's own source match failed/was skipped above — nothing to pair
+    const pairedEffects = triggerEffects.filter(isAddManaEffect).filter((effect) => effect.color === trigger.tapLandForManaColor);
+    if (pairedEffects.length === 0) continue;
+
+    const conditionPattern = buildTriggerConditionPattern(trigger.tapLandForManaColor);
+    const conditionMatches = matchesOutsideQuotes(input.oracleText, conditionPattern);
+    if (conditionMatches.length === 0) {
+      return {
+        matched: false,
+        kind: 'mismatch',
+        reason: `expected trigger-condition clause /${conditionPattern.source}/ not found (verbatim) in oracle text "${input.oracleText}"`,
+      };
+    }
+    if (conditionMatches.length > 1) {
+      return {
+        matched: false,
+        kind: 'mismatch',
+        reason: `expected trigger-condition clause /${conditionPattern.source}/ matched ${conditionMatches.length} times — ambiguous, declining rather than guessing which`,
+      };
+    }
+    const cm = conditionMatches[0]!;
+    const conditionStart = cm.index!;
+    const conditionEnd = conditionStart + cm[0]!.length;
+    const conditionAnnotation = toLineOffset(input.oracleText, conditionStart, conditionEnd);
+    if (!conditionAnnotation) {
+      return {
+        matched: false,
+        reason: `trigger-condition span [${conditionStart},${conditionEnd}) did not resolve to a single real oracle-text line`,
+      };
+    }
+
+    for (const effect of pairedEffects) {
+      if (!annotationByEffect.has(effect)) continue; // this effect's own source match failed/was skipped above — nothing to pair
       facts.push({
         role: 'sink',
         fact: {
@@ -177,7 +226,7 @@ export function recognizeAddManaEffectStructural(input: StructuralRecognizerInpu
           colors: { has: [effect.color] },
           controller: 'you',
           types: { has: ['Land'] },
-          annotations: [annotation],
+          annotations: [conditionAnnotation],
         },
         provenance: { origin: 'parser', rule: RULE },
       });

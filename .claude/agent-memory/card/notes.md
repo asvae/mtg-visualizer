@@ -4315,3 +4315,112 @@ before I started; nothing to correct there.
   errors. No contract mismatch found — `card-schema.md` already documents
   the multi-annotation case accurately (it's the same section that
   flagged this gap in the first place).
+
+- **2026-09-14, Prev/Next boundary bug — mostly already fixed, one real
+  gap closed**: bug report was "fin/1 Previous navigates to eoc/191"
+  (cross-set wrap). Investigated the full path
+  (`app/pages/app/card/[set]/[number].vue`'s `prevTarget`/`nextTarget`,
+  `app/composables/useSetOrder.ts`, `server/api/cards/set-order/[set].ts`)
+  and found this was already fixed by an earlier, already-committed
+  change (`ae53829e` "Card page: unique-card Prev/Next + loader scoping")
+  before I touched anything — `git status`/`git diff` showed zero pending
+  changes on any of those three files at task start. The per-set
+  `setOrder` fetch is correctly scoped to `route.params.set` throughout
+  (never a global/cross-set list), and `neighborsInSetOrder` already
+  returns `null` (not a wrapped value) past either edge. Confirmed live
+  with Playwright against the running dev server: fin/1 renders Previous
+  as a disabled `<span>`, no `<a>` element at all (genuinely unclickable,
+  not just greyed out), no navigation happens. Could not reproduce the
+  reported `eoc/191` target at all, and couldn't find `eoc` as a set code
+  anywhere in this repo's data/DB — likely a stale repro from before
+  `ae53829e` landed.
+  - Real gap found and fixed while verifying the symmetric (last-card)
+    case: the template had a disabled `v-else` span for Previous but NO
+    matching one for Next — at the true last card in a set (`fin/A-248`,
+    a bonus/Alchemy-numbered card that sorts last per the set-order
+    route's own non-numeric-sorts-last rule) Next just vanished entirely
+    (`<!--v-if-->`, no visible element) instead of greying out like
+    Previous. Added the missing `<span v-else class="text-muted/40">Next
+    &rarr;</span>` mirroring Previous's own markup — no other logic
+    touched.
+  - Adjacent cosmetic bug fixed same pass: the header's `#{{
+    currentNumber }}` used the `parseInt`'d `currentNumber` computed
+    (whose own comment says it's kept only for the old ±1 fallback
+    arithmetic, not display) — on a non-numeric collector number this
+    rendered literally `#NaN`. Changed the display to read
+    `route.params.number` directly; `currentNumber` itself untouched,
+    still backs the fallback arithmetic.
+  - Verified live end-to-end after both fixes (Playwright, real dev
+    server): fin/1 -> Previous disabled (no `<a>`), Next -> fin/2, label
+    `#1`. fin/2 (mid-set) -> both directions work normally. fin/A-248
+    (true last card) -> Previous works (fin/563), Next now correctly
+    disabled (no `<a>`), label reads `#A-248` not `#NaN`. Clicking (not
+    just checking href) at both boundary cards confirmed no navigation
+    occurs either way.
+  - No contract mismatch found — purely a card-page-local presentation
+    gap.
+
+- 2026-09-14 (card page: "Show type-derived facts" sibling checkbox, shared
+  classification with recognizers page): added a second UCheckbox on the
+  Facts tab right after "Show parser-derived facts", same style/props
+  shape, default OFF, own per-card live count — hides facts whose entire
+  match is structurally implied by the card's own type/supertype (today's
+  real pool: only `saga-lore-and-sacrifice-structural`'s Saga lore-counter/
+  sacrifice/dies facts). Reused the classification the `ui` agent had just
+  built the same day for the separate `/app/recognizers` page
+  (`server/api/recognizers/index.get.ts`'s `TYPE_DERIVED_RECOGNIZER_IDS` +
+  `RecognizerEntryCard.vue`'s own checkbox) rather than re-deriving or
+  duplicating it.
+  Shared home chosen: hoisted `TYPE_DERIVED_RECOGNIZER_IDS` (as
+  `ReadonlySet<string>`, matching `Fact.provenance.rule`'s own plain-string
+  type, not the narrower `RecognizerId` union) into `functional-model/
+  recognizers/types.ts` — NOT into `server/api/recognizer-source/
+  [rule].get.ts` (where the sibling `RECOGNIZER_IDS` id list already lives)
+  because that file pulls in `node:fs`/`node:path` at module scope; this
+  app's `/app` pages are SPA-only, so a client-side Vue page importing
+  anything that drags in Node built-ins would break. `types.ts` was already
+  proven client-safe (only re-exports from `../synergy`, which the card page
+  already imports directly for `describeFact`/`Fact`). `server/api/
+  recognizers/index.get.ts` now imports the constant instead of
+  hand-keeping its own copy; `RecognizerEntryCard.vue` unchanged (still
+  reads the server-shaped per-match `typeDerived` boolean, unaffected).
+  Card page changes (`app/pages/app/card/[set]/[number].vue`): imports
+  `TYPE_DERIVED_RECOGNIZER_IDS` directly (client-side, no server round-trip
+  needed — `Fact.provenance.rule` is already served per fact, same data the
+  parser-derived toggle already reads); added `isTypeDerivedFact()`,
+  `typeDerivedFactsCount` (mirrors `parserFactsCount`'s "always the total,
+  not a live-hidden count" reasoning), and folded a second filter clause
+  into `factRowGroups`'s existing `visible` filter (AND, not OR, between
+  the two toggles — a fact that's both parser- and type-derived, true for
+  every real Saga fact today, needs BOTH toggles on to show; either one
+  alone keeps it hidden, confirmed correct behavior live, not a bug).
+  `showParserFacts`/new `showTypeDerivedFacts` both moved to/added on
+  `useGraphStore.ts` with the same survive-navigation + localStorage
+  persistence treatment (own storage key
+  `mtg-visualizer-show-type-derived-facts`), not a local page ref.
+  Verified live (real dev server on :3000, already running from another
+  session — did not restart it; Playwright headless, no MCP browser tool
+  available in this session): fin/203 (Summon: Fenrir, a Saga) — checkbox
+  present, count (3), both toggles independently confirmed via row-count
+  diffing (both off: 2 base rows; either alone on: still 2 — AND semantics,
+  correct; both on: 5 rows, the 3 saga facts appear). fin/1 (Summon:
+  Bahamut — ALSO a Saga, not purely a Ultima-style vanilla card as the task
+  brief assumed; has 8 parser facts total, 3 type-derived + 5 not) —
+  parser-only-on revealed exactly the 5 non-Saga structural facts (destroy
+  x2, drawCard, dealDamage x2), type-derived-only-on revealed 0 extra (all
+  3 Saga facts are ALSO parser-derived, so need both), both-on revealed all
+  8 — confirms independent-AND toggle logic is right, not a double-count/
+  conflict bug. fin/2 (Ultima, Origin of Oblivion — genuinely non-Saga) —
+  "Show parser-derived facts (5)" present but NO "Show type-derived facts"
+  checkbox at all (count 0, `v-if` guard correctly suppresses it). No
+  console/page errors on any of the three. `npx vue-tsc --noEmit` and
+  `npm run typecheck` both show only the same 2 PRE-EXISTING unrelated
+  failures already on record above (`functional-model/mana.ts`,
+  `server/api/tokens/by-key.ts`); `npx vitest run` 644/649 (same 5
+  pre-existing unrelated `tagging/sets/*`/`tagging/card-enrichment-status
+  .json` ENOENT failures from the separate historical-sets sweep, confirmed
+  untouched by this change).
+  No contract mismatch to flag — `card-schema.md` already documents
+  `Fact.provenance` accurately; `TYPE_DERIVED_RECOGNIZER_IDS` itself is
+  presentation-layer classification metadata, not part of the engine↔card
+  fact shape, so nothing there needed updating.

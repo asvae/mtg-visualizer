@@ -1,42 +1,6 @@
 {
   "source": [
     {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "costReductionPerControlled": {
-        "amountPerMatch": 1,
-        "subtype": "Town"
-      },
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
       "event": "drawCard",
       "controller": "you",
       "annotations": [

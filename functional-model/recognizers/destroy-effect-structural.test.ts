@@ -47,7 +47,7 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
     const result = recognizeDestroyEffectStructural(structuralInput('Summon: Bahamut', summonBahamut));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts).toHaveLength(4);
+    expect(result.facts).toHaveLength(6);
     const expectedDestroyFact = {
       role: 'source',
       fact: { event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true, annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }] },
@@ -65,7 +65,19 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
       },
       provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
     };
-    expect(result.facts).toEqual([expectedDestroyFact, expectedDiesFact, expectedDestroyFact, expectedDiesFact]);
+    const expectedSinkFact = {
+      role: 'sink',
+      fact: { to: 'Battlefield', types: { not: ['Land'] }, annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }] },
+      provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+    };
+    expect(result.facts).toEqual([
+      expectedDestroyFact,
+      expectedDiesFact,
+      expectedSinkFact,
+      expectedDestroyFact,
+      expectedDiesFact,
+      expectedSinkFact,
+    ]);
     // Real byproduct check, same discipline Recognizers A/B's own tests use:
     // the claimed span really does read the real destroy clause verbatim.
     const input = structuralInput('Summon: Bahamut', summonBahamut);
@@ -95,6 +107,11 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
         },
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
+      {
+        role: 'sink',
+        fact: { to: 'Battlefield', types: { not: ['Land'] }, annotations: [{ target: 'oracle', line: 1, start: 0, end: 32 }] },
+        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+      },
     ]);
   });
 
@@ -116,6 +133,16 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
           to: 'Graveyard',
           target: { types: { has: ['Creature'] }, power: { min: 4 } },
           targeted: true,
+          annotations: [{ target: 'oracle', line: 3, start: 10, end: 57 }],
+        },
+        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+      },
+      {
+        role: 'sink',
+        fact: {
+          to: 'Battlefield',
+          types: { has: ['Creature'] },
+          power: { min: 4 },
           annotations: [{ target: 'oracle', line: 3, start: 10, end: 57 }],
         },
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },

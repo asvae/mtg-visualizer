@@ -240,9 +240,15 @@ under `app/`/`server/` and have been deleted outright from `synergy.ts`.
 
 ## Parser-derived facts (`Fact.provenance`) — 2026-09-13, `PRD_AUTOMATED_AUTHORING.md` wiring
 
-`functional-model/recognizers/` (two real recognizers so far —
+`functional-model/recognizers/` (two real recognizers at first —
 `instant-sorcery-resolves-to-graveyard`, `permanent-enters-battlefield-normally`
-— see `functional-model/PRD_AUTOMATED_AUTHORING.md`) is now wired into real
+— **both now RETIRED** (the latter 2026-09-14, the former the same day,
+third instance of this exact pattern — see this file's own dated entries
+further down: "a normal permanent's self-cast/self-entersBattlefield fact
+pair is no longer hand/parser-authored `Fact` data at all" and "a normal
+Instant/Sorcery's self-cast-from-Hand/self-graveyard fact pair is no longer
+hand/parser-authored `Fact` data at all") — see
+`functional-model/PRD_AUTOMATED_AUTHORING.md`) is now wired into real
 per-card generated data via `functional-model/scripts/apply-recognizers.mjs`.
 Real, checked-in `cards/<slug>/synergy.json` files now carry a mix of
 hand-authored facts (unmarked, as always) and parser-derived facts —
@@ -252,11 +258,22 @@ hand-authored facts (unmarked, as always) and parser-derived facts —
   (`synergy.ts`) — present ONLY on a fact a recognizer produced; absent
   entirely on every hand-authored fact (there is still no explicit
   `origin: 'agent'` marker — absence IS the agent-authored signal). `rule`
-  names which recognizer (`'instant-sorcery-resolves-to-graveyard'` /
-  `'permanent-enters-battlefield-normally'` today — a plain `string` on the
-  `Fact` type itself, not a closed union, since `synergy.ts` deliberately
-  doesn't import from `recognizers/`; the exhaustive catalog lives in that
-  directory's own `RecognizerId`).
+  names which recognizer produced it — today's real, still-active catalog
+  is `destroy-effect-structural`, `drawCard-effect-structural`,
+  `saga-lore-and-sacrifice-structural`, `dies-trigger-structural`,
+  `lifegain-trigger-structural`, `dealDamage-effect-structural`,
+  `putCounter-broadcast-structural`, `attacks-trigger-structural`,
+  `putCounterTarget-effect-structural`, `addMana-effect-structural`,
+  `putCounterSelf-effect-structural`, `putCounterMagnitude-clause-structural`
+  (the last 2 added 2026-09-14, closing Aerith Gainsborough's own last 2
+  unprovenanced facts — see `functional-model/PRD_AUTOMATED_AUTHORING.md`'s
+  own dated entry)
+  (`instant-sorcery-resolves-to-graveyard`/
+  `permanent-enters-battlefield-normally` can no longer appear on any fact
+  — both retired, see below) — a plain `string` on the `Fact` type itself,
+  not a closed union, since `synergy.ts` deliberately doesn't import from
+  `recognizers/`; the exhaustive catalog lives in that directory's own
+  `RecognizerId`).
 - **Purely informational, same bucket as `targeted`/`untilEndOfTurn`/
   `costReductionPerControlled`** — not consulted by `factsInteract`, not
   added to `themeOf`. A parser fact interacts/matches identically to a
@@ -520,7 +537,253 @@ from everything (edges, facts, etc). No -1, no nothing."
   11 that WERE dropped. Left untouched per the explicit literal instruction
   ("do NOT touch these 5"), not auto-corrected — a human should decide
   whether to fold it into the same removal in a follow-up.
+- **PARKED (2026-09-14, later same day), by explicit user decision — not
+  removed.** The `hasPrintedLifelink`/`syntheticLifelinkFact` match-time
+  synthesis described in the two bullets above is being reconsidered and
+  may come back later; `synergy.ts` keeps both functions in place as
+  dead/draft code but the injection itself is now a hard no-op behind
+  `const LIFELINK_SYNTHETIC_FACT_ENABLED = false`. The 12 real cards this
+  used to cover (the 11 above plus Cecil, Redeemed Paladin's own back-face
+  fact, folded in as part of this same restoration) have their own
+  explicit `{event:'lifegain', controller:'you', ...}` SOURCE fact back in
+  `synergy.json` (same shape as before, minus `value` — that field stays
+  permanently gone project-wide, unrelated to this reversal). The paired
+  `synergy.test.ts` describe block is `describe.skip`, not deleted, ready
+  to re-enable alongside the flag. The OTHER two synthetic patterns
+  (`isNormalPermanent`/`isNormalInstantOrSorcery`) are NOT part of this
+  decision and remain fully active.
 
+- **New (2026-09-14): a normal permanent's self-`cast`/self-
+  `entersBattlefield` fact pair is no longer hand/parser-authored `Fact`
+  data at all — same pattern the Lifelink removal above already
+  established, applied to `permanent-enters-battlefield-normally`
+  (`functional-model/recognizers/`) instead of a printed keyword.** 210
+  real pool cards used to carry an explicit, parser-derived
+  (`provenance.rule: 'permanent-enters-battlefield-normally'`) `{event:
+  'cast', from:'Hand', target:'self'}` + `{event:'entersBattlefield',
+  to:'Battlefield', controller:'you', subject:'self', target:'self'}` pair
+  — a literal restatement of "this is a normal permanent," confirmed
+  (pool-wide field scan, all 420 tagged facts) to carry no case with any
+  extra real constraint beyond that canonical shape. Dropped pool-wide.
+  Real synergy-matching coverage doesn't regress: `synergy.ts`'s
+  `findInteractionsForCard` now synthesizes the equivalent pair at MATCH
+  TIME (`isNormalPermanent`/`syntheticCastFact`/
+  `syntheticEntersBattlefieldFact`) for any non-token permanent (Creature/
+  Artifact/Enchantment/Planeswalker/Battle — a Land is played, not cast,
+  same exclusion the retired recognizer used) that doesn't already declare
+  a real self-cast/self-entersBattlefield fact of its own. Same "never
+  written to any `synergy.json`, no `annotations`" treatment the synthetic
+  Lifelink fact already gets, same reasons.
+  - **The recognizer file itself is deleted**
+    (`functional-model/recognizers/permanent-enters-battlefield-normally.ts`),
+    not kept inert — its whole scope was producing these two facts.
+    Removed from `apply-recognizers.mjs`'s `RECOGNIZERS` list and from
+    `recognizers/types.ts`'s `RecognizerId` union (a fact carrying this
+    `provenance.rule` string can no longer exist anywhere in the pool).
+    `server/api/recognizer-source/[rule].get.ts`'s hand-kept
+    `RECOGNIZER_IDS` mirror was updated to match by `engine` directly (same
+    "small, mechanical, blocking, card-owned file" precedent the
+    `destroy-effect-structural` miss earlier in this file already
+    established) — `card`/`server` should still double check nothing else
+    hand-lists this rule id (a concurrent, in-flight `server/api/
+    recognizers/index.get.ts` edit at the time of this pass still has a
+    stale `'permanent-enters-battlefield-normally'` display-label entry;
+    engine left it alone since that file was mid-edit by another session,
+    but it's now a dead label for a rule that can never appear on a served
+    fact again).
+  - **One deliberate, known, small broadening this removal can't avoid**:
+    the retired recognizer used to DECLINE this pair for a card whose own
+    oracle text describes its own entrance as modified (enters tapped/with
+    a counter/as a copy/face down, CR 614.12) — a distinction
+    `isNormalPermanent` can no longer make, since `CardDefinition` has no
+    structured "enters tapped" field anywhere (confirmed: the 3 real pool
+    cards with this shape — `tonberry`, `shambling-cie-th`, `elixir` — all
+    model it as an ordinary `onEnter` trigger effect tapping/counter-ing a
+    pool-filtered candidate, a shape structurally IDENTICAL to a
+    genuinely different card's own ETB trigger targeting something else
+    entirely, e.g. `cloudbound-moogle`/`ice-flan`). These 3 cards (plus 17
+    more that simply predate `apply-recognizers.mjs` ever running on them —
+    either a not-yet-migrated empty `synergy.json`, or a real card outside
+    that script's own oracle-text lookup, e.g. the historical-sets sweep;
+    all 17 confirmed ordinary permanents by direct inspection, nothing
+    entering abnormally) now get the synthetic pair for the first time.
+    Not a correctness regression — the CAST/ENTERS events are still
+    literally true either way, only the optional `tapped` field (which the
+    old recognizer never set either) is left unconstrained rather than
+    unclaimed — but a real, visible behavior change from before this pass,
+    flagged here rather than silently absorbed into "removed the redundant
+    fact" framing. See `functional-model/synergy.ts`'s `isNormalPermanent`
+    doc comment for the full reasoning.
+  - **Genuine special case confirmed kept, unaffected by this change**:
+    `zack-fair`'s own hand-authored "enters with a +1/+1 counter" pair (CR
+    614.12, no `provenance` tag — the recognizer always declined it) is
+    untouched (nothing to strip, no `provenance.rule` tag on it) and never
+    gets a synthetic duplicate layered on top (`findInteractionsForCard`'s
+    own "already declared" skip, same as a card with its own real lifegain
+    ability skips the synthetic Lifelink fact). No OTHER genuine special
+    case was found among the 210 recognizer-tagged cards — every one was
+    either the exact canonical shape or a harmless schema-drift variant
+    (a stale pre-`subject`-field `entersBattlefield`, or a redundant
+    explicit `controller:'you'` on `cast` that `effectiveController`
+    already derives for free).
+  - **Known, accepted card-side consequence, same shape as the Lifelink
+    one above**: these 210 cards' own Facts tab no longer shows "Cast a
+    spell"/"Enters the battlefield" rows for this pair at all (fed from raw
+    `synergy.json`, not the synthesized-at-match-time path) — intended, not
+    a regression. Live-verified via a running dev server against
+    `fin/87` (Ahriman): `functionalModel.synergy.source` no longer lists
+    `cast`/`entersBattlefield`, while the Interactions tab and
+    `/api/graph-links` both still show a real, populated
+    `entersBattlefield` produce group/edge (127 matches / 261 real "enters
+    the battlefield" edges touching Ahriman alone) via the synthesized
+    fact — the Interactions/graph path was unaffected by the removal.
+
+- **New (2026-09-14, same day, third instance of this exact pattern): a
+  normal Instant/Sorcery's self-`cast`-from-Hand/self-graveyard fact pair
+  is no longer hand/parser-authored `Fact` data at all** — same pattern
+  the Lifelink and normal-permanent removals above already established,
+  applied to `instant-sorcery-resolves-to-graveyard`
+  (`functional-model/recognizers/`) instead. 62 real pool cards used to
+  carry an explicit, parser-derived (`provenance.rule:
+  'instant-sorcery-resolves-to-graveyard'`) `{event:'cast', from:'Hand',
+  target:'self'}` + `{to:'Graveyard', controller:'you', subject:'self'}`
+  pair — a literal restatement of "this is a normal Instant/Sorcery,"
+  confirmed (pool-wide field scan, all 124 tagged facts) to carry no case
+  with any extra real constraint beyond that canonical shape. Dropped
+  pool-wide. Real synergy-matching coverage doesn't regress: `synergy.ts`'s
+  `findInteractionsForCard` now synthesizes the equivalent pair at MATCH
+  TIME (`isNormalInstantOrSorcery`/`syntheticCastFact` — reused verbatim
+  from the normal-permanent case, since the CAST half is the byte-identical
+  real fact either way — `/syntheticInstantSorceryGraveyardFact`) for any
+  non-Adventure Instant/Sorcery that doesn't already declare a real
+  self-cast-from-Hand/self-graveyard fact of its own. Same "never written
+  to any `synergy.json`, no `annotations`" treatment the synthetic
+  Lifelink/normal-permanent facts already get, same reasons.
+  - **The recognizer file itself is deleted**
+    (`functional-model/recognizers/instant-sorcery-resolves-to-
+    graveyard.ts`), not kept inert — its whole scope was producing these
+    two facts. Removed from `apply-recognizers.mjs`'s `RECOGNIZERS` list
+    and from `recognizers/types.ts`'s `RecognizerId` union (a fact carrying
+    this `provenance.rule` string can no longer exist anywhere in the
+    pool). `server/api/recognizer-source/[rule].get.ts`'s hand-kept
+    `RECOGNIZER_IDS` mirror was updated to match by `engine` directly, same
+    "small, mechanical, blocking, card-owned file" precedent the
+    `destroy-effect-structural` miss/`permanent-enters-battlefield-normally`
+    removal already established. **Not yet checked/fixed**: `server/api/
+    recognizers/index.get.ts`'s own separate, hand-kept `TITLES` display-
+    label map still has a `'instant-sorcery-resolves-to-graveyard'` entry —
+    non-blocking (that map is a plain `Record<string,string>`, not typed
+    against `RecognizerId`, so it compiles fine either way) but now a dead
+    label for a rule that can never appear on a served fact again, same
+    situation the `permanent-enters-battlefield-normally` removal flagged
+    for that file at the time (since resolved — that stale entry is gone
+    from `TITLES` today); `card`/`ui` should clean up the new one the same
+    way when next touching that file.
+    `recognizers/recognizers.test.ts` (the dedicated test file for both
+    original text-only prototype recognizers, "Recognizer A"/"Recognizer
+    B") is ALSO deleted outright, not left with an inert comment-only body
+    — Recognizer B's own retirement had already reduced this file to "one
+    real describe block (A) plus one retirement comment (B)"; retiring A
+    too would have left zero actual tests, which Vitest hard-fails on
+    ("No test suite found in file") rather than silently skipping. The
+    equivalent describe block in `functional-model/synergy.test.ts` (see
+    below) is the durable, still-executing record of this recognizer's own
+    real accept/decline cases.
+  - **One deliberate, known, small broadening this removal can't avoid**:
+    the retired recognizer used to DECLINE this pair for a card whose own
+    oracle text names a genuinely self-referential exile/shuffle override
+    ("including/exile/shuffle this card/spell") — a distinction
+    `isNormalInstantOrSorcery` can no longer make, since `CardDefinition`
+    carries no oracle text at all (`synergy.ts` has no access to a card's
+    real Scryfall body text to check for this). Checked directly
+    (2026-09-14): the ONLY real pool card the retired recognizer ever
+    declined for this reason, `ultima`, already carries its own
+    hand-authored (untagged, no `provenance`) self-cast/self-graveyard fact
+    pair regardless — the recognizer's own module doc comment already
+    called this "a likely-latent gap in that specific hand-authored card,
+    not something this recognizer should replicate," so `ultima` keeping
+    that pair (now via the "already declared, skip the synthetic
+    duplicate" guard) is not a new regression, just the same pre-existing
+    state under a new mechanism.
+  - **Genuine special case confirmed kept, unaffected by this change**:
+    Adventure instant/sorcery halves (CR 715.3d — exiled, not put into the
+    graveyard, on resolution; every real Adventure half in this pool prints
+    "Adventure" as a literal typeLine subtype) are still excluded by a
+    structural typeLine check `isNormalInstantOrSorcery` reuses verbatim
+    from the retired recognizer's own `isAdventure` — confirmed none of the
+    5 real FIN Town//Adventure cards' own Adventure halves gain this pair.
+    Flashback/"cast from a graveyard" cards (`auron-s-inspiration`,
+    `from-father-to-son`, `dreams-of-laguna`, `retrieve-the-esper`, and
+    siblings) are deliberately NOT treated as a special case, matching the
+    retired recognizer's own explicit reasoning: their normal cast-from-
+    Hand resolution still goes to the graveyard exactly like any other
+    Instant/Sorcery, so they correctly keep BOTH their own genuinely
+    distinct, separately-authored `{event:'cast', from:'Graveyard', ...}` +
+    `{to:'Exile', ...}` Flashback-recast facts (real, card-specific data)
+    AND the synthetic normal-Hand-cast/graveyard pair — the synthetic-fact
+    "already declared" dedup guard checks `from: 'Hand'` specifically
+    (narrower than the normal-permanent case's own check) for exactly this
+    reason, so a Flashback card's own real `from: 'Graveyard'` fact can
+    never wrongly suppress the synthetic `from: 'Hand'` one. **Not directly
+    observable via `findInteractionsForCard`'s own group output** (a
+    `from`-only fact is genuinely zone-shaped but has no resolvable
+    `effectiveZone`, so `factsInteract` always returns `false` for it,
+    regardless of whether the dedup guard fired correctly or wrongly —
+    same structural blind spot `synergy.test.ts`'s own normal-permanent
+    describe block already documents for its own cast fact) — verified by
+    direct code inspection instead, and via the real pool
+    (`auron-s-inspiration`/`from-father-to-son` genuinely keep their own
+    distinct `from: 'Graveyard'` fact after the strip, confirmed directly).
+  - **`functional-model/scripts/verify-synergy.mjs` also updated** — its
+    reverse "every produce-relevant ACTION must be explained" check reads
+    each card's raw on-disk `source` array directly (no visibility into
+    `synergy.ts`'s own match-time synthesis), and `harness.ts`'s scenario
+    runner naturally logs a real `{fn:'move', from:'stack', to:'Graveyard'}`
+    trace entry for nearly every plain Instant/Sorcery scenario — so
+    stripping the stored fact pool-wide surfaced ~20 brand-new soft notes
+    before this fix (confirmed via a before/after comparison scoped to all
+    62 affected cards). Added `isNormalInstantOrSorceryGraveyardMove` (same
+    structural mirror of `isNormalInstantOrSorcery`, same "note-not-fail,
+    now correctly suppressed" treatment the file's own `moveTo`-to-Exile
+    promotion comment already established for an analogous case) to that
+    reverse check. Reverified after the fix: the scoped 62-card comparison
+    and the FULL pool's own before/after output are now byte-identical.
+  - **Known, accepted card-side consequence, same shape as the Lifelink/
+    normal-permanent ones above**: these 62 cards' own Facts tab no longer
+    shows "Cast a spell"/"graveyard presence" rows for this pair at all
+    (fed from raw `synergy.json`, not the synthesized-at-match-time path)
+    — intended, not a regression.
+  - **Live-verified, not just JSON-level** (per standing convention):
+    started a real `nuxt dev` instance (a different port — another
+    session already held :3000), curled `/api/card/fin/5` (Aerith Rescue
+    Mission, one of the 62 stripped cards) — `functionalModel.synergy
+    .source` no longer lists `cast`/the bare graveyard fact, but
+    `interactions` still shows a real, populated synthesized `{to:
+    'Graveyard', subject:'self'}` source group (13 matches), and
+    `/api/graph-links?set=fin` shows 176 total edges touching Aerith
+    Rescue Mission, 13 of them graveyard-presence edges via the
+    synthesized fact. Dev server stopped after (confirmed port free); a
+    DIFFERENT, unrelated `nuxt dev` process on :3000 was already running
+    under some other session — left alone, not mine.
+
+- **New recognizers (2026-09-14, fin/3-10 mechanization pass)**: 6 more
+  wired into the real pipeline, `Fact.provenance.rule` is now one of 20
+  strings — `ptFormula-scalingPump-structural`, `digReveal-effect-
+  structural`, `flashback-alternateCost-structural`, `gainLife-effect-
+  structural`, `landfall-trigger-structural`, `triggerDoubling-
+  selfAndAttachedEquipment-structural` — plus `destroy-effect-structural`
+  extended to also emit a paired SINK fact (only when its own `target`
+  narrows to a real type filter). See `functional-model/
+  PRD_AUTOMATED_AUTHORING.md`'s own dated section for the full per-
+  recognizer whole-pool-check reasoning and the real declines (token
+  creation, "fixed pump," Cloud's own search-for-Equipment `validType`
+  divergence) left hand-authored on purpose. `card`/`server` action items:
+  same as every prior recognizer addition — `server/api/recognizer-source/
+  [rule].get.ts`'s `RECOGNIZER_IDS` and `functional-model/recognizers/
+  types.ts`'s `RecognizerId` union both updated this pass (not left as a
+  follow-up miss); `server/api/recognizers/index.get.ts`'s `TITLES` map
+  was NOT updated for these 6 (that map already falls back to a
+  title-cased id when absent, same as most existing recognizers).
 - `card` agent must not assume anything about `Effect` kinds or
   `resolveCard()` internals beyond what's in `synergy.json`/`trace.json` —
   if presenting a fact requires reading `definition.ts` directly, that's a

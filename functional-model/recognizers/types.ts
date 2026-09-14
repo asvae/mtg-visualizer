@@ -29,8 +29,14 @@ export interface RecognizerInput {
    * True when this face is `CardDefinition.backFace` (`card.ts`'s own doc
    * comment: "a transforming DFC's back face") — set by the caller
    * (`apply-recognizers.mjs`'s own `faces` array construction, mirrored by
-   * `recognizers.test.ts`'s own `faceOf` helper) from its own already-tracked
-   * `face: 'front' | 'back'`, never derived independently here.
+   * a plain-TEXT recognizer's own `.test.ts`-local `faceOf` helper, e.g.
+   * `dies-trigger-structural.test.ts`'s/`attacks-trigger-structural.test
+   * .ts`'s/`lifegain-trigger-structural.test.ts`'s own copies —
+   * `recognizers.test.ts` itself, which used to define the original copy of
+   * this helper for the two now-retired original text-only recognizers
+   * (Recognizers A/B), was deleted 2026-09-14 once both had nothing left to
+   * test) from its own already-tracked `face: 'front' | 'back'`, never
+   * derived independently here.
    *
    * **Confirmed NOT a universal "this face is never independently cast"
    * signal** (2026-09-13, direct pool scan for the
@@ -46,8 +52,12 @@ export interface RecognizerInput {
    * permanent type, so the two checks never actually conflict today — but a
    * recognizer relying on `isBackFace` alone, with no type gate of its own,
    * would be wrong to assume it always means "entered via transform, never
-   * cast"). See `permanent-enters-battlefield-normally.ts`'s own use of this
-   * flag for the one recognizer that currently needs it.
+   * cast"). `permanent-enters-battlefield-normally.ts` used to be the one
+   * recognizer that read this flag (retired 2026-09-14 — see
+   * `functional-model/synergy.ts`'s `isNormalPermanent` doc comment for
+   * where its job went); no recognizer currently registered in
+   * `apply-recognizers.mjs` reads `isBackFace` today. Kept on this shared
+   * input shape rather than removed, in case a future recognizer needs it.
    */
   isBackFace?: boolean;
 }
@@ -58,8 +68,19 @@ export interface RecognizerInput {
  * one small enum a future "rule review" pass (PRD's own parked idea) can
  * enumerate exhaustively. */
 export type RecognizerId =
-  | 'instant-sorcery-resolves-to-graveyard'
-  | 'permanent-enters-battlefield-normally'
+  // 'permanent-enters-battlefield-normally' retired 2026-09-14 — its job
+  // (a normal permanent's self-cast/self-entersBattlefield fact pair) is
+  // now synthesized at match time (`functional-model/synergy.ts`'s
+  // `isNormalPermanent`), never stored as a `Fact.provenance.rule` value —
+  // removed from this union rather than kept as a dead entry, since a
+  // fact carrying this string can no longer exist anywhere in the pool.
+  //
+  // 'instant-sorcery-resolves-to-graveyard' retired 2026-09-14, same day,
+  // third instance of this exact pattern — its job (a normal Instant/
+  // Sorcery's self-cast-from-Hand/self-graveyard fact pair) is now
+  // synthesized at match time (`functional-model/synergy.ts`'s
+  // `isNormalInstantOrSorcery`), never stored as a `Fact.provenance.rule`
+  // value — removed from this union the same way, for the same reason.
   | 'destroy-effect-structural'
   | 'drawCard-effect-structural'
   | 'saga-lore-and-sacrifice-structural'
@@ -69,7 +90,24 @@ export type RecognizerId =
   | 'putCounter-broadcast-structural'
   | 'attacks-trigger-structural'
   | 'putCounterTarget-effect-structural'
-  | 'addMana-effect-structural';
+  | 'addMana-effect-structural'
+  | 'putCounterSelf-effect-structural'
+  | 'putCounterMagnitude-clause-structural'
+  // 2026-09-14 follow-up (fin/3-10 mechanization pass, closing several of
+  // these 7 cards' own remaining unprovenanced facts) — `landfall-trigger-
+  // structural`/`attacks-trigger-structural`-family text recognizers,
+  // `flashback-alternateCost-structural`/`ptFormula-scalingPump-structural`/
+  // `triggerDoubling-selfAndAttachedEquipment-structural` (all 3 read a
+  // CARD-DEFINITION-LEVEL structured field, same family as `saga-lore-and-
+  // sacrifice-structural`), and `gainLife-effect-structural`/`digReveal-
+  // effect-structural` (both structural, same family as `destroy-effect-
+  // structural`/`putCounterSelf-effect-structural`).
+  | 'landfall-trigger-structural'
+  | 'flashback-alternateCost-structural'
+  | 'gainLife-effect-structural'
+  | 'ptFormula-scalingPump-structural'
+  | 'digReveal-effect-structural'
+  | 'triggerDoubling-selfAndAttachedEquipment-structural';
 
 /**
  * `FactProvenance` itself is now DEFINED on `Fact` (`synergy.ts`, wired in
@@ -146,3 +184,43 @@ export type RecognizerResult =
  * for what is, from a recognizer's point of view, plain annotation
  * plumbing. */
 export { toLineOffset } from '../synergy';
+
+/**
+ * Recognizer ids whose match is entirely predictable from a card's own
+ * printed type/supertype alone, with zero card-specific judgment involved
+ * (e.g. every Saga gets CR 714's lore-counter/sacrifice/dies facts purely by
+ * being a Saga) — as opposed to a match that required reading THAT card's
+ * own specific written ability content. Originally authored 2026-09-14 (`ui`
+ * agent, recognizer-coverage page's "hide busywork Saga review rows"
+ * feature) as a local constant in `server/api/recognizers/index.get.ts`;
+ * hoisted here the same day (`card` agent, card-page Facts-tab "Show
+ * type-derived facts" checkbox) so BOTH that server route and the card
+ * page's own client-side Facts tab import the exact same classification
+ * instead of each hand-keeping a copy that could drift. Lives here (not in
+ * `server/api/recognizer-source/[rule].get.ts`, which already hand-keeps the
+ * sibling `RECOGNIZER_IDS` id list) specifically because that file pulls in
+ * `node:fs`/`node:path` at module scope — fine for a server-only route, but
+ * this module also needs to be safely importable from a plain client-side
+ * Vue page (this app's `/app` pages are SPA-only), and this file (like
+ * `../synergy`, which it already re-exports pieces of) has no Node-only
+ * imports.
+ *
+ * Checked directly against the real pool (every recognizer file's own
+ * module doc comment, 2026-09-14): today only
+ * `'saga-lore-and-sacrifice-structural'` qualifies, and it qualifies for
+ * EVERY real match it has (both its "3-fact" and its rarer "1-fact,
+ * sacrifice+dies pair conservatively declined" matches are equally
+ * structural). Every other recognizer keys off that SPECIFIC card's own
+ * written effect/trigger content, or requires an ABSENCE of override text
+ * specific to that card, so none of their matches qualify — see
+ * `server/api/recognizers/index.get.ts`'s own (more detailed) header
+ * comment for the full per-recognizer reasoning; not re-derived here to
+ * avoid a second copy of that same analysis going stale independently.
+ *
+ * A plain `Set<string>` (not `Set<RecognizerId>`), matching `Fact.provenance
+ * .rule`'s own type (`synergy.ts`: "a plain `string`, not `recognizers/
+ * types.ts`'s own narrower `RecognizerId` union") — the whole point of this
+ * constant is to be checked against a served `Fact`'s `provenance.rule`,
+ * which is untyped-narrower than `RecognizerId` by design.
+ */
+export const TYPE_DERIVED_RECOGNIZER_IDS: ReadonlySet<string> = new Set<string>(['saga-lore-and-sacrifice-structural']);

@@ -521,6 +521,49 @@ resume alone (session transcripts are swept after ~30 days).
     afterward) to leave the dev-only override file exactly as found.
     `npm run typecheck` clean throughout.
 
+- 2026-09-15: `server/api/cards.ts`'s discover-typeahead leg (the `name:"..."`
+  query shape SearchBox.vue's `runDiscoverFetch` sends on every debounced
+  keystroke) now resolves against `data/cards.db` first, same local-DB
+  pattern `server/api/cards/by-names.ts` already established for its own
+  earlier 429 lockout — this was the SAME root cause resurfacing on a
+  DIFFERENT route (discover typeahead had never been given the by-names.ts
+  treatment). Root cause of the actual rate-limit hit today: repeated
+  automated Playwright runs hitting this un-batched live-Scryfall leg all
+  day, not the debounce (debounce logic untouched, out of scope per the
+  task).
+  - `NAME_QUERY_RE = /^name:"([^"]*)"$/i` matches ONLY that exact shape —
+    deliberately narrow, so a free-typed `?sf=` query (real Scryfall search
+    grammar: color/type/set filters, boolean combos, printing-intent flags)
+    still goes live unchanged. `db` null (prod, gitignored 600MB+ file never
+    deployed) also falls through unchanged — same `existsSync`-at-module-load
+    pattern by-names.ts uses, verified by control-flow reasoning (the new
+    `if (db && nameTerm) {...}` block is a pure early-return; no other branch
+    depends on it) rather than physically yanking the 600MB file off a live
+    dev server mid-session.
+  - Unlike by-names.ts's own EXACT-name lookup, this is a substring/prefix
+    typeahead: two-step query (1. `SELECT DISTINCT name ... WHERE name LIKE
+    '%term%' ESCAPE '\'`, prefix matches ranked first via a `CASE WHEN name
+    LIKE 'term%'` tiebreak, then shorter/alphabetical, capped at
+    `MAX_CARDS+1` to detect truncation cheaply; 2. per matching name, reuse
+    by-names.ts's own "best printing" pick — `is_normal DESC, released_at
+    DESC LIMIT 1`). A DFC's already-combined `"Front // Back"` name column
+    means a front-face-only search term (e.g. "Jecht") already substring-
+    matches without needing by-names.ts's own separate `LIKE 'term // %'`
+    fallback query — confirmed live, no extra logic needed for that case.
+  - Verified live against the running dev server (`data/cards.db` present
+    locally): `name:"Jecht"` resolves in ~150ms with NO Scryfall response
+    headers (confirms local path, not network) to the correct DFC
+    (`Jecht, Reluctant Guardian // Braska's Final Aeon`); `name:"Chocobo"`
+    returns 9 correctly-ranked/prefix-first results just as fast; a
+    non-name-shaped live query (`set:fin type:creature`) still takes ~5s
+    (real paginated Scryfall network round trip, unchanged). `npm run
+    typecheck` clean (same 2 pre-existing unrelated errors as always —
+    `functional-model/mana.ts`, `server/api/tokens/by-key.ts`); `npx vitest
+    run` — 677 passed, same pre-existing 5 `tagging/sets/*`-data-missing
+    failures as before (confirmed unrelated, sandbox-only).
+  - Didn't touch `by-names.ts`, `set-order`, or any other cards.db consumer —
+    scoped to this one route's name-search leg per the task.
+
 ## Open questions
 
 (none currently open on the synergy-edges toggle — see the SUPERSEDES entry
@@ -2172,3 +2215,83 @@ worth remembering the pitfalls before re-deriving them:
     `server/api/tokens/by-key.ts`); `npx vitest run` — same pre-existing 5
     failures (missing `tagging/sets/*` data in this sandbox), otherwise
     green. No `qtyBoost`/deck-import multiplier logic touched.
+
+- 2026-09-14, `/app/recognizers` "hide type-derived (Saga) busywork rows"
+  task — added a "Show type-derived facts (N)" checkbox to
+  `RecognizerEntryCard.vue`, default UNCHECKED (hidden), gating a subset of
+  each recognizer's own "Matched cards" list; header's own "Matched cards
+  (N)" count stays the TOTAL, unaffected by the toggle, per the task's own
+  spec.
+  - **Classification mechanism chosen: per-match field
+    (`RecognizerMatchedCard.typeDerived: boolean`), computed server-side
+    (`server/api/recognizers/index.get.ts`) from a small recognizer-ID
+    lookup table (`TYPE_DERIVED_RECOGNIZER_IDS`, currently just
+    `{'saga-lore-and-sacrifice-structural'}`)**, not a bare recognizer-level
+    flag on the recognizer's own metadata — the task explicitly warned a
+    recognizer could in principle mix type-derived and substantive matches,
+    so the SHAPE stays per-match (future-proof, no redesign needed if that
+    ever happens) even though today's real pool genuinely IS all-or-nothing
+    per recognizer (verified directly, see below) and the lookup table
+    itself is therefore recognizer-keyed.
+  - **Verified against the real pool, not assumed** (read every recognizer
+    file's own module doc comment, `functional-model/recognizers/*.ts`):
+    only `saga-lore-and-sacrifice-structural` qualifies as type-derived —
+    its facts (CR 714 lore-counter, plus a conditionally-declined
+    sacrifice+dies pair) come ENTIRELY from a face's own `typeLine`
+    ("Saga" subtype) + named chapter-trigger STRUCTURE, never that specific
+    card's own written effect content. The sacrifice+dies decline (some
+    Sagas get 1 fact, most get 3 — confirmed via a real grep across
+    `functional-model/cards/*/synergy.json`: 7 of 20 real Saga matches are
+    1-fact, not the "always exactly 3" the task's own motivating example
+    assumed) is STILL structural, not textual judgment (it reads whether
+    the final chapter's own `Effect`/`triggers` structure contains a
+    `custom`/`program` node, never oracle text) — so both shapes count as
+    type-derived, not just the 3-fact case. Every OTHER recognizer in the
+    real pool (`destroy`/`drawCard`/`dealDamage`/`putCounter*`/`addMana`-
+    effect-structural, `dies`/`lifegain`/`attacks`-trigger-structural) keys
+    off that SPECIFIC card's own authored `Effect` or a literal trigger
+    clause that only SOME cards of the relevant type actually print — not
+    predictable from type alone. `instant-sorcery-resolves-to-graveyard`/
+    `permanent-enters-battlefield-normally` also don't qualify — matching
+    requires confirming the ABSENCE of card-specific override text
+    ("enters tapped," an exile clause, etc.), which is per-card judgment,
+    not a type-derived guarantee. Confirmed via a live `/api/recognizers`
+    fetch: exactly 1 recognizer has any `typeDerived:true` matches, and
+    100% of that recognizer's own matches (20/20) are flagged — matches the
+    "verify before assuming all-or-nothing" instruction, and happens to
+    land on "yes, all-or-nothing today" rather than falsifying it.
+  - **UI**: `UCheckbox` (same component/convention FilterPanel.vue's own
+    "Show synergy edges"/"Relation hubs (prototype)" checkboxes use),
+    rendered `v-if="typeDerivedMatchedCards.length"` — a recognizer with
+    ZERO type-derived matches (every recognizer but the Saga one, today)
+    gets no checkbox at all rather than a permanently-"(0)", inert control.
+    A recognizer whose ENTIRE matched-cards list is type-derived (Saga,
+    today) shows an explicit "Every match here is type-derived — check
+    ... above to see them" empty-state message rather than a bare blank
+    list, so the page never looks broken/empty by default.
+  - Left `functional-model/recognizers/permanent-enters-battlefield-
+    normally.ts`, every `synergy.json`, and `apply-recognizers.mjs`
+    completely untouched, per the task's own constraint — this feature only
+    ever reads `server/api/recognizers/index.get.ts`'s own existing
+    synergy.json-scanning loop, no new file reads added. Mid-task, a
+    concurrent `engine`-agent pass in the same working tree (visible via
+    `git status`) deleted that exact recognizer file and narrowed
+    `RecognizerId`, transiently breaking `npm run typecheck` on an UNRELATED
+    file (`server/api/recognizer-source/[rule].get.ts`'s own hand-kept
+    `RECOGNIZER_IDS` mirror, a known "recurring miss" that file's own
+    comments already document) for one run; didn't touch it (their own
+    in-flight work, not mine to fix mid-collision) and confirmed on a
+    second typecheck run it had already self-resolved (presumably the same
+    engine pass finishing its own edit) — back to the same 2 pre-existing,
+    unrelated errors (`functional-model/mana.ts`, `server/api/tokens/by-
+    key.ts`) as before this task.
+  - Verified live (Playwright against the running dev server): navigating
+    straight to `/app/recognizers/saga-lore-and-sacrifice-structural` shows
+    "Matched cards (20)" header + "Show type-derived facts (20)" checkbox,
+    0 visible card chips + the empty-state message by default; one real
+    checkbox click reveals all 20; unchecking again hides them; 0
+    console/page errors throughout. Confirmed `/app/recognizers/destroy-
+    effect-structural` (a recognizer with no type-derived matches) shows no
+    "Show type-derived facts" control at all. `npx vitest run
+    functional-model/recognizers` — 129 passed (unaffected, no recognizer
+    logic touched).

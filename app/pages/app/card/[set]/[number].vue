@@ -6,6 +6,7 @@ import { orderByTextPosition } from '../../../../lib/factOrder';
 import type { FactRow } from '../../../../lib/factOrder';
 import { describeFact } from '../../../../../functional-model/synergy';
 import type { Fact } from '../../../../../functional-model/synergy';
+import { TYPE_DERIVED_RECOGNIZER_IDS } from '../../../../../functional-model/recognizers/types';
 import type { EnrichedInteractionGroup, ContinuousKeywordGrant } from '../../../../../server/api/card/[set]/[number]';
 import type { CardData, EdgeData, ThemeData, AnnotatedCard, ReviewStatus } from '../../../../types';
 import type { LogEntry, Scenario } from '../../../../../functional-model/harness';
@@ -347,6 +348,39 @@ const hoveredFactKey = ref<string | null>(null);
 const showParserFacts = store.showParserFacts;
 function isParserFact(fact: Fact): boolean {
   return fact.provenance?.origin === 'parser';
+}
+
+// Sibling toggle (2026-09-14) — "type-derived" facts, a strict SUBSET of
+// parser-derived ones whose entire match is structurally implied by the
+// card's own printed type/supertype alone (today's real pool: a Saga's
+// lore-counter/sacrifice/dies facts — every Saga gets essentially the same
+// mechanically-predictable facts, reviewing them per-card is repetitive
+// busywork). Classification lives in `functional-model/recognizers/
+// types.ts`'s own `TYPE_DERIVED_RECOGNIZER_IDS` (shared with the
+// recognizer-coverage page's own identical checkbox,
+// `server/api/recognizers/index.get.ts` + `RecognizerEntryCard.vue` — see
+// that constant's own doc comment for the full "which recognizers qualify"
+// reasoning, not re-derived here) — checked directly against this fact's own
+// `provenance.rule` rather than a server-annotated flag, since `provenance`
+// is already served per fact (same data the parser-derived toggle above
+// already reads). Independent of `showParserFacts`: a fact can be
+// type-derived AND parser-derived (true for every real Saga fact today),
+// so a row's own visibility is gated by BOTH toggles' current states (see
+// `factRowGroups` below), never just one implying the other.
+const showTypeDerivedFacts = store.showTypeDerivedFacts;
+function isTypeDerivedFact(fact: Fact): boolean {
+  return !!fact.provenance?.rule && TYPE_DERIVED_RECOGNIZER_IDS.has(fact.provenance.rule);
+}
+
+// Third sibling toggle (2026-09-14) — "AI" facts, the exact complement of
+// `isParserFact` (no `Fact.provenance` at all — hand-authored, never run
+// through a recognizer). Default ON (see useGraphStore.ts's own comment on
+// showAiFacts) so a fresh viewer sees no change from before this toggle
+// existed. Same AND-gated combination as the other two in `factRowGroups`
+// below, not a separate section.
+const showAiFacts = store.showAiFacts;
+function isAiFact(fact: Fact): boolean {
+  return !isParserFact(fact);
 }
 
 // Recognizer-source lookup for a parser fact's own provenance popover used
@@ -708,13 +742,20 @@ const orderedAllFactRows = computed<FactRow[]>(() => {
   for (const row of factRows.value) (isMainFaceFact(row) ? main : other).push(row);
   return [...orderByTextPosition(main), ...orderByTextPosition(other)];
 });
-// `showParserFacts` toggle applies here only — hidden rows never reach the
-// Facts tab's own render at all (not just visually collapsed), but visible
-// rows keep the exact same single, text-ordered list either way: hiding a
-// row never changes where its neighbors land (`orderedAllFactRows` above is
-// already in final order; filtering it preserves that order).
+// `showParserFacts`/`showTypeDerivedFacts`/`showAiFacts` toggles all apply
+// here (a row must pass ALL THREE — see `isTypeDerivedFact`'s own comment on
+// why they're independent, not one implying the other) — hidden rows never
+// reach the Facts tab's own render at all (not just visually collapsed), but
+// visible rows keep the exact same single, text-ordered list either way:
+// hiding a row never changes where its neighbors land (`orderedAllFactRows`
+// above is already in final order; filtering it preserves that order).
 const factRowGroups = computed<{ label: string | null; rows: FactRow[] }[]>(() => {
-  const visible = orderedAllFactRows.value.filter((row) => showParserFacts.value || !isParserFact(row.fact));
+  const visible = orderedAllFactRows.value.filter(
+    (row) =>
+      (showParserFacts.value || !isParserFact(row.fact)) &&
+      (showTypeDerivedFacts.value || !isTypeDerivedFact(row.fact)) &&
+      (showAiFacts.value || !isAiFact(row.fact)),
+  );
   if (!isMultiFace.value) return [{ label: null, rows: visible }];
   const main: FactRow[] = [];
   const other: FactRow[] = [];
@@ -729,6 +770,11 @@ const factRowGroups = computed<{ label: string | null; rows: FactRow[] }[]>(() =
 // count, which would go to 0 the moment the toggle is switched on and make
 // its own guard/label disappear or read oddly).
 const parserFactsCount = computed(() => factRows.value.filter((row) => isParserFact(row.fact)).length);
+// Same reasoning, sibling count for the type-derived toggle — per-card (0
+// for the vast majority of cards; only a Saga has any today).
+const typeDerivedFactsCount = computed(() => factRows.value.filter((row) => isTypeDerivedFact(row.fact)).length);
+// Same reasoning, third sibling count for the AI-facts toggle.
+const aiFactsCount = computed(() => factRows.value.filter((row) => isAiFact(row.fact)).length);
 
 // Every fact-key's position in the card's own text order (`orderedAllFactRows`,
 // "Main card" then "Other faces/functions" — deliberately the UNFILTERED
@@ -978,10 +1024,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
           &larr; Previous
         </NuxtLink>
         <span v-else class="text-muted/40">&larr; Previous</span>
-        <span class="text-muted">#{{ currentNumber }}</span>
+        <span class="text-muted">#{{ route.params.number }}</span>
         <NuxtLink v-if="nextTarget" :to="`/app/card/${nextTarget.set}/${nextTarget.collectorNumber}`" class="text-muted hover:text-text">
           Next &rarr;
         </NuxtLink>
+        <span v-else class="text-muted/40">Next &rarr;</span>
       </div>
     </div>
 
@@ -1127,27 +1174,40 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
         <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2" />
 
         <template v-if="store.functionalModelTab.value === 'facts'">
-          <!-- Parser-derived facts (`Fact.provenance?.origin === 'parser'` —
-               functional-model/PRD_AUTOMATED_AUTHORING.md) are real,
-               correct boilerplate an agent didn't have to author by hand;
-               default OFF keeps the normal per-card view exactly as
-               uncluttered as before this wiring landed. Toggling them on
-               never splits the list — they render inline, in the same
-               single text-ordered table below (factRowGroups already
-               filters/reorders for this). The wand-sparkles icon in the
-               role cell below marks the OPPOSITE set (agent/AI-authored
-               facts, i.e. no `provenance` at all) — a parser-derived row
-               gets no icon there. -->
-          <UCheckbox
-            v-if="synergy && parserFactsCount > 0"
-            v-model="showParserFacts"
-            class="mb-1.5 ml-[0.5em]"
-            :ui="{ label: 'flex items-center gap-1.5 text-xs text-muted' }"
-          >
-            <template #label>
-              <span>Show parser-derived facts ({{ parserFactsCount }})</span>
-            </template>
-          </UCheckbox>
+          <!-- Three-way fact-provenance filter, one compact line (2026-09-14
+               condensed from two separate, count-gated rows into this —
+               user request: always visible regardless of per-card counts,
+               short labels). Each fact falls into exactly one of these three
+               buckets (`isAiFact`/`isTypeDerivedFact`/`isParserFact`'s own
+               comments) but the toggles are still ANDed independently in
+               `factRowGroups`, not mutually exclusive by construction — see
+               that computed's own comment. All three render inline in the
+               SAME single text-ordered table below, never a separate
+               section (`feedback_facts_text_order_role_icon_only`).
+               "type-keywords" = the type-derived subset (structural, e.g. a
+               Saga's lore/sacrifice facts); "other" = every other
+               parser-derived (recognizer) fact; "AI" = hand-authored, no
+               `provenance` at all (default ON — see useGraphStore.ts's
+               showAiFacts comment for why). -->
+          <div v-if="synergy" class="mb-1.5 ml-[0.5em] flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+            <UCheckbox v-model="showAiFacts" :ui="{ label: 'flex items-center gap-1 text-xs text-muted' }">
+              <template #label>
+                <span>AI ({{ aiFactsCount }})</span>
+              </template>
+            </UCheckbox>
+            <span class="text-dimmed">|</span>
+            <UCheckbox v-model="showTypeDerivedFacts" :ui="{ label: 'flex items-center gap-1 text-xs text-muted' }">
+              <template #label>
+                <span>type-keywords ({{ typeDerivedFactsCount }})</span>
+              </template>
+            </UCheckbox>
+            <span class="text-dimmed">|</span>
+            <UCheckbox v-model="showParserFacts" :ui="{ label: 'flex items-center gap-1 text-xs text-muted' }">
+              <template #label>
+                <span>other ({{ parserFactsCount }})</span>
+              </template>
+            </UCheckbox>
+          </div>
           <div v-if="synergy" class="overflow-x-auto">
             <table class="border-collapse text-xs whitespace-nowrap">
               <tbody v-for="group in factRowGroups" :key="group.label ?? 'flat'">
@@ -1179,29 +1239,34 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                         class="h-3.5 w-3.5"
                         :title="row.fact.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
                       />
-                      <!-- Inverted from this icon's original meaning
-                           (2026-09-13): it now marks a fact WITHOUT
-                           `Fact.provenance` — i.e. agent/AI-authored, never
-                           run through a recognizer — not a parser-derived
-                           one. (Absence of `provenance` is the only
-                           agent-authored signal; there's no explicit
-                           `origin: 'agent'` marker, see .claude/contracts/
-                           card-schema.md.) A parser-derived row (has
-                           `provenance`) now gets no icon here at all — its
-                           "how was this derived" detail lives in the
-                           recognizer catalog itself, not per-row, now that
-                           the icon no longer singles those rows out.
-                           There's no `rule`/recognizer source to show for
-                           an agent-authored fact, so this is a plain
-                           `title` tooltip, not the hover popover the old,
-                           parser-facing icon used (that popover's own
-                           rule-name + source-code content made sense only
-                           attached to a parser fact). -->
+                      <!-- One provenance icon per row, matching the three
+                           filter buckets above the table (2026-09-14 — each
+                           fact falls into exactly one, `isAiFact`/
+                           `isTypeDerivedFact`/`isParserFact`'s own comments):
+                           AI (no `provenance` at all — hand-authored, never
+                           run through a recognizer), type-keywords
+                           (structural, e.g. a Saga's lore/sacrifice facts),
+                           or other (every other recognizer/parser fact).
+                           Checked in this order since type-derived is a
+                           strict SUBSET of parser-derived — must test it
+                           first or it'd never be reached. -->
                       <Icon
-                        v-if="!row.fact.provenance"
+                        v-if="isAiFact(row.fact)"
                         name="lucide:wand-sparkles"
                         class="h-3 w-3 cursor-help text-violet-400"
-                        title="Agent-derived — no parser recognizer produced this fact"
+                        title="AI — no parser recognizer produced this fact"
+                      />
+                      <Icon
+                        v-else-if="isTypeDerivedFact(row.fact)"
+                        name="lucide:shapes"
+                        class="h-3 w-3 cursor-help text-teal-400"
+                        title="Type-keywords — structurally implied by this card's own printed type/supertype"
+                      />
+                      <Icon
+                        v-else
+                        name="lucide:regex"
+                        class="h-3 w-3 cursor-help text-amber-400"
+                        title="Other — matched by a parser recognizer"
                       />
                     </span>
                   </td>

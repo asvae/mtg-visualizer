@@ -25,6 +25,15 @@ export const zackFair: CardDefinition = {
   // effects-for-the-activated-ability split dragoon-s-lance/paladin-s-arms/
   // machinist-s-arsenal already use for their own Job-select ETB + separate
   // Equip ability).
+  //
+  // recognizer-exception: putCounterSelf-effect-structural — real text
+  // reads "Zack Fair enters with a +1/+1 counter on it," never the verb
+  // "put" for THIS counter (the card's own LATER "Put Zack Fair's counters
+  // on that creature" sentence is a genuinely different action — relocating
+  // EXISTING counters onto a chosen other creature, not adding a new one to
+  // self — and never contains the literal "+1/+1" substring either, so it
+  // correctly never falsely matches). See that recognizer's own module doc
+  // comment.
   triggers: [
     {
       name: 'onEnter',

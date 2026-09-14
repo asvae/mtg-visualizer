@@ -149,7 +149,21 @@ async function verifyCard(slug, oracleByName) {
       continue;
     }
     usedPaths++;
-    const resolved = computeFactAnnotations(texts, authoring);
+    // `computeFactAnnotations`/`rawHighlightRange` (synergy.ts, 2026-09-14)
+    // throw a real `Error` when this entry's own `line`/`sourceText` anchor
+    // resolves against the real text but `highlight` genuinely isn't found
+    // within it (a real authoring bug, not "nothing to resolve") — this
+    // script surveys every site across all 5 SLUGS in one pass, so catch it
+    // locally and record it as its own bad status (already falls through
+    // the existing `!res.status.startsWith('OK')` bad-tracking below)
+    // rather than letting one bad entry abort the whole run.
+    let resolved;
+    try {
+      resolved = computeFactAnnotations(texts, authoring);
+    } catch (err) {
+      results.push({ path: site.path, status: `HARD HIGHLIGHT FAILURE: ${err.message}`, kind: site.kind, authoring });
+      continue;
+    }
     if (!resolved) {
       results.push({ path: site.path, status: 'FAILED TO RESOLVE', kind: site.kind, authoring });
       continue;

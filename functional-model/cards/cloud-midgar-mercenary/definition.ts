@@ -34,6 +34,26 @@ export const cloudMidgarMercenary: CardDefinition = {
       // Equipment subtype tracking on generic library cards — see
       // state.ts's RealCard), so 'artifact' is the closest honest match,
       // not a claim this is subtype-precise.
+      //
+      // Mechanization pass (2026-09-14): this effect's own `to:'Hand',
+      // from:'Library'` source/sink fact pair stays hand-authored — checked
+      // the whole pool for a general "search library, put into hand"
+      // recognizer first (real, clean, closed Magic template: "[You may
+      // ]search your library for a[n] <type> card, reveal it, put it into
+      // your hand, then shuffle" — `world-map`, `sazh-katzroy` both share it
+      // verbatim). Every real candidate this shape, including THIS card, has
+      // a confirmed, systemic divergence between the structured `validType`
+      // field and the actual printed type word: this card's own real text
+      // says "an EQUIPMENT card" (never "artifact," per the comment right
+      // above), Sazh Katzroy's says "a Bird or basic land card" (its own
+      // `validType:'any'` is a documented approximation, not "any card"),
+      // World Map's first ability says "a BASIC land card" (its own
+      // `validType:'land'` omits "basic"). A recognizer keyed on `validType`
+      // alone would either guess wrong or need a `subtype` field this
+      // effect shape doesn't carry for an untargeted move (`card.ts`'s own
+      // `move.subtype` doc comment: "only meaningful alongside `target:
+      // true`") — not a safe generalization with the data available today;
+      // not attempted here.
       effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, validType: 'artifact' } satisfies Effect],
     },
   ],

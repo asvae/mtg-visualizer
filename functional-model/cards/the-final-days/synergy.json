@@ -15,38 +15,35 @@
     {
       "zone": "Exile",
       "controller": "you",
-      "subject": "self"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
-      "to": "Graveyard",
-      "controller": "you",
       "subject": "self",
       "annotations": [
         {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
+          "target": "oracle",
+          "line": 1,
+          "start": 88,
+          "end": 101
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
+        "rule": "flashback-alternateCost-structural"
+      }
+    },
+    {
+      "event": "cast",
+      "from": "Graveyard",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 29,
+          "end": 86
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "flashback-alternateCost-structural"
       }
     }
   ],

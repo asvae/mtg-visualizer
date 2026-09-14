@@ -1,22 +1,6 @@
 {
   "source": [
     {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
       "event": "putCounter",
       "counterType": "blight",
       "target": {
@@ -60,24 +44,6 @@
         "origin": "parser",
         "rule": "addMana-effect-structural"
       }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
     }
   ],
   "sink": [
@@ -118,8 +84,8 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 33,
-          "end": 54
+          "start": 0,
+          "end": 31
         }
       ],
       "provenance": {

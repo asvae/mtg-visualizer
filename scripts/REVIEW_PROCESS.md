@@ -152,13 +152,16 @@ check tagging correctness, only shape.
 
 ## Scope boundary
 
-This session's job is running the review loop and authoring
+This session is an orchestrator like any other (see CLAUDE.md's "Multiple
+orchestrators"), just scoped to this one loop instead of general dev work.
+Its job is running the review loop and authoring
 `data/fin/fin_relations.json`, `data/global_themes.json` (only when adding a
 genuinely new curated theme), and, when a review surfaces a genuine gap in
 it, `scripts/TAGGING_RULES.md`. Broader work — new UI features, anything
-touching files outside those plus `scripts/review-card.mjs` — is handled in
-the other, main dev session. If a piece of user feedback clearly calls for
-that kind of change, say so rather than making it here.
+touching files outside those plus `scripts/review-card.mjs` — belongs to
+whichever other orchestrator session is scoped to general dev work. If a
+piece of user feedback clearly calls for that kind of change, say so rather
+than making it here.
 
 Creature subtypes (Human, Goblin, ...) are in scope for tagging, same as any
 curated theme — see `TAGGING_RULES.md`'s "Creature types". The theme id/label

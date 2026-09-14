@@ -84,6 +84,20 @@
 // light`'s own back face) that already carry this exact pairing
 // hand-authored, confirming it's a general pattern rather than a one-off
 // for Summon: Bahamut.
+//
+// **Companion SINK fact (2026-09-14, fin/9 gap closure — Battle Menu's own
+// "wants a target creature with power 4 or greater present" precondition)**
+// — only emitted when this effect's own `target` constraint (above) narrows
+// to a real type filter (never for an unrestricted "Destroy target
+// permanent," which asserts no type want at all — matches
+// `dion-bahamut-s-dominant-bahamut-warden-of-light`'s own real hand-authored
+// data, which has never carried a sink for its unrestricted destroy either).
+// Same "one real clause names both what happens and what it wants present"
+// convention `putCounterTarget-effect-structural.ts`'s own paired sink
+// already establishes for a different Effect kind; reuses the SAME
+// annotation span as the paired source/`dies` facts (the destroy clause IS
+// the only real anchor for what it wants present, same as `dies`'s own
+// consequence has no separate textual anchor of its own).
 import type { Effect } from '../card';
 import type { Constraints } from '../synergy';
 import type { RecognizedFact, RecognizerResult } from './types';
@@ -295,6 +309,13 @@ export function recognizeDestroyEffectStructural(input: StructuralRecognizerInpu
       },
       provenance: { origin: 'parser', rule: RULE },
     });
+
+    if (target) {
+      const sinkFact: Record<string, unknown> = { to: 'Battlefield', annotations: [annotation] };
+      if (target.types) sinkFact.types = target.types;
+      if (target.power) sinkFact.power = target.power;
+      facts.push({ role: 'sink', fact: sinkFact as RecognizedFact['fact'], provenance: { origin: 'parser', rule: RULE } });
+    }
   }
 
   return { matched: true, facts };

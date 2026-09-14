@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  computeFactAnnotations,
   describeFact,
   findInteractionsForCard,
   isEventFact,
@@ -266,7 +267,12 @@ describe('selfInteractionKind — a merged zone+event fact self-matches via its 
   });
 });
 
-describe('printed Lifelink implicitly counts as a real lifegain SOURCE (2026-09-14 — replaces the old hand-authored, redundant `{event:\'lifegain\'}` fact 11 real pool cards used to carry for this exact reason, see synergy.ts\'s own `hasPrintedLifelink`/`syntheticLifelinkFact` doc comments)', () => {
+// PARKED (2026-09-14, later same day) — `LIFELINK_SYNTHETIC_FACT_ENABLED` in
+// synergy.ts is now `false` by explicit user decision (the pattern may come
+// back later); the 12 real cards this used to cover have their own explicit
+// `{event:'lifegain'}` source fact restored instead. `describe.skip`, not
+// deleted, so this coverage is ready to re-enable alongside the flag.
+describe.skip('printed Lifelink implicitly counts as a real lifegain SOURCE (2026-09-14 — replaces the old hand-authored, redundant `{event:\'lifegain\'}` fact 11 real pool cards used to carry for this exact reason, see synergy.ts\'s own `hasPrintedLifelink`/`syntheticLifelinkFact` doc comments)', () => {
   function lifelinkCreature(name: string): CardDefinition {
     return { name, manaCost: '', typeLine: 'Creature — Test Testperson', keywords: ['Lifelink'] };
   }
@@ -333,6 +339,129 @@ describe('printed Lifelink implicitly counts as a real lifegain SOURCE (2026-09-
     const sourceGroup = groups.find((g) => g.direction === 'source' && g.fact.event === 'lifegain');
     expect(sourceGroup?.matches.map((m) => m.card)).toContain('Lifegain Payoff 4');
   });
+});
+
+describe('a normal permanent implicitly casts from Hand and enters the Battlefield (2026-09-14 — replaces the old parser-derived `permanent-enters-battlefield-normally` fact pair 210 real pool cards used to carry for this exact reason, see synergy.ts\'s own `isNormalPermanent`/`syntheticCastFact`/`syntheticEntersBattlefieldFact` doc comments)', () => {
+  function vanillaCreature(name: string): CardDefinition {
+    return { name, manaCost: '', typeLine: 'Creature — Test Testperson' };
+  }
+
+  it('a normal permanent with no declared cast/entersBattlefield fact still matches a real "wants a creature to enter" SINK on another card', () => {
+    const creature = poolCard(vanillaCreature('Bare Creature'), [], []);
+    const payoff = poolCard(land('Enters Payoff'), [], [{ to: 'Battlefield', controller: 'you', types: { has: ['Creature'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const pool = [creature, payoff];
+
+    const creatureGroups = findInteractionsForCard('Bare Creature', pool);
+    const sourceGroup = creatureGroups.find((g) => g.direction === 'source' && g.fact.event === 'entersBattlefield');
+    expect(sourceGroup?.matches.map((m) => m.card)).toContain('Enters Payoff');
+  });
+
+  // No standalone "the synthetic cast fact matches a real want" test here —
+  // a `from`-only fact (this one has no `to`/`zone`) is genuinely
+  // ZONE-shaped (`isZoneFact`) but `effectiveZone(p)` is `undefined` for it
+  // (`fact.zone ?? fact.to`, both absent), and `factsInteract`'s own zone
+  // branch immediately returns `false` whenever `effectiveZone(p) ===
+  // undefined` — REGARDLESS of the wanter's own shape. This is a
+  // pre-existing, already-true structural fact about the matcher, not
+  // something this change introduces: the real, now-retired hand/parser-
+  // authored `{event:'cast', from:'Hand', target:'self'}` fact could never
+  // satisfy any real pool sink either (confirmed: every real "wants a spell
+  // cast" sink in the pool — `sahagin`/`the-prima-vista`/`venat-heart-of-
+  // hydaelyn-hydaelyn-the-mothercrystal` — uses a `target`-Constraints
+  // shape, never `from`/`to`/`zone`, so `isZoneFact` disagrees with this
+  // fact either way). The synthetic version is emitted for completeness/
+  // parity with what used to be stored, not because it does real matching
+  // work today.
+
+  it('a card that already declares its own real self-entersBattlefield fact is never double-counted — exactly one produce group, not two', () => {
+    const already = poolCard(
+      vanillaCreature('Already Declared'),
+      [{ event: 'entersBattlefield', to: 'Battlefield', subject: 'self', target: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [],
+    );
+    const payoff = poolCard(land('Enters Payoff 2'), [], [{ to: 'Battlefield', controller: 'you', types: { has: ['Creature'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const groups = findInteractionsForCard('Already Declared', [already, payoff]);
+    expect(groups.filter((g) => g.direction === 'source' && g.fact.event === 'entersBattlefield')).toHaveLength(1);
+  });
+
+  it('a Land never gets a synthetic cast/entersBattlefield produce group — played, not cast', () => {
+    const plainLand = poolCard(land('Plain Land'), [], []);
+    const groups = findInteractionsForCard('Plain Land', [plainLand]);
+    expect(groups.find((g) => g.direction === 'source' && (g.fact.event === 'cast' || g.fact.event === 'entersBattlefield'))).toBeUndefined();
+  });
+
+  it('a normal permanent whose ONLY permanent type lives on its own BACK face is unaffected — `isNormalPermanent` only ever reads the front `CardDefinition` this PoolCard represents', () => {
+    const frontIsSpell: CardDefinition = { name: 'Front Spell', manaCost: '', typeLine: 'Sorcery — Adventure' };
+    const spellCard = poolCard(frontIsSpell, [], []);
+    const groups = findInteractionsForCard('Front Spell', [spellCard]);
+    expect(groups.find((g) => g.direction === 'source' && (g.fact.event === 'cast' || g.fact.event === 'entersBattlefield'))).toBeUndefined();
+  });
+});
+
+describe('a normal Instant/Sorcery implicitly casts from Hand and resolves to the Graveyard (2026-09-14, same day, third instance of this exact pattern — replaces the old parser-derived `instant-sorcery-resolves-to-graveyard` fact pair 62 real pool cards used to carry for this exact reason, see synergy.ts\'s own `isNormalInstantOrSorcery`/`syntheticCastFact`/`syntheticInstantSorceryGraveyardFact` doc comments)', () => {
+  function vanillaSorcery(name: string): CardDefinition {
+    return { name, manaCost: '', typeLine: 'Sorcery' };
+  }
+
+  it('a normal Instant/Sorcery with no declared cast/graveyard fact still matches a real "wants a card in the graveyard" SINK on another card', () => {
+    const spell = poolCard(vanillaSorcery('Bare Sorcery'), [], []);
+    const payoff = poolCard(land('Graveyard Payoff'), [], [{ to: 'Graveyard', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const pool = [spell, payoff];
+
+    const spellGroups = findInteractionsForCard('Bare Sorcery', pool);
+    const sourceGroup = spellGroups.find((g) => g.direction === 'source' && g.fact.to === 'Graveyard');
+    expect(sourceGroup?.matches.map((m) => m.card)).toContain('Graveyard Payoff');
+  });
+
+  it('a card that already declares its own real self-graveyard fact is never double-counted — exactly one produce group, not two', () => {
+    const already = poolCard(
+      vanillaSorcery('Already Declared Sorcery'),
+      [{ to: 'Graveyard', controller: 'you', subject: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>],
+      [],
+    );
+    const payoff = poolCard(land('Graveyard Payoff 2'), [], [{ to: 'Graveyard', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const groups = findInteractionsForCard('Already Declared Sorcery', [already, payoff]);
+    expect(groups.filter((g) => g.direction === 'source' && g.fact.to === 'Graveyard')).toHaveLength(1);
+  });
+
+  it('an Adventure Instant/Sorcery half never gets a synthetic cast/graveyard produce group — CR 715.3d exiles it instead', () => {
+    const adventureHalf = poolCard({ name: 'Adventure Half', manaCost: '', typeLine: 'Sorcery — Adventure' }, [], []);
+    const groups = findInteractionsForCard('Adventure Half', [adventureHalf]);
+    expect(groups.find((g) => g.direction === 'source' && (g.fact.event === 'cast' || g.fact.to === 'Graveyard'))).toBeUndefined();
+  });
+
+  it('a normal permanent (not an Instant/Sorcery) never gets a synthetic self-graveyard produce group', () => {
+    const creature: CardDefinition = { name: 'Bystander Creature', manaCost: '', typeLine: 'Creature — Test Testperson' };
+    const creatureCard = poolCard(creature, [], []);
+    const groups = findInteractionsForCard('Bystander Creature', [creatureCard]);
+    expect(groups.find((g) => g.direction === 'source' && g.fact.to === 'Graveyard')).toBeUndefined();
+  });
+
+  // No standalone "a Flashback-shaped card's own real self-cast-from-
+  // GRAVEYARD fact doesn't suppress the synthetic self-cast-from-HAND one"
+  // test here, for the SAME structural reason the normal-permanent describe
+  // block above already documents for its own cast fact: a `from`-only fact
+  // is genuinely ZONE-shaped (`isZoneFact`) but `effectiveZone(p)` is
+  // `undefined` for it (no `to`/`zone`), and `factsInteract`'s own zone
+  // branch immediately returns `false` whenever `effectiveZone(p) ===
+  // undefined` — REGARDLESS of the wanter's own shape, and regardless of
+  // whether zero, one, or two such facts exist side by side. There is
+  // structurally no way for `findInteractionsForCard`'s own group output to
+  // ever distinguish "the synthetic Hand-cast fact was correctly added
+  // alongside a real Graveyard-cast one" from "it was wrongly skipped" —
+  // neither ever produces an observable group either way. The `from:
+  // 'Hand'` narrowing in `findInteractionsForCard`'s own dedup guard (see
+  // that function's doc comment, and contrast with `isNormalPermanent`'s
+  // own laxer `f.event === 'cast' && f.target === 'self'` check) is
+  // real and load-bearing the moment cast facts EVER become matchable
+  // (or the moment anything else reads `pc.source` directly instead of
+  // going through the matcher) — verified by direct code inspection here
+  // rather than a false-positive-proof executable assertion. Confirmed via
+  // the real pool instead: `auron-s-inspiration`/`from-father-to-son` (both
+  // real Flashback cards, both still carrying their own genuinely distinct
+  // `{event:'cast', from:'Graveyard', ...}` fact after the pool-wide
+  // `instant-sorcery-resolves-to-graveyard` strip) are exactly the shape
+  // this guard protects.
 });
 
 describe('describeFact — named event branches', () => {
@@ -547,5 +676,62 @@ describe('describeFact — label convention (lowercase, no trailing punctuation,
 
   it('entersBattlefield never leaks "tapped" into the label (that belongs in the details column)', () => {
     expect(describeFact(ef({ event: 'entersBattlefield', tapped: true }))).not.toMatch(/tap/i);
+  });
+});
+
+describe('computeFactAnnotations — legitimate "nothing to anchor to" cases stay silent (undefined), a resolved-but-highlight-missing entry throws (2026-09-14)', () => {
+  const oracle = 'Destroy target creature.\nDraw a card.\nGain 3 life.';
+
+  it('no authoring entry at all (null) → undefined', () => {
+    expect(computeFactAnnotations({ oracle }, null)).toBeUndefined();
+  });
+
+  it('missing text for the requested anchor → undefined', () => {
+    expect(computeFactAnnotations({}, { highlight: 'Destroy' })).toBeUndefined();
+    expect(computeFactAnnotations({ oracle }, { anchor: 'typeLine', highlight: 'Creature' })).toBeUndefined();
+  });
+
+  it('line index out of range → undefined', () => {
+    expect(computeFactAnnotations({ oracle }, { line: 99, highlight: 'Destroy' })).toBeUndefined();
+  });
+
+  it('sourceText not found at all (whole-text search, no line) → undefined', () => {
+    expect(computeFactAnnotations({ oracle }, { sourceText: 'Exile target creature', highlight: 'Exile' })).toBeUndefined();
+  });
+
+  it('sourceText not found within the named line → undefined', () => {
+    expect(computeFactAnnotations({ oracle }, { line: 0, sourceText: 'Exile target creature', highlight: 'Exile' })).toBeUndefined();
+  });
+
+  it('resolves correctly on the happy path — whole-text, line-scoped, line+sourceText, and typeLine anchor all still work unchanged', () => {
+    expect(computeFactAnnotations({ oracle }, { sourceText: 'Destroy target creature.', highlight: 'Destroy' })).toEqual([{ target: 'oracle', line: 0, start: 0, end: 7 }]);
+    expect(computeFactAnnotations({ oracle }, { line: 1, highlight: 'Draw a card' })).toEqual([{ target: 'oracle', line: 1, start: 0, end: 11 }]);
+    expect(computeFactAnnotations({ oracle }, { line: 2, sourceText: 'Gain 3 life.', highlight: 'Gain 3 life' })).toEqual([{ target: 'oracle', line: 2, start: 0, end: 11 }]);
+    expect(
+      computeFactAnnotations({ typeLine: 'Enchantment Creature — Saga Dragon' }, { anchor: 'typeLine', sourceText: 'Saga Dragon', highlight: 'Saga Dragon' }),
+    ).toEqual([{ target: 'typeLine', start: 23, end: 34 }]);
+  });
+
+  it('highlight not found within a resolved LINE (no sourceText) — throws, does not silently return undefined', () => {
+    expect(() => computeFactAnnotations({ oracle }, { line: 0, highlight: 'Exile' })).toThrow(/authoring\.highlight.*not found.*line 0/s);
+  });
+
+  it('highlight not found within a resolved sourceText scoped to a LINE — throws', () => {
+    expect(() => computeFactAnnotations({ oracle }, { line: 0, sourceText: 'Destroy target creature.', highlight: 'Exile' })).toThrow(/not found within authoring\.sourceText/);
+  });
+
+  it('highlight not found within a resolved sourceText, whole-text mode (no line) — throws', () => {
+    expect(() => computeFactAnnotations({ oracle }, { sourceText: 'Destroy target creature.', highlight: 'Exile' })).toThrow(/not found within authoring\.sourceText/);
+  });
+
+  it('the thrown error names the actual highlight/sourceText/line so a real authoring bug is attributable, not just "something failed"', () => {
+    try {
+      computeFactAnnotations({ oracle }, { line: 1, sourceText: 'Draw a card.', highlight: 'Draw two cards' });
+      expect.unreachable('expected computeFactAnnotations to throw');
+    } catch (err) {
+      expect(String((err as Error).message)).toContain('Draw two cards');
+      expect(String((err as Error).message)).toContain('Draw a card.');
+      expect(String((err as Error).message)).toContain('line 1');
+    }
   });
 });

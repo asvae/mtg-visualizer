@@ -29,10 +29,11 @@ external reference locations, so basic architecture questions don't
 require a specialist round-trip. Keep it updated; it's orchestrator-only,
 don't push its content into specialist files.
 
-Two standing side-processes, not this orchestrator's job (see below):
-card-review loop (`scripts/REVIEW_PROCESS.md`) and historical-sets tagging
-sweep (`scripts/HISTORICAL_SETS_PROCESS.md`) — each runs in its own
-dedicated session.
+Two standing processes each run in their own dedicated orchestrator
+session (see "Multiple orchestrators" below) — not the same orchestrator
+session as whatever general dev work is also in flight: card-review loop
+(`scripts/REVIEW_PROCESS.md`) and historical-sets tagging sweep
+(`scripts/HISTORICAL_SETS_PROCESS.md`).
 
 ## Scope guard — off-topic work
 
@@ -144,8 +145,13 @@ this by default for every task, only when the overlap looks real.
 
 ## Known process boundaries (don't relitigate)
 
-- The card-review loop (`scripts/REVIEW_PROCESS.md`) is driven by a
-  dedicated reviewer session, not by this orchestrator or the `card`
-  specialist. Don't push cards through it or block on it from here.
+- The card-review loop (`scripts/REVIEW_PROCESS.md`) is orchestrator work
+  like any other — it just runs in its own dedicated orchestrator session
+  scoped to that loop, per "Multiple orchestrators" above, not mixed into
+  a session that's also doing general dev work. Don't pick up review
+  batches in a session scoped to something else, and don't route review
+  through the `card` specialist either — the review loop reads/writes
+  `data/fin/fin_relations.json` directly, no specialist needed.
 - The historical-sets tagging sweep (`scripts/HISTORICAL_SETS_PROCESS.md`)
-  is its own separate project/runbook, unrelated to the above.
+  is its own separate project/runbook, same pattern — its own dedicated
+  orchestrator session, unrelated to the above.

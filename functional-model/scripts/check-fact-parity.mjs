@@ -363,6 +363,30 @@ async function main() {
   let containerAgentCovered = 0;
   const containerGaps = [];
   const resolutionFailures = [];
+  // A DISTINCT bucket (2026-09-14) from `resolutionFailures` above — that
+  // one means "this entry's own anchor (line/sourceText) didn't resolve at
+  // all against the real text," a real-but-tolerated gap this checker has
+  // always folded into its own reporting rather than treating as a scan-
+  // ending crash. This one means `computeFactAnnotations`/
+  // `rawHighlightRange` (synergy.ts) THREW — the anchor resolved fine but
+  // `authoring.highlight` itself wasn't found within it, a genuine
+  // authoring-time bug (typo/stale text/wrong line index) synergy.ts now
+  // surfaces loudly rather than silently. This checker scans EVERY
+  // container pool-wide in one pass, so letting that throw propagate would
+  // abort the whole scan on the first bad entry — caught locally via
+  // `resolveAnnotations` below and recorded here instead, distinctly, so it
+  // doesn't get silently absorbed into `resolutionFailures`' "not a
+  // fact-parity verdict either way" framing (this really is a bug, and gets
+  // its own loud summary line + nonzero exit).
+  const hardHighlightFailures = [];
+  function resolveAnnotations(texts, authoring, slugCtx, pathCtx) {
+    try {
+      return computeFactAnnotations(texts, authoring);
+    } catch (err) {
+      hardHighlightFailures.push({ slug: slugCtx, path: pathCtx, error: err.message });
+      return undefined;
+    }
+  }
   let containerTier3FallbackUsed = 0;
   let containerUnverifiableCount = 0;
   let triggerDoublingHits = 0;
@@ -443,7 +467,7 @@ async function main() {
           ? { oracle: scry.back?.oracleText, typeLine: def.backFace?.typeLine }
           : { oracle: scry.front?.oracleText, typeLine: def.typeLine };
 
-      const resolved = computeFactAnnotations(texts, authoring);
+      const resolved = resolveAnnotations(texts, authoring, slug, path);
       if (!resolved || resolved.length === 0) {
         resolutionFailures.push({ slug, path });
         continue;
@@ -468,7 +492,7 @@ async function main() {
         for (const t3Path of owned) {
           const t3Authoring = annotationsByPath[t3Path];
           if (!t3Authoring) continue;
-          const t3Resolved = computeFactAnnotations(texts, t3Authoring);
+          const t3Resolved = resolveAnnotations(texts, t3Authoring, slug, t3Path);
           if (t3Resolved && t3Resolved.length > 0 && overlaps(t3Resolved[0], containerRef)) {
             tier3Hit = true;
             break;
@@ -513,7 +537,7 @@ async function main() {
           const hit = owned.some((t3) => {
             const t3Authoring = annotationsByPath[t3];
             if (!t3Authoring) return false;
-            const t3Resolved = computeFactAnnotations(texts, t3Authoring);
+            const t3Resolved = resolveAnnotations(texts, t3Authoring, slug, t3);
             return t3Resolved && t3Resolved.length > 0 && overlaps(t3Resolved[0], containerRef);
           });
           if (hit) {
@@ -560,7 +584,7 @@ async function main() {
         for (const t3Path of ownedExact) {
           const t3Authoring = annotationsByPath[t3Path];
           if (!t3Authoring) continue;
-          const t3Resolved = computeFactAnnotations(texts, t3Authoring);
+          const t3Resolved = resolveAnnotations(texts, t3Authoring, slug, t3Path);
           if (t3Resolved && t3Resolved.length > 0 && overlaps(t3Resolved[0], containerRef)) {
             tier3Hit = true;
             break;
@@ -618,6 +642,14 @@ async function main() {
 
   console.log(`  - resolution failures (container annotation entry present but didn't resolve against real text — a data bug, NOT a fact-parity verdict either way): ${resolutionFailures.length}`);
   for (const r of resolutionFailures) console.log(`      ${r.slug}: ${r.path}`);
+
+  if (hardHighlightFailures.length > 0) {
+    console.log(
+      `\n=== HARD HIGHLIGHT FAILURES (${hardHighlightFailures.length}) — definition-annotations.json entry's own line/sourceText resolved against real text, but its \`highlight\` substring genuinely isn't in it (typo/stale text/wrong line index) — a REAL authoring bug, not a coverage gap ===`,
+    );
+    for (const f of hardHighlightFailures) console.log(`  ${f.slug} :: ${f.path} — ${f.error}`);
+    process.exitCode = 1;
+  }
 
   const zeroContainerCards = report.filter((r) => r.containers === 0);
   console.log(`\nCards with zero containers ("nothing to cover"): ${zeroContainerCards.length}`);

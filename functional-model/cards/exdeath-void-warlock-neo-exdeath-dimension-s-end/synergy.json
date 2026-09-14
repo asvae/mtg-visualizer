@@ -15,42 +15,18 @@
     {
       "event": "lifegain",
       "controller": "you",
-      "face": "front"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
+      "face": "front",
       "annotations": [
         {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
+          "target": "oracle",
+          "line": 0,
+          "start": 21,
+          "end": 36
         }
       ],
-      "face": "front",
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ],
-      "face": "front",
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
+        "rule": "gainLife-effect-structural"
       }
     }
   ],

@@ -32,6 +32,13 @@ export const relentlessXAtm092: CardDefinition = {
     {
       name: 'returnFromGraveyard',
       cost: '{8} (activated only while this card is in your graveyard)',
+      // recognizer-exception: putCounterSelf-effect-structural — real text
+      // reads "Return this card from your graveyard to the battlefield
+      // tapped with a finality counter on it," a return-to-battlefield
+      // MODIFIER clause, never the verb "put" anywhere near "finality" —
+      // same real ETB-with-counter idiom as zack-fair/tonberry, applied to a
+      // return-from-graveyard clause instead of a plain ETB. See that
+      // recognizer's own module doc comment for the full reasoning.
       effects: [
         { kind: 'putCounter', target: 'self', counterType: 'finality', amount: 1 } satisfies Effect,
         {

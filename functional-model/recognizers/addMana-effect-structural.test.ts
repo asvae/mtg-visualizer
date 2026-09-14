@@ -68,14 +68,25 @@ describe('addMana-effect-structural — real matched clauses', () => {
         provenance: { origin: 'parser', rule: 'addMana-effect-structural' },
       },
     ]);
-    // Real byproduct check: the claimed span is the TRIGGER's own clause
-    // ("add an additional {C}"), not the quoted reminder text ("Add {C}.")
-    // a few words earlier on the SAME face.
+    // Real byproduct check: the claimed span is the TRIGGER's own
+    // CONSEQUENCE clause ("add an additional {C}"), not the quoted reminder
+    // text ("Add {C}.") a few words earlier on the SAME face.
     const input = structuralInput('Ultima, Origin of Oblivion', ultimaOriginOfOblivion);
-    const ann = result.facts[0]!.fact.annotations![0]!;
-    if (ann.target !== 'oracle') throw new Error('fixture setup bug: expected an oracle-text annotation');
-    const line = input.oracleText.split('\n')[ann.line]!;
-    expect(line.slice(ann.start, ann.end)).toBe('add an additional {C}');
+    const sourceAnn = result.facts[0]!.fact.annotations![0]!;
+    if (sourceAnn.target !== 'oracle') throw new Error('fixture setup bug: expected an oracle-text annotation');
+    const sourceLine = input.oracleText.split('\n')[sourceAnn.line]!;
+    expect(sourceLine.slice(sourceAnn.start, sourceAnn.end)).toBe('add an additional {C}');
+
+    // Real byproduct check: the paired SINK fact's own span is the TRIGGER's
+    // own CONDITION clause ("Whenever you tap a land for {C}") — what this
+    // ability actually DEPENDS ON — never a copy of the source fact's own
+    // consequence-clause span.
+    const sinkAnn = result.facts[1]!.fact.annotations![0]!;
+    if (sinkAnn.target !== 'oracle') throw new Error('fixture setup bug: expected an oracle-text annotation');
+    const sinkLine = input.oracleText.split('\n')[sinkAnn.line]!;
+    expect(sinkLine.slice(sinkAnn.start, sinkAnn.end)).toBe('Whenever you tap a land for {C}');
+    expect(sinkAnn.line).toBe(sourceAnn.line);
+    expect(sinkAnn).not.toEqual(sourceAnn);
   });
 
   it('declines a card with no addMana effect at all on this face', () => {

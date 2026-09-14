@@ -239,6 +239,16 @@ const FUNCTIONAL_MODEL_TAB_STORAGE_KEY = 'mtg-visualizer-functional-model-tab';
 // above — the Facts tab's "show parser-derived facts" checkbox
 // (functional-model/PRD_AUTOMATED_AUTHORING.md).
 const SHOW_PARSER_FACTS_STORAGE_KEY = 'mtg-visualizer-show-parser-facts';
+// Same reasoning again, sibling checkbox (2026-09-14) — "show type-derived
+// facts" (functional-model/recognizers/types.ts's own
+// `TYPE_DERIVED_RECOGNIZER_IDS` doc comment), independent of the toggle
+// above: a fact can be parser-derived, type-derived, both, or neither.
+const SHOW_TYPE_DERIVED_FACTS_STORAGE_KEY = 'mtg-visualizer-show-type-derived-facts';
+// Same reasoning again, third sibling checkbox (2026-09-14) — "show AI facts"
+// (Fact.provenance absent — hand-authored, never run through a recognizer).
+// Default ON (true), unlike the two above: these were unconditionally shown
+// before this toggle existed, so a fresh/never-saved viewer sees no change.
+const SHOW_AI_FACTS_STORAGE_KEY = 'mtg-visualizer-show-ai-facts';
 // PRD 04 "List view" — same "standing UI habit, not a per-set preference"
 // reasoning as the two keys just above: which renderer (graph nodes vs. a
 // sortable table) you last looked at isn't a statement about a particular
@@ -903,6 +913,43 @@ export function useGraphStore() {
     }
   });
 
+  // Facts tab's sibling "show type-derived facts" checkbox — same
+  // survive-navigation-and-persist treatment, own storage key, independent
+  // state (see SHOW_TYPE_DERIVED_FACTS_STORAGE_KEY's own comment above).
+  let savedShowTypeDerivedFacts = false;
+  try {
+    savedShowTypeDerivedFacts = localStorage.getItem(SHOW_TYPE_DERIVED_FACTS_STORAGE_KEY) === 'true';
+  } catch {
+    // storage blocked — just start hidden
+  }
+  const showTypeDerivedFacts = ref(savedShowTypeDerivedFacts);
+  watch(showTypeDerivedFacts, (shown) => {
+    try {
+      localStorage.setItem(SHOW_TYPE_DERIVED_FACTS_STORAGE_KEY, shown ? 'true' : 'false');
+    } catch {
+      // storage full/blocked — toggle just won't persist
+    }
+  });
+
+  // Facts tab's third sibling "show AI facts" checkbox — same
+  // survive-navigation-and-persist treatment, own storage key, independent
+  // state, default ON (see SHOW_AI_FACTS_STORAGE_KEY's own comment above).
+  let savedShowAiFacts = true;
+  try {
+    const raw = localStorage.getItem(SHOW_AI_FACTS_STORAGE_KEY);
+    if (raw !== null) savedShowAiFacts = raw === 'true';
+  } catch {
+    // storage blocked — just start at the default (shown)
+  }
+  const showAiFacts = ref(savedShowAiFacts);
+  watch(showAiFacts, (shown) => {
+    try {
+      localStorage.setItem(SHOW_AI_FACTS_STORAGE_KEY, shown ? 'true' : 'false');
+    } catch {
+      // storage full/blocked — toggle just won't persist
+    }
+  });
+
   // PRD 04 "List view" — which renderer (graph nodes vs. a sortable table)
   // is currently shown; AppHeader.vue's own view-mode toggle is the only
   // writer. Restored synchronously (no graph/network dependency), same
@@ -1214,6 +1261,8 @@ export function useGraphStore() {
     mouseY,
     functionalModelTab,
     showParserFacts,
+    showTypeDerivedFacts,
+    showAiFacts,
     // PRD 04 "List view" — Graph/List renderer toggle (AppHeader.vue).
     viewMode,
     // CardPeekPanel.vue's own drag-to-resize width.

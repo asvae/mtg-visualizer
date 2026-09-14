@@ -61,9 +61,37 @@ import type { RecognizerId } from '../../../functional-model/recognizers/types';
 //
 // `'putCounterTarget-effect-structural'`/`'addMana-effect-structural'`
 // (11th-12th recognizers) added 2026-09-14, same pass as their own wiring.
+//
+// `'putCounterSelf-effect-structural'`/`'putCounterMagnitude-clause-
+// structural'` (13th-14th recognizers) added 2026-09-14, same pass as their
+// own wiring — Aerith Gainsborough's own last 2 remaining unprovenanced
+// facts.
+//
+// `'permanent-enters-battlefield-normally'` REMOVED (2026-09-14, `engine`
+// agent) — the recognizer itself was retired the same day
+// (`functional-model/synergy.ts`'s `isNormalPermanent` doc comment has the
+// full reasoning): its whole job is now synthesized at match time, never
+// stored as a `Fact.provenance.rule` value, so `RecognizerId` itself no
+// longer has this member and this mirror can't compile with it either.
+// `engine` removed this one line directly (same "small, mechanical,
+// blocking, card-owned file" precedent the `destroy-effect-structural`
+// miss above already established) rather than leave `nuxt typecheck` red;
+// no other change to this route.
+//
+// `'instant-sorcery-resolves-to-graveyard'` REMOVED (2026-09-14, same day,
+// `engine` agent, third instance of this exact pattern) — this recognizer
+// was ALSO retired the same day (`functional-model/synergy.ts`'s
+// `isNormalInstantOrSorcery` doc comment has the full reasoning): same
+// "synthesized at match time, `RecognizerId` no longer has this member"
+// situation as the removal immediately above, same direct fix for the
+// same reason (this array's own declared `RecognizerId[]` type would
+// otherwise fail to compile).
+// `'landfall-trigger-structural'`/`'flashback-alternateCost-structural'`/
+// `'gainLife-effect-structural'`/`'ptFormula-scalingPump-structural'`/
+// `'digReveal-effect-structural'`/`'triggerDoubling-selfAndAttachedEquipment-
+// structural'` (15th-20th recognizers) added 2026-09-14, same pass as their
+// own wiring — the fin/3-10 mechanization pass.
 export const RECOGNIZER_IDS: RecognizerId[] = [
-  'instant-sorcery-resolves-to-graveyard',
-  'permanent-enters-battlefield-normally',
   'destroy-effect-structural',
   'drawCard-effect-structural',
   'saga-lore-and-sacrifice-structural',
@@ -74,6 +102,14 @@ export const RECOGNIZER_IDS: RecognizerId[] = [
   'attacks-trigger-structural',
   'putCounterTarget-effect-structural',
   'addMana-effect-structural',
+  'putCounterSelf-effect-structural',
+  'putCounterMagnitude-clause-structural',
+  'landfall-trigger-structural',
+  'flashback-alternateCost-structural',
+  'gainLife-effect-structural',
+  'ptFormula-scalingPump-structural',
+  'digReveal-effect-structural',
+  'triggerDoubling-selfAndAttachedEquipment-structural',
 ];
 
 export default defineEventHandler((event) => {

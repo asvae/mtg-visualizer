@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, AuthoredFact } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 import { branch, compare, putCounter, selfCounters, you } from '../../combinator';
 
 export const aerithGainsborough: CardDefinition = {
@@ -24,6 +24,18 @@ export const aerithGainsborough: CardDefinition = {
       // clause, checked against all 3 real pool cards using it
       // (`excalibur-ii`, `minwu-white-mage`, this card) — the authored
       // duplicate is removed here.
+      //
+      // This trigger's own EFFECT ("...put a +1/+1 counter on Aerith
+      // Gainsborough") used to sit as a plain, un-provenanced `synergy.json`
+      // fact (no `Effect`-shape signal existed to derive it from, since
+      // `kind:'putCounterTarget'` — the only structural putCounter
+      // recognizer that existed at the time — only ever covers a CHOSEN
+      // target, never this effect's always-`target:'self'` shape).
+      // MECHANIZED 2026-09-14 (fact-parity pass): `recognizers/
+      // putCounterSelf-effect-structural.ts`, a new STRUCTURAL recognizer
+      // reading the always-self `kind:'putCounter'` Effect directly
+      // (checked against all 19 real occurrences pool-wide, 15 matched, 4
+      // genuinely declined — see that recognizer's own module doc comment).
       name: 'onLifeGained',
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
     },
@@ -84,40 +96,28 @@ export const aerithGainsborough: CardDefinition = {
           //     SOURCE-side consequence (former `[3]`) are now derived by
           //     `recognizers/dies-trigger-structural.ts` (tier 1 — see the
           //     `onDies` trigger's own comment above).
-          // The ONE remaining entry (this ability's own MAGNITUDE, X,
-          // reading counters already on self) genuinely STAYS tier-3 — see
-          // its own comment below for why neither tier 1 nor tier 2 can
-          // safely derive it.
-          authoredFact: [
-            {
-              // This ability's own MAGNITUDE (X) reads counters already on
-              // self (`ctx.self.getCounters('+1/+1')`) — the same real
-              // "scales with a dependency" shape tier 2's runtime probe
-              // targets for a `Computed<T>` closure, but genuinely different
-              // from the broadcast-target classification the SAME probe now
-              // covers above: proving this SPECIFIC number (not just an
-              // early-return gate) causally determines `putCounter`'s own
-              // `amount` argument would need real numeric-value PROVENANCE
-              // tracking across intervening statements (`const x = ...; ...;
-              // actions.putCounter(creature, '+1/+1', x)`) — JS primitives
-              // carry no object identity a `WeakMap`-based tracker (this
-              // probe family's own mechanism, see `runtime-action-probe
-              // .prototype.ts`'s own header) can hang a path off; a plain
-              // "this closure happens to also read self's own counters
-              // somewhere" correlation would be a materially WEAKER, false-
-              // positive-prone signal than every other fact this pass
-              // mechanized. Genuinely stays tier-3 (2026-09-13 verdict, not
-              // re-attempted since — see `PRD_AUTOMATED_AUTHORING.md`'s own
-              // write-up for the full reasoning). Own annotation:
-              // `definition-annotations.json`, keyed
-              // `"triggers[1].effects[0].authoredFact[0]"`.
-              role: 'sink',
-              event: 'putCounter',
-              counterType: '+1/+1',
-              target: 'self',
-              value: 1,
-            },
-          ] satisfies AuthoredFact[],
+          //   - The ONE remaining entry (former `[4]`, this ability's own
+          //     MAGNITUDE, X, reading counters already on self) was
+          //     genuinely tier-3 as of 2026-09-13 — proving a SPECIFIC
+          //     runtime number causally determines `putCounter`'s own
+          //     `amount` argument needs real numeric-value PROVENANCE
+          //     tracking tier 2's probe family can't do (JS primitives carry
+          //     no object identity a `WeakMap`-based tracker can hang a path
+          //     off). That reasoning is entirely about TIER 2 (execution-
+          //     trace probing), though, and does NOT apply to a TIER-1
+          //     literal-clause match — MECHANIZED 2026-09-14:
+          //     `recognizers/putCounterMagnitude-clause-structural.ts`
+          //     matches the literal English template "where X is the number
+          //     of <counterType> counters on <self>" verbatim (same
+          //     "build-then-verify against real printed text, never execute
+          //     anything" shape `lifegain-trigger-structural.ts` already
+          //     uses), sidestepping the tier-2 provenance problem entirely by
+          //     reading prose instead of runtime data flow. Checked
+          //     pool-wide: this exact `AuthoredFact` shape (`role:'sink',
+          //     event:'putCounter', counterType, target:'self'`) has exactly
+          //     ONE real occurrence in the whole pool (this card's own,
+          //     removed here) — see that recognizer's own module doc comment
+          //     for the full whole-pool review.
         } satisfies Effect,
       ],
     },

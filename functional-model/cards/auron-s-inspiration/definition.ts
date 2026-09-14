@@ -54,6 +54,17 @@ export const auronSInspiration: CardDefinition = {
       // wired into `apply-recognizers.mjs`/`synergy.json` generation. Own
       // annotation: `definition-annotations.json`, keyed
       // `"effects[0].authoredFact[0]"`.
+      //
+      // Mechanization pass (2026-09-14): also checked whether a general
+      // "fixed pump" recognizer (see `ambrosia-whiteheart`'s own definition
+      // .ts comment for the full whole-pool finding — real, confirmed
+      // template variance across `pumpSelf`/`pumpTarget`/`pumpAll`, not
+      // attempted) could cover this fact even in principle — it can't,
+      // independent of that broader finding: there is no REAL `power`/
+      // `toughness` field anywhere on this `custom` effect to read at all
+      // (the `run` body above is an intentional no-op, per its own comment),
+      // so no structural recognizer could ever derive this claim from this
+      // card's own data even with a safe, general "pump" template in hand.
       authoredFact: {
         role: 'source',
         event: 'pump',

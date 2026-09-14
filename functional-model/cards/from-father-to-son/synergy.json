@@ -2,38 +2,6 @@
   "source": [
     {
       "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
-      "event": "cast",
       "from": "Graveyard",
       "target": "self",
       "annotations": [
@@ -43,7 +11,11 @@
           "start": 32,
           "end": 89
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "flashback-alternateCost-structural"
+      }
     },
     {
       "to": "Exile",
@@ -56,7 +28,11 @@
           "start": 91,
           "end": 104
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "flashback-alternateCost-structural"
+      }
     },
     {
       "from": "Library",

@@ -1871,6 +1871,40 @@ function isSelfSacrificeActivationCostFact(p) {
   return p.event === 'sacrifice' && p.subject === 'self' && p.target === 'self';
 }
 
+/**
+ * A normal, non-Adventure Instant/Sorcery's own real self-move from the
+ * stack to its owner's graveyard on resolution (CR 608.2m) is no longer a
+ * stored `Fact` at all (2026-09-14 — `synergy.ts`'s own
+ * `isNormalInstantOrSorcery`/`syntheticInstantSorceryGraveyardFact` doc
+ * comments), synthesized purely at MATCH TIME instead. `harness.ts`'s own
+ * scenario runner naturally logs a real `{fn:'move', card:<name>,
+ * from:'stack', to:'Graveyard'}` entry for nearly every plain Instant/
+ * Sorcery scenario (the spell resolves, then moves to the graveyard, same
+ * as any other card) — this reverse "explain every action" check has no
+ * way to see `synergy.ts`'s own match-time synthesis (it only ever reads
+ * this card's raw, on-disk `source` array), so stripping the stored fact
+ * pool-wide would otherwise surface a brand-new soft note on ~20 real pool
+ * cards for a trace event that is, once again, a generic mechanical
+ * default rather than a genuine per-card gap — same "note-not-fail side
+ * effect, name/shape-scoped rather than silently swallowed" treatment this
+ * file's own `moveTo`-to-Exile promotion comment already accepts for an
+ * analogous situation (see this file's own `case 'moveTo'` comment
+ * earlier). Mirrors `isNormalInstantOrSorcery` in `synergy.ts` structurally
+ * (typeLine primary-type check, Adventure-subtype exclusion) rather than
+ * importing it, matching this script's own established "small, stable,
+ * duplicated helper" convention for `.mjs`-side structural checks
+ * (`apply-recognizers.mjs`'s own `loadOracleTextByName` doc comment).
+ */
+function isNormalInstantOrSorceryGraveyardMove(e, cardName, card) {
+  if (e.fn !== 'move' || e.card !== cardName || e.from !== 'stack' || e.to !== 'Graveyard') return false;
+  if (!card?.typeLine) return false;
+  const primaryType = card.typeLine.split('—')[0].trim();
+  if (!/^(Instant|Sorcery)\b/.test(primaryType)) return false;
+  const subtypes = card.typeLine.split('—')[1];
+  if (subtypes?.includes('Adventure')) return false;
+  return true;
+}
+
 function wantMatchesZoneRead(want, zone) {
   // `effectiveZone`, not a bare `want.zone` (fixed 2026-09-11 alongside
   // synergy.ts's ZoneFact/EventFact merge — a SINK fact can now
@@ -2192,7 +2226,10 @@ async function verifyCard(slug) {
     const evs = producedEvents(e, cardName);
     const zoneOk = z && source.some((p) => ('zone' in p || 'to' in p) && effectiveZone(p) === z.zone && (!p.controller || p.controller === z.side));
     const eventOk = evs.length > 0 && source.some((p) => 'event' in p && evs.some((ev) => ev.event === p.event));
-    if (!zoneOk && !eventOk) notes.push(`trace has ${e.fn} (${JSON.stringify(e)}) with no matching declared produce`);
+    if (!zoneOk && !eventOk) {
+      if (isNormalInstantOrSorceryGraveyardMove(e, cardName, card)) continue; // see isNormalInstantOrSorceryGraveyardMove
+      notes.push(`trace has ${e.fn} (${JSON.stringify(e)}) with no matching declared produce`);
+    }
   }
 
   return { slug, cardName, failures, notes };

@@ -833,6 +833,23 @@ export interface SynergyFile {
  *   (every `annotations-authoring.json` authored before this field existed
  *   keeps working unchanged — `compute-annotations.mjs` doesn't require
  *   `line` on anything).
+ *
+ * Failure modes, and which stay silent vs become loud (2026-09-14, closes a
+ * real silent-authoring-bug gap — see `rawHighlightRange`'s own doc
+ * comment): no `highlight` at all, a `line` index that doesn't exist in the
+ * text, or a `sourceText` not found anywhere it's searched (whole-text, or
+ * scoped to the named `line`) are all legitimate "this anchor doesn't
+ * resolve" cases and stay silent (`undefined`) — a stale/renumbered
+ * `line`, a `sourceText` that no longer appears verbatim after an errata,
+ * or simply no authoring entry yet. But once the anchor DOES resolve (a
+ * valid `line`, and — when given — a `sourceText` genuinely found within
+ * it) and `highlight` STILL isn't found as a substring of that
+ * already-resolved text, that's not "nothing to anchor to" — the author
+ * pointed at real, existing text and then typo'd/staled the one substring
+ * meant to name the fact within it. `rawHighlightRange` throws a real
+ * `Error` for exactly this case instead of returning `undefined` — see
+ * that function's own doc comment for why this can't share the same
+ * silent-return contract as the other failure modes above.
  */
 export interface FactAnnotationAuthoring {
   anchor?: 'oracle' | 'typeLine';
@@ -1496,10 +1513,44 @@ export function describeFact(fact: Fact): string {
  * intended one. `line` is optional, though — omitted (any authoring entry
  * predating this fix), this still falls back to the original whole-text
  * `indexOf` behavior, ambiguity and all, unchanged. Returns `undefined` (not
- * a hard failure by itself) when there's no authoring entry at all, or the
- * match fails — `computeFactAnnotations`'s caller decides what a failed
- * match means (a hard authoring failure for an opted-in card, per
- * `Fact.annotations`'s own required-field doc comment).
+ * a hard failure) when there's no authoring entry at all, or the ANCHOR
+ * itself (the `line`, or `sourceText` wherever it's searched) fails to
+ * resolve — see `FactAnnotationAuthoring`'s own doc comment's "Failure
+ * modes" section for the full list of which cases these are and why they're
+ * legitimately silent.
+ *
+ * One case is deliberately NOT folded into that silent `undefined` return,
+ * though (2026-09-14): once the anchor DOES resolve to a real, concrete
+ * substring of `text` and `authoring.highlight` still isn't found as a
+ * substring of THAT — i.e. the line/sourceText this entry points at
+ * genuinely exists, but the one phrase meant to name the fact within it
+ * doesn't — this throws a real `Error` instead. Before this fix, that case
+ * silently returned `undefined` too, indistinguishable from the legitimate
+ * "nothing to anchor to" cases above; in practice this meant a typo'd
+ * `highlight`, a stale `highlight` left over from a prior wording, or a
+ * `line`/`sourceText` pointed at the WRONG line/phrase (so `highlight`
+ * genuinely isn't on it) all silently produced "this fact has no
+ * annotations" with zero signal anywhere that authoring even ran, let alone
+ * failed — caught only, if at all, by `verify-annotation-coverage.mjs`'s
+ * narrow opt-in `ANNOTATED_CARD_SLUGS` allowlist, and even then with no way
+ * to tell "never authored" apart from "authored wrong." This function
+ * itself is the one place both cases already fully resolve (it already
+ * computed the concrete `targetLine`/`sourceText` substring before running
+ * the failed `highlight` lookup), so throwing here — rather than in some
+ * downstream caller that would have to re-derive the same distinction from
+ * a bare `undefined` — is the only place this doesn't need re-deriving.
+ * `computeFactAnnotations` itself does NOT catch this — it propagates
+ * straight through to whichever script called it. The one caller this
+ * matters for, `scripts/compute-annotations.mjs` (the actual authoring
+ * entries get baked into committed `synergy.json` here), deliberately lets
+ * it propagate uncaught too, so a real broken entry hard-crashes that build
+ * step instead of silently writing empty `annotations`. The two other real
+ * callers (`scripts/check-fact-parity.mjs`, `scripts/
+ * prototype-index-path-annotations-fin1-5.mjs`) scan MANY containers
+ * pool-wide and need to keep surveying past one bad entry — both catch this
+ * specific throw locally and fold it into their own existing
+ * "resolution failure" reporting, rather than letting it abort the whole
+ * scan.
  */
 function rawHighlightRange(text: string, authoring: FactAnnotationAuthoring | null | undefined): { start: number; end: number } | undefined {
   if (!authoring?.highlight) return undefined;
@@ -1523,14 +1574,26 @@ function rawHighlightRange(text: string, authoring: FactAnnotationAuthoring | nu
       searchOffset = lineOffset + sourceIdx;
     }
     const highlightIdx = searchText.indexOf(authoring.highlight);
-    if (highlightIdx === -1) return undefined;
+    if (highlightIdx === -1) {
+      throw new Error(
+        `rawHighlightRange: authoring.highlight ${JSON.stringify(authoring.highlight)} not found ` +
+          (authoring.sourceText
+            ? `within authoring.sourceText ${JSON.stringify(authoring.sourceText)} on line ${authoring.line}`
+            : `on line ${authoring.line}`) +
+          ` (resolved line text: ${JSON.stringify(targetLine)}) — stale/typo'd highlight, or a line/sourceText pointing at the wrong text.`,
+      );
+    }
     return { start: searchOffset + highlightIdx, end: searchOffset + highlightIdx + authoring.highlight.length };
   }
   if (!authoring.sourceText) return undefined;
   const sourceIdx = text.indexOf(authoring.sourceText);
   if (sourceIdx === -1) return undefined;
   const highlightIdx = authoring.sourceText.indexOf(authoring.highlight);
-  if (highlightIdx === -1) return undefined;
+  if (highlightIdx === -1) {
+    throw new Error(
+      `rawHighlightRange: authoring.highlight ${JSON.stringify(authoring.highlight)} not found within authoring.sourceText ${JSON.stringify(authoring.sourceText)} — stale/typo'd highlight for this authoring entry.`,
+    );
+  }
   return { start: sourceIdx + highlightIdx, end: sourceIdx + highlightIdx + authoring.highlight.length };
 }
 
@@ -1587,7 +1650,18 @@ export function toLineOffset(oracleText: string, start: number, end: number): An
  * string) — the array shape exists for a future fact that legitimately
  * needs to point at more than one span, not exercised yet. Returns
  * `undefined` when there's no authoring entry at all (`null`/missing) for
- * this fact, or its `sourceText`/`highlight` don't verifiably match.
+ * this fact, or its anchor (`line`/`sourceText`) doesn't resolve — see
+ * `FactAnnotationAuthoring`'s own doc comment's "Failure modes" section.
+ * Does NOT catch `rawHighlightRange`'s own thrown `Error` (2026-09-14) for
+ * the one case that's a genuine authoring bug rather than "nothing to
+ * annotate" — an anchor that DOES resolve but whose `highlight` still
+ * isn't found within it — that propagates straight through to this
+ * function's own caller uncaught, deliberately, so a broken entry hard-
+ * fails the actual build step (`scripts/compute-annotations.mjs`) instead
+ * of silently producing empty `annotations`. A caller that scans many
+ * containers and needs to survive one bad entry (`scripts/
+ * check-fact-parity.mjs`, `scripts/prototype-index-path-annotations-
+ * fin1-5.mjs`) must catch this itself.
  */
 export function computeFactAnnotations(
   texts: { oracle?: string; typeLine?: string },
@@ -1726,22 +1800,218 @@ function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sin
  * `backFace.keywords`, since `face` is purely a rendering hint never
  * consulted by the matcher itself — see `Fact.face`'s own doc comment).
  *
- * 2026-09-14: 11 real pool cards used to carry an explicit, hand-authored
+ * 2026-09-14: 12 real pool cards used to carry an explicit, hand-authored
  * `{event:'lifegain', controller:'you'}` SOURCE fact whose ENTIRE basis was
  * this same printed keyword (no separate, distinct lifegain-producing
  * ability text anywhere on the card) — a literal restatement of
  * `keywords.includes('Lifelink')`, not a genuine second fact. Dropped
- * pool-wide (see each card's own `progress.json`) in favor of this
- * derivation, so real synergy-matching coverage (a payoff's own SINK
- * wanting `event:'lifegain'`) doesn't regress: `findInteractionsForCard`
- * below synthesizes the equivalent `Fact` at match time for any card this
- * returns `true` for and that has no OTHER real declared `lifegain` source
- * fact of its own (a card with a genuinely separate lifegain ability,
- * e.g. Battle Menu's own real "Item — you gain 4 life" mode, keeps its own
- * real fact untouched and is never double-counted here).
+ * pool-wide in favor of this derivation, so real synergy-matching coverage
+ * (a payoff's own SINK wanting `event:'lifegain'`) doesn't regress:
+ * `findInteractionsForCard` below used to synthesize the equivalent `Fact`
+ * at match time for any card this returns `true` for and that has no OTHER
+ * real declared `lifegain` source fact of its own (a card with a genuinely
+ * separate lifegain ability, e.g. Battle Menu's own real "Item — you gain 4
+ * life" mode, keeps its own real fact untouched and is never double-counted
+ * here).
+ *
+ * 2026-09-14 (later, same day): PARKED by explicit user decision — see
+ * `LIFELINK_SYNTHETIC_FACT_ENABLED` below `syntheticLifelinkFact()`. This
+ * function and `syntheticLifelinkFact()` are kept as dead/draft code (the
+ * pattern may be un-parked later), but the injection is currently disabled
+ * and the 12 real cards above have their own explicit `lifegain` fact back.
  */
 function hasPrintedLifelink(card: CardDefinition): boolean {
   return !!card.keywords?.includes('Lifelink') || !!card.backFace?.keywords?.includes('Lifelink');
+}
+
+/**
+ * Real CR 601/303/305 (etc.): a real, non-token permanent (Creature/
+ * Artifact/Enchantment/Planeswalker/Battle — a Land is PLAYED, never cast,
+ * same exclusion the retired `permanent-enters-battlefield-normally`
+ * recognizer's own `PERMANENT_TYPE_WORDS` list used) is, unconditionally,
+ * cast from hand and enters the battlefield when it resolves — a
+ * card-mechanical fact of what's printed on its OWN type line, not a matter
+ * of what its own oracle text happens to also say elsewhere. Same treatment
+ * `hasPrintedLifelink` above already establishes for a printed keyword:
+ * derived directly from structured `CardDefinition` data, not stored as a
+ * `Fact`.
+ *
+ * 2026-09-14: 210 real pool cards used to carry an explicit, PARSER-derived
+ * (`provenance.rule: 'permanent-enters-battlefield-normally'`) `{event:
+ * 'cast', from:'Hand', target:'self'}` + `{event:'entersBattlefield',
+ * to:'Battlefield', controller:'you', subject:'self', target:'self'}` fact
+ * pair — a literal restatement of "this is a normal permanent," not a
+ * genuine per-card claim (confirmed pool-wide: every one of the 420 tagged
+ * facts across those 210 cards is either the exact canonical shape above or
+ * a harmless schema-drift variant of it — a stale pre-`subject`-field
+ * `entersBattlefield`, or a redundant explicit `controller:'you'` on `cast`
+ * that `effectiveController` already derives for free from `target:'self'`
+ * — never a fact carrying any EXTRA real constraint (`tapped`/`colors`/
+ * `cmc`/`types`/`power`/`toughness`/a narrower `counterType`) that this
+ * bare derivation wouldn't also satisfy). Dropped pool-wide in favor of this
+ * derivation, same "don't store the generic default as data" call the
+ * Lifelink removal above already made.
+ *
+ * The recognizer this replaces used to also DECLINE for a card whose own
+ * oracle text describes its entrance itself as modified (tapped, with a
+ * counter, as a copy, face down — CR 614.12) — a real distinction this
+ * function can no longer make: `CardDefinition` has no structured
+ * "enters tapped"/"enters with a counter" field anywhere (that nuance, on
+ * the handful of real cards that have it — `tonberry`, `shambling-cie-th`,
+ * `elixir` — is modeled as an ordinary `onEnter` trigger effect tapping/
+ * counter-ing a pool-filtered candidate, structurally IDENTICAL in shape to
+ * a genuinely different card's own ETB trigger that targets something else
+ * entirely, e.g. `cloudbound-moogle`/`ice-flan`'s own onEnter triggers — see
+ * those two files' own comments; there is no reliable, general way to tell
+ * "this trigger's own tap/counter effect is secretly about ITSELF" apart
+ * from "this trigger targets some other permanent" from the effect's own
+ * fields alone). This is a deliberate, small, KNOWN broadening, not an
+ * oversight: the CAST and ENTERS-BATTLEFIELD events are still literally
+ * true for an entering-tapped permanent (only the OPTIONAL `tapped` field
+ * on `entersBattlefield` would need to be `true` for full precision, which
+ * this bare derivation simply leaves unconstrained rather than asserting
+ * either way — `factsInteract`'s own `tapped` check only rejects a match
+ * when BOTH sides specify it and disagree, so an unconstrained producer
+ * fact can never wrongly satisfy or wrongly fail a `tapped`-specific want).
+ * Confirmed via a real pool scan (2026-09-14): exactly 3 cards newly gain
+ * this pair as a result that didn't have it before for this specific reason
+ * (`tonberry`, `shambling-cie-th`, `elixir` — all "enters tapped [with a
+ * counter]"), plus 17 more that simply had never been run through
+ * `apply-recognizers.mjs` at all (either a genuinely not-yet-migrated
+ * empty `synergy.json`, or a real card outside that script's own
+ * `data/*_scryfall.json` oracle-text lookup, e.g. cards from the
+ * historical-sets sweep) — every one of those 17 is an ordinary permanent
+ * with nothing resembling a replacement-effect-on-entry in its own
+ * `definition.ts`, confirmed by direct inspection, not assumed.
+ *
+ * A genuinely different real exception this function does NOT need to
+ * special-case at all: `zack-fair`'s own hand-authored "enters with a
+ * +1/+1 counter" pair (CR 614.12, a real replacement effect, no
+ * `provenance` tag — the recognizer always declined it on purpose) is
+ * already covered by `findInteractionsForCard`'s own "don't double-author"
+ * skip below (a card that already declares its own real self-cast/
+ * self-entersBattlefield fact never gets the synthetic one layered on top),
+ * the same way a card with its own genuinely separate lifegain ability
+ * never gets `syntheticLifelinkFact` layered on top of it.
+ */
+function isNormalPermanent(card: CardDefinition): boolean {
+  const primaryTypes = card.typeLine.split('—')[0]!.trim();
+  return ['Creature', 'Artifact', 'Enchantment', 'Planeswalker', 'Battle'].some((w) => primaryTypes.includes(w));
+}
+
+/** The `Fact` a normal permanent's printed CAST would have declared by hand
+ * before the 2026-09-14 removal (`isNormalPermanent`'s own doc comment) —
+ * same "built at MATCH TIME, never written to any `synergy.json`, no
+ * `annotations`" treatment `syntheticLifelinkFact` above already
+ * establishes, for the same reasons (no authored oracle-text span to point
+ * at — the TYPE LINE is the real anchor, and `synergy.ts` has no access to
+ * a card's real Scryfall type line to compute a genuine one here either).
+ *
+ * Reused verbatim (2026-09-14) for `isNormalInstantOrSorcery` below — a
+ * normal, non-Adventure Instant/Sorcery's own printed CAST is the exact
+ * same real `{event:'cast', from:'Hand', target:'self'}` shape a normal
+ * permanent's is (the ONLY thing that differs between the two cases is
+ * what happens AFTER resolution — the battlefield vs. the graveyard — see
+ * `syntheticEntersBattlefieldFact`/`syntheticInstantSorceryGraveyardFact`
+ * below for that half), so this one function already covers both callers
+ * rather than forking into two byte-identical siblings.
+ */
+function syntheticCastFact(): Fact {
+  return { role: 'source', event: 'cast', from: 'Hand', target: 'self' } as unknown as Fact;
+}
+
+/** The `Fact` a normal permanent's printed ENTERS THE BATTLEFIELD would have
+ * declared by hand before the 2026-09-14 removal — see `syntheticCastFact`'s
+ * own doc comment immediately above for why this is never annotated/stored. */
+function syntheticEntersBattlefieldFact(): Fact {
+  return { role: 'source', event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: 'self', target: 'self' } as unknown as Fact;
+}
+
+/**
+ * Real CR 608.2m/`SBA` housekeeping: a resolved Instant/Sorcery with no
+ * other instruction is put into its owner's graveyard — a card-mechanical
+ * default of how these two card types resolve, not a matter of what each
+ * card's own oracle text happens to also say. Same treatment
+ * `isNormalPermanent` above already establishes for a permanent's own
+ * printed type: derived directly from structured `CardDefinition` data
+ * (the type line alone), not stored as a `Fact`.
+ *
+ * 2026-09-14: 62 real pool cards used to carry an explicit, PARSER-derived
+ * (`provenance.rule: 'instant-sorcery-resolves-to-graveyard'`) `{event:
+ * 'cast', from:'Hand', target:'self'}` + `{to:'Graveyard', controller:'you',
+ * subject:'self'}` fact pair — a literal restatement of "this is a normal
+ * Instant/Sorcery," not a genuine per-card claim (confirmed pool-wide: all
+ * 124 tagged facts across those 62 cards are the exact canonical shape
+ * above, nothing carrying any extra real constraint). Dropped pool-wide in
+ * favor of this derivation, same "don't store the generic default as data"
+ * call the Lifelink/normal-permanent removals above already made.
+ *
+ * The retired recognizer (`recognizers/instant-sorcery-resolves-to-
+ * graveyard.ts`) declined on exactly two real, structural grounds this
+ * function reuses verbatim:
+ *   - CR 715.3d: an Adventure instant/sorcery is exiled instead of hitting
+ *     the graveyard (`typeLine.split('—')[1]` carrying the literal
+ *     "Adventure" subtype — every real Adventure half in this pool prints
+ *     it, confirmed pool-wide, same check `isAdventure` in that recognizer
+ *     used).
+ *   - A genuinely self-referential exile/shuffle override naming "this
+ *     card"/"this spell" in the card's own oracle text (only `ultima` in
+ *     this pool actually has this — see below).
+ *
+ * The SECOND ground is the one real, deliberate, KNOWN broadening this
+ * function can no longer make: `CardDefinition` carries no oracle text at
+ * all (`synergy.ts` has no access to a card's real Scryfall body text to
+ * check for a self-override clause), so there is no way to replicate the
+ * text-based decline here — same "structural data only, no oracle-text
+ * nuance" broadening `isNormalPermanent`'s own doc comment already accepts
+ * for "enters tapped/with a counter." Checked directly (2026-09-14): the
+ * ONLY real pool card this recognizer ever declined for this reason,
+ * `ultima`, already carries its own hand-authored (untagged, no
+ * `provenance`) self-cast/self-graveyard fact pair regardless — the
+ * recognizer's own module doc comment calls this "a likely-latent gap in
+ * that specific hand-authored card, not something this recognizer should
+ * replicate," so `ultima` keeping that pair (now via the "already
+ * declared, skip the synthetic duplicate" guard below, same as before) is
+ * not a new regression, just the same pre-existing state under a new
+ * mechanism.
+ *
+ * Flashback/"cast from a graveyard" cards (`auron-s-inspiration`,
+ * `from-father-to-son`, `dreams-of-laguna`, `retrieve-the-esper`, and
+ * siblings) are NOT a special case here, on purpose, matching the retired
+ * recognizer's own explicit reasoning (its module doc comment: "even
+ * though their OWN normal cast-from-hand resolution still goes to the
+ * graveyard exactly like any other instant/sorcery"): this function
+ * returns `true` for them, and they keep BOTH their own genuinely distinct,
+ * separately-authored `{event:'cast', from:'Graveyard', ...}` +
+ * `{to:'Exile', ...}` Flashback-recast facts (real, card-specific data —
+ * an alternate cost/destination no generic rule predicts) AND the
+ * synthetic normal-Hand-cast/graveyard pair below. See
+ * `findInteractionsForCard`'s own dedup guard for why the "already
+ * declared" check here is narrower than `isNormalPermanent`'s own (checks
+ * `from: 'Hand'` specifically) — without that, a Flashback card's own real
+ * `from: 'Graveyard'` cast fact would wrongly suppress the synthetic
+ * `from: 'Hand'` one.
+ */
+function isNormalInstantOrSorcery(card: CardDefinition): boolean {
+  const primaryType = card.typeLine.split('—')[0]!.trim();
+  if (!/^(Instant|Sorcery)\b/.test(primaryType)) return false;
+  const subtypes = card.typeLine.split('—')[1];
+  if (subtypes?.includes('Adventure')) return false;
+  return true;
+}
+
+/** The `Fact` a normal Instant/Sorcery's printed resolution-to-graveyard
+ * would have declared by hand before the 2026-09-14 removal
+ * (`isNormalInstantOrSorcery`'s own doc comment) — same "built at MATCH
+ * TIME, never written to any `synergy.json`, no `annotations`" treatment
+ * `syntheticCastFact`/`syntheticLifelinkFact` above already establish, for
+ * the same reasons (the TYPE LINE is the real anchor here too, and
+ * `synergy.ts` has no access to a card's real Scryfall type line to
+ * compute a genuine one). No `event` key, matching the retired
+ * recognizer's own emitted shape — the movement is fully described by
+ * `to` alone. */
+function syntheticInstantSorceryGraveyardFact(): Fact {
+  return { role: 'source', to: 'Graveyard', controller: 'you', subject: 'self' } as unknown as Fact;
 }
 
 /**
@@ -1768,24 +2038,73 @@ function syntheticLifelinkFact(): Fact {
   return { role: 'source', event: 'lifegain', controller: 'you', subject: 'self' } as unknown as Fact;
 }
 
-/** Every interaction `cardName` participates in, across `pool` (every card's own facts, itself included — self-interactions are a real, kept output, not filtered out). `tokens` resolves `{token}` subjects; omit for a card set with no token-producing effects yet.
+/**
+ * 2026-09-14 (later, same day): PARKED by explicit user decision, not
+ * deleted. `hasPrintedLifelink`/`syntheticLifelinkFact` above stay in the
+ * file as dead/draft code — this pattern is being reconsidered and may come
+ * back later — but the injection below is now a hard no-op: flip this back
+ * to `true` (and restore the 12 real cards' own `{event:'lifegain'}` source
+ * facts to the opposite state) if/when the pattern is un-parked. Unlike
+ * `hasPrintedLifelink`, the OTHER two synthetic patterns injected in the
+ * same place (`isNormalPermanent`/`syntheticCastFact`/
+ * `syntheticEntersBattlefieldFact` and `isNormalInstantOrSorcery`/
+ * `syntheticInstantSorceryGraveyardFact`) are NOT in question and stay
+ * active — this flag only gates the Lifelink one.
+ */
+const LIFELINK_SYNTHETIC_FACT_ENABLED = false;
+
+/** Every interaction `cardName` participates in, across `pool` (every card's own facts, itself included — self-interactions are a real, kept output, not filtered out). `tokens` resolves `{token}` subjects; omit for a card set with no token-producing edges yet.
  *
- * `pool` is augmented once, locally, before matching: any card with printed
- * Lifelink (`hasPrintedLifelink`) that doesn't ALREADY declare its own real
- * `event:'lifegain'` SOURCE fact gets `syntheticLifelinkFact()` appended to
- * its own (locally copied, never mutated in place) `source` array — see
- * both helpers' own doc comments for why. Done here, once, rather than at
- * `PoolCard` construction time (`server/utils/functionalModelPool.ts`/
- * `scripts/find-synergies.mjs`) so every caller of this function — the
- * per-card Interactions panel AND `server/api/graph-links.ts`'s whole-graph
+ * `pool` is augmented once, locally, before matching. The Lifelink instance
+ * of this (any card with printed Lifelink, via `hasPrintedLifelink`, that
+ * doesn't already declare its own real `event:'lifegain'` SOURCE fact
+ * getting `syntheticLifelinkFact()` appended) is PARKED as of 2026-09-14 —
+ * see `LIFELINK_SYNTHETIC_FACT_ENABLED`'s own doc comment just above this
+ * function — and is currently a no-op; the 12 real cards this used to cover
+ * are back to carrying their own real, explicit `lifegain` fact instead.
+ * Done here, once (when re-enabled), rather than at `PoolCard` construction
+ * time (`server/utils/functionalModelPool.ts`/`scripts/find-synergies.mjs`)
+ * so every caller of this function — the per-card Interactions panel AND
+ * `server/api/graph-links.ts`'s whole-graph
  * edge builder, which walks EVERY card's own `direction:'source'` groups —
  * gets this for free, without either of those call sites needing to know
- * Lifelink is special. */
+ * Lifelink is special.
+ *
+ * Same augmentation, same reasons (2026-09-14): a normal, non-token
+ * permanent (`isNormalPermanent`) that doesn't already declare its own real
+ * self-`cast`/self-`entersBattlefield` fact gets `syntheticCastFact()`/
+ * `syntheticEntersBattlefieldFact()` appended too — see those three
+ * functions' own doc comments for the full "why," including the one known,
+ * deliberate broadening (entering-tapped/with-a-counter cards) this can no
+ * longer distinguish the way the retired recognizer's own oracle-text
+ * check could.
+ *
+ * Same augmentation again, same day, third instance (`isNormalInstantOrSorcery`):
+ * a normal, non-Adventure Instant/Sorcery that doesn't already declare its
+ * own real self-`cast`-from-Hand fact gets `syntheticCastFact()` appended,
+ * and one that doesn't already declare its own real self-graveyard fact
+ * gets `syntheticInstantSorceryGraveyardFact()` appended — see
+ * `isNormalInstantOrSorcery`'s own doc comment for the full "why," the one
+ * known broadening (no oracle-text self-override check, unlike the retired
+ * recognizer), and why the cast-fact "already declared" check below is
+ * narrower here (`from: 'Hand'` specifically) than `isNormalPermanent`'s
+ * own — a Flashback card's genuinely distinct `from: 'Graveyard'` recast
+ * fact must NOT suppress this synthetic `from: 'Hand'` one. */
 export function findInteractionsForCard(cardName: string, pool: PoolCard[], tokens: Record<string, TokenLike> = {}): InteractionGroup[] {
   const augmentedPool = pool.map((pc) => {
-    if (pc.source.some((f) => f.event === 'lifegain')) return pc;
-    if (!hasPrintedLifelink(pc.card)) return pc;
-    return { ...pc, source: [...pc.source, syntheticLifelinkFact()] };
+    let source = pc.source;
+    if (LIFELINK_SYNTHETIC_FACT_ENABLED && !source.some((f) => f.event === 'lifegain') && hasPrintedLifelink(pc.card)) {
+      source = [...source, syntheticLifelinkFact()];
+    }
+    if (isNormalPermanent(pc.card)) {
+      if (!source.some((f) => f.event === 'cast' && f.target === 'self')) source = [...source, syntheticCastFact()];
+      if (!source.some((f) => f.event === 'entersBattlefield' && f.target === 'self')) source = [...source, syntheticEntersBattlefieldFact()];
+    }
+    if (isNormalInstantOrSorcery(pc.card)) {
+      if (!source.some((f) => f.event === 'cast' && f.from === 'Hand' && f.target === 'self')) source = [...source, syntheticCastFact()];
+      if (!source.some((f) => f.to === 'Graveyard' && f.subject === 'self')) source = [...source, syntheticInstantSorceryGraveyardFact()];
+    }
+    return source === pc.source ? pc : { ...pc, source };
   });
   const self = augmentedPool.find((p) => p.name === cardName);
   if (!self) return [];

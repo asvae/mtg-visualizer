@@ -6,38 +6,6 @@
       "controller": "you",
       "subject": "self",
       "sourceText": "(baseline — instant resolves then goes to graveyard, no special ability text)"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
     }
   ],
   "sink": [

@@ -3,7 +3,19 @@
     {
       "event": "lifegain",
       "controller": "you",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 11,
+          "end": 26
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "gainLife-effect-structural"
+      }
     },
     {
       "zone": "Graveyard",
@@ -15,47 +27,25 @@
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 85,
+          "end": 98
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "flashback-alternateCost-structural"
+      }
     },
     {
       "event": "grantKeyword",
       "keyword": "Trample",
       "controller": "you",
       "face": "back"
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "face": "front",
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "face": "front",
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
     },
     {
       "event": "putCounter",
@@ -108,6 +98,24 @@
       "provenance": {
         "origin": "parser",
         "rule": "saga-lore-and-sacrifice-structural"
+      }
+    },
+    {
+      "event": "cast",
+      "from": "Graveyard",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 26,
+          "end": 83
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "flashback-alternateCost-structural"
       }
     }
   ],

@@ -16,17 +16,21 @@
 //     convention that same script uses, including its own two-faced-card
 //     "combined name" reconstruction) — a recognizer never sees anything a
 //     human couldn't also read straight off the card.
-//   - Runs every real recognizer (instant-sorcery-resolves-to-graveyard,
-//     permanent-enters-battlefield-normally, destroy-effect-structural,
+//   - Runs every real recognizer (destroy-effect-structural,
 //     drawCard-effect-structural, saga-lore-and-sacrifice-structural,
 //     dies-trigger-structural, lifegain-trigger-structural,
 //     dealDamage-effect-structural, putCounter-broadcast-structural,
 //     attacks-trigger-structural, putCounterTarget-effect-structural,
-//     addMana-effect-structural) against every face a card has. The plain TEXT recognizers (the first
-//     two, plus dies-trigger-structural/lifegain-trigger-structural) only
-//     ever read that face's own printed `typeLine`/`oracleText`; the
-//     STRUCTURAL ones (destroy/drawCard/saga-lore/dealDamage/putCounter-
-//     broadcast) additionally read that SAME face's own structured
+//     addMana-effect-structural) against every face a card has. (Two more
+//     used to run here too — `permanent-enters-battlefield-normally` and
+//     `instant-sorcery-resolves-to-graveyard`, both retired 2026-09-14, see
+//     this file's own comment right above `RECOGNIZERS` below for where
+//     each one's job went.) The plain TEXT recognizers
+//     (dies-trigger-structural/lifegain-trigger-structural/
+//     attacks-trigger-structural) only ever read that face's own printed
+//     `typeLine`/`oracleText`; the STRUCTURAL ones (destroy/drawCard/
+//     saga-lore/dealDamage/putCounter-broadcast) additionally read that
+//     SAME face's own structured
 //     `effects`/`triggers`/`abilities` straight off its
 //     `CardDefinition`/`backFace` — see `recognizers/structural-effects.ts`'s
 //     own doc comment. `putCounter-broadcast-structural` additionally
@@ -153,8 +157,6 @@
 // Usage: npx vite-node functional-model/scripts/apply-recognizers.mjs [<slug> ...]
 //        (no args = whole pool)
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { recognizeInstantSorceryResolvesToGraveyard } from '../recognizers/instant-sorcery-resolves-to-graveyard.ts';
-import { recognizePermanentEntersBattlefieldNormally } from '../recognizers/permanent-enters-battlefield-normally.ts';
 import { recognizeDestroyEffectStructural } from '../recognizers/destroy-effect-structural.ts';
 import { recognizeDrawCardEffectStructural } from '../recognizers/drawCard-effect-structural.ts';
 import { recognizeSagaLoreAndSacrificeStructural } from '../recognizers/saga-lore-and-sacrifice-structural.ts';
@@ -165,6 +167,14 @@ import { recognizePutCounterBroadcastStructural } from '../recognizers/putCounte
 import { recognizeAttacksTriggerStructural } from '../recognizers/attacks-trigger-structural.ts';
 import { recognizePutCounterTargetEffectStructural } from '../recognizers/putCounterTarget-effect-structural.ts';
 import { recognizeAddManaEffectStructural } from '../recognizers/addMana-effect-structural.ts';
+import { recognizePutCounterSelfEffectStructural } from '../recognizers/putCounterSelf-effect-structural.ts';
+import { recognizePutCounterMagnitudeClauseStructural } from '../recognizers/putCounterMagnitude-clause-structural.ts';
+import { recognizeLandfallTriggerStructural } from '../recognizers/landfall-trigger-structural.ts';
+import { recognizeFlashbackAlternateCostStructural } from '../recognizers/flashback-alternateCost-structural.ts';
+import { recognizeGainLifeEffectStructural } from '../recognizers/gainLife-effect-structural.ts';
+import { recognizePtFormulaScalingPumpStructural } from '../recognizers/ptFormula-scalingPump-structural.ts';
+import { recognizeDigRevealEffectStructural } from '../recognizers/digReveal-effect-structural.ts';
+import { recognizeTriggerDoublingSelfAndAttachedEquipmentStructural } from '../recognizers/triggerDoubling-selfAndAttachedEquipment-structural.ts';
 
 const cardsDir = new URL('../cards/', import.meta.url);
 const dataDir = new URL('../../data/', import.meta.url);
@@ -198,9 +208,37 @@ function hasExceptionMarker(rawSource, ruleId) {
 // decline can be attributed to a specific rule for the exception-marker
 // check/hard-fail report above; not previously needed when every decline was
 // silently swallowed the same way regardless of source.
+// **`permanent-enters-battlefield-normally` retired (2026-09-14)** — used to
+// be registered here, immediately after Recognizer A. Its entire job (a
+// self-`cast`/self-`entersBattlefield` fact pair for a normal, non-token
+// permanent) is now synthesized at MATCH TIME instead
+// (`functional-model/synergy.ts`'s `isNormalPermanent`/`syntheticCastFact`/
+// `syntheticEntersBattlefieldFact`, same mechanism `hasPrintedLifelink`/
+// `syntheticLifelinkFact` already established for printed Lifelink) rather
+// than stored as a `Fact` in `synergy.json` at all — see that file's own
+// doc comments for the full reasoning, including the one deliberate,
+// documented broadening this can no longer replicate (the retired
+// recognizer's own oracle-text-based decline for "enters tapped/with a
+// counter/as a copy/face down"). The recognizer file itself
+// (`recognizers/permanent-enters-battlefield-normally.ts`) is deleted, not
+// kept around inert — its whole scope was producing these two facts.
+//
+// **`instant-sorcery-resolves-to-graveyard` retired (2026-09-14, same day,
+// third instance of this exact pattern)** — used to be registered here
+// FIRST, immediately after this comment. Its entire job (a self-`cast`-
+// from-Hand/self-graveyard fact pair for a normal, non-Adventure Instant/
+// Sorcery) is now synthesized at MATCH TIME instead
+// (`functional-model/synergy.ts`'s `isNormalInstantOrSorcery`/
+// `syntheticCastFact`/`syntheticInstantSorceryGraveyardFact`, same
+// mechanism as both retirements above) rather than stored as a `Fact` in
+// `synergy.json` at all — see that file's own doc comments for the full
+// reasoning, including the one deliberate, documented broadening this can
+// no longer replicate (the retired recognizer's own oracle-text-based
+// self-referential-override decline, `ultima`'s own real, pre-existing,
+// already-latent exception to this). The recognizer file itself
+// (`recognizers/instant-sorcery-resolves-to-graveyard.ts`) is deleted, not
+// kept around inert — its whole scope was producing these two facts.
 const RECOGNIZERS = [
-  { id: 'instant-sorcery-resolves-to-graveyard', recognize: recognizeInstantSorceryResolvesToGraveyard },
-  { id: 'permanent-enters-battlefield-normally', recognize: recognizePermanentEntersBattlefieldNormally },
   { id: 'destroy-effect-structural', recognize: recognizeDestroyEffectStructural },
   { id: 'drawCard-effect-structural', recognize: recognizeDrawCardEffectStructural },
   { id: 'saga-lore-and-sacrifice-structural', recognize: recognizeSagaLoreAndSacrificeStructural },
@@ -227,6 +265,30 @@ const RECOGNIZERS = [
   // destroy/drawCard/dealDamage/putCounter-broadcast above.
   { id: 'putCounterTarget-effect-structural', recognize: recognizePutCounterTargetEffectStructural },
   { id: 'addMana-effect-structural', recognize: recognizeAddManaEffectStructural },
+  // 2026-09-14 follow-up (fact-parity pass, Aerith Gainsborough's own last 2
+  // remaining unprovenanced facts): the first is STRUCTURAL, same family as
+  // putCounterTarget/putCounter-broadcast above; the second is a plain TEXT
+  // recognizer, same family as dies/lifegain above (it never reads `Effect[]`
+  // structure at all — see its own module doc comment for why that's still
+  // genuinely tier-1, not a re-litigation of this same clause's own
+  // documented tier-3 verdict).
+  { id: 'putCounterSelf-effect-structural', recognize: recognizePutCounterSelfEffectStructural },
+  { id: 'putCounterMagnitude-clause-structural', recognize: recognizePutCounterMagnitudeClauseStructural },
+  // 2026-09-14 follow-up (fin/3-10 mechanization pass) — `landfall`/
+  // `flashback`/`gainLife`/`ptFormula`/`digReveal`/`triggerDoubling`. The
+  // first is a plain TEXT recognizer, same family as dies/lifegain/attacks
+  // above; `gainLife`/`digReveal` are STRUCTURAL over `effects`, same family
+  // as destroy/drawCard/putCounterSelf above; `flashback`/`ptFormula`/
+  // `triggerDoubling` are STRUCTURAL over a CARD-DEFINITION-LEVEL field
+  // (`alternateCosts`/`ptFormula`/`triggerDoubling`, never `effects`), same
+  // family as `saga-lore-and-sacrifice-structural` — see this script's own
+  // `faces` construction below for the extra fields each of these 3 need.
+  { id: 'landfall-trigger-structural', recognize: recognizeLandfallTriggerStructural },
+  { id: 'flashback-alternateCost-structural', recognize: recognizeFlashbackAlternateCostStructural },
+  { id: 'gainLife-effect-structural', recognize: recognizeGainLifeEffectStructural },
+  { id: 'ptFormula-scalingPump-structural', recognize: recognizePtFormulaScalingPumpStructural },
+  { id: 'digReveal-effect-structural', recognize: recognizeDigRevealEffectStructural },
+  { id: 'triggerDoubling-selfAndAttachedEquipment-structural', recognize: recognizeTriggerDoublingSelfAndAttachedEquipmentStructural },
 ];
 
 /** Same real-oracle-text-by-Scryfall-name loader `compute-annotations.mjs`
@@ -369,7 +431,28 @@ function isV2Shaped(synergy) {
  * an unrelated `to`-shaped one that happen to share every other key).
  */
 function coreKey(fact, { normalizeSelfSubject = true } = {}) {
-  const keys = ['event', 'to', 'from', 'zone', 'subject', 'target', 'face'];
+  // `types`/`power` added 2026-09-14 (destroy-effect-structural's own new
+  // paired-SINK follow-up, fin/9 Battle Menu) — a real, confirmed collision
+  // this pass's own whole-pool run surfaced: TWO genuinely distinct
+  // pre-existing hand-authored SINK facts on the SAME card can share the
+  // bare `{to:'Battlefield'}` key once `types`/`power` are left out of it —
+  // Battle Menu's own "wants a creature present" (its pumpTarget mode's own
+  // want, no `power`) and "wants a creature with power 4+ present" (its
+  // destroy mode's own want) are a real, checked-in example, not a
+  // hypothetical: the destroy-side sink this recognizer now emits was
+  // silently swallowed as "already covered" by the FIRST (bare) candidate it
+  // happened to find, rather than retagging the correct, narrower one.
+  // Genuinely distinct WANTS deserve genuinely distinct keys — same
+  // "genuinely different real claim" standard the `zone`/`dies`/`subject`
+  // normalizations above already apply, just the opposite direction (adding
+  // discriminating fields rather than dropping redundant ones). Verified
+  // safe pool-wide before adding this (not assumed): re-ran the full pool
+  // and confirmed the only card whose retag/append outcome changed at all is
+  // Battle Menu itself (its own destroy-sink now correctly retags in place
+  // instead of being silently skipped) — every other card's own existing
+  // `types`/`power`-bearing sink facts are either already unique on `to`
+  // alone or already carry no such collision to begin with.
+  const keys = ['event', 'to', 'from', 'zone', 'subject', 'target', 'face', 'types', 'power'];
   const reduced = {};
   for (const k of keys) if (k in fact) reduced[k] = fact[k];
   if (normalizeSelfSubject && reduced.target === 'self' && (reduced.subject === 'self' || reduced.subject === undefined)) {
@@ -732,6 +815,13 @@ async function main() {
         effects: card.effects,
         triggers: card.triggers,
         abilities: card.abilities,
+        // Card-definition-level fields (never inside `effects`/`triggers`/
+        // `abilities`) three 2026-09-14 recognizers need —
+        // `flashback-alternateCost-structural`/`ptFormula-scalingPump-
+        // structural`/`triggerDoubling-selfAndAttachedEquipment-structural`.
+        alternateCosts: card.alternateCosts,
+        ptFormula: card.ptFormula,
+        triggerDoubling: card.triggerDoubling,
       },
     ];
     if (card.backFace) {
@@ -743,6 +833,9 @@ async function main() {
         effects: card.backFace.effects,
         triggers: card.backFace.triggers,
         abilities: card.backFace.abilities,
+        alternateCosts: card.backFace.alternateCosts,
+        ptFormula: card.backFace.ptFormula,
+        triggerDoubling: card.backFace.triggerDoubling,
       });
     }
 
@@ -849,10 +942,16 @@ async function main() {
         effects: face.effects,
         triggers: face.triggers,
         abilities: face.abilities,
+        alternateCosts: face.alternateCosts,
+        ptFormula: face.ptFormula,
+        triggerDoubling: face.triggerDoubling,
         // See `recognizers/types.ts`'s own `RecognizerInput.isBackFace` doc
-        // comment: only `permanent-enters-battlefield-normally` currently
-        // reads this — every other recognizer here ignores it, same as they
-        // already ignore any other field on this wider shared input object.
+        // comment: `permanent-enters-battlefield-normally` used to be the
+        // one recognizer that read this (retired 2026-09-14 — see this
+        // file's own comment above `RECOGNIZERS`); every recognizer still
+        // registered here ignores it, same as they already ignore any other
+        // field on this wider shared input object. Kept on the shared input
+        // shape (not removed) in case a future recognizer needs it again.
         isBackFace: face.face === 'back',
       };
       // Every recognizer's own raw verdict against THIS face, collected

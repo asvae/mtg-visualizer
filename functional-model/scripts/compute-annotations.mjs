@@ -150,19 +150,35 @@ async function main() {
       continue;
     }
 
-    const annotateArray = (arr, authoringArr) =>
+    const annotateArray = (arr, authoringArr, side) =>
       (arr ?? []).map((fact, index) => {
         const face = fact.face ?? 'front';
         const oracleText = face === 'back' ? oracle.back : oracle.front;
         const typeLine = face === 'back' ? card.backFace?.typeLine : card.typeLine;
         const entry = (authoringArr ?? [])[index] ?? null;
-        const annotations = computeFactAnnotations({ oracle: oracleText, typeLine }, entry);
+        let annotations;
+        try {
+          annotations = computeFactAnnotations({ oracle: oracleText, typeLine }, entry);
+        } catch (err) {
+          // `computeFactAnnotations`/`rawHighlightRange` (synergy.ts) throw a
+          // real `Error` (2026-09-14) specifically when this entry's own
+          // `line`/`sourceText` anchor resolves against the real text but its
+          // `highlight` substring genuinely isn't found within it — a real
+          // authoring-time bug (typo, stale text, wrong line index), not a
+          // "nothing to annotate" case. Deliberately NOT caught-and-skipped
+          // here: this is the one place a broken entry gets baked silently
+          // into committed `synergy.json` if nothing stops it, so re-throw
+          // with the slug/side/index/event added (the raw error already
+          // names the highlight/line/sourceText text itself) and let this
+          // whole script crash loudly instead.
+          throw new Error(`${slug}: ${side}[${index}] (event=${fact.event ?? '?'}, face=${face}) — ${err.message}`);
+        }
         if (!annotations) return fact;
         annotated++;
         return { ...fact, annotations };
       });
 
-    const out = { source: annotateArray(raw.source, authoring.source), sink: annotateArray(raw.sink, authoring.sink) };
+    const out = { source: annotateArray(raw.source, authoring.source, 'source'), sink: annotateArray(raw.sink, authoring.sink, 'sink') };
     await writeFile(synergyUrl, JSON.stringify(out, null, 2) + '\n', 'utf8');
     written++;
     console.log(`${slug}: annotated`);

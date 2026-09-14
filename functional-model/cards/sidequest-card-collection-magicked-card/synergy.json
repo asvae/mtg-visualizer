@@ -1,40 +1,6 @@
 {
   "source": [
     {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "face": "front",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 11
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "target": "self",
-      "face": "front",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 11
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally"
-      }
-    },
-    {
       "event": "drawCard",
       "controller": "you",
       "face": "front",

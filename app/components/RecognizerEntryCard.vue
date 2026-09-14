@@ -21,12 +21,25 @@
 // produced, each linking to its real `/app/card/<set>/<number>` page when
 // that route is resolvable (see server/api/recognizers/index.get.ts's own
 // header comment on the ~20 non-FIN reference cards that aren't).
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import type { RecognizerPageEntry } from '../../server/api/recognizers/index.get';
 import type { ReviewStatus } from '../types';
 
 const props = defineProps<{ entry: RecognizerPageEntry }>();
 const emit = defineEmits<{ reviewed: [status: ReviewStatus] }>();
+
+// Default UNCHECKED (type-derived matches hidden) — these are the "every
+// Saga gets the same 3 CR-714 facts purely by being a Saga" busywork rows
+// (see server/api/recognizers/index.get.ts's own `typeDerived` doc comment);
+// reviewing each one individually is repetitive, so they start out of the
+// way. `matchedCards` itself is unaffected — this only gates what
+// `visibleMatchedCards` (below) renders; the header's own "Matched cards
+// (N)" count stays the TOTAL, unfiltered count per this feature's own spec.
+const showTypeDerived = ref(false);
+const typeDerivedMatchedCards = computed(() => props.entry.matchedCards.filter((c) => c.typeDerived));
+const visibleMatchedCards = computed(() =>
+  showTypeDerived.value ? props.entry.matchedCards : props.entry.matchedCards.filter((c) => !c.typeDerived),
+);
 
 const sourceCode = ref('');
 const sourceLoading = ref(true);
@@ -102,9 +115,29 @@ async function confirmReview() {
         <div class="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">
           Matched cards ({{ entry.matchCount }})
         </div>
+
+        <!-- Only rendered when this recognizer actually has any type-derived
+             matches (today, only saga-lore-and-sacrifice-structural — see
+             index.get.ts's own TYPE_DERIVED_RECOGNIZER_IDS comment) — every
+             other recognizer's page has nothing to hide, so no dead "(0)"
+             checkbox clutters it. -->
+        <UCheckbox
+          v-if="typeDerivedMatchedCards.length"
+          v-model="showTypeDerived"
+          class="mb-2 w-full py-1"
+          :ui="{ label: 'flex w-full items-center gap-1.5 text-xs' }"
+        >
+          <template #label>
+            <span class="truncate">Show type-derived facts ({{ typeDerivedMatchedCards.length }})</span>
+          </template>
+        </UCheckbox>
+
         <p v-if="!entry.matchedCards.length" class="text-xs text-muted italic">No card currently carries a fact from this recognizer.</p>
+        <p v-else-if="!visibleMatchedCards.length" class="text-xs text-muted italic">
+          Every match here is type-derived — check "Show type-derived facts" above to see them.
+        </p>
         <ul v-else class="flex flex-wrap gap-1.5">
-          <li v-for="card in entry.matchedCards" :key="card.slug">
+          <li v-for="card in visibleMatchedCards" :key="card.slug">
             <NuxtLink
               v-if="card.set && card.collectorNumber"
               :to="`/app/card/${card.set}/${card.collectorNumber}`"

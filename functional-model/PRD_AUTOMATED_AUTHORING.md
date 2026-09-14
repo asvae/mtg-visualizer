@@ -146,6 +146,10 @@ draft, still applicable):
   oracle text, fixing or extending a rule can be mechanically re-applied
   across the whole affected corpus without re-review — this is the
   concrete payoff of keeping provenance separate in the first place.
+- **Recognizer annotation-logic size heuristic** — see its own dated
+  section below ("Recognizer annotation-logic size heuristic
+  (2026-09-14)") before extending a recognizer's own span-computation code
+  much further.
 
 ## Open questions (flag, don't guess)
 
@@ -1376,3 +1380,333 @@ idempotent at the STATS level too, not just the file-content level.
   `definition-annotations.json`/`definition.ts` changes were already
   present in the working tree before this pass started and are untouched
   by it).
+
+## Recognizer annotation-logic size heuristic (2026-09-14)
+
+Explicit user decision, in the same session that closed a real silent-
+failure gap in `synergy.ts`'s `rawHighlightRange`/`computeFactAnnotations`
+(a `{line, highlight}`/`{sourceText, highlight}` authoring entry whose
+anchor resolved but whose `highlight` genuinely wasn't found now throws
+loudly instead of silently producing no annotation — see that function's
+own doc comment): the user was asked whether to switch the project's whole
+annotation-authoring convention over to coarser, line-only,
+definition-level annotation instead of today's granular substring
+matching, and explicitly declined — the granular/substring approach stays.
+Two safeguards were put in its place instead of that switch; this is the
+second, documentation-only one (the first is the `rawHighlightRange` fix
+itself, above).
+
+**The guideline, for whoever (human or agent) extends a recognizer's own
+annotation-computation logic next**: if a single recognizer's own
+annotation-computation logic — the code that decides WHERE in the oracle
+text (or type line) its own claimed span starts/ends, not the logic that
+decides WHETHER the recognizer matches at all — grows past roughly 200
+lines of real logic (blank lines and comments don't count), stop and
+treat that as a signal to investigate rather than pushing further down
+the same path. In practice this usually means the recognizer has started
+overfitting to too many special-case oracle-text phrasings (one regex
+branch per real-but-slightly-different printed wording, each needing its
+own offset math) — a smell that a COARSER, definition-level line
+annotation (the same `{sourceText?, highlight, line?}` shape
+`annotations-authoring.json` already uses, just pointed at the whole
+printed line/clause rather than a narrow sub-phrase — see
+`check-fact-parity.mjs`'s own "container-level" span handling for the
+existing precedent) is likely the better fit for that SPECIFIC hard case,
+even though the pool-wide convention otherwise stays granular.
+
+This is deliberately a judgment call, not a hard gate: no linter, CI
+check, or other automated tooling enforces the 200-line number, and none
+should be built for it — a recognizer legitimately doing more structural
+work (walking a nested `Effect[]`/`modes[]` shape, say) can reasonably
+need more real logic than one just computing a span, and a rigid
+line-count gate would either false-positive on those or get inflated to
+the point of being useless. The number exists to give a concrete,
+noticeable trigger for "stop and look at this" rather than to be argued
+over at the margins.
+
+(`functional-model/recognizers/` has no README/conventions file of its
+own as of this writing — this PRD is the one place a recognizer-author
+already reads for this kind of design guidance, so this guideline lives
+here rather than a new doc.)
+
+## Aerith Gainsborough's last 2 facts mechanized (2026-09-14)
+
+Closes the "Tier-3 elimination pass, fin/1-5" section's own one remaining
+open item for this card (line ~1258 above, `"this ability's magnitude
+scales with +1/+1 counters on self"`, then **STAYS TIER-3**) — that
+verdict's own reasoning is entirely about TIER 2 (`runtime-action-probe`'s
+execution-trace dependency tracing: proving a SPECIFIC runtime number
+causally flows from `ctx.self.getCounters(...)` into `putCounter`'s own
+`amount` argument needs real numeric-value PROVENANCE tracking this
+codebase's probe family genuinely can't do). That reasoning never applied
+to a TIER-1 literal-clause match — the same family as `lifegain-trigger-
+structural.ts`, which matches "Whenever you gain life" verbatim without
+executing or tracing anything at all. Two new recognizers, both wired into
+the real `apply-recognizers.mjs` pipeline (not prototype-only):
+
+- **`putCounterSelf-effect-structural.ts`** (structural — reads
+  `kind:'putCounter'`, the always-`target:'self'` Effect variant, directly
+  off `CardDefinition`) covers this card's OTHER remaining unprovenanced
+  fact: the `onLifeGained` trigger's own SOURCE effect ("...put a +1/+1
+  counter on Aerith Gainsborough"), which predates this pass as a plain,
+  un-provenanced `synergy.json` fact rather than a `definition.ts`
+  `authoredFact` (no structural putCounter recognizer covered the
+  always-self shape before now — `putCounterTarget-effect-structural.ts`
+  only ever covers a CHOSEN target). Checked all 19 real `kind:'putCounter'`
+  (self-target) occurrences pool-wide (18 distinct cards): 15 matched a
+  "put <anything> <counterType> counter(s) on <self-subject>" template
+  (own printed name, short name before a first comma, or a permanent-
+  supertype self-reference — reusing `dies-trigger-structural.ts`'s own
+  already-vetted vocabulary verbatim); 4 genuinely declined (mismatch,
+  each suppressed via its own new `// recognizer-exception:` marker) —
+  Zack Fair/Tonberry/Relentless X-ATM092 all use a real, different English
+  idiom for the same underlying effect ("enters/returns ... with a counter
+  on it," never the verb "put"), and Phantom Train self-references via its
+  own printed SUBTYPE ("this Vehicle") rather than its name or a vetted
+  supertype word — deliberately NOT force-fit with a brand-new, unvetted
+  "this <printed subtype>" template invented for one card.
+- **`putCounterMagnitude-clause-structural.ts`** (plain TEXT, same family
+  as `lifegain-trigger-structural.ts` — never reads `Effect[]` structure at
+  all) covers the actual former tier-3 `authoredFact`: matches the literal
+  "where X is the number of <counterType> counters on <self-subject>"
+  template, capturing `counterType` straight out of the printed text (no
+  structural signal needed — the clause names everything itself). Checked
+  every real card carrying this task's own named `AuthoredFact` shape
+  (`role:'sink', event:'putCounter', counterType, target:'self'`, tier-3,
+  magnitude-dependency reasoning) pool-wide: Aerith Gainsborough is the
+  ONLY real occurrence (`aerith-rescue-mission`'s own superficially-similar
+  `authoredFact` entries are a genuinely different shape — a chosen,
+  TAPPED target, never `target:'self'`). Separately checked every real card
+  using the BROADER "where X is the number of ..." template at all (8 real
+  cards) to confirm none of the other 7 is even a near-miss for this
+  narrower one (each counts something unrelated — graveyard cards, lands
+  controlled, Towns controlled, etc.) — this template genuinely doesn't
+  vary across the one real card that needs it today.
+
+**A real regex bug found and fixed while building the first recognizer**:
+an unbounded `[^\n]*?` gap between "put" and the counterType let Aerith's
+own SECOND, unrelated clause on the SAME oracle-text line (which prints
+the literal counterType `+1/+1` TWICE in one sentence — the broadcast
+clause AND the magnitude clause immediately after it) produce a spurious
+second match by backtracking straight past the first, correctly-failing
+`+1/+1` occurrence to re-anchor on the second one, yielding a false
+"matched 2 times — ambiguous" decline. Fixed by bounding the quantity-word
+gap to at most 5 whitespace-separated tokens (comfortably above every real
+quantity phrase found, 1 word in every case but Vincent Valentine's 3-word
+"a number of") — see that recognizer's own `buildPattern` doc comment for
+the full trace.
+
+**Definitions updated**: `cards/aerith-gainsborough/definition.ts` (the
+one remaining `authoredFact` entry removed, comments updated to say
+MECHANIZED instead of STAYS TIER-3) + its own `definition-annotations.json`
+(the now-orphaned `authoredFact[0]` key removed) + 4 new `//
+recognizer-exception:` markers (phantom-train, relentless-x-atm092,
+tonberry, zack-fair).
+
+**Wired into the real pipeline**: both added to `recognizers/types.ts`'s
+`RecognizerId` union and `scripts/apply-recognizers.mjs`'s `RECOGNIZERS`
+array (not prototype-only), plus `server/api/recognizer-source/[rule]
+.get.ts`'s `RECOGNIZER_IDS` allowlist and `server/api/recognizers/index
+.get.ts`'s `TITLES` map (both real, live-served surfaces a new recognizer
+must be added to or its own provenance popover/coverage row 404s or falls
+back to a title-cased slug — a recurring miss in past passes, checked and
+fixed proactively this time).
+
+**Verification**: `npx apply-recognizers.mjs` full pool run — 15 cards
+retagged `putCounterSelf-effect-structural`, 1 (Aerith herself) retagged
+`putCounterMagnitude-clause-structural`, 0 new facts appended (every match
+retagged an existing hand-authored fact), the 4 genuine mismatches all
+correctly suppressed via their own exception markers, 0 unresolved
+mismatches (no hard fail). `npx vitest run functional-model` → 584 passed,
+5 skipped (24 new tests across both recognizers' own `.test.ts` files).
+`npx tsc --noEmit` → clean, exit 0. `scripts/verify-synergy.mjs` → 320
+checked, 0 hard failures. `scripts/check-fact-parity.mjs` → Aerith
+Gainsborough now shows `2 containers (script:2 agent:0 unverif:0
+gaps:0) — 2 effects (script:2 agent:0 unverif:0 gaps:0)` (both facts
+fully script-covered, 0 gaps), exit 0 pool-wide.
+
+## fin/3-10 mechanization pass (2026-09-14) — 6 new recognizers, 1 extended
+
+Closes as many AI-authored (no `Fact.provenance`) facts as could be
+HONESTLY mechanized across 7 cards: Adelbert Steiner (fin/3), Aerith
+Rescue Mission (fin/5), Ambrosia Whiteheart (fin/6), Ashe, Princess of
+Dalmasca (fin/7), Auron's Inspiration (fin/8), Battle Menu (fin/9), Cloud,
+Midgar Mercenary (fin/10) — a sibling task to Aerith Gainsborough's own
+closure just above, same discipline. Real whole-pool checks done for every
+candidate BEFORE writing any regex, same as every recognizer in this
+catalog.
+
+**6 new recognizers, all wired into the real pipeline**:
+
+- **`ptFormula-scalingPump-structural.ts`** (structural, reads a
+  CARD-DEFINITION-LEVEL field like `saga-lore-and-sacrifice-structural.ts`,
+  not `Effect[]`) — `CardDefinition.ptFormula.kind:
+  'addPerEquipmentControlled'` (Adelbert Steiner, the ONLY real card using
+  this variant today — `setToCreaturesControlled`, Snow Villiers' own
+  different variant, is out of scope, a genuinely different template).
+  Produces the paired `event:'pump'` SOURCE + "wants Equipment present"
+  SINK.
+- **`digReveal-effect-structural.ts`** (structural) — `kind:'dig'` with
+  `validType:'artifact'` AND `optional:true` AND literal `take:1` (Ashe,
+  Princess of Dalmasca — "look at the top N cards... You may reveal an
+  artifact card from among them and put it into your hand"). Checked all 6
+  real `kind:'dig'` occurrences: Commune with Beavers' own `validType:
+  'any'` is a DOCUMENTED approximation of a real 3-way "artifact, creature,
+  or land" disjunction (not "any card" — declined, no confirmed template);
+  Esper Origins' Saga chapter I has no `optional` at all (an unconditional
+  reveal with a conditional put, not a "may"); Dark Confidant/Memories
+  Returning have no `validType`/"reveal" wording at all; Choco, Seeker of
+  Paradise has a `Computed<number>` `qty`.
+- **`flashback-alternateCost-structural.ts`** (structural, reads
+  `CardDefinition.alternateCosts`) — Magic's own fixed Flashback reminder
+  template ("Flashback <cost> (You may cast this card from your graveyard
+  for its flashback cost[ and any additional costs]. Then exile it.)"),
+  `name:'Flashback', from:'graveyard'`. Checked all 14 real occurrences —
+  byte-identical verbatim in 13; **Memories Returning is a real, confirmed
+  data divergence** (its own checked-in `data/fin/fin_scryfall.json` oracle
+  text prints a bare "Flashback {7}{U}{U}" with NO reminder parenthetical
+  at all, unlike every other real Flashback card) — suppressed via a new `//
+  recognizer-exception:` marker in that card's own `definition.ts`, its
+  real `cast`/`Exile` facts stay hand-authored.
+- **`gainLife-effect-structural.ts`** (structural) — `kind:'gainLife'`
+  with a literal `amount` ("[Yy]ou gain N life," tight adjacency, no gap).
+  Checked all 14 real occurrences: 13 literal, byte-clean matches
+  (including Restoration Magic's own 2 DIFFERENT amounts on one face, each
+  its own real line/fact, and Al Bhed Salvagers' own same-clause
+  `loseLife`+`gainLife` pair, where the tight pattern only ever matches the
+  "gain" half); Omega, Heartless Evolution's own `Computed<number>` amount
+  correctly declines.
+- **`landfall-trigger-structural.ts`** (plain TEXT, same family as
+  `lifegain-trigger-structural.ts`) — Magic's own fixed Landfall
+  ability-word template ("Landfall — Whenever a land you control
+  enters,"), CR 702.49. Checked all 13 real `onLandfall`/"Landfall"
+  mentions: 10 real, byte-identical matches (Ambrosia Whiteheart, the
+  motivating card, plus Sabotender/Chocobo Racetrack/Ride the
+  Shoopuf/Sazh's Chocobo/Tifa Lockhart/Choco, Seeker of Paradise/Gladiolus
+  Amicitia/Rydia, Summoner of Mist/Black Chocobo's transformed back face);
+  Quistis Trepe/Rinoa Heartilly/Thranduil // Silvan Rally only ever
+  MENTION "Landfall" in a comment comparing shapes, never print it — no
+  special-casing needed, the literal-text requirement declines them for
+  free. **Tier-3 graduation**: Ambrosia Whiteheart's own
+  `CardDefinition.authoredFacts` entry for this exact sink is removed (now
+  redundant), same "authoredFacts becomes redundant once a real recognizer
+  exists" pattern `ashe-princess-of-dalmasca`'s own `onAttack` trigger
+  already went through for `attacks-trigger-structural`.
+- **`triggerDoubling-selfAndAttachedEquipment-structural.ts`** (structural,
+  reads `CardDefinition.triggerDoubling`) — `scope:
+  'selfAndAttachedEquipment'` (Cloud, Midgar Mercenary — the ONLY real
+  card using this scope value). `TriggerDoublingGrant.scope` is a closed
+  3-value union, each used by exactly one real card, each with a
+  GENUINELY DIFFERENT real printed sentence — checked directly: The
+  Masamune's own `scope:'equippedSelf'` ("Equipped creature has 'If a
+  creature dying causes...'") and Traveling Chocobo's own
+  `scope:'anyPermanentYouControl'` ("If a land or Bird you control
+  entering the battlefield causes...") are both genuinely different
+  sentences, correctly declined rather than guessed at — no single closed
+  template covers all 3 scopes the way `dies-trigger-structural.ts`'s
+  single "<self> dies" idiom does.
+
+**1 existing recognizer extended**: `destroy-effect-structural.ts` now
+also emits a paired "wants a matching target present" SINK fact (only when
+its own `target` constraint narrows to a real type filter — never for an
+unrestricted "Destroy target permanent"), same "one real clause names both
+what happens and what it wants present" convention
+`putCounterTarget-effect-structural.ts`'s own paired sink already
+establishes. Closes Battle Menu's own "target creature with power 4 or
+greater" sink. Its own test file updated (3 `toEqual` cases gained the new
+sink fact; the 2 `toMatchObject` cases and the no-target Dion/Bahamut case
+needed no change).
+
+**A real, narrow `apply-recognizers.mjs` bug found and fixed alongside
+this pass**: `coreKey`'s own reduced-identity field list excluded `types`/
+`power` entirely, which let Battle Menu's own TWO genuinely distinct
+pre-existing SINK facts (pumpTarget's bare "wants a creature," destroy's
+narrower "wants a creature with power 4+") collide under the same bare
+`{to:'Battlefield'}` key the moment `destroy-effect-structural`'s own new
+sink started producing the second one — the retag loop's own
+multi-candidate "exact annotation match" disambiguation then silently
+found neither, mis-reporting the new sink as "already covered" instead of
+retagging it. Fixed by adding `types`/`power` to `coreKey`'s own key list;
+re-verified pool-wide that this changes outcome for exactly Battle Menu
+and nothing else.
+
+**Real, whole-pool-checked candidates DECLINED, left hand-authored, each
+with an explicit reason recorded directly in that card's own
+`definition.ts`** (not silently left unexplained):
+
+- **Token creation** (`kind:'createToken'`, Aerith Rescue Mission's "create
+  three Hero tokens," Battle Menu's "create a Knight token") — 34 real
+  occurrences pool-wide. A dedicated prior prototype
+  (`recognizers/token-creation-from-forge-script.prototype.ts`) already
+  explored this exact problem (reading Forge's own token scripts instead)
+  and documented real, confirmed fragility: printed word ORDER varies card
+  to card, printed word PRESENCE varies too (some tokens never print
+  "artifact"/"creature" at all), and `tokens.ts`'s own registry has no
+  explicit color field at all (only an id-prefix convention to guess from)
+  — genuinely more fragile than `destroy`/`drawCard`'s single-verb
+  templates. Not attempted.
+- **"Fixed pump"** (`kind:'pumpSelf'`/`'pumpTarget'`/`'pumpAll'` with a
+  literal, non-scaling amount — Ambrosia Whiteheart's Landfall pump,
+  Battle Menu's Ability mode, Auron's Inspiration's attacking-creatures
+  pump) — 34 real occurrences across ~27 cards. Found at least 6 distinct
+  real English subject templates (self/short-name, a bare "it" pronoun,
+  "target creature," "target creature you control," "that creature" after
+  a kicker "instead" clause, "creatures you control get"/"Other creatures
+  you control get," subtype-filtered "Wizards you control get," "Equipped
+  creature gets") plus real compound modifiers (Vayne's Treachery's own
+  SECOND pump effect is a kicker-conditional continuation referring back to
+  the FIRST effect's own chosen target via "that creature," a genuinely
+  different pronoun-carryover problem with no clean structural signal to
+  gate on, unlike `putCounterTarget-effect-structural.ts`'s own
+  "immediately preceded by tapTarget" case). A materially bigger, riskier
+  lift than this pass's other single-verb recognizers; not attempted.
+  Auron's Inspiration's own pump fact additionally has NO real `Effect`
+  data at all to read (a documented `custom` no-op) — undeliverable even
+  with a safe "pump" template in hand.
+- **`aerith-rescue-mission`'s own tap-then-counter-one-of-them clause**
+  (inside a `kind:'custom'` closure) — no structural `Effect` exists to key
+  a recognizer off at all (the tap and the counter placement share ONE
+  opaque closure, since the counter needs to reference which specific
+  object the SAME step's tap already chose) — an even more fundamental
+  version of `putCounterTarget-effect-structural.ts`'s own documented "it"
+  pronoun decline (that file at least has a separate `Effect` object to
+  check a structural "preceded by tapTarget" signal against; this card
+  doesn't have a separate Effect at all).
+- **`ambrosia-whiteheart`'s own "return another permanent" effect** —
+  already covered by `recognizers/move-effect-structural.ts` (present in
+  this pass's working tree, unwired as of this writing — a different,
+  concurrent task's own in-flight work, not touched here), whose own module
+  doc comment already explicitly declines this exact card (`owner`/
+  `notSelf`/`optional` all set, none with a confirmed real-English
+  template).
+- **`cloud-midgar-mercenary`'s own "search library for an Equipment card"
+  effect** — a real, clean, closed "search your library for a[n] <type>
+  card, reveal it, put it into your hand, then shuffle" template DOES
+  exist pool-wide (World Map, Sazh Katzroy also use it verbatim) — but
+  every real candidate, including Cloud, has a confirmed, systemic
+  divergence between the structured `validType` field and the actual
+  printed type word (Cloud's own real text says "Equipment," never
+  "artifact"; Sazh's says "a Bird or basic land card," not "any card";
+  World Map's first ability says "a BASIC land card," omitting "basic"
+  from its own `validType:'land'`). No safe way to bridge this with the
+  data available today (`move`'s own `subtype` field is documented as
+  "only meaningful alongside `target:true`," which this untargeted search
+  effect isn't); not attempted.
+
+**Verification**: `npx apply-recognizers.mjs` full pool run — 43 existing
+hand-authored facts retagged (`ptFormula-scalingPump-structural`: 2,
+`gainLife-effect-structural`: 11, `landfall-trigger-structural`: 8,
+`digReveal-effect-structural`: 2, `flashback-alternateCost-structural`:
+15, `triggerDoubling-selfAndAttachedEquipment-structural`: 2,
+`destroy-effect-structural`: 3), 14 brand-new facts appended pool-wide
+(cards outside this 7-card scope that happen to share the same real
+templates — e.g. every other real Flashback/Landfall card not already
+carrying a hand-authored fact for it), 0 unresolved mismatches (1 genuine
+mismatch, Memories Returning, correctly suppressed via its own exception
+marker), fully idempotent (a second run: 0 changes). `npx vitest run
+functional-model` → 605 passed, 5 skipped (33 new tests across the 6 new
+recognizers' own `.test.ts` files, plus `destroy-effect-structural.test
+.ts`'s own updated cases). `npx tsc --noEmit` → same pre-existing baseline
+error categories, 0 new ones. `scripts/verify-synergy.mjs` → 320 checked,
+0 hard failures. `scripts/check-fact-parity.mjs` → exit 0, no new gaps for
+any of the 7 cards.

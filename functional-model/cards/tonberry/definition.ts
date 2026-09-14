@@ -20,6 +20,12 @@ export const tonberry: CardDefinition = {
       // via the same pool-based `tapTarget` convention shambling-cie-th's
       // own onEnter uses; the counter targets self directly (`putCounter`'s
       // own fixed-self shape needs no pool at all).
+      //
+      // recognizer-exception: putCounterSelf-effect-structural — real text
+      // never uses the verb "put" at all for this counter (it's an
+      // ETB-modifier idiom, "enters tapped with a stun counter on it"), same
+      // real divergence zack-fair's/relentless-x-atm092's own markers
+      // document. See that recognizer's own module doc comment.
       name: 'onEnter',
       effects: [
         { kind: 'tapTarget', validType: 'creature', owner: 'you' } satisfies Effect,

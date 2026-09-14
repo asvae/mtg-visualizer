@@ -1,22 +1,6 @@
 {
   "source": [
     {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
-      }
-    },
-    {
       "event": "entersBattlefield",
       "to": "Battlefield",
       "controller": "you",
@@ -115,22 +99,10 @@
           "start": 9,
           "end": 24
         }
-      ]
-    },
-    {
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 0,
-          "end": 7
-        }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard"
+        "rule": "gainLife-effect-structural"
       }
     }
   ],
@@ -165,10 +137,14 @@
         {
           "target": "oracle",
           "line": 3,
-          "start": 18,
+          "start": 10,
           "end": 57
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      }
     }
   ]
 }

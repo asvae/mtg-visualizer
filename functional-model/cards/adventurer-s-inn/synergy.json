@@ -2,7 +2,19 @@
   "source": [
     {
       "event": "lifegain",
-      "controller": "you"
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 23,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "gainLife-effect-structural"
+      }
     }
   ],
   "sink": []

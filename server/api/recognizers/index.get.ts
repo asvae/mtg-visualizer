@@ -62,12 +62,49 @@
 // omitted and `name` falls back to a title-cased read of the slug itself;
 // the page renders such a row as plain text (no `/app/card/<set>/<number>`
 // link — that route needs both).
+//
+// `typeDerived` (2026-09-14, `ui` agent, "hide busywork Saga review rows"
+// task): per-MATCHED-CARD flag — true when that specific match's fact(s)
+// are entirely predictable from the card's own printed type/supertype
+// alone (e.g. every Saga gets CR 714's lore-counter/sacrifice/dies facts
+// purely by being a Saga, zero card-specific judgment involved), as
+// opposed to a match that required reading THIS card's own specific
+// written ability content (a `definition.ts`-authored `Effect`, or a
+// literal trigger clause that only some cards of that type actually
+// print). Deliberately a PER-MATCH field, not a bare recognizer-level
+// boolean, per this feature's own task spec — a recognizer could in
+// principle match some cards for purely-type reasons and others for
+// substantive ones. In practice, checked directly against the real pool
+// (every recognizer file's own module doc comment, 2026-09-14): only
+// `saga-lore-and-sacrifice-structural` qualifies, and it qualifies for
+// EVERY real match it has today (both its "3-fact" and its rarer
+// "1-fact, sacrifice+dies pair conservatively declined" matches are
+// equally structural — the decline itself is a structural read of the
+// final chapter's own `Effect` kind, never oracle-text judgment). Every
+// other recognizer in the pool keys off that SPECIFIC card's own written
+// effect/trigger content (an authored `kind:'destroy'`/`'drawCard'`/etc.
+// `Effect`, or requires a literal clause like "Whenever ~ dies," to
+// actually appear on that card — not every card of the relevant type
+// carries it), or requires an ABSENCE of override text specific to that
+// card (`instant-sorcery-resolves-to-graveyard`/
+// `permanent-enters-battlefield-normally`), so none of their matches
+// qualify. `TYPE_DERIVED_RECOGNIZER_IDS` (imported below, not defined here
+// any more — see its own doc comment in `functional-model/recognizers/
+// types.ts` for why it was hoisted there 2026-09-14 by the `card` agent, so
+// the card page's own Facts-tab "Show type-derived facts" checkbox shares
+// this exact classification instead of hand-keeping a second copy) is
+// therefore a recognizer-keyed lookup table (today's real pool genuinely IS
+// all-or-nothing per recognizer) feeding a per-match field — if a future
+// recognizer ever legitimately mixes type-derived and substantive matches,
+// this field's shape already supports that without a redesign; only that
+// lookup table would need to grow into something finer-grained.
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { slugify } from '../../../app/lib/buildGraph';
 import type { ScryfallCard } from '../../../app/lib/buildGraph';
 import type { ReviewStatus } from '../../../app/types';
 import { RECOGNIZER_IDS } from '../recognizer-source/[rule].get';
+import { TYPE_DERIVED_RECOGNIZER_IDS } from '../../../functional-model/recognizers/types';
 
 const RECOGNIZERS_DIR = join(process.cwd(), 'functional-model', 'recognizers');
 const CARDS_DIR = join(process.cwd(), 'functional-model', 'cards');
@@ -75,11 +112,11 @@ const CARDS_DIR = join(process.cwd(), 'functional-model', 'cards');
 // This route's own human-readable labels — not present anywhere else in the
 // codebase (RECOGNIZER_IDS itself is just the bare rule-id strings).
 const TITLES: Record<string, string> = {
-  'instant-sorcery-resolves-to-graveyard': 'Instant/sorcery resolves to graveyard',
-  'permanent-enters-battlefield-normally': 'Permanent enters battlefield normally',
   'destroy-effect-structural': 'Destroy (structural)',
   'drawCard-effect-structural': 'Draw card (structural)',
   'saga-lore-and-sacrifice-structural': 'Saga: lore & sacrifice (structural)',
+  'putCounterSelf-effect-structural': 'Put counter on self (structural)',
+  'putCounterMagnitude-clause-structural': 'Counter-count magnitude clause (structural)',
 };
 
 function loadReviewOverrides(): Record<string, true> {
@@ -135,6 +172,8 @@ export interface RecognizerMatchedCard {
   slug: string;
   set?: string;
   collectorNumber?: string;
+  /** See this file's own header comment on `TYPE_DERIVED_RECOGNIZER_IDS`. */
+  typeDerived: boolean;
 }
 
 export interface RecognizerPageEntry {
@@ -175,6 +214,7 @@ export default defineEventHandler((): RecognizerPageEntry[] => {
         slug,
         set: scryfallCard?.set,
         collectorNumber: scryfallCard?.collector_number,
+        typeDerived: TYPE_DERIVED_RECOGNIZER_IDS.has(id),
       });
     }
     matchedCards.sort((a, b) => a.name.localeCompare(b.name));
