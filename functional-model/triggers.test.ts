@@ -22,6 +22,16 @@ function triggerCard(name: string, order: string[]): CardDefinition {
   };
 }
 
+/** Same shape as `triggerCard` above, plus a real `activationLimit` (`card.ts`'s own `Trigger.activationLimit` — G'raha Tia/Elrond, Moon-Reader's real `ActivationLimit$ N`). */
+function limitedTriggerCard(name: string, order: string[], activationLimit: number): CardDefinition {
+  return {
+    name,
+    manaCost: '',
+    typeLine: 'Creature — Test',
+    triggers: [{ name: 'onX', effects: [{ kind: 'custom', describe: 'record firing', run: () => order.push(name) }], activationLimit }],
+  };
+}
+
 describe('fireTrigger (ENGINE_GAPS.md gap #13 — the real "Panharmonicon effect" chokepoint)', () => {
   it('baseline: fires once when no triggerDoubling grant is present anywhere on the battlefield', () => {
     const state = new GameState();
@@ -186,6 +196,91 @@ describe('fireTrigger (ENGINE_GAPS.md gap #13 — the real "Panharmonicon effect
       const doubled = fireTrigger(state, triggerCard("Opponent's Creature", order), ctx, noopActions, 'onX', { kind: 'entersBattlefield', entered: land });
       expect(order).toEqual(["Opponent's Creature"]);
       expect(doubled).toBe(false);
+    });
+  });
+
+  describe("Real ActivationLimit$ N (G'raha Tia/Elrond, Moon-Reader's own shape) — gated BEFORE anything else, per-named-trigger, per-object, real per-turn count", () => {
+    it('fires normally while under the cap', () => {
+      const state = new GameState();
+      const you = state.addPlayer('you');
+      const order: string[] = [];
+      const real = state.addCard(you, 'Battlefield', { name: "G'raha Tia" });
+      const ctx: EffectContext = { self: wrapCard(state, real), you: wrapPlayer(state, you), opponents: [], castFrom: 'hand' };
+      const doubled = fireTrigger(state, limitedTriggerCard("G'raha Tia", order, 1), ctx, noopActions, 'onX');
+      expect(order).toEqual(["G'raha Tia"]);
+      expect(doubled).toBe(false);
+    });
+
+    it('a SECOND firing of the SAME named trigger the same turn is gated outright — no effects run, real ActivationLimit 1', () => {
+      const state = new GameState();
+      const you = state.addPlayer('you');
+      const order: string[] = [];
+      const real = state.addCard(you, 'Battlefield', { name: "G'raha Tia" });
+      const ctx: EffectContext = { self: wrapCard(state, real), you: wrapPlayer(state, you), opponents: [], castFrom: 'hand' };
+      const card = limitedTriggerCard("G'raha Tia", order, 1);
+      fireTrigger(state, card, ctx, noopActions, 'onX');
+      const secondDoubled = fireTrigger(state, card, ctx, noopActions, 'onX');
+      expect(order).toEqual(["G'raha Tia"]); // NOT called a second time
+      expect(secondDoubled).toBe(false);
+    });
+
+    it('a gated firing returns false the same as "did not double" — a caller cannot tell a capped firing apart from a plain non-doubled one via the return value alone', () => {
+      const state = new GameState();
+      const you = state.addPlayer('you');
+      const order: string[] = [];
+      const real = state.addCard(you, 'Battlefield', { name: "G'raha Tia" });
+      const ctx: EffectContext = { self: wrapCard(state, real), you: wrapPlayer(state, you), opponents: [], castFrom: 'hand' };
+      const card = limitedTriggerCard("G'raha Tia", order, 1);
+      fireTrigger(state, card, ctx, noopActions, 'onX');
+      expect(fireTrigger(state, card, ctx, noopActions, 'onX')).toBe(false);
+    });
+
+    it('is scoped per NAMED trigger — a DIFFERENT trigger on the same card is unaffected by the first one being capped out', () => {
+      const state = new GameState();
+      const you = state.addPlayer('you');
+      const order: string[] = [];
+      const real = state.addCard(you, 'Battlefield', { name: 'Elrond, Moon-Reader' });
+      const ctx: EffectContext = { self: wrapCard(state, real), you: wrapPlayer(state, you), opponents: [], castFrom: 'hand' };
+      const card: CardDefinition = {
+        name: 'Elrond, Moon-Reader',
+        manaCost: '',
+        typeLine: 'Creature — Test',
+        triggers: [
+          { name: 'onX', effects: [{ kind: 'custom', describe: 'record firing', run: () => order.push('X') }], activationLimit: 1 },
+          { name: 'onY', effects: [{ kind: 'custom', describe: 'record firing', run: () => order.push('Y') }] },
+        ],
+      };
+      fireTrigger(state, card, ctx, noopActions, 'onX'); // uses up onX's own cap
+      fireTrigger(state, card, ctx, noopActions, 'onX'); // gated
+      fireTrigger(state, card, ctx, noopActions, 'onY'); // unrelated trigger, fires fine
+      expect(order).toEqual(['X', 'Y']);
+    });
+
+    it('resetTriggerActivationsThisTurn (real Cleanup reset) lets the trigger fire again "next turn"', () => {
+      const state = new GameState();
+      const you = state.addPlayer('you');
+      const order: string[] = [];
+      const real = state.addCard(you, 'Battlefield', { name: "G'raha Tia" });
+      const ctx: EffectContext = { self: wrapCard(state, real), you: wrapPlayer(state, you), opponents: [], castFrom: 'hand' };
+      const card = limitedTriggerCard("G'raha Tia", order, 1);
+      fireTrigger(state, card, ctx, noopActions, 'onX');
+      fireTrigger(state, card, ctx, noopActions, 'onX'); // gated
+      state.resetTriggerActivationsThisTurn();
+      fireTrigger(state, card, ctx, noopActions, 'onX'); // allowed again
+      expect(order).toEqual(["G'raha Tia", "G'raha Tia"]);
+    });
+
+    it('a trigger with NO activationLimit set is uncapped — fires every time, same as before this mechanism existed', () => {
+      const state = new GameState();
+      const you = state.addPlayer('you');
+      const order: string[] = [];
+      const real = state.addCard(you, 'Battlefield', { name: 'Plain Permanent' });
+      const ctx: EffectContext = { self: wrapCard(state, real), you: wrapPlayer(state, you), opponents: [], castFrom: 'hand' };
+      const card = triggerCard('Plain Permanent', order); // no activationLimit
+      fireTrigger(state, card, ctx, noopActions, 'onX');
+      fireTrigger(state, card, ctx, noopActions, 'onX');
+      fireTrigger(state, card, ctx, noopActions, 'onX');
+      expect(order).toEqual(['Plain Permanent', 'Plain Permanent', 'Plain Permanent']);
     });
   });
 });

@@ -16,19 +16,21 @@ import type { CardDefinition } from '../../card';
 // than guessing either way — a real gap: no turn-number state exposed to
 // any Effect/Computed function.
 //
-// The two mana abilities ({T}: Add {C}; {T}, Pay 1 life: Add one mana of
-// any color) are real mana-producing abilities — no mana-producing
-// Effect/Action exists anywhere in this model, the documented STILL-
-// DEFERRED gap. All three stay static text — there is no declarative
-// onEnter/effects/abilities entry on this card at all.
+// The two mana abilities are now real, structured `manaAbilities` entries.
+// The first (`{T}: Add {C}.`) is an ordinary payable source; the second's
+// own `cost` (real Forge `Cost$ T PayLife<1>`) genuinely isn't a bare
+// `{T}`, so it's real, typed, but deliberately UNPAYABLE (same
+// "mana ability's own cost needs a real spendable mana-pool mechanism this
+// engine doesn't have" reasoning capital-city's own second ability
+// documents). The turn-count-gated conditional ETB-tap clause stays static
+// text — there is no declarative onEnter/effects/abilities entry for it
+// (no turn-number state exposed to any Effect/Computed function, see
+// below).
 export const startingTown: CardDefinition = {
   name: 'Starting Town',
   manaCost: '',
   typeLine: 'Land — Town',
 
-  staticAbilities: [
-    "This land enters tapped unless it's your first, second, or third turn of the game.",
-    '{T}: Add {C}.',
-    '{T}, Pay 1 life: Add one mana of any color.',
-  ],
+  staticAbilities: ["This land enters tapped unless it's your first, second, or third turn of the game."],
+  manaAbilities: [{ colors: ['C'] }, { cost: '{T}, Pay 1 life', colors: ['W', 'U', 'B', 'R', 'G'] }],
 };

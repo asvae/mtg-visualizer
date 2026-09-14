@@ -1,0 +1,13 @@
+{
+  "triggers[0]": { "highlight": "When Jill enters, return up to one other target nonland permanent to its owner's hand.", "line": 0 },
+  "effects": {
+    "highlight": "{3}{U}{U}, {T}: Exile Jill, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.",
+    "line": 1
+  },
+  "backFace.triggers[0]": { "highlight": "I, II — Mesmerize — Target creature can't be blocked this turn.", "line": 1 },
+  "backFace.triggers[1]": { "highlight": "I, II — Mesmerize — Target creature can't be blocked this turn.", "line": 1 },
+  "backFace.triggers[2]": {
+    "highlight": "III — Cold Snap — Tap all lands your opponents control. Exile Shiva, then return it to the battlefield (front face up).",
+    "line": 2
+  }
+}

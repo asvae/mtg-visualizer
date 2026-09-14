@@ -39,7 +39,7 @@ export const ishgardTheHolySee: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {W}.'],
+  manaAbilities: [{ colors: ['W'] }],
 
   backFace: {
     name: 'Faith & Grief',

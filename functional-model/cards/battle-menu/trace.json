@@ -67,10 +67,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s); opp0: a w_1_1_cat",
-      "action": "engine playthrough: cast -> mode 1 (Ability)",
-      "result": "Ability — a target creature gets +0/+4 until end of turn.",
+      "action": "engine playthrough: cast -> mode 1 (Ability) -> Cleanup (pump expires)",
+      "result": "Ability — a target creature gets +0/+4 UNTIL END OF TURN (the real Cat token becomes 1/5) — the scenario then crosses a real Cleanup (514.2) and the Cat is genuinely back to its base 1/1, the pump having really expired, not just applied.",
       "raw": {
-        "result": "Ability — a target creature gets +0/+4 until end of turn.",
+        "result": "Ability — a target creature gets +0/+4 UNTIL END OF TURN (the real Cat token becomes 1/5) — the scenario then crosses a real Cleanup (514.2) and the Cat is genuinely back to its base 1/1, the pump having really expired, not just applied.",
         "you": {
           "basicLands": [
             "Plains",
@@ -117,9 +117,10 @@
       {
         "fn": "pump",
         "target": "Cat",
-        "id": 243,
+        "id": 10,
         "power": 0,
-        "toughness": 4
+        "toughness": 4,
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
@@ -127,6 +128,76 @@
         "instanceId": 1,
         "from": "stack",
         "to": "Graveyard"
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Cat",
+        "id": 10,
+        "power": 1,
+        "toughness": 5
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatBegin",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDamage",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatEnd",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main2",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "EndOfTurn",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "pump",
+        "target": "Cat",
+        "id": 10,
+        "power": 0,
+        "toughness": -4,
+        "removed": true
+      },
+      {
+        "fn": "phase",
+        "phase": "Cleanup",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Cat",
+        "id": 10,
+        "power": 1,
+        "toughness": 1
       }
     ],
     "actions": [
@@ -141,6 +212,38 @@
       {
         "label": "Resolve",
         "from": 3
+      },
+      {
+        "label": "Advance one step",
+        "from": 8
+      },
+      {
+        "label": "Advance one step",
+        "from": 9
+      },
+      {
+        "label": "Advance one step",
+        "from": 10
+      },
+      {
+        "label": "Advance one step",
+        "from": 11
+      },
+      {
+        "label": "Advance one step",
+        "from": 12
+      },
+      {
+        "label": "Advance one step",
+        "from": 13
+      },
+      {
+        "label": "Advance one step",
+        "from": 14
+      },
+      {
+        "label": "Advance one step",
+        "from": 15
       }
     ]
   },
@@ -225,7 +328,7 @@
       {
         "fn": "destroy",
         "target": "Coliseum Behemoth",
-        "id": 250,
+        "id": 17,
         "controller": "opp0"
       },
       {

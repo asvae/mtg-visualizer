@@ -1,0 +1,11 @@
+{
+  "triggers[0]": {
+    "highlight": "When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand.",
+    "line": 1
+  },
+  "triggers[1]": {
+    "highlight": "Landfall — Whenever a land you control enters, Ambrosia Whiteheart gets +1/+0 until end of turn.",
+    "line": 2
+  },
+  "authoredFacts[0]": { "highlight": "Whenever a land you control enters", "line": 2 }
+}

@@ -1,0 +1,7 @@
+{
+  "triggers[0]": {
+    "highlight": "As long as The Lunar Whale attacked this turn, you may play the top card of your library.",
+    "line": 2
+  },
+  "effects": { "highlight": "Crew 1", "line": 3 }
+}

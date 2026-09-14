@@ -1,0 +1,18 @@
+{
+  "effects": {
+    "highlight": "{5}{W}{W}: Exile this Equipment, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.",
+    "line": 1
+  },
+  "backFace.triggers[0]": {
+    "highlight": "I, II — Prevent all damage that would be dealt to creatures you control this turn.",
+    "line": 1
+  },
+  "backFace.triggers[1]": {
+    "highlight": "I, II — Prevent all damage that would be dealt to creatures you control this turn.",
+    "line": 1
+  },
+  "backFace.triggers[2]": {
+    "highlight": "III — Tap all creatures your opponents control.",
+    "line": 2
+  }
+}

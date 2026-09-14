@@ -1,0 +1,7 @@
+{
+  "triggers[0]": { "highlight": "When this Vehicle enters, create a 1/1 colorless Hero creature token.", "line": 0 },
+  "effects": {
+    "highlight": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+    "line": 1
+  }
+}

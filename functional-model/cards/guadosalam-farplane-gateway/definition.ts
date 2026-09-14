@@ -1,9 +1,9 @@
 import type { CardDefinition, Effect } from '../../card';
 
-// Real script (guadosalam_farplane_gateway.txt) — same real "enters tapped"
-// replacement effect and mana-ability-as-text treatment as
-// treno-dark-city's own doc comment explains in full; only the two colors
-// produced differ.
+// Real script (guadosalam_farplane_gateway.txt) — same real "enters
+// tapped" replacement effect and real, structured choice-of-color
+// `manaAbilities` treatment as treno-dark-city's own doc comment explains
+// in full; only the two colors produced differ.
 export const guadosalamFarplaneGateway: CardDefinition = {
   name: 'Guadosalam, Farplane Gateway',
   manaCost: '',
@@ -16,5 +16,5 @@ export const guadosalamFarplaneGateway: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {G} or {U}.'],
+  manaAbilities: [{ colors: ['G', 'U'] }],
 };

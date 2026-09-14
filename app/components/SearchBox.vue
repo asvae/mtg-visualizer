@@ -20,10 +20,19 @@
 // top, it doesn't touch that mechanism at all.
 //
 // Default action (mouse click on a row body, or Enter while the row itself —
-// not its add/remove button — has focus) is always OPEN —
-// store.openCardPanel(set, number), same PRD 02 peek panel a graph-node
-// click already opens, regardless of whether the row is currently in Scope
-// or not. ADD/REMOVE is a genuinely separate action, a two-step keyboard
+// not its add/remove button — has focus) is route-aware: on the graph page
+// itself (`/app`, which is ALSO where List view lives — `viewMode` is just
+// which renderer that one route mounts, and PRD 02's CardPeekPanel is only
+// ever mounted there either way, see pages/app/index.vue) it still opens the
+// PRD 02 peek panel (store.openCardPanel(set, number)), same as a graph-node/
+// list-row click. On any OTHER page this component/AppHeader is mounted on
+// (the full card page, /app/keywords, /app/recognizers, ...) a peek panel
+// would be inert there anyway (CardPeekPanel isn't mounted, nothing reads
+// `?card=`) — so the default action instead navigates straight to that
+// card's own full `/app/card/[set]/[number]` page, via `navigateTo` (same
+// helper CardPeekPanel.vue's own "expand" action already uses for this exact
+// destination). This is unchanged for whether the row is currently in Scope
+// or not, in both cases. ADD/REMOVE is a genuinely separate action, a two-step keyboard
 // gesture confirmed by the coordinator/user: → (ArrowRight) moves focus onto
 // the active row's own add/remove button with NO side effect yet (visually
 // indicated — see `armed` below); Enter WHILE armed performs the action; ←
@@ -44,6 +53,13 @@ import type { CardData } from '../types';
 
 const store = inject(StoreKey)!;
 const toast = useToast();
+const route = useRoute();
+// Same check layouts/graph.vue's own `isGraphPage` already uses to decide
+// whether PhysicsControls make sense — reused here for the same underlying
+// reason: CardPeekPanel is only ever mounted from this one route (both
+// Graph and List view live under it), so this is really "is a peek panel
+// even present to open" rather than a graph-view-specific check per se.
+const onGraphRoute = computed(() => route.path === '/app');
 
 const RESULT_LIMIT = 10;
 const DISCOVER_MIN_LEN = 2;
@@ -199,7 +215,11 @@ watch(rows, (r) => {
 });
 
 function openRow(card: CardData) {
-  store.openCardPanel(card.set, card.collectorNumber);
+  if (onGraphRoute.value) {
+    store.openCardPanel(card.set, card.collectorNumber);
+  } else {
+    navigateTo(`/app/card/${card.set}/${card.collectorNumber}`);
+  }
   dropdownOpen.value = false;
   armed.value = false;
 }

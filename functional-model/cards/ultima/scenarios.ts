@@ -48,8 +48,11 @@ function wipesArtifactsAndCreaturesOnBothSides(): TraceResult {
 
   // Real, untouched lands on both sides, to demonstrate the wipe genuinely
   // stops at "artifacts and creatures" rather than everything.
-  pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'], manaAbility: 'W' });
-  pilot.state.addCard(opp, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'], manaAbility: 'W' });
+  // No `manaAbilities` needed — a basic Plains' own `subtypes: ['Plains']`
+  // already makes `mana.ts`'s `sourceColors` recognize it as a real `W`
+  // source (the basic-land-subtype path, unrelated to `manaAbilities`).
+  pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+  pilot.state.addCard(opp, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
 
   const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: ultima.name, types: [] });
   const actions = pilotActions(pilot, cardReal.id);

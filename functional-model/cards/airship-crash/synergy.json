@@ -41,6 +41,11 @@
         "origin": "parser",
         "rule": "instant-sorcery-resolves-to-graveyard"
       }
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1
     }
   ],
   "sink": [
@@ -53,6 +58,11 @@
         ]
       },
       "value": 1
+    },
+    {
+      "event": "discard",
+      "target": "self",
+      "value": -1
     }
   ]
 }

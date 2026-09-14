@@ -1,0 +1,9 @@
+{
+  "triggers[0]": { "highlight": "I, II — Destroy up to one target nonland permanent.", "line": 1 },
+  "triggers[1]": { "highlight": "I, II — Destroy up to one target nonland permanent.", "line": 1 },
+  "triggers[2]": { "highlight": "III — Draw two cards.", "line": 2 },
+  "triggers[3]": {
+    "highlight": "IV — Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.",
+    "line": 3
+  }
+}

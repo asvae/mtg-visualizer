@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-14",
+  "notes": "2026-09-14: Forestcycling {2} is now real, structured, engine-piloted (ENGINE_GAPS.md gap #23, closed 2026-09-14) \u2014 same mechanism as Cloudbound Moogle's Plainscycling, scoped to Forest. scenarios.ts now runEngineScenarios (2 real engine-piloted scenarios: cast+ETB, Forestcycling activated from hand); the old keywordScenarios(balambTRexaur) spread contributed 0 scenarios for this card anyway (Trample isn't a Lifelink/CDA/Legendary probe), so nothing lost. Added real tutor SOURCE + discard-self/wants-a-Forest-in-library SINK facts (previously this card had ZERO facts for its own printed Cycling ability at all). vitest 550/550, verify-synergy.mjs 320 checked/0 hard failures, tsc no new errors.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

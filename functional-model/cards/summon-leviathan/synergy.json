@@ -8,14 +8,13 @@
       "annotations": [
         {
           "target": "typeLine",
-          "start": 12,
+          "start": 0,
           "end": 20
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {
@@ -32,8 +31,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {
@@ -119,16 +117,14 @@
       "value": 1,
       "annotations": [
         {
-          "target": "oracle",
-          "line": 0,
-          "start": 47,
-          "end": 65
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "saga-lore-and-sacrifice-structural",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'saga-lore-and-sacrifice-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "saga-lore-and-sacrifice-structural"
       }
     },
     {

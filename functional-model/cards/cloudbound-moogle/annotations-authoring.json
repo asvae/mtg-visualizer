@@ -27,6 +27,10 @@
     {
       "sourceText": "Plainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)",
       "highlight": "Discard this card"
+    },
+    {
+      "sourceText": "Plainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)",
+      "highlight": "Search your library for a Plains card"
     }
   ]
 }

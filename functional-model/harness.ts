@@ -830,13 +830,17 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       });
       return made.map((c) => loggingCard(state, c, log));
     },
-    pump: (target, power, toughness) => {
+    pump: (target, power, toughness, opts) => {
       const name = 'getName' in target ? target.getName() : String(target);
       const isCard = 'getId' in target && !('getLife' in target);
-      if (isCard) state.pump(cardOf(target as Card), power, toughness);
+      if (isCard) state.pump(cardOf(target as Card), power, toughness, opts);
       // `id` — real per-instance identity (2026-09-12, real regression fix:
       // see `putCounter`'s own doc comment below for the full incident).
-      log.push({ fn: 'pump', target: name, id: isCard ? (target as Card).getId() : undefined, power, toughness });
+      // `untilEndOfTurn` (2026-09-14) — same field/convention `grantKeyword`'s
+      // own log entry already established (`|| undefined` so an unset one
+      // still serializes as a present-but-undefined key rather than a
+      // differently-shaped entry).
+      log.push({ fn: 'pump', target: name, id: isCard ? (target as Card).getId() : undefined, power, toughness, untilEndOfTurn: opts?.untilEndOfTurn || undefined });
     },
     moveTo: (target, zone) => {
       const real = cardOf(target);
@@ -947,6 +951,13 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       const discarded = state.discard(playerOf(player), qty);
       log.push({ fn: 'discard', player: player.getName(), qty, cards: discarded.map((c) => c.name) });
     },
+    // Real 601.2/701.19 "then shuffle" (`move`'s own `shuffleAfter` field,
+    // card.ts, ENGINE_GAPS.md gap #23) — a genuine Fisher-Yates reorder
+    // (`state.shuffleLibrary`), not a documentary no-op.
+    shuffleLibrary: (player) => {
+      state.shuffleLibrary(playerOf(player));
+      log.push({ fn: 'shuffleLibrary', player: player.getName() });
+    },
     // `state.mill` (ENGINE_GAPS.md gap #19, closed) — a real, dedicated
     // library->graveyard batch move, distinct from `move` above, and the
     // one real chokepoint a genuine CR 614.2 mill-doubling replacement (The
@@ -993,6 +1004,26 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       // present, lets a consumer pick the REAL matching instance instead
       // of guessing "first same-named match."
       log.push({ fn: 'putCounter', target: target.getName(), id: real.id, counterType, amount, controller: state.players.get(real.controllerId)!.name });
+    },
+    // Real Forge `DB$ Effect | RememberObjects$ Targeted | StaticAbilities$
+    // ...` (613, Ultima, Origin of Oblivion's own blight counter,
+    // ENGINE_GAPS.md's own closure) — installs the grant directly onto the
+    // real target, alongside its own counter. Real bookkeeping, not a
+    // produce/consume-shaped board Fact — same "no fact vocabulary for this
+    // yet, and none needed" treatment `queueExtraPhase`'s own log entry
+    // already gets (`scripts/verify-synergy.mjs`'s `IGNORED_FNS`).
+    installCounterConditionalGrant: (target, grant) => {
+      const real = cardOf(target);
+      state.installCounterConditionalGrant(real, grant);
+      log.push({
+        fn: 'installCounterConditionalGrant',
+        target: target.getName(),
+        id: real.id,
+        counterType: grant.counterType,
+        removeLandTypes: !!grant.removeLandTypes,
+        removeAllAbilities: !!grant.removeAllAbilities,
+        grantManaAbility: grant.grantManaAbility ?? null,
+      });
     },
     equip: (equipment, target) => {
       state.equip(cardOf(equipment), cardOf(target));

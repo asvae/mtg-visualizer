@@ -83,6 +83,127 @@ it's worth building at all) should cite a real card, not a hypothetical one.
   multi-counter decrement, the "no counter → untaps/dies normally"
   negative paths, and "a non-Graveyard destination isn't redirected").
 
+- **Counter-conditional continuous effects — a real 613 static grant
+  installed onto an arbitrary OTHER object, keyed on ITS OWN counter
+  presence (closed, Ultima, Origin of Oblivion, fin/2).** Real Forge
+  citation, `res/cardsfolder/u/ultima_origin_of_oblivion.txt`:
+  ```
+  T:Mode$ Attacks | ValidCard$ Creature.Self | Execute$ TrigPutCounter | ...
+  SVar:TrigPutCounter:DB$ PutCounter | ValidTgts$ Land | CounterType$ BLIGHT | CounterNum$ 1 | ... | SubAbility$ DBEffect
+  SVar:DBEffect:DB$ Effect | RememberObjects$ Targeted | StaticAbilities$ BlightStatic | ForgetOnMoved$ Battlefield | ForgetCounter$ BLIGHT | Duration$ Permanent
+  SVar:BlightStatic:Mode$ Continuous | Affected$ Card.IsRemembered | RemoveLandTypes$ True | RemoveAllAbilities$ True | AddAbility$ ColorlessMana
+  SVar:ColorlessMana:AB$ Mana | Cost$ T | Produced$ C | SpellDescription$ Add {C}.
+  ```
+  "Whenever Ultima attacks, put a blight counter on target land. For as long
+  as that land has a blight counter on it, it loses all land types and
+  abilities and has '{T}: Add {C}.'" used to sit as inert `staticAbilities`
+  text (this card's own prior comment: no continuous-effect-tied-to-a-
+  counter-presence machinery existed — `layers.ts` only tracked P/T and
+  added types, not ability removal/type-loss/ability-grant conditioned on
+  "does this permanent have counter X").
+
+  New, general vocabulary, genuinely different from the pre-existing
+  `continuousKeywordGrants`/`continuousPTGrants`/`continuousTypeGrants`/
+  `activatedAbilityLock` family (all of which broadcast FROM a permanent's
+  OWN `CardDefinition`, copied at resolve time, onto self/a subtype-you-
+  control/whatever it's equipped to): `card.ts`'s new
+  `CounterConditionalGrant` (`{counterType, removeLandTypes?,
+  removeAllAbilities?, grantManaAbility?}`) is instead INSTALLED directly
+  onto an ARBITRARY other object at the moment some OTHER effect
+  (`putCounterTarget`) puts a counter on it, via a new
+  `Actions.installCounterConditionalGrant` (mirrors `putCounter`'s own
+  free-action shape; ambient in `interfaces.ts`, real implementation
+  `GameState.installCounterConditionalGrant`, state.ts) — and from then on
+  stays keyed PURELY on that object's own live counter count, with no
+  relationship to whatever installed it (matching real Forge's own
+  `Duration$ Permanent` — the remembered-object Effect genuinely outlives
+  Ultima itself). `putCounterTarget`'s own new optional `grant` field
+  (`Omit<CounterConditionalGrant, 'counterType'>` — the counter type is
+  always the SAME one this same effect just placed, threaded automatically
+  so the two fields can never drift apart) is the one new `Effect` surface;
+  Ultima's own `definition.ts` sets `grant: {removeLandTypes: true,
+  removeAllAbilities: true, grantManaAbility: {colors: ['C']}}` on its
+  `onAttack` trigger's `putCounterTarget` effect.
+
+  Real, LIVE readers, re-checked fresh on every call (never a one-time
+  snapshot at the counter's application — the explicit design constraint
+  for this closure): `state.ts`'s `hasCounterConditionalLandTypeLoss`
+  (consumed by `effectiveSubtypes`, which now strips the affected land's
+  subtypes to `[]` unconditionally when active — real Forge `RemoveLandTypes$
+  True`, layer 4) and `hasCounterConditionalAbilityLoss` (consumed by
+  `effectiveKeywords`, which returns `[]` when active, and by `engine.ts`'s
+  `canActivateAbility`, which now rejects activating any OTHER activated
+  ability the affected permanent has — real Forge `RemoveAllAbilities$
+  True`, layer 6); `mana.ts`'s own `sourceColors`/`sourceAmount`/
+  `payableManaAbility` duck-type the identical check locally (that file
+  never imports a VALUE from `state.ts`) so a blighted land's normal mana
+  derivation (basic-land-subtype-based OR its own printed
+  `manaAbilities`) is replaced outright by the granted `{T}: Add {C}` —
+  `grantManaAbility` wins over `removeAllAbilities` wins over the card's own
+  normal derivation. No `GameState` sweep is needed for any of this (unlike
+  `qualifiesForContinuousGrant`'s own sibling family) — the rule was
+  installed directly onto the affected object itself, so every reader only
+  ever consults that ONE object's own two fields (`counterConditionalGrants`,
+  `counters`).
+
+  Approximated Forge's own remembered-object-set mechanism
+  (`RememberObjects$ Targeted`/`ForgetCounter$ BLIGHT`) as "any permanent
+  currently carrying >=1 counter of `counterType`" — behaviorally identical
+  for this card: no FIN card ever removes a blight counter independent of a
+  zone change, which already wipes `RealCard.counters` (and therefore
+  neutralizes every reader above) via the existing 400.7 reset, same "a
+  narrower live check achieves the same real outcome" reasoning the Stun/
+  Finality closure above already established for a comparable per-object
+  counter-keyed replacement.
+
+  **Real, HARD, explicitly-named remaining gap — flagged, not quietly
+  worked around**: real Forge's `RemoveAllAbilities$ True` removes EVERY
+  ability the affected object has, including TRIGGERED ones. This closure
+  only suppresses mana abilities, printed keywords, and OTHER activated
+  abilities (The Gold Saucer's own real "{3}, {T}, Sacrifice two artifacts:
+  ..." is the one real FIN card this last case matters for if it's ever
+  blighted) — a triggered ability has NO per-object "is this specific
+  trigger currently suppressed" gate anywhere in this codebase
+  (`Trigger`/`fireTrigger` has no such check), and building one generically
+  would mean every real trigger-firing call site in this codebase
+  (`stack.ts`, `engine.ts`'s several dispatch sites, `saga.ts`,
+  `harness.ts`'s scenario runner, `engine-trace.ts`'s `pilotFireTrigger`,
+  already funneled through `triggers.ts`'s shared `fireTrigger` chokepoint
+  for trigger-DOUBLING — the identical chokepoint COULD carry this check
+  too) consulting a per-object suppression flag before firing. Checked the
+  real pool before deciding not to attempt this: every real FIN Town-cycle
+  land's own OTHER ability is a ONE-SHOT `onEnter` ETB trigger that has
+  ALREADY resolved by the time Ultima (an ATTACK trigger, necessarily well
+  after any target land's own ETB) could ever blight it — so this specific
+  gap is real but not LIVE for any card in this pool today. A hypothetical
+  future land with a repeatable `'upkeep'`/`'endStep'`/`'tapLandForMana'`
+  trigger would still incorrectly keep firing it while blighted.
+
+  Real demonstration: `cards/ultima-origin-of-oblivion/scenarios.ts`'s own
+  `attacksAndBlightsAnOpponentLand` scenario now shows the blighted Forest
+  genuinely losing its land type (`read:effectiveSubtypes` → `[]`) and its
+  mana ability becoming exactly `['C']` (`read:sourceColors`), then
+  genuinely paying a real `{1}` generic cost off it (`payMana` — `{C}`
+  itself can't be demonstrated as a CAST cost pip, a separate, already-
+  documented, unrelated gap in gap #6 below: `parseManaCost` still doesn't
+  parse a colorless-specific pip IN a cast cost). No new Fact —
+  `installCounterConditionalGrant`'s own trace line is real engine
+  bookkeeping (which object a continuous effect got installed onto), not a
+  produce/consume-shaped board relation any Fact vocabulary models, same
+  treatment `queueExtraPhase` already got (`scripts/verify-synergy.mjs`'s
+  `IGNORED_FNS`).
+
+  `npx vitest run functional-model` 478/478 green (unchanged count — no new
+  test file added; this closure is demonstrated via the real scenario trace
+  rather than a new unit-test file, matching how gap #5's mana-ability
+  migration itself was verified per-card). `tsc --noEmit` — zero NEW errors
+  (same pre-existing baseline categories as every prior pass:
+  TS5097/TS7016/doppelgang/elrond-moon-reader implicit-any/one unrelated
+  Jill `Actions` mismatch — that one's own missing-field list actually
+  SHRANK by one this pass, since `installCounterConditionalGrant` was added
+  to its own hand-built `realActions` alongside `putCounter`).
+  `scripts/verify-synergy.mjs` full pool: 320 checked, 0 hard failures.
+
 ## Accepted simplifications — NOT gaps to close
 
 These came up in conversation explicitly ("we don't need AI yet, and we
@@ -190,6 +311,38 @@ so a future pass doesn't mistake them for missing work:
    either today — checked): "each player's"/"each opponent's" upkeep/
    end-step triggers (as opposed to "your own"); "skip your next X
    step/phase" effects.
+   **(d) `on: 'tapLandForMana'` trigger auto-fire, CLOSED 2026-09-14**
+   (depended on gap #5's own typed-`manaAbilities` closure above — couldn't
+   detect "tapped a land for mana" as a real event before mana production
+   was structural). Real Forge citation: `TriggerType.TapsForMana`
+   (`TriggerTapsForMana.java`'s `performTest` checks `ValidCard`/
+   `Activator`/`Produced` against the real event), fired via
+   `AbilityManaPart.tapsForMana()` whenever a `{T}`-cost mana ability
+   resolves — mirrored here as `Trigger.on: 'tapLandForMana'` (card.ts) plus
+   a new `Trigger.tapLandForManaColor?: ManaColor` field (mirrors Forge's
+   own `Produced$` gate: omit it to fire on ANY color, name one to fire
+   only when that color was produced). `engine.ts`'s new
+   `fireOnTapLandForManaTriggers(engine, controller, tapped)` is the real
+   auto-fire — called from BOTH of `payMana`'s only two call sites
+   (`castSpell`, `activateAbility`): for every tapped source that's a real
+   `Land`, reads its `sourceColors` (mana.ts) and checks every controller
+   permanent's own registered `resolvedPermanents` entry for a matching
+   trigger, firing it through the same `fireTrigger` (triggers.ts)
+   chokepoint every other trigger uses (so trigger-doubling still applies
+   uniformly). Real FIN card this closes: Ultima, Origin of Oblivion's own
+   "Whenever you tap a land for {C}, add an additional {C}"
+   (`res/cardsfolder/u/ultima_origin_of_oblivion.txt`'s own `T:Mode$
+   TapsForMana | ValidCard$ Land | Activator$ You | Produced$ C |
+   Execute$ TrigMana`) — its `definition.ts` now declares a genuine
+   `on: 'tapLandForMana', tapLandForManaColor: 'C'` trigger instead of
+   sitting as inert `staticAbilities` text; its own `scenarios.ts` no
+   longer manually fires it (previous version hand-simulated the doubling
+   via a direct `pilotFireTrigger` call) — the real trigger now fires
+   automatically off a genuine land tap forced by a same-turn second cast
+   (deliberately kept within one turn: crossing a real Untap step
+   re-untaps every land per 502.1, defeating a forced-scarcity setup — a
+   real lesson from this scenario's own first, buggy draft, not an
+   invented board state).
 4. ~~**Target-legality checking at cast/declare time, and re-validation at
    resolution (608.2b, "fizzle").**~~ **CLOSED for the real, load-bearing
    shape (2026-09-12)** — real cast-time target LOCKING (601.2c/602.1) plus
@@ -294,76 +447,116 @@ so a future pass doesn't mistake them for missing work:
 
 ### Medium priority (common, but narrower blast radius)
 
-5. **Non-basic mana sources.** ~~A narrow real slice~~ **CLOSED for
-   single-color, unrestricted "{T}: Add {X}." sources** (unchanged from
-   before) — checked every real `{T}: Add ...` static-ability string across
-   the pool (35 cards total): 10 qualify for this narrow slice (Druid of
-   the Cowl, Goobbue Gardener, Llanowar Elves — creatures, so 302.6
-   summoning-sickness genuinely applies via a new `payableManaSources`
-   wrapper; Midgar, Ishgard, Jidoor, Lindblum, Zanarkand — Adventure lands;
-   White Auracite, an artifact; Willowrush Verge, a plain land with a
-   second, correctly still-ignored restricted ability). `mana.ts`'s
-   `manaAbilityColorFromStaticText` derives the color at the exact moment
-   a permanent resolves (`resolveTop`/`playLand`), stored on
-   `RealCard.manaAbility` — `RealCard` carries no live `CardDefinition`
-   reference to re-derive it from later, same reasoning `enteredThisTurn`/
-   `resolvedPermanents` already established.
+5. **Non-basic mana sources.** ~~A narrow real slice~~ ~~CLOSED for
+   single-color, unrestricted "{T}: Add {X}." sources~~ **CLOSED for real
+   (2026-09-14): the free-text `staticAbilities`-regex path is GONE.**
+   `CardDefinition` now carries a real typed `manaAbilities?: ManaAbility[]`
+   field (`card.ts`, alongside `keywords`/`ptFormula`) — `interface
+   ManaAbility { cost?: string; colors: ManaColor[]; amount?: number;
+   variableAmount?: {kind:'countSubtypeControlled', subtype: string} |
+   {kind:'selfPower'}; restriction?: string; activationCondition?: string }`,
+   fields named to mirror Forge's own real `AbilityManaPart.java`
+   constructor params (`Cost$`/`Produced$`/`Amount$`/`RestrictValid$`/
+   `AddsKeywords$`; `res/cardsfolder/*/*.txt`'s own `Mana$ Add` script
+   grammar) rather than inventing new vocabulary. `RealCard.manaAbility?:
+   ManaColor | ManaColor[]` is gone too, replaced by
+   `RealCard.manaAbilities?: ManaAbility[]` (`state.ts`, a duck-typed local
+   re-declaration per that file's own never-import-from-`card.ts`
+   convention) — populated straight from `CardDefinition.manaAbilities` at
+   `resolveTop`/`playLand`, no derivation step at all now. `mana.ts`'s three
+   regex functions (`manaAbilityColorFromStaticText`,
+   `manaAbilityColorsFromStaticText`, `deriveManaAbility`) are DELETED, not
+   deprecated — replaced by `payableManaAbility(card)` (finds the first
+   `ManaAbility` entry with no `restriction`/`activationCondition`/
+   `variableAmount` and a `cost` that's unset or exactly `'{T}'` — the only
+   shape `canAfford`/`payMana` can honestly enforce) and `sourceColors`/
+   `sourceAmount` built on top of it. `assignManaRequirements`'s own
+   exhaustive backtracking (gap #5's own 2026-09-12 dual-color closure,
+   unchanged) is reused verbatim — it never cared how a source's color list
+   was derived, so the migration is a pure swap underneath it, not a
+   rewrite of it. `canAfford`/`payMana` were also generalized to SUM
+   `sourceAmount` per leftover source for generic coverage instead of
+   counting 1:1 — real new capability, not just a refactor: Ring of the
+   Lucii's genuine `{T}: Add {C}{C}.` (`amount: 2`) is payable for the first
+   time (previously matched NEITHER old regex, silently unrecognized).
 
-   **Also now CLOSED (2026-09-12) for the dual/choice-of-color remainder** —
-   checked every real `{T}: Add {X} or {Y}.` static-ability string across
-   the pool: 12 real Town-cycle lands qualify (Vector, Imperial Capital's
-   own "{T}: Add {B} or {R}.", e.g.). `RealCard.manaAbility` is now
-   `ManaColor | ManaColor[]` (widened from a bare `ManaColor`); a new
-   `mana.ts` `deriveManaAbility` (the single real call site `resolveTop`/
-   `playLand` now both use, replacing the old single-color-only call) tries
-   the single-color match first, falling back to the existing
-   `manaAbilityColorsFromStaticText` (which already existed for
-   `scripts/prefill-mana-facts.mjs`'s own synergy-FACT generation, but was
-   explicitly NOT wired into affordability before this pass) for a
-   two-color match. The actual matching problem this needed — "one of these
-   two colors, whichever the player needs" — is real, general assignment
-   machinery, not a bigger lookup table: `mana.ts`'s new
-   `assignManaRequirements` (exhaustive backtracking: try the first
-   not-yet-used source whose own producible color(s) overlap a
-   requirement's legal color(s); recurse; undo and retry on failure) is
-   shared by BOTH this closure and gap #6's own Hybrid-pip closure below,
-   since both are the same underlying shape (a requirement or a source that
-   accepts more than one color). `canAfford`/`payMana` (`mana.ts`) were
-   rewritten around this shared assignment instead of the old fixed
-   per-color loop — verified NOT to regress the ordinary single-color case
-   (same iteration order preserved, `mana.test.ts`/`engine.test.ts` both
-   still pass unchanged for every prior single-color scenario). New tests:
-   `mana.test.ts`'s own dual-source `describe` blocks (a dual source paying
-   either of its two colors; correctly NOT paying a third; two dual sources
-   splitting across two different requirements; and a real
-   backtracking-forced case — a dual source tried first for one
-   requirement has to be un-picked and retried once a later, stricter
-   requirement turns out to have no other source), `engine.test.ts`'s own
-   updated `Non-basic mana sources` describe block (a real
-   `canCastSpell`/`castSpell` cast of a `{U}`-costed spell paid for by a
-   dual `{T}: Add {G} or {U}.` rock with no Island anywhere on the board,
-   plus the negative "can't pay a third color" case).
+   **Fixed a real latent bug found during migration**: `sourceColors`'s
+   basic-land-subtype branch used to stop at the FIRST matching subtype —
+   Breeding Pool (real `Land — Forest Island`) could only ever produce `G`,
+   never `U`. Now collects every matching subtype's color. New regression
+   test in `mana.test.ts` proves both colors payable.
 
-   **Still real, explicitly NOT modeled** (the harder remainder of this
-   gap, narrower than before): a restricted ability ("Activate only if...",
-   "Spend this mana only to..." — Cargo Ship's own real "{T}: Add {C}.
-   Spend this mana only to cast an artifact spell..." ability is the
-   concrete, already-declared example; checked before attempting anything
-   here — correctly affording this would need a genuine spendable-mana-pool
-   tracking mechanism this engine doesn't have AT ALL (`interfaces.ts`'s own
-   `Player.addMana` doc comment: a deliberately inert observation point),
-   a materially bigger, riskier lift than the assignment problem above, so
-   deliberately NOT attempted this pass — Cargo Ship's own mana ability
-   stays exactly as undemonstrated as before), and a variable one (Elvish
-   Archdruid's own real, already-declared `{T}: Add {G} for each Elf you
-   control` — its `amount` is a live-computed function of board state, not
-   a fixed symbol at all; unlike the dual-color case, there's no way to
-   represent "this source produces a variable amount" as a
-   `RealCard.manaAbility` value without teaching `payMana` that ONE tap can
-   yield more than one mana unit, a real, separate extension to the payment
-   model itself, not a lookup-widening — also deliberately NOT attempted).
-   A player who only has one of those TWO remaining source shapes still
-   can't be given legal affordability off it.
+   **Migrated the full real pool** (39 cards' worth of prior free-text-only
+   mana abilities, one pass): adventurer's-inn, capital-city, cavern-of-
+   souls, clive's-hideaway, druid-of-the-cowl, eclipsed-realms, eden-seat-
+   of-the-sanctum, goobbue-gardener, ishgard-the-holy-see-faith-grief,
+   jidoor-aristocratic-capital-overture, lindblum-industrial-regency-mage-
+   siege, llanowar-elves, midgar-city-of-mako-reactor-raid, sidequest-
+   catch-a-fish-cooking-campsite, starting-town, the-gold-saucer, white-
+   auracite, willowrush-verge, zanarkand-ancient-metropolis-lasting-fayth,
+   balamb-garden-seed-academy-balamb-garden-airborne, baron-airship-
+   kingdom, gohn-town-of-ruin, gongaga-reactor-town, guadosalam-farplane-
+   gateway, insomnia-crown-city, rabanastre-royal-city, sharlayan-nation-
+   of-scholars, treno-dark-city, vector-imperial-capital, windurst-
+   federation-center, breeding-pool (mana-line text removed entirely — the
+   basic-land-subtype path already covers Forest/Island for free, so no
+   `manaAbilities` needed at all), ring-of-the-lucii, blitzball,
+   overgrown-zealot, freya-crescent, the-emperor-of-palamecia-the-lord-
+   master-of-hell, woodland-weavemaster (the last three had NO prior mana
+   modeling at all — their `{T}: Add ...` text was never even regex-matched
+   before this pass; now genuinely typed and payable for the first time).
+   `mana.test.ts`/`engine.test.ts` both updated to construct fixtures via
+   `manaAbilities: [{colors:[...]}]` instead of the old `manaAbility`
+   field/regex-matching `staticAbilities` strings; full suite (478 tests)
+   green after the migration.
+
+   **Deliberately NOT migrated, real named reasons**: Cargo Ship (already
+   has genuinely-executable `abilities`-based modeling predating this
+   task, strictly better than the new typed field for its case — see its
+   own remaining restricted-ability gap below — migrating it to
+   `manaAbilities` would be a REGRESSION) and Elvish Archdruid (already
+   real via `activationCost`+`effects` with a genuine `Computed` amount
+   function — also predates and sits outside the free-text violation this
+   task targeted; not touched).
+
+   **Still real, explicitly NOT enforced by `canAfford`/`payMana`** (the
+   type itself does not preclude modeling these later — `ManaAbility`'s
+   `restriction`/`activationCondition`/`variableAmount` fields exist
+   precisely so a future pass can wire them in without another type
+   redesign): a restricted ability ("Spend this mana only to..." — Cargo
+   Ship's own real "{T}: Add {C}. Spend this mana only to cast an artifact
+   spell..." ability is the concrete example; correctly affording this
+   would need a genuine spendable-mana-pool tracking mechanism this engine
+   doesn't have AT ALL, per `interfaces.ts`'s own `Player.addMana` doc
+   comment — a deliberately inert observation point — a materially bigger,
+   riskier lift than this pass's typed-field migration, so deliberately
+   not attempted), and a variable one (Elvish Archdruid's own `{T}: Add
+   {G} for each Elf you control` — `ManaAbility.variableAmount` can now
+   NAME this shape (`{kind:'countSubtypeControlled', subtype:'Elf'}`), but
+   nothing computes it at payment time yet).
+
+   **Two real, named remaining gaps found and deliberately NOT force-fit
+   this pass** (would be WRONG, not just incomplete, to approximate as an
+   ordinary `manaAbilities` entry):
+   - **Crossroads Village** — "As this land enters the battlefield, choose
+     a color. Whenever you tap this land for mana, add one mana of the
+     chosen color." (`res/cardsfolder/c/crossroads_village.txt`'s own
+     `Mana$ Add | Produced$ Chosen`, roughly). Real Forge locks the choice
+     PERMANENTLY at ETB — this is not "any of 5 colors, choose one per
+     activation" (which `colors: [W,U,B,R,G]` + `assignManaRequirements`
+     WOULD honestly model), it is "one color, fixed forever, chosen once."
+     This engine has neither a persisted per-permanent "chosen at ETB"
+     value slot nor an ETB-choice mechanism at all (no `RealCard` field for
+     it, no hook to prompt/record a choice when a land enters). Left with
+     its prior free-text `staticAbilities` comment, explicitly marked as
+     this gap, not migrated.
+   - **A Realm Reborn** — grants a mana ability to OTHER permanents (a
+     genuinely different mechanism than a permanent's own `manaAbilities`:
+     a mana-ability GRANT, analogous to `continuousKeywordGrants`
+     (`card.ts`) but for mana abilities specifically). No such grant
+     mechanism exists yet, and no other real FIN card in the pool currently
+     needs one enforced (checked). Left with its prior free-text comment,
+     explicitly marked as this gap, not migrated.
 6. **Hybrid/`{X}` mana symbols.** ~~`parseManaCost` throws on any of
    these~~ **CLOSED for real Hybrid pips (`{G/U}`-shaped) and real `{X}`
    symbols (2026-09-12)** — grepped every real `manaCost:` string across
@@ -1386,7 +1579,7 @@ so a future pass doesn't mistake them for missing work:
     subtype?, onlyDuringYourTurn?}[]` (`card.ts`) — copied onto the live
     `RealCard` only at the moment a permanent actually resolves onto the
     battlefield (`engine.ts`'s `resolveTop`, same pre-existing pattern
-    `manaAbility`'s own resolve-time derivation already established, not a
+    `manaAbilities`'s own resolve-time copy already established, not a
     new one). `state.ts`'s new `effectiveKeywords(state, card)` is the real
     QUERY-TIME read path (mirrors `effectivePT`'s "recalculated on read"
     CDA pattern) — unions a card's own printed `keywords` with every
@@ -2113,6 +2306,576 @@ so a future pass doesn't mistake them for missing work:
       real mechanism is a separate, deliberately out-of-scope fact-
       authoring pass (this closure is the engine mechanism becoming real,
       not a sweep of every card that happens to mention mill).
+20. ~~**Per-turn ability activation-limit tracking (`ActivationLimit$ N`).**~~
+    **CLOSED (2026-09-14).** Surfaced by this session's own fin/1-25
+    completeness inventory: G'raha Tia's own "The Allagan Eye ... This
+    ability triggers only once each turn" and Elrond, Moon-Reader's own
+    "Whenever you activate an ability of a creature, draw a card. This
+    ability triggers only once each turn" both had real, unenforced
+    documentary-only `oncePerTurn`/prose claims — no `turn.ts` counter
+    existed anywhere for "how many times has this NAMED trigger fired this
+    turn," unlike the sibling per-turn trackers this same closure mirrors
+    (`flippedCoinThisTurn`/`resetFlippedCoinThisTurn`, ENGINE_GAPS.md gap
+    #15's own real 514.2-Cleanup-scoped reset shape). Real Forge citation:
+    `Trigger.java`'s own `checkActivationLimit()` (~line 362-368) reads
+    `hasParam("ActivationLimit") && getActivationsThisTurn() >=
+    Integer.parseInt(getParam("ActivationLimit"))`; `getActivationsThisTurn()`
+    (~line 596) reads `hostCard.getAbilityActivatedThisTurn(...)`, backed by
+    `Card.java`'s own `numberTurnActivations` map, reset game-wide by
+    `Game.onCleanupPhase()` (`Game.java` ~lines 1215-1229: `for (final Card
+    card : getCardsInGame()) card.resetActivationsPerTurn();` — every card
+    in the game, not just the active player's). Real card scripts:
+    `res/cardsfolder/g/graha_tia.txt` (`T:Mode$ ChangesZoneAll | ... |
+    ActivationLimit$ 1 | TriggerDescription$ The Allagan Eye — Whenever one
+    or more other creatures and/or artifacts you control die, draw a card.
+    This ability triggers only once each turn.`) and
+    `res/cardsfolder/e/elrond_moon_reader.txt` (`T:Mode$ AbilityCast | ... |
+    ActivationLimit$ 1 | TriggerDescription$ Whenever you activate an
+    ability of a creature, draw a card. This ability triggers only once
+    each turn.`).
+
+    Mirrors the EXISTING `flippedCoinThisTurn` pattern exactly, generalized
+    from "one boolean per player" to "one count per (card, named trigger)
+    pair": `card.ts`'s new `Trigger.activationLimit?: number` (omitted =
+    uncapped, the pre-existing default for every other trigger in the pool);
+    `state.ts`'s new `triggerActivationsThisTurn: Map<string, number>`
+    (keyed `` `${cardId}:${triggerName}` `` — Forge's own `ActivationLimit`
+    is scoped per NAMED trigger, not per card as a whole, so a card with two
+    independently-capped triggers would track them separately, even though
+    no FIN card needs that today), `triggerActivationsSoFar(cardId,
+    triggerName)`, `recordTriggerActivation(cardId, triggerName)`, and
+    `resetTriggerActivationsThisTurn()` (called game-wide from `turn.ts`'s
+    `runPhaseEntryAction` at every real Cleanup, alongside
+    `resetFlippedCoinThisTurn`/`clearUntilEndOfTurnPumps`, same scope as
+    those). The cap is enforced at the ONE real shared chokepoint every
+    trigger-firing call site in this codebase already funnels through —
+    `triggers.ts`'s `fireTrigger` — rather than duplicated per call site:
+    checked BEFORE anything else (before even a `triggerDoubling` check),
+    gating the firing outright (matches Forge's own `checkActivationLimit`,
+    which keeps the trigger from ever being collected/queued in the first
+    place, not "fires but does nothing") and returning `false` (same as "did
+    not double") for a gated firing, since a trigger that never resolved
+    can't have doubled either.
+
+    Both real FIN cards' own `definition.ts` now declare
+    `activationLimit: 1` on their real trigger, replacing documentary-only
+    `oncePerTurn` prose; both own `scenarios.ts` (already real,
+    engine-piloted) demonstrate the cap genuinely enforced, not just
+    declared — G'raha Tia's own scenario kills a SECOND other-creature the
+    same turn and shows no second `drawCard` (only the trigger's own second
+    `{fn:'trigger'}` bracket, no matching effect); Elrond, Moon-Reader's own
+    flat `harness.ts`-style `sequence: ['onActivateCreatureAbility',
+    'onActivateCreatureAbility']` scenario shows the identical shape. Both
+    cards' own `progress.json` `knownGaps` entries (previously stale,
+    claiming no enforcement existed) corrected to point at this closure.
+
+    New tests: `state.test.ts`'s `GameState.triggerActivationsThisTurn /
+    resetTriggerActivationsThisTurn` describe block (starts at 0, increments
+    per (cardId, triggerName) pair, scoped per NAMED trigger not per card,
+    scoped per card not shared across two same-named-trigger objects, and
+    the real Cleanup reset). `triggers.test.ts`'s new "Real ActivationLimit$
+    N" describe block (6 cases: fires normally under the cap; a second
+    same-turn firing of the identical named trigger is gated outright with
+    NO effects running; a gated firing returns `false` indistinguishably
+    from a plain non-doubled firing; scoped per NAMED trigger — a different
+    trigger on the same card is unaffected; `resetTriggerActivationsThisTurn`
+    lets it fire again "next turn"; an uncapped trigger with no
+    `activationLimit` at all fires every time, unchanged regression). New
+    integration cases in `turn.test.ts`'s own Cleanup describe block prove
+    the real `turn.ts`/`state.ts` wiring end-to-end, not just
+    `triggers.ts`'s own pure logic.
+
+    `npx vitest run functional-model` — 541/541 green. `npx tsc -p
+    functional-model/tsconfig.json --noEmit` — zero NEW errors (same
+    pre-existing baseline noise categories). `scripts/verify-synergy.mjs`
+    full pool — 320 checked, 0 hard failures.
+21. **`state.pump()` had no `untilEndOfTurn` expiry — a real, live
+    correctness bug, not just a missing feature. CLOSED (2026-09-14).**
+    Every `pump`/`pumpAll`/`pumpTarget`/`pumpSelf` call used to be a
+    permanent, never-cleared `layers.add` entry — even when the card's own
+    real text says "until end of turn" — so in any real multi-turn
+    engine-piloted playthrough, the buff never went away. Concretely wrong
+    (not just an abstract "layers.ts has no duration" footnote, see
+    Accepted Simplifications above) for Ambrosia Whiteheart's own Landfall
+    "gets +1/+0 until end of turn" and Battle Menu's own Ability mode
+    "target creature gets +0/+4 until end of turn." Real Forge citation:
+    `StaticAbilityLayer`'s own real duration tracking (`layers.ts`'s
+    Accepted-Simplifications entry above already documents this engine's
+    own narrower, timestamp-only layer model) — CR 514.2's "until end of
+    turn" half is the rule being closed here, for the pump case
+    specifically (the keyword-grant half was already real, see
+    `grantKeyword`'s own `untilEndOfTurnKeywordGrants` mechanism, closed
+    2026-09-12).
+
+    Mirrors that EXISTING `untilEndOfTurnKeywordGrants` mechanism exactly,
+    generalized from "a keyword name to remove" to "a P/T delta layer entry
+    to remove": `state.ts`'s new `untilEndOfTurnPumps: {cardId, timestamp,
+    powerDelta, toughnessDelta}[]` (keyed by `{cardId, timestamp}` — the
+    SAME timestamp `pump` gave the underlying `LayerSet` entry — rather than
+    a direct `RealCard`/`LayerEffect` reference, same "safe, cheap lookup,
+    not a stale object reference" reasoning the keyword-grant list already
+    uses; `powerDelta`/`toughnessDelta` are carried too, unlike the
+    keyword-grant list which only needs the keyword NAME, since a pump's own
+    removal is otherwise unreadable after the fact). `GameState.pump` gained
+    a new `opts?: {untilEndOfTurn?: boolean}` param (opt-in, same convention
+    `grantKeyword` already established — every pre-existing call keeps its
+    prior permanent-within-scenario behavior unless explicitly set) that
+    ALSO registers the pump in this list when true; `clearUntilEndOfTurnPumps()`
+    (called game-wide from `turn.ts`'s `runPhaseEntryAction` at every real
+    Cleanup, alongside `clearUntilEndOfTurnKeywordGrants`) removes the
+    SPECIFIC layer entry via `LayerSet.remove(timestamp)` (a real mutation
+    of the card's own continuous-effect list, not a filter applied at read
+    time), silently skipping a card that already left the battlefield
+    (its own layers were already wiped by the 400.7 zone-change reset).
+
+    `card.ts`'s `pumpAll`/`pumpTarget`/`pumpSelf` `Effect` kinds each gained
+    a matching `untilEndOfTurn?: boolean` field (mirroring
+    `grantKeywordTarget`/`grantKeywordAll`/`grantKeywordSelf`'s own field
+    exactly); `resolveCard`'s own dispatch for all three threads it straight
+    through to `actions.pump(...)`. `engine-trace.ts` gained a real, symmetric
+    trace-visibility half for the SAME reason `clearUntilEndOfTurnKeywordGrants`
+    already needed one: `PreAdvanceSnapshot.untilEndOfTurnPumps` captures the
+    pending list BEFORE an `advance()` call (a real Cleanup crossing drains it
+    for real, so it's unreadable AFTER), and `logAutomaticPhaseEntry`'s own
+    Cleanup branch pushes a synthetic `{fn:'pump', target, id, power:
+    -powerDelta, toughness: -toughnessDelta, removed: true}` entry per
+    expired pump — UNLIKE the keyword-grant case (which needs no discrete log
+    entry at all, since a keyword's removal is directly re-derivable by
+    re-reading `card.keywords`), a pump's own removal has no equivalent
+    "current pump list" a renderer could re-derive from, so a discrete log
+    entry is the only way the trace shows the expiry genuinely happened.
+
+    Ambrosia Whiteheart's and Battle Menu's own `definition.ts` now set
+    `untilEndOfTurn: true` on their real pump effects (replacing a bare,
+    permanent pump). Per this task's own instruction, BOTH cards' own
+    `scenarios.ts` were extended to actually DEMONSTRATE the expiry (a
+    scenario spanning past a real Cleanup), not just apply the pump and stop
+    — neither one's own PRIOR scenario ever crossed a Cleanup boundary, so
+    neither would have caught this bug being fixed at all: Ambrosia's own
+    scenario now reads her real effective power/toughness right after
+    Landfall fires (3/2 — genuinely pumped) and again after a real Cleanup
+    crossing (`advanceOneStep` looped to `'Cleanup'`, same convention
+    `the-lunar-whale`'s own scenario already establishes for reaching a
+    specific later phase) — back to her base 2/2. Battle Menu's own Ability
+    mode does the identical thing against the real Cat token it targets
+    (1/5 pumped, 1/1 after Cleanup).
+
+    New tests: `state.test.ts`'s `GameState.pump / clearUntilEndOfTurnPumps`
+    describe block (6 cases: a plain pump with no opts stays permanent; an
+    `untilEndOfTurn: true` pump is genuinely removed at the next Cleanup;
+    the clear is game-wide, not just the active player's own permanents; two
+    pumps on the same card with only one tagged UET correctly removes only
+    that one; the pending list is genuinely drained (a second clear with
+    nothing new pumped is a real no-op); a card that already left the
+    battlefield before Cleanup is silently skipped, not a crash).
+    `turn.test.ts`'s new Cleanup-describe-block case proves the real
+    `turn.ts`/`state.ts` wiring end-to-end, game-wide, mirroring the
+    existing keyword-grant Cleanup test exactly.
+
+    `npx vitest run functional-model` — 541/541 green. `npx tsc -p
+    functional-model/tsconfig.json --noEmit` — zero NEW errors.
+    `scripts/verify-synergy.mjs` full pool — 320 checked, 0 hard failures;
+    both cards individually re-verified after their scenario rewrite (same
+    pre-existing soft-note baseline, 0 hard failures).
+22. **No attack-triggered-ability auto-dispatch primitive. CLOSED for a
+    real, narrow first slice (2026-09-14).** Mirrors the real, already-closed
+    `on: 'upkeep'`/`'endStep'` auto-fire (gap #3 above) and the real, already
+    closed `on: 'tapLandForMana'` auto-fire (gap #5 above), but neither ever
+    covered "whenever ~ attacks" — every real FIN card with an attack
+    trigger had to be piloted through a manual `pilotFireTrigger` call
+    instead of a genuine `declareAttackers`-driven auto-fire, same
+    workaround-vs-real-mechanism gap those two closures already fixed for
+    their own trigger occasions. Real Forge citation:
+    `TriggerType.Attacks`/`TriggerAttacks.java`'s own `performTest` (checks
+    `ValidCard$`/`Attacked$`/`Alone$` against the real event), fired from
+    `CombatUtil.checkDeclaredAttacker` (forge-game/.../combat/CombatUtil.java
+    ~lines 363-383 — its own doc comment: "checks triggered effects of
+    attacking creatures, right before defending player declares blockers"),
+    called once per real declared attacker. Ashe, Princess of Dalmasca's own
+    real "Whenever Ashe attacks, look at the top five cards of your
+    library..." (`res/cardsfolder/a/ashe_princess_of_dalmasca.txt`: `T:Mode$
+    Attacks | ValidCard$ Card.Self | Execute$ TrigDig | ...`) is the real FIN
+    card this closes for real.
+
+    Mirrors the EXISTING `fireOnPhaseEnterTriggers`/`fireOnTapLandForManaTriggers`
+    shape exactly: `card.ts`'s `Trigger.on` gained a new `'attacks'` value;
+    `engine.ts`'s new `fireOnAttackTriggers(engine, attackers)` — called from
+    `declareAttackers` right after a legal attacker batch is declared
+    (508.1), i.e. real Forge's OWN causal position for `checkDeclaredAttacker`
+    — sweeps the just-declared `attackers` for a registered `resolvedPermanents`
+    entry (same "only a permanent CAST through this engine" real, documented
+    limitation `'upkeep'`/`'endStep'`/`'tapLandForMana'` already carry) whose
+    own `CardDefinition` has a trigger with `on: 'attacks'`, firing it with
+    THAT SAME attacker as `ctx.self` — real Forge's own `ValidCard$
+    Card.Self` scope, i.e. "this creature's own attack," not "any creature
+    attacking."
+
+    **Deliberately narrow, real, named scope — only `ValidCard$ Card.Self`
+    is modeled, not the whole real Forge trigger family.** Grepped every
+    real `Whenever [^,.]*attacks[^,.]*,` clause across the full pool (34
+    real occurrences) BEFORE building anything, per this doc's own standing
+    discipline. Genuinely different real gates this pass does NOT attempt
+    (each is a real, separately-shaped precondition, not a narrower version
+    of the same one):
+      - A broader "whenever A creature you control attacks" shape (Seifer
+        Almasy/Squall, SeeD Mercenary's own "attacks alone" — conditioned on
+        being the LONE attacker, a real distinct predicate `TriggerAttacks
+        .performTest`'s own `Alone$` param checks).
+      - An EQUIPMENT's own "whenever equipped creature attacks" (Genji
+        Glove, Ultima Weapon) — the trigger lives on a DIFFERENT permanent
+        than the one attacking.
+      - A Vehicle-crewed-by-a-specific-pair shape (Balthier and Fran).
+      - A compound "enters or attacks" shape (Sephiroth/Gilgamesh/
+        Emet-Selch/Kefka/Sin/Ultimecia) — fires on EITHER event, a genuinely
+        different precondition from a plain self-attack.
+    All of the above are now real, NAMED, unblocked follow-ups (the
+    mechanism itself is real and general — a future pass just needs to widen
+    `fireOnAttackTriggers`'s own scope check, e.g. reading a Vehicle's own
+    equipped/crew relationship or an "alone" flag off `engine.attackers`'s
+    own size) — not attempted this pass per its own explicit instruction to
+    prove the mechanism on Ashe alone, not migrate the whole pool.
+
+    Ashe's own `definition.ts` now declares `on: 'attacks'` on her real
+    `onAttack` trigger, replacing a bare free-text `name` with no
+    engine-recognized dispatch. Her own tier-3 `CardDefinition.authoredFacts`
+    escape hatch (a "wants to attack" sink, needed specifically because
+    `Trigger.on` had no closed vocabulary for "attacks" before this pass) is
+    now GONE — replaced by a real, general recognizer,
+    `recognizers/attacks-trigger-structural.ts` (registered in
+    `scripts/apply-recognizers.mjs`'s own `RECOGNIZERS` catalog, same family
+    as `dies-trigger-structural`/`lifegain-trigger-structural`): a plain TEXT
+    recognizer matching "When/Whenever <self> attacks" (self = "this
+    creature" or the card's own printed name/short-comma-form, "attacks"
+    required IMMEDIATELY adjacent — same adjacency discipline
+    `dies-trigger-structural.ts` already established — so it correctly
+    DECLINES every one of the genuinely-different real shapes listed above,
+    without any card-specific carve-out). Real, whole-pool-checked before
+    writing the regex (34 real clauses read directly, see the recognizer's
+    own module doc comment for the full per-card breakdown). Running
+    `apply-recognizers.mjs ashe-princess-of-dalmasca` retagged her existing
+    sink fact with real `provenance: {origin:'parser', rule:
+    'attacks-trigger-structural'}` — the fact now lives the normal way,
+    verified/re-derivable the same way every other recognizer-backed fact in
+    the pool is, not a one-off `definition.ts` escape hatch. (Running the
+    SAME retag also normalized two of Ashe's own OTHER, unrelated
+    pre-existing facts' stale `value`/`provenance.note` fields — a real,
+    documented, pre-existing side effect of `apply-recognizers.mjs`'s own
+    "no distinction between first-time and re-confirming" retag rule
+    whenever ANY recognizer runs against a card, not something this task's
+    own new recognizer caused.)
+
+    Ashe's own `scenarios.ts` no longer calls `pilotFireTrigger` at all — the
+    real `declareAttackers` call auto-fires her trigger for real now.
+    Surfaced and fixed two real, small trace-ordering bugs found wiring this
+    up for real (both in `engine-trace.ts`, not `engine.ts` — the real
+    engine-side mutation order was always correct):
+      - `pilotDeclareAttackers` used to push its own `tap`/`attack` log
+        markers AFTER calling the real `declareAttackers` — harmless before
+        this pass (nothing else logged anything synchronously inside that
+        call), but now that `declareAttackers` itself auto-fires a trigger
+        whose own effects log THROUGH THE SAME `pilot`, a trailing push
+        showed the trigger's own effects BEFORE the attack that caused them.
+        Fixed the same way `logAutomaticPhaseEntry` already fixes the
+        identical class of bug for Untap/Draw/Cleanup's own automatic
+        actions: capture `beforeLen` before calling the real function, then
+        `pilot.log.splice(beforeLen, 0, ...)` the markers in at that
+        position instead of a trailing push.
+      - `pilotDeclareAttackers` also now logs a synthetic `{fn:'trigger',
+        name}` bracket per attacker with a registered `on:'attacks'` trigger
+        (peeked BEFORE calling the real `declareAttackers`, same "peek the
+        CardDefinition, then call the real mutating function" shape
+        `pilotResolveTop`'s own ETB peek already uses) — needed because
+        `verify-synergy.mjs`'s own `TRIGGER_EVENT_MAP`/`triggerNames`
+        evidence check for an event-shaped SINK want is built ENTIRELY from
+        `{fn:'trigger', name}` bracket entries in the trace, and this
+        engine's real auto-fire (unlike the manual `pilotFireTrigger` it
+        replaces) never pushed one itself — without this, Ashe's own
+        `{event:'attacks', target:'self'}` sink want would have HARD FAILED
+        verify-synergy's forward evidence check (caught live, not
+        theoretically — see the real before/after run this task did).
+        **Scoped to exactly one attacker per call** (Ashe is the only real
+        card exercising this today) — an N-attacker batch where MORE THAN
+        ONE has its own `on:'attacks'` trigger would bunch every trigger
+        bracket ahead of every attacker's own effects instead of
+        interleaving them per-attacker; real, narrower-than-ideal, not
+        attempted since no pool scenario needs it yet.
+
+    New tests: `engine.test.ts`'s new `fireOnAttackTriggers` describe block
+    (4 cases: auto-fires for a registered permanent's own legally-declared
+    attack; does NOT fire for a permanent seeded directly onto the
+    battlefield, same real documented limitation the other auto-fires
+    share; does NOT fire when the attacker declaration itself is illegal —
+    no half-applied trigger; does NOT fire a DIFFERENT attacker's own
+    registered permanent that has no `on:'attacks'` trigger at all).
+    `recognizers/attacks-trigger-structural.test.ts` (new file, 9 cases: 4
+    real accepted cards, the short-comma-name form, and 5 real DECLINE
+    cases — compound "enters or attacks," "equipped creature attacks," "a
+    creature you control attacks alone," a Vehicle-crewed shape, "this
+    Vehicle attacks," a non-Creature typeLine, and no clause at all).
+
+    `npx vitest run functional-model` — 541/541 green. `npx tsc -p
+    functional-model/tsconfig.json --noEmit` — zero NEW errors (one new
+    TS7016 `./load-fin-cards.mjs` implicit-any on the new recognizer test
+    file, same pre-existing baseline category every sibling recognizer test
+    file already has). `scripts/verify-synergy.mjs` full pool — 320
+    checked, 0 hard failures; Ashe individually re-verified before AND after
+    the trace-ordering fix above (confirmed the fix turns a real hard
+    failure into 0, not assumed).
+23. **The entire Cycling family (plain Cycling + Islandcycling/Plainscycling/
+    Swampcycling/Forestcycling/Mountaincycling) had ZERO engine
+    representation — no `CardDefinition` field, no harness lifecycle path,
+    no declarative `Effect` kind; every real card printing it sat as inert
+    `staticAbilities` text pool-wide, violating the standing "no magic
+    strings — declarative or functional" policy. CLOSED (2026-09-14).**
+    Surfaced by this session's own fin/1-25 completeness inventory. Real
+    Forge citation: `Keyword.java` lines 46/199 (`CYCLING`/`TYPECYCLING`);
+    the real expansion, `CardFactoryUtil.java` ~lines 3717-3745:
+    ```
+    } else if (keyword.startsWith("Cycling")) {
+        ... sb.append("AB$ Draw | Cost$ ").append(manacost)
+              .append(" Discard<1/CARDNAME> | ActivationZone$ Hand | ...");
+    } else if (keyword.startsWith("TypeCycling") ...) {
+        ... sb.append("AB$ ChangeZone | Cost$ ").append(typeCycling.getCostString())
+              .append(" Discard<1/CARDNAME> | ActivationZone$ Hand | ...")
+              .append(" | Origin$ Library | Destination$ Hand | ChangeType$ ")...
+    }
+    ```
+    Real card scripts: `res/cardsfolder/t/tranquil_thicket.txt`'s `K:Cycling:2`,
+    `res/cardsfolder/t/timeless_dragon.txt`'s `K:TypeCycling:Plains:2`.
+    `ChangeZone | Origin$ Library` is a real hidden-zone search — confirmed
+    against `ChangeZoneEffect.java`'s own mandatory post-search shuffle
+    (`Player.shuffle`, `Player.java` ~line 1606) that a plain library search
+    always triggers unless `NoShuffle`/`Shuffle$ False` is set (neither
+    Cycling keyword sets it).
+
+    **Real, load-bearing engine gap — turned out SMALLER than the original
+    assessment once actually attempted** (same "assessed as huge, proved
+    smaller in practice" trajectory gap #4's own closure documents): 602.1
+    activated-ability legality (`canActivateAbility`/`activateAbility`,
+    engine.ts) never actually hard-assumed Battlefield presence anywhere in
+    its OWN body — no `permanent.zone === 'Battlefield'` check exists at
+    all. The Battlefield assumption lives ENTIRELY in `harness.ts`'s own
+    flat-scenario convenience wrapper (`selfZone`, `lifecycleBefore`/
+    `lifecycleAfter` — `scenario.ability`/`card.activationCost` always route
+    `self` onto the Battlefield, never Hand). So the real fix needed was
+    narrower than "rebuild how this engine models ability activation" —
+    it was: (a) teach `canActivateAbility`/`activateAbility` to recognize
+    and ACTUALLY PAY a "discard this card" cost component (previously
+    genuinely unrecognized, same `unsupportedCostComponent` chokepoint every
+    other unusual cost shape — Sacrifice/Pay-life/Crew/Equip — already goes
+    through), and (b) demonstrate it via `engine-trace.ts`'s real
+    engine-piloted path (which never shared `harness.ts`'s own
+    Battlefield-only assumption to begin with — a pilot script builds
+    `self` in whatever zone it wants via a bare `state.addCard`) rather than
+    extending `harness.ts`'s flat convention at all.
+
+    New, general engine vocabulary — mirrors the EXISTING `costRequiresTap`/
+    `costRequiresLifePayment` "recognized in the cost-string loop, paid for
+    real by a dedicated check elsewhere" shape exactly, generalized to a
+    THIRD real cost-component shape:
+    - `engine.ts`'s new `costRequiresDiscardSelf(cost): boolean` — real but
+      narrow text-pattern detection (`/Discard this card\b/i`), same
+      "`CardDefinition.activationCost` has no structured cost grammar"
+      caveat every sibling helper already carries.
+    - `unsupportedCostComponent` now accepts a `"Discard this card"`
+      component unconditionally (unlike self-Sacrifice, deliberately NEVER
+      accepted — see that function's own doc comment): Cycling's own
+      resolution effect (`drawCard`, or a real library search) never reads
+      `ctx.self`'s post-discard state the way Zack Fair/Blazing Bomb's own
+      self-sacrifice effects do, so there's no 608.2h last-known-information
+      risk to work around — genuinely safe to pay for real, not merely
+      trusted.
+    - `canActivateAbility` now checks, BEFORE any other cost/timing check,
+      that `costRequiresDiscardSelf(cost)` implies `permanent.zone ===
+      'Hand'` (701.9a: discarding IS DEFINED as a Hand->Graveyard move, so a
+      "discard this card" cost can only ever be paid from Hand — the real,
+      general "ActivationZone$ Hand" restriction, checked by ZONE rather
+      than a hardcoded card-specific rule).
+    - `activateAbility` now genuinely pays this cost — `engine.state.move
+      (permanent, 'Graveyard')` — for real, immediately, as part of paying
+      the cost (602.1's own cost-payment step happens BEFORE the object
+      goes on the stack), NOT deferred to resolution the way the
+      Sacrifice-cost-trusted shape is. `resolveTop`'s own pre-existing
+      `isAbility` branch already never relocates its source permanent
+      (602.1 has no such rule) — no conflict with the move that already
+      happened here.
+    - `engine-trace.ts`'s `pilotActivate` gained a real, symmetric log line
+      for the same reason its own pre-existing `requiresTap` self-tap fix
+      needed one (`engine.ts` is log-agnostic by design): a new
+      `{fn:'discard', target, id, controller}` bracket (a DIFFERENT shape
+      than the pre-existing qty-based `{fn:'discard', player, qty, cards}`
+      effect-level entry — no `player` field at all, so it never
+      accidentally satisfies `producedEvents`' own `case 'discard'`, which
+      reads `entry.player`).
+
+    **The search half (TypeCycling)** reuses the EXISTING `move` Effect
+    kind rather than inventing a new one — two new optional fields, not a
+    new kind:
+    - `move.subtype?: string` — a subtype filter for the TARGETED branch
+      (Cloudbound Moogle's real "search your library for a PLAINS card" —
+      `validType:'land'` alone would accept any land), same `subtype`
+      vocabulary `pumpAll`/`putCounterAll` already establish for a creature-
+      type filter, generalized here.
+    - `move.shuffleAfter?: boolean` — real 601.2/701.19 "then shuffle,"
+      genuinely distinct from `dig`'s own "look at the top N, no shuffle"
+      shape (a dig never searches the WHOLE library, so nothing needs
+      randomizing after). Calls a new `Actions.shuffleLibrary` for every
+      player `move`'s own `owner` scope already resolved to.
+    - New primitive, mirrors `discard`/`mill`'s own real-Forge-citation
+      shape exactly: `interfaces.ts`'s ambient `shuffleLibrary(player)`
+      (`Player.shuffle(SpellAbility)`, `Player.java` ~line 1606) backed by
+      `state.ts`'s real `GameState.shuffleLibrary` — a genuine, in-place
+      Fisher-Yates reorder of `player.library` (`Math.random`-based, real
+      randomization — not a documentary no-op), wired into both
+      `harness.ts`'s `loggingActions` (shared by the engine-trace path too,
+      per that file's own "reuse, never fork" convention) and
+      `engine-trace.ts`'s `pilotActions` (inherited via spread, no override
+      needed).
+
+    **Modeled uniformly via the NAMED `abilities` array on all 7 real
+    cards** (`{name: 'cycling', cost: '...Discard this card', effects:
+    [...]}`), not the top-level `activationCost`/`effects` pair — even for
+    the 6 cards where the top-level pair would have been technically free
+    (no conflicting prior use). Airship Crash's own top-level `effects` is
+    ALREADY its Instant's own cast effect (the destroy-target `custom`), so
+    top-level `activationCost`+`effects` would have silently collided (an
+    activated Cycling would incorrectly run the destroy effect instead of
+    drawing a card — `resolveCard`'s own default-branch dispatch, no
+    `abilityName`, always reads `card.effects`). Using `abilities`
+    uniformly across all 7 avoids this collision AND gives a single,
+    consistent, self-documenting structural marker (`card.abilities?.find
+    (a => a.name === 'cycling')`) a future recognizer could key off, rather
+    than half the pool using one shape and half using another.
+
+    **All 7 real pool cards migrated**, each real Forge citation matching
+    its own printed reminder text:
+    - Cloudbound Moogle (fin/11, Plainscycling {2}) — search for Plains.
+    - Ice Flan (Islandcycling {2}) — search for Island.
+    - Balamb T-Rexaur (Forestcycling {2}) — search for Forest.
+    - Malboro (Swampcycling {2}) — search for Swamp.
+    - Capital City (Cycling {2}) — plain `drawCard`, no search.
+    - Airship Crash (Cycling {2}) — plain `drawCard`, no search (named
+      `abilities` REQUIRED here, not just uniform-for-consistency — see
+      above).
+    - Cid, Timeless Artificer (Cycling {W}{U}) — plain `drawCard`, no
+      search.
+
+    Each card's own `staticAbilities` Cycling/TypeCycling text line is
+    REMOVED (replaced by the real `abilities` entry, same "structured field
+    replaces free text once real" convention `continuousKeywordGrants`'s
+    own cards already established) — Cid, Timeless Artificer's OTHER two
+    real static abilities (the anthem, the "any number of copies" deck-
+    construction rule) stay static text, unrelated, still-open gaps.
+
+    Each card's own `scenarios.ts` migrated to `runEngineScenarios` (real
+    engine-piloted, not `harness.ts`'s flat convention — see the "harness.ts
+    deliberately NOT extended" note below for why), demonstrating BOTH real
+    branches: the card cast/played normally (its own pre-existing real
+    effect, migrated from the old flat scenario), AND Cycling genuinely
+    activated from Hand (real mana paid, real discard-as-cost, real
+    resolution — search-and-shuffle for the 4 TypeCycling cards, a plain
+    draw for the other 3). Two real, incidental fixes surfaced along the
+    way, both required to make these migrations correct, not cosmetic:
+    - Cid, Timeless Artificer's own engine-piloted legend-rule demonstration
+      (replacing the old flat `keywordScenarios`' own `duplicateLegendaryEnters`)
+      initially failed to trigger 704.5j at all — `state.checkLegendRule`
+      checks `card.subtypes.includes('Legendary')` (this engine's own
+      established "Legendary" pragmatic-subtype convention, `harness.ts`'s
+      `subtypesFromTypeLine`), which a hand-built `state.addCard` call
+      must set explicitly (unlike the flat path, which derives it
+      automatically) — same convention Adelbert Steiner's/Ashe's own
+      engine-piloted scenarios already establish.
+    - Capital City's own bare `{zone:'Battlefield', subject:'self'}`
+      baseline fact used to be exempted by `verify-synergy.mjs`'s
+      `isStaticOnlyLand` ("a Land with no card-specific behavior left for a
+      scenario to exercise") — now stale, since this card HAS real
+      card-specific behavior (its own Cycling ability) a scenario can and
+      does exercise. Fixed: `isStaticOnlyLand` now also excludes a card
+      with `abilities?.length`.
+
+    **Cloudbound Moogle's and Ice Flan's own pre-existing per-card
+    `verify-synergy.mjs` exemptions REMOVED, not left stale** —
+    `isCloudboundMoogleDiscardSelfWant`/`isCloudboundMoogleTutorFact`/
+    `isIceFlanDiscardSelfWant`/`isIceFlanTutorFact` existed ONLY because "no
+    scenario/trace path can exist for either half" (their own doc comments,
+    now false). Real trace evidence exists instead: a new, GENERAL (not
+    per-card) `w.event === 'discard' && w.target === 'self'` readEvidence
+    branch (checks for a real `{fn:'discard', target: cardName}` bracket)
+    for the discard-as-cost SINK, and the ordinary zone-fact `evidence`
+    check (already real, unchanged) for the tutor SOURCE fact, now that a
+    real `{fn:'moveTo', zone:'Hand', controller:'you'}` line exists to
+    satisfy it. Balamb T-Rexaur's and Malboro's own Forestcycling/
+    Swampcycling previously had NO facts at all for their own printed
+    Cycling ability (not even an exempted one) — both now get the SAME
+    real tutor SOURCE + discard-self SINK facts, plus a new SINK fact on
+    all 4 search cards (`{to:'Library', controller:'you', types:{has:
+    [<subtype>]}}` — "wants a matching basic land present in library to
+    find," the real want a search creates) needed to satisfy a NEW
+    `read:getCardsIn` aggregate-read backward-check the real search itself
+    introduces. Capital City/Airship Crash/Cid, Timeless Artificer's own
+    plain (non-search) Cycling similarly gained a real `{event:'drawCard'}`
+    SOURCE + `{event:'discard', target:'self'}` SINK fact pair.
+
+    **Deliberately, explicitly NOT extended: `harness.ts`'s own flat
+    `Scenario`/`selfZone`/`lifecycleBefore`/`lifecycleAfter` convention
+    still hard-assumes Battlefield-or-Stack for `self`, never Hand.** This
+    is a real, narrower-than-ideal scope decision, not an oversight: the
+    REAL, load-bearing mechanism this gap needed (602.1 legality, real
+    mana/discard-as-cost payment, real stack push) lives entirely in
+    `engine.ts`, already fixed for real, general reuse by ANY caller —
+    `harness.ts`'s flat runner is a documented, cheaper convenience path
+    that never itself enforced activation legality/cost-payment to begin
+    with (a scripted lifecycle firing `card.effects` directly, no real
+    `canActivateAbility`/`activateAbility` call anywhere in it), so
+    teaching it a Hand-based `selfZone` would only add a SECOND, still-
+    superficial way to log the same lifecycle shape — not close a
+    functionally distinct capability the way the real engine-piloted path
+    already does. All 7 real cards here get the full, real engine-piloted
+    demonstration instead, matching this project's own established
+    convention for every comparably real cost-payment/legality closure in
+    this document (Crew, Equip 301.5c, Qiqirn Merchant's cantrip, Cost
+    reduction). Revisit only if a future card needs a CHEAP flat scenario
+    for a Hand-activated ability with no legality/mana check worth
+    demonstrating — no real FIN card needs that today.
+
+    **Natural, real follow-up, explicitly NOT built this pass**: a
+    structural recognizer for "Cycling {cost}"/"[Type]cycling {cost}"
+    reminder text (mirroring `recognizers/attacks-trigger-structural.ts`'s
+    own recent precedent) could derive these SOURCE/SINK facts
+    automatically for any FUTURE Cycling card added to the pool, instead of
+    each one being hand-authored the way these 7 (and, before them,
+    Cloudbound Moogle/Ice Flan's own 2026-09-11/12 two-fact treatment) were.
+    Not attempted here — no other pool card outside these 7 was found to
+    have an unmodeled Cycling-shaped ability while doing this pass (checked
+    incidentally, not an exhaustive re-sweep — this task's own explicit
+    scope was these 7 cards only).
+
+    New tests: `state.test.ts`'s new `GameState.shuffleLibrary` describe
+    block (preserves every card — same objects, same count; a genuine
+    Fisher-Yates reorder, deterministic via a mocked `Math.random`; a
+    single-card library is a real no-op). `engine.test.ts`'s new `Cycling
+    (702.13)` describe block (6 cases: legal activation from Hand once
+    affordable; REJECTED when the permanent is on the Battlefield instead
+    of Hand, even though every other check would pass; rejected when
+    unaffordable, mutating nothing; `activateAbility` genuinely discards
+    the permanent — Hand->Graveyard — BEFORE the ability even resolves;
+    resolving the pushed ability runs its own real `drawCard` effect
+    without relocating the already-discarded source; TypeCycling's own real
+    library search finds the matching card, moves it to hand, and calls the
+    real shuffle).
+
+    `npx vitest run functional-model` — 550/550 green (541 + 9 new). `npx
+    tsc -p functional-model/tsconfig.json --noEmit` — zero NEW errors (same
+    pre-existing baseline noise categories). `scripts/verify-synergy.mjs`
+    full pool — 320 checked, 0 hard failures (all 7 migrated cards
+    individually re-verified before AND after — the pre-migration run
+    showed each Cycling ability's own facts as either exempted or entirely
+    absent; the post-migration run shows real trace evidence for all of
+    them instead, confirmed live, not assumed).
+    `scripts/verify-annotation-coverage.mjs` — OK (Cloudbound Moogle/Ice
+    Flan are both `ANNOTATED_CARD_SLUGS` members; their new SINK fact's
+    real annotation was authored in `annotations-authoring.json` and baked
+    in via `scripts/compute-annotations.mjs`, not left unannotated).
 
 ## What's already solid (don't re-litigate)
 

@@ -1,11 +1,19 @@
-// PROTOTYPE — "runtime dependency probe" (black-box execution, scoped to
-// ONE closure), per `PRD_AUTOMATED_AUTHORING.md`'s "Flagged future
-// direction, not yet attempted: black-box execution" section (2026-09-13).
-// NOT wired into `apply-recognizers.mjs`, not consumed by any real
-// `synergy.json` — a standalone module kept for reference, same status as
-// this directory's other `*.prototype.ts` files
-// (`forge-script-parser.prototype.ts`,
-// `token-creation-from-forge-script.prototype.ts`).
+// PROMOTED to real production status (2026-09-13, `dealDamage-effect-
+// structural.ts`'s own wiring pass) — "runtime dependency probe" (black-box
+// execution, scoped to ONE closure), per `PRD_AUTOMATED_AUTHORING.md`'s
+// "Flagged future direction, not yet attempted: black-box execution" section
+// (2026-09-13, same day). WAS a standalone, unwired prototype
+// (`runtime-dependency-probe.prototype.ts`) — now a real dependency of
+// `recognizers/dealDamage-effect-structural.ts`'s own tier-2 "scales with X"
+// -> paired sink derivation (`probeComputedNumber`, consumed for real by
+// `apply-recognizers.mjs`'s wired `RECOGNIZERS` list), exercised against
+// Summon: Bahamut's own real chapter IV `amount` closure among others — see
+// that recognizer file's own module doc comment for the real wiring. Kept
+// as its OWN module (not folded into that recognizer file) since its own
+// instrumentation/classification logic is independently testable and,
+// per its original design, meant to be reusable by any future recognizer
+// needing this same "classify what a Computed<number> closure reads"
+// capability, not just this one.
 //
 // Every OTHER recognizer in this catalog reads a static source
 // representation (oracle text, `Effect` structure, Forge script) and hits

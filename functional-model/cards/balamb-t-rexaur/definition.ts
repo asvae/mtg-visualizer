@@ -15,10 +15,14 @@ export const balambTRexaur: CardDefinition = {
     },
   ],
 
-  // Forestcycling {2} — a real alternate ACTIVATED-from-hand ability
-  // (discard this card + pay {2}: search for a Forest), not a cast-time
-  // alternate cost and not an activated ability on a battlefield permanent
-  // — no `CardDefinition` field fits it, same gap hill-gigas' own
-  // Mountaincycling already documents. Real text only.
-  staticAbilities: ['Forestcycling {2} ({2}, Discard this card: Search your library for a Forest card, reveal it, put it into your hand, then shuffle.)'],
+  // Forestcycling {2} (ENGINE_GAPS.md gap #23, closed 2026-09-14) — see
+  // cloudbound-moogle/definition.ts's own comment for the full real,
+  // structured mechanism; same shape, searching for a Forest.
+  abilities: [
+    {
+      name: 'cycling',
+      cost: '{2}, Discard this card',
+      effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, target: true, validType: 'land', subtype: 'Forest', shuffleAfter: true } satisfies Effect],
+    },
+  ],
 };

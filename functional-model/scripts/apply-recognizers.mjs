@@ -18,13 +18,22 @@
 //     human couldn't also read straight off the card.
 //   - Runs every real recognizer (instant-sorcery-resolves-to-graveyard,
 //     permanent-enters-battlefield-normally, destroy-effect-structural,
-//     drawCard-effect-structural, saga-lore-and-sacrifice-structural)
-//     against every face a card has. The first two only ever read that
-//     face's own printed `typeLine`/`oracleText`; the three structural ones
-//     additionally read that SAME face's own structured
+//     drawCard-effect-structural, saga-lore-and-sacrifice-structural,
+//     dies-trigger-structural, lifegain-trigger-structural,
+//     dealDamage-effect-structural, putCounter-broadcast-structural)
+//     against every face a card has. The plain TEXT recognizers (the first
+//     two, plus dies-trigger-structural/lifegain-trigger-structural) only
+//     ever read that face's own printed `typeLine`/`oracleText`; the
+//     STRUCTURAL ones (destroy/drawCard/saga-lore/dealDamage/putCounter-
+//     broadcast) additionally read that SAME face's own structured
 //     `effects`/`triggers`/`abilities` straight off its
 //     `CardDefinition`/`backFace` — see `recognizers/structural-effects.ts`'s
-//     own doc comment.
+//     own doc comment. `putCounter-broadcast-structural` additionally
+//     EXECUTES a `kind:'custom'` effect's own closure (against a fake,
+//     inert, instrumented board — `recognizers/runtime-action-probe.ts`,
+//     promoted out of prototype status the same pass as this wiring) before
+//     text-confirming its own classified output — the one recognizer in this
+//     catalog that isn't a pure function of static source text/structure.
 //   - A DECLINED verdict contributes nothing — same "never contradicts an
 //     already-authored fact" overlay-model guarantee the PRD's own Design
 //     section describes.
@@ -59,22 +68,31 @@
 //       here, at the one real point this project's "authoring vs. served
 //       shape" boundary already lives (`compute-annotations.mjs` does the
 //       equivalent flattening for `annotations`).
-//     - A `coreKey` match against an existing fact that has NO `provenance`
-//       yet (i.e. a real hand-authored fact the recognizer independently
-//       confirmed): that existing fact is RETAGGED in place — same
-//       `provenance` shape, PLUS a short `Fact.provenance.note` documenting
-//       that it predates the recognizer and was reconciled/confirmed by it
-//       (see `synergy.ts`'s `FactProvenance.note` doc comment). Its own real
-//       `value`/`annotations`/every other field is left byte-for-byte
-//       untouched — a recognizer confirms a fact's existence/shape, never
-//       its magnitude, which the trace still owns. This is NOT a silent
-//       no-op the way it used to be: leaving a confirmed fact permanently
-//       unprovenanced/unexplained (indistinguishable from one nothing ever
-//       checked) is exactly the "partial state" this script exists to close.
-//     - A `coreKey` match against an existing fact that ALREADY has
-//       `provenance` (re-running this script, or two recognizers/faces
-//       independently deriving the identical claim): genuinely nothing new
-//       to say — counted, not re-touched (idempotent).
+//     - A `coreKey` match against an existing fact (whether or not that
+//       fact already carries `provenance` — 2026-09-14, see below): that
+//       existing fact's own `value`/`annotations` are REPLACED with the
+//       recognizer's own freshly-computed ones, and `provenance` is set to
+//       the same bare `{ origin: 'parser', rule: <RecognizerId> }` shape a
+//       brand-new fact gets — no distinction between "first time this
+//       recognizer produces this claim" and "re-confirming a claim that
+//       used to be hand-authored." `value` is deprecated pool-wide (not
+//       consulted by anything downstream that matters) and a recognizer's
+//       own `annotations` legitimately being broader/narrower than a
+//       hand-authored span isn't a conflict either — `coreKey` itself is
+//       what already guards against a genuine conflict (a different
+//       `target`/`subject`/zone shape never matches in the first place), so
+//       there is nothing left worth preserving from the original object once
+//       its identity fields are confirmed to agree.
+//       (2026-09-14, replacing the prior, more conservative behavior: a
+//       match used to leave `value`/`annotations` byte-for-byte untouched
+//       and only add a `Fact.provenance.note` explaining the fact "predates
+//       the recognizer" — retired outright, not kept as an option, per an
+//       explicit design decision that a `value` or `annotations` difference
+//       is never itself a real conflict.)
+//     - Genuinely idempotent regardless: re-running against a fact this
+//       script already updated recomputes the identical `value`/
+//       `annotations`/`provenance` and is counted as already-covered, not
+//       re-touched (no console/`factsRetagged` bump, no file write).
 //
 // A card is skipped entirely (no write) when:
 //   - it has no `synergy.json` at all (nothing to append to — this script
@@ -125,6 +143,11 @@ import { recognizePermanentEntersBattlefieldNormally } from '../recognizers/perm
 import { recognizeDestroyEffectStructural } from '../recognizers/destroy-effect-structural.ts';
 import { recognizeDrawCardEffectStructural } from '../recognizers/drawCard-effect-structural.ts';
 import { recognizeSagaLoreAndSacrificeStructural } from '../recognizers/saga-lore-and-sacrifice-structural.ts';
+import { recognizeDiesTriggerStructural } from '../recognizers/dies-trigger-structural.ts';
+import { recognizeLifegainTriggerStructural } from '../recognizers/lifegain-trigger-structural.ts';
+import { recognizeDealDamageEffectStructural } from '../recognizers/dealDamage-effect-structural.ts';
+import { recognizePutCounterBroadcastStructural } from '../recognizers/putCounter-broadcast-structural.ts';
+import { recognizeAttacksTriggerStructural } from '../recognizers/attacks-trigger-structural.ts';
 
 const cardsDir = new URL('../cards/', import.meta.url);
 const dataDir = new URL('../../data/', import.meta.url);
@@ -164,6 +187,24 @@ const RECOGNIZERS = [
   { id: 'destroy-effect-structural', recognize: recognizeDestroyEffectStructural },
   { id: 'drawCard-effect-structural', recognize: recognizeDrawCardEffectStructural },
   { id: 'saga-lore-and-sacrifice-structural', recognize: recognizeSagaLoreAndSacrificeStructural },
+  // 2026-09-13 follow-up — 4 more recognizers promoted into this real
+  // pipeline the same pass (see each file's own module doc comment for its
+  // real pool-wide check): the first two are plain TEXT recognizers (no
+  // structural `Effect` reading at all, same family as Recognizers A/B
+  // above); the last two are STRUCTURAL (read `effects`/`triggers`/
+  // `abilities` off `StructuralRecognizerInput`, same family as
+  // destroy/drawCard above) — `putCounter-broadcast-structural` additionally
+  // EXECUTES a `kind:'custom'` effect's own closure against
+  // `runtime-action-probe.ts`'s fake board (promoted out of prototype status
+  // this same pass) before text-confirming its own classified output.
+  { id: 'dies-trigger-structural', recognize: recognizeDiesTriggerStructural },
+  { id: 'lifegain-trigger-structural', recognize: recognizeLifegainTriggerStructural },
+  { id: 'dealDamage-effect-structural', recognize: recognizeDealDamageEffectStructural },
+  { id: 'putCounter-broadcast-structural', recognize: recognizePutCounterBroadcastStructural },
+  // 2026-09-14 follow-up (ENGINE_GAPS.md — attack-triggered-ability
+  // auto-dispatch, `Trigger.on: 'attacks'`'s own real closure): plain TEXT
+  // recognizer, same family as dies/lifegain above.
+  { id: 'attacks-trigger-structural', recognize: recognizeAttacksTriggerStructural },
 ];
 
 /** Same real-oracle-text-by-Scryfall-name loader `compute-annotations.mjs`
@@ -221,7 +262,11 @@ function isV2Shaped(synergy) {
  *     trace-dependent to defer for these two specific fact shapes); some
  *     existing hand-authored facts still carry the older `-1`
  *     "pending compute-weights.mjs" placeholder for the identical real
- *     claim, which should still count as "already covered," not "missing."
+ *     claim, which should still count as "already covered," not "missing" —
+ *     and, on a `coreKey` match, gets overwritten with the recognizer's own
+ *     value anyway (2026-09-14: `value` is deprecated pool-wide, a mismatch
+ *     here is never treated as a real conflict — see the main retag loop
+ *     below).
  *   - `controller` — real, confirmed pool inconsistency (see this script's
  *     own header): some existing `entersBattlefield` facts declare
  *     `controller: 'you'`, others (Zack Fair among them) omit it for the
@@ -257,6 +302,28 @@ function isV2Shaped(synergy) {
  * collapses the `'self'`-vs-absent case, never any other. See
  * `mergeDuplicateFacts` below for the one-time cleanup this fix needed for
  * data already written to disk by the pre-fix buggy behavior.
+ *
+ * **`to`/`from` normalization for `event:'dies'` facts (2026-09-13,
+ * `destroy-effect-structural.ts`'s own companion-`dies`-fact follow-up)** —
+ * the SAME class of fix as the `subject` normalization above, for a
+ * different real inconsistency this pass's own pool-wide run surfaced: CR
+ * 700.4 makes a `dies` event's zone movement an invariant, ALWAYS
+ * `from:'Battlefield'`/`to:'Graveyard'` whenever either is present at all
+ * (confirmed: grepped every real `event:'dies'` fact pool-wide — 102 total,
+ * 24 already carry this exact `to`/`from` pair, 0 carry any other value) —
+ * so a bare bare `{event:'dies', target:...}` fact (78 real, still-
+ * unmigrated pool occurrences — e.g. `lunatic-pandora`/`sephiroth-s-
+ * intervention`/`sidequest-hunt-the-mark`'s own pre-existing hand-authored
+ * `dies` facts) is the IDENTICAL real claim as the fully-qualified shape
+ * this recognizer always emits, just missing fields that were always going
+ * to be the same pair anyway. Without this, those 3 (and any other
+ * still-bare) cards would get a near-duplicate SECOND `dies` fact appended
+ * instead of retagging the existing one — confirmed via a real pool check
+ * before adding this, not assumed. Scoped to exactly `event === 'dies'`
+ * (every OTHER zone-shaped event — `entersBattlefield`, a bounce, a tutor —
+ * genuinely has more than one real `(from,to)` pair across the pool, so
+ * dropping `to`/`from` there would be a real, different, NOT-yet-checked
+ * change; not attempted here).
  */
 function coreKey(fact, { normalizeSelfSubject = true } = {}) {
   const keys = ['event', 'to', 'from', 'zone', 'subject', 'target', 'face'];
@@ -264,6 +331,10 @@ function coreKey(fact, { normalizeSelfSubject = true } = {}) {
   for (const k of keys) if (k in fact) reduced[k] = fact[k];
   if (normalizeSelfSubject && reduced.target === 'self' && (reduced.subject === 'self' || reduced.subject === undefined)) {
     delete reduced.subject;
+  }
+  if (reduced.event === 'dies' && (reduced.to === undefined || reduced.to === 'Graveyard') && (reduced.from === undefined || reduced.from === 'Battlefield')) {
+    delete reduced.to;
+    delete reduced.from;
   }
   return JSON.stringify(reduced, Object.keys(reduced).sort());
 }
@@ -428,16 +499,18 @@ function mergeDuplicateFacts(facts, slug) {
       merged.push(...group);
       continue;
     }
-    // Survivor is the ORIGINAL hand-authored fact — its own real
-    // `value`/`annotations`/every other field stays byte-for-byte untouched
-    // (same "recognizer confirms existence/shape, never magnitude" rule
-    // every other retag in this script already follows); it just gains the
-    // donor's `provenance` (with the standard reconciliation note) if it
-    // doesn't already have one, exactly as if the original run had matched
-    // it correctly instead of appending a duplicate.
+    // Survivor is the ORIGINAL hand-authored fact object (kept so any other
+    // untouched field/reference stays put), but its `value`/`annotations`/
+    // `provenance` are all taken from the donor — the donor's own fields ARE
+    // the recognizer's freshly-computed output (it was appended fresh, on a
+    // prior run, straight from a `RecognizedFact`), so this is the same
+    // "coreKey match replaces value/annotations, bare provenance" rule the
+    // main retag loop below now uniformly applies, not a special case.
     const survivor = unprovenanced[0];
     const donor = provenanced[0];
-    survivor.provenance = { ...donor.provenance, note: reconciliationNote(donor.provenance.rule) };
+    survivor.value = donor.value;
+    survivor.annotations = donor.annotations;
+    survivor.provenance = { origin: donor.provenance.origin, rule: donor.provenance.rule };
     merged.push(survivor);
     mergedCount += group.length - 1;
   }
@@ -528,17 +601,6 @@ function mergeSameRuleExistingFacts(facts, slug) {
     console.log(`${slug}: merged ${group.length} existing facts (all already retagged '${rule}') sharing one coreKey into one fact, annotations unioned`);
   }
   return { merged, mergedCount };
-}
-
-/** Short documentary text for `FactProvenance.note` (`synergy.ts`) — see that
- * field's own doc comment. Built once per retag rather than inlined so every
- * retagged fact in the pool reads identically for the same rule. */
-function reconciliationNote(rule) {
-  return (
-    `Hand-authored fact; independently reconciled/confirmed by recognizer ` +
-    `'${rule}' (apply-recognizers.mjs). Predates the recognizer — this ` +
-    `card's own real value/annotations are untouched, only provenance was added.`
-  );
 }
 
 async function main() {
@@ -689,9 +751,40 @@ async function main() {
     // appended fact this same run (identical to the old Set's "dedupe
     // within this same run too" behavior) so a later face/recognizer
     // hitting the same claim sees it as already covered either way.
+    // **Keyed by `role::coreKey`, not bare `coreKey` (2026-09-13, real bug
+    // fix surfaced by this pass's own `dies`-event `to`/`from` normalization
+    // above)** — a bare-`coreKey` map lets a SOURCE fact and a SINK fact
+    // collide under the identical reduced key whenever `coreKey` doesn't
+    // itself carry enough fields to tell them apart (concretely: any
+    // `event:'dies'` pair sharing the same `target` — Aerith Gainsborough's
+    // own real source-consequence + sink-precondition dies facts, a common,
+    // expected shape for ANY "onDies" trigger with a self-referential
+    // precondition, not a one-off — collided this way the moment `to`/`from`
+    // were normalized out of `coreKey` for `dies` events, since neither role
+    // has any OTHER field left to distinguish them). Once that happens, the
+    // stricter "2+ candidates need an exact annotation match" branch below
+    // can silently fail BOTH real facts at once: this recognizer's own
+    // computed span (built by regex, "When Aerith Gainsborough dies") is a
+    // few characters wider than the ORIGINAL hand-authored span (just
+    // "Aerith Gainsborough dies," no leading "When ") for BOTH the source
+    // and sink candidate, so neither ever exact-matches, and — since
+    // `candidates.length > 0` — both get silently counted as
+    // "already covered" instead of retagged OR appended fresh. Confirmed via
+    // a real before/after run on this exact card before this fix. Role was
+    // never part of `coreKey` itself (recognizers/`mergeRecognizedFactsByIdentity`
+    // already prefix it separately, same convention followed here) since a
+    // SOURCE and a SINK fact are always genuinely different real claims
+    // (one asserts an occurrence, the other a want) — this fixes a latent
+    // gap in matching, not a new restriction.
     const existingByKey = new Map();
-    for (const f of [...existingSource, ...existingSink]) {
-      const key = coreKey(f);
+    for (const f of existingSource) {
+      const key = `source::${coreKey(f)}`;
+      const list = existingByKey.get(key);
+      if (list) list.push(f);
+      else existingByKey.set(key, [f]);
+    }
+    for (const f of existingSink) {
+      const key = `sink::${coreKey(f)}`;
       const list = existingByKey.get(key);
       if (list) list.push(f);
       else existingByKey.set(key, [f]);
@@ -760,18 +853,20 @@ async function main() {
       recognizerAnnotationsMergedThisCard += mergedAnnotationCount;
 
       for (const { role, fact } of mergedFactsForFace) {
-        const key = coreKey(fact);
+        const key = `${role}::${coreKey(fact)}`;
         const candidates = existingByKey.get(key);
         // Which candidate (if any) this recognized fact retags — see this
         // script's own header on why >1 candidate can share one bare
         // `coreKey`. Two real, different shapes once that can happen:
-        //   - Exactly ONE candidate (the overwhelmingly common case): retag
-        //     it if unprovenanced, regardless of whether its own
-        //     `annotations` happen to match this recognized fact's own
-        //     (an existing fact's hand-authored annotation legitimately
-        //     CAN differ from what a recognizer independently computes for
-        //     the same real claim — `coreKey` already deliberately
-        //     excludes `annotations` for exactly this reason).
+        //   - Exactly ONE candidate (the overwhelmingly common case): always
+        //     matches it, regardless of whether it already carries
+        //     `provenance` (2026-09-14 — see below) or whether its own
+        //     `annotations` happen to agree with this recognized fact's own
+        //     (an existing fact's hand-authored annotation legitimately CAN
+        //     differ from what a recognizer independently computes for the
+        //     same real claim — `coreKey` already deliberately excludes
+        //     `annotations` for exactly this reason, and a difference there
+        //     is no longer treated as a conflict at all, see below).
         //   - More than one candidate: do NOT extend that same tolerance —
         //     require an EXACT `annotations` match to pick which specific
         //     candidate this recognized instance corresponds to. Real,
@@ -781,16 +876,19 @@ async function main() {
         //     real "draw a card" clause, one anchored to the card's own
         //     reminder-text parenthetical ("(Draw after you scry or
         //     surveil.)") — while this recognizer only ever independently
-        //     re-derives the FIRST. A "first unprovenanced candidate wins"
-        //     policy (tried and reverted) would retag the SECOND
-        //     (reminder-text) fact as "confirmed by drawCard-effect-
-        //     structural" on a LATER run once the first was already
-        //     retagged — genuinely wrong (this recognizer never matched
-        //     that span at all) and non-idempotent (a 3rd run would find
-        //     yet more). Requiring an annotation match when candidates.length
-        //     > 1 means the reminder-text fact is correctly, stably, left
-        //     alone forever (this recognizer never produces a fact whose
-        //     annotation equals its span). **2026-09-13 follow-up**: the
+        //     re-derives the FIRST. A "first candidate wins" policy (tried
+        //     and reverted) would retag the SECOND (reminder-text) fact as
+        //     "confirmed by drawCard-effect-structural" — genuinely wrong
+        //     (this recognizer never matched that span at all). Requiring an
+        //     annotation match when candidates.length > 1 means the
+        //     reminder-text fact is correctly, stably, left alone forever
+        //     (this recognizer never produces a fact whose annotation equals
+        //     its span) — unaffected by no longer also requiring
+        //     `!f.provenance` here (2026-09-14): once a real candidate has
+        //     been matched/updated by a prior run, its own `annotations` are
+        //     already the recognizer's own deterministic output, so the
+        //     exact-match re-finds the SAME real candidate every subsequent
+        //     run, not a different one. **2026-09-13 follow-up**: the
         //     incoming `fact` here may now itself be a MERGED fact (see
         //     `mergeRecognizedFactsByIdentity` above) carrying more than one
         //     annotation — e.g. qiqirn-merchant's own two draw abilities are
@@ -805,32 +903,43 @@ async function main() {
         //     cleanup, not something this per-run retag loop re-derives.
         let existingFact;
         if (candidates?.length === 1) {
-          existingFact = candidates[0].provenance ? undefined : candidates[0];
+          existingFact = candidates[0];
         } else if (candidates && candidates.length > 1) {
           const factAnnotationsJSON = JSON.stringify(fact.annotations);
-          existingFact = candidates.find((f) => !f.provenance && JSON.stringify(f.annotations) === factAnnotationsJSON);
+          existingFact = candidates.find((f) => JSON.stringify(f.annotations) === factAnnotationsJSON);
         }
         if (existingFact) {
-          // Real hand-authored fact the recognizer independently
-          // confirmed — retag IN PLACE (same object reference as in
-          // `existingSource`/`existingSink`, so this mutation is what
-          // gets written below). Every other field — `value`,
-          // `annotations`, `controller`, everything — stays exactly as
-          // originally authored; the recognizer confirms the fact's
-          // existence/shape, never its magnitude.
-          existingFact.provenance = { ...fact.provenance, note: reconciliationNote(fact.provenance.rule) };
+          // `coreKey` matched — replace `value`/`annotations` with the
+          // recognizer's own freshly-computed ones and set a bare
+          // `provenance` (2026-09-14: no distinction anymore between "first
+          // time this recognizer produces this claim" and "re-confirming a
+          // fact that used to be hand-authored" — see this script's own
+          // header). A no-op (not counted as a retag, no write) when the
+          // existing fact already has this exact `value`/`annotations`/
+          // bare `provenance` — keeps this idempotent and keeps the run
+          // stats meaningful (a re-run reports 0 further retags).
+          const sameValue = existingFact.value === fact.value;
+          const sameAnnotations = JSON.stringify(existingFact.annotations) === JSON.stringify(fact.annotations);
+          const sameProvenance =
+            existingFact.provenance?.origin === fact.provenance.origin &&
+            existingFact.provenance?.rule === fact.provenance.rule &&
+            existingFact.provenance?.note === undefined;
+          if (sameValue && sameAnnotations && sameProvenance) {
+            factsAlreadyPresent++;
+            continue;
+          }
+          existingFact.value = fact.value;
+          existingFact.annotations = fact.annotations;
+          existingFact.provenance = { origin: fact.provenance.origin, rule: fact.provenance.rule };
           retaggedByRule[fact.provenance.rule] = (retaggedByRule[fact.provenance.rule] ?? 0) + 1;
           factsRetagged++;
           retaggedThisCard++;
           continue;
         }
         if (candidates && candidates.length > 0) {
-          // Every existing/previously-appended fact sharing this bare
-          // `coreKey` already has `provenance` (a prior run's own retag, a
-          // brand-new parser fact from an earlier face/recognizer this
-          // same run, or two recognizers/faces independently deriving the
-          // identical claim) — genuinely nothing new to say, idempotent
-          // no-op.
+          // No candidate matched by the disambiguation rule above (the
+          // multi-candidate, exact-annotation-match branch) — genuinely
+          // nothing new to say for this recognized instance.
           factsAlreadyPresent++;
           continue;
         }

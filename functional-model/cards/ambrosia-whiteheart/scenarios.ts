@@ -7,11 +7,22 @@
 // model one entering), then onLandfall fires manually. Legend-rule coverage
 // is handled parametrically elsewhere now, not as a per-card demonstration
 // here.
+//
+// This scenario now also spans a real Cleanup (2026-09-14, ENGINE_GAPS.md —
+// `state.pump`'s own real `untilEndOfTurn` expiry): Landfall's own real
+// "+1/+0 UNTIL END OF TURN" pump used to be a permanent `layers.add` entry
+// with no expiry at all — the trace now genuinely crosses the rest of this
+// turn (`advanceOneStep` in a loop, same convention `the-lunar-whale`'s own
+// scenario already establishes for reaching a specific later phase) and
+// reads Ambrosia's real effective power/toughness both BEFORE and AFTER
+// Cleanup, proving the pump genuinely disappears rather than just applying.
 
 import { ambrosiaWhiteheart } from './definition';
 import { basicLandsFor } from '../../mana';
+import { currentPhase } from '../../turn';
+import { effectivePT } from '../../state';
 import type { TraceResult } from '../../harness';
-import { setupEnginePilot, pilotActions, pilotCast, pilotResolveTop, advanceToPlayersNextMain1, pilotFireTrigger, finishEnginePilotTrace, type EnginePilotSetup } from '../../engine-trace';
+import { setupEnginePilot, pilotActions, pilotCast, pilotResolveTop, advanceToPlayersNextMain1, advanceOneStep, pilotFireTrigger, finishEnginePilotTrace, type EnginePilotSetup } from '../../engine-trace';
 
 export function runEngineScenarios(): TraceResult[] {
   const setup: EnginePilotSetup = {
@@ -54,7 +65,21 @@ export function runEngineScenarios(): TraceResult[] {
   // Landfall fired manually — no "another permanent entered" auto-detection in this engine
   pilotFireTrigger(pilot, ambrosiaWhiteheart, ctx, actions, 'onLandfall');
 
+  // Real, live evidence the pump applied — genuinely 2/2 base + 1/0 = 3/2
+  // right after Landfall fires, not a scripted number.
+  const [pumpedPower, pumpedToughness] = effectivePT(pilot.state, ambrosiaReal);
+  pilot.log.push({ fn: 'read:getNetPower', target: ambrosiaReal.name, power: pumpedPower, toughness: pumpedToughness });
+
+  // Real 514.2 Cleanup — genuinely crosses the rest of THIS turn
+  // (Main2/EndOfTurn/Cleanup), not a hand-waved "assume it expires."
+  while (currentPhase(pilot.engine.turn) !== 'Cleanup') advanceOneStep(pilot);
+
+  // Real, live evidence the pump is GONE — back to base 2/2, read straight
+  // off the real card after Cleanup, not asserted from outside the trace.
+  const [expiredPower, expiredToughness] = effectivePT(pilot.state, ambrosiaReal);
+  pilot.log.push({ fn: 'read:getNetPower', target: ambrosiaReal.name, power: expiredPower, toughness: expiredToughness });
+
   const result =
-    "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0.";
-  return [finishEnginePilotTrace(pilot, setup, "engine playthrough: Flash cast on opponent's turn -> ETB bounce -> Landfall pump", result)];
+    "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0 UNTIL END OF TURN (3/2) — the scenario then crosses a real Cleanup (514.2) and Ambrosia is genuinely back to her base 2/2, the pump having really expired, not just applied.";
+  return [finishEnginePilotTrace(pilot, setup, "engine playthrough: Flash cast on opponent's turn -> ETB bounce -> Landfall pump -> Cleanup (pump expires)", result)];
 }

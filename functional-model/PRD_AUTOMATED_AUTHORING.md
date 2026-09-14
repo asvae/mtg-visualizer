@@ -585,6 +585,15 @@ as a historical record of that pass, not current behavior.
     recognizers/faces independently deriving the identical claim):
     genuinely nothing new to say, counted as already-covered, untouched
     (idempotent — confirmed by running the script twice in a row).
+
+  **SUPERSEDED (2026-09-14) — see "Dedup-match retagging simplified" near
+  the end of this file.** The `note`-preserving behavior described in the
+  two bullets above is retired outright, not kept as an option: a
+  `coreKey` match now always overwrites `value`/`annotations` with the
+  recognizer's own freshly-computed ones and sets a bare
+  `provenance: { origin: 'parser', rule }`, whether or not the existing
+  fact already carried `provenance`. `FactProvenance.note` no longer
+  exists on the type at all.
 - **Real whole-pool run, this pass**: 0 new parser-originated facts (the
   pool was already fully migrated from the third-recognizer pass above),
   **163 existing hand-authored facts retagged with provenance** —
@@ -1163,3 +1172,207 @@ designed/built. The CR-rule-citation Forge-verification caveat every
 recognizer in this catalog already carries is unchanged by this pass either
 (no new CR claims were introduced — this pass is pure plumbing around
 existing recognizer verdicts).
+
+## Tier-3 elimination pass, fin/1-5 (2026-09-13)
+
+Real per-fact verdicts for every genuine tier-3 (`authoredFact`/
+`authoredFacts`) entry across `summon-bahamut`, `ultima-origin-of-oblivion`,
+`adelbert-steiner`, `aerith-gainsborough`, `aerith-rescue-mission` — the
+prior 2 prototype passes' own hand-authored facts, checked one by one for
+whether tier 1 (a new structural recognizer) or tier 2 (the runtime probe,
+extended) can now derive them mechanically instead.
+
+`summon-bahamut`/`adelbert-steiner` confirmed to need zero tier-3 facts,
+untouched this pass.
+
+**Two new tier-1 TEXT recognizers** (`recognizers/dies-trigger-
+structural.ts`, `recognizers/lifegain-trigger-structural.ts` — both with
+their own `.test.ts` files, same convention as Recognizers A/B, though
+deliberately NOT added to `recognizers/types.ts`'s `RecognizerId` union nor
+wired into `apply-recognizers.mjs`, per this task's own "prototype-only,
+don't touch the real pipeline" constraint):
+
+- `dies-trigger-structural`: "When/Whenever \<self\> dies," — the trigger's
+  own firing precondition (SINK) plus its CR 700.4 SOURCE-side consequence,
+  as one pair. Checked against all 8 real `name:'onDies'`-shaped triggers
+  pool-wide before writing the regex, not just the 1 card that needed it:
+  accepts `dwarven-castle-guard`, `undercity-dire-rat`, `magic-pot`,
+  `ancient-adamantoise`, `aerith-gainsborough`, and both `vincent-valentine
+  -galian-beast`'s and `garland-...-chaos-the-endless`'s own BACK faces
+  (own printed face-name as subject, including a real "short form of a
+  comma-epithet name" fix the initial regex missed on first run — "Chaos,
+  the Endless" is referred to as just "Chaos" in its own oracle text, fixed
+  generically, not with a card-specific carve-out); correctly DECLINES `al
+  bhed-salvagers` (real name has no hyphen, unlike its slug) — its own real
+  clause is BROADER ("this creature or another creature or artifact you
+  control dies"), and the required immediate "dies" adjacency after the
+  self-subject is what declines it for free, no special-casing. Deliberately
+  does NOT match on the trigger's own `name` string (`'onDies'`) instead of
+  oracle text — checked and confirmed this would have been WRONG:
+  `al-bhed-salvagers`'s own trigger is ALSO literally named `'onDies'`
+  despite meaning something broader.
+- `lifegain-trigger-structural`: "Whenever you gain life," — checked against
+  all 3 real pool cards using this literal clause (`excalibur-ii`,
+  `minwu-white-mage`, `aerith-gainsborough`), identical wording all 3 times.
+
+**Tier 2 — `recognizers/runtime-action-probe.prototype.ts`, new** (extends
+`runtime-dependency-probe.prototype.ts`'s read-only `ctx`-only
+instrumentation to ALSO instrument `actions`, per this task's own mandate).
+`probeBroadcastPutCounter` runs a `kind:'custom'` effect's `run(ctx,
+actions)` body once against a richer fake board (self plus, per side, a
+non-Legendary and a Legendary creature and — "you" side only — a land),
+then classifies ONLY one real, narrow shape: an unconditional
+`actions.putCounter` broadcast over a same-side, subtype-filtered
+collection, with NO `actions.chooseTarget` call anywhere (declines
+immediately otherwise). Target-constraint derivation is ID-based, not
+path-string-based: the module owns its own fixture ground truth, resolves
+each `putCounter` target argument back to a known candidate via its real
+`getId()`, and adds a subtype to the derived `target.types.has` only when
+EVERY touched candidate carries it AND at least one untouched (but still
+creature-typed) candidate lacks it — logical induction over known ground
+truth, not string-trace correlation.
+
+A real, generically-useful bug found and fixed along the way: the existing
+read-only probe's own `wrap()` unconditionally re-wraps every function
+call's return value in a brand-new `Proxy`, even when it's already one of
+its own proxies — silently breaking `Array.prototype.includes`-style
+reference-identity checks inside a probed closure (`actions.chooseTarget
+(pool)` returning `pool[0]`, an already-wrapped `Card`, then getting
+double-wrapped). Fixed in this new module via a `pathOf` `WeakMap`
+(registers every proxy this module's own `wrap()` produces; a value that's
+already one of them is returned unchanged instead of re-wrapped).
+
+**Per-fact verdicts, all 8 real facts across the 5 cards**:
+
+| Card | Fact | Verdict | Mechanism |
+|---|---|---|---|
+| `ultima-origin-of-oblivion` | SINK "wants a land tapped for {C}" (`onTapLandForC`'s own firing precondition) | **STAYS TIER-3** | No structural field anywhere expresses this precondition (the addMana `Effect` itself has no "must come from tapping a Land" field); the ONLY signal is the trigger's own free-text `name` and its `staticAbilities` prose, and this is the single real occurrence pool-wide (`grep`'d — no other card uses this shape), so there's no second real case to check a regex against for false positives either way. Building a one-off recognizer with zero cross-checkable precedent was judged too risky to trust; genuinely declined, not skipped. |
+| `aerith-gainsborough` | SOURCE `putCounter` broadcast (each legendary creature you control) | **MECHANIZED — tier 2** | `probeBroadcastPutCounter`, verified byte-identical (modulo `value`) via `scripts/prototype-verify-action-probe-fin1-5.mjs`. |
+| `aerith-gainsborough` | SINK "wants a legendary creature present" (paired with the above) | **MECHANIZED — tier 2 + `mirroredPresenceSinks`** | Falls out automatically once the SOURCE fact's `target.types.has` is known — verified via `scripts/prototype-3tier-reconstruct-fin1-10.mjs`'s own FULL MATCH (10/10) after removing the hand-authored pair. |
+| `aerith-gainsborough` | SINK "wants self to die" (`onDies`'s own firing precondition) | **MECHANIZED — tier 1** | `dies-trigger-structural`. |
+| `aerith-gainsborough` | SOURCE "self dies" (CR 700.4 consequence) | **MECHANIZED — tier 1** | `dies-trigger-structural` (same recognizer, paired fact). |
+| `aerith-gainsborough` | SINK "this ability's magnitude scales with +1/+1 counters on self" | **STAYS TIER-3** | Requires numeric-value PROVENANCE tracking across statements (`const x = ctx.self.getCounters(...); ...; actions.putCounter(..., x)`) — primitives have no object identity for this probe family's `WeakMap`-based path tracker to hang onto; a weaker "this closure happens to also read self's own counters somewhere" correlation would be a real false-positive risk, not attempted. |
+| `aerith-gainsborough` | SINK "wants life to be gained" (`onLifeGained`'s own firing precondition) | **MECHANIZED — tier 1** | `lifegain-trigger-structural`. |
+| `aerith-rescue-mission` | SOURCE `putCounter` (stun, one tapped creature) | **STAYS TIER-3** | `probeBroadcastPutCounter` correctly declines the instant a `chooseTarget` call is observed (this closure's own real shape: choose up to 3 targets across 2 combined root collections, tap each, stun-counter the first). Hand-traced WHY extending past that guard would be unsafe, not just asserted: `tapped[0]` (the actual counter'd target) would deterministically resolve to whichever ROOT is listed first in the closure's own `[...you, ...opponents]` pool construction — an artifact of fixture/array order, not a real fact about the card (whose real text has no controller restriction at all) — see `runtime-action-probe.prototype.ts`'s own "Aerith Rescue Mission" section for the full trace. |
+| `aerith-rescue-mission` | SINK "wants a creature present to tap" | **STAYS TIER-3** | Paired with the above; same reason. |
+
+**Definitions updated**: `cards/aerith-gainsborough/definition.ts` (4 of 6
+authored facts removed — the magnitude-dependency sink is the only one
+left, per the table above) + its own `definition-annotations.json`
+(re-keyed to match). `cards/ultima-origin-of-oblivion/definition.ts` and
+`cards/aerith-rescue-mission/definition.ts` are UNCHANGED — every fact on
+both genuinely stays tier-3.
+
+**Reconstruction proof**: `scripts/prototype-3tier-reconstruct-fin1-10.mjs`
+extended to wire in both new tier-1 recognizers (drop-in — same
+`RecognizerInput` shape Recognizers A/B already use) plus a new tier-2
+deriver calling `probeBroadcastPutCounter` for every `kind:'custom'` effect
+site, with `mirroredPresenceSinks` now fed BOTH tier-1 and tier-2 facts (it
+previously only ever saw tier 1). Re-run after removing
+`aerith-gainsborough`'s 4 now-redundant facts: still **FULL MATCH, 10/10**
+— proves the mechanized facts are genuinely equivalent to what was removed,
+not just "close enough." `scripts/prototype-verify-action-probe-fin1-5.mjs`
+(new, standalone) additionally proves the SPECIFIC derived fact shape
+matches the real `synergy.json` fact byte-for-byte (modulo `value`), and
+separately proves `aerith-rescue-mission`'s own closure declines for the
+documented `chooseTarget`-presence reason.
+
+**Verification**: `npx vitest run functional-model` → 469/469 pass (up
+from 452 baseline — the two new recognizers' own test files add 15 (11
+dies-trigger-structural + 4 lifegain-trigger-structural), the remaining +2
+presumably from concurrent work already in the tree).
+`npm run typecheck` → same 2 pre-existing baseline errors
+(`functional-model/mana.ts`, `server/api/tokens/by-key.ts`), 0 new.
+`verify-synergy.mjs` → 0 hard failures pool-wide (unchanged — no real
+`synergy.json` touched by this pass at all, per this task's own
+constraint). `verify-annotation-coverage.mjs`/`verify-scenario-card-
+names.mjs` clean (unaffected — neither reads `definition.ts` directly).
+
+**Not done, still open**: `dies-trigger-structural`/`lifegain-trigger-
+structural` are NOT added to `recognizers/types.ts`'s `RecognizerId` union
+nor wired into `apply-recognizers.mjs`'s real pipeline, and
+`runtime-action-probe.prototype.ts` is NOT promoted out of its own
+`.prototype.ts` status — all per this task's own explicit "prototype-only,
+don't touch the real pipeline" constraint, a deliberate scope limit, not an
+oversight; a future pass could promote all 3 the same way Recognizers C/D/E
+were each promoted in their own later, separate wiring pass. Forge/CR-
+citation re-verification for the new "dies"/"gain life" trigger templating
+is the same "trained knowledge, not independently checked against a
+rules-text mirror" caveat every recognizer in this catalog already carries
+— not closed by this pass either.
+
+## Dedup-match retagging simplified (2026-09-14)
+
+The conservative "preserve the original's `value`/`annotations`, only add
+`provenance` + an explanatory `note`" retag behavior described in "Dedup-
+match retagging closed" above is retired outright, per an explicit,
+narrower design decision than that section's own reasoning assumed:
+
+- **`value` is deprecated pool-wide** — not consulted by anything
+  downstream that actually matters (`factsInteract`/`themeOf`/matching); a
+  mismatch between a recognizer's own fixed `value` and a hand-authored
+  fact's real magnitude is not a conflict worth defending against.
+- **A recognizer's own `annotations` being broader/narrower/differently-
+  placed than a hand-authored span is not a conflict either** — `coreKey`
+  already excludes `annotations` from the match test for exactly this
+  reason; a difference there was never evidence of two different real
+  claims.
+- What's STILL a real conflict, unchanged: any genuinely different
+  identity field (`event`/`target`/`zone`/`subject`/`controller`-adjacent
+  shape) — `coreKey` itself already excludes these facts from ever being
+  considered a "match" in the first place, so this was never actually
+  reachable through the retag path to begin with.
+
+**New behavior**: on any `coreKey` match — whether the existing fact
+already carries `provenance` or not, first time a recognizer produces a
+given claim or the Nth re-run after a prior hand-authored version existed
+— the existing fact's `value`/`annotations` are REPLACED with the
+recognizer's own freshly-computed ones, and `provenance` is set to the
+same bare `{ origin: 'parser', rule }` shape a brand-new fact gets. No
+`note` field is ever written anymore; `FactProvenance.note` (`synergy.ts`)
+has been removed from the type entirely (confirmed unread anywhere under
+`app/`/`server/` before removal). A match that already has this exact
+`value`/`annotations`/bare-`provenance` shape is a genuine no-op (not
+counted as a retag, no file write) — this is what keeps a second run
+idempotent at the STATS level too, not just the file-content level.
+
+- **Real pool-wide run** (`npx vite-node functional-model/scripts/apply-
+  recognizers.mjs`, no args): 98 `synergy.json` files written, 231 existing
+  hand-authored facts retagged (`permanent-enters-battlefield-normally`:
+  125, `instant-sorcery-resolves-to-graveyard`: 46, `saga-lore-and-
+  sacrifice-structural`: 14, `drawCard-effect-structural`: 13,
+  `destroy-effect-structural`: 11, `dealDamage-effect-structural`: 7,
+  `dies-trigger-structural`: 6, `putCounter-broadcast-structural`: 6,
+  `lifegain-trigger-structural`: 3) — every one of those 187 facts that
+  previously carried a `provenance.note` had it stripped and its
+  `value`/`annotations` overwritten with the recognizer's own (the
+  remaining 44 retags are `coreKey` matches this run newly resolved for
+  the first time, same as any ordinary retag always has). 0 hard mismatch
+  failures. **Confirmed idempotent** across 3 consecutive runs (0 further
+  writes/retags on runs 2 and 3). `grep -rl '"note"' cards/*/synergy.json`
+  → 0 matches pool-wide after this run.
+- **Concrete before/after example** — `cards/summon-bahamut/synergy.json`'s
+  `dealDamage-effect-structural` fact: `value` changed from its old
+  hand-authored `5` (Bahamut's real printed damage amount) to the
+  recognizer's own fixed `1`; its `saga-lore-and-sacrifice-structural`
+  `putCounter` facts changed `annotations` from an oracle-text span to a
+  `typeLine` span (the recognizer's own basis for a Saga's lore-counter
+  claim); every retagged fact's `provenance.note` is gone.
+  `cards/aerith-gainsborough/synergy.json` shows the same shape for its own
+  `cast`/`entersBattlefield`/`putCounter` facts (`value: -1` → `1`, spans
+  moved to match the recognizer's own computed offsets).
+- **Verification**: `npx vitest run functional-model` → 484/484 pass
+  (unchanged count — no test asserted the retired `note`-preserving
+  behavior). `npm run typecheck` → same 2 pre-existing baseline errors
+  (`functional-model/mana.ts`, `server/api/tokens/by-key.ts`), 0 new.
+  `verify-synergy.mjs` → 0 hard failures pool-wide, 320 v2 cards checked —
+  confirmed directly (not assumed) that the parser-origin-fact soft-note
+  downgrade for missing trace evidence (`p.provenance?.origin ===
+  'parser'`) is untouched by this change, since it only ever reads
+  `provenance.origin`, never `value`/`annotations`/`note`.
+- Only `cards/<slug>/synergy.json` files changed pool-wide — no
+  `definition.ts`/`progress.json` touched by this pass (confirmed via
+  `git status`; a large, unrelated concurrent session's own
+  `definition-annotations.json`/`definition.ts` changes were already
+  present in the working tree before this pass started and are untouched
+  by it).

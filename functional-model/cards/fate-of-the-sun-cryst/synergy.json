@@ -11,7 +11,11 @@
           "start": 0,
           "end": 7
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
     },
     {
       "to": "Graveyard",
@@ -24,7 +28,11 @@
           "start": 0,
           "end": 7
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "instant-sorcery-resolves-to-graveyard"
+      }
     },
     {
       "event": "destroy",
@@ -44,7 +52,11 @@
           "start": 0,
           "end": 32
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      }
     },
     {
       "event": "dies",
@@ -66,7 +78,11 @@
           "start": 0,
           "end": 32
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      }
     }
   ],
   "sink": [

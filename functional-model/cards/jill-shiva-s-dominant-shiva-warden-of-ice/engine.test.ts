@@ -65,6 +65,7 @@ function realActions(state: GameState): Actions {
       state.discard(playerOf(player), qty);
     },
     putCounter: (target, counterType, amount) => state.putCounter(cardOf(target), counterType, amount),
+    installCounterConditionalGrant: (target, grant) => state.installCounterConditionalGrant(cardOf(target), grant),
     equip: (equipment, target) => state.equip(cardOf(equipment), cardOf(target)),
     animate: (target, types) => state.animate(cardOf(target), types),
     gainControl: (controller, target) => state.gainControl(playerOf(controller), cardOf(target)),

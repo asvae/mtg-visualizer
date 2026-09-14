@@ -9,10 +9,17 @@ import type { CardDefinition, Effect } from '../../card';
 // other land for "you"). `validType: 'land'` since Treno is a Land, not
 // elixir's own Artifact.
 //
-// "{T}: Add {U} or {B}" is a real mana ability — deliberately staticAbilities
-// text only, never a resolvable effect: no mana-producing Effect/Action
-// exists anywhere in this model (no mana pool tracked), a documented,
-// deliberate STILL-DEFERRED gap, not an oversight.
+// "{T}: Add {U} or {B}" is a real, structured `manaAbilities` entry
+// (`Cost$ T | Produced$ Combo U B`, real Forge citation:
+// `res/cardsfolder/t/treno_dark_city.txt`) — a genuine CHOICE-of-color
+// source: `mana.ts`'s `assignManaRequirements` lets it pay EITHER color a
+// cost needs, via real backtracking (closed 2026-09-14, superseding the
+// old regex-over-`staticAbilities`-text path this comment used to
+// describe; ENGINE_GAPS.md gap #5). Every other real FIN Town-cycle land
+// in this batch (Gohn/Gongaga/Guadosalam/Insomnia/Rabanastre/Sharlayan/
+// Vector/Windurst, plus Baron/Balamb Garden's own front faces) shares this
+// exact real shape, just with a different color pair — each references
+// THIS card's own comment rather than repeating it.
 export const trenoDarkCity: CardDefinition = {
   name: 'Treno, Dark City',
   manaCost: '',
@@ -25,5 +32,5 @@ export const trenoDarkCity: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {U} or {B}.'],
+  manaAbilities: [{ colors: ['U', 'B'] }],
 };

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { GameState, effectiveTypes, effectivePT, effectiveKeywords, effectiveSubtypes, isActivationLocked, wrapCard } from './state';
 
 describe('GameState.move', () => {
@@ -755,5 +755,160 @@ describe('GameState.flipCoin — coin-flip resolution + Two-Headed Coin replacem
     const opp = state.addPlayer('opp');
     state.addCard(opp, 'Battlefield', { name: 'Edgar, King of Figaro', keywords: ['TwoHeadedCoin'] });
     expect(state.flipCoin(you, false)).toBe(false);
+  });
+});
+
+describe('GameState.pump / clearUntilEndOfTurnPumps (real 514.2, ENGINE_GAPS.md — mirrors clearUntilEndOfTurnKeywordGrants)', () => {
+  it('a plain pump (no opts) is permanent — clearUntilEndOfTurnPumps leaves it alone', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.pump(card, 1, 0);
+    state.clearUntilEndOfTurnPumps();
+    expect(effectivePT(state, card)).toEqual([2, 1]);
+  });
+
+  it('untilEndOfTurn: true registers the pump for real removal at the next Cleanup (real 514.2)', () => {
+    // Real, live correctness bug this closes: Ambrosia Whiteheart's own
+    // Landfall "+1/+0 until end of turn" and Battle Menu's own Ability mode
+    // "+0/+4 until end of turn" used to be permanent `layers.add` entries
+    // with no expiry at all, even though the card's own printed text says
+    // otherwise.
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.pump(card, 1, 0, { untilEndOfTurn: true });
+    expect(effectivePT(state, card)).toEqual([2, 1]);
+    state.clearUntilEndOfTurnPumps();
+    expect(effectivePT(state, card)).toEqual([1, 1]);
+  });
+
+  it('clearUntilEndOfTurnPumps is game-wide (real 514.2 — not just the active player\'s own permanents)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    const mine = state.addCard(you, 'Battlefield', { name: 'mine' });
+    const theirs = state.addCard(opp, 'Battlefield', { name: 'theirs' });
+    state.pump(mine, 2, 2, { untilEndOfTurn: true });
+    state.pump(theirs, 3, 3, { untilEndOfTurn: true });
+    state.clearUntilEndOfTurnPumps();
+    expect(effectivePT(state, mine)).toEqual([1, 1]);
+    expect(effectivePT(state, theirs)).toEqual([1, 1]);
+  });
+
+  it('two pumps on the same card, only one until-end-of-turn — only the tagged one is removed', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.pump(card, 1, 1); // permanent-within-scenario
+    state.pump(card, 2, 0, { untilEndOfTurn: true });
+    expect(effectivePT(state, card)).toEqual([1 + 1 + 2, 1 + 1]);
+    state.clearUntilEndOfTurnPumps();
+    expect(effectivePT(state, card)).toEqual([1 + 1, 1 + 1]);
+  });
+
+  it('drains its own pending list — a second clear with nothing new pumped is a real no-op', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.pump(card, 1, 0, { untilEndOfTurn: true });
+    state.clearUntilEndOfTurnPumps();
+    state.pump(card, 0, 1); // unrelated, permanent
+    state.clearUntilEndOfTurnPumps();
+    expect(effectivePT(state, card)).toEqual([1, 1 + 1]);
+  });
+
+  it('a card that already left the battlefield before Cleanup is silently skipped (its own layers were already wiped by the 400.7 zone-change reset)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.pump(card, 3, 3, { untilEndOfTurn: true });
+    state.move(card, 'Graveyard');
+    expect(() => state.clearUntilEndOfTurnPumps()).not.toThrow();
+  });
+});
+
+describe('GameState.triggerActivationsThisTurn / resetTriggerActivationsThisTurn (real ActivationLimit$ N, ENGINE_GAPS.md)', () => {
+  it('starts at 0 for a trigger that has never fired', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    expect(state.triggerActivationsSoFar(card.id, 'onAttack')).toBe(0);
+  });
+
+  it('recordTriggerActivation increments per (cardId, triggerName) pair', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.recordTriggerActivation(card.id, 'onAttack');
+    expect(state.triggerActivationsSoFar(card.id, 'onAttack')).toBe(1);
+    state.recordTriggerActivation(card.id, 'onAttack');
+    expect(state.triggerActivationsSoFar(card.id, 'onAttack')).toBe(2);
+  });
+
+  it('is scoped per NAMED trigger, not per card as a whole', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.recordTriggerActivation(card.id, 'onAttack');
+    expect(state.triggerActivationsSoFar(card.id, 'onAttack')).toBe(1);
+    expect(state.triggerActivationsSoFar(card.id, 'onOtherTrigger')).toBe(0);
+  });
+
+  it('is scoped per card, not shared across two different real objects with the same trigger name', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const a = state.addCard(you, 'Battlefield', { name: 'a' });
+    const b = state.addCard(you, 'Battlefield', { name: 'b' });
+    state.recordTriggerActivation(a.id, 'onAttack');
+    expect(state.triggerActivationsSoFar(a.id, 'onAttack')).toBe(1);
+    expect(state.triggerActivationsSoFar(b.id, 'onAttack')).toBe(0);
+  });
+
+  it('resetTriggerActivationsThisTurn (real Cleanup reset) clears every tracked count', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const card = state.addCard(you, 'Battlefield', { name: 'permanent' });
+    state.recordTriggerActivation(card.id, 'onAttack');
+    state.resetTriggerActivationsThisTurn();
+    expect(state.triggerActivationsSoFar(card.id, 'onAttack')).toBe(0);
+  });
+});
+
+// ENGINE_GAPS.md gap #23 (closed 2026-09-14) — real 601.2/701.19 "then
+// shuffle" (Cycling's own TypeCycling search, card.ts's `move` `shuffleAfter`
+// field) needs a GENUINE reorder, not a documentary no-op.
+describe('GameState.shuffleLibrary (real 601.2/701.19 "then shuffle")', () => {
+  it('preserves every card (same objects, same count), never adds/drops/duplicates one', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const cards = Array.from({ length: 6 }, (_, i) => state.addCard(you, 'Library', { name: `c${i}` }));
+    state.shuffleLibrary(you);
+    expect(you.library).toHaveLength(6);
+    expect(new Set(you.library)).toEqual(new Set(cards));
+  });
+
+  it('genuinely reorders (real Fisher-Yates, not a no-op) — deterministic via a mocked Math.random', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    Array.from({ length: 4 }, (_, i) => state.addCard(you, 'Library', { name: `c${i}` }));
+    const before = [...you.library];
+    // Force every `Math.floor(Math.random() * (i+1))` draw to pick index 0 —
+    // a real, fully-determined Fisher-Yates outcome (a left-rotation by one:
+    // each step swaps the CURRENT position-0 card out to position `i`, so
+    // the original first card ends up last), not a probabilistic
+    // "usually differs" assertion.
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    state.shuffleLibrary(you);
+    spy.mockRestore();
+    expect(you.library).toEqual([...before.slice(1), before[0]]);
+  });
+
+  it('a single-card library is a real no-op (nothing to reorder)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const only = state.addCard(you, 'Library', { name: 'only' });
+    state.shuffleLibrary(you);
+    expect(you.library).toEqual([only]);
   });
 });

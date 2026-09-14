@@ -15,7 +15,19 @@
     {
       "event": "damage",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamage-effect-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 83,
+          "end": 114
+        }
+      ]
     },
     {
       "zone": "Graveyard",

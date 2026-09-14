@@ -1,0 +1,10 @@
+{
+  "effects": { "highlight": "Choose one —", "line": 0 },
+  "effects[0].modes[0]": { "highlight": "• Take the Elevator — Create three 1/1 colorless Hero creature tokens.", "line": 1 },
+  "effects[0].modes[1]": {
+    "highlight": "• Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "line": 2
+  },
+  "effects[0].modes[1].effects[0].authoredFact[0]": { "highlight": "Put a stun counter on one of them", "line": 2 },
+  "effects[0].modes[1].effects[0].authoredFact[1]": { "highlight": "Tap up to three target creatures", "line": 2 }
+}

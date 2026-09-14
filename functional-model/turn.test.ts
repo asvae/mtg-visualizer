@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GameState } from './state';
+import { GameState, effectivePT } from './state';
 import { startGame, currentPhase, activePlayer, advancePhase, queueExtraTurn, queueExtraPhase, isFirstPhaseGroupOccurrenceThisTurn, PHASES } from './turn';
 
 describe('turn/phase structure', () => {
@@ -164,6 +164,41 @@ describe('turn/phase structure', () => {
     expect(mine.keywords).not.toContain('Flying');
     expect(theirs.keywords).not.toContain('Menace');
     expect(mine.keywords).toContain('Vigilance');
+  });
+
+  it('Cleanup ends "until end of turn" pumps, game-wide (514.2, mirrors the keyword-grant case above)', () => {
+    // Real, live correctness bug this closes: Ambrosia Whiteheart's own
+    // Landfall "+1/+0 until end of turn" and Battle Menu's own Ability mode
+    // "+0/+4 until end of turn" used to be permanent `layers.add` entries
+    // with no expiry at all, even in a real multi-turn engine-piloted
+    // playthrough.
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    const mine = state.addCard(p1, 'Battlefield', { name: 'Mine', types: ['Creature'] });
+    const theirs = state.addCard(p2, 'Battlefield', { name: 'Theirs', types: ['Creature'] });
+    state.pump(mine, 1, 0, { untilEndOfTurn: true });
+    state.pump(theirs, 0, 4, { untilEndOfTurn: true });
+    state.pump(mine, 2, 2); // a real, permanent pump (no flag) is unaffected
+    let turn = startGame();
+    for (let i = 0; i < PHASES.length - 1; i++) turn = advancePhase(state, turn, [p1, p2]); // -> Cleanup
+    expect(effectivePT(state, mine)).toEqual([1 + 2, 1 + 2]);
+    expect(effectivePT(state, theirs)).toEqual([1, 1]);
+  });
+
+  it('Cleanup resets a real per-turn ActivationLimit$ N count, game-wide (`card.ts`\'s own `Trigger.activationLimit`)', () => {
+    // Real cards needing this: G'raha Tia's own "The Allagan Eye ... triggers
+    // only once each turn" and Elrond, Moon-Reader's own "This ability
+    // triggers only once each turn."
+    const state = new GameState();
+    const p1 = state.addPlayer('p1');
+    const p2 = state.addPlayer('p2');
+    const mine = state.addCard(p1, 'Battlefield', { name: "G'raha Tia" });
+    state.recordTriggerActivation(mine.id, 'onOtherPermanentsDie');
+    expect(state.triggerActivationsSoFar(mine.id, 'onOtherPermanentsDie')).toBe(1);
+    let turn = startGame();
+    for (let i = 0; i < PHASES.length - 1; i++) turn = advancePhase(state, turn, [p1, p2]); // -> Cleanup
+    expect(state.triggerActivationsSoFar(mine.id, 'onOtherPermanentsDie')).toBe(0);
   });
 
   it('a real attackedThisTurn flag (set the way engine.ts\'s declareAttackers does — ENGINE_GAPS.md gap #16) persists through the rest of the turn, then clears at Cleanup', () => {

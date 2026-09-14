@@ -32,21 +32,24 @@ export const cargoShip: CardDefinition = {
   // this engine tracks no spendable mana pool at all (interfaces.ts's own
   // `Player.addMana` doc comment — a deliberately inert observation
   // point), so there is no mechanism anywhere that could constrain what a
-  // produced mana unit is later spent on. Checked the rest of the pool for
-  // a restricted-mana precedent before modeling this (fin/138 Freya
-  // Crescent's own "Spend this mana only to cast an Equipment spell or
-  // activate an equip ability" and fin/219 The Emperor of Palamecia's own
-  // "Spend this mana only to cast a noncreature spell" are the only other
-  // 2 real restricted-mana abilities in this set, and neither is migrated
-  // to CardDefinition/the unified Fact model at all yet — no existing
-  // precedent to follow). Also NOT recognized by `mana.ts`'s own
-  // `manaAbilityColorFromStaticText`/`manaAbilityColorsFromStaticText`
-  // (both explicitly exclude any "spend only"-restricted text, by design —
-  // see that file's own header), so this ability never gets auto-detected
-  // as a payable source for another spell's own cost the way an
-  // unrestricted "{T}: Add {C}." land/rock would be — correct, since a
-  // real restricted source shouldn't silently pay an unrelated cost
-  // either.
+  // produced mana unit is later spent on. Freya Crescent's own "Spend this
+  // mana only to cast an Equipment spell..." and The Emperor of Palamecia's
+  // own "Spend this mana only to cast a noncreature spell" are the only
+  // other 2 real restricted-mana abilities in this set — both are now ALSO
+  // migrated (2026-09-14, `card.ts`'s new `CardDefinition.manaAbilities`/
+  // `ManaAbility.restriction` field, ENGINE_GAPS.md gap #5), unlike here.
+  // This card DELIBERATELY stays on its own bespoke `abilities`-based
+  // modeling rather than ALSO switching to a `manaAbilities` entry — its
+  // add-mana half needs to leave a real, checkable `fn:'addMana'` trace
+  // line (piloted in scenarios.ts), which `manaAbilities` (a plain,
+  // non-resolvable structural fact, same "not a resolvable Effect"
+  // treatment `keywords` gets) deliberately can't produce; declaring BOTH
+  // would duplicate/conflict, not compose. `mana.ts`'s own
+  // `payableManaAbility` correctly never looks at `card.abilities` at all,
+  // so this ability never gets auto-detected as a payable source for
+  // another spell's own cost the way an unrestricted `{T}: Add {C}.`
+  // land/rock would be — correct, since a real restricted source shouldn't
+  // silently pay an unrelated cost either.
   abilities: [
     {
       name: 'mana',

@@ -64,18 +64,12 @@ export const sidequestCatchAFish: CardDefinition = {
     manaCost: '',
     typeLine: 'Land',
 
-    // {T}: Add {W} — a real mana ability. `card.ts` DOES have a real
-    // `kind:'addMana'` Effect now (promoted 2026-09-05, same as `drawCard`)
-    // — this stale comment used to say no such Effect kind existed at all;
-    // it's simply not used HERE because a plain single-color "{T}: Add X."
-    // static ability is the documented, accepted `verify-synergy.mjs`
-    // exemption (`staticManaColorsFor`) that doesn't require a structured
-    // Effect/real trace line to back its own `addMana` fact — no mana POOL
-    // is modeled anywhere in this system either way (`state.ts`'s own
-    // header rules out a full rules engine), so wiring the real Effect kind
-    // here would add no executable behavior beyond what the fact already
-    // (correctly) claims via the exemption.
-    staticAbilities: ['{T}: Add {W}.'],
+    // {T}: Add {W} — a real, structured `manaAbilities` entry (2026-09-14,
+    // superseding the old plain single-color static-ability-text treatment
+    // this comment used to describe) — genuinely payable via `mana.ts`'s
+    // `canAfford`/`payMana`, still with no mana POOL modeled anywhere in
+    // this system (`mana.ts`'s own header rules out a full rules engine).
+    manaAbilities: [{ colors: ['W'] }],
 
     // {3}, {T}, Sacrifice an artifact: Put a +1/+1 counter on EACH creature
     // you control. Activate only as a sorcery. The sacrifice is part of the

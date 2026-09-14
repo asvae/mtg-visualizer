@@ -5,7 +5,18 @@
       "controller": "you",
       "subject": "self",
       "value": 1
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "discard",
+      "target": "self",
+      "value": -1
+    }
+  ]
 }

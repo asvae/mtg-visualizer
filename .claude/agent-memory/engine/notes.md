@@ -18210,3 +18210,1544 @@ now ~18.2k lines / 1.2MB, large enough that the `card` agent's mirror
 notes file is likely comparably sized — worth an orchestrator-level call
 on pruning/archiving older entries before it becomes unreadable/slow to
 load.
+
+## 2026-09-13: 3-tier waterfall PoC (`PRD_AUTOMATED_AUTHORING.md`), fin/1-10 scoped
+
+Task: prove "zero externally-authored Fact data, everything compiled from
+`definition.ts` alone" is achievable for real fin/1-10 cards, via a 3-tier
+fallback (static structural -> runtime-dependency probe -> a NEW embedded
+"authored fact" field). Read-only/additive — did NOT touch
+`apply-recognizers.mjs`, did NOT write to any real `synergy.json`.
+
+**Tier 3 design, landed in `card.ts` (real, typed, additive)**:
+- `Effect`'s `kind:'custom'` variant gains `authoredFact?: Fact | Fact[]`
+  (reuses `synergy.ts`'s real `Fact` type verbatim, `role` kept ON each
+  object since there's no on-disk array to imply it the way `RecognizedFact`
+  omits it) — for a fact whose only real basis is inside an opaque `run()`
+  closure (arity-2, mutates state — out of scope for the runtime probe by
+  design).
+- `CardDefinition` gains `authoredFacts?: Fact[]` — the card-level sibling,
+  for a fact tied to a NAMED trigger's own firing PRECONDITION (attacks/
+  dies/landfall) with no single owning `Effect`/container — `Trigger.name`
+  is free text, not a closed vocabulary the way `Trigger.on`
+  ('enter'/'upkeep'/'endStep') is, so there's no safe general structural
+  rule to derive these (confirmed: `cloud-midgar-mercenary`'s `on:'enter'`
+  trigger HAS a matching "wants self to enter" sink in real data,
+  `ambrosia-whiteheart`'s own `on:'enter'` trigger does NOT — a real,
+  confirmed inconsistency, not a rule to generalize from).
+- Both purely additive/inert, same status as every other
+  `PRD_AUTOMATED_AUTHORING.md` prototype field on `card.ts` (`annotation`/
+  `effectsAnnotation`/etc.) — not consulted by `factsInteract`/`themeOf`/
+  `apply-recognizers.mjs`.
+
+**Populated for real** (7 facts across 5 real cards, all copied verbatim
+from each card's own existing hand-authored `synergy.json` — proving these
+CAN be authored inline, not just designed): `aerith-gainsborough`'s onDies
+`custom` effect (4 facts: source putCounter, sink Battlefield/{Creature,
+Legendary}, sink dies-self precondition, source dies-self, sink
+putCounter-self-magnitude-dependency) + card-level lifegain-sink (the OTHER
+trigger's precondition); `auron-s-inspiration`'s no-op `custom` effect (the
+real "attacking creatures get +2/+0" pump fact — the canonical
+task-specified example); `aerith-rescue-mission`'s tap+stun `custom` mode
+(2 facts); `ashe-princess-of-dalmasca` + `ambrosia-whiteheart` +
+`ultima-origin-of-oblivion` + `cloud-midgar-mercenary` each got one
+card-level `authoredFacts` entry (attacks/landfall/addMana-from-lands/
+entersBattlefield-self trigger-precondition sinks respectively).
+
+**Tier 1 extended (throwaway-script-only, NOT new real recognizer files)**:
+beyond the 5 shipped recognizers (reused as-is), added inline derivations
+for `keywords:['Lifelink']`->lifegain, `ptFormula.kind:'addPerEquipment
+Controlled'`->pump+Equipment-sink, `alternateCosts[]`->cast(from)+exile,
+`triggerDoubling[].scope`->triggeredAbility sinks, and literal-field-only
+`move`/`dig`/`pumpSelf`/`pumpTarget`/`createToken`/`gainLife`/`putCounter`/
+`putCounterTarget`/`addMana`/`dealDamage` effects — plus a
+CR-700.4-justified "dies" consequence always paired with an accepted
+`destroy` fact, and a general (sample-checked, NOT pool-verified) "a
+produce fact whose `target` is a POSITIVE `types.has` constraint gets a
+paired 'wants this present' sink" rule — confirmed this does NOT
+over-fire on Bahamut's own `types.not` (exclusion) destroy target, a real
+counterexample within this same sample that would have been silently
+overclaimed by a naive version of the rule.
+
+**Tier 2** (real, unmodified `runtime-dependency-probe.prototype.ts`):
+ran against `summon-bahamut` chapter IV's `Computed<number>` `amount`
+closure — classifies "scales with permanents you control", mapped to the
+paired SINK fact tier 1 alone couldn't justify (tier 1 already had the
+SOURCE fact's `event`/`target`/`recipient`, all literal fields).
+
+**Result**: `functional-model/scripts/prototype-3tier-reconstruct-fin1-10.mjs`
+(new, throwaway, kept as reference — same status as other `*.prototype.ts`
+files) runs the full waterfall per card and diffs against real
+`synergy.json` (shape/existence only — `value`/`annotations`/`provenance`
+excluded on purpose: `value` is a separately-computed weight
+(`compute-weights.mjs`), precise annotation byte-offsets are a separately-
+solved mechanical concern (`compute-annotations.mjs`/`toLineOffset`);
+`controller` also excluded and `subject`-on-self normalized, mirroring
+`apply-recognizers.mjs`'s own documented `coreKey` precedent for the exact
+same real pool inconsistencies). **9/10 cards fully reconstruct** (shape-
+identical to hand-authored data) with ZERO tier-3 authoring needed at all
+for 3 of them (`summon-bahamut`, `adelbert-steiner`, `battle-menu` — tiers
+1+2 alone sufficed). The 1 real, HONEST, un-fixed gap: `cloud-midgar-
+mercenary`'s own "search library for an Equipment card" reconstructs as
+generic `Artifact` (the structural `move.validType` union's own coarsest
+common denominator, already flagged as a known lossy approximation in that
+card's own pre-existing code comment) vs. the real hand-authored
+`Equipment`-specific fact — a genuine structural-field precision ceiling,
+not silently patched.
+
+Verification: `npx vitest run functional-model` 454/454 (unchanged);
+`npm run typecheck` — same 2 pre-existing baseline errors (`mana.ts`,
+`server/api/tokens/by-key.ts`), 0 new. `git status` confirms only 7
+`definition.ts` files + `card.ts` + the 1 new script changed — no
+`synergy.json`/`apply-recognizers.mjs`/any other real pipeline file
+touched, per this task's explicit constraint.
+
+**Open, not attempted this pass**: whether/how a tier-3 fact should ever
+OVERRIDE a tier-1/tier-2 guess that turns out coarser/wrong (Cloud's
+Equipment-vs-Artifact case) — same "per-card override mechanism, deferred
+until a real need surfaces" open item this PRD's Design section already
+names; this pass's tiers are pure ADDITION, never override. Whether the
+"positive `types.has` target -> mirrored presence sink" tier-1 heuristic
+holds pool-wide (checked only within this 10-card sample) is unverified —
+flagged in the script's own header, same "grow/verify only when forced"
+discipline every other recognizer in this catalog already follows.
+
+## Definition-level annotation DATA externalized to per-card index-path file (2026-09-13, design correction, fin/1-5 only)
+
+The prior two passes' inline `annotation?: FactAnnotationAuthoring` sibling
+fields (`Trigger.annotation`/`.abilities[].annotation`/`effectsAnnotation`/
+`ptFormula`'s own `annotation`/`modal`'s `modes[].annotation`) and tier-3
+`authoredFact`/`authoredFacts`' own embedded `annotations` field are now
+migrated OFF `definition.ts` for the 5 real fin/1-5 cards specifically
+(`summon-bahamut`, `ultima-origin-of-oblivion`, `adelbert-steiner`,
+`aerith-gainsborough`, `aerith-rescue-mission`) — per explicit user
+correction: `definition.ts` should stay pure game-logic structure, no
+textual/authoring metadata mixed in, mirroring the OLD
+`annotations-authoring.json` convention's separation, just re-keyed to work
+BEFORE facts exist.
+
+- **New per-card file: `cards/<slug>/definition-annotations.json`** — a flat
+  map from an INDEX PATH string into the definition structure to a
+  `{highlight, line, anchor?}` object (the same `FactAnnotationAuthoring`
+  shape, `synergy.ts`). Deliberately NOT named `annotations-authoring.json`
+  (every one of these 5 cards already has a REAL, different-shaped file by
+  that name — positionally aligned to `synergy.json`'s `source`/`sink`
+  arrays, read by the real `compute-annotations.mjs` pipeline — reusing the
+  name would collide/conflate two genuinely different conventions). Path
+  scheme, index-based per explicit user direction (brittleness to reordering
+  accepted): `"triggers[0]"`, `"abilities[0]"`, `"effects"` (bare — one
+  top-level `effects` array per face, no index needed), `"ptFormula"`,
+  `"effects[0].modes[1]"` (a `modal` effect's own mode-level annotation —
+  aerith-rescue-mission's the one card in this batch that needs it, its
+  own real "Choose one —" spans 3 physical oracle-text lines and
+  `AnnotationRef`/`toLineOffset` hard-require a single-line span, so the
+  modal's own per-mode annotations are the only way to keep per-mode
+  precision), `"authoredFacts[0]"` (card-level tier-3 array), and
+  `"triggers[1].effects[0].authoredFact[2]"` (a tier-3 fact co-located on a
+  `custom` Effect nested inside a named trigger — array index disambiguates
+  multiple facts sharing one `authoredFact` array on the same effect).
+- **`card.ts` type change**: new `export type AuthoredFact = Omit<Fact,
+  'annotations'> & { annotations?: Fact['annotations'] }` — `Effect
+  .authoredFact?: Fact | Fact[]` -> `AuthoredFact | AuthoredFact[]`,
+  `CardDefinition.authoredFacts?: Fact[]` -> `AuthoredFact[]`. Chosen over
+  removing `annotations` outright because fin/6-10 (`ashe-princess-of-
+  dalmasca`, `cloud-midgar-mercenary`, `auron-s-inspiration`, `ambrosia-
+  whiteheart` — all out of THIS task's scope, all still carry inline
+  `annotation`/embedded-`annotations` data from the earlier two passes) also
+  use `authoredFact`/`authoredFacts` and still embed `annotations` directly
+  — making the field merely OPTIONAL (not removed) means both conventions
+  type-check under the one shared field, 0 changes needed to fin/6-10's own
+  data. The inline `annotation?: FactAnnotationAuthoring` sibling fields
+  themselves (`Trigger`/`abilities`/`effectsAnnotation`/`ptFormula`/`modal`
+  mode) are UNCHANGED in `card.ts` — still real fields, still used by
+  fin/6-10's own definitions — only the 5 in-scope cards' own DATA for them
+  was removed.
+- **Migration, concrete before/after** (`ultima-origin-of-oblivion`):
+  before — `triggers[1]` (`onTapLandForC`) carried `annotation: {highlight:
+  'Whenever you tap a land for {C}, add an additional {C}.', line: 2}`
+  inline; `authoredFacts[0]` carried `annotations: [{target:'oracle',
+  line:2, start:13, end:31}]` embedded on the Fact object. After — both
+  fields are gone from `definition.ts`; `cards/ultima-origin-of-oblivion/
+  definition-annotations.json` now has `"triggers[1]": {"highlight":
+  "Whenever you tap a land for {C}, add an additional {C}.", "line": 2}` and
+  `"authoredFacts[0]": {"highlight": "tap a land for {C}", "line": 2}` (the
+  `highlight` text for the tier-3 entry was reverse-derived by slicing this
+  card's own real oracle text line 2 at the stripped entry's own
+  `[start,end)`, then confirmed the slice round-trips to the identical
+  `AnnotationRef` via `computeFactAnnotations` — see verification below).
+  `aerith-gainsborough`'s onDies `custom` effect (`triggers[1].effects[0]`)
+  is the densest case: 5 tier-3 `authoredFact` entries (2 pairs share an
+  identical highlight/line — entries `[2]`/`[3]` both anchor to "Aerith
+  Gainsborough dies" on line 2, matching their real pre-migration identical
+  `annotations`), all 5 now keyed `triggers[1].effects[0].authoredFact[0..4]`
+  in that card's own `definition-annotations.json`, none left inline.
+- **Resolver**: no new resolution logic — reuses the real, exported
+  `computeFactAnnotations`/`rawHighlightRange` (`synergy.ts`) unchanged, only
+  a new lookup step (path -> JSON entry) in front of it. New throwaway
+  verification script, `functional-model/scripts/prototype-index-path-
+  annotations-fin1-5.mjs` (NOT wired into `apply-recognizers.mjs`, does not
+  touch any real `synergy.json`): walks each of the 5 cards' own
+  `CardDefinition` (triggers/abilities/effects/modal modes/ptFormula/
+  authoredFacts, recursing into `custom` effects' own `authoredFact`
+  arrays), computes each site's real index path the same way each card's own
+  `definition.ts` comments now document it, looks that path up in
+  `definition-annotations.json`, resolves via `computeFactAnnotations`, and
+  — for every tier-3 `authoredFact`/`authoredFacts` entry specifically —
+  cross-checks the resolved `AnnotationRef` against a REAL fact's own
+  `annotations` in that card's currently-checked-in `synergy.json` (the
+  concrete "did this migration actually preserve what gets served" proof,
+  not just internal self-consistency). Also flags any `definition-
+  annotations.json` key with no matching definition site (stale/typo guard).
+- **Real whole-batch run, this task**: 21 total annotation sites across the
+  5 cards (4 summon-bahamut, 3 ultima, 1 adelbert-steiner, 8 aerith-
+  gainsborough, 5 aerith-rescue-mission), ALL 21 resolve successfully via the
+  external file + `computeFactAnnotations`, 0 stale keys. Of those, 8 are
+  tier-3 `authoredFact`/`authoredFacts` entries (1 ultima, 5 aerith-
+  gainsborough — its 5-entry `authoredFact` array plus its own separate
+  card-level `authoredFacts[0]`, 2 aerith-rescue-mission) — **all 8
+  independently confirmed to match a real fact's own `annotations` in that
+  card's currently-checked-in `synergy.json`**, byte-for-byte (same `line`/
+  `start`/`end`), proving the externalization didn't silently change what's
+  actually served. `summon-bahamut`/`adelbert-steiner` have 0 tier-3 sites
+  (matches the prior 3-tier prototype's own finding that neither needed
+  tier-3 authoring at all).
+- **Verification**: `npx vitest run functional-model` 454/454 pass
+  (unchanged). `npm run typecheck` (`nuxt typecheck`) — same 2 pre-existing
+  baseline errors (`functional-model/mana.ts`, `server/api/tokens/
+  by-key.ts`), 0 new (confirmed both predate this task via the unrelated
+  file paths). `verify-synergy.mjs` — 0 hard failures pool-wide (unchanged,
+  confirms no real `synergy.json` was touched — only `card.ts`, the 5
+  in-scope `definition.ts` files, and 5 new `definition-annotations.json`
+  files changed by this task; `git status` confirmed fin/6-10's own
+  already-uncommitted inline-annotation changes from the two PRIOR passes
+  this session were pre-existing, not touched by this task).
+- **Not done, still open**: this remains prototype-only, same as the two
+  prior passes — not wired into `apply-recognizers.mjs`'s real production
+  pipeline. Whether/how this index-path convention should extend to the
+  remaining fin/6-10 cards' own still-inline `annotation`/embedded-
+  `annotations` data (a pool-wide migration) is a separate future task, not
+  attempted here — this task was explicitly scoped to fin/1-5 only per the
+  dispatch. The `AuthoredFact` type's own `annotations?` being optional
+  (rather than fully removed) is a deliberate scoping choice for the same
+  reason — a clean pool-wide removal of the embedded-annotations option
+  entirely would need every fin/6-10 card migrated first.
+
+## Tier-3 elimination pass, fin/1-5 (2026-09-13, follow-up to the annotation-externalization pass above)
+
+Task: attempt to eliminate the tier-3 `authoredFact`/`authoredFacts` entries
+on `summon-bahamut`, `ultima-origin-of-oblivion`, `adelbert-steiner`,
+`aerith-gainsborough`, `aerith-rescue-mission` by extending tier 1
+(structural recognizers) or tier 2 (the runtime probe) to derive them
+mechanically. Full write-up (per-fact table, recognizer design, decline
+reasoning) is in `PRD_AUTOMATED_AUTHORING.md`'s own new "Tier-3 elimination
+pass, fin/1-5" section — this entry is the short pointer + open items.
+
+- **4 of 8 real tier-3 facts mechanized**, all on `aerith-gainsborough`: 2
+  via a new tier-1 TEXT recognizer (`recognizers/dies-trigger-
+  structural.ts` — "When/Whenever \<self\> dies," precondition+consequence
+  pair, checked against all 8 real `onDies`-named triggers pool-wide,
+  correctly declines `al-bhed-salvagers`'s own broader clause), 1 via
+  another new tier-1 recognizer (`recognizers/lifegain-trigger-
+  structural.ts` — "Whenever you gain life,", checked against all 3 real
+  occurrences), 1 (+ its auto-paired sink) via a NEW tier-2 capability
+  (`recognizers/runtime-action-probe.prototype.ts`'s `probeBroadcastPutCounter`
+  — extends the read-only runtime-dependency probe to also instrument
+  `actions`, observing an unconditional `actions.putCounter` broadcast over
+  a subtype-filtered same-side collection). Both new recognizers have real
+  `.test.ts` files but are deliberately NOT wired into `apply-
+  recognizers.mjs`/`recognizers/types.ts`'s `RecognizerId` union, per this
+  task's own "prototype-only" constraint.
+- **4 of 8 stay genuinely tier-3**, each with a concrete, hand-verified
+  reason (not a hand-wave): `ultima-origin-of-oblivion`'s addMana-Land want
+  (no structural field expresses the trigger's own precondition, and it's
+  the only real pool occurrence — no second case to check a regex against);
+  `aerith-gainsborough`'s own counters-on-self magnitude dependency (needs
+  numeric-value PROVENANCE tracking across statements — primitives have no
+  identity for a `WeakMap`-based tracker to hang onto); both of
+  `aerith-rescue-mission`'s facts (its own closure's target-selection shape
+  combines 2 root collections via `actions.chooseTarget` BEFORE the
+  eventual `putCounter` — hand-traced why mechanizing this would produce a
+  false-positive "creatures you control" over-narrowing purely from fixture
+  array-order, not any real fact about the card).
+- **A real, generically-useful bug found+fixed while building the actions
+  probe**: the ctx-only probe's own `wrap()` unconditionally re-wraps a
+  function's return value even when it's already one of its own proxies —
+  breaks `Array.prototype.includes`-based identity checks inside a probed
+  closure. Fixed in the NEW action-probe's own `wrap()` via a `pathOf`
+  `WeakMap` short-circuit (not backported to the original read-only probe
+  file, since nothing there currently needs it).
+- **Definitions changed**: `cards/aerith-gainsborough/definition.ts` (4 of 6
+  authored facts removed, its own `definition-annotations.json` re-keyed to
+  match) — reconstruction-verified FULL MATCH (10/10) via `scripts/
+  prototype-3tier-reconstruct-fin1-10.mjs` (extended this pass to wire in
+  both new recognizers + the action-probe deriver) both before AND after
+  the removal. `ultima-origin-of-oblivion`/`aerith-rescue-mission`/
+  `summon-bahamut`/`adelbert-steiner` — UNCHANGED (nothing to remove).
+- **Verification**: `npx vitest run functional-model` 469/469 (up from 452
+  baseline — +15 for the two new recognizer test files (11 dies-trigger, 4
+  lifegain-trigger), +2 elsewhere presumably from concurrent work already
+  in the tree). `npm run typecheck` — same 2
+  pre-existing baseline errors (`functional-model/mana.ts`, `server/api/
+  tokens/by-key.ts`), 0 new. `verify-synergy.mjs` 0 hard failures pool-wide
+  (no real `synergy.json` touched, per constraint).
+- **Open Forge-verification still needed** (flagging per this domain's own
+  ground-truth discipline, not resolved this pass): the "dies"/"gain life"
+  trigger-templating assumptions behind the 2 new recognizers are trained
+  knowledge, not independently checked against a rules-text mirror — same
+  standing caveat every recognizer in this catalog already carries (see
+  PRD's own "Not yet re-verified" note from the original prototype pass).
+  Whether/when `dies-trigger-structural`/`lifegain-trigger-structural`/
+  `runtime-action-probe.prototype.ts` get promoted into the real
+  `apply-recognizers.mjs` pipeline is open, unscheduled follow-up work, not
+  decided by this pass.
+
+## `definition-annotations.json` scaled fin/1-100 (2026-09-13)
+
+Scaled the external-file, index-path-keyed definition-annotation
+convention (see "Wired into real per-card data" / the fin/1-5
+`definition-annotations.json` examples above) from fin/1-5 to the FULL
+fin/1-100 range. Pure data-authoring — did NOT wire anything into
+`apply-recognizers.mjs`/the live serving pipeline; no `synergy.json`
+touched.
+
+- **Fin/6-10 migrated off the inline `annotation`/`effectsAnnotation`/
+  `modes[].annotation`/`triggerDoubling[].annotation` field convention**
+  (`ashe-princess-of-dalmasca`, `auron-s-inspiration`, `battle-menu`,
+  `cloud-midgar-mercenary`, `ambrosia-whiteheart`) to the same external
+  `definition-annotations.json` file fin/1-5 already uses — same process:
+  moved each `highlight`/`line` pair out of `definition.ts` into the new
+  file, removed the inline field usage. Tier-3 `authoredFacts`/
+  `authoredFact` entries on these 5 (which predate the fin/1-5
+  "annotation is DATA ABOUT the definition" correction and still embedded
+  a raw `AnnotationRef` — `{target:'oracle', line, start, end}` — directly
+  on the Fact) were converted to the same `{highlight, line}` shape by
+  slicing the real oracle text at that raw range to recover the literal
+  substring, then re-typed each card's own `authoredFacts`/`authoredFact`
+  from `satisfies Fact[]`/`Fact` to `satisfies AuthoredFact[]`/
+  `AuthoredFact` (the correct fin/1-5-established type — `Fact` itself
+  requires non-optional `annotations`, which no longer applies once the
+  annotation moves external). Did NOT touch the inline field TYPES
+  themselves in `card.ts` (`Trigger.annotation`/`effectsAnnotation`/
+  `modes[].annotation`/`TriggerDoublingGrant.annotation`) — confirmed via
+  a pool-wide grep that nothing in `cards/` uses them anymore post-
+  migration, but left the types declared per the task's own "don't remove
+  without checking" constraint; a future pass could actually delete them
+  now that they're provably dead, not done here since it wasn't asked.
+- **Fin/11-100 (90 cards) authored fresh**, same methodology as the
+  original fin/1-10 pass: for every container holding real, distinct
+  printed text (`triggers[]`, `abilities[]`, top-level `effects`,
+  `ptFormula`, modal `modes[]`, plus `backFace.*` and `triggerDoubling[]`
+  which the original fin/1-5 prototype script didn't yet walk — extended
+  for this pass), found the real printed oracle-text line
+  (`data/fin/fin_scryfall.json`) it corresponds to and recorded
+  `{highlight: <verbatim line text>, line: <index>}` — the established
+  convention turns out to always be the FULL verbatim line, never a
+  partial substring, for every non-tier-3 site; only tier-3
+  `authoredFact`/`authoredFacts` entries (none existed in fin/11-100 —
+  this range's own `synergy.json` facts are all mechanized/hand-authored
+  without an embedded `authoredFact`) would need a sub-line phrase.
+  - **85 of 90 cards got real annotation files** (the other 5 are
+    documented, not silent gaps — see below).
+  - **2 cards, zero containers, correctly zero entries** (same
+    `adelbert-steiner`-Lifelink precedent): `gaelicat` (Flying/Vigilance +
+    a conditional pump modeled as `staticAbilities` text, no `ptFormula`),
+    `scorpion-sentinel` (same shape, `staticAbilities`-only conditional
+    pump). No file needed or created.
+  - **3 cards, real containers DECLINED** (a genuinely new gap shape this
+    pass surfaced, not present in fin/1-10): a bare, non-modal top-level
+    `effects` array whose sub-`Effect`s correspond to TWO SEPARATE real
+    oracle-text lines with no `modal`/`modes[]` substructure to split by.
+    `computeFactAnnotations`/`rawHighlightRange`'s `line`-scoped resolution
+    only ever covers ONE physical line per entry, and the task's own
+    "coarse... not per-individual-Effect precision" instruction rules out
+    an `effects[0]`/`effects[1]`-indexed workaround — so these 3 are
+    skipped outright rather than force a span that would silently omit
+    real content: `eject` (`move` on one line, `drawCard` on the next),
+    `circle-of-power` (`drawCard`+`loseLife`+`createToken` on line 0,
+    `pumpAll`+`grantKeywordAll` on line 1), `cornered-by-black-mages`
+    (`sacrifice` on line 0, `createToken` on line 1). No
+    `definition-annotations.json` file exists for these 3 at all.
+  - **1 more real, smaller-scope decline inside an otherwise-annotated
+    card**: `louisoix-s-sacrifice`'s 2 `modal` `modes[]` don't correspond
+    to distinct real printed bullet lines at all — the real card has no
+    "Choose one —" structure, it's a single mandatory alternative-cost
+    effect ("sacrifice a legendary creature or pay {2}") modeled as a
+    2-mode `modal` purely as an engine trick for the cost branch, both
+    modes sharing the identical real effect text. Annotated the top-level
+    `effects` container to the real effect line (line 1, "Counter target
+    ..." — line 0's alternative-cost clause is treated like every other
+    cost-reduction/additional-cost static line elsewhere in this pool,
+    correctly out of scope), but explicitly declined
+    `effects[0].modes[0]`/`modes[1]` rather than force either mode's own
+    invented `describe` text onto a real oracle line it doesn't actually
+    correspond to.
+  - Every other multi-trigger-name-shares-one-real-line case (Saga
+    chapters sharing a printed "I, II — ..."/"I, II, III, IV — ..." line,
+    equipped-creature quoted granted-ability text living inside the same
+    line as its own static P/T grant — `sage-s-nouliths`/`thief-s-knife`/
+    `black-mage-s-rod`'s own patterns) followed the exact fin/1-10
+    precedent (multiple index paths pointing at the identical line/
+    highlight, same as `summon-bahamut`'s chapters I/II).
+- **Verification — a general-purpose walker+resolver script, not just the
+  fin/1-5 prototype**: extended `scripts/prototype-index-path-annotations-
+  fin1-5.mjs`'s own `collectAnnotationSites`/resolution logic (kept the
+  original file untouched, wrote the extended version to the session
+  scratchpad only, not checked in — this task's own scope was data
+  authoring, not new checked-in tooling) to also walk `backFace.*` and
+  `triggerDoubling[]`, and to tolerate a missing `definition-
+  annotations.json` (the 2 zero-container cards) without erroring.
+  - **Whole-pool run, all 100 cards**: 180 real annotation sites found
+    pool-wide, 175 resolved via the external file (the 5 documented
+    declines above — `eject` 1, `louisoix-s-sacrifice` 2,
+    `circle-of-power` 1, `cornered-by-black-mages` 1 — are the ONLY
+    non-resolving sites; zero stale/typo'd path keys anywhere).
+  - **Independent spot-check, 27 cards spread across fin/11-100** (well
+    past the requested 15-20): a second, independent script resolved every
+    annotation entry via the real `computeFactAnnotations` and printed the
+    resolved substring directly next to the real oracle-text line sliced
+    fresh from `data/fin/fin_scryfall.json` — all 27 matched byte-for-byte
+    (`cloudbound-moogle`, `crystal-fragments-summon-alexander` (DFC),
+    `dwarven-castle-guard`, `g-raha-tia`, `machinist-s-arsenal`,
+    `moogles-valor`, `phoenix-down` (modal), `summon-choco-mog` (Saga),
+    `ultima`, `venat-...-hydaelyn` (DFC), `white-mage-s-staff`,
+    `cargo-ship` (`abilities[]`), `combat-tutorial`,
+    `jill-shiva-s-dominant-...` (DFC+Saga), `matoya-archon-elder`,
+    `qiqirn-merchant` (`abilities[]` x2), `sage-s-nouliths`,
+    `summon-shiva` (Saga), `thief-s-knife`, `ardyn-the-usurper`,
+    `demon-wall`, `fight-on`, `snow-villiers`/`adelbert-steiner`
+    (`ptFormula`), `cecil-dark-knight-...` (DFC),
+    `sidequest-card-collection-...` (DFC), `sleep-magic`).
+- **Full test suite + typecheck, clean**: `npx vitest run functional-model`
+  484/484 pass. `npm run typecheck` — same 2 pre-existing baseline errors
+  (`functional-model/mana.ts`, `server/api/tokens/by-key.ts`), 0 new. No
+  `synergy.json`/`apply-recognizers.mjs` touched by this pass at all
+  (confirmed via `git status` — every `synergy.json` diff in the working
+  tree pre-dates this task, from earlier concurrent recognizer-retagging
+  work, not touched here).
+- **Not done / open**: no consumption step exists yet for
+  `definition-annotations.json` — same as fin/1-5, this remains pure
+  corpus-building for a future step. Whether the 3 fully-declined cards
+  (`eject`/`circle-of-power`/`cornered-by-black-mages`) could be better
+  served by a future, finer-grained container shape (e.g. letting a
+  non-modal `effects` array itself carry per-index annotation the way
+  `modes[]` does) is a real open design question this pass surfaced but
+  didn't decide — flagged, not resolved, would need `card.ts`'s own
+  container-annotation type shape reconsidered, not just more data
+  authoring. Whether `card.ts`'s now-fully-dead inline `annotation`-field
+  types (`Trigger.annotation`/`effectsAnnotation`/`modes[].annotation`/
+  `TriggerDoublingGrant.annotation`) should be deleted outright (confirmed
+  dead pool-wide by this pass, per above) is left for whoever picks that
+  up next.
+
+## Real production wiring: destroy->dies companion, dealDamage recognizer, tier-2 sink promotion, dies/lifegain-trigger + putCounter-broadcast promotion (2026-09-13, closes fin/1's last 3 agent-derived facts + fin/4's mechanized ones for real)
+
+Task: close summon-bahamut/fin-1's last 3 agent-derived facts for real (unlike
+several prior passes this session, which stayed prototype-only) — THIS TIME
+wired into the real `apply-recognizers.mjs` pipeline, run pool-wide. Mid-task,
+orchestrator escalated scope: also promote `dies-trigger-structural.ts`/
+`lifegain-trigger-structural.ts` (written, tested, but never wired in a prior
+pass) and `runtime-action-probe.prototype.ts`'s putCounter-broadcast capability
+into the same real pipeline, in the same pass.
+
+**Done, all real, all pool-wide-run + idempotent + tested + live-verified**:
+
+1. **`destroy-effect-structural.ts` extended** (not a new recognizer) to also
+   emit a companion `event:'dies'` SOURCE fact (same target constraint,
+   `from:'Battlefield'/'to':'Graveyard'/targeted:true`, same annotation span)
+   for every matched `destroy` effect — CR 700.4, same "ACT vs CONSEQUENCE"
+   rule `saga-lore-and-sacrifice-structural.ts` already established for
+   sacrifice->dies. Verified as a real, general pattern first: `battle-menu`
+   and `fate-of-the-sun-cryst` already carry this exact pairing hand-authored
+   (byte-for-byte match confirmed via test); `dion-bahamut-s-dominant-
+   bahamut-warden-of-light`'s back face too. `qutrub-forayer`/`deadly-
+   embrace`/`ultima-weapon`/`summon-primal-odin` correctly still decline (no
+   change — the owner-restricted/qualifier declines were already there).
+2. **New `recognizers/dealDamage-effect-structural.ts`** — `kind:'dealDamage'`
+   effects, `target:'opponents'` only (the one confirmed real `EffectOwner`
+   value in the pool, 7 real occurrences checked: Black Waltz No. 3, Joshua/
+   Phoenix chapters I+II, Sabotender, Vivi Ornitier, Summon: Bahamut chapter
+   IV, The Emperor of Palamecia's back face). Clause pattern
+   `\bdeals\b[^\n]*?\bdamage\b[^\n]*?\bto each opponent\b` — deliberately
+   does NOT anchor on the literal `amount` text at all (unlike `destroy`'s
+   `qty`/`minPower`): the asserted Fact
+   (`{event:'damage',controller:'you',recipient:'opp',targeted:false}`)
+   carries no magnitude field at all, confirmed against every existing
+   hand-authored fact of this shape pool-wide (`value` never echoes the real
+   printed amount, e.g. Black Waltz No. 3's own hand-authored `value:4` vs
+   its real printed `2`) — so a `Computed<number>` amount (Bahamut's own
+   chapter IV, Emperor's own Starfall) is expected to match, same as a
+   literal one, and does.
+3. **Tier-2 "scales with X" -> paired sink, folded into the SAME recognizer**
+   (not a separate file) — when `amount` is a function, runs
+   `runtime-dependency-probe.ts`'s `probeComputedNumber` (promoted out of
+   `.prototype.ts` status this same pass) and, on a classified bucket found
+   in a small `BUCKET_TO_SINK` map (`permanents/creatures/lands you
+   control`), emits the paired `{to:'Battlefield',controller:'you',...}`
+   sink at the SAME annotation span as the source `damage` fact. Bahamut's
+   own chapter IV classifies "scales with permanents you control" -> matches
+   its own pre-existing hand-authored sink exactly. Emperor's own Starfall
+   classifies "scales with cards in your graveyard" -> NOT in the map ->
+   correctly NO sink asserted (source fact still asserted) — this is the
+   real, deliberate "grow only when forced" restraint, not a gap.
+4. **Promoted BOTH `runtime-dependency-probe.prototype.ts` and
+   `runtime-action-probe.prototype.ts` out of prototype status** (renamed,
+   dropped `.prototype`, header comments rewritten) — now real dependencies
+   of #3 above and #5 below respectively, not standalone/unwired.
+5. **New `recognizers/putCounter-broadcast-structural.ts`** — the ONE
+   recognizer in this catalog that EXECUTES a `kind:'custom'` effect's own
+   closure (via the promoted action probe) before text-confirming its
+   classified output. Real whole-pool check BEFORE wiring: of 18 real
+   `actions.putCounter`-calling custom effects, only 3 classify as a genuine
+   unconditional broadcast (Aerith Gainsborough; Dion Bahamut's Dominant's
+   back face, chapters I+II; The Crystal's Chosen) — the rest correctly
+   decline (chosen-target shape via `actions.chooseTarget`, no putCounter
+   call, or a safe probe crash). Tries BOTH "each X"/"each other X" phrasing
+   variants (Dion's own real text excludes self via `.filter()`, Crystal's
+   Chosen's doesn't — a Sorcery, no self on the battlefield to exclude in
+   the first place); emits the paired "wants this present" sink at the same
+   span, same convention as #3.
+6. **`dies-trigger-structural.ts`/`lifegain-trigger-structural.ts` wired in**
+   (already written+tested in a PRIOR pass, never wired before now) — no
+   changes to either file's own logic needed.
+7. **`recognizers/types.ts`'s `RecognizerId`** widened by 4:
+   `dies-trigger-structural`, `lifegain-trigger-structural`,
+   `dealDamage-effect-structural`, `putCounter-broadcast-structural`.
+   **`server/api/recognizer-source/[rule].get.ts`'s `RECOGNIZER_IDS`**
+   updated in the SAME pass as the wiring (not a follow-up fix) — no repeat
+   of the earlier-session allowlist-miss bug.
+8. **Real bug found and fixed in `apply-recognizers.mjs` itself, surfaced by
+   this pass's own pool-wide run**: `coreKey`'s dedup-lookup map
+   (`existingByKey`) was NOT role-partitioned — a SOURCE fact and a SINK
+   fact sharing an identical reduced key (any real "onDies" trigger's own
+   precondition-sink + consequence-source pair, e.g. Aerith Gainsborough's)
+   could silently collide once `to`/`from` were ALSO normalized out of
+   `coreKey` for `event:'dies'` facts (a second, deliberate fix this pass
+   needed, for the SAME reason the pre-existing `subject` self-reference
+   normalization exists: CR 700.4 makes a `dies` fact's `to`/`from` an
+   invariant pair whenever present, so a bare pre-existing `dies` fact —
+   `lunatic-pandora`/`sephiroth-s-intervention`/`sidequest-hunt-the-mark`'s
+   own hand-authored facts — is the identical real claim as this
+   recognizer's fully-qualified shape). Caught live (not by inspection): a
+   first pool-wide run silently left Aerith Gainsborough's own dies pair
+   completely untouched (neither retagged nor newly appended — the 2+
+   candidate branch's exact-annotation-match requirement failed for BOTH
+   real candidates at once, and `candidates.length > 0` swallowed them as
+   "already covered"). Fixed by making `existingByKey`'s own keys
+   (AND the retag loop's own lookup key) `${role}::${coreKey(fact)}` instead
+   of bare `coreKey(fact)` — the `role` prefix `mergeRecognizedFactsByIdentity`
+   already used for its own, different grouping pass, now also applied here.
+   Reverted the buggy first run (`git checkout`) and re-ran clean after the
+   fix — see before/after counts below, from the CORRECTED run.
+9. **Real pool-wide run** (`npx vite-node functional-model/scripts/apply-
+   recognizers.mjs`, no args): 23 files written, 10 new parser-derived facts
+   added (real gaps the now-wired recognizers additively found beyond the
+   fin/1-5 scope, e.g. `ancient-adamantoise`/`garland-knight-of-cornelia-
+   chaos-the-endless`/`undercity-dire-rat`/`vincent-valentine-galian-beast`
+   each gained a real dies source+sink pair that didn't exist before), 44
+   existing hand-authored facts retagged (dies-trigger-structural: 6,
+   lifegain-trigger-structural: 3, putCounter-broadcast-structural: 6,
+   destroy-effect-structural: 10, dealDamage-effect-structural: 7,
+   permanent-enters-battlefield-normally: 6, instant-sorcery-resolves-to-
+   graveyard: 4, saga-lore-and-sacrifice-structural: 2), 0 hard mismatch
+   failures (4 pre-existing suppressed-by-exception-marker mismatches,
+   unrelated to this pass). **Confirmed idempotent across 3 consecutive
+   runs** (0 further writes/diffs on runs 2 and 3).
+10. **Before/after agent-derived-fact counts, fin/1-5, verified by directly
+    reading each real `synergy.json`** (per the orchestrator's own explicit
+    ask): `summon-bahamut` 3 -> **0** (all 3 target facts closed — `dies`
+    companion, `damage` source, `battlefield presence` tier-2 sink, all now
+    provenance-tagged, confirmed live via `/app/card/fin/1`'s Facts tab +
+    working recognizer-source popovers for `destroy-effect-structural`/
+    `dealDamage-effect-structural`); `aerith-gainsborough` 8 -> **3**
+    (closed: dies source+sink via `dies-trigger-structural`, lifegain sink
+    via `lifegain-trigger-structural`, putCounter broadcast source+sink via
+    `putCounter-broadcast-structural` — confirmed live via `/app/card/fin/4`;
+    remaining 3 genuinely out of scope, no recognizer exists for them: the
+    Lifelink-causes-lifegain source, the plain self-only putCounter, and the
+    magnitude-scaling sink the orchestrator explicitly named as staying
+    tier-3); `ultima-origin-of-oblivion` 4 -> 4 (unchanged, genuinely tier-3,
+    no recognizer built this pass); `adelbert-steiner` 3 -> 3 (unchanged);
+    `aerith-rescue-mission` 3 -> 3 (unchanged, its own stun-counter pair
+    explicitly named as staying tier-3).
+11. **Full verification**: `npx vitest run functional-model` 484/484 (was
+    484 before too — no test COUNT regression, though many individual test
+    bodies changed/were added). `npm run typecheck` — same 2 pre-existing
+    baseline errors (`functional-model/mana.ts`, `server/api/tokens/
+    by-key.ts`), 0 new. `verify-synergy.mjs` — 0 hard failures pool-wide
+    (320 v2 cards checked). Live-verified via a real headless-browser
+    reload (Playwright) of `/app/card/fin/1` and `/app/card/fin/4`'s own
+    Facts tabs (not just API/file-level checks) — every target fact's
+    row now correctly shows NO `wand-sparkles` "agent-derived" icon, and
+    clicking its `lucide:scroll` "View recognizer source" button opens a
+    real modal with the actual recognizer TypeScript source (not a 404),
+    correctly attributed per rule (`dealDamage-effect-structural` for both
+    the Damage and Battlefield-presence rows on fin/1; `putCounter-
+    broadcast-structural`/`dies-trigger-structural`/`lifegain-trigger-
+    structural` correctly attributed on fin/4).
+12. **Not touched / explicitly out of scope, per the orchestrator's own
+    carve-out**: the `definition-annotations.json` index-path externalization
+    design (still prototype-only, a DIFFERENT concurrent session appears to
+    be actively extending this pool-wide during this same task — confirmed
+    via `git status` showing many more `definition-annotations.json`/
+    `definition.ts` files touched than this task itself modified; verified
+    this doesn't conflict — those changes only touch `annotation`/
+    `authoredFact` documentation-adjacent fields, never `effects`/
+    `triggers`/`abilities` structure, so none of this task's own structural
+    recognizers are affected either way, confirmed by re-running the full
+    test suite after noticing the concurrent activity, still 484/484 green).
+
+**Open, no Forge-verification needed this pass** (both new recognizers are
+pure vocabulary/templating work over this app's OWN already-Forge-verified
+`Effect`/`CardDefinition` model and printed Scryfall text, not new rules
+interpretation) — nothing flagged.
+
+## Dedup-match retagging simplified (2026-09-14)
+
+Per explicit user design decision: `value` is deprecated pool-wide (never
+consulted by matching), and a recognizer's own `annotations` being
+broader/narrower than a hand-authored span is not a conflict either
+(`coreKey` already excludes both from the match test). Retired the
+conservative "preserve original value/annotations, add a `Fact.provenance
+.note` explaining it predates the recognizer" retag behavior outright — no
+longer an option.
+
+- **`functional-model/synergy.ts`**: removed `FactProvenance.note?: string`
+  from the type entirely (confirmed unread anywhere under `app/`/`server/`
+  first — only `provenance.rule` is ever read, for the "View recognizer
+  source" popover).
+- **`functional-model/scripts/apply-recognizers.mjs`**: on any `coreKey`
+  match (whether or not the existing fact already carried `provenance` —
+  no more special-casing "first time" vs "re-run after a prior hand-
+  authored version"), the existing fact's `value`/`annotations` are now
+  REPLACED with the recognizer's own freshly-computed ones and
+  `provenance` is set to the bare `{ origin: 'parser', rule }` shape (same
+  as a brand-new fact). A match is only counted as a real retag (and only
+  triggers a write) when `value`/`annotations`/`provenance` actually
+  differ from what's already on disk — keeps idempotency meaningful at
+  the stats level, not just file-content level. Also updated
+  `mergeDuplicateFacts` (the narrow existing-on-disk self-heal for the
+  2026-09-13 subject-normalization bug) to match: its survivor now takes
+  the donor's `value`/`annotations` too (the donor's own fields ARE a
+  prior run's recognizer output), not just its `provenance`. Removed the
+  now-dead `reconciliationNote()` helper. `mergeSameRuleExistingFacts`
+  (unions annotations across facts already retagged by the identical
+  rule) was untouched — it never wrote a `note` and isn't part of this
+  design decision's scope.
+- **Real pool-wide run** (`npx vite-node functional-model/scripts/apply-
+  recognizers.mjs`, no args): 98 `synergy.json` files written, 231
+  existing facts retagged (187 of which previously carried a `note`, now
+  stripped + value/annotations overwritten; 44 newly-resolved `coreKey`
+  matches, ordinary retags). 0 hard mismatch failures. **Confirmed
+  idempotent across 3 consecutive runs** (0 further writes on runs 2/3).
+  `grep -rl '"note"' functional-model/cards/*/synergy.json` → 0 matches
+  pool-wide after this run.
+  - Concrete example: `cards/summon-bahamut/synergy.json`'s
+    `dealDamage-effect-structural` fact — `value` `5` (Bahamut's real
+    printed damage) → `1` (recognizer's fixed value); its saga
+    `putCounter` facts' `annotations` moved from an oracle-text span to a
+    `typeLine` span. `cards/aerith-gainsborough/synergy.json` shows the
+    same shape (`value: -1`/`4` → `1` across 3 facts).
+- **Verification**: `npx vitest run functional-model` 484/484 (unchanged
+  count — no test asserted the retired `note`-preserving behavior, so
+  nothing needed updating there). `npm run typecheck` — same 2
+  pre-existing baseline errors, 0 new. `verify-synergy.mjs` — 0 hard
+  failures, 320 v2 cards checked; confirmed DIRECTLY (not assumed) that
+  the parser-origin soft-note downgrade for missing produce trace
+  evidence (`p.provenance?.origin === 'parser'`, only reads `.origin`,
+  never `value`/`annotations`/`note`) is unaffected.
+- **Live-verified** (Playwright, not just API/file-level): `/app/card/
+  fin/1`'s Facts tab, "Damage" row's raw-JSON debug modal (`{}` icon)
+  shows `"value": 1` (not the old `5`) and a bare `"provenance": {
+  "origin": "parser", "rule": "dealDamage-effect-structural" }` with no
+  `note` field; its "View recognizer source" popover (`lucide:scroll`
+  icon) still opens the real recognizer source, no 404. Full page text
+  scraped for "predates the recognizer"/"independently reconciled" —
+  0 matches (note text was never rendered in the UI to begin with, only
+  `rule` was — contract already said so, confirmed directly here rather
+  than assumed).
+- **Docs updated**: `functional-model/PRD_AUTOMATED_AUTHORING.md` (new
+  "Dedup-match retagging simplified (2026-09-14)" section, superseding
+  bullet added to the old "Dedup-match retagging closed" section) and
+  `.claude/contracts/card-schema.md` (same, in the "Parser-derived facts"
+  section).
+- **Unrelated, pre-existing dirty state noted, not touched**: a large
+  concurrent session's own `definition-annotations.json`/`definition.ts`
+  changes (128 files) were already in the working tree before this task
+  started — confirmed this script only ever writes `synergy.json` (101
+  files this run), no overlap/conflict.
+
+## Fact-parity checker built: `functional-model/scripts/check-fact-parity.mjs` (2026-09-14)
+
+Task: build a read-only script verifying every real, distinct fin/1-100 card
+behavior (enumerated from this session's own `cards/<slug>/definition-
+annotations.json` index-path files) ends up represented by SOME Fact —
+recognizer-derived, hand-authored, or tier-3 `authoredFact`/`authoredFacts`
+in `definition.ts` — with zero silent gaps. Never writes to any
+`synergy.json`/`definition.ts`.
+
+**Correspondence method**: `computeFactAnnotations` (synergy.ts, the SAME
+function the real annotation pipeline uses) resolves each definition-
+annotations.json entry to a real `AnnotationRef`; a container/effect is
+"covered" when a real fact's own `annotations` OVERLAPS that span (same
+face/target/line) — NOT exact equality (verified first: a container's span
+is usually the WHOLE line, an individual fact's own annotation a narrower
+sub-phrase nested inside it — exact-match would have produced false gaps on
+every correctly-covered container checked).
+
+**Mid-task orchestrator refinement (real, adopted)**: a container-only check
+("does >=1 fact overlap this container's span, of ANY kind") is too coarse —
+a container holding 3 real `Effect` objects with only 2 producing facts
+would silently read as "covered." Extended to a genuine PER-EFFECT check:
+walks each container down to its own leaf `Effect` objects (reusing the
+walk shape `recognizers/structural-effects.ts`'s `collectEffects` already
+established, one level only — a `kind:'modal'` wrapper itself is excluded,
+its own modes are separately-enumerated containers, never double-counted),
+classifies each leaf's `kind` against an EMPIRICALLY-built kind->event/zone
+table (built from the 6 real structural recognizers' own `event:` literals +
+PRD_AUTOMATED_AUTHORING.md's documented `addMana`/`pump` additions — NOT
+guessed), and requires a matching fact of the RIGHT expected event/zone-
+shape, not just any fact on the same line. Effect kinds with no confirmed
+mapping (`grantKeyword*`, `tapAll`/`tapTarget`, `untapTarget`, `discard`,
+`mill`, `surveil`, `dig`, `fightTarget`, `counter`, `animate`,
+`playFromLibraryTop`, `loseLife`, `custom`) fall back to the weaker "any
+fact overlaps" check, counted SEPARATELY as "approximate" (99 of 195 real
+effects, honestly flagged, not hidden inside the covered count).
+
+**Real, unplanned finding surfaced mid-task, now a proper 3rd bucket**: 26
+real facts across 8 real fin/1-100 cards (fin/91-100 — cecil-dark-knight,
+circle-of-power, cornered-by-black-mages, dark-confidant, dark-knight-s-
+greatsword, demon-wall, evil-reawakened, fight-on, the-darkness-crystal)
+have NO `annotations` field at all — a real, pre-existing violation of the
+"Fact.annotations required" invariant (synergy.ts's own doc comment),
+apparently missed for this specific late batch. A fact like this MAY already
+represent the behavior in question, but this checker (or any annotation-
+based consumer) structurally cannot confirm it. Tracked as "unverifiable" —
+NOT silently counted as covered, NOT silently counted as a genuine gap
+either. This reclassified 11 of the 18 originally-flagged effect-level
+"gaps" from the first pass into "unverifiable" once implemented, leaving 7
+real, confirmed (manually spot-checked against each card's own synergy.json)
+gaps.
+
+**Final real, pool-wide numbers (fin/1-100, 100 real cards checked)**:
+- Container-level: 167 containers — 27 script-covered, 122 agent-covered (0
+  needed the tier-3 fallback — every current tier-3 authoredFact/
+  authoredFacts entry already has an equivalent synergy.json fact too), 9
+  unverifiable (missing-annotation fact exists), 9 genuine gaps.
+- Per-effect-level (the real ask): 195 leaf effects — 33 script-covered, 144
+  agent-covered, 11 unverifiable, **7 genuine parity gaps** (manually
+  confirmed each by reading the card's own synergy.json/definition.ts):
+  - `gogo-master-of-mimicry` (fin/54) `effects[0]` (custom) — whole card has
+    NO synergy.json authored yet at all (not an isolated miss).
+  - `quistis-trepe` (fin/66) `triggers[0].effects[0]` (custom) — same, no
+    synergy.json at all yet.
+  - `ice-magic` (fin/56) `effects[0].modes[2].effects[0]` (move, Blizzaga
+    tier) — real synergy.json exists and covers the OTHER 2 tiers
+    (Blizzard/Blizzara), Blizzaga alone has zero facts.
+  - `restoration-magic` (fin/30) `effects[0].modes[1]`'s 3 effects
+    (grantKeywordTarget x2 + gainLife) — the "Cura" (middle) tier has ZERO
+    facts; Cure and Curaga (the other 2 tiers) are both covered. A real,
+    previously-unknown authoring gap this task surfaced, not a checker
+    artifact — confirmed by direct inspection: no fact anchors to line 2 at
+    all.
+  - `sidequest-card-collection-magicked-card` (fin/73)
+    `triggers[1].effects[0]` (custom, the "transform if 8+ cards in
+    graveyard" end-step trigger) — real synergy.json exists (cast/enters/
+    drawCard/discard/crew/grantType) but nothing represents this specific
+    trigger at all.
+
+**Known, explicitly-flagged method limitations** (in the script's own header
+comment, not silently absorbed):
+1. Container enumeration is deliberately the `definition-annotations.json`
+   file's OWN keys, per the task's own instruction — NOT an independent
+   structural re-walk. 3 real fin/1-100 cards (`eject`, `circle-of-power`,
+   `cornered-by-black-mages`) have a COMPLETELY MISSING annotations file
+   despite having real `effects` containers (declined at authoring time —
+   multi-line, no modal substructure to split by) — these report as "0
+   containers, nothing to cover" per the task's own explicit instruction,
+   but are independently re-flagged under a separate "KNOWN ANNOTATION-
+   COVERAGE-GAP" heading (verified via a minimal, separate structural-
+   presence check used ONLY for this classification, never for enumeration)
+   rather than silently conflated with a genuine "nothing to annotate" card.
+2. Per-effect kind classification is only as precise as the empirically-
+   built table — 99 of 195 real effects fall into the "unclassified,
+   approximate" bucket (any fact on the same line counts), honestly reported
+   separately, not folded into a false-confidence "kind-verified" count.
+3. Multiplicity beyond kind-presence isn't verified (two same-kind leaf
+   effects in one container would both read "covered" off one matching
+   fact) — no real fin/1-100 case hits this, flagged anyway.
+4. The "unverifiable" (missing-annotations) bucket is a real, separate,
+   pre-existing data-quality bug this task surfaced but did NOT fix (task
+   was explicitly read-only/checking, not authoring) — flagged for a future
+   authoring pass, not silently worked around.
+
+Verification: `npx vitest run functional-model` 484/484 (unchanged, script
+is new/additive, touches nothing else). `git status` confirms the only new
+file is `functional-model/scripts/check-fact-parity.mjs` — nothing else
+touched.
+
+**Open, no Forge-verification needed** — this is pure internal data-
+reconciliation tooling over this app's own already-Forge-verified model, not
+new rules interpretation. One real, un-actioned follow-up flagged for a
+future pass: fix the 26 missing-`annotations` facts on fin/91-100 (would
+convert most of the 11 "unverifiable" per-effect items into confirmed
+coverage), and author real facts for the 7 genuine gaps above (2 of which —
+gogo-master-of-mimicry, quistis-trepe — need their FIRST synergy.json
+authored, not just one missing fact).
+
+## 2026-09-14: typed `manaAbilities` field (Part 1) + Ultima's real `tapLandForMana` trigger (Part 2)
+
+Orchestrator task, standing policy: "all abilities declarative or
+functional, no magical strings; flag hard if genuinely blocked." Closed
+gap #5's remaining free-text mana-ability debt and Ultima, Origin of
+Oblivion's manually-simulated doubling trigger. Both closures written up
+in full in `ENGINE_GAPS.md` (gap #5's rewrite + gap #3's new "(d)"
+sub-closure) — this entry is the condensed pointer, read those for detail.
+
+**Part 1 shape**: `CardDefinition.manaAbilities?: ManaAbility[]` (card.ts,
+next to `keywords`/`ptFormula`) — `{cost?, colors: ManaColor[], amount?,
+variableAmount?: {kind:'countSubtypeControlled',subtype}|{kind:'selfPower'},
+restriction?, activationCondition?}`, field names mirroring Forge's real
+`AbilityManaPart.java` (`Cost$`/`Produced$`/`Amount$`/`RestrictValid$`).
+`state.ts` re-declares its own `ManaAbility` (never imports from card.ts —
+established `TriggerDoublingGrant` precedent, followed here too).
+`mana.ts`'s three regex functions (`manaAbilityColorFromStaticText`,
+`manaAbilityColorsFromStaticText`, `deriveManaAbility`) DELETED, replaced
+by `payableManaAbility`/`sourceColors`/`sourceAmount` reading the typed
+field directly. `assignManaRequirements` untouched (same backtracking,
+reused verbatim). `canAfford`/`payMana` generalized to sum `sourceAmount`
+(was 1:1 count) — real new capability: Ring of the Lucii's `{T}: Add
+{C}{C}` now payable, matched neither old regex before.
+
+**Migrated 39 cards** off the regex path (full list in ENGINE_GAPS.md gap
+#5). **Deliberately NOT migrated**: Cargo Ship (already better-modeled via
+real executable `abilities`, migrating would regress it), Elvish
+Archdruid (already real via `activationCost`+`Computed` amount, predates
+this task's target). **Two named remaining gaps, NOT force-fit** (would be
+wrong, not incomplete, to approximate): Crossroads Village (ETB-choose-
+color-fixed-forever — needs persisted per-permanent chosen-color state +
+an ETB-choice mechanism, neither exists), A Realm Reborn (grants a mana
+ability to OTHER permanents — a "mana-ability GRANT" mechanism analogous
+to `continuousKeywordGrants` but nonexistent; no other pool card needs it
+enforced).
+
+**Found and fixed a real latent bug during migration**: `sourceColors`'s
+basic-land-subtype branch stopped at the first matching subtype — Breeding
+Pool (`Land — Forest Island`) could only ever produce `G`, never `U`.
+Fixed to collect all matching colors; new regression test added.
+
+**Part 2**: `Trigger.on` gained `'tapLandForMana'` + a new
+`tapLandForManaColor?: ManaColor` field (card.ts). `engine.ts`'s new
+`fireOnTapLandForManaTriggers` is called from payMana's only two call
+sites (`castSpell`, `activateAbility`) — genuinely detects a real land tap,
+reads its `sourceColors`, and fires any matching registered
+`resolvedPermanents` trigger through the same `fireTrigger` chokepoint
+(trigger-doubling still applies uniformly). Forge citation:
+`TriggerType.TapsForMana`/`TriggerTapsForMana.java`'s `performTest`,
+`res/cardsfolder/u/ultima_origin_of_oblivion.txt`'s own `T:Mode$
+TapsForMana | ValidCard$ Land | Activator$ You | Produced$ C |
+Execute$ TrigMana`. Ultima's `definition.ts` now has a real
+`on:'tapLandForMana', tapLandForManaColor:'C'` trigger; its `scenarios.ts`
+no longer manually fires it.
+
+**Real lesson learned rewriting Ultima's scenario**: first draft chained
+the mana-doubling demo AFTER the attack half (same scenario, crossing a
+turn boundary via `advanceToPlayersNextMain1`) — but a real Untap step
+(502.1) genuinely re-untaps every land every turn, so by the time the
+second cast happened, all 5 Forests were untapped again and got tapped
+instead of the intended Adventurer's Inn, silently defeating the "force
+the Inn as sole payment source" setup. Fixed by splitting into two
+independent single-turn scenario functions instead of fudging the board
+state directly — the mana-doubling one deliberately never crosses a real
+Untap step, so nothing needs inventing to force scarcity. General
+takeaway for future scenario authoring: forcing "only one legal mana
+source" across a turn boundary is a real trap, not a corner case — the
+Untap step will undo it. Keep such demonstrations same-turn where possible
+instead of reaching for direct `state.tap()` manipulation as a patch.
+
+Verification: `npx vitest run functional-model` 478/478 green.
+`npx tsc -p functional-model/tsconfig.json --noEmit` — zero NEW errors
+(confirmed by diffing against pre-existing noise categories: TS5097
+`.ts`-extension imports, TS7016 missing `.mjs` declarations, one unrelated
+`jill-shiva-s-dominant/engine.test.ts` `Actions` mismatch, `doppelgang`/
+`elrond-moon-reader` implicit-any — none touched by this task).
+`npx vite-node scripts/verify-synergy.mjs` (full pool): 320 checked, 0 hard
+failures (the "unrecognized action tapForMana" note-level noise is
+pre-existing baseline, confirmed present on other untouched cards too,
+e.g. weapons-vendor/white-auracite/zack-fair).
+
+Full repo grep confirms zero stray references to the deleted function
+names or the old singular `manaAbility` field outside historical/
+explanatory comments citing them as removed.
+
+## 2026-09-14 — fin 1-25 completeness inventory (read-only, no code changed)
+
+Dispatched as a pure scoping pass (gaps + `kind:'custom'` inventory) ahead
+of real fix dispatches. Ultima (fin/2) explicitly excluded (owned by a
+concurrent agent). Full findings went back to the orchestrator directly
+(not duplicated here in full) — short version, so a resumed session isn't
+starting cold:
+
+- **All 24 cards' oracle text verified byte-for-byte against
+  `data/fin/fin_scryfall.json`** — no hidden/missed clauses beyond what
+  each card's own `progress.json`/`definition.ts` comments already
+  document. Every real `kind:'custom'` closure in this range is already
+  either fully mechanized or has an explicit, named, non-silent gap
+  comment — none are silently inert.
+- **Two `progress.json` files are STALE relative to their own
+  `definition.ts`** (real doc-drift, not a code gap): `fate-of-the-sun-cryst`
+  still lists the cost-reduction clause as unmodeled in `knownGaps`/notes,
+  but `definition.ts` already declares `costReduction:
+  {amount:2,condition:'tappedCreatureTarget'}` (ENGINE_GAPS.md gap #7,
+  closed). `dion-bahamut-s-dominant-bahamut-warden-of-light` still lists
+  Dragonfire Dive as gap-having, but `definition.ts` already declares
+  `continuousKeywordGrants` (gap #14, closed). Both need a `knownGaps`/notes
+  cleanup pass, not an engine fix.
+- **4 real gaps found that affect this range but have NO numbered
+  ENGINE_GAPS.md entry** (only mentioned in passing prose, or not at all):
+  1. Type-cycling family (Plainscycling/Islandcycling/Swampcycling/
+     Forestcycling/Cycling — activated-from-hand discard-cost search/draw)
+     — no engine mechanism at all, affects `cloudbound-moogle` here (+6
+     other pool cards). Zero ENGINE_GAPS.md mentions.
+  2. Per-turn trigger/ability activation-limit tracking ("this ability
+     triggers only once each turn" / Forge `ActivationLimit`) — no
+     `turn.ts` counter exists for it anywhere. Affects `g-raha-tia` here
+     (+ elrond-moon-reader elsewhere). Zero ENGINE_GAPS.md mentions.
+  3. No attack-triggered-ability auto-dispatch primitive (mirrors the real,
+     closed upkeep/endStep auto-fire from gap #3, but never built for
+     "whenever ~ attacks") — affects `ashe-princess-of-dalmasca`'s
+     `onAttack` here (+ Cloud/Masamune/Balthier-Fran/Genji-Glove/Regalia
+     combos elsewhere, all worked around via manual `pilotFireTrigger`).
+     Only ever referenced as an aside in other cards' comments, never its
+     own entry.
+  4. `state.pump()` has no `untilEndOfTurn` expiry at all (unlike
+     `grantKeyword`'s real, dedicated `untilEndOfTurnKeywordGrants`
+     mechanism) — a P/T pump is a permanent `layers.add` entry, full stop.
+     Concretely wrong (not just an abstract "layers.ts has no duration"
+     footnote) for `ambrosia-whiteheart`'s Landfall "+1/+0 until end of
+     turn" and `battle-menu`'s Ability mode "+0/+4 until end of turn" in
+     any real multi-turn engine-piloted playthrough. Auron's Inspiration's
+     identical-shaped UET pump is moot (already a documented no-op).
+     Cross-cutting gap #7's own "attacking creatures get +2/+0" broadcast
+     limitation (`auron-s-inspiration`) is ALSO only ever mentioned as an
+     aside (lines ~506/641), never its own numbered entry, despite being a
+     real, separately-scoped engine gap (no live attacker-state reaches
+     `card.ts`'s Effect surface for ANY player's creatures).
+- Real, already-flagged (not new) but worth carrying forward: a shared
+  `harness.ts`/`engine-trace.ts` bug pair found during `delivery-moogle`'s
+  migration — (a) a 1-player `EnginePilotSetup` (no `opponents`) doesn't
+  get CR103.8a's skip-first-draw, silently drawing away a seeded
+  library/graveyard candidate before a card's own ETB runs; (b) the flat
+  `harness.ts` `move` action logs `fn:'move'` even when nothing was
+  actually found. Neither was fixed pool-wide. Re-confirmed
+  `cloud-midgar-mercenary` is NOT currently hit by either (its scenario
+  was independently rewritten with real `opponents` + real library
+  seeding for the trigger-doubling combo work) — but the shared bug is
+  still live for any future card.
+- Accepted, not new, but explicitly re-surfaced per the task's own
+  "including anything punted via layers.ts" instruction: Magitek Armor's
+  crewed-Vehicle-stays-a-creature-forever (no `animate` duration), and
+  Machinist's Arsenal's/Gaelicat's/Magitek Infantry's shared
+  "no threshold/board-scaled CDA machinery" gap (already gap #14's own
+  prose, not separately numbered).
+- No Forge citations were newly needed for this pass (pure inventory,
+  cross-checked against existing ENGINE_GAPS.md citations only) — a real
+  fix pass for the 4 not-yet-written-up gaps above should each get its own
+  `tmp/mtg-forge` citation before implementation (none looked up yet):
+  Cycling's own `Cost.java`/keyword-expansion shape, `ActivationLimit`'s
+  real Forge field, `TriggerType.Attacks`, and `StaticAbilityLayer`'s own
+  duration/until-end-of-turn tracking convention.
+
+## 2026-09-14 (later same day): Ultima's blight-counter static ability — real counter-conditional continuous effect (closed)
+
+Orchestrator task: mechanize Ultima, Origin of Oblivion's OTHER inert
+`staticAbilities` string ("For as long as a land has a blight counter on
+it, it loses all land types and abilities and has '{T}: Add {C}.'") — a
+genuinely different clause from the `tapLandForMana`/`manaAbilities`
+closure earlier the same day (that one was the card's SECOND ability, the
+mana-doubling trigger; this is its FIRST, the attack-trigger blight
+counter). Full writeup in `ENGINE_GAPS.md`'s new "Counter-conditional
+continuous effects" entry — condensed pointer here.
+
+**New general mechanism, not a one-off hack**: `card.ts`'s
+`CounterConditionalGrant` (`{counterType, removeLandTypes?,
+removeAllAbilities?, grantManaAbility?}`) is installed directly onto an
+ARBITRARY other object (via new `Actions.installCounterConditionalGrant`,
+ambient in `interfaces.ts`, real impl `GameState
+.installCounterConditionalGrant`, state.ts) at the moment some OTHER
+effect (`putCounterTarget`'s new optional `grant` field) puts a counter on
+it — genuinely different from the pre-existing `continuousKeywordGrants`/
+`continuousPTGrants`/`continuousTypeGrants`/`activatedAbilityLock` family,
+which all broadcast FROM a permanent's own `CardDefinition` at resolve
+time. Once installed, the grant stays keyed PURELY on the affected
+object's own live counter count (`state.ts`'s
+`hasCounterConditionalLandTypeLoss`/`hasCounterConditionalAbilityLoss`,
+consumed by `effectiveSubtypes`/`effectiveKeywords`; `mana.ts`'s
+`sourceColors`/`sourceAmount`/`payableManaAbility` duck-type the same
+check locally, no state.ts value import) — no `GameState` sweep needed at
+all, unlike `qualifiesForContinuousGrant`'s sibling family, since the rule
+lives directly on the affected object.
+
+**Real, HARD, explicitly-flagged gap, not silently worked around**: real
+Forge's `RemoveAllAbilities$ True` removes triggered abilities too; this
+closure only suppresses mana abilities + printed keywords + other
+activated abilities (`engine.ts`'s `canActivateAbility` now also checks
+`hasCounterConditionalAbilityLoss` — The Gold Saucer's own real sacrifice
+ability is the one live case this matters for). No per-object
+trigger-suppression gate exists anywhere in this codebase
+(`fireTrigger`/`triggers.ts` has none) — building one generically would
+touch every real trigger-firing call site. Checked the real pool: every
+FIN Town-cycle land's OTHER ability is a one-shot `onEnter` ETB that's
+already fired by the time an ATTACK trigger could ever blight it, so this
+gap is real but not live for any card in the pool today.
+
+Ultima's own `definition.ts` updated: the inert `staticAbilities` string
+is GONE, replaced by `grant: {removeLandTypes: true, removeAllAbilities:
+true, grantManaAbility: {colors: ['C']}}` on the `onAttack` trigger's
+`putCounterTarget` effect. Its own `scenarios.ts` regenerated
+(`trace.json`, via `run-scenarios.mjs`) and extended to DEMONSTRATE the
+real mechanization, not just claim it: after the blight counter lands, the
+scenario reads `effectiveSubtypes`/`sourceColors` directly off the
+blighted Forest (`[]` and `['C']` respectively) and genuinely pays a real
+`{1}` generic cost off it via `payMana` — real trace evidence, not a
+narrated comment. (`{C}` itself can't be used as the demonstration COST —
+`parseManaCost` still doesn't parse a colorless-specific pip IN a cast
+cost, a separate, already-documented, unrelated gap, gap #6.)
+
+**Regen footgun encountered and worked around, worth remembering**:
+`run-scenarios.mjs` shares ONE global incrementing object-id counter
+across the ENTIRE pool in a single process run — regenerating the whole
+pool after fixing Ultima's own (previously stale — pre-existing staleness,
+not something this pass caused: the checked-in file had 6 Forests where
+the current `scenarios.ts` only ever specified 5) scenario shifted the
+object-count offset for every alphabetically-LATER card, touching ~31
+OTHER cards' `trace.json` with pure id renumbering (zero semantic
+content change, confirmed via diff on a sample). Reverted all of those
+via `git checkout --` and kept ONLY `ultima-origin-of-oblivion/trace.json`
+regenerated — don't run `run-scenarios.mjs` pool-wide as a side effect of
+a single-card task without checking `git status` after and reverting
+unrelated renumbering-only diffs.
+
+Verification: `npx vitest run functional-model` 478/478 green. `tsc
+--noEmit` zero NEW errors (same pre-existing baseline categories;
+jill-shiva-s-dominant's own `Actions` mismatch actually shrank by one — its
+hand-built `realActions` got `installCounterConditionalGrant` added
+alongside `putCounter`, same file, same pass). `scripts/verify-synergy.mjs`
+full pool: 320 checked, 0 hard failures — new `installCounterConditionalGrant`
+trace fn added to `IGNORED_FNS` (real bookkeeping, no Fact vocabulary
+needed, same treatment `queueExtraPhase` already got). No new Fact
+authored on Ultima (per task instruction — the new `Effect` field is real,
+structured, recognizer-reachable data; nothing about it is a
+produce/consume-shaped board relation this pool's Fact vocabulary covers).
+
+**Open, no further Forge-verification needed for THIS closure** — the one
+real named gap above (triggered-ability suppression) is a genuine,
+structural, pool-wide limitation, not specific to Ultima; revisit only if
+a future FIN card needs a REPEATABLE (not one-shot ETB) ability suppressed
+by a counter-conditional grant.
+
+## 2026-09-14: combinator-DSL built for real (`functional-model/combinator.ts`) + 8 real `custom` closures migrated (Cluster 1)
+
+Followed up the same-day fin/1-25 hand-translation experiment
+([[project_combinator_dsl_experiment]] memory) — building the vocabulary as
+real production infrastructure per standing policy
+([[feedback_combinator_dsl_default]]), not another prototype.
+
+**New file `functional-model/combinator.ts`**: a real typed AST —
+`Query` (`{kind:'query', source:'creaturesInPlay', owner:'you'|'opponents'}`),
+`Filter` (`{kind:'filter', input: Query|Filter, predicate: {field:'subtype',
+value}|{field:'excludeSelf'}}`), `Aggregate` (`{kind:'aggregate',
+op:'sum'|'count', input, field?:'power'|'toughness'|'cmc'}`), `Each`
+(`{kind:'each', input, action:{action:'putCounter',counterType,amount:
+ValueRef}|{action:'tap'}}`), `Branch` (`{kind:'branch', condition:
+{kind:'compare',left:ValueRef,op,right:ValueRef}, then: ProgramNode[],
+else?: ProgramNode[]}`), `Sequence` (`{kind:'sequence', steps:
+{action:'moveSelf', to:ZoneType}[]}`), `ValueRef` (`literal`/`selfCounters`/
+`Aggregate`). `ProgramNode = Each | Branch | Sequence`.
+
+**Concrete interpreter** (`runProgram(node, ctx, actions)`) — real
+resolution, wired into `card.ts`'s new `Effect` variant `kind:'program'`
+(`{describe, program: ProgramNode, authoredFact?}`, sitting alongside
+`custom` — `custom` is NOT removed, stays the true last-resort escape
+hatch) and `applyEffect`'s `case 'program': runProgram(effect.program, ctx,
+actions); return;`. `synergyTags`'s own `'program'` case deliberately
+pushes the identical `custom:${describe}` tag `custom` already did — zero
+change to synergy-tag-derived matching from the migration itself.
+
+**Real, subtle correctness fix found while testing**: `Each`'s own
+`amount` (a `ValueRef`) is resolved ONCE per `Each` node, BEFORE the loop
+— not re-read per item. First draft re-read it per iteration, which
+silently broke when `ctx.self` itself was also a matched item (a
+`putCounter` onto self in iteration 1 changed the LIVE `selfCounters` read
+for iteration 2, snowballing 3->6->12...). The original imperative
+closures all computed `const x = ...` once, then reused it for every
+target — this is the correct, CR-608.2h-flavored "locked in once"
+semantics, and now what `runProgram` genuinely does. No real migrated
+card hits this in practice (Aerith's own self is already off the
+battlefield — dead — by the time her `onDies` effect resolves), but the
+interpreter itself needed to be right regardless, not just lucky.
+
+**Symbolic walker** (`walkProgram(node): WalkEvent[]`) — takes ONLY a
+`ProgramNode`, no `ctx`/`actions`/`GameState` parameter exists at all; a
+`Branch` unconditionally walks both `then` and `else` (never "picks a
+side" the way `runProgram` does). Tested directly against Aerith
+Gainsborough's own real reconstructed AST (`combinator.test.ts`) — proves
+her `then:[]` (early-return arm) and `else:[Each ...]` are both traversed
+with zero board/execution.
+
+**8 real closures migrated** (all verified against CURRENT `definition.ts`
+first, not trusted from the task's own snippets):
+1. `aerith-gainsborough` onDies (`Branch` + `Filter` + `Each`, magnitude via `selfCounters`)
+2. `the-crystal-s-chosen` 2nd effect (`Each`, literal amount)
+3. `crystal-fragments-summon-alexander` front-face transform (`Sequence`)
+4. `crystal-fragments-summon-alexander` backFace chapterIII (`Each`, tap)
+5. `dion-bahamut-s-dominant...` front-face transform (`Sequence`)
+6. `dion-bahamut-s-dominant...` backFace chapterI (`Filter excludeSelf` + `Each`)
+7. `dion-bahamut-s-dominant...` backFace chapterII (same shape as #6)
+8. `dion-bahamut-s-dominant...` backFace chapterIII exile/return (`Sequence`)
+
+**Skipped, named, not force-fit**:
+- `summon-bahamut` — the task's own candidate list assumed a `custom`
+  closure existed here; checked first, found ZERO `kind:'custom'` effects
+  on this card already (closed by earlier engine work this session,
+  before this task started) — nothing to migrate.
+- `dragoon-s-lance` onEnter, `machinist-s-arsenal` onEnter (identical
+  shape) — BOTH genuinely need `Bind` (create a token, then `equip(self,
+  created)` — the target of `equip` is the object the PRECEDING step just
+  created, a real cross-step reference), not just `Sequence`. This is
+  literally the motivating example the experiment's own memory names for
+  `Bind` ("create a token, then equip THAT token"). Per the task's own
+  explicit instruction to name rather than force-fit, left as `kind:
+  'custom'` — real follow-up work once `Bind`/`Choose`/`ContextEquals` are
+  built (deliberately out of THIS pass's scope).
+
+**Real downstream consequence found and handled — not silently left as a
+landmine**: `recognizers/saga-lore-and-sacrifice-structural.ts`'s own
+`chapterHasCustomEffect` used `kind==='custom'` as its ONE signal for "this
+Saga's final chapter might transform back instead of being sacrificed,
+decline the pair conservatively." Migrating Dion's own chapterIII
+exile-then-return off `custom` onto `program` would have flipped that
+check to FALSE on a future `apply-recognizers.mjs` re-run — genuinely
+WRONG (Dion really does transform back; the recognizer would start
+asserting a real sacrifice+dies pair that's factually incorrect), not just
+a missed-opportunity gap. Fixed with one line: `e.kind==='custom' ||
+e.kind==='program'` — same conservative treatment, extended to the new
+node kind, with a comment explaining exactly why (teaching this recognizer
+to positively read a `program` `Sequence`'s own semantics — as opposed to
+just treating it as equally opaque — is real, valuable, NOT attempted
+here).
+
+**Other real, deliberately NOT fixed downstream consequence, flagged**:
+`recognizers/putCounter-broadcast-structural.ts`'s own runtime-probe
+detector (`isCustomEffect`) also only ever finds a `kind:'custom'` closure
+to instrument — it will no longer be ABLE TO RE-DERIVE (on a hypothetical
+future from-scratch regen) the 3 real facts this recognizer used to find
+for aerith-gainsborough/dion-bahamut/the-crystal's-chosen, since their
+closures are gone. NOT a correctness bug (unlike the Saga case above) —
+the facts are ALREADY committed to disk with real `provenance`, unaffected
+by this migration; only a fresh re-run from an empty synergy.json would
+notice the gap. Genuinely superseded, not just broken: a `program` effect
+no longer NEEDS runtime probing at all (its structure is already data) —
+teaching a recognizer to read `kind:'program'` `Each`/`Filter` nodes
+DIRECTLY (strictly easier/more reliable than instrumented execution) is
+real future work, not attempted this pass. Updated
+`putCounter-broadcast-structural.test.ts` accordingly: the 3 "accepts real
+card" tests now reconstruct each card's OWN pre-migration closure as a
+synthetic fixture (preserves `probeBroadcastPutCounter`'s own regression
+coverage, which has no other test file), plus a new "no longer matches"
+describe block proving the REAL current card exports correctly decline.
+
+**Also found, NOT acted on, flagged for a future pass**: Aerith
+Gainsborough's own tier-3 `authoredFact` (the "magnitude X" fact,
+previously justified as needing tier-3 because runtime probing "carries no
+object identity to track numeric provenance through") is now arguably
+OBSOLETE — the `program` AST makes that exact same magnitude a directly
+visible `selfCounters` `ValueRef`, no probing needed. Left in place (a
+`card.ts` doc comment on the new `program` variant's own `authoredFact`
+field points this out) since retiring it means building a recognizer that
+reads `kind:'program'`, out of this pass's scope.
+
+**Verification**: `npx vitest run functional-model` — 496/496 green (was
+478 before this task; +15 new `combinator.test.ts` cases, +3 net from
+`putCounter-broadcast-structural.test.ts`'s restructure). `npx tsc -p
+functional-model/tsconfig.json --noEmit` — 59 errors, ZERO from any file
+this task touched (same pre-existing baseline noise — TS5097 `.ts`-
+extension imports, TS7016 missing `.mjs` declarations — confirmed by name,
+not just count). `npx vite-node functional-model/scripts/verify-synergy.mjs`
+— 320 v2 cards checked, 0 hard failures; spot-checked all 4 migrated
+cards' own trace output directly — the migrated effects' own actions
+(`putCounter`/`tap`/`moveTo`) all show clean matches against existing
+declared facts, no new "unmatched trace line" notes introduced by the
+migration (every note present is pre-existing/unrelated — `tapForMana`,
+`equip`, `drawCard`, `untap`). `check-fact-parity.mjs` (read-only, not a
+required gate) also ran clean, no crash — confirmed why the-crystal-s-
+chosen's own migrated effect still shows "script-covered": the on-disk
+`synergy.json` fact still legitimately carries its OLD `provenance` tag
+from before this migration (accurate, just now un-re-derivable — see
+above), not a bug.
+
+**Open, no Forge-verification needed** — this is pure internal
+combinator/AST infrastructure over this app's own already-Forge-verified
+`Effect`/`CardDefinition` model; no new rules interpretation, nothing to
+check against `tmp/mtg-forge`. Real open follow-ups for a future pass,
+named above, not silently dropped: (1) build `Bind`/`Choose`/
+`ContextEquals` and migrate dragoon-s-lance/machinist-s-arsenal's onEnter
+(+ the 4 other real fin/1-25 cards the original experiment found needing
+them); (2) teach `saga-lore-and-sacrifice-structural.ts` to positively
+distinguish a transform-back `Sequence` from an unrelated `program` effect
+on a Saga's final chapter, rather than treating every `program` as equally
+opaque; (3) teach `putCounter-broadcast-structural.ts` (or a new
+recognizer) to read `kind:'program'` `Each`/`Filter` nodes directly instead
+of runtime-probing a `custom` closure; (4) retire Aerith Gainsborough's own
+now-arguably-redundant tier-3 `authoredFact` once (3) exists.
+
+## 2026-09-14: `combinator.ts` fluent builder layer (readability follow-up, same-day)
+
+Direct user feedback on the same-day AST build above: "key goal of that was
+to make it readable and traversable. Readable - it's not." — raw nested
+object literals were functionally correct but ugly to author. This pass
+adds a THIN construction-only layer on top of the SAME `ProgramNode` types
+— zero touch to `runProgram`/`walkProgram`'s signatures or the AST types
+themselves, a builder call only assembles a plain data value (never
+touches `ctx`/`actions`/`GameState`), so the "enumerable without execution"
+property doesn't regress.
+
+**New exports, all in `combinator.ts` itself** (added after the
+`ProgramNode` type, before the interpreter section):
+- `QueryChain` class wraps a `Query|Filter`: `.filter('subtype', value)` /
+  `.filter('excludeSelf')` (overloaded, returns another `QueryChain` so
+  predicates compose), 3 TERMINALS — `.each(action)` (-> `Each`),
+  `.count()`/`.sum(field)` (-> `Aggregate`, itself already a valid
+  `ValueRef`, no unwrap step).
+- `you`/`opponents` — the only 2 entry points (`{creaturesInPlay: () =>
+  QueryChain}`), matching `Query.owner`'s only 2 values.
+- Leaf/terminal plain functions (NOT classes — deliberate, see below):
+  `literal(n)`, `selfCounters(type)`, `putCounter(type, amountOrNumber)`,
+  `tap()` (an `EachAction`, not the runtime `Actions.tap`), `compare(left,
+  op, right)` (-> `Condition`), `branch(condition, then, elseBranch?)` (->
+  `Branch`), `sequence(...to)` (-> `Sequence`, e.g. `sequence('Exile',
+  'Battlefield')`). Every one of `putCounter`'s `amount` / `compare`'s
+  `left`/`right` accepts a bare `number` (auto-wrapped as `literal`) OR any
+  real `ValueRef` in the same slot.
+- Target style (Aerith Gainsborough's own real case): `branch(compare
+  (selfCounters('+1/+1'), '<=', 0), [], [you.creaturesInPlay().filter
+  ('subtype', 'Legendary').each(putCounter('+1/+1', selfCounters
+  ('+1/+1')))])`.
+
+**Real naming collision found and fixed**: `combinator.ts` already had a
+PRIVATE internal numeric evaluator named `compare(left: number, op, right:
+number): boolean` (used by `runProgram`'s own `'branch'` case) — the new
+PUBLIC builder also wants the name `compare` (assembles a `Condition`).
+Renamed the internal one to `evalCompareOp` (not exported, only
+`runProgram` calls it) rather than compromising the builder's own natural
+name — confirmed via a real `SyntaxError: Identifier 'compare' has already
+been declared` crashing ALL of `functional-model`'s test suite (not just
+this file) until fixed.
+
+**Design choice, deliberate**: `QueryChain` is the one class in this
+layer (genuine chaining need — `.filter().filter()` composes); every OTHER
+node kind is a single plain function returning one finished node, NOT
+wrapped in its own builder class — so a future node kind (`Choose`/
+`ChooseUpTo`/`Bind`/`ContextEquals`, still explicitly out of scope, see
+this file's own header) just adds one more standalone function, no
+restructuring of this layer.
+
+**4 already-migrated cards switched from raw nested literals onto the
+builder** (`program:` field only — no other change): `aerith-gainsborough`
+(`branch`+`compare`+`selfCounters`+`you.creaturesInPlay().filter().each
+(putCounter(...))`), `the-crystal-s-chosen` (`you.creaturesInPlay().each
+(putCounter('+1/+1', 1))`), `crystal-fragments-summon-alexander`
+(`sequence('Exile','Battlefield')` front-face transform +
+`opponents.creaturesInPlay().each(tap())` chapterIII),
+`dion-bahamut-s-dominant-bahamut-warden-of-light` (`sequence(...)` front-
+face transform + chapterIII exile/return, `you.creaturesInPlay()
+.filter('excludeSelf').each(putCounter('+1/+1', 1))` chapterI/II). Verified
+byte-identical AST via `combinator.test.ts`'s own new deep-equal cases
+(built value `.toEqual()`s the exact old hand-written literal for every one
+of these 8 shapes, not just "behaves the same").
+
+**`combinator.test.ts`**: +11 new cases in a new `describe('fluent builder
+layer...')` block — one deep-equal case per real migrated shape (including
+Aerith's own full real AST, `walkProgram` on both forms compared too),
+plus: `.filter().filter()` composition, `branch()`'s `else` key genuinely
+ABSENT vs genuinely present-but-empty (`'else' in built` check, not just
+`.else === undefined`), `.count()`/`.sum()` plugging directly into
+`compare()` with no unwrap, and a "touches zero ctx/actions/board" smoke
+check (assembling throws nothing, no board object constructed anywhere in
+the test).
+
+**Verification**: `npx vitest run functional-model` — 541/541 green (was
+496 before this task; +45 net — the concurrent unrelated engine session
+also added tests in the same window, not all attributable to this pass;
+this pass's own new cases: +11 `combinator.test.ts`). `npx tsc -p
+functional-model/tsconfig.json --noEmit` — confirmed by NAME (not just
+count, since a concurrent session is also mid-edit in this same window)
+zero new errors from `combinator.ts`, `combinator.test.ts`, or the 4
+touched card files (the only 2 of the 4 that show ANY tsc line —
+`the-crystal-s-chosen`/`dion-bahamut...` — are the SAME pre-existing
+TS5097 `'../../tokens.ts'` import-extension noise every other TOKENS-
+importing card already carries, on the unrelated pre-existing import line,
+not my added one). `npx vite-node functional-model/scripts/verify-
+synergy.mjs` — 320 v2 cards, 0 hard failures; spot-checked all 4 migrated
+cards by name — identical pre-existing "note" lines only (`tapForMana`,
+`drawCard`, `untap`, `equip`), nothing new.
+
+**Process note**: mid-task, attempted `git stash push -- <specific
+files>` to isolate a tsc-error-count comparison; 2 of the given paths were
+this task's own NEW untracked files (`combinator.ts`/`combinator.test.ts`)
+which don't match a plain (non-`-u`) pathspec, so the command errored and
+aborted (per git's own "any pathspec fails to match -> nothing stashed"
+behavior) — confirmed via `git status`/`git stash show --stat` afterward
+that NOTHING of mine was lost and the pre-existing `stash@{0}` left in the
+repo (magitek-infantry files + `harness.ts` + `verify-synergy.mjs` +
+`annotation-coverage.mjs`) belongs to the CONCURRENT unrelated engine
+session mentioned in this task's own brief, not to this task — left
+untouched, not popped/dropped. Don't re-attempt a stash-based isolation
+trick while another session may be concurrently mid-edit; a plain
+`git diff`/targeted `grep` by filename is safer.
+
+**Open, no Forge-verification needed** — pure authoring-ergonomics layer
+over already-Forge-verified AST types, nothing new to check against
+`tmp/mtg-forge`. Real open follow-up, not attempted this pass: the 4
+Choose/Bind/ContextEquals candidate cards named in the original combinator
+task (Delivery Moogle, Dragoon's Lance, From Father to Son, Magitek
+Infantry) still need those node kinds built before they can migrate off
+`kind:'custom'` — this pass's own header comments in `combinator.ts`
+confirm the builder layer doesn't need restructuring to add them.
+
+## 2026-09-14 (later same day): 3 real gaps from the fin/1-25 inventory closed — activation limits, pump UET expiry, attack-trigger auto-dispatch
+
+Orchestrator task, resumed after an earlier attempt was killed for an
+unrelated concurrent-edit collision risk (that other work had already
+finished/verified green). Found on arrival: gaps #1 (activation limit) and
+#2 (pump UET) were ALREADY fully built and wired (state.ts/turn.ts/
+triggers.ts/card.ts mechanisms, both named cards' own definition.ts/
+scenarios.ts) by that earlier killed attempt — just missing test coverage,
+ENGINE_GAPS.md write-ups, and (gap #2 only) a scenario extension to actually
+SPAN Cleanup and show the pump expiring, not just applying. Gap #3 (attack
+trigger auto-dispatch) was NOT started at all. Full per-gap ENGINE_GAPS.md
+entries (#20/#21/#22, both closed) carry all real Forge citations/detail —
+condensed pointers only here:
+
+- **Gap #20 (activation limit)**: mechanism was already complete
+  (`Trigger.activationLimit`, `state.triggerActivationsThisTurn`/
+  `resetTriggerActivationsThisTurn`, `triggers.ts`'s `fireTrigger` gating
+  BEFORE anything else including doubling, `turn.ts`'s Cleanup wiring),
+  both g-raha-tia/elrond-moon-reader already wired+demonstrated in their own
+  scenarios. Added: `state.test.ts`'s new describe block (6 cases),
+  `triggers.test.ts`'s new "Real ActivationLimit$ N" describe block (6
+  cases, testing `fireTrigger`'s own gating directly — the actual mechanism
+  under test, not just the counter), 2 new `turn.test.ts` Cleanup
+  integration cases. Fixed 2 stale `progress.json` `knownGaps` entries
+  (elrond-moon-reader, g-raha-tia) that still claimed no enforcement
+  existed.
+- **Gap #21 (pump UET)**: mechanism was already complete
+  (`pump*` Effect kinds' `untilEndOfTurn` field, `state.untilEndOfTurnPumps`/
+  `clearUntilEndOfTurnPumps`, `turn.ts` Cleanup wiring, `engine-trace.ts`'s
+  own synthetic `{fn:'pump', removed:true}` log entry via
+  `logAutomaticPhaseEntry` — genuinely asymmetric vs. `grantKeyword`'s own
+  UET removal, which needs NO discrete entry since a keyword is
+  re-derivable from `card.keywords` directly, but a pump's own current
+  total has no equivalent list to re-derive from), both cards' own
+  `definition.ts` already had `untilEndOfTurn: true` set. What was actually
+  missing: neither card's own `scenarios.ts` had EVER crossed a Cleanup
+  boundary, so neither ever demonstrated the fix — per the task's own
+  explicit instruction this was the one piece I had to build for real:
+  extended both scenarios (`advanceOneStep` looped to `'Cleanup'`, same
+  convention `the-lunar-whale`'s own scenario already established) with
+  real `effectivePT` reads before/after Cleanup. Regenerated both
+  `trace.json` (scoped `run-scenarios.mjs --slug=`), verified 0 hard
+  failures both before and after. Added `state.test.ts`'s `GameState.pump /
+  clearUntilEndOfTurnPumps` describe block (6 cases) + 1 `turn.test.ts`
+  integration case. New `.claude/contracts/state-event-format.md` entry
+  documenting the `pump removed:true` shape for the `card` agent's replay
+  renderer (additive, mirrors the existing `grantKeyword` entry's own
+  structure but flags the asymmetry above).
+- **Gap #22 (attack-trigger auto-dispatch) — built from scratch, the one
+  real new engine mechanism this task added**: `card.ts`'s `Trigger.on`
+  gained `'attacks'`; `engine.ts`'s new `fireOnAttackTriggers`, wired into
+  `declareAttackers` right after a legal attacker batch is declared —
+  mirrors `fireOnPhaseEnterTriggers`/`fireOnTapLandForManaTriggers` exactly
+  (registered-`resolvedPermanents`-only scope, same real documented
+  limitation). Scope is deliberately narrow — only `ValidCard$ Card.Self`
+  (real Forge `TriggerAttacks.java`), NOT the broader "a creature you
+  control attacks alone" (Seifer Almasy/Squall), "whenever EQUIPPED
+  creature attacks" (Genji Glove/Ultima Weapon), or Vehicle-crewed-by-pair
+  (Balthier and Fran) shapes — all real, now-unblocked follow-ups, not
+  migrated this pass per its own explicit instruction (prove it on Ashe
+  alone). Ashe's `definition.ts` now sets `on:'attacks'`; her own tier-3
+  `authoredFacts` escape hatch is GONE, replaced by a real new recognizer
+  (`recognizers/attacks-trigger-structural.ts`, registered in
+  `apply-recognizers.mjs`'s catalog, same family as
+  `dies-trigger-structural`/`lifegain-trigger-structural` — "When/Whenever
+  <self> attacks" text match, adjacency-gated so it correctly DECLINES
+  every one of the genuinely-different real pool shapes above without any
+  card-specific carve-out; grepped all 34 real pool `attacks`-clause cards
+  before writing the regex). Ran `apply-recognizers.mjs
+  ashe-princess-of-dalmasca` (scoped, not pool-wide) to retag her real
+  sink fact with `provenance`.
+
+  **Two real trace-ordering bugs found and fixed wiring this up for real**
+  (both in `engine-trace.ts`, engine-side mutation order was always
+  correct) — full detail in ENGINE_GAPS.md gap #22's own writeup:
+  `pilotDeclareAttackers` used to push its own tap/attack log markers
+  AFTER calling the real `declareAttackers`, which broke once
+  `declareAttackers` itself started auto-firing a trigger that logs
+  through the same pilot mid-call (fixed via the same splice-at-beforeLen
+  convention `logAutomaticPhaseEntry` already uses); and
+  `verify-synergy.mjs`'s own trigger-evidence check for an event-shaped
+  sink is built ENTIRELY off `{fn:'trigger', name}` bracket entries in the
+  trace, which a real auto-fire never produces on its own (unlike the
+  manual `pilotFireTrigger` it replaces) — fixed by having
+  `pilotDeclareAttackers` peek the CardDefinition and log a synthetic
+  bracket itself, same convention `pilotResolveTop`'s own ETB peek already
+  uses. **Caught live, not theoretically**: the missing bracket produced a
+  real HARD FAILURE on the first verify-synergy run after wiring the
+  auto-fire (`want {event:attacks,target:"self"} has no trigger/read
+  evidence`) — re-ran verify-synergy after each fix to confirm before
+  moving on, not assumed fixed.
+
+  New tests: `engine.test.ts`'s new `fireOnAttackTriggers` describe block
+  (4 cases), `recognizers/attacks-trigger-structural.test.ts` (new file, 9
+  cases: 4 real accepts + short-comma-name form + 5 real declines covering
+  every genuinely-different real pool shape named above).
+
+**Verification, all 3 combined**: `npx vitest run functional-model` —
+541/541 green. `npx tsc -p functional-model/tsconfig.json --noEmit` — zero
+NEW errors from any file this task touched (one new TS7016 on the new
+recognizer test file, same baseline category every sibling recognizer test
+file already has). `scripts/verify-synergy.mjs` full pool — 320 checked, 0
+hard failures (spot-checked ashe/ambrosia-whiteheart/battle-menu/
+g-raha-tia/elrond-moon-reader individually too).
+
+**A real, transient concurrent-edit collision observed live, not caused by
+this task**: `npx vitest run functional-model/engine.test.ts` failed once
+mid-task with `SyntaxError: Identifier 'compare' has already been declared`
+(from `combinator.ts`, imported transitively via `card.ts`) — re-read
+`combinator.ts` immediately after and found only ONE `compare` declaration
+(the public builder) plus a distinctly-named `evalCompareOp` internal
+helper, exactly as designed; re-running the identical test command
+seconds later passed clean (126/126). Confirms another concurrent session
+was actively mid-edit on `combinator.ts` at that exact moment — not a bug
+in anything this task touched, self-resolved, re-verified rather than
+assumed fixed.
+
+**Own git-hygiene mistake, caught and verified harmless, not covered up**:
+attempted a scoped `git stash push -- <paths>` mid-task to diff before/
+after state; the command partially errored (an untracked new file's
+pathspec wasn't recognized without `-u`), and the follow-up `git stash pop`
+restored everything but — because the stash was a PARTIAL/scoped one (not
+a plain full stash) — git kept the stash entry rather than auto-dropping
+it. Verified directly, by re-reading every touched file's actual content
+(not by trusting `git status` alone), that nothing was lost: every
+intended change (Ashe's definition.ts/scenarios.ts, engine.ts's
+`fireOnAttackTriggers`, engine-trace.ts's two fixes) is present and
+correct. Left `stash@{0}` untouched rather than dropping it myself — a
+`git diff stash@{0} -- <paths>` shows large, confusing diffs against it
+(almost certainly because the stash's own base commit predates a huge pile
+of already-uncommitted concurrent work from other sessions across this
+whole tree, not because anything is actually missing from the working
+tree) — flagged for the orchestrator/user rather than resolved unilaterally
+given the shared, actively-concurrent tree.
+
+**Open, real Forge-verification still needed for a future pass** (per this
+task's own explicit instruction not to migrate these now): gap #22's own
+narrow `ValidCard$ Card.Self` scope leaves Cloud, Midgar Mercenary/The
+Masamune (equipment-scoped "whenever equipped creature attacks"),
+Balthier and Fran (Vehicle-crewed-by-a-specific-pair), Genji Glove/Ultima
+Weapon (same equipment-scoped shape as Cloud/Masamune), and Seifer Almasy/
+Squall SeeD Mercenary ("a creature you control attacks alone") as real,
+now-unblocked follow-ups — each needs its own real Forge citation
+(`TriggerAttacks.java`'s own `Alone$`/equipment-equipped-check/Vehicle
+handling) checked before widening `fireOnAttackTriggers`'s own scope, not
+assumed from this pass's narrow Card.Self citation alone. Also worth a
+future look: Adventurer's Airship's own "whenever this Vehicle attacks" was
+deliberately left out of `attacks-trigger-structural.ts`'s own self-subject
+alternation (Vehicle-specific, zero other pool need checked) — a real,
+narrower-than-strictly-necessary scope decision, not an oversight, flagged
+in that file's own module doc comment too.
+
+---
+
+**2026-09-14, separate task: entire Cycling family closed for real
+(ENGINE_GAPS.md gap #23).** Plain Cycling + Islandcycling/Plainscycling/
+Swampcycling/Forestcycling had ZERO engine representation pool-wide before
+this task (7 real cards: cloudbound-moogle, capital-city, ice-flan,
+balamb-t-rexaur, malboro, airship-crash, cid-timeless-artificer) — inert
+`staticAbilities` text only. Started fresh against a clean tree (the prior
+attempt at this same task was killed by an unrelated concurrent-edit
+collision, since fully resolved — verified 541/541 green before starting,
+per the dispatch's own note).
+
+Real, load-bearing finding: `canActivateAbility`/`activateAbility`
+(engine.ts) never actually hard-assumed Battlefield presence anywhere in
+their OWN bodies — that assumption lives ENTIRELY in `harness.ts`'s flat
+`selfZone`/`lifecycleBefore` convenience wrapper, which this task
+deliberately did NOT extend (see ENGINE_GAPS.md gap #23's own full
+writeup for the reasoning) — all 7 cards' new Cycling scenarios go through
+the real engine-piloted path (`engine-trace.ts`) instead, matching this
+project's own established convention for every comparable real cost-
+payment closure. New vocabulary: `engine.ts`'s `costRequiresDiscardSelf`
+(a real, PAID — not just trusted — "Discard this card" cost component,
+genuinely safe unlike self-Sacrifice since Cycling's own effect never
+reads post-discard `ctx.self` state), a real Hand-zone check in
+`canActivateAbility` (701.9a), `card.ts`'s `move` Effect gained `subtype`/
+`shuffleAfter` fields (reused for TypeCycling's search — no new Effect kind
+needed), a brand-new `Actions.shuffleLibrary`/`state.shuffleLibrary` (real
+Fisher-Yates, not a documentary no-op). Modeled uniformly via the named
+`abilities` array on all 7 cards (not the top-level `activationCost`/
+`effects` pair) — Airship Crash's own top-level `effects` was already its
+Instant's own cast effect, a real collision the uniform-`abilities` choice
+sidesteps for all 7, not just that one card.
+
+Removed 4 now-obsolete per-card `verify-synergy.mjs` exemptions
+(`isCloudboundMoogleDiscardSelfWant`/`isCloudboundMoogleTutorFact`/
+`isIceFlanDiscardSelfWant`/`isIceFlanTutorFact`) — real trace evidence
+exists now instead of the "no scenario/trace path can exist" reasoning
+those existed for; verified this by regenerating trace.json and running
+the pool-wide check with the exemptions actually gone before considering
+it closed, not by assuming the new evidence would satisfy them. Added a
+new GENERAL (not per-card) SINK-evidence branch for `{event:'discard',
+target:'self'}` in verify-synergy.mjs instead. Also fixed a real,
+newly-stale exemption found in passing: `isStaticOnlyLand` (Capital City's
+own former "no card-specific behavior left" exemption) didn't check
+`card.abilities` at all — now does.
+
+Two incidental bugs surfaced and fixed while building the 7 real engine-
+piloted scenarios (both real, not edge cases avoided): Cid, Timeless
+Artificer's own hand-built `state.addCard` calls needed `'Legendary'`
+threaded into `subtypes` explicitly (this engine's own established
+pragmatic Legendary-as-subtype convention, `harness.ts`'s
+`subtypesFromTypeLine` — the flat path derives this for free, a hand-built
+engine-piloted scenario must do it itself, same convention
+adelbert-steiner's/ashe's own scenarios already establish) for
+`state.checkLegendRule` to find the duplicate at all.
+
+New tests: `state.test.ts`'s `GameState.shuffleLibrary` describe block (3
+cases, including a deterministic-via-mocked-Math.random real-reorder
+proof), `engine.test.ts`'s new `Cycling (702.13)` describe block (6
+cases). `npx vitest run functional-model` 550/550 green (541 + 9 new).
+`npx tsc -p functional-model/tsconfig.json --noEmit` zero new errors.
+`scripts/verify-synergy.mjs` full pool 320 checked/0 hard failures (all 7
+migrated cards individually re-verified before AND after their own
+migration, not assumed). `scripts/verify-annotation-coverage.mjs` OK
+(Cloudbound Moogle/Ice Flan are both `ANNOTATED_CARD_SLUGS` members — their
+new SINK fact's annotation was authored for real in
+`annotations-authoring.json` and baked in via `compute-annotations.mjs`,
+not left unannotated).
+
+**Real, deliberately narrow scope decision, not a gap needing Forge
+verification**: `harness.ts`'s own flat `Scenario`/`selfZone` convention
+still cannot represent a Hand-activated ability at all (see ENGINE_GAPS.md
+gap #23's own "Deliberately, explicitly NOT extended" section for the full
+reasoning) — a real, narrower-than-ideal follow-up if a FUTURE card ever
+needs a cheap flat scenario for a Hand-activated ability with no
+legality/mana worth demonstrating; no real FIN card needs that today.
+
+**Real, named follow-up, not built this pass**: a structural recognizer
+for "Cycling {cost}"/"[Type]cycling {cost}" reminder text (mirroring
+`recognizers/attacks-trigger-structural.ts`'s own recent precedent) could
+derive these SOURCE/SINK facts automatically for any FUTURE Cycling card
+added to the pool. Not attempted — task's own explicit scope was these 7
+cards only; no other pool card was found to have an unmodeled Cycling-
+shaped ability while doing this pass (checked incidentally, not an
+exhaustive re-sweep).

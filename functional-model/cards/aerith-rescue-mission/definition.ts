@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect, EffectContext, Actions, AuthoredFact } from '../../card';
 import type { Card } from '../../interfaces';
 import { TOKENS } from '../../tokens.ts';
 
@@ -7,38 +7,32 @@ export const aerithRescueMission: CardDefinition = {
   manaCost: '{3}{W}',
   typeLine: 'Sorcery',
 
-  // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial) — real limitation
-  // found here, not just inert data: `AnnotationRef`/`toLineOffset` (synergy.ts)
-  // hard-require a resolved span to sit within a SINGLE line, but this card's
-  // real oracle text spreads its "Choose one —" modal across 3 lines (one
-  // per mode). The "whole trigger/ability line, cause+effect together"
-  // design this trial otherwise uses has no single line to point at for a
-  // multi-mode spell at this (top-level `effects`) granularity — the best
-  // honest annotation here is the modal's own header line, not the full
-  // ability. Per-mode detail is NOT lost, though: each `modes[]` entry below
-  // now carries its own `annotation` (added to `card.ts`'s `modal` Effect
-  // kind for this trial), independently anchored to that mode's own real
-  // oracle-text line.
-  effectsAnnotation: { highlight: 'Choose one —', line: 0 },
+  // Real limitation, not just inert data: `AnnotationRef`/`toLineOffset`
+  // (synergy.ts) hard-require a resolved span to sit within a SINGLE line,
+  // but this card's real oracle text spreads its "Choose one —" modal across
+  // 3 lines (one per mode). The "whole ability line, cause+effect together"
+  // annotation convention has no single line to point at for a multi-mode
+  // spell at this (top-level `effects`) granularity — the best honest
+  // annotation here is the modal's own header line, not the full ability.
+  // Per-mode detail is NOT lost, though: each `modes[]` entry below has its
+  // own annotation too. Own annotation (as of the
+  // PRD_AUTOMATED_AUTHORING.md "definition-level annotation" migration,
+  // 2026-09-13): `definition-annotations.json`, keyed `"effects"` (bare —
+  // one top-level `effects` array per face).
   effects: [
     {
       kind: 'modal',
       modes: [
         {
+          // Own annotation: `definition-annotations.json`, keyed
+          // `"effects[0].modes[0]"`.
           describe: 'Take the Elevator — create three 1/1 colorless Hero creature tokens',
           effects: [{ kind: 'createToken', token: TOKENS.c_1_1_hero, amount: 3 } satisfies Effect],
-          annotation: {
-            highlight: '• Take the Elevator — Create three 1/1 colorless Hero creature tokens.',
-            line: 1,
-          },
         },
         {
+          // Own annotation: `definition-annotations.json`, keyed
+          // `"effects[0].modes[1]"`.
           describe: 'Take 59 Flights of Stairs — tap up to three target creatures, put a stun counter on one of them',
-          annotation: {
-            highlight:
-              '• Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun counter on one of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)',
-            line: 2,
-          },
           effects: [
             {
               // Tap-N-then-counter-ONE-of-those-N needs the same chosen
@@ -61,6 +55,38 @@ export const aerithRescueMission: CardDefinition = {
                 }
                 if (tapped.length > 0) actions.putCounter(tapped[0]!, 'stun', 1);
               },
+              // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, "3-tier waterfall"
+              // trial, 2026-09-13, scoped to fin/1-10 only) — tier 3
+              // (`Effect.authoredFact`). This `run` body combines a
+              // multi-target tap with a follow-up counter in one closure
+              // specifically because no declarative shape here can reference
+              // "one of the targets the PREVIOUS step picked" (see the
+              // comment above `run`) — genuinely opaque to both static reads
+              // and the runtime probe (arity-2 `run`, mutates real state).
+              // Matches this card's own real `synergy.json` byte-for-byte
+              // (the `putCounter`/stun source fact, and the "wants creatures
+              // present to tap" sink fact). Not wired into
+              // `apply-recognizers.mjs`/`synergy.json` generation. Each
+              // entry's own annotation: `definition-annotations.json`, keyed
+              // `"effects[0].modes[1].effects[0].authoredFact[<i>]"`.
+              authoredFact: [
+                {
+                  // [0]
+                  role: 'source',
+                  event: 'putCounter',
+                  counterType: 'stun',
+                  target: { types: { has: ['Creature'] } },
+                  targeted: true,
+                  value: 1,
+                },
+                {
+                  // [1]
+                  role: 'sink',
+                  to: 'Battlefield',
+                  types: { has: ['Creature'] },
+                  value: 1,
+                },
+              ] satisfies AuthoredFact[],
             } satisfies Effect,
           ],
         },

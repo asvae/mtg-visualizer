@@ -5,14 +5,16 @@ export const malboro: CardDefinition = {
   manaCost: '{4}{B}{B}',
   typeLine: 'Creature — Plant Horror',
 
-  // Swampcycling {2} (discard this card from hand: search your library for
-  // a Swamp) isn't modeled as an executable effect — it's a special action
-  // FROM HAND, not a cast, not an activated ability on a permanent, and not
-  // a triggered ability; none of CardDefinition's current fields fit a
-  // real "discard this card as its own cost" mechanic. Left as a plain
-  // description rather than forced into a bad-fit shape — flagged as a
-  // real gap, not derived.
-  staticAbilities: ['Swampcycling {2} ({2}, Discard this card: Search your library for a Swamp card, reveal it, put it into your hand, then shuffle.)'],
+  // Swampcycling {2} (ENGINE_GAPS.md gap #23, closed 2026-09-14) — see
+  // cloudbound-moogle/definition.ts's own comment for the full real,
+  // structured mechanism; same shape, searching for a Swamp.
+  abilities: [
+    {
+      name: 'cycling',
+      cost: '{2}, Discard this card',
+      effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, target: true, validType: 'land', subtype: 'Swamp', shuffleAfter: true } satisfies Effect],
+    },
+  ],
 
   triggers: [
     {

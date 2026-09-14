@@ -132,13 +132,37 @@ function maxChapterOf(input: StructuralRecognizerInput): number {
 }
 
 /** Whether ANY effect on this one chapter trigger (recursively, through any
- * `modal` mode) is a `kind: 'custom'` opaque closure — see this file's own
- * module doc comment for why this is the one real signal available, and its
- * own known limits. */
+ * `modal` mode) is a `kind: 'custom'` opaque closure, OR a `kind: 'program'`
+ * combinator-AST effect (`combinator.ts`) — see this file's own module doc
+ * comment for why this is the one real signal available, and its own known
+ * limits.
+ *
+ * **`'program'` is treated identically to `'custom'` here, on purpose**
+ * (added 2026-09-14, when Dion, Bahamut's Dominant's own chapter III
+ * "exile-then-return" closure was migrated off `kind:'custom'` onto
+ * `kind:'program'` — a `combinator.ts` `Sequence` of two `moveSelf` steps):
+ * that migration does NOT change what the card does (still a real
+ * transform-back, still no real sacrifice), so this recognizer's own
+ * conservative "decline the sacrifice+dies pair whenever the final chapter
+ * isn't provably free of a transform-back" read must stay unchanged too, or
+ * this recognizer would start asserting a WRONG sacrifice+dies pair for
+ * Dion the next time `apply-recognizers.mjs` runs (a real correctness
+ * regression, not just a missed-opportunity one). A `program` effect IS
+ * genuinely more inspectable than `custom` (unlike a `custom` closure's `run`
+ * body, `combinator.ts`'s `walkProgram` can read a `Sequence`'s own steps
+ * with zero execution) — teaching this recognizer to positively distinguish
+ * "a `program` that structurally IS an exile-then-return-to-battlefield
+ * sequence" from "a `program` for an unrelated reason" (Crystal Fragments/
+ * Summon: Alexander's own chapter III, a real, deliberate divergence this
+ * file's own module doc comment already names, is exactly that second case)
+ * is real, valuable, future work this pass doesn't attempt — same
+ * conservative-by-construction discipline this whole recognizer already
+ * follows, just extended to cover the new node kind.
+ */
 function chapterHasCustomEffect(effects: Effect[] | undefined): boolean {
   const collected: Effect[] = [];
   collectEffects(effects, collected);
-  return collected.some((e) => e.kind === 'custom');
+  return collected.some((e) => e.kind === 'custom' || e.kind === 'program');
 }
 
 /** `[start, end)` span of the literal word `Saga` inside `typeLine` — never

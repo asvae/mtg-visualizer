@@ -41,7 +41,7 @@ export function runEngineScenarios(): TraceResult[] {
     // actually find it on this player's own battlefield later. Every other
     // engine-piloted scenario constructing its own manual RealCard already
     // needs this same explicit copy (no live `CardDefinition` reference on
-    // `RealCard` — see state.ts's own `manaAbility` doc comment for the
+    // `RealCard` — see state.ts's own `manaAbilities` doc comment for the
     // established convention).
     keywords: edgarKingOfFigaro.keywords,
   });

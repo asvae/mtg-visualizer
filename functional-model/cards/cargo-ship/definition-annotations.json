@@ -1,0 +1,10 @@
+{
+  "abilities[0]": {
+    "highlight": "{T}: Add {C}. Spend this mana only to cast an artifact spell or activate an ability of an artifact source.",
+    "line": 1
+  },
+  "effects": {
+    "highlight": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+    "line": 2
+  }
+}

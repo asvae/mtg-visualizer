@@ -1,0 +1,8 @@
+{
+  "triggers[0]": {
+    "highlight": "Whenever Ultima attacks, put a blight counter on target land. For as long as that land has a blight counter on it, it loses all land types and abilities and has \"{T}: Add {C}.\"",
+    "line": 1
+  },
+  "triggers[1]": { "highlight": "Whenever you tap a land for {C}, add an additional {C}.", "line": 2 },
+  "authoredFacts[0]": { "highlight": "tap a land for {C}", "line": 2 }
+}

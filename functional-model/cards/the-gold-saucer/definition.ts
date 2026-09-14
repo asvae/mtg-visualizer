@@ -4,8 +4,8 @@ import type { CardDefinition, Effect } from '../../card';
 // ETBTapped` line — The Gold Saucer genuinely enters UNTAPPED.
 //
 // Three real activated abilities:
-//  - "{T}: Add {C}" — real mana ability, no mana-producing Effect/Action
-//    exists anywhere in this model, the documented STILL-DEFERRED gap.
+//  - "{T}: Add {C}" — a real, structured `manaAbilities` entry, genuinely
+//    payable via `mana.ts`'s `canAfford`/`payMana`.
 //  - "{2}, {T}: Flip a coin. If you win the flip, create a Treasure
 //    token." — a real, genuinely probabilistic outcome (`AB$ FlipCoin`);
 //    there is no coin-flip/random-outcome mechanism anywhere in this
@@ -25,7 +25,8 @@ export const theGoldSaucer: CardDefinition = {
   manaCost: '',
   typeLine: 'Land — Town',
 
-  staticAbilities: ['{T}: Add {C}.', '{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.'],
+  staticAbilities: ['{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.'],
+  manaAbilities: [{ colors: ['C'] }],
 
   activationCost: '{3}, {T}, Sacrifice two artifacts',
   effects: [{ kind: 'drawCard' } satisfies Effect],

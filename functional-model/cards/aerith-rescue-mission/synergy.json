@@ -4,7 +4,7 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -14,8 +14,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'instant-sorcery-resolves-to-graveyard' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "instant-sorcery-resolves-to-graveyard"
       }
     },
     {
@@ -70,8 +69,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'instant-sorcery-resolves-to-graveyard' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "instant-sorcery-resolves-to-graveyard"
       }
     }
   ],

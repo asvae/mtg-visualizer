@@ -31,7 +31,7 @@
 import type { Phase, PhaseGroup } from './turn';
 // Type-only, same erased-cycle reasoning as the `turn.ts` import above —
 // `card.ts` itself imports `play` (below) FROM this file.
-import type { CardDefinition } from './card';
+import type { CardDefinition, CounterConditionalGrant } from './card';
 
 /**
  * Mirrors forge-game/src/main/java/forge/game/GameEntity.java (~line 51 for
@@ -221,6 +221,16 @@ export declare function dealDamage(source: Card, target: Card | Player, amount: 
 /** Convenience wrapper over `Card.addCounter(CounterType, int, ...)`. */
 export declare function putCounter(target: Card, counterType: string, amount: number): void;
 
+/**
+ * Convenience wrapper over Forge's own `DB$ Effect | RememberObjects$ ... |
+ * StaticAbilities$ ...` sub-ability shape — installs a real, LIVE,
+ * counter-presence-conditioned continuous effect directly onto `target`.
+ * See `card.ts`'s own `CounterConditionalGrant` doc comment for the full
+ * design and Ultima, Origin of Oblivion's own real Forge citation
+ * (`res/cardsfolder/u/ultima_origin_of_oblivion.txt`) needing this.
+ */
+export declare function installCounterConditionalGrant(target: Card, grant: CounterConditionalGrant): void;
+
 /** Convenience wrapper over `Card.tap()`. */
 export declare function tap(target: Card): void;
 
@@ -269,6 +279,15 @@ export declare function counter(what: string): void;
 
 /** Convenience wrapper over `Player.discard(...)`. */
 export declare function discard(player: Player, qty: number): void;
+
+/**
+ * `Player.shuffle(SpellAbility)` (Player.java ~line 1606) — real, in-place
+ * randomization of `player`'s own library. Real Forge requires a shuffle
+ * any time a hidden zone (the library) is searched (601.2/701.19) — Cycling
+ * (`move`'s own `shuffleAfter` field, card.ts) is the first real caller,
+ * but this is a general primitive, not Cycling-specific.
+ */
+export declare function shuffleLibrary(player: Player): void;
 
 /** Convenience wrapper over `Game.getAction().exile(Card, ...)`. */
 export declare function exile(target: Card): void;
@@ -349,8 +368,13 @@ export declare function animate(target: Card, types: string[]): void;
  * own "you ... gain hexproof") gets applied to a PLAYER, not just a
  * creature — the same effect class either way in Forge, just a 0/0 delta
  * with a `KW$` field when nothing's actually being pumped stat-wise.
+ *
+ * `opts.untilEndOfTurn` (2026-09-14) mirrors real Forge's own duration on
+ * this same temporary-pump effect object — see `state.ts`'s own `pump`/
+ * `clearUntilEndOfTurnPumps` doc comments for the real 514.2 Cleanup
+ * removal this now closes.
  */
-export declare function pump(target: Card | Player, powerDelta: number, toughnessDelta: number): void;
+export declare function pump(target: Card | Player, powerDelta: number, toughnessDelta: number, opts?: { untilEndOfTurn?: boolean }): void;
 
 /** Convenience wrapper over `CardFactory.copyCard(Card, Player, ...)`. */
 export declare function copyPermanent(source: Card, controller: Player): Card;

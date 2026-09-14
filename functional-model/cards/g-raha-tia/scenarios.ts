@@ -108,9 +108,32 @@ export function runEngineScenarios(): TraceResult[] {
   // engine already uses.
   if (townGreeter.zone === 'Graveyard') pilotFireTrigger(pilot, gRahaTia, ctx, actions, 'onOtherPermanentsDie');
 
+  // Real `ActivationLimit$ 1` (`res/cardsfolder/g/graha_tia.txt`, this
+  // card's own `definition.ts`) — a SECOND other-permanent death THE SAME
+  // TURN draws no second card. A real second creature you control (Dwarven
+  // Castle Guard — real fin {1}{W} 2/1) enters and dies (represented as a
+  // direct real zone change, same "an off-card event" technique
+  // cards/fate-of-the-sun-cryst/scenarios.ts already uses, rather than
+  // staging a whole second blocked-combat exchange just to kill it) —
+  // firing the SAME named trigger again logs a second `trigger` bracket but
+  // produces NO second `drawCard`, proving the cap is genuinely enforced
+  // (`triggers.ts`'s `fireTrigger`), not just declared.
+  const dwarvenCastleGuard = pilot.state.addCard(pilot.you, 'Battlefield', {
+    name: 'Dwarven Castle Guard',
+    types: ['Creature'],
+    subtypes: ['Dwarf', 'Soldier'],
+    basePower: 2,
+    baseToughness: 1,
+  });
+  pilot.log.push({ fn: 'enters', card: dwarvenCastleGuard.name, zone: 'Battlefield', power: 2, toughness: 1, controller: pilot.you.name });
+  pilot.beginStep('A second real creature you control dies the same turn (off-card event)');
+  pilot.state.destroy(dwarvenCastleGuard);
+  pilot.log.push({ fn: 'destroy', target: dwarvenCastleGuard.name, controller: pilot.you.name });
+  if (dwarvenCastleGuard.zone === 'Graveyard') pilotFireTrigger(pilot, gRahaTia, ctx, actions, 'onOtherPermanentsDie');
+
   const result =
-    "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires, drawing a card.";
+    "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger fires, drawing a card. A SECOND other creature you control (Dwarven Castle Guard) then also dies the same turn, but the trigger's own real ActivationLimit 1 means this second firing draws no second card.";
   return [
-    finishEnginePilotTrace(pilot, setup, "engine playthrough: cast -> other-creature combat death -> onOtherPermanentsDie", result),
+    finishEnginePilotTrace(pilot, setup, "engine playthrough: cast -> other-creature combat death -> onOtherPermanentsDie -> a second same-turn death does NOT draw again (ActivationLimit 1)", result),
   ];
 }

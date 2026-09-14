@@ -1,26 +1,180 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "\"onEnter\" trigger fires",
-      "result": "you gain 3 life",
+      "setup": "you: 6 Forest(s)",
+      "action": "engine playthrough: cast -> resolve -> enters -> ETB lifegain",
+      "result": "Balamb T-Rexaur is cast ({4}{G}{G} paid) and enters the battlefield; its ETB gains you 3 life.",
       "raw": {
-        "result": "you gain 3 life",
-        "trigger": "onEnter"
+        "result": "Balamb T-Rexaur is cast ({4}{G}{G} paid) and enters the battlefield; its ETB gains you 3 life.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
       }
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Balamb T-Rexaur",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{G}{G}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "enters",
+        "card": "Balamb T-Rexaur",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Balamb T-Rexaur",
         "instanceId": 1,
-        "id": 200,
         "name": "onEnter"
       },
       {
         "fn": "gainLife",
         "player": "you",
         "amount": 3
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Balamb T-Rexaur ({4}{G}{G})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 7
+      },
+      {
+        "label": "Fire onEnter",
+        "from": 8
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 Forest(s)",
+      "action": "engine playthrough: Forestcycling activated from hand -> discard self -> search library -> shuffle",
+      "result": "Forestcycling {2} is activated from hand: {2} is paid, Balamb T-Rexaur is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Forest card, putting it into hand, then shuffling.",
+      "raw": {
+        "result": "Forestcycling {2} is activated from hand: {2} is paid, Balamb T-Rexaur is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Forest card, putting it into hand, then shuffling.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Balamb T-Rexaur",
+        "instanceId": 1,
+        "cost": "{2}, Discard this card",
+        "ability": "cycling"
+      },
+      {
+        "fn": "discard",
+        "target": "Balamb T-Rexaur",
+        "id": 14,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Balamb T-Rexaur"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Forest",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Forest",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Forest",
+        "id": 13,
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Activate Forestcycling ({2}, Discard this card): search for a Forest",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

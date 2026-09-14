@@ -31,6 +31,10 @@
     {
       "sourceText": "Islandcycling {2} ({2}, Discard this card: Search your library for an Island card, reveal it, put it into your hand, then shuffle.)",
       "highlight": "Discard this card"
+    },
+    {
+      "sourceText": "Islandcycling {2} ({2}, Discard this card: Search your library for an Island card, reveal it, put it into your hand, then shuffle.)",
+      "highlight": "Search your library for an Island card"
     }
   ]
 }

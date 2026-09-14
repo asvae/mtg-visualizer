@@ -4,18 +4,17 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
-          "start": 0,
+          "start": 10,
           "end": 18
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {
@@ -24,18 +23,17 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
-          "start": 0,
+          "start": 10,
           "end": 18
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {

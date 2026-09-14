@@ -1,12 +1,17 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 artifact(s)",
-      "action": "cast from hand",
-      "result": "destroys the target artifact",
+      "setup": "you: 3 Forest(s)",
+      "action": "engine playthrough: cast -> resolve -> destroy target artifact",
+      "result": "Airship Crash is cast ({2}{G} paid) and destroys the real target artifact.",
       "raw": {
-        "result": "destroys the target artifact",
+        "result": "Airship Crash is cast ({2}{G} paid) and destroys the real target artifact.",
         "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
           "artifactsCount": 1
         }
       }
@@ -16,16 +21,75 @@
         "fn": "cast",
         "card": "Airship Crash",
         "instanceId": 1,
-        "id": 88,
         "from": "hand",
         "cost": "{2}{G}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Airship Crash"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Airship Crash"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Airship Crash"
       },
       {
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 1,
+        "count": 4,
         "creatureCount": 0
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isEnchantment",
+        "target": "Forest",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Forest",
+        "result": false
       },
       {
         "fn": "read:isArtifact",
@@ -35,119 +99,90 @@
       {
         "fn": "destroy",
         "target": "Mind Stone",
-        "id": 87,
+        "id": 5,
         "controller": "you"
       },
       {
         "fn": "move",
         "card": "Airship Crash",
         "instanceId": 1,
-        "id": 88,
         "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
+        "to": "Graveyard"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Airship Crash ({2}{G})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   },
   {
     "scenario": {
-      "setup": "you: 1 enchantment(s)",
-      "action": "cast from hand",
-      "result": "destroys the target enchantment",
+      "setup": "you: 3 Forest(s)",
+      "action": "engine playthrough: Cycling activated from hand -> discard self -> draw a card",
+      "result": "Cycling {2} is activated from hand: {2} is paid, Airship Crash is genuinely discarded (never cast, its own destroy effect never runs) as part of the cost, then the ability resolves for real — drawing a real card.",
       "raw": {
-        "result": "destroys the target enchantment",
+        "result": "Cycling {2} is activated from hand: {2} is paid, Airship Crash is genuinely discarded (never cast, its own destroy effect never runs) as part of the cost, then the ability resolves for real — drawing a real card.",
         "you": {
-          "enchantmentsCount": 1
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "libraryCount": 1
         }
       }
     },
     "log": [
       {
-        "fn": "cast",
+        "fn": "activate",
         "card": "Airship Crash",
         "instanceId": 1,
-        "id": 91,
-        "from": "hand",
-        "cost": "{2}{G}"
+        "cost": "{2}, Discard this card",
+        "ability": "cycling"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "you-enchantment-0",
-        "result": false
-      },
-      {
-        "fn": "read:isEnchantment",
-        "target": "you-enchantment-0",
-        "result": true
-      },
-      {
-        "fn": "destroy",
-        "target": "you-enchantment-0",
-        "id": 90,
+        "fn": "discard",
+        "target": "Airship Crash",
+        "id": 12,
         "controller": "you"
       },
       {
-        "fn": "move",
-        "card": "Airship Crash",
-        "instanceId": 1,
-        "id": 91,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Airship Crash"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Airship Crash"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
       }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "no legal target, nothing destroyed",
-      "raw": {
-        "result": "no legal target, nothing destroyed",
-        "you": {},
-        "opponents": [
-          {}
-        ]
-      }
-    },
-    "log": [
+    ],
+    "actions": [
       {
-        "fn": "cast",
-        "card": "Airship Crash",
-        "instanceId": 1,
-        "id": 94,
-        "from": "hand",
-        "cost": "{2}{G}"
+        "label": "Start",
+        "from": 0
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
+        "label": "Activate Cycling ({2}, Discard this card): draw a card",
+        "from": 0
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "move",
-        "card": "Airship Crash",
-        "instanceId": 1,
-        "id": 94,
-        "from": "stack",
-        "to": "Graveyard",
-        "cardType": "Instant"
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

@@ -27,7 +27,7 @@ export const zanarkandAncientMetropolis: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {G}.'],
+  manaAbilities: [{ colors: ['G'] }],
 
   backFace: {
     name: 'Lasting Fayth',

@@ -14,8 +14,26 @@ export const woodlandWeavemaster: CardDefinition = {
     },
   ],
 
-  // Mana ability is documentary (no engine support) — doubly untestable
-  // since its own amount is itself dynamic ("X mana... where X is this
-  // creature's power").
-  staticAbilities: ['{T}: Add X mana of any one color, where X is this creature\'s power. Spend this mana only to cast Elf spells and activate abilities of Elf sources.'],
+  // Real Forge citation: `res/cardsfolder/w/woodland_weavemaster.txt`
+  // (`A:AB$ Mana | Cost$ T | Produced$ Any | Amount$ X | RestrictValid$
+  // Spell.Elf,Activated.Elf`, `SVar:X:Count$CardPower`) — now a real,
+  // structured `manaAbilities` entry (2026-09-14, ENGINE_GAPS.md gap #5),
+  // genuinely typed (`variableAmount: {kind:'selfPower'}` mirrors Forge's
+  // own `Count$CardPower` formula, distinct from Elvish Archdruid's
+  // `Count$Valid <Subtype>.YouCtrl` board-count shape) rather than opaque
+  // free text. Deliberately NOT wired into `mana.ts`'s `canAfford`/
+  // `payMana` this pass (real, named, flagged debt — see `ManaAbility
+  // .variableAmount`'s own doc comment: neither function takes a live
+  // controller/board reference to re-derive a variable amount from at
+  // payment time), doubly so alongside its own real `restriction`
+  // ("Spend this mana only to cast Elf spells and activate abilities of
+  // Elf sources," also honestly unenforced, same reasoning Cargo Ship's
+  // own restricted ability documents).
+  manaAbilities: [
+    {
+      colors: ['W', 'U', 'B', 'R', 'G'],
+      variableAmount: { kind: 'selfPower' },
+      restriction: 'Spend this mana only to cast Elf spells and activate abilities of Elf sources.',
+    },
+  ],
 };

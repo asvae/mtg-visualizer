@@ -1,0 +1,11 @@
+{
+  "triggers[0]": {
+    "highlight": "I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "line": 1
+  },
+  "triggers[1]": {
+    "highlight": "I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "line": 1
+  },
+  "triggers[2]": { "highlight": "III — Diamond Dust — Draw a card for each tapped creature your opponents control.", "line": 2 }
+}

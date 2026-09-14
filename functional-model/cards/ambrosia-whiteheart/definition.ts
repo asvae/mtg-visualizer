@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect } from '../../card';
+import type { CardDefinition, Effect, AuthoredFact } from '../../card';
 
 export const ambrosiaWhiteheart: CardDefinition = {
   name: 'Ambrosia Whiteheart',
@@ -18,11 +18,6 @@ export const ambrosiaWhiteheart: CardDefinition = {
       name: 'onEnter',
       on: 'enter',
       effects: [{ kind: 'move', owner: 'you', from: 'Battlefield', to: 'Hand', qty: 1, target: true, notSelf: true, optional: true } satisfies Effect],
-      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial).
-      annotation: {
-        highlight: 'When Ambrosia Whiteheart enters, you may return another permanent you control to its owner\'s hand.',
-        line: 1,
-      },
     },
     {
       // Landfall — real Forge fires this off ANOTHER permanent (a land)
@@ -31,15 +26,31 @@ export const ambrosiaWhiteheart: CardDefinition = {
       // entered" detection anywhere), so it's modeled the same way every
       // other trigger here is: a real, correctly-shaped effect, invoked
       // on cue rather than auto-detected.
+      // Real "Landfall — Whenever a land you control enters, Ambrosia
+      // Whiteheart gets +1/+0 until end of turn" — `untilEndOfTurn: true`
+      // (2026-09-14) closes the real gap this used to have: a bare `pumpSelf`
+      // was a PERMANENT `layers.add` entry with no expiry at all, even
+      // though the printed text says otherwise (`state.ts`'s own `pump`/
+      // `clearUntilEndOfTurnPumps` doc comments). See `scenarios.ts` for a
+      // real engine-piloted demonstration spanning a full Cleanup.
       name: 'onLandfall',
-      effects: [{ kind: 'pumpSelf', power: 1, toughness: 0 } satisfies Effect],
-      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial). Real oracle
-      // text uses an ability-word lead-in ("Landfall — Whenever...") — the
-      // whole ability-word + trigger clause is one line, highlighted whole.
-      annotation: {
-        highlight: 'Landfall — Whenever a land you control enters, Ambrosia Whiteheart gets +1/+0 until end of turn.',
-        line: 2,
-      },
+      effects: [{ kind: 'pumpSelf', power: 1, toughness: 0, untilEndOfTurn: true } satisfies Effect],
     },
   ],
+  // Tier 3 (`CardDefinition.authoredFacts`). Same "trigger's own firing
+  // precondition, no single owning `Effect`" case as ashe-princess-of-
+  // dalmasca's own `authoredFacts` (see that file's comment) —
+  // 'onLandfall' is a free-text `name`, not one of `Trigger.on`'s closed
+  // 'enter'/'upkeep'/'endStep' vocabulary. Matches this card's own real
+  // `synergy.json` sink fact byte-for-byte. Not wired into
+  // `apply-recognizers.mjs`/`synergy.json` generation. Own annotation:
+  // `definition-annotations.json`, keyed `"authoredFacts[0]"`.
+  authoredFacts: [
+    {
+      role: 'sink',
+      event: 'landfall',
+      controller: 'you',
+      value: 1,
+    },
+  ] satisfies AuthoredFact[],
 };

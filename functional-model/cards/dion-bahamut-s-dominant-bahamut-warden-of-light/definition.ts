@@ -1,5 +1,6 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 import { TOKENS } from '../../tokens.ts';
+import { putCounter, sequence, you } from '../../combinator';
 
 // A transforming DFC Legendary Creature // Saga — same shape as jecht-
 // reluctant-guardian-braska-s-final-aeon (front-face damage trigger reused
@@ -39,12 +40,18 @@ export const dionBahamutsDominant: CardDefinition = {
   activationCost: '{4}{W}{W}, {T}',
   effects: [
     {
-      kind: 'custom',
+      // MIGRATED (2026-09-14) off a `kind:'custom'` closure onto the real
+      // `combinator.ts` AST — a plain `Sequence` of two fixed, self-targeted
+      // `moveSelf` steps, same shape crystal-fragments-summon-alexander's
+      // own front-face transform (and this card's own chapter III below)
+      // both use.
+      //
+      // Authored via `combinator.ts`'s own fluent builder layer (2026-09-14
+      // follow-up — SAME AST as before, just not a raw nested object
+      // literal).
+      kind: 'program',
       describe: "exile Dion, then return it to the battlefield transformed under its owner's control (activate only as a sorcery)",
-      run: (ctx: EffectContext, actions: Actions) => {
-        actions.moveTo(ctx.self, 'Exile');
-        actions.moveTo(ctx.self, 'Battlefield');
-      },
+      program: sequence('Exile', 'Battlefield'),
     } satisfies Effect,
   ],
 
@@ -63,12 +70,13 @@ export const dionBahamutsDominant: CardDefinition = {
             // (StrictlyOther) is a board-wide broadcast excluding self —
             // `putCounter` is self-only, `putCounterTarget` is a CHOSEN
             // pool, and `pumpAll` (the closest board-wide shape) has no
-            // notSelf exclusion either.
-            kind: 'custom',
+            // notSelf exclusion either. MIGRATED (2026-09-14) off a
+            // `kind:'custom'` closure onto the real `combinator.ts` AST — a
+            // `Filter`-narrowed (`excludeSelf`) `Each` over
+            // `creaturesInPlay(you)`.
+            kind: 'program',
             describe: 'Wings of Light — put a +1/+1 counter on each other creature you control',
-            run: (ctx: EffectContext, actions: Actions) => {
-              for (const creature of ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId())) actions.putCounter(creature, '+1/+1', 1);
-            },
+            program: you.creaturesInPlay().filter('excludeSelf').each(putCounter('+1/+1', 1)),
           } satisfies Effect,
           {
             // "Those creatures gain flying until end of turn" — the SAME
@@ -103,11 +111,12 @@ export const dionBahamutsDominant: CardDefinition = {
         name: 'chapterII',
         effects: [
           {
-            kind: 'custom',
+            // Same MIGRATED shape as chapter I above (2026-09-14) — a
+            // `Filter`-narrowed (`excludeSelf`) `Each` over
+            // `creaturesInPlay(you)`.
+            kind: 'program',
             describe: 'Wings of Light — put a +1/+1 counter on each other creature you control',
-            run: (ctx: EffectContext, actions: Actions) => {
-              for (const creature of ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId())) actions.putCounter(creature, '+1/+1', 1);
-            },
+            program: you.creaturesInPlay().filter('excludeSelf').each(putCounter('+1/+1', 1)),
           } satisfies Effect,
           {
             // Same `untilEndOfTurn: true` fix as chapter I above.
@@ -136,13 +145,13 @@ export const dionBahamutsDominant: CardDefinition = {
             // transform ability uses (this model has no notion of "which
             // face is showing" as tracked state beyond `backFace` being a
             // second static CardDefinition), just without the `Transformed$`
-            // flag real Forge sets.
-            kind: 'custom',
+            // flag real Forge sets. MIGRATED (2026-09-14) off a
+            // `kind:'custom'` closure onto the real `combinator.ts` AST —
+            // the same 2-step `Sequence` shape used by the front face's own
+            // transform ability above.
+            kind: 'program',
             describe: 'Gigaflare — exile Bahamut, then return it to the battlefield (front face up)',
-            run: (ctx: EffectContext, actions: Actions) => {
-              actions.moveTo(ctx.self, 'Exile');
-              actions.moveTo(ctx.self, 'Battlefield');
-            },
+            program: sequence('Exile', 'Battlefield'),
           } satisfies Effect,
         ],
       },

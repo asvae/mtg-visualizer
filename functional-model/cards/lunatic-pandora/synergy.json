@@ -25,7 +25,19 @@
           ]
         }
       },
-      "value": 1
+      "value": 1,
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 37,
+          "end": 69
+        }
+      ]
     },
     {
       "event": "cast",

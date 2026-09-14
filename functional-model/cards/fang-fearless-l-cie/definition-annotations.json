@@ -1,0 +1,6 @@
+{
+  "triggers[0]": {
+    "highlight": "Whenever one or more cards leave your graveyard, you draw a card and you lose 1 life. This ability triggers only once each turn.",
+    "line": 0
+  }
+}

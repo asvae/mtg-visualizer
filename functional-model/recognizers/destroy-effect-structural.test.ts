@@ -43,18 +43,30 @@ function structuralInput(scryfallName: string, def: CardDefinition, face: 'front
 }
 
 describe('Recognizer C — destroy effect, read structurally off Effect[] (not oracle text)', () => {
-  it('accepts Summon: Bahamut — chapterI + chapterII both point at the SAME real clause; this recognizer no longer dedups that itself (moved to apply-recognizers.mjs\'s own runner-level pass — see that script\'s own `mergeRecognizedFactsByIdentity`), so both are returned, literally identical', () => {
+  it('accepts Summon: Bahamut — chapterI + chapterII both point at the SAME real clause; this recognizer no longer dedups that itself (moved to apply-recognizers.mjs\'s own runner-level pass — see that script\'s own `mergeRecognizedFactsByIdentity`), so both are returned, literally identical — EACH now also paired with its own companion `dies` consequence fact (2026-09-13 follow-up)', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Summon: Bahamut', summonBahamut));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts).toHaveLength(2);
-    const expectedFact = {
+    expect(result.facts).toHaveLength(4);
+    const expectedDestroyFact = {
       role: 'source',
       fact: { event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true, value: 1, annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }] },
       provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
     };
-    expect(result.facts[0]).toEqual(expectedFact);
-    expect(result.facts[1]).toEqual(expectedFact);
+    const expectedDiesFact = {
+      role: 'source',
+      fact: {
+        event: 'dies',
+        from: 'Battlefield',
+        to: 'Graveyard',
+        target: { types: { not: ['Land'] } },
+        targeted: true,
+        value: 1,
+        annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }],
+      },
+      provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+    };
+    expect(result.facts).toEqual([expectedDestroyFact, expectedDiesFact, expectedDestroyFact, expectedDiesFact]);
     // Real byproduct check, same discipline Recognizers A/B's own tests use:
     // the claimed span really does read the real destroy clause verbatim.
     const input = structuralInput('Summon: Bahamut', summonBahamut);
@@ -62,7 +74,7 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
     expect(lines[1]!.slice(8, 50)).toBe('Destroy up to one target nonland permanent');
   });
 
-  it('accepts Fate of the Sun-Cryst — plain nonland-permanent destroy, no Saga/modal wrapping', () => {
+  it('accepts Fate of the Sun-Cryst — plain nonland-permanent destroy, no Saga/modal wrapping, plus its companion `dies` fact', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Fate of the Sun-Cryst', fateOfTheSunCryst));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
@@ -72,10 +84,23 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
         fact: { event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true, value: 1, annotations: [{ target: 'oracle', line: 1, start: 0, end: 32 }] },
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
+      {
+        role: 'source',
+        fact: {
+          event: 'dies',
+          from: 'Battlefield',
+          to: 'Graveyard',
+          target: { types: { not: ['Land'] } },
+          targeted: true,
+          value: 1,
+          annotations: [{ target: 'oracle', line: 1, start: 0, end: 32 }],
+        },
+        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+      },
     ]);
   });
 
-  it('accepts Battle Menu — inside a `modal` mode, with a real minPower threshold ("with power 4 or greater")', () => {
+  it('accepts Battle Menu — inside a `modal` mode, with a real minPower threshold ("with power 4 or greater"), plus its companion `dies` fact carrying the SAME minPower constraint', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Battle Menu', battleMenu));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
@@ -83,6 +108,19 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
       {
         role: 'source',
         fact: { event: 'destroy', target: { types: { has: ['Creature'] }, power: { min: 4 } }, targeted: true, value: 1, annotations: [{ target: 'oracle', line: 3, start: 10, end: 57 }] },
+        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+      },
+      {
+        role: 'source',
+        fact: {
+          event: 'dies',
+          from: 'Battlefield',
+          to: 'Graveyard',
+          target: { types: { has: ['Creature'] }, power: { min: 4 } },
+          targeted: true,
+          value: 1,
+          annotations: [{ target: 'oracle', line: 3, start: 10, end: 57 }],
+        },
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
     ]);
@@ -93,6 +131,7 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true, value: 1 });
+    expect(result.facts[1]!.fact).toMatchObject({ event: 'dies', from: 'Battlefield', to: 'Graveyard', target: { types: { not: ['Land'] } }, targeted: true, value: 1 });
   });
 
   it('accepts Sephiroth\'s Intervention — plain "Destroy target creature." with no threshold/quantifier', () => {
@@ -100,6 +139,7 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { has: ['Creature'] } }, targeted: true, value: 1 });
+    expect(result.facts[1]!.fact).toMatchObject({ event: 'dies', from: 'Battlefield', to: 'Graveyard', target: { types: { has: ['Creature'] } }, targeted: true, value: 1 });
   });
 
   it('accepts Sidequest: Hunt the Mark — a genuinely MISSING fact today (its real synergy.json has no event:"destroy" at all), optional qty:1 creature destroy inside a named trigger', () => {
@@ -107,14 +147,22 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { has: ['Creature'] } }, targeted: true, value: 1 });
+    expect(result.facts[1]!.fact).toMatchObject({ event: 'dies', from: 'Battlefield', to: 'Graveyard', target: { types: { has: ['Creature'] } }, targeted: true, value: 1 });
   });
 
-  it('accepts Bahamut, Warden of Light (Dion\'s back face) — unrestricted "Destroy target permanent," no type filter at all (matches real hand-authored data, which omits `target` entirely here)', () => {
+  it('accepts Bahamut, Warden of Light (Dion\'s back face) — unrestricted "Destroy target permanent," no type filter at all (matches real hand-authored data, which omits `target` entirely here), plus its companion `dies` fact (also confirmed hand-authored already)', () => {
     const backDef = dionBahamutsDominant.backFace!;
     const result = recognizeDestroyEffectStructural(structuralInput("Dion, Bahamut's Dominant // Bahamut, Warden of Light", backDef, 'back'));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toEqual({ event: 'destroy', targeted: true, value: 1, annotations: [{ target: 'oracle', line: 2, start: 18, end: 42 }] });
+    expect(result.facts).toEqual([
+      { role: 'source', fact: { event: 'destroy', targeted: true, value: 1, annotations: [{ target: 'oracle', line: 2, start: 18, end: 42 }] }, provenance: { origin: 'parser', rule: 'destroy-effect-structural' } },
+      {
+        role: 'source',
+        fact: { event: 'dies', from: 'Battlefield', to: 'Graveyard', targeted: true, value: 1, annotations: [{ target: 'oracle', line: 2, start: 18, end: 42 }] },
+        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+      },
+    ]);
   });
 
   it('declines Qutrub Forayer — real oracle text has a trailing qualifier ("that was dealt damage this turn") the structured Effect has no field for at all; matches today\'s existing hand-authored data (no event:"destroy" fact there either)', () => {

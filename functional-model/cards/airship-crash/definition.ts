@@ -17,15 +17,23 @@ import type { CardDefinition, Effect, EffectContext, Actions } from '../../card'
 // `custom` already uses) rather than an invented mechanic or a
 // mismatched-validType approximation.
 //
-// "Cycling {2}" has no entry in card.ts's own `Keyword` vocabulary (it's a
-// discard-from-hand-to-draw alternate action, not a cast-time
-// `AlternateCost` either) — kept as real text only via `staticAbilities`.
+// Cycling {2} (ENGINE_GAPS.md gap #23, closed 2026-09-14) is now a real,
+// structured, engine-piloted activated ability — a genuine 602.1
+// activation FROM HAND, cost = {2} + discard this card itself
+// (`engine.ts`'s `costRequiresDiscardSelf`), resolving to a plain
+// `drawCard`. Modeled via the NAMED `abilities` array (not the top-level
+// `activationCost`/`effects` pair) specifically because this card's own
+// top-level `effects` is already spoken for — that's the Instant's own
+// CAST effect (the destroy-target `custom` below), a genuinely different
+// resolution than Cycling's. See cloudbound-moogle/definition.ts's own
+// comment for the full mechanism (TypeCycling's own search variant, not
+// needed here — Airship Crash's real printed Cycling has no search).
 export const airshipCrash: CardDefinition = {
   name: 'Airship Crash',
   manaCost: '{2}{G}',
   typeLine: 'Instant',
 
-  staticAbilities: ['Cycling {2} ({2}, Discard this card: Draw a card.)'],
+  abilities: [{ name: 'cycling', cost: '{2}, Discard this card', effects: [{ kind: 'drawCard' } satisfies Effect] }],
 
   effects: [
     {

@@ -45,7 +45,34 @@
         "origin": "parser",
         "rule": "permanent-enters-battlefield-normally"
       }
+    },
+    {
+      "to": "Hand",
+      "from": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Swamp"
+        ]
+      },
+      "value": -1
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "discard",
+      "target": "self",
+      "value": -1
+    },
+    {
+      "to": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Swamp"
+        ]
+      },
+      "value": 1
+    }
+  ]
 }

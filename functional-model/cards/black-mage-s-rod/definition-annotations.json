@@ -1,0 +1,7 @@
+{
+  "triggers[0]": {
+    "highlight": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+    "line": 0
+  },
+  "effects": { "highlight": "Equip {3}", "line": 2 }
+}

@@ -1,0 +1,19 @@
+{
+  "triggers[0]": { "highlight": "When Dion enters, create a 2/2 white Knight creature token.", "line": 1 },
+  "effects": {
+    "highlight": "{4}{W}{W}, {T}: Exile Dion, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.",
+    "line": 2
+  },
+  "backFace.triggers[0]": {
+    "highlight": "I, II — Wings of Light — Put a +1/+1 counter on each other creature you control. Those creatures gain flying until end of turn.",
+    "line": 1
+  },
+  "backFace.triggers[1]": {
+    "highlight": "I, II — Wings of Light — Put a +1/+1 counter on each other creature you control. Those creatures gain flying until end of turn.",
+    "line": 1
+  },
+  "backFace.triggers[2]": {
+    "highlight": "III — Gigaflare — Destroy target permanent. Exile Bahamut, then return it to the battlefield (front face up).",
+    "line": 2
+  }
+}

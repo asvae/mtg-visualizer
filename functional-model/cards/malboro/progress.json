@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp0\",\"amount\":2}) with no matching declared produce | trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp0\",\"amount\":2}) with no matching declared produce | trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp1\",\"amount\":2}) with no matching declared produce",
+  "lastVerified": "2026-09-14",
+  "notes": "2026-09-14: Swampcycling {2} is now real, structured, engine-piloted (ENGINE_GAPS.md gap #23, closed 2026-09-14) \u2014 same mechanism as Cloudbound Moogle's Plainscycling, scoped to Swamp. scenarios.ts now runEngineScenarios (2 real engine-piloted scenarios: cast+ETB opponent punishment, Swampcycling activated from hand). Added real tutor SOURCE + discard-self/wants-a-Swamp-in-library SINK facts (previously this card had ZERO facts for its own printed Cycling ability at all). vitest 550/550, verify-synergy.mjs 320 checked/0 hard failures, tsc no new errors.\n\ntrace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp0\",\"amount\":2}) with no matching declared produce | trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp0\",\"amount\":2}) with no matching declared produce | trace has loseLife ({\"fn\":\"loseLife\",\"player\":\"opp1\",\"amount\":2}) with no matching declared produce",
   "textCoverageAudited": false,
   "knownGaps": []
 }

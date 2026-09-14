@@ -1,0 +1,7 @@
+{
+  "triggers[0]": { "highlight": "When this creature enters, draw a card.", "line": 0 },
+  "triggers[1]": {
+    "highlight": "At the beginning of combat on your turn, if you control an Equipment, you may pay {1}. When you do, attach target Equipment you control to target creature you control.",
+    "line": 1
+  }
+}

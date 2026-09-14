@@ -43,13 +43,46 @@
         "origin": "parser",
         "rule": "permanent-enters-battlefield-normally"
       }
+    },
+    {
+      "event": "dies",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "subject": "self",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 11,
+          "end": 34
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dies-trigger-structural"
+      }
     }
   ],
   "sink": [
     {
       "event": "dies",
       "target": "self",
-      "value": 1
+      "value": 1,
+      "provenance": {
+        "origin": "parser",
+        "rule": "dies-trigger-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 11,
+          "end": 34
+        }
+      ]
     }
   ]
 }

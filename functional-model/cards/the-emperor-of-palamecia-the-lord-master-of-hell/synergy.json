@@ -25,7 +25,19 @@
       "event": "damage",
       "controller": "you",
       "value": 1,
-      "face": "back"
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamage-effect-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 56,
+          "end": 87
+        }
+      ]
     },
     {
       "event": "cast",

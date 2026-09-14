@@ -131,7 +131,7 @@
 
 import type { CardDefinition, EffectContext, Actions, AlternateCost, ActivationCostReduction } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
-import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged, activeSpellCostDiscount, isActivationLocked, wrapCard } from './state';
+import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged, activeSpellCostDiscount, isActivationLocked, hasCounterConditionalAbilityLoss, wrapCard } from './state';
 import { Stack, type StackObject } from './stack';
 import { fireTrigger } from './triggers';
 import { runPriorityRound, type PriorityChoice, type PriorityOutcome } from './priority';
@@ -146,7 +146,7 @@ import {
   type TurnState,
   type PhaseGroup,
 } from './turn';
-import { parseManaCost, reduceGenericCost, resolveXCost, formatManaCost, type ParsedManaCost, canAfford, payMana, untappedManaSources, deriveManaAbility } from './mana';
+import { parseManaCost, reduceGenericCost, resolveXCost, formatManaCost, type ParsedManaCost, canAfford, payMana, untappedManaSources, sourceColors } from './mana';
 import { advanceSaga, advanceSagasAfterDrawStep } from './saga';
 import { checkStateBasedActions } from './sba';
 
@@ -467,6 +467,7 @@ export function castSpell(engine: GameEngine, caster: RealPlayer, cardReal: Real
   if (!check.ok) return check;
   const { cost } = effectiveCastCost(card, alt, declaredTarget, x, caster);
   const tappedForMana = payMana(engine.state, payableManaSources(engine, caster), cost);
+  fireOnTapLandForManaTriggers(engine, caster, tappedForMana);
   const targets = declaredTargets ?? (declaredTarget ? [declaredTarget] : undefined);
   engine.state.move(cardReal, 'Stack');
   // A permanent with its OWN `activationCost` reserves `card.effects` for
@@ -542,13 +543,13 @@ export function canPlayLand(engine: GameEngine, caster: RealPlayer, card: CardDe
  * action: moves `cardReal` Hand -> Battlefield directly (never touching the
  * Stack), stamps it for summoning-sickness purposes and mana-ability
  * derivation exactly like `resolveTop` already does for a cast permanent
- * (`enteredThisTurn`/`resolvedPermanents`/`manaAbility` — a land needs all
+ * (`enteredThisTurn`/`resolvedPermanents`/`manaAbilities` — a land needs all
  * three same as any other permanent: a creature land could still be
  * summoning-sick, and a mana-producing land like Midgar needs its
- * `manaAbility` derived the same narrow-slice way any other mana source
- * does), fires its own real ETB trigger if it has one, then increments the
- * per-turn land-drop counter. Returns `{ok:false, reason}` and mutates
- * NOTHING if illegal.
+ * `manaAbilities` copied the same way any other mana source's are), fires
+ * its own real ETB trigger if it has one, then increments the per-turn
+ * land-drop counter. Returns `{ok:false, reason}` and mutates NOTHING if
+ * illegal.
  */
 export function playLand(engine: GameEngine, caster: RealPlayer, cardReal: RealCard, card: CardDefinition, ctx: EffectContext, actions: Actions): ActionResult {
   const check = canPlayLand(engine, caster, card);
@@ -556,7 +557,7 @@ export function playLand(engine: GameEngine, caster: RealPlayer, cardReal: RealC
   engine.state.move(cardReal, 'Battlefield');
   engine.enteredThisTurn.set(cardReal.id, engine.turn.turnNumber);
   engine.resolvedPermanents.set(cardReal.id, { card, ctx, actions });
-  cardReal.manaAbility = deriveManaAbility(card.staticAbilities);
+  cardReal.manaAbilities = card.manaAbilities;
   // Same "copy once at resolve time, RealCard keeps no live CardDefinition
   // reference" treatment `resolveTop` gives every other continuous grant —
   // no real FIN land carries `triggerDoubling` today, but a land IS one of
@@ -649,6 +650,36 @@ export function costRequiresLifePayment(cost: string): number | undefined {
   return match ? Number(match[1]) : undefined;
 }
 
+/**
+ * Whether `cost`'s own free text requires discarding the activating
+ * permanent ITSELF as part of the cost (ENGINE_GAPS.md gap #23 — real 702.13
+ * Cycling/TypeCycling, `CardFactoryUtil.java` ~lines 3717-3745: `AB$ Draw |
+ * Cost$ <mana> Discard<1/CARDNAME> | ActivationZone$ Hand` for plain
+ * Cycling, `AB$ ChangeZone | Cost$ <mana> Discard<1/CARDNAME> |
+ * ActivationZone$ Hand | Origin$ Library | Destination$ Hand | ChangeType$
+ * <type>` for TypeCycling). Real card scripts: `res/cardsfolder/t/
+ * tranquil_thicket.txt`'s `K:Cycling:2`, `res/cardsfolder/t/
+ * timeless_dragon.txt`'s `K:TypeCycling:Plains:2`. Same "real but narrow
+ * text-pattern detection, not a parser" shape `costRequiresTap`/
+ * `costRequiresLifePayment` already establish — `CardDefinition.activationCost`
+ * has no structured cost grammar at all, so this card's own cost STRING
+ * literally spells out "Discard this card" (matching Forge's own
+ * `Discard<1/CARDNAME>` cost-string convention), same comma-separated shape
+ * `unsupportedCostComponent`'s own loop already parses every other
+ * component with.
+ *
+ * Unlike self-Sacrifice (deliberately left UNSUPPORTED — see
+ * `unsupportedCostComponent`'s own doc comment above), discarding the
+ * source card as a cost is genuinely SAFE to pay for real here: Cycling's
+ * own resolution effect (`drawCard`, or `move`'s real library search) never
+ * reads `ctx.self`'s post-discard state the way Zack Fair/Blazing Bomb's own
+ * self-sacrifice effects do — a card being cycled just draws/searches, so
+ * there's no 608.2h last-known-information concern to work around.
+ */
+export function costRequiresDiscardSelf(cost: string): boolean {
+  return /Discard this card\b/i.test(cost);
+}
+
 /** The pure mana-symbol portion of an activationCost string, with `{T}` (handled separately by `costRequiresTap`) and any parenthetical restriction text ("(activate only as a sorcery)") stripped first — `parseManaCost` would otherwise throw trying to parse `{T}` as a color/generic symbol. */
 function manaPortionOf(cost: string): string {
   return cost.replace(/\{T\}/g, '').replace(/\([^)]*\)/g, '');
@@ -712,6 +743,12 @@ function unsupportedCostComponent(cost: string, card: CardDefinition): string | 
     // real by a dedicated check elsewhere" split `{T}` already has via
     // `costRequiresTap`.
     if (costRequiresLifePayment(part) !== undefined) continue;
+    // Real 702.13 Cycling's own "Discard this card" cost component
+    // (ENGINE_GAPS.md gap #23) — see `costRequiresDiscardSelf`'s own doc
+    // comment for why this is safe to actually pay (unlike self-Sacrifice
+    // just above): `canActivateAbility`/`activateAbility` pay this for
+    // real (a genuine Hand->Graveyard move, 701.9a), not merely trusted.
+    if (/^Discard this card$/i.test(part)) continue;
     if (!/^(\{[^}]+\})+$/.test(part)) return part;
   }
   return undefined;
@@ -842,6 +879,18 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
   if (isActivationLocked(engine.state, permanent)) {
     return { ok: false, reason: `"${card.name}"'s activated abilities can't be activated — locked by a static ability on another permanent (613/602.1, CantBeActivated)` };
   }
+  // Real Forge `RemoveAllAbilities$ True` (613, layer 6, ENGINE_GAPS.md's
+  // own "Ultima, Origin of Oblivion" closure) — a permanent currently
+  // losing ALL its abilities to an active `counterConditionalGrants` entry
+  // (installed by SOME OTHER effect, e.g. Ultima's own blight counter) has
+  // no OTHER activated ability left to activate either. The Gold Saucer's
+  // own real "{3}, {T}, Sacrifice two artifacts: ..." is the one real FIN
+  // card this matters for if it's ever blighted. See `state.ts`'s own
+  // `hasCounterConditionalAbilityLoss` doc comment for what this does NOT
+  // cover (a TRIGGERED ability has no equivalent suppression anywhere).
+  if (hasCounterConditionalAbilityLoss(permanent)) {
+    return { ok: false, reason: `"${card.name}" has lost all its abilities (613, RemoveAllAbilities) — no activated ability to activate` };
+  }
   if (card.crewCost !== undefined && abilityName === undefined) {
     // Real Crew (702.121b/c): "Tap any number of untapped creatures you
     // control with total power N or greater" — a real, STRUCTURED cost
@@ -868,6 +917,18 @@ export function canActivateAbility(engine: GameEngine, controller: RealPlayer, p
       return { ok: false, reason: `Crew ${card.crewCost}: tapped creatures' total power (${totalPower}) is less than required` };
     }
     return { ok: true };
+  }
+  // Real 701.9a + Forge's own `ActivationZone$ Hand` (ENGINE_GAPS.md gap
+  // #23, Cycling/TypeCycling): "discard this card" is DEFINED as a
+  // Hand->Graveyard move, so an ability whose own cost includes it can only
+  // ever be activated from Hand — genuinely different from every OTHER
+  // activated ability in this pool, which this engine otherwise never zone-
+  // checks at all (implicitly assumed to already be on the Battlefield, per
+  // `harness.ts`'s own `selfZone` convention). Checked before any other
+  // cost/timing check below, same "real restriction checked up front" shape
+  // the Crew/Equip branches above already establish.
+  if (costRequiresDiscardSelf(cost) && permanent.zone !== 'Hand') {
+    return { ok: false, reason: `"${card.name}"'s cost includes discarding itself (701.9a) — this ability can only be activated from Hand, but "${card.name}" is currently in ${permanent.zone}` };
   }
   if (/activate only as a sorcery/i.test(cost) && !sorcerySpeedTimingOk(engine, controller)) {
     return { ok: false, reason: `"${cost}" restricts this to sorcery-speed timing: only during your own main phase with an empty stack` };
@@ -952,9 +1013,21 @@ export function activateAbility(engine: GameEngine, controller: RealPlayer, perm
   const cost = activationCostFor(card, abilityName)!;
   const { manaPortion } = effectiveActivationCost(engine, controller, card, abilityName, x);
   const tappedForMana = manaPortion ? payMana(engine.state, payableManaSources(engine, controller), manaPortion) : undefined;
+  if (tappedForMana) fireOnTapLandForManaTriggers(engine, controller, tappedForMana);
   if (costRequiresTap(cost)) engine.state.tap(permanent);
   const lifeCost = costRequiresLifePayment(cost);
   if (lifeCost !== undefined) controller.life -= lifeCost;
+  // Real 702.13 Cycling's own "Discard this card" cost (ENGINE_GAPS.md gap
+  // #23) — a genuine Hand->Graveyard move, paid for real HERE, as part of
+  // activation, before the ability is even pushed onto the stack (602.1's
+  // own cost-payment step happens before the object goes on the stack) —
+  // NOT deferred to resolution the way the Sacrifice-cost-trusted shape
+  // above is (that deferral exists only to dodge a last-known-information
+  // problem `costRequiresDiscardSelf`'s own doc comment explains doesn't
+  // apply here). `resolveTop`'s own `isAbility` branch never relocates its
+  // source permanent either way (602.1 has no such rule), so there's no
+  // conflicting double-move once this already happened here.
+  if (costRequiresDiscardSelf(cost)) engine.state.move(permanent, 'Graveyard');
   engine.stack.push({ card, ctx, actions, abilityName, isAbility: true, declaredTargets: wrappedTargets });
   return { ok: true, tappedForMana };
 }
@@ -980,12 +1053,11 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       engine.state.move(real, 'Battlefield');
       engine.enteredThisTurn.set(real.id, engine.turn.turnNumber);
       engine.resolvedPermanents.set(real.id, { card: resolved.card, ctx: resolved.ctx, actions: resolved.actions });
-      // Real narrow-slice mana ability (mana.ts's own
-      // `deriveManaAbility` — single-color OR dual-color-choice, see that
-      // function's own doc comment) — derived here, once, from the
-      // resolving CardDefinition's own text, since `RealCard` keeps no
-      // live CardDefinition reference to re-derive it from later.
-      real.manaAbility = deriveManaAbility(resolved.card.staticAbilities);
+      // Real, structural mana ability/abilities (`card.ts`'s own
+      // `CardDefinition.manaAbilities`/`ManaAbility`) — copied here, once,
+      // from the resolving CardDefinition, since `RealCard` keeps no live
+      // CardDefinition reference to re-derive it from later.
+      real.manaAbilities = resolved.card.manaAbilities;
       // Same "copy once at resolve time, RealCard keeps no live
       // CardDefinition reference" treatment for `continuousKeywordGrants`
       // (2026-09-12, ENGINE_GAPS.md gap #14) — a pilot script that builds
@@ -1075,6 +1147,73 @@ function fireOnPhaseEnterTriggers(engine: GameEngine): void {
     // "caused by a permanent entering," so only a cause-less doubling gate
     // (Cloud's own shape) could ever apply here; none of the 3 real FIN
     // cards needing gap #13 target this specific trigger occasion.
+    fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
+  }
+}
+
+/**
+ * Real Forge `TriggerType.TapsForMana` auto-fire (closed 2026-09-14,
+ * ENGINE_GAPS.md gap #5's own Ultima, Origin of Oblivion closure — see
+ * `card.ts`'s own `Trigger.on: 'tapLandForMana'`/`tapLandForManaColor` doc
+ * comments for the full real Forge citation). Called right after EVERY
+ * real `mana.ts` `payMana` call (this engine's only two "tap sources to pay
+ * a cost" call sites, `castSpell`/`activateAbility`) with the exact real
+ * sources `payMana` just tapped.
+ *
+ * For each tapped source that's a genuine Land (`ValidCard$ Land`, Forge's
+ * own real gate — a non-Land mana source, e.g. a mana rock, never fires
+ * this), re-derives which color(s) it actually produced
+ * (`mana.ts`'s own `sourceColors`, the SAME function `payMana` itself used
+ * to decide what to tap — `payMana` has no engine/trigger-firing context
+ * of its own to fire this from directly, so this re-derivation happens
+ * here instead of threading a callback all the way through `mana.ts`), then
+ * sweeps `controller`'s own `resolvedPermanents`-registered battlefield
+ * (`Activator$ You`, Forge's own real gate — same "your own battlefield
+ * only" scope `fireOnPhaseEnterTriggers` already establishes) for any
+ * trigger with `on: 'tapLandForMana'` whose own `tapLandForManaColor` (if
+ * set) is among the colors just produced, firing each real match.
+ */
+function fireOnTapLandForManaTriggers(engine: GameEngine, controller: RealPlayer, tapped: RealCard[]): void {
+  const tappedLands = tapped.filter((c) => c.types.includes('Land'));
+  if (tappedLands.length === 0) return;
+  for (const land of tappedLands) {
+    const colors = sourceColors(land);
+    for (const real of controller.battlefield) {
+      const registered = engine.resolvedPermanents.get(real.id);
+      if (!registered) continue;
+      const trigger = registered.card.triggers?.find((t) => t.on === 'tapLandForMana' && (t.tapLandForManaColor === undefined || colors.includes(t.tapLandForManaColor)));
+      if (!trigger) continue;
+      fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name, { kind: 'tapLandForMana', colors });
+    }
+  }
+}
+
+/**
+ * Real Forge `TriggerType.Attacks` auto-fire (closed 2026-09-14,
+ * ENGINE_GAPS.md — attack-triggered-ability auto-dispatch; see `card.ts`'s
+ * own `Trigger.on: 'attacks'` doc comment for the full real Forge citation).
+ * Called right after `declareAttackers` legally declares a real attacker
+ * batch (508.1) — mirrors real Forge's own `CombatUtil.checkDeclaredAttacker`
+ * (forge-game/.../combat/CombatUtil.java ~lines 363-383), which does the same
+ * thing per real declared attacker, "right before defending player declares
+ * blockers."
+ *
+ * Only `ValidCard$ Card.Self` scope is modeled — for each declared attacker
+ * with a registered `resolvedPermanents` entry (a permanent seeded directly
+ * onto the battlefield, never cast through this engine, has none and is
+ * silently skipped — same "no entry = gap, not a silent success" convention
+ * `fireOnPhaseEnterTriggers`/`fireOnTapLandForManaTriggers` already
+ * establish), fires whichever of ITS OWN triggers has `on: 'attacks'`, with
+ * that SAME attacker as `ctx.self`. No `cause` is threaded (no real
+ * `triggerDoubling` grant in this pool gates on an "attacks" cause today —
+ * see `state.ts`'s own `TriggerCause` doc comment).
+ */
+function fireOnAttackTriggers(engine: GameEngine, attackers: RealCard[]): void {
+  for (const attacker of attackers) {
+    const registered = engine.resolvedPermanents.get(attacker.id);
+    if (!registered) continue;
+    const trigger = registered.card.triggers?.find((t) => t.on === 'attacks');
+    if (!trigger) continue;
     fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
   }
 }
@@ -1236,6 +1375,9 @@ export function declareAttackers(engine: GameEngine, attackers: RealCard[]): Act
   for (const creature of attackers) creature.attackedThisTurn = true;
   engine.attackers = attackers;
   engine.blockers = new Map();
+  // Real `TriggerType.Attacks` auto-fire (ENGINE_GAPS.md — attack-triggered-
+  // ability auto-dispatch), see `fireOnAttackTriggers`'s own doc comment.
+  fireOnAttackTriggers(engine, attackers);
   return { ok: true };
 }
 

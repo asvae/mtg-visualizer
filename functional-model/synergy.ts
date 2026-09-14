@@ -484,7 +484,7 @@ export interface Fact extends Constraints {
    * behavior change (plain-equality fallback already worked the same way).
    */
   keyword?: string;
-  /** `event: 'addMana'`'s own free-form detail — the color produced (card.ts's `Effect` `kind: 'addMana'`'s own `color` field, or the single symbol `mana.ts`'s `manaAbilityColorFromStaticText` recognizes off a plain `"{T}: Add {X}."` static-ability string). Superseded by `colors` below for anything NEW (a plain string can't express a real choice-of-color ability as one matchable fact, only as display-equality) — kept only because 11 real single-color cards (Druid of the Cowl, Goobbue Gardener, Llanowar Elves, Midgar, Ishgard, Jidoor, Lindblum, Zanarkand, White Auracite, Willowrush Verge, Elvish Archdruid) already declare this field and migrating them is out of scope for the pass that added `colors` (2026-09-09) — still matched (by plain equality, same as `counterType`) for backward compatibility, and `factsInteract` also treats it as an implicit single-element `colors` set so it stays comparable against a `colors`-shaped want on the other side. */
+  /** `event: 'addMana'`'s own free-form detail — the color produced (card.ts's `Effect` `kind: 'addMana'`'s own `color` field, or a single-element `card.ts`'s `CardDefinition.manaAbilities`/`ManaAbility.colors` entry, formerly derived off a plain `"{T}: Add {X}."` static-ability string via a since-deleted `mana.ts` regex — see that field's own doc comment). Superseded by `colors` below for anything NEW (a plain string can't express a real choice-of-color ability as one matchable fact, only as display-equality) — kept only because 11 real single-color cards (Druid of the Cowl, Goobbue Gardener, Llanowar Elves, Midgar, Ishgard, Jidoor, Lindblum, Zanarkand, White Auracite, Willowrush Verge, Elvish Archdruid) already declare this field and migrating them is out of scope for the pass that added `colors` (2026-09-09) — still matched (by plain equality, same as `counterType`) for backward compatibility, and `factsInteract` also treats it as an implicit single-element `colors` set so it stays comparable against a `colors`-shaped want on the other side. */
   color?: string;
   /** `event: 'addMana'`'s own color-SET detail, added 2026-09-09 alongside `playLand` — reuses `TypeConstraint`'s exact `has`/`hasAny`/`not` vocabulary/matching (`satisfiesType`) rather than inventing a fourth constraint pattern, since "does the producer's color set satisfy the consumer's color need" is structurally the identical question `Constraints.types` already answers for card types. On a PRODUCE fact: which color(s) this ability can actually make — `hasAny` for a genuine choice-of-color ability (Vector, Imperial Capital's own "{T}: Add {B} or {R}." → `{hasAny:['B','R']}`, ONE fact instead of two `color:'B'`/`color:'R'` facts — it makes one of these per activation, never both at once, so `has` would misstate it as "makes both simultaneously"; a fixed single-color ability would use `{has:['G']}` if migrated). On a WANT fact: what color(s) the consumer needs — `has:['R']` for "needs R specifically," `hasAny:['W','U']` for "needs any of W or U," `not:['B']` for "needs any non-black source" — matched against the producer's own declared set (see `factsInteract`'s `colorSetOf`/`satisfiesType` reuse below), no separate matching code written for color. Coexists with `color` above (a legacy single-color fact) via the same `colorSetOf` helper, so a `colors`-shaped want still matches a `color`-shaped produce and vice versa. */
   colors?: TypeConstraint;
@@ -683,24 +683,6 @@ export interface Fact extends Constraints {
 export interface FactProvenance {
   origin: 'parser';
   rule: string;
-  /**
-   * Short, human-readable documentary note — same "not consulted by
-   * matching logic" bucket as `provenance` itself (see `Fact.provenance`'s
-   * own doc comment), never read by `factsInteract`/`themeOf`/anything else
-   * that actually matches facts. Present ONLY on the one real case
-   * `scripts/apply-recognizers.mjs` uses it for: a recognizer's derived
-   * fact deduped (on `coreKey`) against an ALREADY hand-authored fact
-   * rather than originating a brand-new one — that existing fact gets
-   * retagged with this same `provenance` shape in place (its own real
-   * `value`/`annotations`/every other field byte-for-byte untouched — a
-   * recognizer confirms a fact's existence/shape, never its magnitude), and
-   * this field records, in plain words, that the fact predates the
-   * recognizer and was independently reconciled/confirmed by it, not
-   * originated by it. Absent on a brand-new recognizer-originated fact
-   * (nothing to reconcile against yet) — `rule` alone already says who
-   * produced those.
-   */
-  note?: string;
 }
 
 /**

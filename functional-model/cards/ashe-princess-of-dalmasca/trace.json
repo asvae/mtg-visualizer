@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 3 Plains(s); opp0: 1 Forest(s)",
-      "action": "engine playthrough: cast -> turn passage -> attack -> onAttack (dig)",
-      "result": "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.",
+      "action": "engine playthrough: cast -> turn passage -> attack -> onAttack auto-fires (dig)",
+      "result": "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — her onAttack trigger auto-fires for real off the declared attack itself, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.",
       "raw": {
-        "result": "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.",
+        "result": "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — her onAttack trigger auto-fires for real off the declared attack itself, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.",
         "you": {
           "basicLands": [
             "Plains",
@@ -102,12 +102,12 @@
       {
         "fn": "tap",
         "target": "Ashe, Princess of Dalmasca",
-        "id": 176
+        "id": 17
       },
       {
         "fn": "attack",
         "card": "Ashe, Princess of Dalmasca",
-        "id": 176
+        "id": 17
       },
       {
         "fn": "trigger",
@@ -146,7 +146,7 @@
       {
         "fn": "moveTo",
         "target": "Phoenix Down",
-        "id": 175,
+        "id": 16,
         "zone": "Hand",
         "controller": "you"
       }
@@ -179,10 +179,6 @@
       {
         "label": "Declare Ashe as attacker",
         "from": 14
-      },
-      {
-        "label": "Fire onAttack",
-        "from": 16
       }
     ]
   }

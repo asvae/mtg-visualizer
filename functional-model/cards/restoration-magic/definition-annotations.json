@@ -1,0 +1,15 @@
+{
+  "effects": { "highlight": "Tiered (Choose one additional cost.)", "line": 0 },
+  "effects[0].modes[0]": {
+    "highlight": "• Cure — {0} — Target permanent gains hexproof and indestructible until end of turn.",
+    "line": 1
+  },
+  "effects[0].modes[1]": {
+    "highlight": "• Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life.",
+    "line": 2
+  },
+  "effects[0].modes[2]": {
+    "highlight": "• Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.",
+    "line": 3
+  }
+}

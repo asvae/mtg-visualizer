@@ -65,10 +65,28 @@ import { shouldDoubleTrigger, type GameState, type TriggerCause } from './state'
  * callback here instead of checking `shouldDoubleTrigger` itself
  * beforehand, which would duplicate this function's own real doubling
  * logic in the caller.
+ *
+ * Real `ActivationLimit$ N` (`card.ts`'s own `Trigger.activationLimit` doc
+ * comment for the full Forge citation) is enforced HERE, before anything
+ * else — a named trigger already fired `activationLimit` times this turn
+ * doesn't resolve at all (matches Forge's own `checkActivationLimit`, which
+ * gates the trigger from ever being collected/queued in the first place,
+ * not merely "fires but does nothing"); returns `false` (same as
+ * "didn't double") for a gated firing, since a trigger that never resolved
+ * can't have doubled either. `ctx.self.getId()` must resolve to a real
+ * `state.cards` entry for the cap to be tracked at all — same "no entry =
+ * gap, not a silent success" convention the doubling check just below
+ * already establishes; an unregistered `ctx.self` simply never gets capped
+ * (the safe default, not a crash).
  */
 export function fireTrigger(state: GameState, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName: string, cause?: TriggerCause, onDoubled?: () => void): boolean {
-  resolveCard(card, ctx, actions, triggerName);
   const source = state.cards.get(ctx.self.getId());
+  const trigger = card.triggers?.find((t) => t.name === triggerName);
+  if (trigger?.activationLimit !== undefined && source) {
+    if (state.triggerActivationsSoFar(source.id, triggerName) >= trigger.activationLimit) return false;
+    state.recordTriggerActivation(source.id, triggerName);
+  }
+  resolveCard(card, ctx, actions, triggerName);
   const doubled = source !== undefined && shouldDoubleTrigger(state, source, cause);
   if (doubled) {
     onDoubled?.();

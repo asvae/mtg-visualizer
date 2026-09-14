@@ -16,13 +16,10 @@ export const adelbertSteiner: CardDefinition = {
     kind: 'addPerEquipmentControlled',
     power: 1,
     toughness: 1,
-    // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, fin/1-10 trial) — the CDA's own
-    // real printed line (data/fin/fin_scryfall.json), separate from the
-    // "Lifelink" keyword line above (a plain keyword, correctly gets no
-    // Fact/annotation of its own).
-    annotation: {
-      highlight: 'Adelbert Steiner gets +1/+1 for each Equipment you control.',
-      line: 1,
-    },
+    // The CDA's own real printed line (data/fin/fin_scryfall.json), separate
+    // from the "Lifelink" keyword line above (a plain keyword, correctly
+    // gets no Fact/annotation of its own). Own annotation (as of the
+    // PRD_AUTOMATED_AUTHORING.md "definition-level annotation" migration,
+    // 2026-09-13): `definition-annotations.json`, keyed `"ptFormula"`.
   },
 };

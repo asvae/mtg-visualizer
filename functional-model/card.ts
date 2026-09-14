@@ -56,6 +56,12 @@
 // `sacrifice`, `move`, `putCounter`, `equip`, `animate`).
 
 import type { Card, Player, TokenInfo, ZoneType } from './interfaces';
+// Type-only — `mana.ts` never imports `card.ts` (checked; no runtime
+// cycle), so this is a plain, non-circular type import. `ManaAbility` below
+// reuses this same real WUBRG(+C) union rather than re-declaring one, so a
+// `CardDefinition.manaAbilities` entry and `mana.ts`'s own
+// `canAfford`/`payMana` are always talking about the identical color space.
+import type { ManaColor } from './mana';
 // Type-only, and circular (synergy.ts already imports `CardDefinition` from
 // THIS file) — safe because both sides are `import type` only, erased before
 // emit; no runtime cycle exists. Reused here (rather than re-declaring an
@@ -72,7 +78,34 @@ import type { Card, Player, TokenInfo, ZoneType } from './interfaces';
 // one physical oracle-text line, closing a real cross-line-ambiguity gap
 // `synergy.ts`'s own `rawHighlightRange` doc comment used to admit as
 // unresolved — every annotation in this prototype sets it.
-import type { FactAnnotationAuthoring } from './synergy';
+import type { Fact, FactAnnotationAuthoring } from './synergy';
+// Type-only, circular (combinator.ts itself imports `Actions`/`EffectContext`
+// FROM this file) — same accepted "erased before emit, no runtime cycle"
+// precedent this file's own header already establishes for its `synergy.ts`
+// import above. `runProgram` is imported as a VALUE (the real interpreter
+// `applyEffect`'s own `'program'` case below calls) — safe, not a
+// value-level cycle, since `combinator.ts` never imports any VALUE back out
+// of `card.ts`, only types.
+import type { ProgramNode } from './combinator';
+import { runProgram } from './combinator';
+// `Effect.authoredFact`/`CardDefinition.authoredFacts` (tier 3, below) used
+// to embed a full `Fact` — including that fact's own required `annotations`
+// — directly in `definition.ts`. Corrected 2026-09-13, per
+// PRD_AUTOMATED_AUTHORING.md's "definition-level annotation" design revision
+// (fin/1-5 only so far — `cards/<slug>/definition-annotations.json`, keyed by
+// an INDEX PATH into the definition structure, e.g.
+// `"triggers[1].effects[0].authoredFact[2]"`): the annotation is DATA ABOUT
+// the definition, not game logic, so it now lives in that external file
+// instead of embedded on the authored Fact object, mirroring the same
+// separation `Trigger.annotation`/`effectsAnnotation`/etc. already keep from
+// `definition.ts` proper (those were never embedded IN a Fact to begin with;
+// this closes the one place a Fact-shaped field still carried its own
+// annotation inline). `annotations` merely becomes OPTIONAL here rather than
+// removed outright — fin/6-10's own `authoredFact`/`authoredFacts` usage
+// (ashe-princess-of-dalmasca, cloud-midgar-mercenary, auron-s-inspiration,
+// ambrosia-whiteheart) predates this correction and still embeds
+// `annotations` directly; both conventions type-check under this one field.
+export type AuthoredFact = Omit<Fact, 'annotations'> & { annotations?: Fact['annotations'] };
 // Type-only — interfaces.ts's own header is explicit that these are ambient
 // `declare function` signatures with NO body, kept purely so a card
 // definition reads as code written against Forge's real shape; nothing here
@@ -96,7 +129,9 @@ import type {
   mill as realMill,
   sacrifice as realSacrifice,
   discard as realDiscard,
+  shuffleLibrary as realShuffleLibrary,
   putCounter as realPutCounter,
+  installCounterConditionalGrant as realInstallCounterConditionalGrant,
   equip as realEquip,
   animate as realAnimate,
   gainControl as realGainControl,
@@ -133,7 +168,9 @@ export interface Actions {
   mill: typeof realMill;
   sacrifice: typeof realSacrifice;
   discard: typeof realDiscard;
+  shuffleLibrary: typeof realShuffleLibrary;
   putCounter: typeof realPutCounter;
+  installCounterConditionalGrant: typeof realInstallCounterConditionalGrant;
   equip: typeof realEquip;
   animate: typeof realAnimate;
   gainControl: typeof realGainControl;
@@ -224,7 +261,7 @@ export interface EffectContext {
    * "caller-supplied real fact, not something an effect computes" pattern
    * `castFrom`/`mode`/`xPaid` already use above: `RealCard` carries no live
    * `CardDefinition` reference to derive this from (see `state.ts`'s own
-   * `manaAbility`/`continuousKeywordGrants` doc comments for the established
+   * `manaAbilities`/`continuousKeywordGrants` doc comments for the established
    * convention), so whoever pilots "play the top card of your library" must
    * supply it explicitly, the same way `harness.ts`/`engine-trace.ts` build
    * every other `EffectContext` field. Left unset only when there's
@@ -372,6 +409,8 @@ export type Effect =
       notSelf?: boolean;
       /** A creature subtype filter (Circle of Power's own "Wizards you control get...") — same field `putCounterAll` already carries, omit to match every creature `predicate` selects. */
       subtype?: string;
+      /** Real oracle text says "until end of turn" (Warren Elder's own "creatures you control get +1/+1 until end of turn," e.g.) — real 514.2 Cleanup removal, see state.ts's own `pump`/`clearUntilEndOfTurnPumps` doc comments. Omit (default false) for a permanent-within-scenario pump, same default `grantKeywordTarget`'s own field establishes. */
+      untilEndOfTurn?: boolean;
     }
   | { kind: 'loseLife'; owner: EffectOwner; amount: Computed<number> }
   | { kind: 'discard'; owner: EffectOwner; qty: Computed<number> }
@@ -441,6 +480,30 @@ export type Effect =
       nonLand?: boolean;
       /** Forge's own `OptionalDecider$ You` (Ambrosia Whiteheart's own ETB) — a real binary "you MAY," distinct from qty/pool-exhaustion's own "up to N" (which already yields zero for free when nothing qualifies). Documentary only, same as `sacrifice`/`dig`'s own `optional` field: this model has no player-decision engine anywhere (`chooseTarget` always takes the first pool candidate), so a legal-but-declined target isn't actually modeled yet — set this to record the real card text's intent, not to change resolution behavior. */
       optional?: boolean;
+      /**
+       * A subtype filter narrower than `validType` alone can express (Cloudbound
+       * Moogle's real Plainscycling — "search your library for a PLAINS
+       * card" — `validType:'land'` alone would accept ANY land; real Forge's
+       * own `ChangeType$ Plains` on the expanded `TypeCycling` ability,
+       * `CardFactoryUtil.java` ~line 3740). Same `subtype` vocabulary
+       * `pumpAll`/`putCounterAll` already use for a creature-type filter,
+       * generalized here to the TARGETED branch of `move` (only meaningful
+       * alongside `target: true` — an untargeted batch `move` has no real
+       * FIN card needing this yet, so it's not read there).
+       */
+      subtype?: string;
+      /**
+       * Real CR 601.2/701.19: searching a hidden zone (the library) always
+       * ends with "then shuffle your library" — genuinely distinct from
+       * `dig`'s own "look at the top N, no shuffle" shape (a dig never
+       * searches the WHOLE library, so nothing needs randomizing after).
+       * Shuffles every player in `players` (the SAME set this effect's own
+       * `owner` scope already resolved) once the move(s) are applied — a
+       * plain library search (Cloudbound Moogle's Plainscycling, e.g.)
+       * always sets `owner:'you'`, so only the searching player's own
+       * library gets shuffled, matching real 701.19's "you" wording.
+       */
+      shuffleAfter?: boolean;
     }
   | { kind: 'putCounter'; target: 'self'; counterType: string; amount: Computed<number> }
   | {
@@ -452,6 +515,20 @@ export type Effect =
       qty?: Computed<number>;
       /** See `dealDamageTarget`'s own doc comment above — same owner-restriction fix, same bug. */
       owner?: EffectOwner;
+      /**
+       * Real Forge `DB$ Effect | RememberObjects$ Targeted | StaticAbilities$
+       * ...` (Ultima, Origin of Oblivion's own real shipped script) — see
+       * `CounterConditionalGrant`'s own doc comment for the full design and
+       * real Forge citation. Installed onto the SAME target(s) this effect
+       * puts the counter on, one call to `actions
+       * .installCounterConditionalGrant` per target, right alongside
+       * `actions.putCounter` (`resolveCard`'s own `putCounterTarget` case).
+       * `counterType` is deliberately OMITTED here — it's always this SAME
+       * effect's own `counterType` above (`resolveCard` fills it in when
+       * installing), so the two fields can never accidentally name different
+       * counters.
+       */
+      grant?: Omit<CounterConditionalGrant, 'counterType'>;
     }
   | {
       /** Forge's own `CountersPut ... | Defined$ ...+ValidType` UNCHOSEN batch shape (Minwu, White Mage's own "put a +1/+1 counter on each Cleric you control") — every creature matching `predicate` gets it, as opposed to `putCounterTarget`'s player-chosen targets. Same `predicate`/`notSelf` shape `pumpAll` uses, not a new vocabulary. */
@@ -515,12 +592,16 @@ export type Effect =
       owner?: EffectOwner;
       /** "another target creature you control" (Gladiolus Amicitia/Rinoa Heartilly's own Landfall/attack pumps) — excludes `ctx.self` from the pool, same reasoning as `pumpAll`/`sacrifice`/`move`'s own `notSelf`. Without this the pool ordering (self is always added to the battlefield LAST in a scenario — see harness.ts) happens to put self last, so omitting it isn't unsafe today, but a real "another" card should still set this explicitly rather than rely on that ordering. */
       notSelf?: boolean;
+      /** Real oracle text says "until end of turn" (Battle Menu's own Ability mode — "target creature gets +0/+4 until end of turn") — real 514.2 Cleanup removal, see state.ts's own `pump`/`clearUntilEndOfTurnPumps` doc comments. Omit (default false) for a permanent-within-scenario pump. */
+      untilEndOfTurn?: boolean;
     }
   | {
       /** `self` gets a P/T delta with no target/board-wide choice involved (Ambrosia Whiteheart's own Landfall — "CARDNAME gets +1/+0") — a third, narrower shape than `pumpTarget` (chosen) and `pumpAll` (broadcast). */
       kind: 'pumpSelf';
       power: Computed<number>;
       toughness: Computed<number>;
+      /** Real oracle text says "until end of turn" (Ambrosia Whiteheart's own Landfall — "CARDNAME gets +1/+0 until end of turn") — real 514.2 Cleanup removal, see state.ts's own `pump`/`clearUntilEndOfTurnPumps` doc comments. Omit (default false) for a permanent-within-scenario pump. */
+      untilEndOfTurn?: boolean;
     }
   | {
       /** Grants a keyword to a SINGLE chosen target (Magic Damper-style "target creature gains X") — same target-picking shape as `pumpTarget`. Mechanically REAL, not just documentary (see state.ts's own `grantKeyword`: it mutates the real card's `keywords`, so a later Lifelink/Indestructible check genuinely reflects it) — DURATION defaults to permanent-within-scenario (same caveat `state.grantKeyword`'s own doc comment explains in full) unless `untilEndOfTurn` is set. */
@@ -663,6 +744,99 @@ export type Effect =
       kind: 'custom';
       describe: string;
       run: (ctx: EffectContext, actions: Actions) => void;
+      /**
+       * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, "3-tier waterfall" trial,
+       * 2026-09-13, scoped to fin/1-10 only — NOT wired into
+       * `apply-recognizers.mjs`/`synergy.json` generation). Tier 3 of that
+       * PRD's fallback chain (static structural read, then the runtime-
+       * dependency probe, then this) — the thing to reach for ONLY when
+       * BOTH of the first two genuinely have nothing to say: a `custom`
+       * effect's `run` body is opaque to static structural reads by
+       * construction (this file's own header, "Trade-off, stated plainly"),
+       * and the runtime probe (`recognizers/runtime-dependency-probe
+       * .prototype.ts`) only ever executes an arity-1 `Computed<T>`
+       * closure — `run`'s arity-2 `(ctx, actions)` shape is excluded from
+       * that probe by design (it can MUTATE real state, `wrap()`'s own doc
+       * comment is explicit that side-effect-freedom is what makes probing
+       * safe at all).
+       *
+       * A human/agent who has already read this `run` body and knows what
+       * it really does asserts the FULL resulting `Fact` object(s) HERE,
+       * co-located with the code that justifies them, instead of in a
+       * separately-authored/maintained `synergy.json` entry with no
+       * structural link back to this effect at all. Reuses `Fact`'s own
+       * real shape verbatim (`synergy.ts`) — `role` stays ON each object
+       * (unlike `RecognizedFact.fact`'s `Omit<Fact,'role'>`, which only
+       * omits it because the on-disk `SynergyFile` implies role from which
+       * array a fact sits in; here there's no array to imply it from, so a
+       * `custom` effect asserting facts of BOTH roles at once — e.g. one
+       * `source` fact for what it does, one `sink` fact for what it wants
+       * present — needs `role` on each entry to disambiguate). A single
+       * `Fact` when there's exactly one real claim, an array when the same
+       * `run` body backs more than one (Aerith Gainsborough's own onDies
+       * custom effect: the `source` putCounter fact it produces, AND
+       * (co-located here for the same reason, since neither has any other
+       * natural single-effect home) the `sink` fact for what board state
+       * makes it worth anything, AND the `sink` fact for the trigger's own
+       * "self dies" firing precondition).
+       *
+       * **Still purely additive/inert data as of this trial** — same
+       * "not consulted by anything real yet" status every other
+       * `PRD_AUTOMATED_AUTHORING.md` prototype field on this file already
+       * has (`Trigger.annotation`, `effectsAnnotation`, etc.). See
+       * `CardDefinition.authoredFacts` below for the sibling field one
+       * level up, for a fact that has no single owning `Effect` at all.
+       *
+       * **`annotations` (2026-09-13 correction, fin/1-5 only so far)**: no
+       * longer embedded on the Fact object here — see `AuthoredFact`'s own
+       * doc comment (this file's imports) for why, and
+       * `cards/<slug>/definition-annotations.json` for where it now lives,
+       * keyed by this container's own index path (e.g. an array entry here
+       * is `"<trigger/effect path>.authoredFact[<i>]"`).
+       */
+      authoredFact?: AuthoredFact | AuthoredFact[];
+    }
+  | {
+      /**
+       * A typed, DATA-shaped combinator AST (`combinator.ts`) for the shape
+       * of `custom`-effect logic that's genuinely just Query/Filter/
+       * Aggregate/Each/Branch/Sequence over real board state — the DEFAULT
+       * way to express new `custom`-style effect logic going forward, per
+       * standing project policy (proven first as a hand-translation
+       * experiment, 2026-09-14, fin/1-25's own 17 real `kind:'custom'`
+       * closures, 100% coverage — see `combinator.ts`'s own header for the
+       * full trail). `custom` above stays the true last-resort escape hatch
+       * for a genuinely irreducible case — this is what MOST new/migrated
+       * cases should use instead.
+       *
+       * Unlike `custom`'s opaque `run` closure, `program` is real,
+       * inspectable DATA: `combinator.ts`'s `walkProgram` reads the SAME
+       * `program` value with NO `ctx`/`actions`/board at all (no fake board,
+       * no simulated execution) — the whole point of making an effect data
+       * instead of code. `resolveCard`'s own `applyEffect` runs it for real
+       * via `combinator.ts`'s `runProgram`, which calls the exact same
+       * `Actions`/`EffectContext` every other declarative `Effect` kind in
+       * this file already uses — genuine game resolution, not a simulation.
+       */
+      kind: 'program';
+      describe: string;
+      program: ProgramNode;
+      /**
+       * Same tier-3 escape hatch as `custom.authoredFact` above (see its own
+       * doc comment for the full design) — a `program` effect is genuinely
+       * MORE structurally readable than `custom`'s opaque closure, but this
+       * pass doesn't build a recognizer that exploits that yet (see
+       * `combinator.ts`'s own header), so a fact this AST can't yet derive
+       * for itself is still hand-authored here in the meantime. Aerith
+       * Gainsborough's own migrated `onDies` effect is the first real user —
+       * its magnitude (X, `ctx.self`'s own live `+1/+1` count) is now
+       * directly visible in the `program` data itself (a `selfCounters`
+       * `ValueRef`, no longer opaque), a real future opportunity to retire
+       * this specific `authoredFact` entry once a recognizer is built to
+       * read it — not attempted in this pass, flagged rather than silently
+       * left stale.
+       */
+      authoredFact?: AuthoredFact | AuthoredFact[];
     };
 
 /** An alternate way to cast this card — Flashback, Jump-start, Escape, casting from exile, etc. Real rule text, not a derived fact, so it's declared per-card rather than computed. */
@@ -836,6 +1010,232 @@ export interface MillModifierGrant {
 }
 
 /**
+ * Real, structural "this permanent can produce mana" vocabulary — replaces
+ * the old `mana.ts`-only text-regex path (`manaAbilityColorFromStaticText`/
+ * `manaAbilityColorsFromStaticText`/`deriveManaAbility`, deleted alongside
+ * this field) that used to be the ONLY representation of a real mana
+ * ability across 30+ real pool cards, invisible to anything but two narrow
+ * exact-string patterns. Real Forge citation: every one of these fields is
+ * a direct mirror of `AbilityManaPart.java`'s own constructor params
+ * (`forge-game/.../spellability/AbilityManaPart.java` lines 106-115) and
+ * the real shipped `A:AB$ Mana | ...` card-script line those params come
+ * from (`res/cardsfolder/<l>/llanowar_elves.txt`: `Cost$ T | Produced$ G`,
+ * e.g.) — NOT invented vocabulary:
+ *  - `cost`/`colors`/`amount` mirror `Cost$`/`Produced$`/`Amount$`.
+ *  - `restriction` mirrors `RestrictValid$` (`AbilityManaPart
+ *    .meetsManaRestrictions`).
+ *  - `activationCondition` mirrors `IsPresent$` (a plain activation
+ *    precondition, checked before the ability can even be activated at
+ *    all — genuinely different from `restriction`, which instead
+ *    constrains what the ALREADY-PRODUCED mana can later be spent on).
+ *  - `variableAmount` mirrors a dynamic `Amount$ X` paired with its own
+ *    `SVar:X:...` formula.
+ *
+ * Lives alongside `keywords`/`ptFormula` (recognized-and-structured, not
+ * necessarily fully enforced — see each field's own note below for exactly
+ * what's wired vs. honestly inert) rather than in `staticAbilities`' free
+ * text, which `resolveCard()` never executes at all.
+ */
+export interface ManaAbility {
+  /**
+   * Real Forge `Cost$` (almost always bare `T` — Forge's own shorthand for
+   * `{T}`). Defaults to `'{T}'` when omitted — every real FIN mana source
+   * this pool has is a plain tap; a source whose OWN cost is anything else
+   * (Capital City's second ability, `Cost$ 1 T`; Starting Town's second,
+   * `Cost$ T PayLife<1>`) is a real, typed, but DELIBERATELY UNPAYABLE
+   * source through `mana.ts`'s own `canAfford`/`payMana` — those two
+   * functions only ever recognize a bare-`{T}` `ManaAbility` as an
+   * ordinary source (see `mana.ts`'s own header): paying a MANA ABILITY'S
+   * OWN cost with more mana would need a genuine spendable mana-pool
+   * mechanism this engine still doesn't have at all (`interfaces.ts`'s own
+   * `Player.addMana` doc comment), the same real, load-bearing boundary
+   * `restriction` below already documents from the other side.
+   */
+  cost?: string;
+  /**
+   * Real Forge `Produced$` — every color this ability can produce. A
+   * single-element array is a fixed, single-color source (`Produced$ G`,
+   * Llanowar Elves); 2+ elements is a real CHOICE (`Produced$ Combo B R`,
+   * Vector, Imperial Capital — `AbilityManaPart.isComboMana()`/
+   * `getComboColors`, Forge's own "Combo" prefix marking "produces exactly
+   * ONE of these, the payer's choice at the moment it's tapped," not one of
+   * each) — `mana.ts`'s `assignManaRequirements` already generalizes over
+   * any-length `colors` (built for the 2-color case, but the backtracking
+   * itself doesn't care how many), so a genuine 5-color "any one color"
+   * ability (`Produced$ Any` — Blitzball, Overgrown Zealot's first ability)
+   * is just `colors: ['W','U','B','R','G']`, no separate flag needed.
+   */
+  colors: ManaColor[];
+  /**
+   * Real Forge `Amount$` as a FIXED integer — how many mana units ONE
+   * activation produces. Defaults to 1 (`AbilityManaPart`'s own `Produced`
+   * param default, "1") when omitted. Ring of the Lucii's real `Produced$
+   * C | Amount$ 2` (`{T}: Add {C}{C}.`) is the one real pool card that
+   * needs a value other than 1 — `mana.ts`'s `canAfford`/`payMana` sum a
+   * source's own `amount` toward GENERIC coverage (a real, narrow
+   * extension; see that file's own header for the one documented
+   * simplification this doesn't cover: an amount>1 source is never also
+   * matched against more than one COLORED requirement in a single
+   * assignment, harmless here since Ring of the Lucii's own 2 units are
+   * colorless-only and colorless is never itself a payable pip in a cast
+   * cost — see `mana.ts`'s own `COLORS`). Omit (or leave `undefined`) when
+   * `variableAmount` is set instead — a card in this pool never needs
+   * both.
+   */
+  amount?: number;
+  /**
+   * Real Forge `Amount$ X` paired with a dynamic `SVar:X:...` board-state
+   * formula — mutually exclusive with the fixed `amount` above. Two real
+   * shapes this pool's cards need, kept as a small closed union (same
+   * "controlled vocabulary, extend only when a new real card forces a new
+   * shape" discipline `ptFormula`/`Keyword` already hold to) rather than an
+   * executable function, so a `ManaAbility` stays plain, inspectable data
+   * like every other `Effect`/`CardDefinition` field in this file:
+   *  - `{kind:'countSubtypeControlled', subtype}` — Forge's own
+   *    `SVar:X:Count$Valid <Subtype>.YouCtrl` (Elvish Archdruid's real
+   *    `{T}: Add {G} for each Elf you control`). Elvish Archdruid ITSELF
+   *    stays on its own pre-existing, already-real `activationCost`+
+   *    `effects:[{kind:'addMana', amount: ctx => ...}]` modeling (already
+   *    genuinely executable via a `Computed` function, never text, and so
+   *    never part of the free-text violation this field closes) — this
+   *    variant exists for OTHER real cards with the identical shape that
+   *    only ever had free `staticAbilities` text before now (none in this
+   *    pool yet needed it structurally until this pass; kept general
+   *    rather than Elvish-Archdruid-specific).
+   *  - `{kind:'selfPower'}` — Forge's own `SVar:X:Count$CardPower`
+   *    (Woodland Weavemaster's real `{T}: Add X mana of any one color,
+   *    where X is this creature's power`) — a genuinely different live
+   *    quantity (the permanent's OWN current power, via `effectivePT`) from
+   *    the board-count shape above.
+   * **Deliberately NOT wired into `mana.ts`'s `canAfford`/`payMana` this
+   * pass** — real, named, flagged debt: both functions only ever take a
+   * bare `RealCard[]` list of sources with no LIVE controller/board
+   * reference to re-derive a variable count from at payment time (the same
+   * "narrower, real gap" ENGINE_GAPS.md's non-basic-mana-sources entry
+   * already named for Elvish Archdruid's own shape before this pass, now
+   * extended to Woodland Weavemaster's `selfPower` shape too) — a real,
+   * separate, larger threading change (`sourceColors`/`assignManaRequirements`
+   * would need a live `GameState`/controller passed all the way through
+   * every `canAfford`/`payMana` call site), assessed and not attempted
+   * here. The type itself does NOT preclude wiring this in later — a
+   * `ManaAbility` carrying `variableAmount` is real, present, structured
+   * data today, just not yet a payable source.
+   */
+  variableAmount?: { kind: 'countSubtypeControlled'; subtype: string } | { kind: 'selfPower' };
+  /**
+   * Real Forge `RestrictValid$` — this mana can ONLY be spent on a
+   * matching spell/ability (Cargo Ship's own real `Spell.Artifact,
+   * Activated.Artifact`; Freya Crescent's own `Spell.Equipment,
+   * Activated.Equip`; The Emperor of Palamecia's own `Spell.nonCreature`).
+   * Kept as the real, raw Forge validity string (same "free text in a
+   * structured slot, not a magic string bucket" treatment `activationCost`/
+   * `abilities[].cost` already get elsewhere in this file) rather than
+   * parsed further — genuinely UNENFORCED, on purpose, same real boundary
+   * `cost` above documents from the other side: no spendable mana POOL
+   * exists anywhere in this engine (`interfaces.ts`'s own `Player.addMana`
+   * doc comment), so nothing could check what a tapped source's mana later
+   * gets spent on even if this string were parsed further. `mana.ts`'s
+   * `canAfford`/`payMana` correctly treat ANY `ManaAbility` with a
+   * `restriction` set as NOT an ordinarily-payable source (same "correctly
+   * not recognized" behavior the old regex path already had for these
+   * cards, now honestly typed instead of silently absent/text-only).
+   */
+  restriction?: string;
+  /**
+   * Real Forge `IsPresent$` — an activation-time precondition beyond the
+   * ordinary tap cost (Willowrush Verge's own second ability: `IsPresent$
+   * Forest.YouCtrl,Island.YouCtrl`, "Activate only if you control a Forest
+   * or an Island"). Kept as the real, raw Forge condition string, same
+   * "unenforced, on purpose, structured slot not a magic bucket" treatment
+   * `restriction` gets — no general `IsPresent$`-string evaluator exists in
+   * this engine. `mana.ts` excludes a `ManaAbility` with this set from
+   * ordinary payability, same as `restriction`.
+   */
+  activationCondition?: string;
+}
+
+/**
+ * Real, LIVE continuous effect (613) INSTALLED onto a specific object at the
+ * moment a counter is put on it, conditioned on that SAME object continuing
+ * to carry the counter — genuinely different from `ContinuousGrantTargeting`
+ * (`continuousKeywordGrants`/`continuousPTGrants`/`continuousTypeGrants`
+ * above): those broadcast from a SOURCE permanent onto self/a subtype-you-
+ * control/whatever it's equipped to; this one has NO relationship to its own
+ * source at all once installed — it lives directly on the affected object
+ * and stays keyed purely on ITS OWN counter count, independent of whether
+ * the granting permanent (or even the game object that created it) still
+ * exists. Real Forge citation, Ultima, Origin of Oblivion's own real shipped
+ * script (`res/cardsfolder/u/ultima_origin_of_oblivion.txt`):
+ * ```
+ * T:Mode$ Attacks | ValidCard$ Creature.Self | Execute$ TrigPutCounter | ...
+ * SVar:TrigPutCounter:DB$ PutCounter | ValidTgts$ Land | CounterType$ BLIGHT | CounterNum$ 1 | ... | SubAbility$ DBEffect
+ * SVar:DBEffect:DB$ Effect | RememberObjects$ Targeted | StaticAbilities$ BlightStatic | ForgetOnMoved$ Battlefield | ForgetCounter$ BLIGHT | Duration$ Permanent
+ * SVar:BlightStatic:Mode$ Continuous | Affected$ Card.IsRemembered | RemoveLandTypes$ True | RemoveAllAbilities$ True | AddAbility$ ColorlessMana
+ * SVar:ColorlessMana:AB$ Mana | Cost$ T | Produced$ C | SpellDescription$ Add {C}.
+ * ```
+ * Real Forge creates a genuinely independent `Effect` game object
+ * (`DB$ Effect`) that remembers the exact target(s) `PutCounter` chose
+ * (`RememberObjects$ Targeted`) and un-remembers them once the BLIGHT
+ * counter itself is gone (`ForgetCounter$ BLIGHT`) or the object leaves the
+ * battlefield (`ForgetOnMoved$ Battlefield`) — `Duration$ Permanent` means
+ * this Effect object itself outlives Ultima (it is NOT tied to Ultima
+ * remaining on the battlefield). Approximated here as "any permanent
+ * currently carrying >=1 counter of `counterType`" instead of a separate
+ * remembered-object-set mechanism — behaviorally identical for this card
+ * (no FIN card ever removes a blight counter independent of a zone change,
+ * which already wipes `RealCard.counters`/`counterConditionalGrants` via
+ * the existing 400.7 reset, `state.ts`'s `GameState.move`) — same "a
+ * narrower live check achieves the same real outcome" reasoning
+ * ENGINE_GAPS.md's "Stun and finality counters" section already establishes
+ * for a comparable per-object counter-keyed replacement.
+ *
+ * Installed via a new `Actions.installCounterConditionalGrant` (mirrors
+ * `putCounter`'s own shape: a free action taking the real target `Card`),
+ * called from `resolveCard`'s own `putCounterTarget` case right alongside
+ * `actions.putCounter` whenever that effect's own `grant` field is set —
+ * see that Effect variant's own doc comment. `state.ts`'s
+ * `hasCounterConditionalLandTypeLoss`/`hasCounterConditionalAbilityLoss`/
+ * `effectiveSubtypes`/`effectiveKeywords`, and `mana.ts`'s own
+ * `sourceColors`/`sourceAmount`/`payableManaAbility`, are the real LIVE
+ * readers — every one of them re-checks the affected object's OWN CURRENT
+ * counter count on every call, never a value baked in once at install time.
+ */
+export interface CounterConditionalGrant {
+  /** Which counter type gates this effect — filled in automatically from the owning `putCounterTarget` effect's own `counterType` (see that field's own doc comment); never authored separately, so the two can't drift apart. */
+  counterType: string;
+  /** Real Forge `RemoveLandTypes$ True` (layer 4) — the affected permanent loses every land subtype it has (granted or printed) for as long as the condition holds. */
+  removeLandTypes?: boolean;
+  /**
+   * Real Forge `RemoveAllAbilities$ True` (layer 6) — **only partially
+   * enforced, real named gap, not silently worked around**: this engine
+   * suppresses the affected permanent's own `manaAbilities` (`mana.ts`'s
+   * `sourceColors`/`sourceAmount`/`payableManaAbility`, so its normal mana
+   * production genuinely stops) and its own printed `keywords`
+   * (`effectiveKeywords`), and rejects activating any OTHER activated
+   * ability it has (`engine.ts`'s `canActivateAbility`, mirroring the
+   * existing `isActivationLocked`/`CantBeActivated` check, ENGINE_GAPS.md
+   * gap #18) — The Gold Saucer's own real "{3}, {T}, Sacrifice two
+   * artifacts: ..." is the one real FIN card this last case actually
+   * matters for if it's ever the object Ultima blights. **NOT enforced**:
+   * a TRIGGERED ability the affected object has (`Trigger`/`fireTrigger`
+   * has no per-object "is this specific trigger currently suppressed" gate
+   * anywhere in this codebase). Checked the real pool: every real FIN
+   * Town-cycle land's own OTHER ability is a one-shot `onEnter` ETB trigger
+   * that has ALREADY fired by the time Ultima (an ATTACK trigger,
+   * necessarily well after any target land's own ETB) could ever blight
+   * it — not live for any card in this pool today, but a hypothetical
+   * future land with a repeatable `'upkeep'`/`'endStep'`/`'tapLandForMana'`
+   * trigger would still incorrectly keep firing it while blighted. Building
+   * a fully general per-object trigger-suppression dispatcher (every real
+   * `fireTrigger` call site would need to consult this check first) was
+   * assessed and NOT attempted here — flagged, not quietly worked around.
+   */
+  removeAllAbilities?: boolean;
+  /** Real Forge `AddAbility$ ColorlessMana` (`AB$ Mana | Cost$ T | Produced$ C`) — the ONE mana ability the affected permanent has for as long as the condition holds, replacing (not adding to) whatever it normally produces. */
+  grantManaAbility?: ManaAbility;
+}
+
+/**
  * One NAMED triggered ability. A permanent commonly has more than one,
  * independent of each other (Namazu Trader's own ETB AND attack trigger) —
  * `CardDefinition.triggers` is a list of these rather than a single
@@ -846,6 +1246,28 @@ export interface Trigger {
   /** Short label — 'onEnter'/'onAttack'/'onDealsDamage'/etc. Matches a scenario's own `trigger` field. */
   name: string;
   effects: Effect[];
+  /**
+   * Real Forge `ActivationLimit$ N` (`Trigger.java`'s own `checkActivationLimit`/
+   * `getActivationsThisTurn`, ~lines 362-370/596-598 — checked against
+   * `Card.getAbilityActivatedThisTurn`, reset game-wide for every card in the
+   * game by `Game.onCleanupPhase` -> `Card.resetActivationsPerTurn`,
+   * `Game.java` ~line 1227-1229/`Card.java` ~line 7848): this NAMED trigger
+   * fires at most `N` times per turn, game-wide reset at Cleanup — a real,
+   * common printed cap ("This ability triggers only once each turn"), not a
+   * cost or a static ability. Two real FIN cards print this: G'raha Tia's own
+   * "The Allagan Eye" (`res/cardsfolder/g/graha_tia.txt`) and Elrond,
+   * Moon-Reader's own "activate an ability of a creature, draw a card"
+   * (`res/cardsfolder/e/elrond_moon_reader.txt`), both `ActivationLimit$ 1`.
+   * Enforced by `triggers.ts`'s own shared `fireTrigger` chokepoint (every
+   * real trigger-firing call site in this codebase already funnels through
+   * it, see that file's own header) via `state.ts`'s new
+   * `triggerActivationsThisTurn` tracking + `resetTriggerActivationsThisTurn`
+   * (called from `turn.ts`'s `runPhaseEntryAction` at Cleanup, same
+   * "real, game-wide, once per turn boundary" scope `flippedCoinThisTurn`/
+   * `untilEndOfTurnKeywordGrants` already use). Omitted = uncapped (the
+   * pre-existing default for every other trigger in this pool).
+   */
+  activationLimit?: number;
   /**
    * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, 2026-09-13, scoped trial —
    * fin/1-10 only, not a production field yet). Points at the WHOLE printed
@@ -885,14 +1307,74 @@ export interface Trigger {
    *    registered ctx/actions and its upkeep/end-step triggers won't fire
    *    through this path, same "no entry = gap, not a silent success"
    *    convention `enteredThisTurn` already uses.
+   *  - `'tapLandForMana'` (closed 2026-09-14, ENGINE_GAPS.md gap #5's own
+   *    Ultima, Origin of Oblivion closure) — real Forge's own
+   *    `TriggerType.TapsForMana` (`TriggerTapsForMana.java`, fired from
+   *    `AbilityManaPart.tapsForMana` whenever ANY `{T}`-cost mana ability
+   *    resolves): "a land you control was tapped for mana." Fired by
+   *    `engine.ts`'s new `fireOnTapLandForManaTriggers`, called right after
+   *    EVERY real `mana.ts` `payMana` call (`castSpell`/`activateAbility`,
+   *    this engine's only two real "tap sources to pay a cost" call
+   *    sites) — for each REAL tapped source that's a genuine Land
+   *    (`ValidCard$ Land`, Forge's own real gate; a non-Land mana source
+   *    tapping never fires this), sweeps every permanent the SAME
+   *    controller has registered in `resolvedPermanents` (`Activator$
+   *    You`, Forge's own real gate — no FIN card needs "any player,"
+   *    checked) for a trigger with this `on` value, additionally gated by
+   *    `tapLandForManaColor` below. Same "only fires for a permanent CAST
+   *    through this engine" real, documented limitation `'upkeep'`/
+   *    `'endStep'` already carry — a permanent seeded directly onto the
+   *    battlefield has no registered entry and its own `'tapLandForMana'`
+   *    trigger won't fire through this path.
    * Optional and additive: none of the 312 existing FIN cards' own
    * triggers set any of these yet (picked manually per scenario via
    * `harness.ts`'s own `Scenario.trigger`/`sequence` fields instead,
    * unaffected by this) — retrofitting them is a separate, deferred task
    * (ENGINE_GAPS.md). Real FIN cards that WOULD use `'endStep'` today (Yuna,
-   * Hope of Spira; Ultimecia, Time Sorceress) are cited there.
+   * Hope of Spira; Ultimecia, Time Sorceress) are cited there. Ultima,
+   * Origin of Oblivion's own `onTapLandForC` trigger is the first real FIN
+   * card retrofitted onto `'tapLandForMana'` (2026-09-14) — see
+   * `tapLandForManaColor` below for its own real color gate.
+   *  - `'attacks'` (closed 2026-09-14, ENGINE_GAPS.md — attack-triggered-
+   *    ability auto-dispatch): real Forge `TriggerType.Attacks`
+   *    (`TriggerAttacks.java`'s own `performTest`, checked here against
+   *    `ValidCard$ Card.Self` scope only), fired from real Forge's own
+   *    `CombatUtil.checkDeclaredAttacker` (forge-game/.../combat/
+   *    CombatUtil.java ~lines 363-383 - its own doc comment: "checks
+   *    triggered effects of attacking creatures, right before defending
+   *    player declares blockers") once per real declared attacker.
+   *    Mirrored here as `engine.ts`'s new `fireOnAttackTriggers`, called
+   *    from `declareAttackers` right after a legal attacker batch is
+   *    declared (508.1) - for each declared attacker with a registered
+   *    `resolvedPermanents` entry (same "only a permanent CAST through this
+   *    engine" real, documented limitation `'upkeep'`/`'endStep'`/
+   *    `'tapLandForMana'` already carry) whose own `CardDefinition` has a
+   *    trigger with `on: 'attacks'`, fires it with THAT attacker as
+   *    `ctx.self` - real Forge's own `ValidCard$ Card.Self` scope (this
+   *    creature's own attack, not "any creature attacking"). A broader
+   *    "whenever A creature you control attacks" shape (Seifer Almasy/
+   *    Squall's own "attacks alone"), an EQUIPMENT's own "whenever equipped
+   *    creature attacks" (Genji Glove/Ultima Weapon), or a Vehicle-crewed-
+   *    by-a-specific-pair shape (Balthier and Fran) are real, genuinely
+   *    different gates this narrow first slice does not attempt - see
+   *    ENGINE_GAPS.md's own writeup for the full list this unblocks as
+   *    follow-ups. Ashe, Princess of Dalmasca's own "Whenever Ashe attacks,
+   *    ..." is the first real FIN card retrofitted onto this (2026-09-14).
    */
-  on?: 'enter' | 'upkeep' | 'endStep';
+  on?: 'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks';
+  /**
+   * Only consulted when `on === 'tapLandForMana'` — mirrors Forge's own
+   * real `Produced$` gate on `T:Mode$ TapsForMana` (`TriggerTapsForMana
+   * .performTest`: `runParams.get(Produced)` must CONTAIN this color,
+   * checked against every real color the land tap actually produced, via
+   * `mana.ts`'s own `sourceColors`) — Ultima, Origin of Oblivion's own real
+   * "Whenever you tap a land for {C}, add an additional {C}" needs
+   * `'C'` here (`T:Mode$ TapsForMana | ... | Produced$ C`, real Forge
+   * citation: `res/cardsfolder/u/ultima_origin_of_oblivion.txt`). Omitted
+   * means "any color" (no real FIN card needs that yet, so this stays
+   * required-in-practice rather than speculatively optional-and-untested).
+   */
+  tapLandForManaColor?: ManaColor;
 }
 
 /**
@@ -1420,8 +1902,33 @@ export interface CardDefinition {
    * migrates them — left as text-only here, not touched by this gap's
    * own closure (explicitly scoped to Dion/Ardyn, the two cards the gap
    * was reported against).
+   *
+   * **A real mana-producing ability is NO LONGER modeled here** (closed
+   * 2026-09-14) — see `manaAbilities` below, the real structured
+   * replacement for what used to be the single largest category of
+   * free-text `staticAbilities` entries in this pool (30+ real cards'
+   * ONLY representation of a genuine `{T}: Add ...` ability).
    */
   readonly staticAbilities?: string[];
+  /**
+   * Zero or more real, structured mana-producing abilities this permanent
+   * has ON ITS OWN (as opposed to a mana ability some OTHER permanent
+   * GRANTS to this one — A Realm Reborn's own real `S:Mode$ Continuous |
+   * AddAbility$ AnyMana` broadcast to every OTHER permanent the controller
+   * has is a genuinely different, still-unmodeled mechanism, a mana-ability
+   * analogue of `continuousKeywordGrants`/`continuousTypeGrants` that no
+   * real FIN card in this pool needs enforced today — flagged, not silently
+   * folded into this field). See `ManaAbility`'s own doc comment for the
+   * full field-by-field Forge citation. `mana.ts`'s `sourceColors`/
+   * `canAfford`/`payMana` are the real consumers (via `RealCard
+   * .manaAbilities`, copied at `addCard` time, same convention `ptFormula`/
+   * `continuousKeywordGrants` already establish) — an array since a real
+   * permanent can have MORE than one independent mana ability at once
+   * (Capital City's real `{T}: Add {C}.` PLUS `{1}, {T}: Add one mana of
+   * any color.`; Willowrush Verge's real `{T}: Add {U}.` PLUS a second,
+   * conditioned `{T}: Add {G}.`).
+   */
+  readonly manaAbilities?: ManaAbility[];
   /**
    * A transforming DFC's back face (Jecht, Reluctant Guardian // Braska's
    * Final Aeon) — a second, independent `CardDefinition` rather than new
@@ -1433,6 +1940,47 @@ export interface CardDefinition {
    * array, named `chapterI`/`chapterII`/`chapterIII`.
    */
   readonly backFace?: CardDefinition;
+  /**
+   * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, "3-tier waterfall" trial,
+   * 2026-09-13, scoped to fin/1-10 only — NOT wired into
+   * `apply-recognizers.mjs`/`synergy.json` generation). The CARD-LEVEL
+   * sibling of `Effect`'s own `authoredFact` (see that field's doc comment
+   * for the full tier-3 rationale — repeated only briefly here): for a real
+   * Fact that has no single owning `Effect`/`Trigger`/`ability` container to
+   * live next to at all. Two real shapes this covers, both genuine gaps the
+   * fin/1-10 sample surfaced, neither a `custom`-effect case:
+   *  - A baseline self-cast/self-enters pair NOT already covered by the
+   *    `permanent-enters-battlefield-normally`/`instant-sorcery-resolves-to-
+   *    graveyard` text recognizers for some card-specific reason (none of
+   *    the 10 real fin/1-10 cards actually need this — every one of them is
+   *    a plain, un-exceptional cast/permanent, so both recognizers already
+   *    cover it — kept here as a real, named escape hatch for a FUTURE card
+   *    that needs it, not dead speculative surface).
+   *  - A sink fact whose real basis is a NAMED trigger's own firing
+   *    PRECONDITION rather than anything inside that trigger's `effects`
+   *    (Ashe, Princess of Dalmasca's own "wants to attack" sink for her
+   *    `onAttack` trigger; Ambrosia Whiteheart's own "wants a landfall" sink
+   *    for her `onLandfall` trigger) — `Trigger.name` is a free-text label
+   *    (`harness.ts`'s own `Scenario.trigger` match key), not a closed,
+   *    typed vocabulary the way `Trigger.on` is for the 3 auto-fired cases
+   *    (`'enter'`/`'upkeep'`/`'endStep'`) it already recognizes, so there is
+   *    no SAFE general structural rule to derive "this named trigger's
+   *    precondition is event X" the way `on: 'enter'` already lets a
+   *    (hypothetical, not built in this trial) tier-1 recognizer derive an
+   *    entersBattlefield-precondition sink for free. Until `Trigger` grows a
+   *    real closed-vocabulary equivalent for attack/dies/landfall-shaped
+   *    preconditions, a card needing one of these sinks authors it here
+   *    instead of leaving it to only exist in a separately-maintained
+   *    `synergy.json`.
+   * Same shape/semantics as `Effect.authoredFact` (an array covers more than
+   * one card-level fact; `role` stays on each object, same reasoning as
+   * there) and same "purely additive, inert data, not consulted by anything
+   * real yet" status as every other field in this prototype. Same 2026-09-13
+   * `annotations`-externalization correction as `Effect.authoredFact` (see
+   * `AuthoredFact`'s own doc comment) — an entry here is keyed
+   * `"authoredFacts[<i>]"` in `cards/<slug>/definition-annotations.json`.
+   */
+  readonly authoredFacts?: AuthoredFact[];
 }
 
 /**
@@ -1541,7 +2089,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       for (const creature of ctx.you.getCreaturesInPlay()) {
         if (effect.notSelf && creature.getId() === ctx.self.getId()) continue;
         if (effect.subtype && !creature.hasSubtype(effect.subtype)) continue;
-        actions.pump(creature, power, toughness);
+        actions.pump(creature, power, toughness, { untilEndOfTurn: effect.untilEndOfTurn });
       }
       return;
     }
@@ -1587,6 +2135,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         const pool = players
           .flatMap((player) => player.getCardsIn(effect.from))
           .filter((c) => matchesValidType(c, effect.validType))
+          .filter((c) => !effect.subtype || c.hasSubtype(effect.subtype))
           .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId())
           .filter((c) => !effect.nonLand || !c.isLand());
         const targets = resolveTargets(pool, qty, ctx, actions);
@@ -1598,6 +2147,10 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         // player, not as one shared cross-player pool).
         for (const player of players) actions.move(player, effect.from, effect.to, qty, effect.validType);
       }
+      // Real 601.2/701.19 "then shuffle" — see `shuffleAfter`'s own doc
+      // comment above for why this is a search-specific requirement, not
+      // folded into every `move`.
+      if (effect.shuffleAfter) for (const player of players) actions.shuffleLibrary(player);
       return;
     }
     case 'putCounter':
@@ -1607,7 +2160,16 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType);
       const qty = resolve(effect.qty ?? 1, ctx);
       const chosen = resolveTargets(pool, qty, ctx, actions);
-      for (const target of chosen) actions.putCounter(target, effect.counterType, resolve(effect.amount, ctx));
+      for (const target of chosen) {
+        actions.putCounter(target, effect.counterType, resolve(effect.amount, ctx));
+        // Real Forge `DB$ Effect | RememberObjects$ Targeted | StaticAbilities$
+        // ...` (Ultima, Origin of Oblivion) — see `CounterConditionalGrant`'s
+        // own doc comment. Installed onto the SAME target the counter just
+        // went on, `counterType` threaded from THIS effect's own field so
+        // the grant and the counter it's keyed on can never name different
+        // counters.
+        if (effect.grant) actions.installCounterConditionalGrant(target, { ...effect.grant, counterType: effect.counterType });
+      }
       return;
     }
     case 'putCounterAll': {
@@ -1693,11 +2255,11 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         .flatMap((p) => p.getCreaturesInPlay())
         .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId());
       const target = resolveTargets(pool, 1, ctx, actions)[0];
-      if (target) actions.pump(target, resolve(effect.power, ctx), resolve(effect.toughness, ctx));
+      if (target) actions.pump(target, resolve(effect.power, ctx), resolve(effect.toughness, ctx), { untilEndOfTurn: effect.untilEndOfTurn });
       return;
     }
     case 'pumpSelf':
-      actions.pump(ctx.self, resolve(effect.power, ctx), resolve(effect.toughness, ctx));
+      actions.pump(ctx.self, resolve(effect.power, ctx), resolve(effect.toughness, ctx), { untilEndOfTurn: effect.untilEndOfTurn });
       return;
     case 'grantKeywordTarget': {
       // `validType` defaults to 'creature' (the original, only-ever-used
@@ -1758,6 +2320,9 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'custom':
       effect.run(ctx, actions);
+      return;
+    case 'program':
+      runProgram(effect.program, ctx, actions);
       return;
     default: {
       const _exhaustive: never = effect;
@@ -1878,6 +2443,19 @@ export function synergyTags(card: CardDefinition): string[] {
       case 'custom':
         tags.push(`custom:${effect.describe}`);
         break;
+      case 'program':
+        // Same tag namespace/shape as `custom` above (`describe` is the
+        // same free-text summary a `program` effect still carries) —
+        // deliberately NOT a richer tag derived from `walkProgram` here:
+        // this keeps `synergyTags()`'s own output byte-for-byte unchanged
+        // for every migrated card (same describe string, same tag), so
+        // migrating a closure from `custom` to `program` has zero effect on
+        // synergy-tag-derived matching. A future pass MAY want a richer
+        // `program`-aware tag (the AST is now genuinely walkable, unlike
+        // `custom`'s opaque closure) — not attempted here, out of this
+        // migration's own scope.
+        tags.push(`custom:${effect.describe}`);
+        break;
       default: {
         const _exhaustive: never = effect;
         throw new Error(`unhandled effect kind: ${JSON.stringify(_exhaustive)}`);
@@ -1888,6 +2466,7 @@ export function synergyTags(card: CardDefinition): string[] {
   for (const trigger of card.triggers ?? []) for (const effect of trigger.effects) tagEffect(effect);
   for (const ability of card.abilities ?? []) for (const effect of ability.effects) tagEffect(effect);
   for (const rule of card.staticAbilities ?? []) tags.push(`static:${rule}`);
+  for (const ability of card.manaAbilities ?? []) tags.push(`mana:${ability.colors.join('/')}`);
   for (const keyword of card.keywords ?? []) tags.push(`keyword:${keyword}`);
   if (card.ptFormula?.kind === 'addPerEquipmentControlled') tags.push('static:Gets +X/+X for each Equipment you control.');
   if (card.ptFormula?.kind === 'setToCreaturesControlled') tags.push('static:Power is equal to the number of creatures you control.');

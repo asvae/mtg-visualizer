@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GameState } from './state';
-import { parseManaCost, resolveXCost, reduceGenericCost, formatManaCost, canAfford, payMana, untappedManaSources, basicLandsFor, manaAbilityColorFromStaticText, manaAbilityColorsFromStaticText, deriveManaAbility } from './mana';
+import { parseManaCost, resolveXCost, reduceGenericCost, formatManaCost, canAfford, payMana, untappedManaSources, basicLandsFor } from './mana';
 
 describe('parseManaCost', () => {
   it('sums generic and counts colored pips separately', () => {
@@ -168,101 +168,35 @@ describe('canAfford / payMana — real {X} costs (ENGINE_GAPS.md gap #6, resolve
   });
 });
 
-describe('manaAbilityColorFromStaticText (a narrow real slice of gap #5 — non-basic mana sources)', () => {
-  it('recognizes an exact, single-color, unrestricted "{T}: Add {X}." string', () => {
-    expect(manaAbilityColorFromStaticText(['{T}: Add {G}.'])).toBe('G');
-    expect(manaAbilityColorFromStaticText(['{T}: Add {W}.'])).toBe('W');
-  });
-
-  it('returns the FIRST qualifying entry, correctly skipping a later restricted one (Willowrush Verge-shaped)', () => {
-    expect(manaAbilityColorFromStaticText(['{T}: Add {U}.', '{T}: Add {G}. Activate only if you control a Forest or an Island.'])).toBe('U');
-  });
-
-  it('does not recognize a restricted ability text', () => {
-    expect(manaAbilityColorFromStaticText(['{T}: Add {G}. Activate only if you control a Forest or an Island.'])).toBeUndefined();
-    expect(manaAbilityColorFromStaticText(['{T}: Add {C}. Spend this mana only to cast an artifact spell or activate an ability of an artifact source.'])).toBeUndefined();
-  });
-
-  it('does not recognize a dual/choice-of-color ability', () => {
-    expect(manaAbilityColorFromStaticText(['{T}: Add {G} or {U}.'])).toBeUndefined();
-  });
-
-  it('recognizes an exact, single-colorless, unrestricted "{T}: Add {C}." string (2026-09-09 — The Gold Saucer)', () => {
-    expect(manaAbilityColorFromStaticText(['{T}: Add {C}.'])).toBe('C');
-  });
-
-  it('does not recognize a variable-amount ability', () => {
-    expect(manaAbilityColorFromStaticText(['{T}: Add {G} for each Elf you control.'])).toBeUndefined();
-  });
-
-  it('returns undefined for no staticAbilities at all', () => {
-    expect(manaAbilityColorFromStaticText(undefined)).toBeUndefined();
-    expect(manaAbilityColorFromStaticText([])).toBeUndefined();
-  });
-});
-
-describe('manaAbilityColorsFromStaticText (the choice-of-color-widened counterpart above — now also a real payment primitive via deriveManaAbility, closed 2026-09-12)', () => {
-  it('recognizes a single colorless "{T}: Add {C}." string the same way the single-value function does', () => {
-    expect(manaAbilityColorsFromStaticText(['{T}: Add {C}.'])).toEqual(['C']);
-  });
-
-  it('still does not widen the choice-of-color branch to include colorless (no real card mixes {C} into a choice)', () => {
-    expect(manaAbilityColorsFromStaticText(['{T}: Add {C} or {G}.'])).toEqual([]);
-  });
-
-  it('recognizes a real dual/choice-of-color ability (Vector, Imperial Capital-shaped, 12 real Town-cycle lands)', () => {
-    expect(manaAbilityColorsFromStaticText(['{T}: Add {B} or {R}.'])).toEqual(['B', 'R']);
-  });
-});
-
-describe('deriveManaAbility (real ETB derivation used by engine.ts\'s resolveTop/playLand — single-color first, then choice-of-color)', () => {
-  it('returns a bare ManaColor for a single-color match (unchanged shape from before this pass)', () => {
-    expect(deriveManaAbility(['{T}: Add {G}.'])).toBe('G');
-  });
-
-  it('returns a ManaColor[] for a real choice-of-color match', () => {
-    expect(deriveManaAbility(['{T}: Add {B} or {R}.'])).toEqual(['B', 'R']);
-  });
-
-  it('returns undefined for a restricted (Cargo Ship-shaped) or variable (Elvish Archdruid-shaped) ability — neither is on staticAbilities text at all in the real pool, and even if it were, neither regex matches', () => {
-    expect(deriveManaAbility(['{T}: Add {C}. Spend this mana only to cast an artifact spell or activate an ability of an artifact source.'])).toBeUndefined();
-    expect(deriveManaAbility(['{T}: Add {G} for each Elf you control.'])).toBeUndefined();
-  });
-
-  it('returns undefined for no staticAbilities at all', () => {
-    expect(deriveManaAbility(undefined)).toBeUndefined();
-  });
-});
-
-describe('untappedManaSources — a real manaAbility-derived source (non-Land, e.g. an artifact)', () => {
-  it('counts a card with a real manaAbility field as a source of that color', () => {
+describe('untappedManaSources — a real manaAbilities-derived source (non-Land, e.g. an artifact) — closed 2026-09-14, ENGINE_GAPS.md gap #5, superseding the old text-regex path', () => {
+  it('counts a card with a real manaAbilities entry as a source of that color', () => {
     const state = new GameState();
     const you = state.addPlayer('you');
-    const rock = state.addCard(you, 'Battlefield', { name: 'Test Rock', types: ['Artifact'], manaAbility: 'W' });
+    const rock = state.addCard(you, 'Battlefield', { name: 'Test Rock', types: ['Artifact'], manaAbilities: [{ colors: ['W'] }] });
     expect(canAfford(untappedManaSources(you), parseManaCost('{W}'))).toBe(true);
     payMana(state, untappedManaSources(you), parseManaCost('{W}'));
     expect(rock.tapped).toBe(true);
   });
 
-  it('a tapped manaAbility source no longer counts', () => {
+  it('a tapped manaAbilities source no longer counts', () => {
     const state = new GameState();
     const you = state.addPlayer('you');
-    const rock = state.addCard(you, 'Battlefield', { name: 'Test Rock', types: ['Artifact'], manaAbility: 'W' });
+    const rock = state.addCard(you, 'Battlefield', { name: 'Test Rock', types: ['Artifact'], manaAbilities: [{ colors: ['W'] }] });
     state.tap(rock);
     expect(canAfford(untappedManaSources(you), parseManaCost('{W}'))).toBe(false);
   });
 
-  it('a card with no manaAbility and no basic-land subtype is not a mana source', () => {
+  it('a card with no manaAbilities and no basic-land subtype is not a mana source', () => {
     const state = new GameState();
     const you = state.addPlayer('you');
     state.addCard(you, 'Battlefield', { name: 'Plain Artifact', types: ['Artifact'] });
     expect(canAfford(untappedManaSources(you), parseManaCost('{W}'))).toBe(false);
   });
 
-  it('a real dual-color manaAbility source (ManaColor[], Vector-Imperial-Capital-shaped) counts toward EITHER of its two colors (ENGINE_GAPS.md gap #5, closed 2026-09-12)', () => {
+  it('a real dual-color manaAbilities entry (Vector, Imperial Capital-shaped) counts toward EITHER of its two colors', () => {
     const state = new GameState();
     const you = state.addPlayer('you');
-    const townLand = state.addCard(you, 'Battlefield', { name: 'Test Town', types: ['Land'], subtypes: ['Town'], manaAbility: ['B', 'R'] });
+    const townLand = state.addCard(you, 'Battlefield', { name: 'Test Town', types: ['Land'], subtypes: ['Town'], manaAbilities: [{ colors: ['B', 'R'] }] });
     expect(canAfford(untappedManaSources(you), parseManaCost('{B}'))).toBe(true);
     expect(canAfford(untappedManaSources(you), parseManaCost('{R}'))).toBe(true);
     payMana(state, untappedManaSources(you), parseManaCost('{R}'));
@@ -272,15 +206,15 @@ describe('untappedManaSources — a real manaAbility-derived source (non-Land, e
   it('a dual-color source cannot pay a THIRD color it does not offer', () => {
     const state = new GameState();
     const you = state.addPlayer('you');
-    state.addCard(you, 'Battlefield', { name: 'Test Town', types: ['Land'], subtypes: ['Town'], manaAbility: ['B', 'R'] });
+    state.addCard(you, 'Battlefield', { name: 'Test Town', types: ['Land'], subtypes: ['Town'], manaAbilities: [{ colors: ['B', 'R'] }] });
     expect(canAfford(untappedManaSources(you), parseManaCost('{G}'))).toBe(false);
   });
 
   it('two dual-color sources correctly split across two DIFFERENT colored pip requirements (real assignment, not a fixed first-color pick)', () => {
     const state = new GameState();
     const you = state.addPlayer('you');
-    state.addCard(you, 'Battlefield', { name: 'Test Town A', types: ['Land'], subtypes: ['Town'], manaAbility: ['B', 'R'] });
-    state.addCard(you, 'Battlefield', { name: 'Test Town B', types: ['Land'], subtypes: ['Town'], manaAbility: ['B', 'R'] });
+    state.addCard(you, 'Battlefield', { name: 'Test Town A', types: ['Land'], subtypes: ['Town'], manaAbilities: [{ colors: ['B', 'R'] }] });
+    state.addCard(you, 'Battlefield', { name: 'Test Town B', types: ['Land'], subtypes: ['Town'], manaAbilities: [{ colors: ['B', 'R'] }] });
     payMana(state, untappedManaSources(you), parseManaCost('{B}{R}'));
     expect(you.battlefield.every((c) => c.tapped)).toBe(true);
   });
@@ -294,12 +228,79 @@ describe('untappedManaSources — a real manaAbility-derived source (non-Land, e
     // only real backtracking (assignManaRequirements's own `used.delete`
     // undo) recovers the one legal assignment (fixed-B source -> {B}, dual
     // source -> {R}).
-    const dual = state.addCard(you, 'Battlefield', { name: 'Test Town (dual B/R)', types: ['Land'], subtypes: ['Town'], manaAbility: ['B', 'R'] });
+    const dual = state.addCard(you, 'Battlefield', { name: 'Test Town (dual B/R)', types: ['Land'], subtypes: ['Town'], manaAbilities: [{ colors: ['B', 'R'] }] });
     const fixedB = state.addCard(you, 'Battlefield', { name: 'Test Swamp', types: ['Land'], subtypes: ['Swamp'] });
     expect(canAfford(untappedManaSources(you), parseManaCost('{B}{R}'))).toBe(true);
     payMana(state, untappedManaSources(you), parseManaCost('{B}{R}'));
     expect(dual.tapped).toBe(true);
     expect(fixedB.tapped).toBe(true);
+  });
+
+  it('a restricted manaAbilities entry (Cargo Ship/Freya Crescent-shaped) is NOT recognized as an ordinary payable source', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    state.addCard(you, 'Battlefield', { name: 'Test Restricted Rock', types: ['Artifact'], manaAbilities: [{ colors: ['C'], restriction: 'Spend this mana only to cast an artifact spell...' }] });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{1}'))).toBe(false);
+  });
+
+  it('an activationCondition-gated manaAbilities entry (Willowrush Verge-shaped) is NOT recognized as an ordinary payable source', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    state.addCard(you, 'Battlefield', { name: 'Test Conditioned Land', types: ['Land'], manaAbilities: [{ colors: ['G'], activationCondition: 'Activate only if you control a Forest or an Island.' }] });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{G}'))).toBe(false);
+  });
+
+  it('a variableAmount manaAbilities entry (Woodland Weavemaster-shaped) is NOT recognized as an ordinary payable source', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    state.addCard(you, 'Battlefield', { name: 'Test Variable Dork', types: ['Creature'], manaAbilities: [{ colors: ['W', 'U', 'B', 'R', 'G'], variableAmount: { kind: 'selfPower' } }] });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{1}'))).toBe(false);
+  });
+
+  it('a non-bare-{T}-cost manaAbilities entry (Capital City/Starting Town-shaped) is NOT recognized as an ordinary payable source', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    state.addCard(you, 'Battlefield', { name: 'Test Costly Land', types: ['Land'], manaAbilities: [{ cost: '{1}, {T}', colors: ['W', 'U', 'B', 'R', 'G'] }] });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{1}'))).toBe(false);
+  });
+
+  it('a card with a restricted FIRST entry still falls through to an ordinary SECOND entry (Willowrush Verge\'s own real order, reversed here to prove "first match wins" doesn\'t stop at the first entry unconditionally)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    state.addCard(you, 'Battlefield', {
+      name: 'Test Land (restricted then ordinary)',
+      types: ['Land'],
+      manaAbilities: [{ colors: ['G'], activationCondition: 'Activate only if...' }, { colors: ['U'] }],
+    });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{U}'))).toBe(true);
+    expect(canAfford(untappedManaSources(you), parseManaCost('{G}'))).toBe(false);
+  });
+
+  it('a real amount>1 source (Ring of the Lucii-shaped) contributes multiple units toward GENERIC coverage from a single tap (2026-09-14, ENGINE_GAPS.md gap #5)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const ring = state.addCard(you, 'Battlefield', { name: 'Test Ring', types: ['Artifact'], manaAbilities: [{ colors: ['C'], amount: 2 }] });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{2}'))).toBe(true);
+    const tapped = payMana(state, untappedManaSources(you), parseManaCost('{2}'));
+    expect(tapped).toEqual([ring]);
+    expect(ring.tapped).toBe(true);
+  });
+
+  it('an amount>1 colorless source alone cannot cover a cost needing more generic than it produces', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    state.addCard(you, 'Battlefield', { name: 'Test Ring', types: ['Artifact'], manaAbilities: [{ colors: ['C'], amount: 2 }] });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{3}'))).toBe(false);
+  });
+
+  it('a real dual-BASIC-land-type source (Breeding Pool-shaped: Land — Forest Island, no manaAbilities at all) counts toward BOTH its printed basic land colors (real bug fixed 2026-09-14 — previously only the FIRST matching subtype counted)', () => {
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const dual = state.addCard(you, 'Battlefield', { name: 'Test Shockland', types: ['Land'], subtypes: ['Forest', 'Island'] });
+    expect(canAfford(untappedManaSources(you), parseManaCost('{G}'))).toBe(true);
+    expect(canAfford(untappedManaSources(you), parseManaCost('{U}'))).toBe(true);
+    payMana(state, untappedManaSources(you), parseManaCost('{U}'));
+    expect(dual.tapped).toBe(true);
   });
 });
 

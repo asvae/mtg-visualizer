@@ -41,7 +41,6 @@
 // failure)
 
 import { readdir, readFile } from 'node:fs/promises';
-import { manaAbilityColorsFromStaticText } from '../mana.ts';
 import { findFabricatedScenarioCardNames } from './scenario-card-names.mjs';
 import { findMissingAnnotations, ANNOTATED_CARD_SLUGS } from './annotation-coverage.mjs';
 
@@ -159,9 +158,11 @@ function producedEvents(entry, cardName) {
       // this same `fn:'discard'` line for its own zone-shaped (Graveyard)
       // evidence, but a card whose own real effect just discards a card as
       // part of what it DOES (not a self-referencing discard-as-COST the
-      // way Cloudbound Moogle's Plainscycling models it, `isCloudboundMoogle
-      // DiscardSelfWant`/`isIceFlanDiscardSelfWant`'s own sibling exemptions
-      // — see those doc comments) needs the EVENT-shaped sibling fact too,
+      // way Cloudbound Moogle's Plainscycling/Ice Flan's Islandcycling model
+      // it — a DIFFERENTLY-SHAPED `{fn:'discard', target, id, controller}`
+      // entry with no `player` field at all, `engine-trace.ts`'s
+      // `pilotActivate`, ENGINE_GAPS.md gap #23 — so it never satisfies THIS
+      // case's own `entry.player` read) needs the EVENT-shaped sibling fact too,
       // same "one action, two simultaneously-true fact shapes" pattern
       // `sacrifice`/`destroy` already establish above. `harness.ts`'s own
       // `loggingActions.discard` always logs the scenario's own `player`
@@ -589,7 +590,14 @@ const PARKED_ACTION_FNS = new Set(['dig', 'copyPermanent', 'destroyPrevented']);
 // treatment `queueExtraTurn` (gap #3, closed) never needed a `PARKED_
 // ACTION_FNS`/Fact entry for either, since `harness.ts`'s own plain path
 // never logs it at all (no engine-piloted turn passage there).
-const IGNORED_FNS = new Set(['cast', 'trigger', 'activate', 'phase', 'delayUntil', 'illegalAttempt', 'queueExtraPhase']);
+// `installCounterConditionalGrant` added 2026-09-14 (ENGINE_GAPS.md's own
+// "Ultima, Origin of Oblivion" blight-counter closure) — same bucket as
+// `queueExtraPhase` just above, for the identical reason: it's real engine
+// bookkeeping (which continuous effect got installed onto which object),
+// never itself a produce/consume-shaped board Fact any synergy vocabulary
+// models — the counter that GATES the effect is already covered by the
+// existing, separately-logged `putCounter` line.
+const IGNORED_FNS = new Set(['cast', 'trigger', 'activate', 'phase', 'delayUntil', 'illegalAttempt', 'queueExtraPhase', 'installCounterConditionalGrant']);
 
 // Per-object predicate reads — corroborating evidence for a TYPE/CMC/etc.
 // constraint on some want/produce's target, never independently gated (see
@@ -734,41 +742,63 @@ const TRIGGER_EVENT_MAP = {
 const DEATH_TRIGGER_NAMES = new Set(['onDies']);
 
 /**
- * A plain, unrestricted `"{T}: Add {X}."` (single-color) or
- * `"{T}: Add {X} or {Y}."` (choice-of-color) static-ability STRING
- * (`mana.ts`'s own `manaAbilityColorsFromStaticText`) never produces
- * its own trace line — card.ts/harness.ts only ever log a real `addMana` fn
- * when the ability is ALSO modeled as a structured `{kind:'addMana', ...}`
- * Effect with a matching `activationCost` (Elvish Archdruid's own
- * "for each Elf you control" shape, which DOES get exercised through a
- * real scenario and so keeps needing real trace evidence below). A plain
- * mana-tapping land/artifact has no such scenario to write — the ability's
- * own existence is already fully verifiable by reading `definition.ts`
- * directly, same "known statically, no trace needed" treatment
- * `DEATH_TRIGGER_NAMES` above already gets. Returns every color recognized
- * across BOTH faces (a two-faced card's front/back can each have their own)
- * — a choice-of-color ability contributes BOTH its colors, since the
- * prefill script declares one `addMana` fact per color for that shape (see
- * prefill-mana-facts.mjs's own header for why).
+ * A real, ORDINARILY-payable `CardDefinition.manaAbilities` entry (`card.ts`'s
+ * own `ManaAbility` — a bare `{T}` cost, no `restriction`/
+ * `activationCondition`/`variableAmount`, closed 2026-09-14, superseding the
+ * OLD text-regex path this function used to scan — `mana.ts`'s own
+ * `manaAbilityColorFromStaticText`/`manaAbilityColorsFromStaticText`, both
+ * deleted) never produces its own trace line — card.ts/harness.ts only ever
+ * log a real `addMana` fn when the ability is ALSO modeled as a structured
+ * `{kind:'addMana', ...}` Effect with a matching `activationCost` (Elvish
+ * Archdruid's own "for each Elf you control" shape, which DOES get
+ * exercised through a real scenario and so keeps needing real trace
+ * evidence below — unaffected by this migration, since it was never on the
+ * `manaAbilities`/regex path to begin with). A plain mana-tapping
+ * land/artifact has no such scenario to write — the ability's own existence
+ * is already fully verifiable by reading `definition.ts` directly, same
+ * "known statically, no trace needed" treatment `DEATH_TRIGGER_NAMES` above
+ * already gets. Returns every color across every qualifying entry on BOTH
+ * faces (a two-faced card's front/back can each have their own) — a
+ * choice-of-color ability contributes ALL its colors, since the prefill
+ * script declares one `addMana` fact per color for that shape (see
+ * prefill-mana-facts.mjs's own header for why). A `restriction`/
+ * `activationCondition`/`variableAmount`-bearing entry (Cargo Ship, Freya
+ * Crescent, The Emperor of Palamecia, Willowrush Verge's second ability,
+ * Elvish Archdruid's/Woodland Weavemaster's own variable shapes, ...) is
+ * deliberately EXCLUDED here too, same as `mana.ts`'s own
+ * `payableManaAbility` — those still need their own real trace evidence (or
+ * stay flagged, unverified) rather than a free statically-known pass.
  *
  * Also recognizes crossroads-village's own unique real pair — "As this land
  * enters, choose a color." (a real `K:ETBReplacement:Other:ChooseColor`)
  * plus "{T}: Add one mana of the chosen color." — as the SAME "known
  * statically, no trace needed" shape, just widened to all five colors since
  * the choice is genuinely unconstrained (any of W/U/B/R/G) rather than a
- * fixed pair; `manaAbilityColorsFromStaticText` itself deliberately doesn't
- * parse this phrasing (it only recognizes an exact printed color symbol or
- * pair, not "the chosen color"), so this stays a narrow addition here rather
- * than widening that function's own documented WUBRG-symbol-only scope.
- * Checked: this exact "chosen color" phrasing appears on no other card in
- * the pool, so this is safely scoped to that one real card, not a general
- * pattern that could misfire elsewhere.
+ * fixed pair. This card is DELIBERATELY NOT migrated to `manaAbilities`
+ * (real, flagged gap, not an oversight — see `ENGINE_GAPS.md`'s own
+ * "Non-basic mana sources" entry): real Forge fixes the produced color
+ * PERMANENTLY at ETB (`Produced$ Chosen`, reading `Card.getChosenColors()`),
+ * a genuinely narrower guarantee than "any of 5, every activation" — this
+ * engine has no persisted per-permanent "chosen color" state and no ETB
+ * choice mechanism to set one, so modeling it as an ordinary 5-color
+ * `ManaAbility` would be WRONG (more permissive than reality), not just
+ * incomplete. Stays on `staticAbilities` text, checked via this bespoke
+ * string match, same "known statically" free pass, until that real,
+ * separate gap (an ETB-choice-persistence primitive) is built.
  */
 const WUBRG = ['W', 'U', 'B', 'R', 'G'];
+function manaAbilityColorsOf(manaAbilities) {
+  const colors = [];
+  for (const ability of manaAbilities ?? []) {
+    if (ability.restriction || ability.activationCondition || ability.variableAmount) continue;
+    colors.push(...ability.colors);
+  }
+  return colors;
+}
 function staticManaColorsFor(card) {
   const colors = new Set();
-  for (const c of manaAbilityColorsFromStaticText(card?.staticAbilities)) colors.add(c);
-  for (const c of manaAbilityColorsFromStaticText(card?.backFace?.staticAbilities)) colors.add(c);
+  for (const c of manaAbilityColorsOf(card?.manaAbilities)) colors.add(c);
+  for (const c of manaAbilityColorsOf(card?.backFace?.manaAbilities)) colors.add(c);
   const abilities = [...(card?.staticAbilities ?? []), ...(card?.backFace?.staticAbilities ?? [])];
   if (abilities.some((t) => t === '{T}: Add one mana of the chosen color.')) {
     for (const c of WUBRG) colors.add(c);
@@ -799,7 +829,13 @@ function staticManaColorsFor(card) {
  */
 function isStaticOnlyLand(card) {
   if (!card || !/\bLand\b/.test(card.typeLine ?? '')) return false;
-  return !card.effects && !card.triggers && !card.activationCost && !card.modal;
+  // `!card.abilities?.length` added 2026-09-14 (ENGINE_GAPS.md gap #23) —
+  // Capital City (one of the 6 real cards this function names below) now
+  // carries a genuinely executable named Cycling ability (`abilities`),
+  // real card-specific behavior a scenario CAN exercise (and does — see its
+  // own scenarios.ts) — this predicate would otherwise stay stale, still
+  // claiming "no card-specific behavior left" for a card that now has one.
+  return !card.effects && !card.triggers && !card.activationCost && !card.modal && !card.abilities?.length;
 }
 
 /**
@@ -1731,51 +1767,17 @@ function isSidequestCardCollectionGraveyardThresholdRead(e, card) {
   return e.fn === 'read:getCardsIn' && e.zone === 'Graveyard' && card?.name === 'Sidequest: Card Collection';
 }
 
-/**
- * Cloudbound Moogle's own real Plainscycling ("{2}, Discard this card:
- * Search your library for a Plains card...") — modeled as two specific
- * facts per the user's own explicit ask (2026-09-11: "sink for discard
- * self" + "tutor for Plains"), NOT as generic TypeCycling engine machinery
- * (that gap stays open — same as malboro/hill-gigas/balamb-t-
- * rexaur/capital-city/cid-timeless-artificer's own *cycling abilities,
- * still unmodeled; ice-flan's own Islandcycling got the identical
- * per-card two-fact treatment on 2026-09-12 — see
- * `isIceFlanDiscardSelfWant`/`isIceFlanTutorFact` just below their
- * Cloudbound Moogle counterparts). No scenario/trace path can exist for either half:
- * Plainscycling lives only as a `staticAbilities` text string on this
- * card's own `definition.ts` (never a resolvable `Effect`), same "known
- * statically, no trace needed" treatment `isCostOnlyArtifactSacrificeWant`/
- * `Fact` above already get for a different structural cost requirement.
- * `isCloudboundMoogleDiscardSelfWant` covers the discard-as-cost SINK
- * (`{event:'discard', target:'self'}` — the ACT of discarding itself, no
- * `to`/`from`, mirroring the bare-event `dies`/`sacrifice` self-reference
- * shape rather than a zone fact, since this is about the payment ACT, not
- * a plain "wants a card in Graveyard" presence want); `isCloudboundMoogle
- * TutorFact` covers the resulting SOURCE zone fact (`{to:'Hand',
- * from:'Library', types:{has:['Plains']}}` — same shape/`tutor`
- * `ZONE_MOVEMENT_NAMES` label as Ashe/Cloud's own real tutor facts).
- * Deliberately scoped to THIS one card, not a blanket cycling exemption.
- */
-function isCloudboundMoogleDiscardSelfWant(w, card) {
-  return w.event === 'discard' && w.target === 'self' && card.name === 'Cloudbound Moogle';
-}
-/**
- * Ice Flan's own Islandcycling (2026-09-12), the identical per-card
- * two-fact treatment as `isCloudboundMoogleDiscardSelfWant` immediately
- * above — same real shape (`{event:'discard', target:'self'}`, the
- * discard-as-COST act, not a Graveyard-presence want), same "no
- * scenario/trace path exists — Islandcycling lives only as a
- * `staticAbilities` text string, never a resolvable `Effect`" reasoning.
- * Deliberately scoped to THIS one card, same as its Cloudbound Moogle
- * sibling, not generalized into one shared TypeCycling exemption (see that
- * function's own doc comment for why a blanket exemption isn't done yet —
- * the still-unmodeled malboro/hill-gigas/balamb-t-rexaur/capital-city/
- * cid-timeless-artificer cards would be the natural next candidates for a
- * real generalization, once a third real card actually needs it).
- */
-function isIceFlanDiscardSelfWant(w, card) {
-  return w.event === 'discard' && w.target === 'self' && card.name === 'Ice Flan';
-}
+// `isCloudboundMoogleDiscardSelfWant`/`isIceFlanDiscardSelfWant` (Plainscycling/
+// Islandcycling's own discard-as-cost SINK) and `isCloudboundMoogleTutorFact`/
+// `isIceFlanTutorFact` (their own resulting tutor-for-Plains/Island SOURCE)
+// REMOVED 2026-09-14 (ENGINE_GAPS.md gap #23, closed) — both cards' real
+// Cycling/TypeCycling ability is now genuinely engine-piloted (`engine.ts`'s
+// `costRequiresDiscardSelf`/`activateAbility`, `card.ts`'s `move` effect
+// with `subtype`/`shuffleAfter`), producing real `{fn:'discard'}`/
+// `{fn:'moveTo', zone:'Hand'}` trace lines — see the general (not per-card)
+// `w.event === 'discard' && w.target === 'self'` readEvidence branch below,
+// and the ordinary zone-fact `evidence` check just above, for how these are
+// verified for real now instead of being exempted.
 /**
  * A `{event:'tap', subject:'self', target:'self'}` SOURCE fact — the
  * `{T}` ACTIVATION-COST payment itself (Coeurl/Dion, Bahamut's Dominant,
@@ -1869,35 +1871,6 @@ function isSelfSacrificeActivationCostFact(p) {
   return p.event === 'sacrifice' && p.subject === 'self' && p.target === 'self';
 }
 
-function isCloudboundMoogleTutorFact(p, card) {
-  return (
-    card.name === 'Cloudbound Moogle' &&
-    effectiveZone(p) === 'Hand' &&
-    p.from === 'Library' &&
-    p.types &&
-    Array.isArray(p.types.has) &&
-    p.types.has.includes('Plains')
-  );
-}
-/**
- * Ice Flan's own Islandcycling tutor half (2026-09-12) — same shape/`tutor`
- * `ZONE_MOVEMENT_NAMES` label as `isCloudboundMoogleTutorFact` immediately
- * above, scoped to `Island` instead of `Plains`. See that function's own doc
- * comment and `isIceFlanDiscardSelfWant`'s for the shared reasoning (no
- * scenario/trace path exists — Islandcycling lives only as a
- * `staticAbilities` text string).
- */
-function isIceFlanTutorFact(p, card) {
-  return (
-    card.name === 'Ice Flan' &&
-    effectiveZone(p) === 'Hand' &&
-    p.from === 'Library' &&
-    p.types &&
-    Array.isArray(p.types.has) &&
-    p.types.has.includes('Island')
-  );
-}
-
 function wantMatchesZoneRead(want, zone) {
   // `effectiveZone`, not a bare `want.zone` (fixed 2026-09-11 alongside
   // synergy.ts's ZoneFact/EventFact merge — a SINK fact can now
@@ -1950,8 +1923,13 @@ async function verifyCard(slug) {
       if (zone === 'Battlefield' && isActivationCostPermanentBaselineFact(p, card)) continue; // see isActivationCostPermanentBaselineFact
       if (isSelfBattlefieldPresenceLand(p, card)) continue; // any Land's own tautological battlefield presence — see isSelfBattlefieldPresenceLand
       if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own presence — see isCoinFlipTokenSubjectFact
-      if (isCloudboundMoogleTutorFact(p, card)) continue; // Plainscycling's own tutor-for-Plains half, cost-only ability — see isCloudboundMoogleTutorFact
-      if (isIceFlanTutorFact(p, card)) continue; // Islandcycling's own tutor-for-Island half, cost-only ability — see isIceFlanTutorFact
+      // `isCloudboundMoogleTutorFact`/`isIceFlanTutorFact` REMOVED
+      // 2026-09-14 (ENGINE_GAPS.md gap #23, closed) — Plainscycling/
+      // Islandcycling's own real library search now genuinely logs a
+      // `{fn:'moveTo', zone:'Hand', controller:'you'}` line (see
+      // `engine-trace.ts`'s `pilotActivate`/card.ts's `move` effect), so the
+      // ordinary `evidence` check just below already covers this fact for
+      // real — no per-card exemption needed anymore.
       const evidence = allEntries.some((e) => {
         const z = producedZone(e, cardName);
         return z && z.zone === zone && (!p.controller || z.side === p.controller);
@@ -2156,11 +2134,22 @@ async function verifyCard(slug) {
                     const equipmentName = allEntries[equipIdx].equipment;
                     return allEntries.slice(equipIdx + 1).some((e) => e.fn === 'trigger' && e.card === equipmentName);
                   })()
-                : false;
+                : w.event === 'discard' && w.target === 'self'
+                  ? // Real 702.13 Cycling's own "discard this card" cost
+                    // (ENGINE_GAPS.md gap #23, closed 2026-09-14) — a genuine
+                    // Hand->Graveyard move NOW paid for real by
+                    // `engine.ts`'s `activateAbility`, logged by
+                    // `engine-trace.ts`'s `pilotActivate` as a real
+                    // `{fn:'discard', target: cardName, ...}` bracket (see
+                    // that call site's own doc comment) — REPLACES the
+                    // former `isCloudboundMoogleDiscardSelfWant`/
+                    // `isIceFlanDiscardSelfWant` per-card exemptions (removed
+                    // same pass), which existed only because no real trace
+                    // evidence could exist before this closure.
+                    allEntries.some((e) => e.fn === 'discard' && e.target === cardName)
+                  : false;
       if (!triggerEvidence && !readEvidence) {
         if (isCloudEquipmentTriggeredAbilityFact(w, card)) continue; // see isCloudEquipmentTriggeredAbilityFact
-        if (isCloudboundMoogleDiscardSelfWant(w, card)) continue; // Plainscycling's own discard-as-cost half — see isCloudboundMoogleDiscardSelfWant
-        if (isIceFlanDiscardSelfWant(w, card)) continue; // Islandcycling's own discard-as-cost half — see isIceFlanDiscardSelfWant
         if (isMatoyaScryBroadcastWant(w, card)) continue; // no real scry action anywhere in this engine — see isMatoyaScryBroadcastWant
         // With/without diff fallback — a scenario pair whose logs differ at
         // all counts as the want being demonstrated (SYNERGY_DESIGN.md's

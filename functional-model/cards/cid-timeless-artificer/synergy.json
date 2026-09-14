@@ -47,7 +47,18 @@
         "origin": "parser",
         "rule": "permanent-enters-battlefield-normally"
       }
+    },
+    {
+      "event": "drawCard",
+      "controller": "you",
+      "value": 1
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "discard",
+      "target": "self",
+      "value": -1
+    }
+  ]
 }

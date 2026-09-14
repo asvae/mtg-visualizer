@@ -1,23 +1,28 @@
-import type { CardDefinition } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 // Real script (capital_city.txt): unlike every other Town in this batch,
 // Capital City has NO `R:Event$ Moved ... ReplaceWith$ ETBTapped` line at
-// all — it genuinely enters UNTAPPED. Every real ability it has fails to
-// fit an existing declarative shape:
-//  - Both mana abilities ({T}: Add {C}; {1},{T}: Add one mana of any
-//    color) are real mana-producing abilities — no mana-producing
-//    Effect/Action exists anywhere in this model (no mana pool tracked), a
-//    documented, deliberate STILL-DEFERRED gap.
-//  - Cycling {2} is a real activated-FROM-HAND ability (discard this card,
-//    pay {2}: draw a card) — no `CardDefinition` field models activation
-//    from hand (same gap hill-gigas' own Mountaincycling and cid-timeless-
-//    artificer's own Cycling comments already document).
-// All three stay static text — there is no declarative onEnter/effects/
-// abilities entry on this card at all.
+// all — it genuinely enters UNTAPPED.
+//  - Both mana abilities (`{T}: Add {C}.`; `{1}, {T}: Add one mana of any
+//    color.`) are now real, structured `manaAbilities` entries. The first
+//    is an ordinary payable `{T}` source; the second's own `cost` genuinely
+//    ISN'T a bare `{T}` (Cost$ 1 T) — real, typed, but deliberately
+//    UNPAYABLE (`mana.ts`'s own `payableManaAbility` only recognizes a bare
+//    `{T}` cost as ordinary — see that function's own doc comment: paying a
+//    mana ability's OWN cost would need a real spendable mana-pool
+//    mechanism this engine doesn't have at all).
+//  - Cycling {2} (ENGINE_GAPS.md gap #23, closed 2026-09-14) is now a real,
+//    structured, engine-piloted activated ability (`abilities`) — a genuine
+//    602.1 activation FROM HAND, cost = {2} + discard this card itself
+//    (`engine.ts`'s `costRequiresDiscardSelf`), resolving to a plain
+//    `drawCard`. See cloudbound-moogle/definition.ts's own comment for the
+//    full mechanism (TypeCycling's own search variant); this is the plain,
+//    no-search Cycling shape.
 export const capitalCity: CardDefinition = {
   name: 'Capital City',
   manaCost: '',
   typeLine: 'Land — Town',
 
-  staticAbilities: ['{T}: Add {C}.', '{1}, {T}: Add one mana of any color.', 'Cycling {2} ({2}, Discard this card: Draw a card.)'],
+  abilities: [{ name: 'cycling', cost: '{2}, Discard this card', effects: [{ kind: 'drawCard' } satisfies Effect] }],
+  manaAbilities: [{ colors: ['C'] }, { cost: '{1}, {T}', colors: ['W', 'U', 'B', 'R', 'G'] }],
 };

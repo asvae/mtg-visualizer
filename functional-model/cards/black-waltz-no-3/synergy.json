@@ -3,7 +3,19 @@
     {
       "event": "damage",
       "controller": "you",
-      "value": 4
+      "value": 1,
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamage-effect-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 57,
+          "end": 88
+        }
+      ]
     },
     {
       "zone": "Battlefield",

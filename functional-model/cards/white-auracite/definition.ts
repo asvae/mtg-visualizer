@@ -41,9 +41,8 @@ export const whiteAuracite: CardDefinition = {
     },
   ],
 
-  // "{T}: Add {W}." — a real mana ability; no Effect kind (nor any action
-  // in interfaces.ts) models mana production anywhere in this system (same
-  // deliberate boundary sidequest-catch-a-fish's own "Cooking Campsite"
-  // back face already documents) — genuinely out of scope, kept as text.
-  staticAbilities: ['{T}: Add {W}.'],
+  // "{T}: Add {W}." — a real, structured `manaAbilities` entry, genuinely
+  // payable via `mana.ts`'s `canAfford`/`payMana` (no mana POOL modeled
+  // anywhere in this system either way).
+  manaAbilities: [{ colors: ['W'] }],
 };

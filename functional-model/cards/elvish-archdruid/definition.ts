@@ -23,6 +23,19 @@ export const elvishArchdruid: CardDefinition = {
   // modeled). "for each Elf you control" counts itself (Elvish Archdruid is
   // itself an Elf) — real printed text has no "other" qualifier here,
   // unlike the anthem line above.
+  //
+  // NOT migrated to `card.ts`'s new `manaAbilities`/`ManaAbility
+  // .variableAmount: {kind:'countSubtypeControlled', subtype:'Elf'}` shape
+  // (2026-09-14, ENGINE_GAPS.md gap #5) — this card was never on the
+  // free-text violation `manaAbilities` closes in the first place: its own
+  // `activationCost`+`effects` below is ALREADY a real, genuinely
+  // executable `Computed` amount, strictly better than the new field's own
+  // still-unwired `variableAmount` (see that field's own doc comment for
+  // why board-counted amounts aren't yet threaded into `canAfford`/
+  // `payMana`). `variableAmount`'s `countSubtypeControlled` shape exists
+  // for OTHER real cards with this exact printed pattern that had nothing
+  // but free text before this pass — switching this card TO it would be a
+  // real regression, not a migration.
   activationCost: '{T}',
   effects: [
     {

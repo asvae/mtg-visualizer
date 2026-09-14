@@ -1,0 +1,7 @@
+{
+  "abilities[0]": { "highlight": "{1}, {T}: Draw a card, then discard a card.", "line": 0 },
+  "abilities[1]": {
+    "highlight": "{7}, {T}, Sacrifice this creature: Draw three cards. This ability costs {1} less to activate for each Town you control.",
+    "line": 1
+  }
+}

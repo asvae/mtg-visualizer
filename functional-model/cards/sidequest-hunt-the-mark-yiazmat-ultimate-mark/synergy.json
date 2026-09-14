@@ -9,8 +9,20 @@
           ]
         }
       },
-      "value": 4,
-      "face": "front"
+      "value": 1,
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 30,
+          "end": 63
+        }
+      ]
     },
     {
       "zone": "Battlefield",

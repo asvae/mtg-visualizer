@@ -1,17 +1,21 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "is cast from hand, enters the battlefield, then puts a +1/+1 counter on the other creature",
+      "setup": "you: 5 Plains(s)",
+      "action": "engine playthrough: cast -> resolve -> enters -> ETB counter",
+      "result": "Cloudbound Moogle is cast ({3}{W}{W} paid) and enters the battlefield; its ETB puts a +1/+1 counter on the other real creature you control.",
       "raw": {
-        "result": "is cast from hand, enters the battlefield, then puts a +1/+1 counter on the other creature",
+        "result": "Cloudbound Moogle is cast ({3}{W}{W} paid) and enters the battlefield; its ETB puts a +1/+1 counter on the other real creature you control.",
         "you": {
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
           "creaturesCount": 1
-        },
-        "sequence": [
-          "onEnter"
-        ]
+        }
       }
     },
     "log": [
@@ -19,29 +23,51 @@
         "fn": "cast",
         "card": "Cloudbound Moogle",
         "instanceId": 1,
-        "id": 448,
         "from": "hand",
         "cost": "{3}{W}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cloudbound Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cloudbound Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cloudbound Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cloudbound Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cloudbound Moogle"
       },
       {
         "fn": "enters",
         "card": "Cloudbound Moogle",
         "instanceId": 1,
-        "id": 448,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Cloudbound Moogle",
         "instanceId": 1,
-        "id": 448,
         "name": "onEnter"
       },
       {
         "fn": "read:getCardsIn",
         "player": "you",
         "zone": "Battlefield",
-        "count": 2,
+        "count": 7,
         "creatureCount": 2
       },
       {
@@ -51,16 +77,144 @@
       },
       {
         "fn": "read:isCreature",
+        "target": "Plains",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Plains",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Plains",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Plains",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Plains",
+        "result": false
+      },
+      {
+        "fn": "read:isCreature",
         "target": "Cloudbound Moogle",
         "result": true
       },
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 447,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Cloudbound Moogle ({3}{W}{W})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 6
+      },
+      {
+        "label": "Fire onEnter",
+        "from": 7
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 Forest(s)",
+      "action": "engine playthrough: Plainscycling activated from hand -> discard self -> search library -> shuffle",
+      "result": "Plainscycling {2} is activated from hand: {2} is paid, Cloudbound Moogle is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Plains card, putting it into hand, then shuffling.",
+      "raw": {
+        "result": "Plainscycling {2} is activated from hand: {2} is paid, Cloudbound Moogle is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Plains card, putting it into hand, then shuffling.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Cloudbound Moogle",
+        "instanceId": 1,
+        "cost": "{2}, Discard this card",
+        "ability": "cycling"
+      },
+      {
+        "fn": "discard",
+        "target": "Cloudbound Moogle",
+        "id": 14,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Cloudbound Moogle"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Cloudbound Moogle"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Plains",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Plains",
+        "subtype": "Plains",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Plains",
+        "id": 13,
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Activate Plainscycling ({2}, Discard this card): search for a Plains",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

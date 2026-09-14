@@ -5,11 +5,28 @@ import type { CardDefinition, Effect } from '../../card';
 // as an onEnter trigger tapping self (treno-dark-city's own precedent).
 // "As it enters, choose a color" (K:ETBReplacement:Other:ChooseColor) is a
 // SECOND real ETB event, but its only observable consequence is which color
-// the later `{T}: Add one mana of the chosen color` ability produces — pure
-// mana-ability plumbing (no mana-producing Effect/Action exists anywhere in
-// this model, a documented, deliberate STILL-DEFERRED gap), so the choice
-// and the mana ability both stay staticAbilities text rather than a second
-// named trigger with nothing declarative to do.
+// the later `{T}: Add one mana of the chosen color` ability produces.
+//
+// **Real, HARD-FLAGGED gap, deliberately NOT migrated to `manaAbilities`**
+// (2026-09-14, ENGINE_GAPS.md gap #5's own "ETB choose-a-color, fixed
+// forever after" entry): unlike every OTHER real mana ability in this
+// pool, this one's real Forge shape (`Produced$ Chosen`, reading
+// `Card.getChosenColors()`) is genuinely narrower than "any of 5, every
+// activation" — real Forge locks the produced color PERMANENTLY at ETB,
+// once, for this specific permanent's whole lifetime. Modeling it as an
+// ordinary `manaAbilities: [{colors:['W','U','B','R','G']}]` entry (the
+// same shape Blitzball's genuine "any one color, no restriction" ability
+// correctly uses) would be WRONG, not just incomplete — it would let this
+// land pay a DIFFERENT color on every later cast within the same game,
+// which real Magic never allows once the ETB choice is made. Fixing this
+// for real needs two new primitives that don't exist anywhere in this
+// engine: a persisted per-permanent "chosen color" field on `RealCard`,
+// and a genuine ETB-choice mechanism to set it (no player-decision engine
+// exists at all, `priority.ts`'s own header). Both the choice and the mana
+// ability stay `staticAbilities` text — checked, verified as the ONLY
+// real card in this pool with this exact shape (`scripts/verify-synergy
+// .mjs`'s own `staticManaColorsFor` still special-cases this ONE bespoke
+// string as "known statically," unchanged by this pass).
 export const crossroadsVillage: CardDefinition = {
   name: 'Crossroads Village',
   manaCost: '',

@@ -1,11 +1,19 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "enters the battlefield with no resolvable effect — every ability is static text (see definition.ts)",
+      "setup": "you: 4 Plains(s)",
+      "action": "engine playthrough: cast -> resolve -> enters -> a duplicate legendary copy enters -> legend rule",
+      "result": "Cid, Timeless Artificer is cast ({2}{W}{U} paid) and enters the battlefield with no resolvable ETB (every other real ability — the anthem, the \"any number of copies\" deck-construction rule — stays static text, see definition.ts); a second real copy entering then triggers the real 704.5j legend rule, and one is genuinely put into the graveyard.",
       "raw": {
-        "result": "enters the battlefield with no resolvable effect — every ability is static text (see definition.ts)"
+        "result": "Cid, Timeless Artificer is cast ({2}{W}{U} paid) and enters the battlefield with no resolvable ETB (every other real ability — the anthem, the \"any number of copies\" deck-construction rule — stays static text, see definition.ts); a second real copy entering then triggers the real 704.5j legend rule, and one is genuinely put into the graveyard.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Island",
+            "Plains",
+            "Island"
+          ]
+        }
       }
     },
     "log": [
@@ -13,49 +21,123 @@
         "fn": "cast",
         "card": "Cid, Timeless Artificer",
         "instanceId": 1,
-        "id": 372,
         "from": "hand",
         "cost": "{2}{W}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cid, Timeless Artificer"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Cid, Timeless Artificer"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cid, Timeless Artificer"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Cid, Timeless Artificer"
       },
       {
         "fn": "enters",
         "card": "Cid, Timeless Artificer",
         "instanceId": 1,
-        "id": 372,
         "zone": "Battlefield"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Cid, Timeless Artificer",
-        "instanceId": 1,
-        "id": 374,
-        "from": "hand",
-        "cost": "{2}{W}{U}"
       },
       {
         "fn": "enters",
         "card": "Cid, Timeless Artificer",
-        "instanceId": 1,
-        "id": 374,
-        "zone": "Battlefield"
+        "zone": "Battlefield",
+        "controller": "you"
       },
       {
         "fn": "legendRule",
         "card": "Cid, Timeless Artificer",
         "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Cid, Timeless Artificer ({2}{W}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 5
+      },
+      {
+        "label": "A second real copy of Cid, Timeless Artificer enters",
+        "from": 6
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Plains(s)",
+      "action": "engine playthrough: Cycling activated from hand -> discard self -> draw a card",
+      "result": "Cycling {W}{U} is activated from hand: {W}{U} is paid, Cid, Timeless Artificer is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — drawing a real card.",
+      "raw": {
+        "result": "Cycling {W}{U} is activated from hand: {W}{U} is paid, Cid, Timeless Artificer is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — drawing a real card.",
+        "you": {
+          "basicLands": [
+            "Plains",
+            "Island"
+          ],
+          "libraryCount": 1
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Cid, Timeless Artificer",
+        "instanceId": 1,
+        "cost": "{W}{U}, Discard this card",
+        "ability": "cycling"
+      },
+      {
+        "fn": "discard",
+        "target": "Cid, Timeless Artificer",
+        "id": 12,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "Cid, Timeless Artificer"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Cid, Timeless Artificer"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Activate Cycling ({W}{U}, Discard this card): draw a card",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

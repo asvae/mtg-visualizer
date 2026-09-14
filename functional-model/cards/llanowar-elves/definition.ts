@@ -6,9 +6,9 @@ export const llanowarElves: CardDefinition = {
   typeLine: 'Creature — Elf Druid',
   pt: [1, 1],
 
-  // No engine support for mana abilities anywhere in this model (confirmed:
-  // harness.ts assumes unlimited mana for casting, nothing tracks a
-  // produced amount) — same documented gap elvish-archdruid's own mana
-  // ability hits.
-  staticAbilities: ['{T}: Add {G}.'],
+  // Real, structured `manaAbilities` entry (`Cost$ T | Produced$ G`,
+  // `res/cardsfolder/l/llanowar_elves.txt`) — genuinely payable via
+  // `mana.ts`'s `canAfford`/`payMana` (creature, so 302.6 summoning-sickness
+  // applies, `engine.ts`'s `payableManaSources`).
+  manaAbilities: [{ colors: ['G'] }],
 };

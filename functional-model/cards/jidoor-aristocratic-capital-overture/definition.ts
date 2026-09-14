@@ -32,7 +32,7 @@ export const jidoorAristocraticCapital: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {U}.'],
+  manaAbilities: [{ colors: ['U'] }],
 
   backFace: {
     name: 'Overture',

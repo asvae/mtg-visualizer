@@ -169,3 +169,41 @@ Knight token kept showing Flying in the replay UI through the opponent's
 own subsequent turns forever, once fired — unrelated to (and initially
 mistaken for) `continuousKeywordGrants`' own turn-conditional toggle
 (gap #14), which was independently re-verified live and is NOT regressed.
+
+## `pump`'s own `untilEndOfTurn` field + a real, discrete removal entry (2026-09-14, additive; ENGINE_GAPS.md gap #21)
+
+A `pump` entry now optionally carries `untilEndOfTurn: true` (only present
+when true, omitted otherwise) — real CR 514.2 "until end of turn" duration,
+opt-in per `Effect` (`card.ts`'s `pumpAll`/`pumpTarget`/`pumpSelf` own
+`untilEndOfTurn` field), tracked game-wide in
+`GameState.untilEndOfTurnPumps` and drained by `state.ts`'s
+`clearUntilEndOfTurnPumps()` at every real Cleanup phase entry (`turn.ts`'s
+`runPhaseEntryAction`, alongside the pre-existing `clearAllDamage()`/
+`clearUntilEndOfTurnKeywordGrants()` calls).
+
+**Unlike `grantKeyword`'s own `untilEndOfTurn` (above), this DOES get a new,
+discrete removal log entry** — `{fn:'pump', target, id, power: <negated
+delta>, toughness: <negated delta>, removed: true}` — pushed by
+`engine-trace.ts`'s own `logAutomaticPhaseEntry` the moment a real Cleanup
+crossing drains the pending list. The reason for the asymmetry: a
+`grantKeyword` removal is fully re-derivable at render/query time (the
+keyword is just gone from the card's own `keywords` array, so a renderer
+re-scanning "every `grantKeyword` entry so far, minus a Cleanup-crossed
+`untilEndOfTurn` one" can recompute current state) — but a `pump`'s own
+current numeric total has no equivalent "list of active pumps" a renderer
+could re-derive from; the discrete `removed: true` entry is the only way
+the trace shows the expiry actually happened, not just that the pump
+applied earlier.
+
+**`card` (consumer) should**: same pattern the `grantKeyword`
+`untilEndOfTurn` entry above already establishes for keywords, applied to
+numeric P/T instead — a renderer tracking a card's own current effective
+power/toughness off "every `pump` entry seen so far, summed" must also
+apply a `removed: true` entry's own `power`/`toughness` (already
+pre-negated relative to the original application) once seen, and should do
+so REGARDLESS OF WHICH PLAYER'S turn is passing (real 514.2 is game-wide,
+not just the active player's own permanents) — same real, live regression
+class the `grantKeyword` entry above documents (Ambrosia Whiteheart's own
+Landfall pump, Battle Menu's own Ability-mode pump) — a `pump` entry with
+no `removed`/`untilEndOfTurn` distinction at all is unaffected (a bare pump
+is permanent-within-the-replay, same as before this closure).

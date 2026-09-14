@@ -1,9 +1,9 @@
 import type { CardDefinition, Effect } from '../../card';
 
 // Real script (rabanastre_royal_city.txt) — same real "enters tapped"
-// replacement effect and mana-ability-as-text treatment as
-// treno-dark-city's own doc comment explains in full; only the two colors
-// produced differ.
+// replacement effect and real, structured choice-of-color `manaAbilities`
+// treatment as treno-dark-city's own doc comment explains in full; only
+// the two colors produced differ.
 export const rabanastreRoyalCity: CardDefinition = {
   name: 'Rabanastre, Royal City',
   manaCost: '',
@@ -16,5 +16,5 @@ export const rabanastreRoyalCity: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {R} or {W}.'],
+  manaAbilities: [{ colors: ['R', 'W'] }],
 };

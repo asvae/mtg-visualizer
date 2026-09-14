@@ -1,157 +1,25 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "taps the opponent's target creature and puts a stun counter on it",
+      "setup": "you: 6 Island(s)",
+      "action": "engine playthrough: cast -> resolve -> enters -> ETB tap+stun",
+      "result": "Ice Flan is cast ({4}{U}{U} paid) and enters the battlefield; its ETB taps the opponent's target creature and puts a stun counter on it.",
       "raw": {
-        "result": "taps the opponent's target creature and puts a stun counter on it",
-        "opponents": [
-          {
-            "creaturesCount": 1
-          }
-        ],
-        "sequence": [
-          "onEnter"
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Ice Flan",
-        "instanceId": 1,
-        "id": 1192,
-        "from": "hand",
-        "cost": "{4}{U}{U}"
-      },
-      {
-        "fn": "enters",
-        "card": "Ice Flan",
-        "instanceId": 1,
-        "id": 1192,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "trigger",
-        "card": "Ice Flan",
-        "instanceId": 1,
-        "id": 1192,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
-      },
-      {
-        "fn": "read:isCreature",
-        "target": "Grizzly Bears",
-        "result": true
-      },
-      {
-        "fn": "tap",
-        "target": "Grizzly Bears",
-        "id": 1191,
-        "controller": "opp0"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 1,
-        "creatureCount": 1
-      },
-      {
-        "fn": "read:isCreature",
-        "target": "Grizzly Bears",
-        "result": true
-      },
-      {
-        "fn": "putCounter",
-        "target": "Grizzly Bears",
-        "id": 1191,
-        "counterType": "stun",
-        "amount": 1,
-        "controller": "opp0"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "no legal target — the opponent controls no creatures, nothing tapped or countered",
-      "raw": {
-        "result": "no legal target — the opponent controls no creatures, nothing tapped or countered",
-        "opponents": [
-          {
-            "creaturesCount": 0
-          }
-        ],
-        "sequence": [
-          "onEnter"
-        ]
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Ice Flan",
-        "instanceId": 1,
-        "id": 1195,
-        "from": "hand",
-        "cost": "{4}{U}{U}"
-      },
-      {
-        "fn": "enters",
-        "card": "Ice Flan",
-        "instanceId": 1,
-        "id": 1195,
-        "zone": "Battlefield"
-      },
-      {
-        "fn": "trigger",
-        "card": "Ice Flan",
-        "instanceId": 1,
-        "id": 1195,
-        "name": "onEnter"
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "opp0",
-        "zone": "Battlefield",
-        "count": 0,
-        "creatureCount": 0
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "you: 1 creature(s); opp0: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "with a creature on both sides, still taps only the opponent's — self's own controller isn't a legal target",
-      "raw": {
-        "result": "with a creature on both sides, still taps only the opponent's — self's own controller isn't a legal target",
+        "result": "Ice Flan is cast ({4}{U}{U} paid) and enters the battlefield; its ETB taps the opponent's target creature and puts a stun counter on it.",
         "you": {
-          "creaturesCount": 1
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ]
         },
         "opponents": [
           {
             "creaturesCount": 1
           }
-        ],
-        "sequence": [
-          "onEnter"
         ]
       }
     },
@@ -160,22 +28,49 @@
         "fn": "cast",
         "card": "Ice Flan",
         "instanceId": 1,
-        "id": 1200,
         "from": "hand",
         "cost": "{4}{U}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Ice Flan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Ice Flan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Ice Flan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Ice Flan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Ice Flan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Ice Flan"
       },
       {
         "fn": "enters",
         "card": "Ice Flan",
         "instanceId": 1,
-        "id": 1200,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Ice Flan",
         "instanceId": 1,
-        "id": 1200,
         "name": "onEnter"
       },
       {
@@ -193,7 +88,7 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 1199,
+        "id": 9,
         "controller": "opp0"
       },
       {
@@ -211,10 +106,113 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1199,
+        "id": 9,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Ice Flan ({4}{U}{U})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 7
+      },
+      {
+        "label": "Fire onEnter",
+        "from": 8
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 Forest(s)",
+      "action": "engine playthrough: Islandcycling activated from hand -> discard self -> search library -> shuffle",
+      "result": "Islandcycling {2} is activated from hand: {2} is paid, Ice Flan is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Island card, putting it into hand, then shuffling.",
+      "raw": {
+        "result": "Islandcycling {2} is activated from hand: {2} is paid, Ice Flan is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Island card, putting it into hand, then shuffling.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Ice Flan",
+        "instanceId": 1,
+        "cost": "{2}, Discard this card",
+        "ability": "cycling"
+      },
+      {
+        "fn": "discard",
+        "target": "Ice Flan",
+        "id": 16,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ice Flan"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Ice Flan"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 1,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Island",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Island",
+        "subtype": "Island",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Island",
+        "id": 15,
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Activate Islandcycling ({2}, Discard this card): search for an Island",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

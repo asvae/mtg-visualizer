@@ -6,9 +6,18 @@ export const overgrownZealot: CardDefinition = {
   typeLine: 'Creature — Elf Druid',
   pt: [0, 4],
 
-  // Both abilities are plain mana abilities — no engine support (same gap
-  // llanowar-elves/druid-of-the-cowl hit). The second ability's own
-  // "Spend this mana only to turn permanents face up" restriction is moot
-  // here regardless (no morph/face-down mechanic modeled anywhere either).
-  staticAbilities: ['{T}: Add one mana of any color.', '{T}: Add two mana of any one color. Spend this mana only to turn permanents face up.'],
+  // Both are now real, structured `manaAbilities` entries (real Forge
+  // citation, `res/cardsfolder/o/overgrown_zealot.txt`). The first
+  // (`Produced$ Any`, no restriction) is genuinely payable via `mana.ts`'s
+  // `canAfford`/`payMana` — same 5-color unrestricted shape blitzball's own
+  // ability uses, creature so 302.6 summoning-sickness applies
+  // (`engine.ts`'s `payableManaSources`). The second's own real
+  // `RestrictValid$ Static.isTurnFaceUp` restriction (real printed "Spend
+  // this mana only to turn permanents face up") is honestly typed but
+  // deliberately unenforced (moot here regardless — no morph/face-down
+  // mechanic is modeled anywhere either).
+  manaAbilities: [
+    { colors: ['W', 'U', 'B', 'R', 'G'] },
+    { colors: ['W', 'U', 'B', 'R', 'G'], amount: 2, restriction: 'Spend this mana only to turn permanents face up.' },
+  ],
 };

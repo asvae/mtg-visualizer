@@ -1,0 +1,11 @@
+{
+  "triggers[0]": {
+    "highlight": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+    "line": 0
+  },
+  "triggers[1]": {
+    "highlight": "Equipped creature gets +1/+1, has \"Whenever this creature deals combat damage to a player, draw a card,\" and is a Rogue in addition to its other types.",
+    "line": 1
+  },
+  "effects": { "highlight": "Equip {4}", "line": 2 }
+}

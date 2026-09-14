@@ -1,1 +1,95 @@
-[]
+[
+  {
+    "scenario": {
+      "setup": "",
+      "action": "engine playthrough: land drop -> enters",
+      "result": "Capital City is played as a land (CR 305.1) and enters the battlefield untapped — no ETB trigger (unlike every other real Town-cycle land in this pool).",
+      "raw": {
+        "result": "Capital City is played as a land (CR 305.1) and enters the battlefield untapped — no ETB trigger (unlike every other real Town-cycle land in this pool)."
+      }
+    },
+    "log": [
+      {
+        "fn": "playLand",
+        "card": "Capital City",
+        "instanceId": 1
+      },
+      {
+        "fn": "enters",
+        "card": "Capital City",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Play Capital City",
+        "from": 0
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 2 Forest(s)",
+      "action": "engine playthrough: Cycling activated from hand -> discard self -> draw a card",
+      "result": "Cycling {2} is activated from hand: {2} is paid, Capital City is genuinely discarded (never played as a land) as part of the cost, then the ability resolves for real — drawing a real card.",
+      "raw": {
+        "result": "Cycling {2} is activated from hand: {2} is paid, Capital City is genuinely discarded (never played as a land) as part of the cost, then the ability resolves for real — drawing a real card.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest"
+          ],
+          "libraryCount": 1
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Capital City",
+        "instanceId": 1,
+        "cost": "{2}, Discard this card",
+        "ability": "cycling"
+      },
+      {
+        "fn": "discard",
+        "target": "Capital City",
+        "id": 7,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Capital City"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Capital City"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Activate Cycling ({2}, Discard this card): draw a card",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      }
+    ]
+  }
+]

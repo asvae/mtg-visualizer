@@ -21,8 +21,20 @@
     {
       "event": "damage",
       "controller": "you",
-      "value": 5,
-      "face": "back"
+      "value": 1,
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamage-effect-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 63
+        }
+      ]
     },
     {
       "event": "lifegain",

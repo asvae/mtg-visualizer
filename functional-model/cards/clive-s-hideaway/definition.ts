@@ -16,10 +16,13 @@ import type { CardDefinition } from '../../card';
 //    tracks that) AND the explicitly out-of-scope "cast a card from
 //    exile you didn't put there via alternateCosts" action (per this
 //    batch's own known-gaps list) — a real gap on two independent counts.
-//  - {T}: Add {C} is a real mana ability — no mana-producing Effect/Action
-//    exists anywhere in this model, the documented STILL-DEFERRED gap.
-// All three stay static text — there is no declarative onEnter/effects/
-// abilities entry on this card at all.
+//  - {T}: Add {C} is a real, structured `manaAbilities` entry (`Cost$ T |
+//    Produced$ C`, `res/cardsfolder/c/clives_hideaway.txt`) now that
+//    `manaAbilities` exists — genuinely payable via `mana.ts`'s
+//    `canAfford`/`payMana` (no mana POOL is tracked anywhere in this model
+//    either way).
+// The other two real abilities stay static text — there is no declarative
+// onEnter/effects/abilities entry on this card at all for them.
 export const clivesHideaway: CardDefinition = {
   name: "Clive's Hideaway",
   manaCost: '',
@@ -27,7 +30,7 @@ export const clivesHideaway: CardDefinition = {
 
   staticAbilities: [
     'Hideaway 4 (When this land enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom in a random order.)',
-    '{T}: Add {C}.',
     '{2}, {T}: You may play the exiled card without paying its mana cost if you control four or more legendary creatures.',
   ],
+  manaAbilities: [{ colors: ['C'] }],
 };

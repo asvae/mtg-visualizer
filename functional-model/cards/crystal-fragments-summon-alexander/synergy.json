@@ -9,14 +9,13 @@
       "annotations": [
         {
           "target": "typeLine",
-          "start": 11,
-          "end": 20
+          "start": 0,
+          "end": 8
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {
@@ -31,13 +30,12 @@
         {
           "target": "typeLine",
           "start": 0,
-          "end": 20
+          "end": 8
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {

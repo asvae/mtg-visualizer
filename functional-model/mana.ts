@@ -27,44 +27,64 @@
 //    discipline. A source that PRODUCES {C} is unaffected either way (next
 //    bullet) — that's a source-side ability, not a cast-cost pip.
 //  - Basic lands (real subtype = color: Plains=W, Island=U, Swamp=B,
-//    Mountain=R, Forest=G), PLUS a narrow real slice of non-basic mana
-//    sources: any permanent whose `CardDefinition.staticAbilities`
-//    contains an EXACT, single-color, unrestricted "{T}: Add {X}." string
-//    (`manaAbilityColorFromStaticText` below, X one of W/U/B/R/G/C) is
-//    recognized too — checked against the real pool: 10 real WUBRG cards
-//    qualify (Druid of the Cowl, Goobbue Gardener, Llanowar Elves — all
-//    creatures, so 302.6 summoning-sickness applies, handled in
-//    `engine.ts`; Midgar, Ishgard, Jidoor, Lindblum, Zanarkand — Adventure
-//    lands; White Auracite, an artifact; Willowrush Verge, a plain land),
-//    plus 6 real "{T}: Add {C}." lands (capital-city, cavern-of-souls,
-//    starting-town, eclipsed-realms, clive-s-hideaway, the-gold-saucer —
-//    added 2026-09-09 alongside colorless `ManaColor` support), PLUS
-//    (closed 2026-09-12, ENGINE_GAPS.md gap #5's own "dual/choice-of-color"
-//    remainder) an exact, unrestricted "{T}: Add {X} or {Y}." string
-//    (`manaAbilityColorsFromStaticText` below) — checked against the real
-//    pool: 12 real Town-cycle lands qualify (Vector, Imperial Capital's own
-//    "{T}: Add {B} or {R}.", e.g.). `sourceColors`/`assignManaRequirements`
-//    below generalize `canAfford`/`payMana`'s own colored-pip matching into
-//    a real assignment problem so a dual source genuinely counts toward
-//    EITHER color a cost needs (not just a fixed one, and not just a bigger
-//    lookup table — a real per-cast choice, checked by exhaustive
-//    backtracking since the real pool's costs/source counts are always
-//    small enough for that to be both correct and fast). Still explicitly
-//    NOT recognized: a restricted ability ("Activate only if...", "Spend
-//    this mana only to..." — Cargo Ship's own real "{T}: Add {C}. Spend
-//    this mana only to cast an artifact spell..." ability, e.g. — see this
-//    file's own `manaAbilityColorFromStaticText` doc comment for why
+//    Mountain=R, Forest=G), PLUS every real, structured `CardDefinition
+//    .manaAbilities` entry (`card.ts`'s own `ManaAbility` — see its full
+//    doc comment for the real Forge citation, `AbilityManaPart.java`)
+//    that's an ORDINARY payable source: a bare `{T}` cost (no `cost`
+//    override), no `restriction`, no `activationCondition`, and no
+//    `variableAmount` — see `payableManaAbility` below, the one real
+//    chokepoint this file now filters through (closed 2026-09-14,
+//    superseding the OLD text-regex path this same header used to
+//    document: `manaAbilityColorFromStaticText`/
+//    `manaAbilityColorsFromStaticText`/`deriveManaAbility`, all DELETED —
+//    every real card that used to rely on scanning `staticAbilities` text
+//    now declares a real, typed `manaAbilities` entry instead, checked and
+//    migrated card-by-card, see `ENGINE_GAPS.md`'s own "Non-basic mana
+//    sources" entry for the full list).
+//  - `sourceColors`/`assignManaRequirements` below generalize `canAfford`/
+//    `payMana`'s own colored-pip matching into a real assignment problem so
+//    a multi-color source (a real CHOICE, `ManaAbility.colors.length > 1`)
+//    genuinely counts toward ANY of its own colors a cost needs — not just
+//    a fixed one, and not just a bigger lookup table — a real per-cast
+//    choice, checked by exhaustive backtracking since the real pool's
+//    costs/source counts are always small enough for that to be both
+//    correct and fast. This now ALSO covers a genuine 5-color "any one
+//    color" source (Blitzball's real, unrestricted `{T}: Add one mana of
+//    any color.` — `ManaAbility.colors: ['W','U','B','R','G']`, no
+//    narrower vocabulary needed) for free, same mechanism.
+//  - A source with `ManaAbility.amount` > 1 (Ring of the Lucii's real
+//    `{T}: Add {C}{C}.`) contributes that many units toward GENERIC
+//    coverage in one tap (`sourceAmount` below) — real, narrow extension;
+//    see `payableManaAbility`'s own doc comment for the one documented
+//    simplification this doesn't cover (an amount>1 source is never
+//    matched against more than one COLORED requirement in a single
+//    assignment — harmless for the one real pool card that needs this,
+//    since its own 2 units are colorless-only and colorless is never
+//    itself a payable pip in a cast cost, see `COLORS` below).
+//  - Still explicitly NOT recognized as an ordinary payable source — real,
+//    named, flagged debt, not silently dropped: a RESTRICTED ability
+//    ("Spend this mana only to..." — Cargo Ship's own real `{T}: Add {C}.
+//    Spend this mana only to cast an artifact spell...`, Freya Crescent's,
+//    The Emperor of Palamecia's own real equivalents — all 3 now genuinely
+//    TYPED via `ManaAbility.restriction`, just still unenforced, since
 //    correctly affording this would need a real spendable-mana-pool
-//    tracking mechanism this engine doesn't have at all, a materially
-//    bigger lift than a matching problem), or a variable one (Elvish
-//    Archdruid's own "Add {G} for each Elf you control" — its `amount` is a
-//    function of live board state, not a fixed single symbol at all, and
-//    unlike the dual-color case above there's no way to represent "produces
-//    a variable amount" as a `RealCard.manaAbility` value without teaching
-//    `payMana` that ONE tap can yield more than one mana unit — a real,
-//    separate extension to the payment model itself, not just a lookup
-//    widening). A mana rock with one of THOSE two shapes remains a real,
-//    separately tracked gap (ENGINE_GAPS.md gap #5).
+//    tracking mechanism this engine doesn't have at all — see
+//    `ManaAbility.restriction`'s own doc comment), a VARIABLE one (Elvish
+//    Archdruid's own "Add {G} for each Elf you control", Woodland
+//    Weavemaster's own "Add X mana... where X is this creature's power" —
+//    both now genuinely TYPEABLE via `ManaAbility.variableAmount`, just not
+//    yet wired into `canAfford`/`payMana`, which take no live
+//    controller/board reference to re-derive a variable count from at
+//    payment time — see that field's own doc comment), or a source whose
+//    OWN activation needs something other than a bare `{T}` (a non-`{T}`
+//    `cost`, e.g. Capital City's real `{1}, {T}: Add one mana of any
+//    color.`; or a real `activationCondition`, e.g. Willowrush Verge's
+//    second ability) — paying a MANA ABILITY'S OWN cost, or checking a
+//    live board-state precondition before activating one, are both real,
+//    separate, bigger lifts than this file's own narrow "tap sources,
+//    assign to requirements" scope. A mana rock/land with any of these
+//    remaining shapes stays a real, separately tracked gap (ENGINE_GAPS.md
+//    gap #5), now honestly TYPED rather than silently text-only or absent.
 
 import type { GameState, RealCard, RealPlayer } from './state';
 
@@ -263,97 +283,109 @@ export function basicLandsFor(cost: string): BasicLandName[] {
 }
 
 /**
- * Recognizes a real, narrow slice of non-basic "{T}: Add mana" static
- * abilities (see this file's own header) — the string must be EXACTLY
- * `{T}: Add {X}.` (X a single real color OR colorless — `[WUBRGC]`, widened
- * 2026-09-09 for The Gold Saucer's real "{T}: Add {C}." ability, same real
- * value as any other color here, not a separate check), with no
- * restriction/"spend only"/multi-symbol text attached, or it's correctly
- * ignored (still a real static ability text-wise — `staticAbilities` is
- * unaffected either way — just not modeled as a payable source). Returns
- * the FIRST such match across `staticAbilities` (Willowrush Verge has a
- * second, restricted `{T}: Add {G}` entry that's correctly skipped, while
- * its first, unrestricted `{T}: Add {U}` still qualifies).
+ * Every `card.counterConditionalGrants` entry currently ACTIVE (`card`'s own
+ * counter count for that entry's `counterType` is > 0 right now) — duck-typed
+ * against `state.ts`'s own `RealCard.counterConditionalGrants`/
+ * `CounterConditionalGrant` shape rather than imported as a value (this
+ * file's own header: `mana.ts` never imports a VALUE from `state.ts`,
+ * only types — reading `card.counterConditionalGrants`/`card.counters`
+ * directly needs no runtime import at all). Real Forge citation and full
+ * design: `card.ts`'s own `CounterConditionalGrant` doc comment (Ultima,
+ * Origin of Oblivion's own real `RemoveAllAbilities$ True | AddAbility$
+ * ColorlessMana`) — `payableManaAbility`/`sourceColors`/`sourceAmount`
+ * below are the real mana-side readers.
  */
-export function manaAbilityColorFromStaticText(staticAbilities?: string[]): ManaColor | undefined {
-  for (const text of staticAbilities ?? []) {
-    const match = /^\{T\}: Add \{([WUBRGC])\}\.$/.exec(text);
-    if (match) return match[1] as ManaColor;
+function activeCounterConditionalGrants(card: RealCard) {
+  return (card.counterConditionalGrants ?? []).filter((g) => (card.counters[g.counterType] ?? 0) > 0);
+}
+
+/**
+ * The one real ORDINARILY-PAYABLE `ManaAbility` on `card`, if any (closed
+ * 2026-09-14, ENGINE_GAPS.md gap #5, superseding the old text-regex path —
+ * see this file's own header) — a bare `{T}` cost (no `cost` override), no
+ * `restriction`, no `activationCondition`, and no `variableAmount`. Returns
+ * the FIRST such qualifying entry across `card.manaAbilities` (Willowrush
+ * Verge's own second, conditioned `{T}: Add {G}.` entry is correctly
+ * skipped in favor of its first, unrestricted `{T}: Add {U}.`, same
+ * "first match wins" behavior the old regex path already had). A
+ * restricted/conditioned/variable/non-bare-`{T}` entry is real, present,
+ * structured data (`CardDefinition.manaAbilities` — never silently dropped)
+ * but deliberately excluded HERE, same "known, honestly unenforced" scope
+ * every one of those fields' own doc comments already documents.
+ *
+ * An ACTIVE `counterConditionalGrants` entry (Ultima, Origin of Oblivion's
+ * own blight counter) is checked FIRST and, when present, REPLACES this
+ * entirely: a `grantManaAbility` wins outright (the permanent's only mana
+ * ability is now that one, printed ones ignored); a bare `removeAllAbilities`
+ * with no replacement means no mana ability at all anymore.
+ */
+function payableManaAbility(card: RealCard): { colors: ManaColor[]; amount: number } | undefined {
+  const active = activeCounterConditionalGrants(card);
+  const granted = active.find((g) => g.grantManaAbility)?.grantManaAbility;
+  if (granted) return { colors: granted.colors, amount: granted.amount ?? 1 };
+  if (active.some((g) => g.removeAllAbilities)) return undefined;
+  for (const ability of card.manaAbilities ?? []) {
+    if (ability.restriction || ability.activationCondition || ability.variableAmount) continue;
+    if ((ability.cost ?? '{T}') !== '{T}') continue;
+    return { colors: ability.colors, amount: ability.amount ?? 1 };
   }
   return undefined;
 }
 
 /**
- * Widens the above to also recognize a real, common "choice of color" shape
- * — an EXACT `{T}: Add {X} or {Y}.` string (two real colors, still no
- * restriction/"spend only"/third-symbol text attached) — checked against the
- * real pool: 12 real FIN Town-cycle lands use this exact shape (Vector,
- * Imperial Capital's own "{T}: Add {B} or {R}.", e.g.), on top of the
- * single-color cards `manaAbilityColorFromStaticText` above already covers.
+ * Every color `card` produces as a mana source — EVERY matching basic-land
+ * subtype color (real fix, 2026-09-14: previously stopped at the FIRST
+ * matching subtype, silently dropping a genuine dual-basic-type land's
+ * second color — Breeding Pool's own real `Land — Forest Island` typeLine
+ * needs BOTH `G` and `U`, matching real Forge's own behavior: a dual-basic
+ * land needs no explicit `A:AB$ Mana` script line at all, its mana ability
+ * is automatically derived from its own printed basic land types, confirmed
+ * against `res/cardsfolder/b/breeding_pool.txt` — no such line exists
+ * there), OR the ordinarily-payable `ManaAbility` above (single- or
+ * multi-element) — or an empty array if it's neither/not a mana source at
+ * all. Every real caller below goes through this, so a dual land's own
+ * producible colors are always fully visible to `canAfford`/`payMana`'s own
+ * assignment, not just the first.
  *
- * **Now (2026-09-12) also a real payment/affordability primitive, not just
- * `scripts/prefill-mana-facts.mjs`'s own synergy-FACT generation** —
- * ENGINE_GAPS.md gap #5's own "dual/choice-of-color" remainder, closed:
- * `engine.ts`'s `resolveTop`/`playLand` now store this function's own
- * result on `RealCard.manaAbility` (widened to a real `ManaColor[]` — see
- * that field's own doc comment) whenever the single-color function above
- * doesn't match but this one names two colors, and `sourceColors`/
- * `assignManaRequirements` below genuinely let a dual source pay EITHER of
- * its two colors via real backtracking (not a bigger lookup table — a real
- * per-cast choice, checked exhaustively since the real pool's cost/source
- * sizes are always small enough for that to be both correct and fast).
- *
- * Returns every color the FIRST matching static-ability string names (in
- * printed order) — a single-color match short-circuits the same way the
- * function above does; a choice match returns both colors; neither shape
- * matching (restricted/hybrid/variable, same exclusions as above) returns an
- * empty array, not `undefined` (a caller iterates this one). Colorless
- * (`{C}`) is now a recognized single-color match too (2026-09-09, same
- * `[WUBRGC]` widening as `manaAbilityColorFromStaticText` above) — still
- * only via the single-symbol branch; a `{T}: Add {C} or {X}.` choice-of-
- * color-plus-colorless shape doesn't exist on any real card in this pool,
- * so the choice branch stays WUBRG-only rather than speculatively widened.
+ * Exported (2026-09-14, ENGINE_GAPS.md gap #5's own "Ultima, Origin of
+ * Oblivion" closure) so `engine.ts` can re-derive which color(s) a REAL
+ * tapped source just produced, right after `payMana` returns — the one
+ * real chokepoint for firing `card.ts`'s new `Trigger.on: 'tapLandForMana'`
+ * (Forge's own real `TriggerType.TapsForMana`, see that field's own doc
+ * comment) — without duplicating this function's own real derivation
+ * logic at the call site.
  */
-export function manaAbilityColorsFromStaticText(staticAbilities?: string[]): ManaColor[] {
-  for (const text of staticAbilities ?? []) {
-    const single = /^\{T\}: Add \{([WUBRGC])\}\.$/.exec(text);
-    if (single) return [single[1] as ManaColor];
-    const choice = /^\{T\}: Add \{([WUBRG])\} or \{([WUBRG])\}\.$/.exec(text);
-    if (choice) return [choice[1] as ManaColor, choice[2] as ManaColor];
-  }
-  return [];
-}
-
-/**
- * Real, structural mana-ability derivation for a permanent as it enters the
- * battlefield (`engine.ts`'s `resolveTop`/`playLand`, the one real call
- * site) — single-color first (`manaAbilityColorFromStaticText`, stored as a
- * bare `ManaColor`, unchanged shape/behavior from before this pass), then
- * the choice-of-color widening (`manaAbilityColorsFromStaticText`, stored
- * as a real `ManaColor[]`) only when the single-color match fails. A
- * restricted/variable ability (Cargo Ship's own "Spend this mana only to
- * cast an artifact spell...", Elvish Archdruid's own "for each Elf you
- * control") matches NEITHER function, so this correctly returns `undefined`
- * for both — see this file's own header for why those two shapes stay
- * unmodeled.
- */
-export function deriveManaAbility(staticAbilities?: string[]): ManaColor | ManaColor[] | undefined {
-  const single = manaAbilityColorFromStaticText(staticAbilities);
-  if (single) return single;
-  const choice = manaAbilityColorsFromStaticText(staticAbilities);
-  return choice.length > 0 ? choice : undefined;
-}
-
-/** Every color `card` produces as a mana source — a basic land subtype (single-element), or a real `manaAbility` derived at ETB (`RealCard`'s own doc comment; single- or dual-element) — or an empty array if it's neither/not a mana source at all. Supersedes the old single-`ManaColor`-returning `manaColorOf` (2026-09-12, ENGINE_GAPS.md gap #5's dual-color-source closure) — every real caller below now goes through this instead, so a dual land's own TWO producible colors are both genuinely visible to `canAfford`/`payMana`'s own assignment, not just the first. */
-function sourceColors(card: RealCard): ManaColor[] {
+export function sourceColors(card: RealCard): ManaColor[] {
+  // Real Forge `RemoveLandTypes$ True | RemoveAllAbilities$ True |
+  // AddAbility$ ColorlessMana` (613, Ultima, Origin of Oblivion's own blight
+  // counter, ENGINE_GAPS.md's own closure) — checked BEFORE the basic-land-
+  // subtype derivation below, since a blighted land has genuinely lost every
+  // land subtype it printed (`effectiveSubtypes`, `state.ts`) and would
+  // otherwise still be read here off its raw, un-stripped `card.subtypes`
+  // (this function reads the RAW field, not `effectiveSubtypes`, since it
+  // has no `GameState` to call that with — the active-grant check below
+  // needs none either, it's entirely local to `card`).
+  const active = activeCounterConditionalGrants(card);
+  const granted = active.find((g) => g.grantManaAbility)?.grantManaAbility;
+  if (granted) return granted.colors;
+  if (active.some((g) => g.removeAllAbilities)) return [];
   if (card.types.includes('Land')) {
-    for (const subtype of card.subtypes) {
-      const color = BASIC_LAND_COLOR[subtype];
-      if (color) return [color];
-    }
+    const landColors = card.subtypes.map((s) => BASIC_LAND_COLOR[s]).filter((c): c is ManaColor => c !== undefined);
+    if (landColors.length > 0) return landColors;
   }
-  if (card.manaAbility === undefined) return [];
-  return Array.isArray(card.manaAbility) ? card.manaAbility : [card.manaAbility];
+  return payableManaAbility(card)?.colors ?? [];
+}
+
+/** How many mana units ONE tap of `card` produces toward GENERIC coverage (`canAfford`/`payMana` below) — always 1 for a basic land (no real FIN basic land taps for more), or the ordinarily-payable `ManaAbility`'s own real `amount` (Ring of the Lucii's real `Amount$ 2`, the one pool card that needs a value other than 1). Only ever consulted for a source `sourceColors` already returned at least one color for. */
+function sourceAmount(card: RealCard): number {
+  // Same active-grant precedence as `sourceColors` above — a blighted
+  // land's own real `{T}: Add {C}` always produces exactly 1 (Ultima's own
+  // real script has no `Amount$` override on `ColorlessMana`).
+  const active = activeCounterConditionalGrants(card);
+  const granted = active.find((g) => g.grantManaAbility)?.grantManaAbility;
+  if (granted) return granted.amount ?? 1;
+  if (card.types.includes('Land') && card.subtypes.some((s) => BASIC_LAND_COLOR[s])) return 1;
+  return payableManaAbility(card)?.amount ?? 1;
 }
 
 /** Every untapped real mana source (see `sourceColors`) this player currently controls. */
@@ -427,14 +459,16 @@ function coloredRequirementsFor(cost: ParsedManaCost): ColorRequirement[] {
   return requirements;
 }
 
-/** Whether `sources` (already-filtered untapped mana sources) can cover `cost` — colored + Hybrid pips matched first via `assignManaRequirements` (a real dual-color source may pay either its own color, a real Hybrid pip may be paid by either of its two colors), generic covered by whatever's left. Read-only; doesn't tap anything (see `payMana` for the mutating half). `cost.xCount` is ignored (see `ParsedManaCost.xCount`'s own doc comment — resolve X first via `resolveXCost`). */
+/** Whether `sources` (already-filtered untapped mana sources) can cover `cost` — colored + Hybrid pips matched first via `assignManaRequirements` (a real dual-color source may pay either its own color, a real Hybrid pip may be paid by either of its two colors), generic covered by whatever's left, SUMMING each leftover source's own `sourceAmount` (2026-09-14, ENGINE_GAPS.md gap #5 — Ring of the Lucii's real `Amount$ 2` source counts as 2 toward generic, not 1; every other real source in this pool still has `amount` 1, so this is a strict generalization of the old plain-count check, not a behavior change for them). Read-only; doesn't tap anything (see `payMana` for the mutating half). `cost.xCount` is ignored (see `ParsedManaCost.xCount`'s own doc comment — resolve X first via `resolveXCost`). */
 export function canAfford(sources: RealCard[], cost: ParsedManaCost): boolean {
   const assigned = assignManaRequirements(sources, coloredRequirementsFor(cost));
   if (assigned === null) return false;
-  return sources.length - assigned.length >= cost.generic;
+  const assignedSet = new Set(assigned);
+  const genericAvailable = sources.filter((s) => !assignedSet.has(s)).reduce((sum, s) => sum + sourceAmount(s), 0);
+  return genericAvailable >= cost.generic;
 }
 
-/** Taps exactly enough of `sources` to pay `cost` (colored + Hybrid pips first via the same real assignment `canAfford` uses, then generic off whatever's left) — real `payMana` mutation (`state.tap`), not a log-only observation. Throws if `canAfford` would say no, rather than tapping a partial/wrong set. Returns the exact real sources tapped, in order — the same deterministic choice this function already makes, just surfaced instead of thrown away (a caller has no other way to know WHICH lands paid for something; `engine-trace.ts`'s own pilot logging is what this return value exists for). */
+/** Taps exactly enough of `sources` to pay `cost` (colored + Hybrid pips first via the same real assignment `canAfford` uses, then generic off whatever's left, one tap at a time, each contributing its own real `sourceAmount` toward the remaining generic need — 2026-09-14, ENGINE_GAPS.md gap #5, same generalization `canAfford` above documents) — real `payMana` mutation (`state.tap`), not a log-only observation. Throws if `canAfford` would say no, rather than tapping a partial/wrong set. Returns the exact real sources tapped, in order — the same deterministic choice this function already makes, just surfaced instead of thrown away (a caller has no other way to know WHICH lands paid for something; `engine-trace.ts`'s own pilot logging is what this return value exists for). */
 export function payMana(state: GameState, sources: RealCard[], cost: ParsedManaCost): RealCard[] {
   if (!canAfford(sources, cost)) throw new Error('payMana: cannot afford this cost with the given sources');
   const remaining = [...sources];
@@ -447,6 +481,11 @@ export function payMana(state: GameState, sources: RealCard[], cost: ParsedManaC
   };
   const assigned = assignManaRequirements(remaining, coloredRequirementsFor(cost))!;
   for (const card of assigned) tapCard(card);
-  for (let i = 0; i < cost.generic; i++) tapCard(remaining[0]!);
+  let genericNeeded = cost.generic;
+  while (genericNeeded > 0) {
+    const source = remaining[0]!;
+    genericNeeded -= sourceAmount(source);
+    tapCard(source);
+  }
   return tapped;
 }

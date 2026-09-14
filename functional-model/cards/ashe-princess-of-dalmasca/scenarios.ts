@@ -1,8 +1,12 @@
-// Real engine-piloted trace (see engine-trace.ts's own header). onAttack has
-// no auto-fire in this engine (Trigger.on only recognizes
-// 'enter'|'upkeep'|'endStep') — so this pilots a real attack declaration,
-// then fires the trigger manually right after (same convention Ultima's own
-// onAttack uses).
+// Real engine-piloted trace (see engine-trace.ts's own header). `onAttack`
+// is now a real, closed-vocabulary `on: 'attacks'` auto-fire (ENGINE_GAPS.md
+// — attack-triggered-ability auto-dispatch; `card.ts`'s own
+// `Trigger.on: 'attacks'` doc comment) — `engine.ts`'s new
+// `fireOnAttackTriggers` fires this trigger for real, straight off the real
+// `declareAttackers` call below, no manual `pilotFireTrigger` needed
+// anymore (this used to be the exact same manual-firing workaround
+// Ultima's own `onAttack` still uses for ITS OWN, differently-shaped
+// trigger — see that card's own scenario for the still-manual pattern).
 
 import { ashePrincessOfDalmasca } from './definition';
 import { basicLandsFor } from '../../mana';
@@ -15,7 +19,6 @@ import {
   advanceToPlayersNextMain1,
   advanceToDeclareAttackersStep,
   pilotDeclareAttackers,
-  pilotFireTrigger,
   finishEnginePilotTrace,
   type EnginePilotSetup,
 } from '../../engine-trace';
@@ -50,14 +53,13 @@ export function runEngineScenarios(): TraceResult[] {
   // Real turn passage — summoning sickness (302.6) clears
   advanceToPlayersNextMain1(pilot, pilot.you);
 
-  // Real attack declaration (508.1)
+  // Real attack declaration (508.1) — `engine.ts`'s own `declareAttackers`
+  // now auto-fires Ashe's real `on: 'attacks'` trigger right here, for real
+  // (no manual pilotFireTrigger call needed anymore).
   advanceToDeclareAttackersStep(pilot);
   pilotDeclareAttackers(pilot, [asheReal], 'Declare Ashe as attacker');
 
-  // onAttack fired manually — digs 5 real library cards, takes the one real artifact found
-  pilotFireTrigger(pilot, ashePrincessOfDalmasca, ctx, actions, 'onAttack');
-
   const result =
-    "Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — onAttack fires manually, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.";
-  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> turn passage -> attack -> onAttack (dig)', result)];
+    'Ashe enters, turn passage clears summoning sickness, then attacks (508.1) — her onAttack trigger auto-fires for real off the declared attack itself, digging through the top 5 library cards and taking the one artifact among them (Phoenix Down) to hand.';
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> turn passage -> attack -> onAttack auto-fires (dig)', result)];
 }

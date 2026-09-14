@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect } from '../../card';
+import type { CardDefinition, Effect, AuthoredFact } from '../../card';
 
 export const cloudMidgarMercenary: CardDefinition = {
   name: 'Cloud, Midgar Mercenary',
@@ -16,16 +16,12 @@ export const cloudMidgarMercenary: CardDefinition = {
   // restriction at all — ANY triggered ability of Cloud himself OR of
   // whatever's attached to him doubles, gated purely on "genuinely equipped
   // right now" (`state.ts`'s own `shouldDoubleTrigger`/`triggerDoublingGrantApplies`).
+  // Own annotation: `definition-annotations.json`, keyed
+  // `"triggerDoubling[0]"` — the static grant's own real, standalone
+  // printed line, separate from the onEnter search trigger below.
   triggerDoubling: [
     {
       scope: 'selfAndAttachedEquipment',
-      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, fin/1-10 trial) — the static
-      // grant's own real, standalone printed line (data/fin/
-      // fin_scryfall.json), separate from the onEnter search trigger above.
-      annotation: {
-        highlight: 'As long as Cloud is equipped, if a triggered ability of Cloud or an Equipment attached to it triggers, that ability triggers an additional time.',
-        line: 1,
-      },
     },
   ],
 
@@ -39,11 +35,25 @@ export const cloudMidgarMercenary: CardDefinition = {
       // state.ts's RealCard), so 'artifact' is the closest honest match,
       // not a claim this is subtype-precise.
       effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, validType: 'artifact' } satisfies Effect],
-      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial).
-      annotation: {
-        highlight: 'When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle.',
-        line: 0,
-      },
     },
   ],
+  // Tier 3 (`CardDefinition.authoredFacts`). This card's `onEnter` trigger
+  // DOES set the closed, typed `Trigger.on: 'enter'` field — but that alone
+  // is NOT a safe general rule for deriving this sink: `ambrosia-whiteheart`'s
+  // own `onEnter` trigger (this same 10-card sample) ALSO sets `on: 'enter'`
+  // and has NO equivalent sink in its real, hand-authored `synergy.json` — a
+  // genuine, confirmed inconsistency this trial surfaced, not a rule this
+  // recognizer approach can safely generalize from without risking a false
+  // positive on Ambrosia. Authored per-card instead, matching this card's own
+  // real `synergy.json` sink fact byte-for-byte. Not wired into
+  // `apply-recognizers.mjs`/`synergy.json` generation. Own annotation:
+  // `definition-annotations.json`, keyed `"authoredFacts[0]"`.
+  authoredFacts: [
+    {
+      role: 'sink',
+      event: 'entersBattlefield',
+      target: 'self',
+      value: 1,
+    },
+  ] satisfies AuthoredFact[],
 };

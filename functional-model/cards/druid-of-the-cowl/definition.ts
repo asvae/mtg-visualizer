@@ -6,6 +6,9 @@ export const druidOfTheCowl: CardDefinition = {
   typeLine: 'Creature — Elf Druid',
   pt: [1, 3],
 
-  // No engine support for mana abilities — same gap llanowar-elves hits.
-  staticAbilities: ['{T}: Add {G}.'],
+  // Real, structured `manaAbilities` entry (`Cost$ T | Produced$ G`,
+  // `res/cardsfolder/d/druid_of_the_cowl.txt`) — same shape llanowar-elves
+  // uses; both are creatures, so 302.6 summoning-sickness genuinely applies
+  // (`engine.ts`'s `payableManaSources`).
+  manaAbilities: [{ colors: ['G'] }],
 };

@@ -58,7 +58,19 @@
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 1
+      "value": 1,
+      "provenance": {
+        "origin": "parser",
+        "rule": "lifegain-trigger-structural"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 22
+        }
+      ]
     },
     {
       "zone": "Battlefield",

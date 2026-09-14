@@ -1,29 +1,58 @@
-import type { Scenario } from '../../harness';
+// Real engine-piloted trace (see engine-trace.ts's own header). Two
+// independent real scenarios (same "genuinely two different real actions"
+// split auron-s-inspiration's own normalCast/flashbackCast establishes):
+// Ice Flan is either CAST normally (its own ETB taps + stuns an opponent's
+// creature) or CYCLED (discarded from hand instead, never entering the
+// battlefield at all).
+//
+// Islandcycling {2} (ENGINE_GAPS.md gap #23, closed 2026-09-14) is now a
+// real, structured, engine-piloted activated ability — see definition.ts's
+// own comment and cloudbound-moogle/definition.ts's own comment for the
+// full mechanism.
 
-// No top-level `trigger` on any of these (2026-09-12 consolidation, same
-// "either one realistic scenario, or 0 scenarios" fix already applied to
-// dwarven-castle-guard/cloudbound-moogle — see cloudbound-moogle's own
-// scenarios.ts comment for the full mechanism): `harness.ts`'s own
-// `selfZone` rule starts Ice Flan on the Stack and runs the REAL
-// cast->resolve->enters lifecycle first (real `fn:'cast'`/`fn:'enters'`
-// evidence for the baseline `self-cast`/`self-enters` facts), then
-// `sequence: ['onEnter']` fires the ETB trigger AFTER that lifecycle,
-// against the same shared GameState — demonstrating the card's own real
-// tap+stun branches without a separate, purely-boilerplate cast-only
-// scenario alongside them. Islandcycling ({2}, Discard this card: search
-// for an Island) has no engine-modeled Effect at all (a special action
-// from hand, not a cast/activated/triggered ability — same real gap
-// Cloudbound Moogle's own Plainscycling documents) and so gets no scenario
-// here; it's captured purely via `synergy.json` facts + verify-synergy.mjs's
-// `isIceFlanDiscardSelfWant`/`isIceFlanTutorFact` exemptions, same
-// treatment as Cloudbound Moogle's own Plainscycling.
-export const scenarios: Scenario[] = [
-  { result: "taps the opponent's target creature and puts a stun counter on it", opponents: [{ creaturesCount: 1 }], sequence: ['onEnter'] },
-  { result: 'no legal target — the opponent controls no creatures, nothing tapped or countered', opponents: [{ creaturesCount: 0 }], sequence: ['onEnter'] },
-  {
-    result: "with a creature on both sides, still taps only the opponent's — self's own controller isn't a legal target",
-    you: { creaturesCount: 1 },
-    opponents: [{ creaturesCount: 1 }],
-    sequence: ['onEnter'],
-  },
-];
+import { iceFlan } from './definition';
+import { basicLandsFor } from '../../mana';
+import type { TraceResult } from '../../harness';
+import { setupEnginePilot, pilotActions, pilotCast, pilotResolveTop, pilotActivate, pilotFireTrigger, finishEnginePilotTrace, type EnginePilotSetup } from '../../engine-trace';
+
+function castAndEnters(): TraceResult {
+  const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{4}{U}{U}') }, opponents: [{ creaturesCount: 1 }] };
+  const pilot = setupEnginePilot(setup);
+  const real = pilot.state.addCard(pilot.you, 'Hand', {
+    name: iceFlan.name,
+    types: ['Creature'],
+    subtypes: ['Elemental', 'Ooze'],
+    basePower: iceFlan.pt?.[0],
+    baseToughness: iceFlan.pt?.[1],
+  });
+  const actions = pilotActions(pilot, real.id);
+  const ctx = pilot.ctxFor(real);
+
+  pilotCast(pilot, real, iceFlan, ctx, actions);
+  pilotResolveTop(pilot);
+  pilotFireTrigger(pilot, iceFlan, ctx, actions, 'onEnter');
+
+  const result = "Ice Flan is cast ({4}{U}{U} paid) and enters the battlefield; its ETB taps the opponent's target creature and puts a stun counter on it.";
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> resolve -> enters -> ETB tap+stun', result);
+}
+
+function islandcycling(): TraceResult {
+  const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{2}') } };
+  const pilot = setupEnginePilot(setup);
+  // A real Island, not invented placeholder filler.
+  pilot.state.addCard(pilot.you, 'Library', { name: 'Island', types: ['Land'], subtypes: ['Island'] });
+  const real = pilot.state.addCard(pilot.you, 'Hand', { name: iceFlan.name, types: ['Creature'], subtypes: ['Elemental', 'Ooze'] });
+  const actions = pilotActions(pilot, real.id);
+  const ctx = pilot.ctxFor(real);
+
+  pilotActivate(pilot, pilot.you, real, iceFlan, ctx, actions, 'Activate Islandcycling ({2}, Discard this card): search for an Island', 'cycling');
+  pilotResolveTop(pilot);
+
+  const result =
+    'Islandcycling {2} is activated from hand: {2} is paid, Ice Flan is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Island card, putting it into hand, then shuffling.';
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: Islandcycling activated from hand -> discard self -> search library -> shuffle', result);
+}
+
+export function runEngineScenarios(): TraceResult[] {
+  return [castAndEnters(), islandcycling()];
+}

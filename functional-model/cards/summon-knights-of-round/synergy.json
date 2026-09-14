@@ -4,27 +4,35 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": -1,
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 12,
-          "end": 20
-        }
-      ]
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
           "start": 0,
           "end": 20
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 0,
+          "end": 20
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
     },
     {
       "event": "entersBattlefield",
@@ -92,15 +100,18 @@
     {
       "event": "sacrifice",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
-          "target": "oracle",
-          "line": 0,
-          "start": 67,
-          "end": 84
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     },
     {
       "event": "dies",
@@ -109,15 +120,35 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "annotations": [
         {
-          "target": "oracle",
-          "line": 0,
-          "start": 67,
-          "end": 84
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     }
   ],
   "sink": [

@@ -1,9 +1,9 @@
 import type { CardDefinition, Effect } from '../../card';
 
 // Real script (gongaga_reactor_town.txt) — same real "enters tapped"
-// replacement effect and mana-ability-as-text treatment as
-// treno-dark-city's own doc comment explains in full; only the two colors
-// produced differ.
+// replacement effect and real, structured choice-of-color `manaAbilities`
+// treatment as treno-dark-city's own doc comment explains in full; only
+// the two colors produced differ.
 export const gongagaReactorTown: CardDefinition = {
   name: 'Gongaga, Reactor Town',
   manaCost: '',
@@ -16,5 +16,5 @@ export const gongagaReactorTown: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {R} or {G}.'],
+  manaAbilities: [{ colors: ['R', 'G'] }],
 };

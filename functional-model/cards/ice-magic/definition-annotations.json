@@ -1,0 +1,9 @@
+{
+  "effects": { "highlight": "Tiered (Choose one additional cost.)", "line": 0 },
+  "effects[0].modes[0]": { "highlight": "• Blizzard — {0} — Return target creature to its owner's hand.", "line": 1 },
+  "effects[0].modes[1]": {
+    "highlight": "• Blizzara — {2} — Target creature's owner puts it on their choice of the top or bottom of their library.",
+    "line": 2
+  },
+  "effects[0].modes[2]": { "highlight": "• Blizzaga — {5}{U} — Target creature's owner shuffles it into their library.", "line": 3 }
+}

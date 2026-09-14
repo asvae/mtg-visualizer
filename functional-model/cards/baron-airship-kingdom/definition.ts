@@ -4,14 +4,14 @@ import type { CardDefinition, Effect } from '../../card';
 // "This land enters tapped" is a real replacement effect, modeled as a
 // real onEnter trigger tapping self — same precedent elixir's own
 // "enters tapped" artifact establishes. The mana ability ("{T}: Add {U}
-// or {R}") stays real text only — no mana-producing Effect/Action exists
-// anywhere in this model (deliberate, no mana pool tracked).
+// or {R}") is a real, structured choice-of-color `manaAbilities` entry —
+// see treno-dark-city's own doc comment for the full citation/mechanism.
 export const baronAirshipKingdom: CardDefinition = {
   name: 'Baron, Airship Kingdom',
   manaCost: '',
   typeLine: 'Land — Town',
 
-  staticAbilities: ['{T}: Add {U} or {R}.'],
+  manaAbilities: [{ colors: ['U', 'R'] }],
 
   triggers: [
     {

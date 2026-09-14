@@ -1,0 +1,8 @@
+{
+  "triggers[0]": { "highlight": "Whenever you gain life, put a +1/+1 counter on Aerith Gainsborough.", "line": 1 },
+  "triggers[1]": {
+    "highlight": "When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough.",
+    "line": 2
+  },
+  "triggers[1].effects[0].authoredFact[0]": { "highlight": "where X is the number of +1/+1 counters on Aerith Gainsborough", "line": 2 }
+}

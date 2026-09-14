@@ -12,11 +12,18 @@ export const iceFlan: CardDefinition = {
 
   pt: [5, 4],
 
-  // Islandcycling {2} (discard this card from hand: search your library for
-  // an Island) isn't modeled — same real gap malboro's own Swampcycling
-  // comment documents: a special action FROM HAND, not a cast/activated/
-  // triggered ability, no CardDefinition field fits it.
-  staticAbilities: ['Islandcycling {2} ({2}, Discard this card: Search your library for an Island card, reveal it, put it into your hand, then shuffle.)'],
+  // Islandcycling {2} (ENGINE_GAPS.md gap #23, closed 2026-09-14) — see
+  // cloudbound-moogle/definition.ts's own comment for the full real,
+  // structured mechanism (`abilities`, `engine.ts`'s `costRequiresDiscardSelf`,
+  // `move`'s `subtype`/`shuffleAfter`); same shape, searching for an Island
+  // instead of a Plains.
+  abilities: [
+    {
+      name: 'cycling',
+      cost: '{2}, Discard this card',
+      effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, target: true, validType: 'land', subtype: 'Island', shuffleAfter: true } satisfies Effect],
+    },
+  ],
 
   triggers: [
     {

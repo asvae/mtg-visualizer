@@ -14,8 +14,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {
@@ -32,8 +31,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "permanent-enters-battlefield-normally",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'permanent-enters-battlefield-normally' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "permanent-enters-battlefield-normally"
       }
     },
     {

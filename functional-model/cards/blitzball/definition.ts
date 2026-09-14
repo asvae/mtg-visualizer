@@ -1,11 +1,15 @@
 import type { CardDefinition, Effect } from '../../card';
 
 // Real script (blitzball.txt): two independent activated abilities.
-// "{T}: Add one mana of any color" is a real mana ability — no Effect kind
-// (nor any action in interfaces.ts) models mana production anywhere in
-// this system (same deliberate boundary white-auracite/cargo-ship's own
-// "{T}: Add ..." abilities already document) — genuinely out of scope,
-// kept as text only via `staticAbilities`.
+// "{T}: Add one mana of any color" (real Forge `Produced$ Any`, no
+// `RestrictValid$`) is a real, structured, UNRESTRICTED `manaAbilities`
+// entry — genuinely payable via `mana.ts`'s `canAfford`/`payMana`, the same
+// 5-color `assignManaRequirements` backtracking a real choice-of-2 source
+// already uses, just with all five colors legal instead of two (closed
+// 2026-09-14, ENGINE_GAPS.md gap #5 — this card was never recognized by
+// the old text-regex path, since "Add one mana of any color" doesn't match
+// either of its two exact WUBRG-symbol shapes; now genuinely payable for
+// the first time).
 //
 // The second ("GOOOOAAAALLL!") ability IS modeled: draw two cards, cost
 // {T}+sacrifice-self (cost text only, same "sacrifice is part of the
@@ -23,7 +27,7 @@ export const blitzball: CardDefinition = {
   manaCost: '{3}',
   typeLine: 'Artifact',
 
-  staticAbilities: ['{T}: Add one mana of any color.'],
+  manaAbilities: [{ colors: ['W', 'U', 'B', 'R', 'G'] }],
 
   activationCost:
     'GOOOOAAAALLL! — {T}, Sacrifice this artifact (activate only if an opponent was dealt combat damage by a legendary creature this turn)',

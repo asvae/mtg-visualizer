@@ -1,0 +1,11 @@
+{
+  "triggers[0]": {
+    "highlight": "Job select (When this Equipment enters, create a 1/1 colorless Hero creature token, then attach this to it.)",
+    "line": 0
+  },
+  "triggers[1]": {
+    "highlight": "Equipped creature gets +1/+0, has \"Whenever this creature attacks, untap target attacking creature,\" and is a Cleric in addition to its other types.",
+    "line": 1
+  },
+  "effects": { "highlight": "Hagneia — Equip {3}", "line": 2 }
+}

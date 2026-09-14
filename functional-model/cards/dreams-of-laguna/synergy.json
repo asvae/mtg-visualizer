@@ -14,8 +14,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'instant-sorcery-resolves-to-graveyard' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "instant-sorcery-resolves-to-graveyard"
       }
     },
     {
@@ -32,8 +31,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "instant-sorcery-resolves-to-graveyard",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'instant-sorcery-resolves-to-graveyard' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "instant-sorcery-resolves-to-graveyard"
       }
     },
     {
@@ -91,8 +89,7 @@
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "drawCard-effect-structural",
-        "note": "Hand-authored fact; independently reconciled/confirmed by recognizer 'drawCard-effect-structural' (apply-recognizers.mjs). Predates the recognizer — this card's own real value/annotations are untouched, only provenance was added."
+        "rule": "drawCard-effect-structural"
       }
     }
   ],

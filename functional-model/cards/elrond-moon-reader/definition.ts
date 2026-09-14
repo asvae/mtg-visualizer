@@ -9,13 +9,21 @@ export const elrondMoonReader: CardDefinition = {
   triggers: [
     {
       // Real "Whenever you activate an ability of a creature, draw a card.
-      // This ability triggers only once each turn." — the once-per-turn
-      // cap has no representable state here (no per-turn trigger-count
-      // tracking anywhere in this model), so a scenario just exercises one
-      // activation -> one draw; a real game's second activation in the
-      // same turn wouldn't draw again, this model would.
+      // This ability triggers only once each turn." — real Forge's own
+      // `ActivationLimit$ 1` (`res/cardsfolder/e/elrond_moon_reader.txt`:
+      // `T:Mode$ AbilityCast | ... | Execute$ TrigDraw | ActivationLimit$ 1 |
+      // TriggerDescription$ Whenever you activate an ability of a creature,
+      // draw a card. This ability triggers only once each turn.`), now real
+      // here too — `triggers.ts`'s shared `fireTrigger` chokepoint enforces
+      // this via `state.ts`'s `triggerActivationsThisTurn` (reset every real
+      // Cleanup, `turn.ts`). `scenarios.ts`'s own flat-scenario style still
+      // fires this trigger only manually (no automatic "an ability of a
+      // creature was activated" detection anywhere in this model, same gap
+      // this trigger's own `effects` doc already notes — see this card's
+      // second scenario below for a real demonstration of the cap itself).
       name: 'onActivateCreatureAbility',
       effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect],
+      activationLimit: 1,
     },
   ],
 

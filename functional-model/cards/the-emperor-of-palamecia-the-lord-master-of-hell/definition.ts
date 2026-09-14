@@ -1,14 +1,23 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
 
-// Real front-face mana ability (`A:AB$ Mana | Cost$ T | Produced$ Combo U R`)
-// is OUT OF SCOPE (no mana-producing Effect/Action anywhere — this batch's
-// own deferred-gaps list) and is omitted entirely, same as Torgal's own.
+// Real front-face mana ability (`A:AB$ Mana | Cost$ T | Produced$ Combo
+// U R | RestrictValid$ Spell.nonCreature`, real Forge citation:
+// `res/cardsfolder/t/the_emperor_of_palamecia_the_lord_master_of_hell.txt`)
+// is now a real, structured `manaAbilities` entry (2026-09-14,
+// ENGINE_GAPS.md gap #5) — upgraded from being omitted ENTIRELY to
+// genuinely present, typed data. A real CHOICE-of-color source (`U` or
+// `R`) with a real `restriction` ("Spend this mana only to cast a
+// noncreature spell") — the restriction stays honestly UNENFORCED, same
+// reasoning Cargo Ship's/Freya Crescent's own identically-shaped
+// restricted mana abilities already document (no spendable mana-pool
+// mechanism exists anywhere in this engine).
 export const theEmperorOfPalamecia: CardDefinition = {
   name: 'The Emperor of Palamecia',
   manaCost: '{U}{R}',
   typeLine: 'Legendary Creature — Human Noble Wizard',
 
   pt: [2, 2],
+  manaAbilities: [{ colors: ['U', 'R'], restriction: 'Spend this mana only to cast a noncreature spell.' }],
 
   triggers: [
     {

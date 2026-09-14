@@ -4,29 +4,37 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "face": "front",
       "annotations": [
         {
           "target": "typeLine",
-          "start": 0,
+          "start": 10,
           "end": 18
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
     },
     {
       "event": "entersBattlefield",
       "to": "Battlefield",
       "target": "self",
-      "value": -1,
+      "value": 1,
       "face": "front",
       "annotations": [
         {
           "target": "typeLine",
-          "start": 0,
+          "start": 10,
           "end": 18
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
     },
     {
       "event": "grantKeyword",
@@ -128,7 +136,7 @@
           ]
         }
       },
-      "value": -1,
+      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -137,7 +145,11 @@
           "start": 25,
           "end": 79
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounter-broadcast-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -164,7 +176,7 @@
     {
       "event": "destroy",
       "targeted": true,
-      "value": -1,
+      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -173,14 +185,18 @@
           "start": 18,
           "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      }
     },
     {
       "event": "dies",
       "from": "Battlefield",
       "to": "Graveyard",
       "targeted": true,
-      "value": -1,
+      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -189,7 +205,11 @@
           "start": 18,
           "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      }
     },
     {
       "to": "Exile",
@@ -224,6 +244,24 @@
           "end": 108
         }
       ]
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
+      "target": "self",
+      "value": 1,
+      "annotations": [
+        {
+          "target": "typeLine",
+          "start": 33,
+          "end": 37
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     }
   ],
   "sink": [
@@ -235,7 +273,7 @@
           "Creature"
         ]
       },
-      "value": -1,
+      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -244,7 +282,11 @@
           "start": 25,
           "end": 79
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounter-broadcast-structural"
+      }
     },
     {
       "to": "Battlefield",

@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-14",
+  "notes": "2026-09-14: Cycling {2} is now real, structured, engine-piloted (ENGINE_GAPS.md gap #23, closed 2026-09-14): `abilities: [{name:'cycling', cost:'{2}, Discard this card', effects:[{kind:'drawCard'}]}]`. scenarios.ts was an empty array (every fact covered by static-check exemptions) \u2014 no longer true now that this card has real executable ability behavior; now runEngineScenarios (2 real engine-piloted scenarios: a real CR 305.1 land drop, and Cycling activated from hand). verify-synergy.mjs's own isStaticOnlyLand updated to also exclude a card with `abilities` (was stale otherwise). Added real drawCard SOURCE + discard-self SINK facts. vitest 550/550, verify-synergy.mjs 320 checked/0 hard failures, tsc no new errors.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

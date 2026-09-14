@@ -35,13 +35,18 @@
 //     player's own battlefield), Draw (`PhaseHandler.java` ~line 268-273:
 //     `playerTurn.drawCard()`), and Cleanup (514.1's own discard-to-
 //     maximum-hand-size, 514.2's own damage-clearing, PLUS 514.2's "until
-//     end of turn" half for any `grantKeyword` call that opted into real
-//     tracking via `opts.untilEndOfTurn` — added 2026-09-12,
-//     `state.ts`'s own `clearUntilEndOfTurnKeywordGrants`; `layers.ts`'s
-//     own BROADER duration-not-tracked simplification, covering every
-//     other "until end of turn" effect shape — pump/type-change/etc. with
-//     no opt-in flag of their own — is otherwise unchanged/accepted), PLUS
-//     508.1's own "attacked this turn" reset (`state.ts`'s own
+//     end of turn" half for any `grantKeyword` OR `pump` call that opted
+//     into real tracking via `opts.untilEndOfTurn` — `grantKeyword`'s own
+//     added 2026-09-12 (`state.ts`'s `clearUntilEndOfTurnKeywordGrants`),
+//     `pump`'s own added 2026-09-14 (`state.ts`'s `clearUntilEndOfTurnPumps`
+//     + `layers.ts`'s new `LayerSet.remove`); `layers.ts`'s own BROADER
+//     duration-not-tracked simplification, covering every other "until end
+//     of turn" effect shape (type-change/etc.) with no opt-in flag of its
+//     own, is otherwise unchanged/accepted, PLUS real per-turn trigger
+//     `ActivationLimit$ N` tracking (`state.ts`'s own
+//     `resetTriggerActivationsThisTurn`, added 2026-09-14 — `card.ts`'s own
+//     `Trigger.activationLimit` doc comment for the real Forge citation),
+//     PLUS 508.1's own "attacked this turn" reset (`state.ts`'s own
 //     `clearAttackedThisTurn`, added 2026-09-12, ENGINE_GAPS.md gap #16 —
 //     The Lunar Whale's own "as long as it attacked this turn" needs this)
 //     are the automatic actions modeled. Upkeep/end-step TRIGGER auto-firing
@@ -261,12 +266,23 @@ function runPhaseEntryAction(state: GameState, turn: TurnState, players: RealPla
     // with no "until end of turn" flag at all) is otherwise unchanged.
     state.clearAllDamage();
     state.clearUntilEndOfTurnKeywordGrants();
+    // Real 514.2's "until end of turn" half for a `pump` grant (`state.ts`'s
+    // own `pump`/`clearUntilEndOfTurnPumps` doc comments) — same real,
+    // game-wide, once-per-Cleanup scope as the keyword-grant clear just
+    // above.
+    state.clearUntilEndOfTurnPumps();
     // Real per-turn coin-flip tracking reset (ENGINE_GAPS.md gap #15,
     // `state.ts`'s own `flippedCoinThisTurn`/`flipCoin` doc comments for the
     // real Forge citation) — game-wide (any player, not just the active
     // one), same scope `clearAllDamage`/`clearUntilEndOfTurnKeywordGrants`
     // already use.
     state.resetFlippedCoinThisTurn();
+    // Real per-turn trigger `ActivationLimit$ N` reset (`card.ts`'s own
+    // `Trigger.activationLimit` doc comment for the full Forge citation:
+    // `Game.onCleanupPhase` -> `Card.resetActivationsPerTurn`, `Game.java`
+    // ~line 1227-1229) — same "real, game-wide, once per Cleanup" shape as
+    // the coin-flip reset just above.
+    state.resetTriggerActivationsThisTurn();
     // Real 508.1 "attacked this turn" reset (ENGINE_GAPS.md gap #16,
     // `state.ts`'s own `clearAttackedThisTurn` doc comment for the real
     // Forge citation) — same "real, game-wide, once per Cleanup" shape as

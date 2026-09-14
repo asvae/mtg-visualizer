@@ -4,8 +4,10 @@
 
 import { battleMenu } from './definition';
 import { basicLandsFor } from '../../mana';
+import { currentPhase } from '../../turn';
+import { effectivePT } from '../../state';
 import type { TraceResult } from '../../harness';
-import { setupEnginePilot, pilotActions, pilotCast, pilotResolveTop, finishEnginePilotTrace, type EnginePilotSetup } from '../../engine-trace';
+import { setupEnginePilot, pilotActions, pilotCast, pilotResolveTop, advanceOneStep, finishEnginePilotTrace, type EnginePilotSetup } from '../../engine-trace';
 
 function attackMode(): TraceResult {
   const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{1}{W}') } };
@@ -20,6 +22,12 @@ function attackMode(): TraceResult {
 }
 
 function abilityMode(): TraceResult {
+  // 2026-09-14, ENGINE_GAPS.md — `state.pump`'s own real `untilEndOfTurn`
+  // expiry: this mode's own real "target creature gets +0/+4 UNTIL END OF
+  // TURN" used to be a permanent `layers.add` entry with no expiry at all.
+  // The scenario now genuinely crosses a real Cleanup and reads the real
+  // target's own effective power/toughness both BEFORE and AFTER, proving
+  // the pump actually disappears rather than just applying.
   const setup: EnginePilotSetup = { you: { basicLands: basicLandsFor('{1}{W}') }, opponents: [{ tokens: ['w_1_1_cat'] }] };
   const pilot = setupEnginePilot(setup);
   const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: battleMenu.name, types: [] });
@@ -27,8 +35,22 @@ function abilityMode(): TraceResult {
   const ctx = pilot.ctxFor(cardReal, { mode: 1 });
   pilotCast(pilot, cardReal, battleMenu, ctx, actions);
   pilotResolveTop(pilot);
-  const result = 'Ability — a target creature gets +0/+4 until end of turn.';
-  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> mode 1 (Ability)', result);
+
+  // The real Cat token (`TOKENS.w_1_1_cat`'s own printed name) — the only
+  // legal target on the board, resolved by `pumpTarget`'s own `chooseTarget`.
+  const cat = pilot.opponents[0]!.battlefield.find((c) => c.name === 'Cat')!;
+  const [pumpedPower, pumpedToughness] = effectivePT(pilot.state, cat);
+  pilot.log.push({ fn: 'read:getNetPower', target: cat.name, id: cat.id, power: pumpedPower, toughness: pumpedToughness });
+
+  // Real 514.2 Cleanup — genuinely crosses the rest of THIS turn.
+  while (currentPhase(pilot.engine.turn) !== 'Cleanup') advanceOneStep(pilot);
+
+  const [expiredPower, expiredToughness] = effectivePT(pilot.state, cat);
+  pilot.log.push({ fn: 'read:getNetPower', target: cat.name, id: cat.id, power: expiredPower, toughness: expiredToughness });
+
+  const result =
+    'Ability — a target creature gets +0/+4 UNTIL END OF TURN (the real Cat token becomes 1/5) — the scenario then crosses a real Cleanup (514.2) and the Cat is genuinely back to its base 1/1, the pump having really expired, not just applied.';
+  return finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> mode 1 (Ability) -> Cleanup (pump expires)', result);
 }
 
 function magicMode(): TraceResult {

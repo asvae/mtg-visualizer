@@ -1,0 +1,7 @@
+{
+  "effects": { "highlight": "Choose one —", "line": 0 },
+  "effects[0].modes[0]": { "highlight": "• Attack — Create a 2/2 white Knight creature token.", "line": 1 },
+  "effects[0].modes[1]": { "highlight": "• Ability — Target creature gets +0/+4 until end of turn.", "line": 2 },
+  "effects[0].modes[2]": { "highlight": "• Magic — Destroy target creature with power 4 or greater.", "line": 3 },
+  "effects[0].modes[3]": { "highlight": "• Item — You gain 4 life.", "line": 4 }
+}

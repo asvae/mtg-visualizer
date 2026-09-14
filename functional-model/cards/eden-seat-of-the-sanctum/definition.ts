@@ -32,9 +32,9 @@ export const edenSeatOfTheSanctum: CardDefinition = {
   manaCost: '',
   typeLine: 'Land — Town',
 
-  // {T}: Add {C} — real mana ability, no mana-producing Effect/Action
-  // exists anywhere in this model, the documented STILL-DEFERRED gap.
-  staticAbilities: ['{T}: Add {C}.'],
+  // {T}: Add {C} — real, structured `manaAbilities` entry (`Cost$ T |
+  // Produced$ C`, `res/cardsfolder/e/eden_seat_of_the_sanctum.txt`).
+  manaAbilities: [{ colors: ['C'] }],
 
   activationCost: '{5}, {T}',
   effects: [

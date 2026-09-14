@@ -1,0 +1,6 @@
+{
+  "effects": {
+    "highlight": "{2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card.",
+    "line": 1
+  }
+}

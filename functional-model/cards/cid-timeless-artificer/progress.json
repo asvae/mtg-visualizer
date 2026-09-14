@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-14",
+  "notes": "2026-09-14: Cycling {W}{U} is now real, structured, engine-piloted (ENGINE_GAPS.md gap #23, closed 2026-09-14): `abilities: [{name:'cycling', cost:'{W}{U}, Discard this card', effects:[{kind:'drawCard'}]}]` (the anthem and 'any number of copies' deck-construction rule both stay static text, unrelated gaps). scenarios.ts now runEngineScenarios (2 real engine-piloted scenarios: cast+enters+a real 704.5j legend rule demonstration replacing the old flat keywordScenarios' duplicateLegendaryEnters, and Cycling activated from hand). Added real drawCard SOURCE + discard-self SINK facts. vitest 550/550, verify-synergy.mjs 320 checked/0 hard failures, tsc no new errors.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

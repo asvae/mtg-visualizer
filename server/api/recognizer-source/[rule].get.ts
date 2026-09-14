@@ -43,12 +43,23 @@ import type { RecognizerId } from '../../../functional-model/recognizers/types';
 // `server/api/recognizers/index.get.ts`/`review-status.ts` can import this
 // exact array instead of hand-typing a second copy that could drift — this
 // route stays the one canonical place the id list is hand-kept.
+//
+// `'dies-trigger-structural'`/`'lifegain-trigger-structural'`/
+// `'dealDamage-effect-structural'`/`'putCounter-broadcast-structural'`
+// (6th-9th recognizers) added 2026-09-13, `engine` agent, same pass as their
+// own real wiring into `apply-recognizers.mjs` — added THIS TIME alongside
+// the wiring pass itself, per this file's own standing note above not to
+// repeat the original allowlist-miss bug.
 export const RECOGNIZER_IDS: RecognizerId[] = [
   'instant-sorcery-resolves-to-graveyard',
   'permanent-enters-battlefield-normally',
   'destroy-effect-structural',
   'drawCard-effect-structural',
   'saga-lore-and-sacrifice-structural',
+  'dies-trigger-structural',
+  'lifegain-trigger-structural',
+  'dealDamage-effect-structural',
+  'putCounter-broadcast-structural',
 ];
 
 export default defineEventHandler((event) => {

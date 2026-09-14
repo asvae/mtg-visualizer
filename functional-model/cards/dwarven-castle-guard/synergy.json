@@ -11,7 +11,11 @@
           "start": 0,
           "end": 8
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
     },
     {
       "event": "entersBattlefield",
@@ -26,7 +30,11 @@
           "start": 0,
           "end": 8
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "permanent-enters-battlefield-normally"
+      }
     },
     {
       "event": "dies",
@@ -43,7 +51,11 @@
           "start": 0,
           "end": 23
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dies-trigger-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -75,7 +87,11 @@
           "start": 0,
           "end": 23
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dies-trigger-structural"
+      }
     }
   ]
 }

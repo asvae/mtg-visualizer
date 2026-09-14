@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 2 Plains(s)",
-      "action": "engine playthrough: Flash cast on opponent's turn -> ETB bounce -> Landfall pump",
-      "result": "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0.",
+      "action": "engine playthrough: Flash cast on opponent's turn -> ETB bounce -> Landfall pump -> Cleanup (pump expires)",
+      "result": "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0 UNTIL END OF TURN (3/2) — the scenario then crosses a real Cleanup (514.2) and Ambrosia is genuinely back to her base 2/2, the pump having really expired, not just applied.",
       "raw": {
-        "result": "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0.",
+        "result": "Ambrosia is cast during the opponent's own Main1 (Flash, 117.1a) — legal despite it not being your main phase; ETB (603.6b) returns one of your own Plains to hand (\"another permanent you control,\" no artifact restriction); later a land entering triggers Landfall, pumping Ambrosia +1/+0 UNTIL END OF TURN (3/2) — the scenario then crosses a real Cleanup (514.2) and Ambrosia is genuinely back to her base 2/2, the pump having really expired, not just applied.",
         "you": {
           "basicLands": [
             "Plains",
@@ -77,7 +77,7 @@
       {
         "fn": "moveTo",
         "target": "Plains",
-        "id": 119,
+        "id": 2,
         "zone": "Hand",
         "controller": "you"
       },
@@ -117,9 +117,78 @@
       {
         "fn": "pump",
         "target": "Ambrosia Whiteheart",
-        "id": 138,
+        "id": 21,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Ambrosia Whiteheart",
+        "power": 3,
+        "toughness": 2
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatBegin",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareBlockers",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDamage",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatEnd",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "Main2",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "EndOfTurn",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "pump",
+        "target": "Ambrosia Whiteheart",
+        "id": 21,
+        "power": -1,
+        "toughness": 0,
+        "removed": true
+      },
+      {
+        "fn": "phase",
+        "phase": "Cleanup",
+        "turn": 3,
+        "player": "you"
+      },
+      {
+        "fn": "read:getNetPower",
+        "target": "Ambrosia Whiteheart",
+        "power": 2,
+        "toughness": 2
       }
     ],
     "actions": [
@@ -150,6 +219,38 @@
       {
         "label": "Fire onLandfall",
         "from": 15
+      },
+      {
+        "label": "Advance one step",
+        "from": 18
+      },
+      {
+        "label": "Advance one step",
+        "from": 19
+      },
+      {
+        "label": "Advance one step",
+        "from": 20
+      },
+      {
+        "label": "Advance one step",
+        "from": 21
+      },
+      {
+        "label": "Advance one step",
+        "from": 22
+      },
+      {
+        "label": "Advance one step",
+        "from": 23
+      },
+      {
+        "label": "Advance one step",
+        "from": 24
+      },
+      {
+        "label": "Advance one step",
+        "from": 25
       }
     ]
   }

@@ -28,7 +28,7 @@ export const midgarCityOfMako: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {B}.'],
+  manaAbilities: [{ colors: ['B'] }],
 
   backFace: {
     name: 'Reactor Raid',

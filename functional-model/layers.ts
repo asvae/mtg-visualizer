@@ -21,11 +21,15 @@
 //     order is modeled — correct for the common case (two independent
 //     pumps), wrong for a real dependency chain (rare, and out of scope
 //     here on purpose).
-//   - Duration ("until end of turn") is NOT tracked — once added, an
-//     effect has no expiry. Same simplification state.ts already
-//     documented for its old direct-mutation version; unchanged by this
-//     file, just expressed as a continuous effect instead of a permanent
-//     delta.
+//   - Duration ("until end of turn") is NOT tracked by this file's OWN
+//     effect-application logic — an added `LayerEffect` never expires on
+//     its own, still the same simplification state.ts's old direct-mutation
+//     version documented. The narrow exception: `remove(timestamp)` below
+//     lets a CALLER (`state.ts`'s own `clearUntilEndOfTurnPumps`, mirroring
+//     the pre-existing `clearUntilEndOfTurnKeywordGrants` treatment for a
+//     granted keyword) drain a specific, individually-tracked entry at a
+//     real Cleanup — this file still has no OWN duration concept; it's just
+//     no longer impossible for a caller to build one on top.
 
 export type LayerEffect =
   | { layer: 4; timestamp: number; apply: (types: string[]) => string[] }
@@ -44,6 +48,21 @@ export class LayerSet {
 
   add(effect: LayerEffect): void {
     this.effects.push(effect);
+  }
+
+  /**
+   * Real 514.2's "until end of turn" half — removes the ONE effect added
+   * with this exact `timestamp` (each `add` call gets a fresh, unique one
+   * via `nextLayerTimestamp`, so this is a precise single-entry removal, not
+   * a broad sweep). Mirrors `state.ts`'s existing
+   * `clearUntilEndOfTurnKeywordGrants` treatment for a granted keyword — a
+   * real mutation of the card's own continuous-effect list, not a
+   * duration flag checked at read time. See `state.ts`'s `pump`/
+   * `untilEndOfTurnPumps` for the one real caller (`GameState
+   * .clearUntilEndOfTurnPumps`, drained at every real Cleanup).
+   */
+  remove(timestamp: number): void {
+    this.effects = this.effects.filter((e) => e.timestamp !== timestamp);
   }
 
   private sorted<L extends LayerEffect['layer']>(layer: L): Extract<LayerEffect, { layer: L }>[] {

@@ -13,19 +13,25 @@
 //  - A structured `{ kind: 'addMana', color, amount }` Effect (Elvish
 //    Archdruid today) — a real, checkable trace line via card.ts's own
 //    `ctx.you.addMana(...)`.
-//  - A plain, unrestricted `"{T}: Add {X}."` (single-color) or
-//    `"{T}: Add {X} or {Y}."` (choice-of-color) static-ability STRING
-//    (mana.ts's own `manaAbilityColorsFromStaticText` — the single-color
-//    half of this is the same narrow slice engine.ts's non-basic-mana-source
-//    support recognizes for piloting a real game; the choice-of-color half
-//    is fact-generation-only, NOT recognized for engine payment/
-//    affordability — see that function's own doc comment). This kind is
-//    text-only in card.ts/harness.ts — it never produces its own trace
-//    line, so scripts/verify-synergy.mjs trusts the card's own
-//    definition.ts directly for it (same "known statically, no trace
-//    needed" treatment DEATH_TRIGGER_NAMES already gets for a card whose
-//    own death never logs a real zone-change) — see that script's own
-//    `staticManaColorsFor`.
+//  - A real, ORDINARILY-payable `CardDefinition.manaAbilities` entry
+//    (`card.ts`'s own `ManaAbility` — closed 2026-09-14, superseding the OLD
+//    `mana.ts`-only text-regex path this comment used to cite
+//    [`manaAbilityColorFromStaticText`/`manaAbilityColorsFromStaticText`,
+//    both deleted]): a bare `{T}` cost, no `restriction`/
+//    `activationCondition`/`variableAmount` — the single-color case is the
+//    same narrow slice engine.ts's non-basic-mana-source support recognizes
+//    for piloting a real game; the choice-of-color case is ALSO now a real
+//    payment primitive (`mana.ts`'s `assignManaRequirements`), not just
+//    fact-generation-only. A RESTRICTED/conditioned/variable entry (Cargo
+//    Ship, Freya Crescent, Elvish Archdruid's own separate `effects`-based
+//    ability, ...) is correctly skipped here too — same exclusion
+//    `mana.ts`'s own `payableManaAbility` applies. A `manaAbilities` entry
+//    is text-only in the sense that `resolveCard()` never executes it as a
+//    resolvable step — it never produces its own trace line, so
+//    scripts/verify-synergy.mjs trusts the card's own definition.ts directly
+//    for it (same "known statically, no trace needed" treatment
+//    DEATH_TRIGGER_NAMES already gets for a card whose own death never logs
+//    a real zone-change) — see that script's own `staticManaColorsFor`.
 //  A choice-of-color ability ("Add {X} or {Y}.") produces ONE `addMana` fact
 //  with a `colors: {hasAny:[...]}` set (`EventFact.colors`, 2026-09-09 —
 //  reuses `TypeConstraint`'s own `has`/`hasAny`/`not` vocabulary, matched via
@@ -54,7 +60,6 @@
 // normal full-corpus sweep.
 
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { manaAbilityColorsFromStaticText } from '../mana.ts';
 
 const dryRun = process.argv.includes('--dry');
 const onlySlug = process.argv.find((a) => a.startsWith('--slug='))?.split('=')[1];
@@ -64,17 +69,14 @@ const slugs = (await readdir(cardsDir, { withFileTypes: true }))
   .map((e) => e.name)
   .filter((s) => !onlySlug || s === onlySlug);
 
-/** One real recognized mana source on one face — `colors` is always the full set this one ability can make (length 1 for a plain single-color ability or a structured `addMana` Effect, length 2 for a real choice-of-color ability); `staticText` present only for the plain-string shape (undefined for a structured `addMana` Effect, which has no single oracle-text line to cite here). */
+/** One real recognized mana source on one face — `colors` is always the full set this one ability can make (length 1 for a plain single-color ability or a structured `addMana` Effect, length 2+ for a real choice-of-color ability); `staticText` present only for a `manaAbilities` entry (re-derived from its own typed `colors`, not scanned off pre-existing free text — undefined for a structured `addMana` Effect, which has no single oracle-text line to cite here). A `restriction`/`activationCondition`/`variableAmount`-bearing `manaAbilities` entry is correctly skipped, same exclusion `mana.ts`'s own `payableManaAbility` applies. */
 function manaSourcesOnFace(face) {
   const out = [];
-  const staticColors = manaAbilityColorsFromStaticText(face.staticAbilities);
-  if (staticColors.length) {
-    const pattern =
-      staticColors.length === 2
-        ? `^\\{T\\}: Add \\{${staticColors[0]}\\} or \\{${staticColors[1]}\\}\\.$`
-        : `^\\{T\\}: Add \\{${staticColors[0]}\\}\\.$`;
-    const staticText = (face.staticAbilities ?? []).find((t) => new RegExp(pattern).test(t));
-    out.push({ colors: staticColors, staticText });
+  for (const ability of face.manaAbilities ?? []) {
+    if (ability.restriction || ability.activationCondition || ability.variableAmount) continue;
+    if ((ability.cost ?? '{T}') !== '{T}') continue;
+    const staticText = `{T}: Add ${ability.colors.map((c) => `{${c}}`).join(' or ')}${ability.amount && ability.amount > 1 ? ` (x${ability.amount})` : ''}.`;
+    out.push({ colors: ability.colors, staticText });
   }
   for (const effect of face.effects ?? []) {
     if (effect.kind === 'addMana' && typeof effect.color === 'string') {

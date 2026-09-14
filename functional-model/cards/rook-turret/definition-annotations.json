@@ -1,0 +1,6 @@
+{
+  "triggers[0]": {
+    "highlight": "Whenever another artifact you control enters, you may draw a card. If you do, discard a card.",
+    "line": 1
+  }
+}

@@ -77,33 +77,25 @@ export interface RealCard {
   /** Whether ANY of this card's marked damage came from a source with Deathtouch (702.2b/704.5h) — any nonzero amount from such a source is lethal regardless of accumulated total, so this is tracked as a flag rather than trying to recover "was source X deathtouch" from the summed `damageMarked` number alone. Same clearing caveat as `damageMarked`. */
   deathtouchDamaged?: boolean;
   /**
-   * A real, structural "{T}: Add {X}." (or "{T}: Add {X} or {Y}.") mana
-   * ability — narrow slices of ENGINE_GAPS.md gap #5, see `mana.ts`'s own
-   * `manaAbilityColorFromStaticText`/`manaAbilityColorsFromStaticText` —
-   * derived from the resolving `CardDefinition.staticAbilities` text at the
-   * moment this permanent enters the battlefield (`resolveTop`/`playLand`,
-   * `engine.ts`) — NOT live-derived from a stored `CardDefinition`
-   * reference (`RealCard` has none), so this is the one place that fact is
-   * captured. A card seeded directly onto the battlefield (never cast
-   * through the engine) has no value here, same documented convention
-   * `enteredThisTurn`/`resolvedPermanents` already established for
-   * ETB-derived bookkeeping.
-   *
-   * A single `ManaColor` for the ORIGINAL single-color-only slice (10 real
-   * cards — Druid of the Cowl, White Auracite, etc.); a `ManaColor[]`
-   * (always length 2 in practice — no real FIN card offers 3+ choices) for
-   * the widened real "choice of color" slice (12 real Town-cycle lands,
-   * e.g. Vector, Imperial Capital's own "{T}: Add {B} or {R}.") — closed
-   * 2026-09-12 via `mana.ts`'s `sourceColors`/`assignManaRequirements`
-   * generalizing `canAfford`/`payMana`'s own colored-pip matching into a
-   * real bipartite-style assignment, so a dual land now genuinely counts
-   * toward EITHER color a cost needs, not just a fixed one. Restricted
-   * ("Spend this mana only to...") and variable-amount ("for each Elf you
-   * control") sources are still NOT represented here at all — see
-   * `mana.ts`'s own header for why both remain open.
+   * Real, structural mana-producing ability/abilities this permanent has ON
+   * ITS OWN (ENGINE_GAPS.md gap #5, closed 2026-09-14 for the ordinary
+   * cases — see `mana.ts`'s own header) — see `card.ts`'s own
+   * `CardDefinition.manaAbilities`/`ManaAbility` doc comments for the real
+   * Forge citation (`AbilityManaPart.java`) and full field-by-field scope.
+   * Copied verbatim from the resolving `CardDefinition` at the moment this
+   * permanent enters the battlefield (`resolveTop`/`playLand`, `engine.ts`)
+   * — NOT live-derived from a stored `CardDefinition` reference (`RealCard`
+   * has none), same "copy at resolve time" convention `ptFormula`/
+   * `continuousKeywordGrants` already establish. A card seeded directly
+   * onto the battlefield (never cast through the engine) has no value
+   * here, same documented convention `enteredThisTurn`/`resolvedPermanents`
+   * already established for ETB-derived bookkeeping. `ManaAbility` here is
+   * `state.ts`'s own duck-typed re-declaration (below), same
+   * "state.ts never imports card.ts" convention `TriggerDoublingGrant`
+   * already establishes just below this interface.
    */
-  manaAbility?: ManaColor | ManaColor[];
-  /** Real, query-time continuous keyword grant(s) (613, ENGINE_GAPS.md gap #14) — see `card.ts`'s own `CardDefinition.continuousKeywordGrants` doc comment for the two real Forge shapes (Dion's turn-conditional Dragonfire Dive, Ardyn's unconditional Demons grant). Copied from the resolving `CardDefinition` at `addCard` time, same convention `ptFormula`/`manaAbility` already establish — `RealCard` never holds a live reference back to its own `CardDefinition`. Consumed by `effectiveKeywords` below, not read directly anywhere else. */
+  manaAbilities?: ManaAbility[];
+  /** Real, query-time continuous keyword grant(s) (613, ENGINE_GAPS.md gap #14) — see `card.ts`'s own `CardDefinition.continuousKeywordGrants` doc comment for the two real Forge shapes (Dion's turn-conditional Dragonfire Dive, Ardyn's unconditional Demons grant). Copied from the resolving `CardDefinition` at `addCard` time, same convention `ptFormula`/`manaAbilities` already establish — `RealCard` never holds a live reference back to its own `CardDefinition`. Consumed by `effectiveKeywords` below, not read directly anywhere else. */
   continuousKeywordGrants?: { keywords: string[]; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
   /** Real, query-time continuous P/T grant(s) (613.3, layer 7c, ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12) — see `card.ts`'s own `CardDefinition.continuousPTGrants` doc comment for the real Forge citation and the 5 real fixed-delta cards it covers (Dragoon's Lance/Paladin's Arms/Crystal Fragments/White Mage's Staff/Sage's Nouliths). Same copy-at-resolve-time convention as `continuousKeywordGrants` right above. Consumed by `effectivePT` below, not read directly anywhere else. */
   continuousPTGrants?: { power: number; toughness: number; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
@@ -183,6 +175,59 @@ export interface RealCard {
    * optional turn-scoped `RealCard` field here already uses.
    */
   attackedThisTurn?: boolean;
+  /**
+   * Real, LIVE counter-presence-conditioned continuous effect(s) (613) —
+   * see `card.ts`'s own `CounterConditionalGrant` doc comment for the full
+   * real Forge citation (Ultima, Origin of Oblivion's own real shipped
+   * script) and design. Genuinely different from `continuousKeywordGrants`/
+   * `continuousPTGrants`/`continuousTypeGrants`/`activatedAbilityLock`
+   * above: those are copied from a permanent's OWN `CardDefinition` at
+   * resolve time and broadcast FROM it onto qualifying recipients; this is
+   * installed directly onto an ARBITRARY other object (`GameState
+   * .installCounterConditionalGrant`, below) at the moment some OTHER
+   * effect (`putCounterTarget`) puts a counter on it, and stays keyed
+   * purely on `card`'s OWN counter count from then on — no relationship to
+   * whatever installed it. Consumed by `hasCounterConditionalLandTypeLoss`/
+   * `hasCounterConditionalAbilityLoss`/`effectiveSubtypes`/
+   * `effectiveKeywords` below, and by `mana.ts`'s own
+   * `sourceColors`/`sourceAmount`/`payableManaAbility` (duck-typed against
+   * this same shape, not imported — see that file's own header for why
+   * it never imports a VALUE from this one).
+   */
+  counterConditionalGrants?: CounterConditionalGrant[];
+}
+
+/**
+ * Real, LIVE counter-presence-conditioned continuous effect shape —
+ * mirrors `card.ts`'s own `CounterConditionalGrant` structurally (same
+ * duck-typed-not-imported convention `ManaAbility`/`TriggerDoublingGrant`
+ * below already establish). See that interface's own doc comment for the
+ * full real Forge citation and design.
+ */
+export interface CounterConditionalGrant {
+  counterType: string;
+  removeLandTypes?: boolean;
+  removeAllAbilities?: boolean;
+  grantManaAbility?: ManaAbility;
+}
+
+/**
+ * Real, structural mana-producing ability shape (ENGINE_GAPS.md gap #5) —
+ * mirrors `card.ts`'s own `ManaAbility` structurally, field-for-field (same
+ * duck-typed-not-imported convention `TriggerDoublingGrant` just below
+ * already establishes — `state.ts` deliberately never imports from
+ * `card.ts`, see this file's own header). See that interface's own doc
+ * comment for the full real Forge citation (`AbilityManaPart.java`) and
+ * per-field scope; `mana.ts`'s `sourceColors`/`payableManaAbility`/
+ * `canAfford`/`payMana` are the real readers.
+ */
+export interface ManaAbility {
+  cost?: string;
+  colors: ManaColor[];
+  amount?: number;
+  variableAmount?: { kind: 'countSubtypeControlled'; subtype: string } | { kind: 'selfPower' };
+  restriction?: string;
+  activationCondition?: string;
 }
 
 /**
@@ -230,10 +275,19 @@ export interface TriggerDoublingGrant {
  * `causedBy` cares (Masamune/Traveling Chocobo) — omit for a trigger whose
  * only possibly-active doubling gate doesn't filter on cause at all
  * (Cloud's own shape). Not a general "why did this trigger" taxonomy —
- * scoped exactly to the two real causes gap #13's own 3 cards need; extend
- * only once a new real card needs a third.
+ * scoped exactly to the real causes a real FIN card needs; extend only once
+ * a new real card needs another.
+ *
+ * `'tapLandForMana'` (added 2026-09-14, ENGINE_GAPS.md gap #5's own Ultima,
+ * Origin of Oblivion closure) is genuinely different from the other two —
+ * it's never consulted by `triggerDoublingGrantApplies`/`shouldDoubleTrigger`
+ * below (no real `triggerDoubling` grant's own `causedBy` recognizes it, so
+ * it safely never matches one by construction), only by `engine.ts`'s own
+ * NEW `fireOnTapLandForManaTriggers` — passed through `fireTrigger` purely
+ * for shape uniformity (every real trigger-firing call site threads a
+ * `TriggerCause` the same way), not because doubling logic reads it.
  */
-export type TriggerCause = { kind: 'dying' } | { kind: 'entersBattlefield'; entered: RealCard };
+export type TriggerCause = { kind: 'dying' } | { kind: 'entersBattlefield'; entered: RealCard } | { kind: 'tapLandForMana'; colors: ManaColor[] };
 
 function triggerCauseMatches(entered: RealCard, filters: { isLand?: boolean; subtype?: string }[]): boolean {
   return filters.some((f) => (f.isLand === undefined || entered.types.includes('Land') === f.isLand) && (f.subtype === undefined || entered.subtypes.includes(f.subtype)));
@@ -339,7 +393,47 @@ function qualifiesForContinuousGrant(
   return isSelf || isMatchingOther || isEquipped;
 }
 
+/**
+ * Every `card.counterConditionalGrants` entry currently ACTIVE — i.e. `card`
+ * genuinely still carries >=1 counter of that entry's own `counterType`
+ * right now. Needs no `GameState` sweep at all (unlike `qualifiesForContinuousGrant`'s
+ * own siblings above): the rule was already installed directly onto `card`
+ * itself (`GameState.installCounterConditionalGrant`), so all this reads is
+ * `card`'s own two fields. The one real, shared chokepoint
+ * `hasCounterConditionalLandTypeLoss`/`hasCounterConditionalAbilityLoss`/
+ * `effectiveSubtypes`/`effectiveKeywords` below all consult.
+ */
+function activeCounterConditionalGrants(card: RealCard): CounterConditionalGrant[] {
+  return (card.counterConditionalGrants ?? []).filter((g) => (card.counters[g.counterType] ?? 0) > 0);
+}
+
+/** Real Forge `RemoveLandTypes$ True` (613, layer 4) — see `card.ts`'s own `CounterConditionalGrant.removeLandTypes` doc comment. Consumed by `effectiveSubtypes` below. */
+export function hasCounterConditionalLandTypeLoss(card: RealCard): boolean {
+  return activeCounterConditionalGrants(card).some((g) => g.removeLandTypes);
+}
+
+/**
+ * Real Forge `RemoveAllAbilities$ True` (613, layer 6) — see `card.ts`'s own
+ * `CounterConditionalGrant.removeAllAbilities` doc comment for the real,
+ * NAMED, only-partial enforcement scope (mana abilities + this permanent's
+ * own printed keywords + rejecting activation of any OTHER activated
+ * ability — NOT triggered abilities). Consumed by `effectiveKeywords` below
+ * and `engine.ts`'s `canActivateAbility`; `mana.ts`'s own
+ * `sourceColors`/`sourceAmount`/`payableManaAbility` duck-type the same
+ * check locally instead of importing this function (that file's own header
+ * — `mana.ts` never imports a VALUE from `state.ts`).
+ */
+export function hasCounterConditionalAbilityLoss(card: RealCard): boolean {
+  return activeCounterConditionalGrants(card).some((g) => g.removeAllAbilities);
+}
+
 export function effectiveKeywords(state: GameState, card: RealCard): string[] {
+  // Real Forge `RemoveAllAbilities$ True` (613, layer 6) — a genuine keyword
+  // IS one of the "abilities" this strips (Forge's own `K:` lines), same as
+  // any other. Checked FIRST/unconditionally: no real FIN land in this pool
+  // has a printed keyword to lose, but a future one might, and this is the
+  // one real chokepoint that would need to know either way.
+  if (hasCounterConditionalAbilityLoss(card)) return [];
   const set = new Set(card.keywords);
   for (const source of state.cards.values()) {
     if (source.zone !== 'Battlefield' || !source.continuousKeywordGrants) continue;
@@ -368,6 +462,15 @@ export function effectiveKeywords(state: GameState, card: RealCard): string[] {
  * supertype/type (`RealCard.types`, `effectiveTypes`'s own domain).
  */
 export function effectiveSubtypes(state: GameState, card: RealCard): string[] {
+  // Real Forge `RemoveLandTypes$ True` (613, layer 4, Ultima, Origin of
+  // Oblivion's own real static ability) — checked FIRST and wins
+  // unconditionally over any UNION below: a land losing all its land types
+  // loses whatever any OTHER permanent might also be granting it, same as
+  // real Forge's own layer-4 removal applying on top of any prior
+  // type-adding effect (no FIN card broadcasts a type grant onto an
+  // arbitrary land today, so this ordering is unexercised in practice, but
+  // correct either way).
+  if (hasCounterConditionalLandTypeLoss(card)) return [];
   const set = new Set(card.subtypes);
   for (const source of state.cards.values()) {
     if (source.zone !== 'Battlefield' || !source.continuousTypeGrants) continue;
@@ -586,6 +689,8 @@ export class GameState {
   delayedTriggers: DelayedTrigger[] = [];
   /** Pending real 514.2 "until end of turn" keyword grants — see `grantKeyword`'s own `opts.untilEndOfTurn` doc comment and `clearUntilEndOfTurnKeywordGrants` (drains this at every real Cleanup entry). By `cardId` (not a direct `RealCard` reference) so a card that's since changed zones is still a safe, cheap `Map` lookup rather than a stale object reference. */
   untilEndOfTurnKeywordGrants: { cardId: number; keyword: string }[] = [];
+  /** Pending real 514.2 "until end of turn" pumps — see `pump`'s own `opts.untilEndOfTurn` doc comment and `clearUntilEndOfTurnPumps` (drains this at every real Cleanup entry). By `{cardId, timestamp}` (the SAME timestamp `pump` gave the underlying `LayerSet` entry) rather than a direct `RealCard`/`LayerEffect` reference, same "safe, cheap lookup, not a stale object reference" reasoning `untilEndOfTurnKeywordGrants` already uses; `powerDelta`/`toughnessDelta` are carried too (unlike the keyword-grant list, which only needs the keyword NAME to remove/log) since a pump's own removal is otherwise unreadable after the fact — nothing else records what a specific timestamped `LayerEffect` closure actually applied, and `engine-trace.ts`'s own synthetic Cleanup log entry (mirroring its existing `untilEndOfTurnGrants` removal entry) needs real numbers to report. */
+  untilEndOfTurnPumps: { cardId: number; timestamp: number; powerDelta: number; toughnessDelta: number }[] = [];
   /** See `isActiveOrDefault`'s own doc comment (just below `RealCard`, above) — kept in sync by `engine.ts`'s `advance()`; defaults to the FIRST player added (the scenario's own conventional 'you') the moment they're added, so an unadvanced/plain scenario already reads as "your turn" without needing a real turn simulation to say so explicitly. */
   activePlayerId?: number;
   /**
@@ -638,7 +743,7 @@ export class GameState {
       keywords: opts.keywords ?? [],
       ptFormula: opts.ptFormula,
       cmc: opts.cmc,
-      manaAbility: opts.manaAbility,
+      manaAbilities: opts.manaAbilities,
       continuousKeywordGrants: opts.continuousKeywordGrants,
       continuousPTGrants: opts.continuousPTGrants,
       continuousTypeGrants: opts.continuousTypeGrants,
@@ -749,6 +854,24 @@ export class GameState {
     return made;
   }
 
+  /**
+   * `Player.shuffle(SpellAbility)` (Player.java ~line 1606) — a real,
+   * genuine in-place Fisher-Yates randomization of `player.library`, not a
+   * documentary no-op: real Forge requires this any time a hidden zone is
+   * searched (601.2/701.19), and CR 601.2's own "then shuffle" text is what
+   * Cycling's own real `TypeCycling` search (`move`'s new `shuffleAfter`
+   * field, card.ts) needs to actually demonstrate for real (a caller/test
+   * can observe the library's own card order genuinely changed, not just
+   * trust a comment).
+   */
+  shuffleLibrary(player: RealPlayer): void {
+    const lib = player.library;
+    for (let i = lib.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [lib[i], lib[j]] = [lib[j]!, lib[i]!];
+    }
+  }
+
   /** `Player.discard` (forge-game/.../player/Player.java ~line 1416) — real hand->graveyard move for `qty` cards (this prototype discards from the front of hand; real Forge lets the player/AI choose which). */
   discard(player: RealPlayer, qty: number): RealCard[] {
     const discarded: RealCard[] = [];
@@ -832,9 +955,68 @@ export class GameState {
     card.counters[counterType] = (card.counters[counterType] ?? 0) + amount;
   }
 
-  /** Layer 7 (P/T) — real Forge layered pump machinery (see layers.ts's own header for the real `StaticAbilityLayer` citation). Each call adds ONE timestamped continuous effect rather than mutating a stored delta — two pumps on the same card both persist and apply in creation order (`LayerSet.computePT`), not last-write-wins. */
-  pump(card: RealCard, powerDelta: number, toughnessDelta: number): void {
-    card.layers.add({ layer: 7, timestamp: nextLayerTimestamp(), apply: (p, t) => [p + powerDelta, t + toughnessDelta] });
+  /**
+   * Real Forge `DB$ Effect | RememberObjects$ Targeted | StaticAbilities$
+   * ...` (613) — installs `grant` directly onto `card`, independent of
+   * whatever effect/permanent created it (see `card.ts`'s own
+   * `CounterConditionalGrant` doc comment for the full design/citation).
+   * No explicit removal is ever needed: `move()`'s existing 400.7
+   * zone-change reset already wipes `card.counters` (and therefore
+   * neutralizes every reader below, which all gate on the SAME counter
+   * being > 0) the instant `card` changes zones — same "the counter's own
+   * removal already does the work" reasoning the FINALITY counter's own
+   * die-redirect above relies on.
+   */
+  installCounterConditionalGrant(card: RealCard, grant: CounterConditionalGrant): void {
+    card.counterConditionalGrants = [...(card.counterConditionalGrants ?? []), grant];
+  }
+
+  /**
+   * Layer 7 (P/T) — real Forge layered pump machinery (see layers.ts's own
+   * header for the real `StaticAbilityLayer` citation). Each call adds ONE
+   * timestamped continuous effect rather than mutating a stored delta — two
+   * pumps on the same card both persist and apply in creation order
+   * (`LayerSet.computePT`), not last-write-wins.
+   *
+   * `opts.untilEndOfTurn: true` additionally registers the SAME timestamp in
+   * `untilEndOfTurnPumps` (real 514.2 — Cleanup ends "until end of turn"
+   * effects), closing the real gap `grantKeyword`'s own
+   * `opts.untilEndOfTurn` already closed for a keyword grant: a real "gets
+   * +N/+N until end of turn" pump (Ambrosia Whiteheart's own Landfall,
+   * Battle Menu's own Ability mode) used to be a PERMANENT `layers.add`
+   * entry with no expiry at all, even though the card's own printed text
+   * says otherwise — a real, live correctness bug in any multi-turn
+   * engine-piloted playthrough, not just a missing feature (confirmed:
+   * neither card's own prior scenario ever spanned a Cleanup to notice).
+   * Opt-in only, same convention `grantKeyword` already established: every
+   * pre-existing `pump`/`pumpSelf`/`pumpTarget`/`pumpAll` call keeps its
+   * prior permanent-within-scenario behavior unless the `Effect` explicitly
+   * sets `untilEndOfTurn: true`.
+   */
+  pump(card: RealCard, powerDelta: number, toughnessDelta: number, opts?: { untilEndOfTurn?: boolean }): void {
+    const timestamp = nextLayerTimestamp();
+    card.layers.add({ layer: 7, timestamp, apply: (p, t) => [p + powerDelta, t + toughnessDelta] });
+    if (opts?.untilEndOfTurn) this.untilEndOfTurnPumps.push({ cardId: card.id, timestamp, powerDelta, toughnessDelta });
+  }
+
+  /**
+   * Real 514.2's "until end of turn" half for a `pump` grant — ends every
+   * pump registered via `pump`'s own `opts.untilEndOfTurn: true`, game-wide
+   * (any player's permanent), removing the SPECIFIC layer entry via
+   * `LayerSet.remove(timestamp)` (a real mutation of the card's own
+   * continuous-effect list, not a filter applied at read time — same
+   * "disappears from every consumer at once" reasoning
+   * `clearUntilEndOfTurnKeywordGrants` already documents for a keyword). A
+   * card no longer on the battlefield (already moved zones, which itself
+   * already wipes `card.layers` via the existing 400.7 reset in `move()`) is
+   * silently skipped — its own layer entry is already gone either way.
+   */
+  clearUntilEndOfTurnPumps(): void {
+    for (const { cardId, timestamp } of this.untilEndOfTurnPumps) {
+      const card = this.cards.get(cardId);
+      card?.layers.remove(timestamp);
+    }
+    this.untilEndOfTurnPumps = [];
   }
 
   /** `Card.setController`/a control-change effect — real reassignment of `controllerId`, distinct from `ownerId` (Forge's own owner/controller split, e.g. `Card.java`'s `getOwner()`/`getController()` at ~3696/~3710). */
@@ -1053,6 +1235,38 @@ export class GameState {
   /** Real per-turn reset for `flippedCoinThisTurn` above (ENGINE_GAPS.md gap #15) — called game-wide at every real Cleanup (`turn.ts`'s `runPhaseEntryAction`, alongside `clearAllDamage`/`clearUntilEndOfTurnKeywordGrants`), same "once per real turn boundary" scope those two already use — matches real Forge's own `Count$YouFlipThisTurn` SVar implicitly resetting every turn (`edgar_king_of_figaro.txt`'s own `SVarCompare$ EQ0` check). */
   resetFlippedCoinThisTurn(): void {
     this.flippedCoinThisTurn.clear();
+  }
+
+  /**
+   * Real per-turn "how many times has this NAMED trigger fired" tracking
+   * (`card.ts`'s own `Trigger.activationLimit` doc comment for the full real
+   * Forge citation — `Trigger.java`'s `checkActivationLimit`/
+   * `getActivationsThisTurn`, backed by `Card.numberTurnActivations`, reset
+   * game-wide by `Game.onCleanupPhase` -> `Card.resetActivationsPerTurn`).
+   * Keyed by `${cardId}:${triggerName}` rather than just `cardId` — Forge's
+   * own `ActivationLimit` is scoped per NAMED trigger (`Trigger.java`'s own
+   * `getOverridingAbility()`-keyed `ActivationTable`), not per card as a
+   * whole, so a card with two independently-capped triggers (none in this
+   * pool today, but nothing here should assume otherwise) would track them
+   * separately. Consulted/incremented by `triggers.ts`'s own shared
+   * `fireTrigger` chokepoint, never mutated directly by a card's own effect.
+   */
+  triggerActivationsThisTurn = new Map<string, number>();
+
+  /** How many times `triggerName` has already fired on `cardId` this turn — see `triggerActivationsThisTurn`'s own doc comment. 0 for a trigger that hasn't fired yet this turn (the common case). */
+  triggerActivationsSoFar(cardId: number, triggerName: string): number {
+    return this.triggerActivationsThisTurn.get(`${cardId}:${triggerName}`) ?? 0;
+  }
+
+  /** Records one more real firing of `cardId`'s `triggerName` this turn — called by `triggers.ts`'s `fireTrigger` immediately before a firing it's allowing through (never for one it gates). */
+  recordTriggerActivation(cardId: number, triggerName: string): void {
+    const key = `${cardId}:${triggerName}`;
+    this.triggerActivationsThisTurn.set(key, (this.triggerActivationsThisTurn.get(key) ?? 0) + 1);
+  }
+
+  /** Real per-turn reset for `triggerActivationsThisTurn` above — called game-wide at every real Cleanup (`turn.ts`'s `runPhaseEntryAction`, alongside `resetFlippedCoinThisTurn`/`clearAllDamage`/`clearUntilEndOfTurnKeywordGrants`), same scope as those (real Forge citation: `Game.onCleanupPhase` sweeps `getCardsInGame()` — every card in the game, not just the active player's). */
+  resetTriggerActivationsThisTurn(): void {
+    this.triggerActivationsThisTurn.clear();
   }
 
   /**

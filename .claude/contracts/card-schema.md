@@ -310,29 +310,42 @@ hand-authored facts (unmarked, as always) and parser-derived facts —
   `event:'destroy'` fact left it untouched/unprovenanced) — **superseded by
   the dedup-retagging bullet immediately below; left here only as a
   historical record of that specific pass, not current behavior.**
-- **Dedup-match retagging (2026-09-13, follow-up pass)** — the "already-
-  covered, leaves it untouched/unprovenanced" behavior described above (and
-  in `apply-recognizers.mjs`'s own pre-existing `coreKey` dedup) is gone.
-  When a recognizer's derived fact dedups against an ALREADY hand-authored
-  fact that has no `provenance` yet, that existing fact is now RETAGGED IN
-  PLACE: same `Fact.provenance` shape, plus a new optional
-  `FactProvenance.note?: string` (`synergy.ts`) — a short documentary string
-  explaining the fact predates the recognizer and was independently
-  reconciled/confirmed by it. Same "not consulted by matching logic" bucket
-  as `provenance` itself; not surfaced anywhere in the served UI beyond
-  existing off-the-shelf JSON/debug views (the Facts-tab popover still only
-  shows `rule` + recognizer source, unchanged). Every other field on the
-  retagged fact (`value`, `annotations`, `controller`, everything) is left
-  byte-for-byte untouched — a recognizer confirms a fact's existence/shape,
-  never its magnitude. **`summon-bahamut` (fin/1) now DOES show a
-  provenance-tagged destroy fact** (its own real `value: -1` placeholder
-  preserved, not overwritten) — the bullet above is stale as of this one.
-  Pool-wide this pass: 163 existing facts retagged (`permanent-enters-
-  battlefield-normally`: 113, `instant-sorcery-resolves-to-graveyard`: 46,
-  `destroy-effect-structural`: 4). Idempotent (re-running retags 0
-  additional facts) — see `PRD_AUTOMATED_AUTHORING.md`'s "Dedup-match
-  retagging closed" section for the full breakdown and live-browser
-  verification notes.
+- **Dedup-match retagging (2026-09-13, follow-up pass; simplified again
+  2026-09-14 — see below, this bullet is a historical record of the FIRST
+  version of this behavior, not current)** — the "already-covered, leaves
+  it untouched/unprovenanced" behavior described above (and in
+  `apply-recognizers.mjs`'s own pre-existing `coreKey` dedup) is gone. When
+  a recognizer's derived fact dedups against an ALREADY hand-authored fact
+  that has no `provenance` yet, that existing fact was RETAGGED IN PLACE:
+  same `Fact.provenance` shape, plus a `FactProvenance.note?: string`
+  documenting that it predates the recognizer, every other field
+  (`value`/`annotations`/`controller`) left byte-for-byte untouched.
+- **Dedup-match retagging simplified (2026-09-14)** — the conservative
+  preserve-and-note behavior above is retired outright, not kept as an
+  option, per an explicit design decision: `value` is deprecated pool-wide
+  (not consulted by anything that actually matches/interacts facts) and a
+  recognizer's own `annotations` being broader/narrower/differently-placed
+  than a hand-authored span was never a real conflict either (`coreKey`
+  already excludes `annotations` from the match test for that exact
+  reason). A `coreKey` match now uniformly REPLACES the existing fact's
+  `value`/`annotations` with the recognizer's own freshly-computed ones and
+  sets a bare `provenance: { origin: 'parser', rule }` — no distinction
+  anymore between a fresh recognizer-originated fact and a `coreKey` match
+  against a previously hand-authored (or previously retagged) one.
+  `FactProvenance.note` has been removed from the type entirely (confirmed
+  unread anywhere under `app/`/`server/` first). Still a genuine decline,
+  never merged: anything that makes `coreKey` itself not match in the first
+  place (a different `target`/`subject`/zone shape, etc.) — unaffected by
+  this change, `coreKey`'s own computation is unchanged.
+  `cards/summon-bahamut/synergy.json`'s `dealDamage-effect-structural` fact
+  is the concrete example: `value` changed from its old hand-authored `5`
+  to the recognizer's own fixed `1` (previously preserved, now
+  overwritten). Pool-wide re-run: 98 files changed, 231 existing facts
+  retagged (187 of which previously carried a now-removed `note`), 0 hard
+  failures, confirmed idempotent across 3 consecutive runs (`grep -rl
+  '"note"' cards/*/synergy.json` → 0 matches). See
+  `PRD_AUTOMATED_AUTHORING.md`'s "Dedup-match retagging simplified
+  (2026-09-14)" section for the full breakdown.
 - **Real bug found+fixed alongside this same pass, `card`-owned file**:
   `server/api/recognizer-source/[rule].get.ts`'s hand-kept `RECOGNIZER_IDS`
   runtime array had not been widened to include `'destroy-effect-

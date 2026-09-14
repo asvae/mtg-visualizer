@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { CardDefinition, EffectContext, Actions } from './card';
 import { GameState, wrapPlayer, wrapCard } from './state';
 import type { RealCard, RealPlayer } from './state';
@@ -522,6 +522,78 @@ describe('declareAttackers — summoning sickness (302.6) / tapped (508.1a) / Vi
     toCombat(engine);
     expect(declareAttackers(engine, [legal, sick]).ok).toBe(false);
     expect(legal.tapped).toBe(false);
+  });
+});
+
+describe('fireOnAttackTriggers — real "whenever ~ attacks" auto-fire (ENGINE_GAPS.md — attack-triggered-ability auto-dispatch)', () => {
+  function toCombat(engine: ReturnType<typeof setupGame>['engine']) {
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatDeclareAttackers') advance(engine);
+  }
+  function attackTriggerCard(order: string[]): CardDefinition {
+    return {
+      name: 'Test Attacker',
+      manaCost: '{1}{G}',
+      typeLine: 'Creature — Test',
+      triggers: [{ name: 'onAttack', on: 'attacks', effects: [{ kind: 'custom', describe: 'tick', run: () => order.push('tick') }] }],
+    };
+  }
+
+  it('auto-fires a registered on:\'attacks\' trigger the moment its own creature is legally declared as an attacker (Ashe, Princess of Dalmasca\'s own shape)', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = attackTriggerCard(order);
+    // Haste (302.6) — otherwise this same-turn-cast creature would be
+    // summoning-sick and `declareAttackers` would (correctly) reject it,
+    // never reaching `fireOnAttackTriggers` at all — this test is about the
+    // auto-fire itself, not summoning sickness (see its own dedicated
+    // describe block above for that).
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'], keywords: ['Haste'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    toCombat(engine);
+    expect(declareAttackers(engine, [real]).ok).toBe(true);
+    expect(order).toEqual(['tick']);
+  });
+
+  it('does NOT fire for a permanent seeded directly onto the battlefield (never cast through this engine — same real, documented limitation upkeep/endStep already carry)', () => {
+    const { state, you, engine } = setupGame();
+    const order: string[] = [];
+    attackTriggerCard(order); // a CardDefinition exists, but is never wired up via castSpell+resolveTop
+    const real = state.addCard(you, 'Battlefield', { name: 'Test Attacker', types: ['Creature'] }); // seeded directly — no resolvedPermanents entry
+    toCombat(engine);
+    expect(declareAttackers(engine, [real]).ok).toBe(true);
+    expect(order).toEqual([]);
+  });
+
+  it('does NOT fire when the attacker declaration itself is rejected (summoning sickness, e.g.) — no half-applied trigger', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const card = attackTriggerCard(order);
+    const real = state.addCard(you, 'Hand', { name: card.name, types: ['Creature'] });
+    const self = wrapCard(state, real);
+    castSpell(engine, you, real, card, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    engine.enteredThisTurn.set(real.id, engine.turn.turnNumber); // still sick — this same turn
+    toCombat(engine);
+    expect(declareAttackers(engine, [real]).ok).toBe(false);
+    expect(order).toEqual([]);
+  });
+
+  it('does NOT fire a DIFFERENT attacker\'s own registered permanent that has no on:\'attacks\' trigger', () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const order: string[] = [];
+    const triggerCard = attackTriggerCard(order);
+    const attackerWithTrigger = state.addCard(you, 'Hand', { name: triggerCard.name, types: ['Creature'], keywords: ['Haste'] });
+    castSpell(engine, you, attackerWithTrigger, triggerCard, ctxFor(state, wrapCard(state, attackerWithTrigger), youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    const plainCard: CardDefinition = { name: 'Plain Attacker', manaCost: '{1}{G}', typeLine: 'Creature — Test' };
+    const plainAttacker = state.addCard(you, 'Hand', { name: plainCard.name, types: ['Creature'], keywords: ['Haste'] });
+    castSpell(engine, you, plainAttacker, plainCard, ctxFor(state, wrapCard(state, plainAttacker), youPlayer, [oppPlayer]), noopActions);
+    resolveTop(engine);
+    toCombat(engine);
+    expect(declareAttackers(engine, [plainAttacker]).ok).toBe(true); // ONLY the plain one attacks
+    expect(order).toEqual([]); // its own trigger never registered on the attacking creature
   });
 });
 
@@ -1193,12 +1265,12 @@ describe('{X} cost on an ACTIVATED ABILITY (Rydia, Summoner of Mist\'s real shap
   });
 });
 
-describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real ETB derivation + 302.6', () => {
+describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real manaAbilities copy + 302.6', () => {
   const MANA_ROCK: CardDefinition = {
     name: 'Test Mana Rock',
     manaCost: '{1}',
     typeLine: 'Artifact',
-    staticAbilities: ['{T}: Add {W}.'],
+    manaAbilities: [{ colors: ['W'] }],
   };
 
   const MANA_DORK: CardDefinition = {
@@ -1206,14 +1278,14 @@ describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real ETB d
     manaCost: '{G}',
     typeLine: 'Creature — Elf Druid',
     pt: [1, 1],
-    staticAbilities: ['{T}: Add {G}.'],
+    manaAbilities: [{ colors: ['G'] }],
   };
 
   const DUAL_ROCK: CardDefinition = {
     name: 'Test Dual Rock',
     manaCost: '{1}',
     typeLine: 'Artifact',
-    staticAbilities: ['{T}: Add {G} or {U}.'],
+    manaAbilities: [{ colors: ['G', 'U'] }],
   };
 
   it('a resolved non-Land mana-ability permanent (an artifact) really becomes a payable mana source', () => {
@@ -1222,7 +1294,7 @@ describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real ETB d
     const rockSelf = wrapCard(state, rockReal);
     castSpell(engine, you, rockReal, MANA_ROCK, ctxFor(state, rockSelf, youPlayer, [oppPlayer]), noopActions);
     resolveTop(engine);
-    expect(rockReal.manaAbility).toBe('W');
+    expect(rockReal.manaAbilities).toEqual([{ colors: ['W'] }]);
 
     const whiteSpell: CardDefinition = { name: 'Test White Spell', manaCost: '{W}', typeLine: 'Sorcery', effects: [] };
     expect(canCastSpell(engine, you, whiteSpell).ok).toBe(true);
@@ -1243,7 +1315,7 @@ describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real ETB d
     const dorkSelf = wrapCard(state, dorkReal);
     castSpell(engine, you, dorkReal, MANA_DORK, ctxFor(state, dorkSelf, youPlayer, [oppPlayer]), noopActions);
     resolveTop(engine);
-    expect(dorkReal.manaAbility).toBe('G');
+    expect(dorkReal.manaAbilities).toEqual([{ colors: ['G'] }]);
 
     const greenSpell: CardDefinition = { name: 'Test Green Spell', manaCost: '{G}{G}', typeLine: 'Sorcery', effects: [] };
     expect(canCastSpell(engine, you, greenSpell)).toEqual({ ok: false, reason: expect.stringMatching(/cannot afford/) });
@@ -1274,7 +1346,7 @@ describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real ETB d
     const rockSelf = wrapCard(state, rockReal);
     castSpell(engine, you, rockReal, DUAL_ROCK, ctxFor(state, rockSelf, youPlayer, [oppPlayer]), noopActions);
     resolveTop(engine);
-    expect(rockReal.manaAbility).toEqual(['G', 'U']);
+    expect(rockReal.manaAbilities).toEqual([{ colors: ['G', 'U'] }]);
 
     const blueSpell: CardDefinition = { name: 'Test Blue Spell', manaCost: '{U}', typeLine: 'Sorcery', effects: [] };
     expect(canCastSpell(engine, you, blueSpell).ok).toBe(true);
@@ -1428,6 +1500,90 @@ describe('Sacrifice cost trusted when matched by the card\'s own effects (Ahrima
     const selfSac: CardDefinition = { ...AHRIMAN_SHAPED, activationCost: '{3}, Sacrifice this creature' };
     const source = state.addCard(you, 'Battlefield', { name: selfSac.name, types: ['Creature'] });
     expect(canActivateAbility(engine, you, source, selfSac)).toEqual({ ok: false, reason: expect.stringMatching(/unsupported component/) });
+  });
+});
+
+// ENGINE_GAPS.md gap #23 (closed 2026-09-14) — real 702.13 Cycling/
+// TypeCycling: a genuine 602.1 activation FROM HAND (not the Battlefield
+// every OTHER activated ability in this pool implicitly assumes), cost =
+// mana + discarding the permanent itself (a real Hand->Graveyard move, paid
+// for real, not merely trusted the way the Sacrifice-cost-trusted describe
+// block above works).
+describe('Cycling (702.13) — activate FROM HAND, discard self as cost (ENGINE_GAPS.md gap #23)', () => {
+  const CYCLER: CardDefinition = {
+    name: 'Test Cycler',
+    manaCost: '{3}{W}',
+    typeLine: 'Creature — Test',
+    abilities: [{ name: 'cycling', cost: '{2}, Discard this card', effects: [{ kind: 'drawCard' }] }],
+  };
+
+  it('allows activating Cycling from Hand once the mana is affordable', () => {
+    const { state, you, engine } = setupGame();
+    const permanent = state.addCard(you, 'Hand', { name: CYCLER.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, permanent, CYCLER, 'cycling').ok).toBe(true);
+  });
+
+  it("rejects Cycling when the permanent is NOT in Hand (701.9a — discarding is a Hand->Graveyard move; real ActivationZone$ Hand), even though every other check would pass", () => {
+    const { state, you, engine } = setupGame();
+    const onBattlefield = state.addCard(you, 'Battlefield', { name: CYCLER.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, onBattlefield, CYCLER, 'cycling')).toEqual({
+      ok: false,
+      reason: expect.stringMatching(/can only be activated from Hand/),
+    });
+  });
+
+  it('rejects an unaffordable Cycling cost, mutating nothing (permanent stays in Hand)', () => {
+    const { state, you, engine } = setupGame();
+    const expensive: CardDefinition = { ...CYCLER, abilities: [{ name: 'cycling', cost: '{5}{G}{G}, Discard this card', effects: [{ kind: 'drawCard' }] }] };
+    const permanent = state.addCard(you, 'Hand', { name: expensive.name, types: ['Creature'] });
+    expect(canActivateAbility(engine, you, permanent, expensive, 'cycling')).toEqual({ ok: false, reason: expect.stringMatching(/cannot afford/) });
+    expect(permanent.zone).toBe('Hand');
+  });
+
+  it('activateAbility genuinely discards the permanent (real Hand->Graveyard move) as part of paying the cost, BEFORE the ability even resolves', () => {
+    const { state, you, engine, youPlayer } = setupGame();
+    const permanent = state.addCard(you, 'Hand', { name: CYCLER.name, types: ['Creature'] });
+    const self = wrapCard(state, permanent);
+    const result = activateAbility(engine, you, permanent, CYCLER, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, noopActions, 'cycling');
+    expect(result.ok).toBe(true);
+    expect(permanent.zone).toBe('Graveyard'); // discarded for real, not deferred to resolution
+    expect(engine.stack.size).toBe(1);
+  });
+
+  it("resolving the pushed ability runs its own real effect (drawCard) without relocating the already-discarded source (602.1 has no such rule, and it's not on the stack's own zone anyway)", () => {
+    const { state, you, engine, youPlayer } = setupGame();
+    const permanent = state.addCard(you, 'Hand', { name: CYCLER.name, types: ['Creature'] });
+    const self = wrapCard(state, permanent);
+    const libraryBefore = you.library.length;
+    activateAbility(engine, you, permanent, CYCLER, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, noopActions, 'cycling');
+    resolveTop(engine);
+    expect(permanent.zone).toBe('Graveyard'); // still there, never moved a second time
+    expect(you.library.length).toBe(libraryBefore - 1); // the real drawCard effect genuinely ran
+  });
+
+  it('TypeCycling\'s own real library search (move with subtype+shuffleAfter) finds the matching card, puts it in hand, and shuffles', () => {
+    const { state, you, engine, youPlayer } = setupGame();
+    const SEARCHER: CardDefinition = {
+      name: 'Test Searcher',
+      manaCost: '{2}{G}',
+      typeLine: 'Creature — Test',
+      abilities: [
+        {
+          name: 'cycling',
+          cost: '{2}, Discard this card',
+          effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, target: true, validType: 'land', subtype: 'Plains', shuffleAfter: true }],
+        },
+      ],
+    };
+    const permanent = state.addCard(you, 'Hand', { name: SEARCHER.name, types: ['Creature'] });
+    const plains = state.addCard(you, 'Library', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    const self = wrapCard(state, permanent);
+    const shuffleSpy = vi.fn();
+    const actions: Actions = { ...loggingActions(state, [], permanent.id), shuffleLibrary: shuffleSpy };
+    activateAbility(engine, you, permanent, SEARCHER, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, actions, 'cycling');
+    resolveTop(engine);
+    expect(plains.zone).toBe('Hand'); // the real Plains card genuinely found and moved
+    expect(shuffleSpy).toHaveBeenCalledTimes(1); // real 601.2/701.19 "then shuffle"
   });
 });
 

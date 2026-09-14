@@ -62,7 +62,12 @@ export type RecognizerId =
   | 'permanent-enters-battlefield-normally'
   | 'destroy-effect-structural'
   | 'drawCard-effect-structural'
-  | 'saga-lore-and-sacrifice-structural';
+  | 'saga-lore-and-sacrifice-structural'
+  | 'dies-trigger-structural'
+  | 'lifegain-trigger-structural'
+  | 'dealDamage-effect-structural'
+  | 'putCounter-broadcast-structural'
+  | 'attacks-trigger-structural';
 
 /**
  * `FactProvenance` itself is now DEFINED on `Fact` (`synergy.ts`, wired in

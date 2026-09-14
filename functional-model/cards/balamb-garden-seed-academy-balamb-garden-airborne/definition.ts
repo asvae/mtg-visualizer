@@ -15,14 +15,15 @@ import type { CardDefinition, Effect, EffectContext, Actions } from '../../card'
 // face's OWN effects run independently, same as cecil). The dynamic cost
 // reduction is documentary cost text only, same convention qiqirn-
 // merchant's own "costs {1} less for each Town you control" ability uses.
-// The mana ability ("{T}: Add {G} or {U}") stays real text only — no
-// mana-producing Effect/Action exists anywhere in this model.
+// The mana ability ("{T}: Add {G} or {U}") is a real, structured
+// choice-of-color `manaAbilities` entry — see treno-dark-city's own doc
+// comment for the full citation/mechanism.
 export const balambGardenSeedAcademyBalambGardenAirborne: CardDefinition = {
   name: 'Balamb Garden, SeeD Academy',
   manaCost: '',
   typeLine: 'Land — Town',
 
-  staticAbilities: ['{T}: Add {G} or {U}.'],
+  manaAbilities: [{ colors: ['G', 'U'] }],
 
   triggers: [
     {

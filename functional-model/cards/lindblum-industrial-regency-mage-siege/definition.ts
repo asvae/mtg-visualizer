@@ -27,7 +27,7 @@ export const lindblumIndustrialRegency: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {R}.'],
+  manaAbilities: [{ colors: ['R'] }],
 
   backFace: {
     name: 'Mage Siege',

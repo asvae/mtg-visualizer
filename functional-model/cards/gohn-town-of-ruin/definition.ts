@@ -1,10 +1,9 @@
 import type { CardDefinition, Effect } from '../../card';
 
 // Real script (gohn_town_of_ruin.txt) — same real "enters tapped"
-// replacement effect and mana-ability-as-text treatment as
-// treno-dark-city's own doc comment explains in full (see that card, a
-// different agent's own FIN batch, for the citation); only the two colors
-// produced differ.
+// replacement effect and real, structured choice-of-color `manaAbilities`
+// treatment as treno-dark-city's own doc comment explains in full (see
+// that card for the citation); only the two colors produced differ.
 export const gohnTownOfRuin: CardDefinition = {
   name: 'Gohn, Town of Ruin',
   manaCost: '',
@@ -17,5 +16,5 @@ export const gohnTownOfRuin: CardDefinition = {
     },
   ],
 
-  staticAbilities: ['{T}: Add {B} or {G}.'],
+  manaAbilities: [{ colors: ['B', 'G'] }],
 };

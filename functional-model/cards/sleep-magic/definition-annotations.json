@@ -1,0 +1,4 @@
+{
+  "triggers[0]": { "highlight": "When this Aura enters, tap enchanted creature.", "line": 1 },
+  "triggers[1]": { "highlight": "When enchanted creature is dealt damage, sacrifice this Aura.", "line": 3 }
+}

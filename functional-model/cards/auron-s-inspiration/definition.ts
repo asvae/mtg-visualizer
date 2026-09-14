@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect, EffectContext, Actions, AuthoredFact } from '../../card';
 
 export const auronSInspiration: CardDefinition = {
   name: "Auron's Inspiration",
@@ -7,11 +7,7 @@ export const auronSInspiration: CardDefinition = {
 
   alternateCosts: [{ name: 'Flashback', cost: '{2}{W}{W}', from: 'graveyard', thenExile: true }],
 
-  // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial) — the top-level
-  // `effects` here is a real cast effect (an honest no-op custom, per the
-  // comment below), whole-line annotation is straightforward: one clean
-  // single-sentence line, no modal/multi-line split to worry about.
-  effectsAnnotation: { highlight: 'Attacking creatures get +2/+0 until end of turn.', line: 0 },
+  // Own annotation: `definition-annotations.json`, keyed `"effects"`.
   effects: [
     {
       // "Attacking creatures get +2/+0" is symmetric (ANY player's
@@ -45,6 +41,25 @@ export const auronSInspiration: CardDefinition = {
       run: (_ctx: EffectContext, _actions: Actions) => {
         // Intentionally a no-op — see describe above.
       },
+      // Tier 3 (`Effect.authoredFact`). The one real fact this ability
+      // represents is real, honest, printed text (see this card's own
+      // `definition-annotations.json`, keyed `"effects"`) even though `run`
+      // itself is a documented no-op (see the long comment above `run`) — a
+      // static/runtime read of `run`'s own body would correctly find NOTHING
+      // (there is genuinely nothing to find, that's the whole documented
+      // gap), so this fact can ONLY ever come from a human/agent who read
+      // the real oracle text and the gap-explaining comment together.
+      // Matches this card's own real `synergy.json` source fact
+      // byte-for-byte (this card has no sink array entries at all). Not
+      // wired into `apply-recognizers.mjs`/`synergy.json` generation. Own
+      // annotation: `definition-annotations.json`, keyed
+      // `"effects[0].authoredFact[0]"`.
+      authoredFact: {
+        role: 'source',
+        event: 'pump',
+        target: { types: { has: ['Creature'] }, attacking: true },
+        value: 1,
+      } satisfies AuthoredFact,
     } satisfies Effect,
   ],
 };

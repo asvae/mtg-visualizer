@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { opponents, sequence, tap } from '../../combinator';
 
 // A transforming DFC Equipment // Saga — same shape as jecht-reluctant-
 // guardian-braska-s-final-aeon's own front/back split: `backFace` is a
@@ -40,12 +41,19 @@ export const crystalFragmentsSummonAlexander: CardDefinition = {
   activationCost: '{5}{W}{W}',
   effects: [
     {
-      kind: 'custom',
+      // MIGRATED (2026-09-14) off a `kind:'custom'` closure onto the real
+      // `combinator.ts` AST — a plain `Sequence` of two fixed, self-targeted
+      // `moveSelf` steps, no Query/Filter/Branch needed at all (see
+      // `combinator.ts`'s own header for why this shape deliberately stays
+      // "Sequence only" rather than being forced into a Query/Filter shape
+      // it doesn't need).
+      //
+      // Authored via `combinator.ts`'s own fluent builder layer (2026-09-14
+      // follow-up — SAME AST as before, just not a raw nested object
+      // literal).
+      kind: 'program',
       describe: "exile this Equipment, then return it to the battlefield transformed under its owner's control (activate only as a sorcery)",
-      run: (ctx: EffectContext, actions: Actions) => {
-        actions.moveTo(ctx.self, 'Exile');
-        actions.moveTo(ctx.self, 'Battlefield');
-      },
+      program: sequence('Exile', 'Battlefield'),
     } satisfies Effect,
   ],
 
@@ -93,11 +101,12 @@ export const crystalFragmentsSummonAlexander: CardDefinition = {
         name: 'chapterIII',
         effects: [
           {
-            kind: 'custom',
+            // MIGRATED (2026-09-14) off a `kind:'custom'` closure onto the
+            // real `combinator.ts` AST — a plain `Each` (`tap`) over an
+            // unfiltered `creaturesInPlay(opponents)` `Query`.
+            kind: 'program',
             describe: 'tap all creatures your opponents control',
-            run: (ctx: EffectContext, actions: Actions) => {
-              for (const creature of ctx.opponents.flatMap((p) => p.getCreaturesInPlay())) actions.tap(creature);
-            },
+            program: opponents.creaturesInPlay().each(tap()),
           } satisfies Effect,
         ],
       },

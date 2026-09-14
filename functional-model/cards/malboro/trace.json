@@ -1,12 +1,21 @@
 [
   {
     "scenario": {
-      "setup": "opp0: 4 card(s) in hand; opp0: 40 card(s) in library",
-      "action": "\"onEnter\" trigger fires",
-      "result": "opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
+      "setup": "you: 6 Swamp(s)",
+      "action": "engine playthrough: cast -> resolve -> enters -> ETB opponent punishment",
+      "result": "Malboro is cast ({4}{B}{B} paid) and enters the battlefield; its ETB makes the opponent discard a card, lose 2 life, and has the top 3 cards of their library exiled.",
       "raw": {
-        "result": "opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
-        "trigger": "onEnter",
+        "result": "Malboro is cast ({4}{B}{B} paid) and enters the battlefield; its ETB makes the opponent discard a card, lose 2 life, and has the top 3 cards of their library exiled.",
+        "you": {
+          "basicLands": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
         "opponents": [
           {
             "handCount": 4,
@@ -18,10 +27,52 @@
     },
     "log": [
       {
+        "fn": "cast",
+        "card": "Malboro",
+        "instanceId": 1,
+        "from": "hand",
+        "cost": "{4}{B}{B}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Malboro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Malboro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Malboro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Malboro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Malboro"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Malboro"
+      },
+      {
+        "fn": "enters",
+        "card": "Malboro",
+        "instanceId": 1,
+        "zone": "Battlefield"
+      },
+      {
         "fn": "trigger",
         "card": "Malboro",
         "instanceId": 1,
-        "id": 1563,
         "name": "onEnter"
       },
       {
@@ -43,78 +94,109 @@
         "from": "Library",
         "to": "Exile",
         "qty": 3
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Malboro ({4}{B}{B})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 7
+      },
+      {
+        "label": "Fire onEnter",
+        "from": 8
       }
     ]
   },
   {
     "scenario": {
-      "setup": "opp0: 4 card(s) in hand; opp0: 40 card(s) in library; opp1: at 12 life; opp1: 2 card(s) in hand; opp1: 30 card(s) in library",
-      "action": "\"onEnter\" trigger fires",
-      "result": "each opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
+      "setup": "you: 3 Forest(s)",
+      "action": "engine playthrough: Swampcycling activated from hand -> discard self -> search library -> shuffle",
+      "result": "Swampcycling {2} is activated from hand: {2} is paid, Malboro is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Swamp card, putting it into hand, then shuffling.",
       "raw": {
-        "result": "each opponent discards a card, loses 2 life, and has the top 3 cards of their library exiled",
-        "trigger": "onEnter",
-        "opponents": [
-          {
-            "handCount": 4,
-            "life": 20,
-            "libraryCount": 40
-          },
-          {
-            "handCount": 2,
-            "life": 12,
-            "libraryCount": 30
-          }
-        ]
+        "result": "Swampcycling {2} is activated from hand: {2} is paid, Malboro is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Swamp card, putting it into hand, then shuffling.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
       }
     },
     "log": [
       {
-        "fn": "trigger",
+        "fn": "activate",
         "card": "Malboro",
         "instanceId": 1,
-        "id": 1643,
-        "name": "onEnter"
+        "cost": "{2}, Discard this card",
+        "ability": "cycling"
       },
       {
         "fn": "discard",
-        "player": "opp0",
-        "qty": 1,
-        "cards": [
-          "Forest"
-        ]
+        "target": "Malboro",
+        "id": 59,
+        "controller": "you"
       },
       {
-        "fn": "discard",
-        "player": "opp1",
-        "qty": 1,
-        "cards": [
-          "Forest"
-        ]
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Malboro"
       },
       {
-        "fn": "loseLife",
-        "player": "opp0",
-        "amount": 2
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Malboro"
       },
       {
-        "fn": "loseLife",
-        "player": "opp1",
-        "amount": 2
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Library",
+        "count": 1,
+        "creatureCount": 0
       },
       {
-        "fn": "move",
-        "player": "opp0",
-        "from": "Library",
-        "to": "Exile",
-        "qty": 3
+        "fn": "read:isLand",
+        "target": "Swamp",
+        "result": true
       },
       {
-        "fn": "move",
-        "player": "opp1",
-        "from": "Library",
-        "to": "Exile",
-        "qty": 3
+        "fn": "read:hasSubtype",
+        "target": "Swamp",
+        "subtype": "Swamp",
+        "result": true
+      },
+      {
+        "fn": "moveTo",
+        "target": "Swamp",
+        "id": 58,
+        "zone": "Hand",
+        "controller": "you"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Activate Swampcycling ({2}, Discard this card): search for a Swamp",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

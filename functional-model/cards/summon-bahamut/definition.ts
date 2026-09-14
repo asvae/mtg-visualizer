@@ -17,31 +17,28 @@ export const summonBahamut: CardDefinition = {
   // the ability repeats, not a typo.
   triggers: [
     {
+      // Real Scryfall oracle text templates repeated-chapter Sagas as ONE
+      // shared line ("I, II — ..."). Own annotation (as of the
+      // PRD_AUTOMATED_AUTHORING.md "definition-level annotation" migration,
+      // 2026-09-13): `cards/summon-bahamut/definition-annotations.json`,
+      // keyed `"triggers[0]"`.
       name: 'chapterI',
       effects: [{ kind: 'destroy', validType: 'permanent', nonLand: true, qty: 1, optional: true } satisfies Effect],
-      // PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, scoped trial). Real Scryfall
-      // oracle text templates repeated-chapter Sagas as ONE shared line
-      // ("I, II — ...") — both chapterI and chapterII point at the SAME
-      // whole clause, deliberately coarse per this trial's own "whole
-      // trigger line, not per-Effect" design.
-      annotation: { highlight: 'I, II — Destroy up to one target nonland permanent.', line: 1 },
     },
     {
+      // Own annotation: `definition-annotations.json`, keyed `"triggers[1]"`
+      // (same real oracle line as chapterI above — both chapters share it).
       name: 'chapterII',
       effects: [{ kind: 'destroy', validType: 'permanent', nonLand: true, qty: 1, optional: true } satisfies Effect],
-      annotation: { highlight: 'I, II — Destroy up to one target nonland permanent.', line: 1 },
     },
     {
+      // Own annotation: `definition-annotations.json`, keyed `"triggers[2]"`.
       name: 'chapterIII',
       effects: [{ kind: 'drawCard', amount: 2 } satisfies Effect],
-      annotation: { highlight: 'III — Draw two cards.', line: 2 },
     },
     {
+      // Own annotation: `definition-annotations.json`, keyed `"triggers[3]"`.
       name: 'chapterIV',
-      annotation: {
-        highlight: 'IV — Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent.',
-        line: 3,
-      },
       effects: [
         {
           kind: 'dealDamage',

@@ -73,6 +73,17 @@
 //   truncating the annotation at "creature" and asserting a fact that reads
 //   as broader than the real card, this recognizer declines the whole
 //   card and leaves it for normal agent authorship.
+//
+// **Companion `dies` consequence fact (2026-09-13 follow-up)** — whenever
+// this recognizer confidently recognizes a `destroy` effect, it ALSO emits
+// the paired CR 700.4 `dies` CONSEQUENCE fact (same target constraint, same
+// annotation span, `from:'Battlefield'`/`to:'Graveyard'`/`targeted:true`) —
+// see `recognize`'s own doc comment, right below the loop that builds it,
+// for the full reasoning and the real pool cards (`battle-menu`,
+// `fate-of-the-sun-cryst`, `dion-bahamut-s-dominant-bahamut-warden-of-
+// light`'s own back face) that already carry this exact pairing
+// hand-authored, confirming it's a general pattern rather than a one-off
+// for Summon: Bahamut.
 import type { Effect } from '../card';
 import type { Constraints } from '../synergy';
 import type { RecognizedFact, RecognizerResult } from './types';
@@ -245,6 +256,47 @@ export function recognizeDestroyEffectStructural(input: StructuralRecognizerInpu
     };
 
     facts.push(fact);
+
+    // Companion `dies` CONSEQUENCE fact (2026-09-13 follow-up, closing
+    // Summon: Bahamut/fin-1's own last-but-one agent-derived fact) — CR
+    // 700.4: destroying something IS moving it from the battlefield to a
+    // graveyard, so whenever this recognizer confidently recognizes a real
+    // `destroy` effect, the SAME real dying is ALSO a guaranteed, checkable
+    // consequence — same "ACT vs CONSEQUENCE" standing rule
+    // `SYNERGY_DESIGN.md` already codifies for `saga-lore-and-sacrifice-
+    // structural.ts`'s own sacrifice->dies pair (a sacrifice ACT has no
+    // rules-based prevention mechanism either, but the destroy ACT itself
+    // genuinely can be prevented — indestructible/regeneration — which is
+    // exactly why `destroy-effect-structural`'s OWN fact above stays a bare
+    // ACT tag with no zone fields; the paired `dies` fact below is the
+    // separate, always-real CONSEQUENCE, unconditionally eligible the
+    // moment a destroy effect is recognized at all, per that same rule).
+    //
+    // **Real pool check confirming this is a general pattern, not a
+    // Bahamut-specific hack**: `battle-menu` and `fate-of-the-sun-cryst`
+    // both ALREADY carry this exact pairing hand-authored (same target
+    // constraint, `from:'Battlefield'`/`to:'Graveyard'`/`targeted:true`,
+    // same annotation span as their own `destroy` fact) — this recognizer's
+    // own output is verified byte-for-byte against both in
+    // `destroy-effect-structural.test.ts`. `dion-bahamut-s-dominant-
+    // bahamut-warden-of-light`'s own back face (an unrestricted "Destroy
+    // target permanent," no `target` constraint at all) carries the
+    // identical pairing too. Same span as the paired `destroy` fact — CR
+    // 700.4's own consequence has no separate textual anchor of its own; the
+    // ACT clause IS the only real anchor either fact has.
+    facts.push({
+      role: 'source',
+      fact: {
+        event: 'dies',
+        from: 'Battlefield',
+        to: 'Graveyard',
+        ...(target ? { target } : {}),
+        targeted: true,
+        value: 1,
+        annotations: [annotation],
+      },
+      provenance: { origin: 'parser', rule: RULE },
+    });
   }
 
   return { matched: true, facts };

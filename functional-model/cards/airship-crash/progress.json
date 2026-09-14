@@ -2,10 +2,10 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-14",
+  "notes": "2026-09-14: Cycling {2} is now real, structured, engine-piloted (ENGINE_GAPS.md gap #23, closed 2026-09-14) \u2014 modeled via the named `abilities` array (this card's own top-level `effects` is already the Instant's own destroy-target cast effect). scenarios.ts now runEngineScenarios (2 real engine-piloted scenarios: cast+destroy target artifact, Cycling activated from hand). Added real drawCard SOURCE + discard-self SINK facts. vitest 550/550, verify-synergy.mjs 320 checked/0 hard failures, tsc no new errors.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "the third disjunct of its real destroy filter ('creature with flying') has no vocabulary slot — schema doesn't support keyword-based constraints yet, so this part of the filter is silently narrower than the real card"
+    "the third disjunct of its real destroy filter ('creature with flying') has no vocabulary slot \u2014 schema doesn't support keyword-based constraints yet, so this part of the filter is silently narrower than the real card"
   ]
 }

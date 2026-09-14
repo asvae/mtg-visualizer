@@ -2069,3 +2069,45 @@ worth remembering the pitfalls before re-deriving them:
     read straight off the live DOM). Zero console/page errors throughout;
     `npx nuxi typecheck` — same 2 pre-existing unrelated errors as before
     (`functional-model/mana.ts`, `server/api/tokens/by-key.ts`).
+
+- 2026-09-14, SearchBox.vue row default-action (Enter / click on row body)
+  made route-aware, per explicit spec: peek panel only where CardPeekPanel is
+  actually mounted, full-page navigation everywhere else. `openRow()` now
+  branches on a new `onGraphRoute = computed(() => route.path === '/app')`
+  (same `useRoute()`-based check `layouts/graph.vue`'s own `isGraphPage`
+  already uses for PhysicsControls) — `store.openCardPanel(...)` when true,
+  `navigateTo('/app/card/${set}/${number}')` (same helper
+  CardPeekPanel.vue's own `expand()` already uses for this exact destination)
+  when false. Add/remove toggle path (`toggleScope`, ArrowRight-arm +
+  Enter-while-armed, and the mouse button) untouched — confirmed unaffected
+  live on every page tested.
+  - **Judgment call, flagging for the coordinator to confirm**: treated List
+    view the same as Graph view (peek panel), not as one of the "other
+    pages." Landed on checking `route.path === '/app'` rather than
+    `store.viewMode.value === 'graph'` specifically BECAUSE both viewModes
+    live under the one `/app` route and `CardPeekPanel` is only ever mounted
+    there regardless of which renderer (`GraphCanvas`/`ListView`) is
+    currently showing (`app/pages/app/index.vue`) — so this reduces to "is a
+    peek panel even present to open," and also matches PRD 04's own existing
+    list-row-click behavior (already opens the same peek panel). Using
+    `viewMode` instead would have been actively wrong: List view rows already
+    open the peek panel today, so a search result behaving differently from
+    a list row on the exact same screen would be the more surprising
+    inconsistency, not less.
+  - Verified live (Playwright, real `locator.press('Enter')`/`.click()`, not
+    `page.evaluate`) against the running dev server: (1) `/app` Graph view,
+    Enter on a result → `?card=` param + `[aria-label="Card preview"]` panel
+    visible, unchanged; (2) `/app` List view, same Enter → same peek panel
+    (judgment call behaves as decided); (3) `/app/card/fin/217` (full card
+    page), Enter on a different result → navigated straight to that result's
+    own `/app/card/<set>/<number>`, no `?card=` param, no peek panel element
+    at all; (4) `/app/keywords`, same → same direct-navigation outcome; (5)
+    ArrowRight-arm + Enter-while-armed on `/app/keywords` → toggled Scope
+    membership with NO navigation and NO peek panel (confirmed via
+    before/after `page.url()` staying identical); (6) mouse click on the
+    add/remove button on `/app` Graph view → same, no navigate/no peek. Zero
+    console/page errors across all six. `npm run typecheck` clean (same 2
+    pre-existing unrelated errors noted throughout this file). Toggled every
+    test card's Scope membership back to its original state after each
+    check, and deleted the scratch verification script — no lasting data/
+    state changes from this pass.

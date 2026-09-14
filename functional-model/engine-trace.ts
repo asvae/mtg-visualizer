@@ -52,6 +52,7 @@ import {
   canActivateAbility,
   activateAbility,
   costRequiresTap,
+  costRequiresDiscardSelf,
   activationCostFor,
   effectiveActivationCost,
   resolveTop,
@@ -301,6 +302,8 @@ interface PreAdvanceSnapshot {
   hands: Map<number, RealCard[]>;
   /** Whatever `GameState.untilEndOfTurnKeywordGrants` held right before this `advance()` call — a real Cleanup-phase entry drains that list entirely (`state.ts`'s own `clearUntilEndOfTurnKeywordGrants`), so by the time `advance()` returns there's nothing left to read it FROM; this is the only way to know which (card, keyword) pairs a Cleanup crossing just ended, for the synthetic removal entry below. */
   untilEndOfTurnGrants: { cardId: number; keyword: string }[];
+  /** Same real need, for a `pump`'s own `opts.untilEndOfTurn` (`state.ts`'s own `untilEndOfTurnPumps`/`clearUntilEndOfTurnPumps`) — a real Cleanup drains this list too, so the synthetic "pump expired" entry below needs it captured beforehand. */
+  untilEndOfTurnPumps: { cardId: number; timestamp: number; powerDelta: number; toughnessDelta: number }[];
 }
 
 function snapshotBeforeAdvance(pilot: EnginePilot): PreAdvanceSnapshot {
@@ -310,7 +313,7 @@ function snapshotBeforeAdvance(pilot: EnginePilot): PreAdvanceSnapshot {
     for (const c of p.battlefield) if (c.tapped) tappedIds.add(c.id);
     hands.set(p.id, [...p.hand]);
   }
-  return { tappedIds, hands, untilEndOfTurnGrants: [...pilot.state.untilEndOfTurnKeywordGrants] };
+  return { tappedIds, hands, untilEndOfTurnGrants: [...pilot.state.untilEndOfTurnKeywordGrants], untilEndOfTurnPumps: [...pilot.state.untilEndOfTurnPumps] };
 }
 
 /**
@@ -360,6 +363,23 @@ function logAutomaticPhaseEntry(pilot: EnginePilot, before: PreAdvanceSnapshot, 
     for (const { cardId, keyword } of before.untilEndOfTurnGrants) {
       const card = pilot.state.cards.get(cardId);
       if (card && !card.keywords.includes(keyword)) entries.push({ fn: 'grantKeyword', target: card.name, id: card.id, keyword, removed: true });
+    }
+    // Same real need, for a `pump`'s own `opts.untilEndOfTurn` (`state.ts`'s
+    // `untilEndOfTurnPumps`/`clearUntilEndOfTurnPumps`) — this SAME Cleanup
+    // crossing already drained the list for real (`LayerSet.remove`, via
+    // `runPhaseEntryAction`'s own `clearUntilEndOfTurnPumps` call), so a
+    // synthetic `pump removed:true` entry is the only way the trace shows
+    // the expiry actually happened, not just that the effect was applied
+    // earlier. Unlike the keyword-grant diff above, this doesn't need a
+    // "still gone" re-check against live state (`LayerSet` has no
+    // `includes`-style membership query to re-check against) — the
+    // timestamped entry either got drained by THIS Cleanup (it's in
+    // `before`, and `clearUntilEndOfTurnPumps` unconditionally drains
+    // everything in the list every time) or it wasn't due yet (not in
+    // `before` at all), so presence in `before` alone is the correct signal.
+    for (const { cardId, powerDelta, toughnessDelta } of before.untilEndOfTurnPumps) {
+      const card = pilot.state.cards.get(cardId);
+      if (card) entries.push({ fn: 'pump', target: card.name, id: card.id, power: -powerDelta, toughness: -toughnessDelta, removed: true });
     }
   }
   if (entries.length) pilot.log.splice(atIndex, 0, ...entries);
@@ -470,11 +490,41 @@ export function advanceToDeclareAttackersStep(pilot: EnginePilot, label?: string
  * per real attacker declared. Throws on an illegal batch, same
  * "don't half-apply, don't silently continue" contract every other
  * pilot* helper here already has.
+ *
+ * **Splices these markers in at the log length captured BEFORE calling the
+ * real `declareAttackers`, not a trailing push (2026-09-14, ENGINE_GAPS.md —
+ * attack-triggered-ability auto-dispatch)** — `declareAttackers` itself now
+ * auto-fires a real `on: 'attacks'` trigger (`engine.ts`'s new
+ * `fireOnAttackTriggers`) as its very last step, which can synchronously
+ * append its own effect log lines (via this SAME `pilot`'s logging
+ * `actions`) before this function ever gets a chance to log its own
+ * tap/attack markers. A trailing push would then show the trigger's own
+ * effects BEFORE the attack that caused them — same real ordering bug
+ * `logAutomaticPhaseEntry`'s own splice-at-`beforeLen` convention already
+ * exists to prevent for Untap/Draw/Cleanup's own automatic actions.
+ *
+ * **Also logs a synthetic `{fn:'trigger', name}` bracket per attacker with a
+ * registered `on: 'attacks'` trigger** — same real reason `pilotResolveTop`'s
+ * own ETB auto-fire already logs one (see that function's own doc comment):
+ * `verify-synergy.mjs`'s own `triggerNames`/`TRIGGER_EVENT_MAP` evidence
+ * check for an event-shaped SINK want is built ENTIRELY from `{fn:'trigger',
+ * name}` bracket entries in the trace, and this engine's own real auto-fire
+ * (unlike the manual `pilotFireTrigger` this replaces) never pushes one
+ * itself. Peeked BEFORE calling the real `declareAttackers` (same "peek the
+ * CardDefinition, THEN call the real mutating function" shape
+ * `pilotResolveTop` already uses for its own ETB peek) so the bracket lands
+ * in the spliced batch, before the trigger's own already-appended effects.
+ * **Scoped to exactly one attacker per call** (Ashe, Princess of Dalmasca is
+ * the only real card exercising this today) — an N-attacker batch where MORE
+ * THAN ONE has its own `on: 'attacks'` trigger would bunch every trigger
+ * bracket ahead of every attacker's own effects instead of interleaving them
+ * per-attacker; real, narrower-than-ideal, not attempted since no pool
+ * scenario needs it yet.
  */
 export function pilotDeclareAttackers(pilot: EnginePilot, attackers: RealCard[], label?: string): void {
   pilot.beginStep(label ?? `Declare ${attackers.map((c) => c.name).join(', ')} as attacker${attackers.length > 1 ? 's' : ''}`);
-  const result = declareAttackers(pilot.engine, attackers);
-  if (!result.ok) throw new Error(`pilotDeclareAttackers: illegal — ${result.reason}`);
+  const beforeLen = pilot.log.length;
+  const entries: LogEntry[] = [];
   for (const a of attackers) {
     // `id`/`cardId` added 2026-09-12 alongside `harness.ts`'s own
     // `loggingActions` per-instance-id fix (real regression: multiple
@@ -484,9 +534,15 @@ export function pilotDeclareAttackers(pilot: EnginePilot, attackers: RealCard[],
     // exact same collision class (any engine-piloted scenario with 2
     // same-named attackers), additive-only per `.claude/contracts/state-
     // event-format.md`'s own non-breaking-field rule.
-    if (!a.keywords.includes('Vigilance')) pilot.log.push({ fn: 'tap', target: a.name, id: a.id });
-    pilot.log.push({ fn: 'attack', card: a.name, id: a.id });
+    if (!a.keywords.includes('Vigilance')) entries.push({ fn: 'tap', target: a.name, id: a.id });
+    entries.push({ fn: 'attack', card: a.name, id: a.id });
+    const registered = pilot.engine.resolvedPermanents.get(a.id);
+    const attackTrigger = registered?.card.triggers?.find((t) => t.on === 'attacks');
+    if (attackTrigger) entries.push({ fn: 'trigger', card: a.name, instanceId: SELF_INSTANCE_ID, name: attackTrigger.name });
   }
+  const result = declareAttackers(pilot.engine, attackers);
+  if (!result.ok) throw new Error(`pilotDeclareAttackers: illegal — ${result.reason}`);
+  pilot.log.splice(beforeLen, 0, ...entries);
 }
 
 /** Real 509.1-legal blocker declaration (`engine.ts`'s own `declareBlockers`) — logs one `block` marker per real (blocker, attacker) pair. An empty `assignments` (no blocks declared) is a real, legal choice — logs nothing (no player-visible board change from declining to block). */
@@ -865,9 +921,16 @@ export function pilotActivate(pilot: EnginePilot, controller: RealPlayer, perman
   const { costString } = effectiveActivationCost(pilot.engine, controller, card, abilityName, x);
   pilot.log.push({ fn: 'activate', card: card.name, instanceId: SELF_INSTANCE_ID, cost: costString || (cost ?? ''), ...(abilityName ? { ability: abilityName } : {}) });
   const requiresTap = !!cost && costRequiresTap(cost);
+  // Real 702.13 Cycling's own "Discard this card" cost (ENGINE_GAPS.md gap
+  // #23) — `activateAbility` pays this for real (a genuine Hand->Graveyard
+  // move via `engine.state.move`) with NO log line of its own (`engine.ts`
+  // is log-agnostic by design) — same root cause, same fix shape as this
+  // function's own `requiresTap` self-tap fix just below.
+  const requiresDiscardSelf = !!cost && costRequiresDiscardSelf(cost);
   const result = activateAbility(pilot.engine, controller, permanent, card, ctx, actions, abilityName, crewedBy, x);
   if (!result.ok) throw new Error(`pilotActivate("${card.name}"): ${result.reason}`);
   if (requiresTap) pilot.log.push({ fn: 'tap', target: permanent.name, id: permanent.id, controller: controller.name });
+  if (requiresDiscardSelf) pilot.log.push({ fn: 'discard', target: permanent.name, id: permanent.id, controller: controller.name });
   // Real 702.121b Crew cost (ENGINE_GAPS.md's own "Crew (702.121b/c)" entry)
   // — `activateAbility` taps every real `crewedBy` creature as part of
   // paying the cost, with NO log line of its own (`engine.ts` is

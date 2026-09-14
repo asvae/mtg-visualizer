@@ -1,0 +1,8 @@
+{
+  "effects": { "highlight": "{1}{W}, {T}, Exile this artifact: Choose one —", "line": 0 },
+  "effects[0].modes[0]": {
+    "highlight": "• Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped.",
+    "line": 1
+  },
+  "effects[0].modes[1]": { "highlight": "• Exile target Skeleton, Spirit, or Zombie.", "line": 2 }
+}
