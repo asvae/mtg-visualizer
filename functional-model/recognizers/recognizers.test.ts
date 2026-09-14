@@ -46,8 +46,8 @@ describe('Recognizer A — instant/sorcery resolves to its owner\'s graveyard no
     expect(result.matched, `expected a match for "${name}", got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts).toEqual([
-      { role: 'source', fact: { event: 'cast', from: 'Hand', target: 'self', value: 1, annotations: [{ target: 'typeLine', start: 0, end: expect.any(Number) }] }, provenance: { origin: 'parser', rule: 'instant-sorcery-resolves-to-graveyard' } },
-      { role: 'source', fact: { to: 'Graveyard', controller: 'you', subject: 'self', value: 1, annotations: [{ target: 'typeLine', start: 0, end: expect.any(Number) }] }, provenance: { origin: 'parser', rule: 'instant-sorcery-resolves-to-graveyard' } },
+      { role: 'source', fact: { event: 'cast', from: 'Hand', target: 'self', annotations: [{ target: 'typeLine', start: 0, end: expect.any(Number) }] }, provenance: { origin: 'parser', rule: 'instant-sorcery-resolves-to-graveyard' } },
+      { role: 'source', fact: { to: 'Graveyard', controller: 'you', subject: 'self', annotations: [{ target: 'typeLine', start: 0, end: expect.any(Number) }] }, provenance: { origin: 'parser', rule: 'instant-sorcery-resolves-to-graveyard' } },
     ]);
     // Annotation-as-byproduct: the claimed span, sliced straight out of the
     // real printed typeLine, really does read "Instant" or "Sorcery" — no
@@ -90,8 +90,8 @@ describe('Recognizer B — permanent enters the battlefield normally when cast',
     const result = recognizePermanentEntersBattlefieldNormally(faceOf(name));
     expect(result.matched, `expected a match for "${name}", got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'cast', from: 'Hand', target: 'self', value: 1 });
-    expect(result.facts[1]!.fact).toMatchObject({ event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: 'self', target: 'self', value: 1 });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'cast', from: 'Hand', target: 'self' });
+    expect(result.facts[1]!.fact).toMatchObject({ event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: 'self', target: 'self' });
     for (const rf of result.facts) expect(rf.provenance).toEqual({ origin: 'parser', rule: 'permanent-enters-battlefield-normally' });
   });
 

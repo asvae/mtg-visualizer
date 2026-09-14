@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -23,7 +22,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -48,7 +46,6 @@
       },
       "targeted": false,
       "untilEndOfTurn": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -61,7 +58,6 @@
     {
       "event": "sacrifice",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -81,7 +77,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -98,7 +93,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -121,7 +115,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

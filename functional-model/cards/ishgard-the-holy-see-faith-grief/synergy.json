@@ -7,7 +7,6 @@
       "color": "W",
       "sourceText": "{T}: Add {W}.",
       "highlight": "{W}",
-      "value": 1,
       "face": "front"
     }
   ],
@@ -21,7 +20,6 @@
           "Enchantment"
         ]
       },
-      "value": 1,
       "face": "back"
     }
   ]

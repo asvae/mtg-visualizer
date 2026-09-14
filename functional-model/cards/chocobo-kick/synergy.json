@@ -2,25 +2,21 @@
   "source": [
     {
       "event": "damage",
-      "controller": "you",
-      "value": 5
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Hand",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -37,7 +33,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -59,8 +54,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
@@ -69,8 +63,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
@@ -79,8 +72,7 @@
         "has": [
           "Land"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

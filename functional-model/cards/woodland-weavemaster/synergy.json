@@ -4,8 +4,7 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — Woodland Weavemaster is itself a permanent on your battlefield)",
-      "value": 1
+      "sourceText": "(baseline — Woodland Weavemaster is itself a permanent on your battlefield)"
     }
   ],
   "sink": [
@@ -18,8 +17,7 @@
         ]
       },
       "excludeSelf": true,
-      "sourceText": "Whenever another Elf you control enters, this creature gets +1/+1 until end of turn.",
-      "value": 1
+      "sourceText": "Whenever another Elf you control enters, this creature gets +1/+1 until end of turn."
     }
   ]
 }

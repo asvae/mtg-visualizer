@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -21,7 +20,6 @@
       "event": "entersBattlefield",
       "to": "Battlefield",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -44,7 +42,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -70,7 +67,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -87,7 +83,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -106,7 +101,6 @@
       "controller": "you",
       "recipient": "opp",
       "targeted": false,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -124,7 +118,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -140,7 +133,6 @@
     {
       "event": "sacrifice",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -160,7 +152,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -178,7 +169,6 @@
     {
       "to": "Battlefield",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

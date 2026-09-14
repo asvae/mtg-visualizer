@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -23,7 +22,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -45,7 +43,6 @@
           "Artifact"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -65,7 +62,6 @@
           "Artifact"
         ]
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -78,7 +74,6 @@
     {
       "event": "attacks",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

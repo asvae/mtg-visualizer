@@ -18,12 +18,23 @@
 // an actual number against two user-tunable budgets, so retuning the
 // "spread" sliders in the Physics popover never needs a re-fetch here.
 //
+// Synergy is now uniform/binary (2026-09-14 design change) — a fact's own
+// `value` magnitude no longer distinguishes one match from another (this
+// codebase no longer trusts per-fact `value` as a meaningful differentiator;
+// a separate pass is removing `Fact.value` from the schema entirely on its
+// own timeline). Each share ratio below is therefore a plain 1/N even split
+// across every match sharing that source/sink fact, NOT a value-proportional
+// slice — the "narrow fact concentrates its budget, broad fact spreads thin"
+// design intent (reasonWeight's own doc comment in graphRenderer.ts) still
+// holds under this scheme, it's just driven by match COUNT now instead of
+// summed value.
+//
 // GET /api/graph-links
 
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadFunctionalModelPool } from '../utils/functionalModelPool';
-import { findInteractionsForCard, factTotal } from '../../functional-model/synergy';
+import { findInteractionsForCard } from '../../functional-model/synergy';
 import type { GraphReason } from '../../app/types';
 
 function countCardSlugs(): number {
@@ -57,8 +68,6 @@ interface RawReason {
   // `${consumer}::${sinkFactId}` — every match sharing this key is a
   // different producer splitting the SAME sink fact's demand.
   sinkKey: string;
-  mineValue: number;
-  theirValue: number;
 }
 
 export default defineEventHandler(async () => {
@@ -77,32 +86,29 @@ export default defineEventHandler(async () => {
   // Interactions panel (server/api/card/[set]/[number].ts) is where those
   // still show up.
   const rawReasons: RawReason[] = [];
+  // Each map counts MATCHES (not summed value) sharing a given source/sink
+  // key — the uniform-split denominator (N in "1/N"), per the header comment
+  // above.
   const sourceTotals = new Map<string, number>();
   const sinkTotals = new Map<string, number>();
-  const addTo = (map: Map<string, number>, key: string, value: number) => map.set(key, (map.get(key) ?? 0) + value);
+  const bump = (map: Map<string, number>, key: string) => map.set(key, (map.get(key) ?? 0) + 1);
 
   for (const { name } of pool) {
     const groups = findInteractionsForCard(name, pool);
     for (const group of groups) {
       if (group.direction !== 'source') continue;
-      // Missing (fact predates the weight fields) floors to 1 — the real
-      // floor, "verified minimum-strength match," not "unknown" — so it
-      // still gets a real (if minimal) share rather than a zero/undefined
-      // that would poison the ratio math below.
-      const mineValue = factTotal(group.fact) ?? 1;
       const sourceKey = `${name}::${group.description}`;
       for (const match of group.matches) {
         if (match.card === name) continue; // self-interaction — not a graph edge
         const [a, b] = [name, match.card].sort();
-        const theirValue = match.theirTotal ?? 1;
         const sinkKey = `${match.card}::${match.theirFactId ?? group.description}`;
         // `name` is always the producer here (this loop only ever walks
         // `source`-direction groups) — direction is which of the sorted
         // a/b pair that producer landed as.
         const from: 'a' | 'b' = name === a ? 'a' : 'b';
-        rawReasons.push({ a: a!, b: b!, from, description: group.description, sourceKey, sinkKey, mineValue, theirValue });
-        addTo(sourceTotals, sourceKey, theirValue);
-        addTo(sinkTotals, sinkKey, mineValue);
+        rawReasons.push({ a: a!, b: b!, from, description: group.description, sourceKey, sinkKey });
+        bump(sourceTotals, sourceKey);
+        bump(sinkTotals, sinkKey);
       }
     }
   }
@@ -118,8 +124,8 @@ export default defineEventHandler(async () => {
     link.reasons.push({
       description: r.description,
       from: r.from,
-      sourceShareRatio: r.theirValue / sourceTotals.get(r.sourceKey)!,
-      sinkShareRatio: r.mineValue / sinkTotals.get(r.sinkKey)!,
+      sourceShareRatio: 1 / sourceTotals.get(r.sourceKey)!,
+      sinkShareRatio: 1 / sinkTotals.get(r.sinkKey)!,
     });
   }
 

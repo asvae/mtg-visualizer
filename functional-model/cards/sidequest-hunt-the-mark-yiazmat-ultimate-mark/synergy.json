@@ -9,7 +9,6 @@
           ]
         }
       },
-      "value": 1,
       "face": "front",
       "provenance": {
         "origin": "parser",
@@ -30,33 +29,28 @@
       "subject": {
         "token": "c_a_treasure_sac"
       },
-      "value": 1,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1,
       "face": "back"
     },
     {
       "event": "dies",
       "controller": "you",
-      "value": 4,
       "face": "back"
     },
     {
       "event": "grantKeyword",
       "keyword": "Indestructible",
       "controller": "you",
-      "value": 1,
       "face": "back"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -76,7 +70,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -100,7 +93,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -124,7 +116,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "front"
     },
     {
@@ -135,7 +126,6 @@
           "Treasure"
         ]
       },
-      "value": 1,
       "face": "front"
     },
     {
@@ -148,7 +138,6 @@
         ]
       },
       "excludeSelf": true,
-      "value": 1,
       "face": "back"
     }
   ]

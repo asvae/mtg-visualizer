@@ -4,22 +4,19 @@
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — a resolved sorcery goes to its owner's graveyard, generic rule, not printed text)",
-      "value": 1
+      "sourceText": "(baseline — a resolved sorcery goes to its owner's graveyard, generic rule, not printed text)"
     }
   ],
   "sink": [
     {
       "zone": "Battlefield",
       "controller": "you",
-      "sourceText": "For each of X target permanents, create X tokens that are copies of that permanent (unrestricted — can target your own permanents).",
-      "value": 1
+      "sourceText": "For each of X target permanents, create X tokens that are copies of that permanent (unrestricted — can target your own permanents)."
     },
     {
       "zone": "Battlefield",
       "controller": "opp",
-      "sourceText": "For each of X target permanents, create X tokens that are copies of that permanent (unrestricted — can equally target an opponent's permanents).",
-      "value": 1
+      "sourceText": "For each of X target permanents, create X tokens that are copies of that permanent (unrestricted — can equally target an opponent's permanents)."
     }
   ]
 }

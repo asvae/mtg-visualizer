@@ -6,7 +6,6 @@
       "subject": {
         "token": "g_2_2_bird_landfall"
       },
-      "value": 1,
       "face": "front"
     },
     {
@@ -17,14 +16,12 @@
           "Land"
         ]
       },
-      "value": 1,
       "face": "back"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -44,7 +41,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -63,7 +59,6 @@
     {
       "event": "landfall",
       "controller": "you",
-      "value": 1,
       "face": "back"
     },
     {
@@ -75,7 +70,6 @@
           "Bird"
         ]
       },
-      "value": 1,
       "face": "back"
     }
   ]

@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -39,7 +37,6 @@
       "event": "tap",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -53,7 +50,6 @@
       "event": "exile",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -80,7 +76,6 @@
       },
       "targeted": true,
       "tapped": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -102,7 +97,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -125,7 +119,6 @@
       "cmc": {
         "max": 4
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -144,7 +137,6 @@
           "Zombie"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

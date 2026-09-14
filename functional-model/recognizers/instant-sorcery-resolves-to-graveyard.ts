@@ -13,8 +13,8 @@
 // `magic-damper`, `stolen-uniform`, `combat-tutorial`, `relm-s-sketching`,
 // `memories-returning`, `the-crystal-s-chosen`, `travel-the-overworld`,
 // `retrieve-the-esper`, `from-father-to-son` all carry this exact pair):
-//   - `{ event: 'cast', from: 'Hand', target: 'self', value: 1 }`
-//   - `{ to: 'Graveyard', controller: 'you', subject: 'self', value: 1 }`
+//   - `{ event: 'cast', from: 'Hand', target: 'self' }`
+//   - `{ to: 'Graveyard', controller: 'you', subject: 'self' }`
 // (no `event` key on the graveyard fact — matches `battle-menu`'s own real
 // shape; the movement is fully described by `to` alone, same as any other
 // zone-presence fact). `value: 1` on both, not the `-1` "pending
@@ -101,12 +101,12 @@ export function recognizeInstantSorceryResolvesToGraveyard(input: RecognizerInpu
   const facts: RecognizedFact[] = [
     {
       role: 'source',
-      fact: { event: 'cast', from: 'Hand', target: 'self', value: 1, annotations: [...annotations] },
+      fact: { event: 'cast', from: 'Hand', target: 'self', annotations: [...annotations] },
       provenance: { origin: 'parser', rule: RULE },
     },
     {
       role: 'source',
-      fact: { to: 'Graveyard', controller: 'you', subject: 'self', value: 1, annotations: [...annotations] },
+      fact: { to: 'Graveyard', controller: 'you', subject: 'self', annotations: [...annotations] },
       provenance: { origin: 'parser', rule: RULE },
     },
   ];

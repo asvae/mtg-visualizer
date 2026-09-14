@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -24,7 +23,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -48,7 +46,6 @@
         },
         "equippedBySelf": true
       },
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -64,7 +61,6 @@
       "from": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -82,7 +78,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -103,7 +98,6 @@
         }
       },
       "controller": "you",
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -125,7 +119,6 @@
         }
       },
       "targeted": false,
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -139,7 +132,6 @@
     {
       "event": "sacrifice",
       "target": "self",
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -157,7 +149,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -172,7 +163,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -196,7 +186,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -215,7 +204,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {

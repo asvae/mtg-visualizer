@@ -61,7 +61,7 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { event: 'drawCard', controller: 'you', value: 1, annotations: [{ target: 'oracle', line: 2, start: 6, end: 20 }] },
+        fact: { event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 2, start: 6, end: 20 }] },
         provenance: { origin: 'parser', rule: 'drawCard-effect-structural' },
       },
     ]);
@@ -77,14 +77,14 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     const result = recognizeDrawCardEffectStructural(structuralInput('Dreams of Laguna', dreamsOfLaguna));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you', value: 1 });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you' });
   });
 
   it('accepts Ahriman — an omitted `amount` field entirely (resolves to 1 at resolution, same as a literal amount:1)', () => {
     const result = recognizeDrawCardEffectStructural(structuralInput('Ahriman', ahriman));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you', value: 1 });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you' });
   });
 
   it('accepts Adventurer\'s Airship — a comma clause boundary ("draw a card, then discard a card")', () => {
@@ -96,7 +96,7 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     const result = recognizeDrawCardEffectStructural(structuralInput('Circle of Power', circleOfPower));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you', value: 1 });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you' });
   });
 
   it('accepts Travel the Overworld — a literal amount:4 ("Draw four cards.")', () => {
@@ -108,7 +108,7 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     const result = recognizeDrawCardEffectStructural(structuralInput('Coliseum Behemoth', coliseumBehemoth));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toEqual({ event: 'drawCard', controller: 'you', value: 1, annotations: [{ target: 'oracle', line: 3, start: 2, end: 13 }] });
+    expect(result.facts[0]!.fact).toEqual({ event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 3, start: 2, end: 13 }] });
   });
 
   it('accepts Thief\'s Knife — a comma boundary INSIDE a quoted granted-ability string ("...draw a card," and is a Rogue...")', () => {
@@ -148,12 +148,12 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { event: 'drawCard', controller: 'you', value: 1, annotations: [{ target: 'oracle', line: 0, start: 10, end: 21 }] },
+        fact: { event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 0, start: 10, end: 21 }] },
         provenance: { origin: 'parser', rule: 'drawCard-effect-structural' },
       },
       {
         role: 'source',
-        fact: { event: 'drawCard', controller: 'you', value: 1, annotations: [{ target: 'oracle', line: 1, start: 35, end: 51 }] },
+        fact: { event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 1, start: 35, end: 51 }] },
         provenance: { origin: 'parser', rule: 'drawCard-effect-structural' },
       },
     ]);
@@ -163,7 +163,7 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     const result = recognizeDrawCardEffectStructural(structuralInput('Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel', sephirothFabledSoldier));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you', value: 1 });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you' });
   });
 
   it('declines Rook Turret — real "you MAY draw a card" (the draw itself is optional; `drawCard` Effect has no `optional` field to represent that, unlike `destroy`)', () => {

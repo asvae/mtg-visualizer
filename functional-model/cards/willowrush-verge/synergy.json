@@ -4,8 +4,7 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — Willowrush Verge is itself a permanent on your battlefield, no special ability text)",
-      "value": 1
+      "sourceText": "(baseline — Willowrush Verge is itself a permanent on your battlefield, no special ability text)"
     },
     {
       "id": "mana",
@@ -13,8 +12,7 @@
       "controller": "you",
       "color": "U",
       "sourceText": "{T}: Add {U}.",
-      "highlight": "{U}",
-      "value": 1
+      "highlight": "{U}"
     }
   ],
   "sink": []

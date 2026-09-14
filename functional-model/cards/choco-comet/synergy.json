@@ -5,20 +5,17 @@
       "controller": "you",
       "subject": {
         "token": "g_2_2_bird_landfall"
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -35,7 +32,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",

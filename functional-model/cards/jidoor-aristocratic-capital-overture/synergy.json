@@ -3,7 +3,6 @@
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "value": 1,
       "face": "back"
     },
     {
@@ -13,7 +12,6 @@
       "color": "U",
       "sourceText": "{T}: Add {U}.",
       "highlight": "{U}",
-      "value": 1,
       "face": "front"
     }
   ],
@@ -21,7 +19,6 @@
     {
       "zone": "Library",
       "controller": "opp",
-      "value": 1,
       "face": "back"
     }
   ]

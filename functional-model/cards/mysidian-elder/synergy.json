@@ -5,14 +5,12 @@
       "controller": "you",
       "subject": {
         "token": "b_0_1_wizard_snipe"
-      },
-      "value": 1
+      }
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -31,7 +29,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",

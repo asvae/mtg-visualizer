@@ -2,14 +2,12 @@
   "source": [
     {
       "event": "damage",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -28,7 +26,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -45,7 +42,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -61,7 +57,6 @@
     {
       "event": "sacrifice",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -81,7 +76,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -104,13 +98,11 @@
           "Creature",
           "Land"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "zone": "Battlefield",
@@ -120,8 +112,7 @@
           "Creature",
           "Wizard"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

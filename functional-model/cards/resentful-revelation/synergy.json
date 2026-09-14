@@ -2,31 +2,26 @@
   "source": [
     {
       "zone": "Hand",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1
-    },
-    {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Exile",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -43,7 +38,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -60,8 +54,7 @@
   "sink": [
     {
       "zone": "Library",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     }
   ]
 }

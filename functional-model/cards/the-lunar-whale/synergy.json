@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -38,7 +36,6 @@
     {
       "event": "crew",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -53,7 +50,6 @@
       "type": "Creature",
       "target": "self",
       "untilEndOfTurn": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -67,7 +63,6 @@
       "event": "play",
       "from": "Library",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -87,7 +82,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

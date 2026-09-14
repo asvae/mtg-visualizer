@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -20,7 +19,6 @@
     {
       "to": "Graveyard",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -47,7 +45,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -61,7 +58,6 @@
       "event": "counter",
       "target": {},
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -82,7 +78,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

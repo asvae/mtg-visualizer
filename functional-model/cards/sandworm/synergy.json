@@ -8,18 +8,15 @@
             "Land"
           ]
         }
-      },
-      "value": 4
+      }
     },
     {
-      "zone": "Graveyard",
-      "value": 1
+      "zone": "Graveyard"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -38,7 +35,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -60,8 +56,7 @@
         "has": [
           "Land"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
@@ -70,8 +65,7 @@
         "has": [
           "Land"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

@@ -24,7 +24,7 @@ describe('lifegain-trigger-structural — "Whenever you gain life" precondition'
     expect(result.facts).toEqual([
       {
         role: 'sink',
-        fact: { event: 'lifegain', controller: 'you', value: 1, annotations: [expect.objectContaining({ target: 'oracle' })] },
+        fact: { event: 'lifegain', controller: 'you', annotations: [expect.objectContaining({ target: 'oracle' })] },
         provenance: { origin: 'parser', rule: 'lifegain-trigger-structural' },
       },
     ]);

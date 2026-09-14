@@ -15,7 +15,7 @@
 // directly — all three are the IDENTICAL literal clause, "Whenever you gain
 // life,", no compound/qualified variant anywhere in the pool. All three
 // already carry a matching hand-authored sink fact today
-// (`{event:'lifegain', controller:'you', value:1}`), confirming this is a
+// (`{event:'lifegain', controller:'you'}`), confirming this is a
 // real, established, checkable shape, not a guess.
 import type { RecognizedFact, RecognizerInput, RecognizerResult } from './types';
 import { toLineOffset } from './types';
@@ -40,7 +40,7 @@ export function recognizeLifegainTriggerStructural(input: RecognizerInput): Reco
   const facts: RecognizedFact[] = [
     {
       role: 'sink',
-      fact: { event: 'lifegain', controller: 'you', value: 1, annotations: [annotation] },
+      fact: { event: 'lifegain', controller: 'you', annotations: [annotation] },
       provenance: { origin: 'parser', rule: RULE },
     },
   ];

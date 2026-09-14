@@ -2,19 +2,16 @@
   "source": [
     {
       "zone": "Graveyard",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "zone": "Exile",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -33,7 +30,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -54,15 +50,13 @@
         "has": [
           "Swamp"
         ]
-      },
-      "value": -1
+      }
     }
   ],
   "sink": [
     {
       "event": "discard",
-      "target": "self",
-      "value": -1
+      "target": "self"
     },
     {
       "to": "Library",
@@ -71,8 +65,7 @@
         "has": [
           "Swamp"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

@@ -8,7 +8,6 @@
         "amountPerMatch": 1,
         "subtype": "Town"
       },
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -25,7 +24,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -41,7 +39,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

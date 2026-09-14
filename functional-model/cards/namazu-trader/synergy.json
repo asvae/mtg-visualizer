@@ -2,27 +2,23 @@
   "source": [
     {
       "event": "lifeloss",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_a_treasure_sac"
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Graveyard",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -41,7 +37,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -64,8 +59,23 @@
           "Creature",
           "Artifact"
         ]
-      },
-      "value": 1
+      }
+    },
+    {
+      "event": "attacks",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 30
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "attacks-trigger-structural"
+      }
     }
   ]
 }

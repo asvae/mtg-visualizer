@@ -11,13 +11,23 @@
           ]
         }
       },
-      "value": 1
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 47,
+          "end": 85
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -36,7 +46,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -53,8 +62,7 @@
   "sink": [
     {
       "event": "landfall",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Battlefield",
@@ -64,7 +72,18 @@
           "Creature"
         ]
       },
-      "value": 1
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 47,
+          "end": 85
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     }
   ]
 }

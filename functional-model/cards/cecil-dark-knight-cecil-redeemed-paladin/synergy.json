@@ -4,39 +4,28 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "lifeloss",
       "controller": "you",
-      "value": 5,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "dies",
       "target": "self",
-      "value": 1,
       "face": "front"
-    },
-    {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "face": "back"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -56,7 +45,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -71,5 +59,23 @@
       }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "attacks",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 32
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "attacks-trigger-structural"
+      }
+    }
+  ]
 }

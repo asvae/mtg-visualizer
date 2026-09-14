@@ -11,22 +11,23 @@
 // token (`moogles-valor`, `aerith-rescue-mission`, `battle-menu`,
 // `retrieve-the-esper`, `dwarven-castle-guard` all carry this exact shape):
 //   `{ event: 'entersBattlefield', to: 'Battlefield', controller: 'you',
-//      subject: { token: <id> }, value: -1, annotations: [...] }`
-// `value: -1` always, never a literal count read off `TokenAmount$` — this
-// is a real, structurally-grounded finding, not just cautious mirroring of
-// the existing `-1` "pending compute-weights.mjs" convention: `scripts/
-// compute-weights.mjs`'s own `sourceMagnitude` ALWAYS re-derives a
-// token-subject fact's magnitude from the real execution trace
-// (`Math.max(1, maxAmount(log, 'createToken', 'qty'))`), unconditionally,
-// regardless of whatever value was authored — confirmed directly against
-// `ancient-adamantoise` (Forge's own script says `TokenAmount$ 10` literally,
-// yet its real, current `synergy.json` shows `value: 5`, the trace-observed
-// count, not Forge's literal number) and `aerith-rescue-mission` (Forge says
-// `TokenAmount$ 3` literally, real `synergy.json` shows `value: 5`). Baking
-// in a Forge-script literal here would be actively WRONG more often than
-// right; `-1` is the only honest choice regardless of whether the source
+//      subject: { token: <id> }, annotations: [...] }`
+// **Superseded, 2026-09-14: `Fact.value` removed from the schema entirely
+// pool-wide** (a hard user instruction — see `CLAUDE.md`/session notes, not
+// this file's own decision) — the paragraph below is kept only as a
+// historical record of a real, structurally-grounded finding from when this
+// field still existed, not current shape guidance: never bake a Forge
+// script's own `TokenAmount$` literal into the fact at all, since
+// `compute-weights.mjs` (also removed) used to always re-derive a
+// token-subject fact's magnitude from the real execution trace instead
+// (confirmed directly against `ancient-adamantoise`, whose own Forge script
+// says `TokenAmount$ 10` literally while the real trace-observed count is 5,
+// and `aerith-rescue-mission`, script says `TokenAmount$ 3`, trace-observed
+// count 5) — a Forge-script literal would have been actively WRONG more
+// often than right for either card, regardless of whether the source
 // script's own amount is a fixed integer or a variable (Moogles' Valor's own
-// "X").
+// "X"). No field on the current `Fact` shape carries this signal anymore;
+// nothing to get right or wrong here today.
 //
 // **THE open problem this recognizer exists to probe**
 // (`PRD_AUTOMATED_AUTHORING.md`'s task brief) — unlike the two oracle-text
@@ -245,7 +246,6 @@ export function recognizeTokenCreationFromForgeScript(input: ForgeScriptRecogniz
         to: 'Battlefield',
         controller: 'you',
         subject: { token: ability.tokenScriptId },
-        value: -1,
         annotations: [annotation],
       },
       // `origin: 'parser'` is the only real value `synergy.ts`'s

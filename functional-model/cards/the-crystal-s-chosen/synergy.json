@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -24,7 +23,6 @@
       "subject": {
         "token": "c_1_1_hero"
       },
-      "value": 5,
       "annotations": [
         {
           "target": "oracle",
@@ -46,7 +44,6 @@
         }
       },
       "targeted": false,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -64,7 +61,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -87,7 +83,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

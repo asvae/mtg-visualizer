@@ -2,25 +2,21 @@
   "source": [
     {
       "event": "grantKeyword",
-      "keyword": "Haste",
-      "value": 1
+      "keyword": "Haste"
     },
     {
       "zone": "Exile",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -37,7 +33,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -59,13 +54,11 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Library",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     }
   ]
 }

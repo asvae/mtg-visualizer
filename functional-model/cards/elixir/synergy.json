@@ -2,8 +2,7 @@
   "source": [
     {
       "event": "lifegain",
-      "controller": "you",
-      "value": 4
+      "controller": "you"
     }
   ],
   "sink": [
@@ -14,8 +13,7 @@
         "has": [
           "Artifact"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Graveyard",
@@ -24,8 +22,7 @@
         "not": [
           "Land"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

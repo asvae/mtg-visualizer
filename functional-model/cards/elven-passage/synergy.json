@@ -4,8 +4,7 @@
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "sourceText": "Sacrifice this land: ... (self-sacrifice is part of the activation cost)",
-      "value": 1
+      "sourceText": "Sacrifice this land: ... (self-sacrifice is part of the activation cost)"
     },
     {
       "zone": "Battlefield",
@@ -15,8 +14,7 @@
           "Land"
         ]
       },
-      "sourceText": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
-      "value": 1
+      "sourceText": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."
     }
   ],
   "sink": [
@@ -28,8 +26,7 @@
           "Land"
         ]
       },
-      "sourceText": "Search your library for a basic land card (needs a land card in library to find).",
-      "value": 1
+      "sourceText": "Search your library for a basic land card (needs a land card in library to find)."
     }
   ]
 }

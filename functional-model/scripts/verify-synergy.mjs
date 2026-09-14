@@ -1537,7 +1537,7 @@ function isEquippedTypeGrantFact(p, card) {
  * permanent at all (checked `card.ts`'s full `Effect` union — closest is
  * `grantKeywordTarget`/`grantKeywordAll`, which only ever grant a KEYWORD,
  * never a fresh ability with its own condition+effect). Modeled honestly as
- * a real `{event:'lifegain', controller:'you', value:1}` fact — reusing
+ * a real `{event:'lifegain', controller:'you'}` fact — reusing
  * already-established `lifegain` vocabulary (same shape Lifelink's own
  * standing exception uses) rather than inventing a new event name, since
  * the real-world CONSEQUENCE this clause describes (you gain life) is
@@ -1597,8 +1597,8 @@ function isEquipGrantedPutCounterFact(p, card) {
  * `Effect`/`Actions` surface again for this card specifically, and checked
  * ENGINE_GAPS.md fresh: still nothing grants a fresh ability to ANOTHER
  * permanent as of this card's own migration). Modeled honestly as a real
- * `{event:'damage', controller:'you', recipient:'opp', targeted:false,
- * value:1}` fact — reusing already-established `damage` vocabulary
+ * `{event:'damage', controller:'you', recipient:'opp', targeted:false}`
+ * fact — reusing already-established `damage` vocabulary
  * (Summon: Bahamut's own Mega Flare, `controller`+`recipient`+`targeted`
  * shape) rather than inventing a new event name, since the real-world
  * CONSEQUENCE this clause describes (1 damage to each opponent) is already
@@ -1636,8 +1636,8 @@ function isBlackMagesRodGrantedAbilityFact(p, card) {
  * `ValidCard$`), not a single equipped permanent — `definition.ts`'s own
  * `chapterII`/`chapterIII` triggers correctly no-op (`run: () => {}`) for
  * the exact same reason. Modeled as two real, honest, deliberately inert
- * `{event:'drawCard', controller:'you', target:{types:{hasAny:[...]}},
- * value}` facts — one per real chapter firing (same "repeat per real
+ * `{event:'drawCard', controller:'you', target:{types:{hasAny:[...]}}}`
+ * facts — one per real chapter firing (same "repeat per real
  * occurrence" convention jill-shiva-s-dominant's/dion-bahamut-s-dominant's
  * own duplicated chapter facts establish) — reusing already-promoted
  * `drawCard` vocabulary (summon-bahamut's own chapter III) rather than

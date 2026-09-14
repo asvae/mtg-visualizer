@@ -3,14 +3,12 @@
     {
       "event": "putCounter",
       "counterType": "+1/+1",
-      "target": "self",
-      "value": 1
+      "target": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -29,7 +27,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -46,8 +43,7 @@
   "sink": [
     {
       "event": "landfall",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     }
   ]
 }

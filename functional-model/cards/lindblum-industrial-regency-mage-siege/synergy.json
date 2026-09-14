@@ -6,7 +6,6 @@
       "subject": {
         "token": "b_0_1_wizard_snipe"
       },
-      "value": 1,
       "face": "back"
     },
     {
@@ -16,7 +15,6 @@
       "color": "R",
       "sourceText": "{T}: Add {R}.",
       "highlight": "{R}",
-      "value": 1,
       "face": "front"
     }
   ],

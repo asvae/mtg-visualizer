@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -21,7 +20,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -38,7 +36,6 @@
       "event": "cast",
       "from": "Graveyard",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -52,7 +49,6 @@
       "to": "Exile",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -69,7 +65,6 @@
       "subject": {
         "token": "u_3_3_robot_warrior"
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -88,7 +83,6 @@
           "eq": "Robot Warrior"
         }
       },
-      "value": 4,
       "annotations": [
         {
           "target": "oracle",

@@ -2,8 +2,7 @@
   "source": [
     {
       "event": "lifegain",
-      "controller": "you",
-      "value": 4
+      "controller": "you"
     }
   ],
   "sink": []

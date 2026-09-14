@@ -135,7 +135,6 @@ for (const slug of slugs) {
         controller: 'you',
         color,
         ...(staticText ? { sourceText: staticText, highlight: `{${color}}` } : {}),
-        value: 1,
       };
       synergy.source.push(fact);
       changed = true;
@@ -157,7 +156,6 @@ for (const slug of slugs) {
       controller: 'you',
       colors: { hasAny: colors },
       ...(staticText ? { sourceText: staticText, highlight: `{${colors[0]}} or {${colors[1]}}` } : {}),
-      value: 1,
     };
     synergy.source.push(fact);
     changed = true;

@@ -6,7 +6,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -25,7 +24,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -49,7 +47,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -71,7 +68,6 @@
         }
       },
       "targeted": true,
-      "value": 5,
       "annotations": [
         {
           "target": "oracle",
@@ -85,7 +81,6 @@
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": 5,
       "annotations": [
         {
           "target": "oracle",
@@ -105,7 +100,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

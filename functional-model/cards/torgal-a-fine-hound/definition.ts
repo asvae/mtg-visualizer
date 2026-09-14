@@ -31,6 +31,13 @@ export const torgalAFineHound: CardDefinition = {
       // lands on the right one. `amount` is computed live off real board
       // state (Dog/Wolf count), matching the real `SVar:X:Count$Valid
       // Dog.YouCtrl,Wolf.YouCtrl` — no hardcoded/guessed number.
+      // recognizer-exception: putCounterTarget-effect-structural — real
+      // printed text reads "...that creature enters with an additional
+      // +1/+1 counter on it for each Dog and/or Wolf you control," with
+      // neither "target" nor "put" appearing at all (a trigger-input
+      // reference, not a real chosen target — see this trigger's own
+      // comment above) — a confirmed model approximation, not a recognizer
+      // bug.
       name: 'onFirstHumanCreatureCast',
       effects: [
         {

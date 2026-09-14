@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -22,7 +21,6 @@
       "event": "entersBattlefield",
       "to": "Battlefield",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -48,7 +46,6 @@
           ]
         }
       },
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -66,7 +63,6 @@
       "subject": {
         "token": "c_a_food_sac"
       },
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -85,7 +81,6 @@
           "W"
         ]
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -100,7 +95,6 @@
       "event": "tap",
       "subject": "self",
       "target": "self",
-      "value": -1,
       "face": "back",
       "annotations": [
         {
@@ -121,7 +115,6 @@
           ]
         }
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -143,7 +136,6 @@
           ]
         }
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -165,7 +157,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -184,7 +175,6 @@
           "Artifact"
         ]
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -203,7 +193,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {

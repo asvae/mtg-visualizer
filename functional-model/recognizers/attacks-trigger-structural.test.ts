@@ -25,7 +25,7 @@ describe('attacks-trigger-structural — "When/Whenever <self> attacks" precondi
     expect(result.facts).toEqual([
       {
         role: 'sink',
-        fact: { event: 'attacks', target: 'self', value: 1, annotations: [expect.objectContaining({ target: 'oracle' })] },
+        fact: { event: 'attacks', target: 'self', annotations: [expect.objectContaining({ target: 'oracle' })] },
         provenance: { origin: 'parser', rule: 'attacks-trigger-structural' },
       },
     ]);

@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -21,7 +20,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -40,7 +38,6 @@
       "target": {},
       "targeted": true,
       "untilEndOfTurn": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -56,7 +53,6 @@
       "target": {},
       "targeted": true,
       "untilEndOfTurn": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -72,7 +68,6 @@
       "controller": "you",
       "target": {},
       "untilEndOfTurn": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -88,7 +83,6 @@
       "controller": "you",
       "target": {},
       "untilEndOfTurn": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -101,7 +95,6 @@
     {
       "event": "lifegain",
       "controller": "you",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -115,7 +108,6 @@
   "sink": [
     {
       "to": "Battlefield",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

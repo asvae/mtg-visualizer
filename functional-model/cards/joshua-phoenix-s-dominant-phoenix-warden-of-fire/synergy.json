@@ -4,7 +4,6 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
@@ -15,13 +14,11 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "back"
     },
     {
       "event": "damage",
       "controller": "you",
-      "value": 1,
       "face": "back",
       "provenance": {
         "origin": "parser",
@@ -37,29 +34,20 @@
       ]
     },
     {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "face": "back"
-    },
-    {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "dies",
       "target": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -79,7 +67,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -97,7 +84,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -121,7 +107,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "back"
     }
   ]

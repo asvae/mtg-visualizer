@@ -3,25 +3,12 @@
     {
       "zone": "Graveyard",
       "controller": "you",
+      "subject": "self"
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
       "subject": "self",
-      "value": 1
-    },
-    {
-      "event": "damage",
-      "controller": "you",
-      "value": 5
-    },
-    {
-      "event": "putCounter",
-      "counterType": "LORE",
-      "controller": "you",
-      "value": 1
-    },
-    {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -35,10 +22,30 @@
       }
     },
     {
-      "to": "Graveyard",
+      "event": "damage",
+      "controller": "you"
+    },
+    {
+      "event": "putCounter",
+      "counterType": "LORE",
       "controller": "you",
-      "subject": "self",
-      "value": 1,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 2,
+          "end": 30
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
+    },
+    {
+      "event": "cast",
+      "from": "Hand",
+      "target": "self",
       "annotations": [
         {
           "target": "typeLine",
@@ -60,8 +67,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
@@ -70,13 +76,11 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     }
   ]
 }

@@ -206,7 +206,7 @@ export function recognizeSagaLoreAndSacrificeStructural(input: StructuralRecogni
   const facts: RecognizedFact[] = [
     {
       role: 'source',
-      fact: { event: 'putCounter', counterType: 'LORE', target: 'self', value: 1, annotations: [...annotations] },
+      fact: { event: 'putCounter', counterType: 'LORE', target: 'self', annotations: [...annotations] },
       provenance: { origin: 'parser', rule: RULE },
     },
   ];
@@ -217,7 +217,7 @@ export function recognizeSagaLoreAndSacrificeStructural(input: StructuralRecogni
     facts.push(
       {
         role: 'source',
-        fact: { event: 'sacrifice', target: 'self', value: 1, annotations: [...annotations] },
+        fact: { event: 'sacrifice', target: 'self', annotations: [...annotations] },
         provenance: { origin: 'parser', rule: RULE },
       },
       {
@@ -229,7 +229,6 @@ export function recognizeSagaLoreAndSacrificeStructural(input: StructuralRecogni
           controller: 'you',
           subject: 'self',
           target: 'self',
-          value: 1,
           annotations: [...annotations],
         },
         provenance: { origin: 'parser', rule: RULE },

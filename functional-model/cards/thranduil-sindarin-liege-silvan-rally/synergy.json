@@ -5,7 +5,6 @@
       "controller": "you",
       "subject": "self",
       "sourceText": "(baseline — Thranduil is itself a permanent on your battlefield, no special ability text)",
-      "value": 1,
       "face": "front"
     },
     {
@@ -13,14 +12,12 @@
       "controller": "you",
       "subject": "self",
       "sourceText": "(baseline — Thranduil can die and go to your graveyard like any creature)",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "dies",
       "target": "self",
       "sourceText": "(baseline — Thranduil dying, no special ability text)",
-      "value": 1,
       "face": "front"
     },
     {
@@ -30,7 +27,6 @@
         "token": "g_1_1_elf"
       },
       "sourceText": "Landfall — Whenever a land you control enters, create a 1/1 green Elf creature token.",
-      "value": 1,
       "face": "front"
     },
     {
@@ -42,7 +38,6 @@
         ]
       },
       "sourceText": "Silvan Rally — Mill four cards, then put up to two land cards from among them into your hand.",
-      "value": 1,
       "face": "back"
     }
   ],
@@ -51,7 +46,6 @@
       "event": "landfall",
       "controller": "you",
       "sourceText": "Landfall — Whenever a land you control enters, create a 1/1 green Elf creature token.",
-      "value": 1,
       "face": "front"
     },
     {
@@ -63,14 +57,12 @@
         ]
       },
       "sourceText": "Silvan Rally — Mill four cards, then put up to two land cards from among them into your hand (needs land cards in library to find).",
-      "value": 1,
       "face": "back"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "sourceText": "Silvan Rally — reads the just-milled cards (now in your graveyard) to find the lands among them.",
-      "value": 1,
       "face": "back"
     }
   ]

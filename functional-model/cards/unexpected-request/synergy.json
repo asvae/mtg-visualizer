@@ -3,19 +3,16 @@
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "grantKeyword",
-      "keyword": "Haste",
-      "value": 1
+      "keyword": "Haste"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -32,7 +29,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -53,8 +49,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
@@ -63,8 +58,7 @@
         "has": [
           "Equipment"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

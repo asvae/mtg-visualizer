@@ -5,16 +5,14 @@
       "event": "playLand",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(CR 305.1 — an ordinary land with no restriction on being played can always be played from hand as a special action, once per turn; not printed oracle text on this specific card, a base game rule)",
-      "value": 1
+      "sourceText": "(CR 305.1 — an ordinary land with no restriction on being played can always be played from hand as a special action, once per turn; not printed oracle text on this specific card, a base game rule)"
     },
     {
       "id": "battlefield-presence",
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — Treno, Dark City is itself a permanent on your battlefield once played; tautologically true by construction, same as the `played` fact above — no scenario/trace evidence needed, see verify-synergy.mjs's own isSelfBattlefieldPresenceLand)",
-      "value": 1
+      "sourceText": "(baseline — Treno, Dark City is itself a permanent on your battlefield once played; tautologically true by construction, same as the `played` fact above — no scenario/trace evidence needed, see verify-synergy.mjs's own isSelfBattlefieldPresenceLand)"
     },
     {
       "id": "enters-tapped",
@@ -23,8 +21,7 @@
       "subject": "self",
       "tapped": true,
       "sourceText": "Treno, Dark City enters tapped.",
-      "highlight": "enters tapped",
-      "value": 1
+      "highlight": "enters tapped"
     },
     {
       "id": "mana",
@@ -37,8 +34,7 @@
         ]
       },
       "sourceText": "{T}: Add {U} or {B}.",
-      "highlight": "{U} or {B}",
-      "value": 1
+      "highlight": "{U} or {B}"
     }
   ],
   "sink": []

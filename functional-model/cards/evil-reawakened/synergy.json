@@ -3,8 +3,7 @@
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Battlefield",
@@ -13,8 +12,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "event": "putCounter",
@@ -25,14 +23,12 @@
             "Creature"
           ]
         }
-      },
-      "value": 4
+      }
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -49,7 +45,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -71,8 +66,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

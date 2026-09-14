@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -38,7 +36,6 @@
     {
       "event": "pump",
       "target": "self",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -61,7 +58,6 @@
       "amount": {
         "min": 2
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

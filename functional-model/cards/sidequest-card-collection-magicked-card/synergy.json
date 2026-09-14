@@ -12,7 +12,6 @@
           "end": 11
         }
       ],
-      "value": 1,
       "provenance": {
         "origin": "parser",
         "rule": "permanent-enters-battlefield-normally"
@@ -30,7 +29,6 @@
           "end": 11
         }
       ],
-      "value": 1,
       "provenance": {
         "origin": "parser",
         "rule": "permanent-enters-battlefield-normally"
@@ -48,7 +46,6 @@
           "end": 46
         }
       ],
-      "value": 1,
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
@@ -65,8 +62,7 @@
           "start": 48,
           "end": 70
         }
-      ],
-      "value": 1
+      ]
     },
     {
       "event": "crew",
@@ -79,8 +75,7 @@
           "start": 8,
           "end": 74
         }
-      ],
-      "value": 1
+      ]
     },
     {
       "event": "grantType",
@@ -95,8 +90,7 @@
           "start": 76,
           "end": 135
         }
-      ],
-      "value": 1
+      ]
     }
   ],
   "sink": [
@@ -116,8 +110,7 @@
           "start": 8,
           "end": 74
         }
-      ],
-      "value": 1
+      ]
     }
   ]
 }

@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -36,22 +34,8 @@
       }
     },
     {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 0,
-          "start": 0,
-          "end": 8
-        }
-      ]
-    },
-    {
       "event": "pump",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -71,7 +55,6 @@
           "Equipment"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

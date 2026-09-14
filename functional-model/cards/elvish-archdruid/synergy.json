@@ -6,7 +6,6 @@
       "controller": "you",
       "sourceText": "{T}: Add {G} for each Elf you control.",
       "highlight": "Add {G} for each Elf you control",
-      "value": 5,
       "color": "G"
     }
   ],
@@ -20,8 +19,7 @@
           "Creature"
         ]
       },
-      "sourceText": "counts Elf creatures you control to determine how much mana this produces — not a want for a specific effect, just the read the amount is computed from",
-      "value": 1
+      "sourceText": "counts Elf creatures you control to determine how much mana this produces — not a want for a specific effect, just the read the amount is computed from"
     }
   ]
 }

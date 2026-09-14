@@ -20,8 +20,10 @@ function isV2Shaped(synergy: { source?: unknown[]; sink?: unknown[] }): boolean 
   // A SOURCE `ZoneFact` may now carry `to`/`from` instead of (or alongside)
   // `zone` (2026-09-11 rework, functional-model/synergy.ts's `ZoneFact`) —
   // this is a local duplicate of the same widening `engine` made to every
-  // other `isV2Shaped` copy in scripts/{verify-synergy,find-synergies,
-  // compute-weights}.mjs; this one lives here (not those scripts) since it
+  // other `isV2Shaped` copy in scripts/{verify-synergy,find-synergies}.mjs
+  // (`compute-weights.mjs`, a third former sibling copy, was deleted
+  // 2026-09-14 along with `Fact.value`, the field it existed to compute);
+  // this one lives here (not those scripts) since it
   // gates the live card-page API route, and was missed by that pass. Without
   // it, summon-bahamut's own two converted facts (no `zone`/`event` key at
   // all) fail `.every()` and the WHOLE card falls back to "not yet migrated"

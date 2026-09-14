@@ -3,35 +3,25 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "dies",
-      "target": "self",
-      "value": 1
-    },
-    {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5
+      "target": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -50,7 +40,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -66,7 +55,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

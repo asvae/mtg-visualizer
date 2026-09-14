@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -21,7 +20,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -37,7 +35,6 @@
     {
       "event": "drawCard",
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -59,15 +56,18 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
           "line": 0,
           "start": 31,
-          "end": 91
+          "end": 79
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -79,15 +79,18 @@
           "Creature"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
           "line": 0,
-          "start": 64,
-          "end": 91
+          "start": 31,
+          "end": 79
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     }
   ]
 }

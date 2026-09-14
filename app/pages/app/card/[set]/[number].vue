@@ -14,12 +14,6 @@ import { useSetOrder, neighborsInSetOrder, type SetOrderData } from '../../../..
 
 definePageMeta({ layout: 'graph' });
 
-// Facts tab's value/weight column (ValueBar 1-5 dots) — hidden for now per
-// explicit request, display-only toggle. Underlying `Fact.value` data and
-// the `ValueBar` component itself are untouched; flip this back to true to
-// re-enable the column, no other change needed.
-const SHOW_FACT_VALUE_COLUMN = false;
-
 // Debug column showing each row's raw `Fact` JSON, so it's inspectable
 // without switching to the separate JSON tab or opening devtools. On by
 // default (standing debug aid, not a one-off) — flip to false to hide it
@@ -1163,7 +1157,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                      vast majority of cards. -->
                 <tr v-if="group.label">
                   <td
-                    :colspan="(SHOW_FACT_VALUE_COLUMN ? 4 : 3) + (SHOW_FACT_DEBUG_COLUMN ? 1 : 0)"
+                    :colspan="3 + (SHOW_FACT_DEBUG_COLUMN ? 1 : 0)"
                     class="pt-2 pb-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
                   >
                     {{ group.label }}
@@ -1177,7 +1171,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
                   @mouseenter="hoveredFactKey = factKey(row.fact)"
                   @mouseleave="hoveredFactKey = null"
                 >
-                  <td v-if="SHOW_FACT_VALUE_COLUMN" class="py-1 px-2"><ValueBar :value="row.fact.value" /></td>
                   <td class="py-1 px-2">
                     <span class="inline-flex items-center gap-1">
                       <Icon

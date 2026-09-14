@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, AuthoredFact } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 export const ultimaOriginOfOblivion: CardDefinition = {
   name: 'Ultima, Origin of Oblivion',
@@ -60,26 +60,14 @@ export const ultimaOriginOfOblivion: CardDefinition = {
       effects: [{ kind: 'addMana', color: 'C', amount: 1 } satisfies Effect],
     },
   ],
-  // Tier 3 (`CardDefinition.authoredFacts`). Same "trigger's own firing
-  // precondition, no single owning `Effect`" case as ashe-princess-of-
-  // dalmasca's/ambrosia-whiteheart's own `authoredFacts` (see those files'
-  // comments): this card's `onTapLandForC` trigger only fires off a LAND
-  // you control being tapped for {C} — a real want for colorless-producing
-  // lands specifically, not just any `addMana` source, which no structural
-  // field on this card expresses (the trigger's own free-text `name` isn't a
-  // closed vocabulary the way `Trigger.on` is). Matches this card's own real
-  // `synergy.json` sink fact byte-for-byte. Not wired into
-  // `apply-recognizers.mjs`/`synergy.json` generation. Own annotation: see
-  // `AuthoredFact`'s own doc comment (card.ts) — `definition-
-  // annotations.json`, keyed `"authoredFacts[0]"`.
-  authoredFacts: [
-    {
-      role: 'sink',
-      event: 'addMana',
-      colors: { has: ['C'] },
-      controller: 'you',
-      types: { has: ['Land'] },
-      value: 1,
-    },
-  ] satisfies AuthoredFact[],
+  // Former tier-3 `CardDefinition.authoredFacts` escape hatch for this
+  // trigger's own real "wants a land tapped for {C}" want RETIRED
+  // (2026-09-14, fact-parity pass) — `addMana-effect-structural.ts`'s own
+  // paired-sink derivation now reads `on: 'tapLandForMana'` +
+  // `tapLandForManaColor` directly (real, closed structural vocabulary that
+  // didn't exist when this card's own `authoredFacts` entry was first
+  // written) and produces the IDENTICAL real sink fact with genuine parser
+  // provenance instead. Same "retire the escape hatch once the mechanism
+  // becomes real" precedent Ashe, Princess of Dalmasca's own former
+  // `authoredFacts` entry already established for `Trigger.on: 'attacks'`.
 };

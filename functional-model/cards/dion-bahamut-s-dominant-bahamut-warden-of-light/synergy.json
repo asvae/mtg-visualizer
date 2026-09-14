@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -22,7 +21,6 @@
       "event": "entersBattlefield",
       "to": "Battlefield",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -47,7 +45,6 @@
           ]
         }
       },
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -65,7 +62,6 @@
       "subject": {
         "token": "w_2_2_knight"
       },
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -81,7 +77,6 @@
       "from": "Battlefield",
       "subject": "self",
       "controller": "you",
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -99,7 +94,6 @@
       "subject": "self",
       "target": "self",
       "controller": "you",
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -114,7 +108,6 @@
       "event": "tap",
       "subject": "self",
       "target": "self",
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -136,7 +129,6 @@
           ]
         }
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -162,7 +154,6 @@
           ]
         }
       },
-      "value": -1,
       "face": "back",
       "annotations": [
         {
@@ -176,7 +167,6 @@
     {
       "event": "destroy",
       "targeted": true,
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -196,7 +186,6 @@
       "from": "Battlefield",
       "to": "Graveyard",
       "targeted": true,
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -216,7 +205,6 @@
       "from": "Battlefield",
       "subject": "self",
       "controller": "you",
-      "value": -1,
       "face": "back",
       "annotations": [
         {
@@ -234,7 +222,6 @@
       "subject": "self",
       "target": "self",
       "controller": "you",
-      "value": -1,
       "face": "back",
       "annotations": [
         {
@@ -249,7 +236,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -273,7 +259,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "back",
       "annotations": [
         {
@@ -290,7 +275,6 @@
     },
     {
       "to": "Battlefield",
-      "value": -1,
       "face": "back",
       "annotations": [
         {

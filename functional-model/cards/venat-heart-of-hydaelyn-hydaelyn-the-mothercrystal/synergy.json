@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -24,7 +23,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -41,7 +39,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "face": "front",
       "annotations": [
         {
@@ -67,7 +64,6 @@
         }
       },
       "targeted": true,
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -83,7 +79,6 @@
       "from": "Battlefield",
       "subject": "self",
       "controller": "you",
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -101,7 +96,6 @@
       "subject": "self",
       "target": "self",
       "controller": "you",
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -116,7 +110,6 @@
       "event": "tap",
       "subject": "self",
       "target": "self",
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -139,7 +132,6 @@
         }
       },
       "targeted": true,
-      "value": -1,
       "face": "back",
       "annotations": [
         {
@@ -162,7 +154,6 @@
         }
       },
       "targeted": true,
-      "value": -1,
       "face": "back",
       "annotations": [
         {
@@ -176,7 +167,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": -1,
       "face": "back",
       "annotations": [
         {
@@ -200,7 +190,6 @@
         }
       },
       "oncePerTurn": true,
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -218,7 +207,6 @@
           "Land"
         ]
       },
-      "value": -1,
       "face": "front",
       "annotations": [
         {
@@ -237,7 +225,6 @@
           "Creature"
         ]
       },
-      "value": -1,
       "face": "back",
       "annotations": [
         {

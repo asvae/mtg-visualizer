@@ -3,13 +3,11 @@
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1,
       "face": "back"
     },
     {
       "event": "dies",
       "controller": "you",
-      "value": 1,
       "face": "back"
     },
     {
@@ -19,13 +17,11 @@
       "color": "B",
       "sourceText": "{T}: Add {B}.",
       "highlight": "{B}",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -51,7 +47,6 @@
           "Artifact"
         ]
       },
-      "value": 1,
       "face": "back"
     }
   ]

@@ -401,7 +401,6 @@ defineExpose({
             :title="f.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
           />
           <span class="text-text first-letter:uppercase">{{ describeFact(f) }}</span>
-          <ValueBar class="ml-auto shrink-0" :value="f.value" />
         </div>
       </div>
     </div>

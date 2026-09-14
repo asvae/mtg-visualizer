@@ -3,20 +3,29 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 37,
+          "end": 48
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      }
     }
   ],
   "sink": [
     {
       "event": "discard",
-      "target": "self",
-      "value": -1
+      "target": "self"
     }
   ]
 }

@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -39,7 +37,6 @@
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -54,7 +51,6 @@
       "keyword": "Unblockable",
       "target": "self",
       "untilEndOfTurn": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -79,7 +75,6 @@
           "min": 4
         }
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

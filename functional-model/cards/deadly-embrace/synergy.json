@@ -3,24 +3,20 @@
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "event": "dies",
-      "controller": "opp",
-      "value": 4
+      "controller": "opp"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -37,7 +33,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -59,8 +54,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Graveyard",
@@ -69,8 +63,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Graveyard",
@@ -79,8 +72,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

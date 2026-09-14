@@ -2,29 +2,24 @@
   "source": [
     {
       "zone": "Graveyard",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "event": "dies",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "event": "lifeloss",
-      "controller": "you",
-      "value": 4
+      "controller": "you"
     },
     {
       "event": "lifeloss",
-      "controller": "opp",
-      "value": 4
+      "controller": "opp"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -43,7 +38,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -59,7 +53,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -77,7 +70,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -93,7 +85,6 @@
     {
       "event": "sacrifice",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -113,7 +104,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -135,8 +125,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

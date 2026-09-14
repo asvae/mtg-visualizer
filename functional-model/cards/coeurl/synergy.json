@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -48,7 +46,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -62,7 +59,6 @@
       "event": "tap",
       "subject": "self",
       "target": "self",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -84,7 +80,6 @@
           "Enchantment"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -21,7 +20,6 @@
       "event": "entersBattlefield",
       "to": "Battlefield",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -41,7 +39,6 @@
       "subject": {
         "token": "w_2_2_knight"
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -64,7 +61,6 @@
       },
       "targeted": false,
       "untilEndOfTurn": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -87,7 +83,6 @@
         "excludeSelf": true
       },
       "targeted": false,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -100,7 +95,6 @@
     {
       "event": "sacrifice",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -120,7 +114,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -137,7 +130,6 @@
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -161,7 +153,6 @@
         ]
       },
       "excludeSelf": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

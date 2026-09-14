@@ -2,14 +2,12 @@
   "source": [
     {
       "event": "damage",
-      "controller": "you",
-      "value": 4
+      "controller": "you"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -28,7 +26,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -50,8 +47,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
@@ -60,8 +56,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

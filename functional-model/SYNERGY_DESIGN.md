@@ -2908,3 +2908,34 @@ duplicate of either.
   personally — both come out of the real whole-pool run with **zero**
   new facts and zero diff, confirming the prototype's own side-findings
   hold for real, not just in `recognizers.test.ts`.
+
+### `Fact.value`/`Weight`/`factTotal` removed from the schema entirely (2026-09-14)
+
+Every `value`/`Weight`/`factTotal`/`ease` reference throughout this document
+(the fact model's own doc comment, the dedup-retagging sections, the
+`compute-weights.mjs` recompute writeups) is now **historical record of a
+field that no longer exists**, not current behavior — struck through in
+spirit, not literally, the same "kept as history, not deleted" treatment
+this doc already gives the pre-merge `ZoneFact`/`EventFact` split above.
+User's own explicit instruction: "let's remove value from everything (edges,
+facts, etc). No -1, no nothing. wipe it out of the project" — a hard
+removal, not a further step in the "deprecated pool-wide" status the field
+already had going into this pass (`.claude/contracts/card-schema.md` already
+recorded it as "not consulted by anything that actually matches/interacts
+facts" before this).
+
+Concretely: `Fact.value`/`Weight` (`synergy.ts`) are gone from the type;
+`factTotal()` and `InteractionMatch.theirTotal` are deleted (the latter's
+only real consumer, `server/api/card/[set]/[number].ts`'s
+`dedupMatchesByCard`, now keeps the first-encountered duplicate rather than
+the highest-`theirTotal` one — a benign, arbitrary-tiebreak degradation,
+never surfaced on the served payload either way). `compute-weights.mjs`
+(whose entire job was computing/writing this field) is deleted outright,
+not gutted-and-kept. Every recognizer in `functional-model/recognizers/`
+stopped emitting `value` on its own produced facts; `apply-recognizers.mjs`'s
+dedup/retag logic (which already excluded `value` from `coreKey` identity
+matching, per this doc's own note above) no longer reads or writes
+`.value` anywhere. Every `cards/<slug>/synergy.json` file had its `value`
+key stripped from every fact, pool-wide (a one-off script, not hand-edited
+per file — verified via a pool-wide grep for zero remaining `"value"` keys
+under any fact object afterward).

@@ -190,22 +190,18 @@ export interface Constraints {
   excludeSelf?: boolean;
 }
 
-/** 1-5, computed mechanically (not authored by hand) — real game-mechanical magnitude of a fact, steeply bucketed from the actual number involved (NOT linear: a 1-for-1 effect and a 2-for-1 effect are not "close" in power, so the bucketing jumps hard past 1 — magnitude 1 → 1, magnitude 2 → 4-5, magnitude 3+ → 5 — rather than spreading evenly):
- *  - on a `source` fact: the real number from `trace.json` (tokens/counters/damage/life/cards — whatever the source's own action carries).
- *  - on a `sink` fact: the fact's own declared `amount` constraint (e.g. "wants 3+ creatures" → 3) — no trace involved, it's a static requirement, not an action. A sink with no numeric constraint (most bare event hooks — "wants lifegain," no minimum) has no magnitude concept and stays unset (`factTotal` treats missing as neutral 1, same as a source with no measurable magnitude).
- * Previously paired with a second `ease` (rarity) dimension; dropped in favor of `value` alone on both sides — see git history for the retired rationale. A crude stand-in for real weighting (see SYNERGY_DESIGN.md's parked rarity-weighting note) — recompute if the pool changes meaningfully rather than trusting these to stay accurate. Renamed from `strength` (2026-09-05) — collided with d3-force's own unrelated `.strength()` API/graphRenderer.ts's physics terminology; `power` was tried next but collides with `Constraints.power` (a creature's real power stat), so this landed on `value` instead.
- *
- * `-1` is a distinct sentinel, NOT a real magnitude: "this fact has a value
- * field at all (so it's not merely predating the weight fields — see
- * `factTotal`'s own doc comment for that other, `undefined` case), but it's
- * a manual placeholder authored alongside the fact itself, pending a real
- * `compute-weights.mjs` pass" — e.g. a newly-authored self-referencing fact
- * with no trace magnitude to derive from yet. Stays visible as `-1` in
- * `synergy.json` (a human or a future `compute-weights.mjs` run should be
- * able to find it and replace it for real) but `factTotal` treats it exactly
- * like "unset" for any actual weighting/combination arithmetic — never
- * multiplied in as if it were real. */
-export type Weight = -1 | 1 | 2 | 3 | 4 | 5;
+/** `Weight`/`Fact.value` (a 1-5 mechanically-computed magnitude, formerly
+ * written by `compute-weights.mjs`) was removed from the schema entirely,
+ * pool-wide, 2026-09-14 — an explicit user instruction ("let's remove value
+ * from everything ... No -1, no nothing. wipe it out of the project"), not
+ * a deprecation. It was never consulted by `factsInteract`/anything that
+ * actually matches or interacts facts (see `.claude/contracts/card-schema.md`)
+ * — a rough per-fact "how strong is this" dial that stopped being trusted as
+ * a real differentiator well before this removal. `compute-weights.mjs`
+ * (whose entire job was computing/writing this field) is deleted outright,
+ * not gutted-and-kept. See git history for the full historical design (the
+ * bucketing scheme, the `-1` "pending computation" sentinel, the earlier
+ * `ease`/`strength`/`power` naming attempts) if ever relevant again. */
 
 /** `'self'` = the card this synergy.json belongs to; `{token}` = a token, resolved from token-cards/<slug>/definition.ts's own definition the same way. */
 export type Subject = 'self' | { token: string };
@@ -571,7 +567,6 @@ export interface Fact extends Constraints {
    * deliberate future schema addition, not an accidental byproduct of
    * setting this field twice. */
   oncePerTurn?: boolean;
-  value?: Weight;
   /**
    * See `AnnotationRef` — a real pointer into this fact's own owning face's
    * real printed text (oracle text body or type line). Computed ONCE,
@@ -1051,17 +1046,10 @@ export interface PoolCard {
 
 export type SelfInteractionKind = 'same-instance' | 'second-copy' | 'second-copy-legendary';
 
-/** `fact.value` (1-5) — `compute-weights.mjs` writes an explicit value on EVERY fact it processes, source and sink alike, `1` (neutral) when the fact has no measurable magnitude (a bare event hook, an unquantified want) rather than leaving it unset. So `undefined` here only means "this fact predates the weight fields entirely" (never run through `compute-weights.mjs`) — genuinely unknown, not neutral — and stays `null` rather than being coerced to 1. `-1` (see `Weight`'s own doc comment) is a different kind of not-real-yet — a manual placeholder pending computation, not a predates-the-fields gap — but for arithmetic purposes it collapses to the same `null` here too: nothing downstream should ever multiply a placeholder in as if it were a real magnitude. A caller wanting a match's full two-sided value combines both sides' `factTotal` (see `server/api/graph-links.ts` — each side floors a `null` to 1 before use, per-side range 1-5, combined range 1-25). */
-export function factTotal(fact: Fact): number | null {
-  return fact.value != null && fact.value > 0 ? fact.value : null;
-}
-
 export interface InteractionMatch {
   card: string;
   /** Present only when `card` names THIS SAME card — the pair (A, A), computed and kept like any other match, never dropped (SYNERGY_DESIGN.md "Self-interactions"). */
   selfInteraction?: SelfInteractionKind;
-  /** `factTotal` of the OTHER side's specific fact that satisfied this match (the group's own `fact` is `mine`'s side — see `InteractionGroup`) — a caller wanting this match's full two-sided value combines both (e.g. `Math.sqrt(mine * theirs)`), not just `mine` alone. `null` if that fact predates the weight fields. */
-  theirTotal: number | null;
   /** Identifies exactly which fact on `card` this match satisfied, distinct from `mine`'s own fact on `InteractionGroup`. Used by `server/api/graph-links.ts` to group every match pointing at the SAME sink fact (possibly from many different producer cards) for its own supply-side normalization. Computed via `factIdentity` (below) — there is no longer a per-fact `id` field (removed 2026-09-11, facts are short enough now that stable identity across regen/diffing isn't needed; see `SYNERGY_DESIGN.md`), so this is always derivable and never `undefined` in practice, but stays optional in the type since nothing requires it. */
   theirFactId?: string;
 }
@@ -1725,16 +1713,88 @@ function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sin
   return true;
 }
 
-/** Every interaction `cardName` participates in, across `pool` (every card's own facts, itself included — self-interactions are a real, kept output, not filtered out). `tokens` resolves `{token}` subjects; omit for a card set with no token-producing effects yet. */
+/**
+ * Real CR 702.15e: a permanent with printed Lifelink UNCONDITIONALLY gains
+ * its controller life equal to any damage it deals — a card-mechanical
+ * fact, not a matter of what its own oracle text happens to also say
+ * elsewhere. `card.ts`'s bare-printed-keyword convention (SYNERGY_DESIGN.md:
+ * "Not needed for keywords on card. That would be parsed directly - we
+ * don't need facts for that") already treats a printed keyword as
+ * structured, directly-parseable `CardDefinition.keywords` data rather than
+ * something needing its own `Fact` — this reuses exactly that same
+ * treatment for Lifelink specifically (checks BOTH `keywords` and
+ * `backFace.keywords`, since `face` is purely a rendering hint never
+ * consulted by the matcher itself — see `Fact.face`'s own doc comment).
+ *
+ * 2026-09-14: 11 real pool cards used to carry an explicit, hand-authored
+ * `{event:'lifegain', controller:'you'}` SOURCE fact whose ENTIRE basis was
+ * this same printed keyword (no separate, distinct lifegain-producing
+ * ability text anywhere on the card) — a literal restatement of
+ * `keywords.includes('Lifelink')`, not a genuine second fact. Dropped
+ * pool-wide (see each card's own `progress.json`) in favor of this
+ * derivation, so real synergy-matching coverage (a payoff's own SINK
+ * wanting `event:'lifegain'`) doesn't regress: `findInteractionsForCard`
+ * below synthesizes the equivalent `Fact` at match time for any card this
+ * returns `true` for and that has no OTHER real declared `lifegain` source
+ * fact of its own (a card with a genuinely separate lifegain ability,
+ * e.g. Battle Menu's own real "Item — you gain 4 life" mode, keeps its own
+ * real fact untouched and is never double-counted here).
+ */
+function hasPrintedLifelink(card: CardDefinition): boolean {
+  return !!card.keywords?.includes('Lifelink') || !!card.backFace?.keywords?.includes('Lifelink');
+}
+
+/**
+ * The `Fact` a printed-Lifelink card would have declared by hand before the
+ * 2026-09-14 removal above — built at MATCH TIME, never written to any
+ * `synergy.json` (so `scripts/annotation-coverage.mjs`'s file-based
+ * `annotations` check never sees it, and it never needs to satisfy that
+ * invariant for real). `annotations` is deliberately OMITTED: this fact has
+ * no authored oracle-text span of its own to point at (the keyword IS the
+ * printed anchor; `synergy.ts` has no access to a card's real Scryfall
+ * oracle text to compute a genuine one here), and — same "the TYPE requires
+ * it but the runtime already tolerates its absence" situation
+ * `factIdentity`'s own doc comment documents for the bulk of this pool's
+ * still-unmigrated on-disk facts — nothing in `factsInteract`/`themeOf`/
+ * `describeFact` actually dereferences `fact.annotations` for a bare event
+ * fact like this one, so an absent array here is genuinely safe, not just
+ * hopefully safe. Never rendered as text either: the served
+ * `InteractionGroup.fact` this becomes is only ever read for its
+ * `role`/`describeFact` LABEL and `factIdentity`'s own hover-key on the
+ * card page (`app/pages/app/card/[set]/[number].vue`), never for its
+ * `annotations` content directly.
+ */
+function syntheticLifelinkFact(): Fact {
+  return { role: 'source', event: 'lifegain', controller: 'you', subject: 'self' } as unknown as Fact;
+}
+
+/** Every interaction `cardName` participates in, across `pool` (every card's own facts, itself included — self-interactions are a real, kept output, not filtered out). `tokens` resolves `{token}` subjects; omit for a card set with no token-producing effects yet.
+ *
+ * `pool` is augmented once, locally, before matching: any card with printed
+ * Lifelink (`hasPrintedLifelink`) that doesn't ALREADY declare its own real
+ * `event:'lifegain'` SOURCE fact gets `syntheticLifelinkFact()` appended to
+ * its own (locally copied, never mutated in place) `source` array — see
+ * both helpers' own doc comments for why. Done here, once, rather than at
+ * `PoolCard` construction time (`server/utils/functionalModelPool.ts`/
+ * `scripts/find-synergies.mjs`) so every caller of this function — the
+ * per-card Interactions panel AND `server/api/graph-links.ts`'s whole-graph
+ * edge builder, which walks EVERY card's own `direction:'source'` groups —
+ * gets this for free, without either of those call sites needing to know
+ * Lifelink is special. */
 export function findInteractionsForCard(cardName: string, pool: PoolCard[], tokens: Record<string, TokenLike> = {}): InteractionGroup[] {
-  const self = pool.find((p) => p.name === cardName);
+  const augmentedPool = pool.map((pc) => {
+    if (pc.source.some((f) => f.event === 'lifegain')) return pc;
+    if (!hasPrintedLifelink(pc.card)) return pc;
+    return { ...pc, source: [...pc.source, syntheticLifelinkFact()] };
+  });
+  const self = augmentedPool.find((p) => p.name === cardName);
   if (!self) return [];
 
   const groups: InteractionGroup[] = [];
 
   function matchOne(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sink'): InteractionGroup | null {
     const matches: InteractionMatch[] = [];
-    for (const other of pool) {
+    for (const other of augmentedPool) {
       const otherFacts = mineRole === 'source' ? other.sink : other.source;
       for (const theirs of otherFacts) {
         if (factsInteract(mine, mineCard, mineRole, theirs, other, tokens)) {
@@ -1742,7 +1802,6 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
           matches.push({
             card: other.name,
             selfInteraction: isSelf ? selfInteractionKind(mine, mineCard) : undefined,
-            theirTotal: factTotal(theirs),
             theirFactId: factIdentity(theirs),
           });
         }

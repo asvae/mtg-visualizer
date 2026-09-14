@@ -3,25 +3,21 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Hand",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
-      "target": "self",
-      "value": 1
+      "target": "self"
     },
     {
       "event": "putCounter",
@@ -32,14 +28,12 @@
             "Creature"
           ]
         }
-      },
-      "value": 1
+      }
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -58,7 +52,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -79,8 +72,23 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
+    },
+    {
+      "event": "attacks",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 29
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "attacks-trigger-structural"
+      }
     }
   ]
 }

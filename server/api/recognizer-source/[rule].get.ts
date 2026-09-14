@@ -50,6 +50,17 @@ import type { RecognizerId } from '../../../functional-model/recognizers/types';
 // own real wiring into `apply-recognizers.mjs` — added THIS TIME alongside
 // the wiring pass itself, per this file's own standing note above not to
 // repeat the original allowlist-miss bug.
+//
+// `'attacks-trigger-structural'` (10th recognizer, wired 2026-09-14) was
+// ACTUALLY MISSED here despite the standing note above — caught and fixed
+// 2026-09-14 by the SAME `engine` agent pass that added the 2 recognizers
+// below, not alongside its own original wiring. Confirms this file's own
+// "recurring miss" risk is real, not hypothetical — re-check this list
+// every time `recognizers/types.ts`'s `RecognizerId` union grows, don't
+// assume a prior pass already caught it.
+//
+// `'putCounterTarget-effect-structural'`/`'addMana-effect-structural'`
+// (11th-12th recognizers) added 2026-09-14, same pass as their own wiring.
 export const RECOGNIZER_IDS: RecognizerId[] = [
   'instant-sorcery-resolves-to-graveyard',
   'permanent-enters-battlefield-normally',
@@ -60,6 +71,9 @@ export const RECOGNIZER_IDS: RecognizerId[] = [
   'lifegain-trigger-structural',
   'dealDamage-effect-structural',
   'putCounter-broadcast-structural',
+  'attacks-trigger-structural',
+  'putCounterTarget-effect-structural',
+  'addMana-effect-structural',
 ];
 
 export default defineEventHandler((event) => {

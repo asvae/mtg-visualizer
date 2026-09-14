@@ -134,7 +134,7 @@ export function recognizeDiesTriggerStructural(input: RecognizerInput): Recogniz
       // die (co-located here as a SINK, same shape aerith-gainsborough's
       // own former `authoredFacts` entry asserted by hand).
       role: 'sink',
-      fact: { event: 'dies', target: 'self', value: 1, annotations: [annotation] },
+      fact: { event: 'dies', target: 'self', annotations: [annotation] },
       provenance: { origin: 'parser', rule: RULE },
     },
     {
@@ -149,7 +149,6 @@ export function recognizeDiesTriggerStructural(input: RecognizerInput): Recogniz
         controller: 'you',
         subject: 'self',
         target: 'self',
-        value: 1,
         annotations: [annotation],
       },
       provenance: { origin: 'parser', rule: RULE },

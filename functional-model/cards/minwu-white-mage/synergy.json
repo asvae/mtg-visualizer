@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -23,7 +22,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -48,7 +46,6 @@
         }
       },
       "targeted": false,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -57,26 +54,12 @@
           "end": 70
         }
       ]
-    },
-    {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 0,
-          "start": 11,
-          "end": 19
-        }
-      ]
     }
   ],
   "sink": [
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -98,7 +81,6 @@
           "Cleric"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

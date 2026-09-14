@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -42,7 +40,6 @@
       "subject": {
         "token": "c_1_1_hero"
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -57,7 +54,6 @@
       "target": {
         "equippedBySelf": true
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -73,7 +69,6 @@
       "target": {
         "equippedBySelf": true
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -93,7 +88,6 @@
           "Creature"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

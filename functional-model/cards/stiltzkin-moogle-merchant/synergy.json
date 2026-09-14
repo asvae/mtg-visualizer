@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -23,7 +22,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -40,7 +38,6 @@
       "event": "tap",
       "subject": "self",
       "target": "self",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -55,7 +52,6 @@
       "controller": "you",
       "recipient": "opp",
       "targeted": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -68,7 +64,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -77,26 +72,12 @@
           "end": 108
         }
       ]
-    },
-    {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 0,
-          "start": 0,
-          "end": 8
-        }
-      ]
     }
   ],
   "sink": [
     {
       "to": "Battlefield",
       "controller": "you",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

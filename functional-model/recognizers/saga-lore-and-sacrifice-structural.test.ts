@@ -46,11 +46,11 @@ describe('Recognizer E — Saga lore-counter + sacrifice/dies, read structurally
     if (!result.matched) return;
     const annotations = [{ target: 'typeLine', start: 23, end: 27 }];
     expect(result.facts).toEqual([
-      { role: 'source', fact: { event: 'putCounter', counterType: 'LORE', target: 'self', value: 1, annotations }, provenance: { origin: 'parser', rule: 'saga-lore-and-sacrifice-structural' } },
-      { role: 'source', fact: { event: 'sacrifice', target: 'self', value: 1, annotations }, provenance: { origin: 'parser', rule: 'saga-lore-and-sacrifice-structural' } },
+      { role: 'source', fact: { event: 'putCounter', counterType: 'LORE', target: 'self', annotations }, provenance: { origin: 'parser', rule: 'saga-lore-and-sacrifice-structural' } },
+      { role: 'source', fact: { event: 'sacrifice', target: 'self', annotations }, provenance: { origin: 'parser', rule: 'saga-lore-and-sacrifice-structural' } },
       {
         role: 'source',
-        fact: { event: 'dies', from: 'Battlefield', to: 'Graveyard', controller: 'you', subject: 'self', target: 'self', value: 1, annotations },
+        fact: { event: 'dies', from: 'Battlefield', to: 'Graveyard', controller: 'you', subject: 'self', target: 'self', annotations },
         provenance: { origin: 'parser', rule: 'saga-lore-and-sacrifice-structural' },
       },
     ]);
@@ -67,7 +67,7 @@ describe('Recognizer E — Saga lore-counter + sacrifice/dies, read structurally
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { event: 'putCounter', counterType: 'LORE', target: 'self', value: 1, annotations: [{ target: 'typeLine', start: 23, end: 27 }] },
+        fact: { event: 'putCounter', counterType: 'LORE', target: 'self', annotations: [{ target: 'typeLine', start: 23, end: 27 }] },
         provenance: { origin: 'parser', rule: 'saga-lore-and-sacrifice-structural' },
       },
     ]);

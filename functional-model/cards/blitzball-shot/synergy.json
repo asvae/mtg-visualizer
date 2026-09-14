@@ -3,20 +3,17 @@
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "grantKeyword",
       "keyword": "Trample",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -33,7 +30,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -55,8 +51,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

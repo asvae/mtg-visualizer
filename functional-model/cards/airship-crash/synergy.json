@@ -1,18 +1,15 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
-      "value": 1
+      "zone": "Graveyard"
     },
     {
-      "event": "dies",
-      "value": 4
+      "event": "dies"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -29,7 +26,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -45,7 +41,18 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 37,
+          "end": 48
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -56,13 +63,11 @@
           "Artifact",
           "Enchantment"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "event": "discard",
-      "target": "self",
-      "value": -1
+      "target": "self"
     }
   ]
 }

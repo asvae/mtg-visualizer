@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -21,7 +20,6 @@
       "event": "entersBattlefield",
       "to": "Battlefield",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -46,7 +44,6 @@
         }
       },
       "targeted": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -64,7 +61,6 @@
           "W"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -84,7 +80,6 @@
           "Land"
         ]
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

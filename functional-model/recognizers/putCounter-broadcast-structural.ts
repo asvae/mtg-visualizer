@@ -179,7 +179,7 @@ export function recognizePutCounterBroadcastStructural(input: StructuralRecogniz
     const target: Constraints = result.fact.target;
     facts.push({
       role: 'source',
-      fact: { event: 'putCounter', counterType: result.fact.counterType, controller: 'you', target, targeted: false, value: 1, annotations: [annotation] },
+      fact: { event: 'putCounter', counterType: result.fact.counterType, controller: 'you', target, targeted: false, annotations: [annotation] },
       provenance: { origin: 'parser', rule: RULE },
     });
     // Paired "wants this present" sink — same real convention
@@ -192,7 +192,7 @@ export function recognizePutCounterBroadcastStructural(input: StructuralRecogniz
     // target bucket).
     facts.push({
       role: 'sink',
-      fact: { to: 'Battlefield', controller: 'you', types: target.types!, value: 1, annotations: [annotation] },
+      fact: { to: 'Battlefield', controller: 'you', types: target.types!, annotations: [annotation] },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

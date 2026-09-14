@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -23,7 +22,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -43,7 +41,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -58,23 +55,9 @@
       }
     },
     {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 0,
-          "start": 0,
-          "end": 8
-        }
-      ]
-    },
-    {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": 4,
       "annotations": [
         {
           "target": "oracle",
@@ -97,7 +80,6 @@
         }
       },
       "targeted": false,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -116,7 +98,6 @@
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -133,7 +114,6 @@
     {
       "event": "dies",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -151,7 +131,6 @@
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -170,7 +149,6 @@
           "Legendary"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

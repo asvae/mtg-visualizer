@@ -3,46 +3,38 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "event": "dies",
-      "controller": "you",
-      "value": 5
+      "controller": "you"
     },
     {
       "event": "dies",
-      "controller": "opp",
-      "value": 5
+      "controller": "opp"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
-      "target": "self",
-      "value": 1
+      "target": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -61,7 +53,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -83,12 +74,10 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
-      "event": "dies",
-      "value": 1
+      "event": "dies"
     }
   ]
 }

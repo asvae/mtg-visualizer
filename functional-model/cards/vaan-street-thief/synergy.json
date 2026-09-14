@@ -2,16 +2,14 @@
   "source": [
     {
       "zone": "Exile",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_a_treasure_sac"
-      },
-      "value": 1
+      }
     },
     {
       "event": "putCounter",
@@ -25,14 +23,12 @@
             "Rogue"
           ]
         }
-      },
-      "value": 1
+      }
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -51,7 +47,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -75,8 +70,7 @@
           "Pirate",
           "Rogue"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

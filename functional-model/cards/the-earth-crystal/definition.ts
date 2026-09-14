@@ -32,6 +32,11 @@ export const theEarthCrystal: CardDefinition = {
       // "one counter on each of two different creatures" resolution
       // (a legal, common real choice), but not the alternate "both
       // counters on a single creature" branch the real card also allows.
+      // recognizer-exception: putCounterTarget-effect-structural — real
+      // printed text reads "Distribute two +1/+1 counters among one or two
+      // target creatures you control," never "put ... counter on target"
+      // (the built clause this recognizer looks for) — a confirmed model
+      // approximation (this comment), not a recognizer bug.
       kind: 'putCounterTarget',
       validType: 'creature',
       owner: 'you',

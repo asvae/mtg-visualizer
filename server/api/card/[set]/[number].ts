@@ -546,15 +546,18 @@ export interface EnrichedInteractionGroup extends Omit<InteractionGroup, 'matche
 // real and wanted for `server/api/graph-links.ts` (keys off `theirFactId` to
 // normalize per sink fact) — collapsing it in `synergy.ts` itself would
 // break that consumer. This panel instead wants one gallery entry per
-// related card, so collapse only here, keeping the strongest duplicate
-// (highest `theirTotal`) rather than an arbitrary one; `selfInteraction` is
-// derived from `mine`/`mineCard` alone (never `theirs`), so it's identical
-// across duplicates and never lost by this collapse.
+// related card, so collapse only here — keeping the FIRST-encountered
+// duplicate (2026-09-14: used to keep the highest `theirTotal`, an arbitrary
+// tiebreak once `InteractionMatch.theirTotal`/`Fact.value` were removed from
+// the schema entirely — see `.claude/contracts/card-schema.md`'s own dated
+// entry; `theirTotal` was never part of the served payload either way, so
+// nothing client-visible changes here). `selfInteraction` is derived from
+// `mine`/`mineCard` alone (never `theirs`), so it's identical across
+// duplicates and never lost by this collapse.
 function dedupMatchesByCard(matches: InteractionGroup['matches']): InteractionGroup['matches'] {
   const byCard = new Map<string, InteractionGroup['matches'][number]>();
   for (const m of matches) {
-    const existing = byCard.get(m.card);
-    if (!existing || (m.theirTotal ?? -Infinity) > (existing.theirTotal ?? -Infinity)) byCard.set(m.card, m);
+    if (!byCard.has(m.card)) byCard.set(m.card, m);
   }
   return [...byCard.values()];
 }

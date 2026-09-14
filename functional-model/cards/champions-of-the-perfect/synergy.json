@@ -4,8 +4,7 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — Champions of the Perfect is itself a permanent on your battlefield)",
-      "value": 1
+      "sourceText": "(baseline — Champions of the Perfect is itself a permanent on your battlefield)"
     }
   ],
   "sink": [
@@ -17,8 +16,7 @@
           "Creature"
         ]
       },
-      "sourceText": "Whenever you cast a creature spell, draw a card.",
-      "value": 1
+      "sourceText": "Whenever you cast a creature spell, draw a card."
     }
   ]
 }

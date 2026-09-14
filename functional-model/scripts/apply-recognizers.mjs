@@ -20,8 +20,9 @@
 //     permanent-enters-battlefield-normally, destroy-effect-structural,
 //     drawCard-effect-structural, saga-lore-and-sacrifice-structural,
 //     dies-trigger-structural, lifegain-trigger-structural,
-//     dealDamage-effect-structural, putCounter-broadcast-structural)
-//     against every face a card has. The plain TEXT recognizers (the first
+//     dealDamage-effect-structural, putCounter-broadcast-structural,
+//     attacks-trigger-structural, putCounterTarget-effect-structural,
+//     addMana-effect-structural) against every face a card has. The plain TEXT recognizers (the first
 //     two, plus dies-trigger-structural/lifegain-trigger-structural) only
 //     ever read that face's own printed `typeLine`/`oracleText`; the
 //     STRUCTURAL ones (destroy/drawCard/saga-lore/dealDamage/putCounter-
@@ -135,6 +136,20 @@
 // one new read this feature needs. A card+rule pair with a matching marker
 // is logged as a suppressed skip, not a hard failure.
 //
+// **`Fact.value` removed from the schema entirely, 2026-09-14** (explicit
+// user instruction, pool-wide — not a further deprecation of the already-
+// "deprecated pool-wide" status this field had going into this pass). Every
+// `value`-related comment above/below describing the dedup/retag behavior
+// ("coreKey excludes value," "a coreKey match replaces value/annotations,"
+// etc.) is now historical record of behavior from BEFORE this removal — kept
+// as-is rather than rewritten line-by-line, since the underlying REASONING
+// (why `coreKey` ignores certain fields, why a match replaces vs. preserves)
+// is unchanged; only the field itself, and every runtime reference to
+// `fact.value`, is gone (see `coreKey`, `mergeDuplicateFacts`, and the main
+// retag loop below — none of them read or write `.value` anymore).
+// `compute-weights.mjs`, whose entire job was computing/writing this field,
+// is deleted outright.
+//
 // Usage: npx vite-node functional-model/scripts/apply-recognizers.mjs [<slug> ...]
 //        (no args = whole pool)
 import { readdir, readFile, writeFile } from 'node:fs/promises';
@@ -148,6 +163,8 @@ import { recognizeLifegainTriggerStructural } from '../recognizers/lifegain-trig
 import { recognizeDealDamageEffectStructural } from '../recognizers/dealDamage-effect-structural.ts';
 import { recognizePutCounterBroadcastStructural } from '../recognizers/putCounter-broadcast-structural.ts';
 import { recognizeAttacksTriggerStructural } from '../recognizers/attacks-trigger-structural.ts';
+import { recognizePutCounterTargetEffectStructural } from '../recognizers/putCounterTarget-effect-structural.ts';
+import { recognizeAddManaEffectStructural } from '../recognizers/addMana-effect-structural.ts';
 
 const cardsDir = new URL('../cards/', import.meta.url);
 const dataDir = new URL('../../data/', import.meta.url);
@@ -205,6 +222,11 @@ const RECOGNIZERS = [
   // auto-dispatch, `Trigger.on: 'attacks'`'s own real closure): plain TEXT
   // recognizer, same family as dies/lifegain above.
   { id: 'attacks-trigger-structural', recognize: recognizeAttacksTriggerStructural },
+  // 2026-09-14 follow-up (fact-parity pass, Ultima, Origin of Oblivion's own
+  // remaining 4 hand-authored facts): both STRUCTURAL, same family as
+  // destroy/drawCard/dealDamage/putCounter-broadcast above.
+  { id: 'putCounterTarget-effect-structural', recognize: recognizePutCounterTargetEffectStructural },
+  { id: 'addMana-effect-structural', recognize: recognizeAddManaEffectStructural },
 ];
 
 /** Same real-oracle-text-by-Scryfall-name loader `compute-annotations.mjs`
@@ -324,6 +346,27 @@ function isV2Shaped(synergy) {
  * genuinely has more than one real `(from,to)` pair across the pool, so
  * dropping `to`/`from` there would be a real, different, NOT-yet-checked
  * change; not attempted here).
+ *
+ * **`zone` -> `to` normalization for a plain presence-only fact (2026-09-14,
+ * `putCounterTarget-effect-structural.ts`'s own paired-sink follow-up)** —
+ * `Fact.zone`'s own doc comment (`synergy.ts`) already says it's "Legacy
+ * spelling of `to`" and that `effectiveZone` resolves either — but `coreKey`
+ * itself never acted on that until now, so a `zone:'Battlefield'`-shaped
+ * hand-authored sink (Ride the Shoopuf/Rosa, Resolute White Mage's own real
+ * "wants a creature present" sinks, among others) and a freshly-recognized
+ * `to:'Battlefield'`-shaped one for the IDENTICAL real claim used to produce
+ * two different reduced keys — this recognizer's own sink would have been
+ * appended as a near-duplicate instead of retagging the existing one.
+ * Scoped narrowly: only when `to`/`from`/`event` are ALL absent (a bare
+ * presence-only "is there an X here" check, never a real movement or a
+ * named CR occurrence — `zone` genuinely never co-occurs with `to`/`from`
+ * anywhere in this pool, checked, so this can't silently clobber a real
+ * `(from,to)` movement pair). **Verified safe pool-wide before adding this**
+ * (not assumed): simulated this exact normalization against every real
+ * `sink` array in every `cards/<slug>/synergy.json` and confirmed zero cases
+ * where it would merge two facts that weren't already byte-identical after
+ * normalization (no accidental collision between a `zone`-shaped fact and
+ * an unrelated `to`-shaped one that happen to share every other key).
  */
 function coreKey(fact, { normalizeSelfSubject = true } = {}) {
   const keys = ['event', 'to', 'from', 'zone', 'subject', 'target', 'face'];
@@ -335,6 +378,10 @@ function coreKey(fact, { normalizeSelfSubject = true } = {}) {
   if (reduced.event === 'dies' && (reduced.to === undefined || reduced.to === 'Graveyard') && (reduced.from === undefined || reduced.from === 'Battlefield')) {
     delete reduced.to;
     delete reduced.from;
+  }
+  if (reduced.zone !== undefined && reduced.to === undefined && reduced.from === undefined && reduced.event === undefined) {
+    reduced.to = reduced.zone;
+    delete reduced.zone;
   }
   return JSON.stringify(reduced, Object.keys(reduced).sort());
 }
@@ -500,15 +547,16 @@ function mergeDuplicateFacts(facts, slug) {
       continue;
     }
     // Survivor is the ORIGINAL hand-authored fact object (kept so any other
-    // untouched field/reference stays put), but its `value`/`annotations`/
-    // `provenance` are all taken from the donor — the donor's own fields ARE
+    // untouched field/reference stays put), but its `annotations`/
+    // `provenance` are taken from the donor — the donor's own fields ARE
     // the recognizer's freshly-computed output (it was appended fresh, on a
     // prior run, straight from a `RecognizedFact`), so this is the same
-    // "coreKey match replaces value/annotations, bare provenance" rule the
+    // "coreKey match replaces annotations, bare provenance" rule the
     // main retag loop below now uniformly applies, not a special case.
+    // (`value` was also replaced here before 2026-09-14; the field itself is
+    // gone from the schema now, nothing left to copy.)
     const survivor = unprovenanced[0];
     const donor = provenanced[0];
-    survivor.value = donor.value;
     survivor.annotations = donor.annotations;
     survivor.provenance = { origin: donor.provenance.origin, rule: donor.provenance.rule };
     merged.push(survivor);
@@ -909,26 +957,26 @@ async function main() {
           existingFact = candidates.find((f) => JSON.stringify(f.annotations) === factAnnotationsJSON);
         }
         if (existingFact) {
-          // `coreKey` matched — replace `value`/`annotations` with the
-          // recognizer's own freshly-computed ones and set a bare
-          // `provenance` (2026-09-14: no distinction anymore between "first
-          // time this recognizer produces this claim" and "re-confirming a
-          // fact that used to be hand-authored" — see this script's own
-          // header). A no-op (not counted as a retag, no write) when the
-          // existing fact already has this exact `value`/`annotations`/
-          // bare `provenance` — keeps this idempotent and keeps the run
-          // stats meaningful (a re-run reports 0 further retags).
-          const sameValue = existingFact.value === fact.value;
+          // `coreKey` matched — replace `annotations` with the recognizer's
+          // own freshly-computed ones and set a bare `provenance`
+          // (2026-09-14: no distinction anymore between "first time this
+          // recognizer produces this claim" and "re-confirming a fact that
+          // used to be hand-authored" — see this script's own header). A
+          // no-op (not counted as a retag, no write) when the existing fact
+          // already has this exact `annotations`/bare `provenance` — keeps
+          // this idempotent and keeps the run stats meaningful (a re-run
+          // reports 0 further retags). (`value` was also compared/replaced
+          // here before 2026-09-14; the field itself is gone from the
+          // schema now, nothing left to compare.)
           const sameAnnotations = JSON.stringify(existingFact.annotations) === JSON.stringify(fact.annotations);
           const sameProvenance =
             existingFact.provenance?.origin === fact.provenance.origin &&
             existingFact.provenance?.rule === fact.provenance.rule &&
             existingFact.provenance?.note === undefined;
-          if (sameValue && sameAnnotations && sameProvenance) {
+          if (sameAnnotations && sameProvenance) {
             factsAlreadyPresent++;
             continue;
           }
-          existingFact.value = fact.value;
           existingFact.annotations = fact.annotations;
           existingFact.provenance = { origin: fact.provenance.origin, rule: fact.provenance.rule };
           retaggedByRule[fact.provenance.rule] = (retaggedByRule[fact.provenance.rule] ?? 0) + 1;

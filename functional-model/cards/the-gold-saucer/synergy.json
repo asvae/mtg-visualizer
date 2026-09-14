@@ -5,16 +5,14 @@
       "event": "playLand",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(CR 305.1 — an ordinary land with no restriction on being played can always be played from hand as a special action, once per turn; not printed oracle text on this specific card, a base game rule)",
-      "value": 1
+      "sourceText": "(CR 305.1 — an ordinary land with no restriction on being played can always be played from hand as a special action, once per turn; not printed oracle text on this specific card, a base game rule)"
     },
     {
       "id": "battlefield-presence",
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — The Gold Saucer is itself a permanent on your battlefield once played; tautologically true by construction, same as the `played` fact above — no scenario/trace evidence needed, see verify-synergy.mjs's own isSelfBattlefieldPresenceLand)",
-      "value": 1
+      "sourceText": "(baseline — The Gold Saucer is itself a permanent on your battlefield once played; tautologically true by construction, same as the `played` fact above — no scenario/trace evidence needed, see verify-synergy.mjs's own isSelfBattlefieldPresenceLand)"
     },
     {
       "id": "mana",
@@ -22,16 +20,14 @@
       "controller": "you",
       "color": "C",
       "sourceText": "{T}: Add {C}.",
-      "highlight": "Add {C}",
-      "value": 1
+      "highlight": "Add {C}"
     },
     {
       "id": "coin-flip",
       "event": "coinFlip",
       "controller": "you",
       "sourceText": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.",
-      "highlight": "Flip a coin",
-      "value": 1
+      "highlight": "Flip a coin"
     },
     {
       "zone": "Battlefield",
@@ -40,8 +36,7 @@
         "token": "c_a_treasure_sac"
       },
       "sourceText": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.",
-      "highlight": "create a Treasure token",
-      "value": 1
+      "highlight": "create a Treasure token"
     },
     {
       "event": "entersBattlefield",
@@ -50,8 +45,7 @@
         "token": "c_a_treasure_sac"
       },
       "sourceText": "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token.",
-      "highlight": "create a Treasure token",
-      "value": 1
+      "highlight": "create a Treasure token"
     },
     {
       "event": "sacrifice",
@@ -62,8 +56,7 @@
         ]
       },
       "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
-      "highlight": "Sacrifice two artifacts",
-      "value": 1
+      "highlight": "Sacrifice two artifacts"
     },
     {
       "id": "draws-a-card",
@@ -71,7 +64,6 @@
       "controller": "you",
       "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
       "highlight": "Draw a card",
-      "value": 1,
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
@@ -96,8 +88,7 @@
         ]
       },
       "sourceText": "{3}, {T}, Sacrifice two artifacts: Draw a card.",
-      "highlight": "two artifacts",
-      "value": 1
+      "highlight": "two artifacts"
     }
   ]
 }

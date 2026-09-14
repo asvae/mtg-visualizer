@@ -3,8 +3,7 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     }
   ],
   "sink": []

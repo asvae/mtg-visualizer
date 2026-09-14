@@ -77,14 +77,13 @@ describe('putCounter-broadcast-structural — action-probe classification + verb
           controller: 'you',
           target: { types: { has: ['Creature', 'Legendary'] } },
           targeted: false,
-          value: 1,
           annotations: [{ target: 'oracle', line: 2, start: 31, end: 90 }],
         },
         provenance: { origin: 'parser', rule: 'putCounter-broadcast-structural' },
       },
       {
         role: 'sink',
-        fact: { to: 'Battlefield', controller: 'you', types: { has: ['Creature', 'Legendary'] }, value: 1, annotations: [{ target: 'oracle', line: 2, start: 31, end: 90 }] },
+        fact: { to: 'Battlefield', controller: 'you', types: { has: ['Creature', 'Legendary'] }, annotations: [{ target: 'oracle', line: 2, start: 31, end: 90 }] },
         provenance: { origin: 'parser', rule: 'putCounter-broadcast-structural' },
       },
     ]);
@@ -124,7 +123,6 @@ describe('putCounter-broadcast-structural — action-probe classification + verb
         controller: 'you',
         target: { types: { has: ['Creature'] } },
         targeted: false,
-        value: 1,
         annotations: [{ target: 'oracle', line: 1, start: 25, end: 79 }],
       },
       provenance: { origin: 'parser', rule: 'putCounter-broadcast-structural' },

@@ -3,8 +3,7 @@
     {
       "event": "putCounter",
       "counterType": "stun",
-      "target": "self",
-      "value": 1
+      "target": "self"
     }
   ],
   "sink": [
@@ -15,8 +14,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

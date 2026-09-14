@@ -2,14 +2,12 @@
   "source": [
     {
       "zone": "Battlefield",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -28,7 +26,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",

@@ -168,7 +168,6 @@ describe('Recognizer C (prototype) — token creation from Forge script', () => 
           to: 'Battlefield',
           controller: 'you',
           subject: { token: 'w_1_2_moogle_lifelink' },
-          value: -1,
           annotations: [{ target: 'oracle', line: 0, start: 31, end: 85 }],
         },
         provenance: { origin: 'parser', rule: 'token-creation-from-forge-script' },
@@ -262,7 +261,9 @@ describe('Recognizer C (prototype) — token creation from Forge script', () => 
     });
     expect(result.matched, `expected a match, got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact.value).toBe(-1); // never the Forge-literal "10"
+    // `Fact.value` (formerly asserted here as `-1`, "never the Forge-literal
+    // 10") was removed from the schema entirely, 2026-09-14 — nothing left
+    // to assert about a literal-count/magnitude field that no longer exists.
     const ann = result.facts[0]!.fact.annotations![0] as { target: string; line: number; start: number; end: number };
     const claimed = oracleText.split('\n')[ann.line]!.slice(ann.start, ann.end);
     // Clause starts at the word "create" itself (same convention every other

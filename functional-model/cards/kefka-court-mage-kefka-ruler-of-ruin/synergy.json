@@ -4,45 +4,38 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "opp",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "dies",
       "controller": "opp",
-      "value": 1,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "dies",
       "target": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -62,7 +55,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -81,7 +73,6 @@
     {
       "event": "lifeloss",
       "controller": "opp",
-      "value": 1,
       "face": "back"
     }
   ]

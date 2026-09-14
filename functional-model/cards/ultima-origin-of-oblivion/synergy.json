@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -28,7 +27,6 @@
         }
       },
       "targeted": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -36,7 +34,11 @@
           "start": 25,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     },
     {
       "event": "addMana",
@@ -46,7 +48,6 @@
         ]
       },
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -54,7 +55,11 @@
           "start": 33,
           "end": 54
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "addMana-effect-structural"
+      }
     },
     {
       "event": "entersBattlefield",
@@ -62,7 +67,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -84,15 +88,18 @@
           "Land"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
           "line": 1,
-          "start": 49,
+          "start": 25,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     },
     {
       "event": "addMana",
@@ -107,15 +114,34 @@
           "Land"
         ]
       },
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
           "line": 2,
-          "start": 13,
-          "end": 31
+          "start": 33,
+          "end": 54
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "addMana-effect-structural"
+      }
+    },
+    {
+      "event": "attacks",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 23
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "attacks-trigger-structural"
+      }
     }
   ]
 }

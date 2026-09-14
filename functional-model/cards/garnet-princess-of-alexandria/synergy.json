@@ -3,25 +3,17 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
-    },
-    {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5
+      "subject": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -40,7 +32,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -62,8 +53,23 @@
         "has": [
           "Saga"
         ]
-      },
-      "value": 1
+      }
+    },
+    {
+      "event": "attacks",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 23
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "attacks-trigger-structural"
+      }
     }
   ]
 }

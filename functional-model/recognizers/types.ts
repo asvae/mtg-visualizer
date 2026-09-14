@@ -67,7 +67,9 @@ export type RecognizerId =
   | 'lifegain-trigger-structural'
   | 'dealDamage-effect-structural'
   | 'putCounter-broadcast-structural'
-  | 'attacks-trigger-structural';
+  | 'attacks-trigger-structural'
+  | 'putCounterTarget-effect-structural'
+  | 'addMana-effect-structural';
 
 /**
  * `FactProvenance` itself is now DEFINED on `Fact` (`synergy.ts`, wired in

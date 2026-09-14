@@ -38,10 +38,11 @@
 // the real, established Fact shape for this event
 // (`{event:'damage', controller:'you', recipient:'opp', targeted:false}`,
 // confirmed against every one of the 5 cards above that already carry a
-// hand-authored version of it) carries no magnitude at all (`value` is a
-// separate, independently-computed weight — confirmed NOT to echo the
-// real printed amount even for literal cases, e.g. Black Waltz No. 3's own
-// hand-authored `value:4` despite its own real printed amount being `2`).
+// hand-authored version of it) carries no magnitude at all (`Fact.value`,
+// a separate, independently-computed weight, used to confirm this even for
+// literal cases — e.g. Black Waltz No. 3's own hand-authored `value:4`
+// despite its own real printed amount being `2` — before that field was
+// removed from the schema entirely, 2026-09-14).
 // Since amount plays no role in what this Fact actually CLAIMS, requiring
 // it to be a literal number before recognizing the effect at all would be
 // needless over-caution, not real conservatism — this is why Summon:
@@ -181,7 +182,7 @@ export function recognizeDealDamageEffectStructural(input: StructuralRecognizerI
 
     facts.push({
       role: 'source',
-      fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, value: 1, annotations: [annotation] },
+      fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, annotations: [annotation] },
       provenance: { origin: 'parser', rule: RULE },
     });
 
@@ -193,7 +194,7 @@ export function recognizeDealDamageEffectStructural(input: StructuralRecognizerI
         if (sink) {
           facts.push({
             role: 'sink',
-            fact: { ...sink, value: 1, annotations: [annotation] },
+            fact: { ...sink, annotations: [annotation] },
             provenance: { origin: 'parser', rule: RULE },
           });
         }

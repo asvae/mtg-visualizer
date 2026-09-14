@@ -4,34 +4,24 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
-      "value": 5,
       "face": "front"
-    },
-    {
-      "event": "lifegain",
-      "controller": "you",
-      "value": 5,
-      "face": "back"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -51,7 +41,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -72,7 +61,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -92,13 +80,11 @@
     {
       "event": "dies",
       "controller": "opp",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "dies",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -111,6 +97,23 @@
       "provenance": {
         "origin": "parser",
         "rule": "dies-trigger-structural"
+      }
+    },
+    {
+      "event": "attacks",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 34
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "attacks-trigger-structural"
       }
     }
   ]

@@ -32,7 +32,7 @@ describe('dealDamage-effect-structural — literal + Computed<number> `dealDamag
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, value: 1, annotations: [{ target: 'oracle', line: 1, start: expect.any(Number), end: expect.any(Number) }] },
+        fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, annotations: [{ target: 'oracle', line: 1, start: expect.any(Number), end: expect.any(Number) }] },
         provenance: { origin: 'parser', rule: 'dealDamage-effect-structural' },
       },
     ]);
@@ -73,12 +73,12 @@ describe('dealDamage-effect-structural — literal + Computed<number> `dealDamag
     const [sourceFact, sinkFact] = result.facts;
     expect(sourceFact).toEqual({
       role: 'source',
-      fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, value: 1, annotations: [{ target: 'oracle', line: 3, start: 32, end: 123 }] },
+      fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, annotations: [{ target: 'oracle', line: 3, start: 32, end: 123 }] },
       provenance: { origin: 'parser', rule: 'dealDamage-effect-structural' },
     });
     expect(sinkFact).toEqual({
       role: 'sink',
-      fact: { to: 'Battlefield', controller: 'you', value: 1, annotations: [{ target: 'oracle', line: 3, start: 32, end: 123 }] },
+      fact: { to: 'Battlefield', controller: 'you', annotations: [{ target: 'oracle', line: 3, start: 32, end: 123 }] },
       provenance: { origin: 'parser', rule: 'dealDamage-effect-structural' },
     });
     // Real byproduct check: the claimed span really does read the real

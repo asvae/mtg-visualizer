@@ -294,7 +294,6 @@ export function recognizeDrawCardEffectStructural(input: StructuralRecognizerInp
       fact: {
         event: 'drawCard',
         controller: 'you',
-        value: 1,
         annotations: [annotation],
       },
       provenance: { origin: 'parser', rule: RULE },

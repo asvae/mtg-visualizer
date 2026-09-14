@@ -2111,3 +2111,64 @@ worth remembering the pitfalls before re-deriving them:
     test card's Scope membership back to its original state after each
     check, and deleted the scratch verification script — no lasting data/
     state changes from this pass.
+
+- 2026-09-14, synergy edge weighting made uniform/binary — user decision:
+  `Fact.value`'s magnitude no longer drives share-ratio strength (a peer
+  session is removing `Fact.value` from the schema pool-wide/recognizer/
+  compute-weights.mjs on its own timeline; this was just my side —
+  `server/api/graph-links.ts`, which despite its `server/` path is UI's own
+  file per `.claude/agents/ui.md`). Changed `sourceShareRatio`/
+  `sinkShareRatio` computation from value-proportional (`theirValue /
+  sum(values)`) to plain uniform `1/N` (N = count of matches sharing that
+  source/sink fact key), replacing `sourceTotals`/`sinkTotals` from
+  value-sums to match-COUNTS and dropping `mineValue`/`theirValue`/
+  `factTotal` entirely from this file (no longer imported from
+  `functional-model/synergy`). Did NOT touch `Fact.value` in `app/types.ts`
+  or `factTotal` itself in `functional-model/synergy.ts` (engine's own
+  file, out of my lane) — only this one file's consumption of it.
+  - Design intent preserved deliberately, not just "set value=1 and leave
+    the math" (would've been wrong — division logic assumed values summing
+    to something meaningful): `reasonWeight()`'s doc comment in
+    `graphRenderer.ts` ("a fact matched by few concentrates its budget,
+    many spreads thin") still holds verbatim under 1/N, just driven by
+    match count instead of summed value — updated graph-links.ts's own
+    header comment to say so explicitly, left `graphRenderer.ts` itself
+    untouched (its doc comment already only ever talked about "share
+    ratios," never named `value` as the mechanism, so it wasn't stale).
+  - Checked for other `Fact.value`/`theirValue`/`mineValue`/`factTotal`
+    reads before assuming safe to touch: `server/api/card/[set]/[number].ts`
+    (card lane's own file, the per-card Interactions panel's "pick the
+    strongest match by theirTotal" logic) still reads it — untouched,
+    out of scope per the task's own explicit carve-out, and not a UI/graph
+    file anyway.
+  - Contracts checked: `.claude/contracts/api-contract.md`'s
+    `GET /api/graph-links` section never named `value` as the underlying
+    mechanism (just "raw share ratios... turns those into a number") — not
+    stale, left as-is. `.claude/contracts/card-schema.md` already recorded
+    (2026-09-14, engine's own prior entry) that `value` is "deprecated
+    pool-wide, not consulted by anything that actually matches/interacts
+    facts" — consistent with this change, no update needed there either;
+    that's engine's file to maintain regardless.
+  - Verified live: (1) a from-scratch Node script against the real
+    `/api/graph-links` payload confirmed EVERY one of 746 distinct
+    source-fact groups has all its member reasons' `sourceShareRatio`
+    exactly equal to `1/N` for that group's own real match count (0
+    mismatches) — e.g. a 1-match fact (Al Bhed Salvagers::lifeloss) got
+    ratio `1`, a 270-match fact (Jill, Shiva's Dominant::"moves to
+    battlefield (from exile)") got ratio `1/270`; (2) Playwright against
+    the live dev server confirmed the graph still renders (306 cards,
+    26321 rendered edge-segments, 0 console/page errors) and that the
+    documented few-vs-many-match visual gradient still holds under the new
+    math: reading each rendered `path.link`'s own bound datum and
+    recomputing `reasonWeight` client-side, the lowest-quality sample
+    (`sourceShareRatio≈0.0067`, a 149-way-shared "battlefield presence"
+    match) rendered at the documented opacity FLOOR (0.15), while the
+    highest-quality sample (`sourceShareRatio=1`, an unshared "mana
+    production" match) rendered near the ceiling (~0.8) — confirms "few
+    matches = strong pull, many matches = weak pull" survived the
+    value→uniform switch, just recomputed via count instead of magnitude.
+    `npm run typecheck` clean (same 2 pre-existing unrelated errors noted
+    elsewhere in this file — `functional-model/mana.ts`,
+    `server/api/tokens/by-key.ts`); `npx vitest run` — same pre-existing 5
+    failures (missing `tagging/sets/*` data in this sandbox), otherwise
+    green. No `qtyBoost`/deck-import multiplier logic touched.

@@ -30,7 +30,7 @@
 //     attacks," (White Mage's Staff, Il Mheg Pixie, Sage's Nouliths, Namazu
 //     Trader, Jumbo Cactuar, Summoner's Grimoire) — same self-subject shape,
 //     `il-mheg-pixie`'s own real hand-authored sink already carries the
-//     IDENTICAL `{event:'attacks', target:'self', value:1}` shape this
+//     IDENTICAL `{event:'attacks', target:'self'}` shape this
 //     recognizer produces, confirming this is real, established, checkable
 //     vocabulary, not a guess.
 //   - **`Whenever <self> enters or attacks,`** (Sephiroth, Fabled SOLDIER;
@@ -124,7 +124,7 @@ export function recognizeAttacksTriggerStructural(input: RecognizerInput): Recog
   const facts: RecognizedFact[] = [
     {
       role: 'sink',
-      fact: { event: 'attacks', target: 'self', value: 1, annotations: [annotation] },
+      fact: { event: 'attacks', target: 'self', annotations: [annotation] },
       provenance: { origin: 'parser', rule: RULE },
     },
   ];

@@ -3,36 +3,30 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "grantKeyword",
       "keyword": "DoubleStrike",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Battlefield",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "dies",
-      "target": "self",
-      "value": 1
+      "target": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -51,7 +45,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -68,16 +61,14 @@
   "sink": [
     {
       "zone": "Battlefield",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "cmc": {
         "max": 3
-      },
-      "value": 1
+      }
     }
   ]
 }

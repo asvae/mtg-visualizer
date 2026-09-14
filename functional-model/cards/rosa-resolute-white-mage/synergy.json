@@ -3,14 +3,12 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "putCounter",
@@ -23,7 +21,18 @@
           ]
         }
       },
-      "value": 1
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 41,
+          "end": 79
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -35,14 +44,12 @@
             "Creature"
           ]
         }
-      },
-      "value": 1
+      }
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -61,7 +68,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -84,7 +90,18 @@
           "Creature"
         ]
       },
-      "value": 1
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 41,
+          "end": 79
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     }
   ]
 }

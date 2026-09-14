@@ -24,7 +24,7 @@ function expectedFacts(annotations: { target: 'oracle'; line: number; start: num
   return [
     {
       role: 'sink',
-      fact: { event: 'dies', target: 'self', value: 1, annotations },
+      fact: { event: 'dies', target: 'self', annotations },
       provenance: { origin: 'parser', rule: 'dies-trigger-structural' },
     },
     {
@@ -36,7 +36,6 @@ function expectedFacts(annotations: { target: 'oracle'; line: number; start: num
         controller: 'you',
         subject: 'self',
         target: 'self',
-        value: 1,
         annotations,
       },
       provenance: { origin: 'parser', rule: 'dies-trigger-structural' },

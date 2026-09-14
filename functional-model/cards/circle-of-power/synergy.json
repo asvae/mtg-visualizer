@@ -2,34 +2,29 @@
   "source": [
     {
       "event": "lifeloss",
-      "controller": "you",
-      "value": 4
+      "controller": "you"
     },
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "b_0_1_wizard_snipe"
-      },
-      "value": 1
+      }
     },
     {
       "event": "grantKeyword",
       "keyword": "Lifelink",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -46,7 +41,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -62,7 +56,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -86,8 +79,7 @@
           "Creature",
           "Wizard"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

@@ -4,27 +4,23 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 5,
       "face": "front"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -44,7 +40,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -71,7 +66,6 @@
           "Land"
         ]
       },
-      "value": 1,
       "face": "front"
     }
   ]

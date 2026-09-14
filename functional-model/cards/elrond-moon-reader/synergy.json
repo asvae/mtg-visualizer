@@ -6,32 +6,28 @@
       "controller": "you",
       "sourceText": "Whenever you activate an ability of a creature, draw a card. This ability triggers only once each turn.",
       "highlight": "draw a card",
-      "oncePerTurn": true,
-      "value": 5
+      "oncePerTurn": true
     },
     {
       "id": "exile",
       "zone": "Exile",
       "controller": "you",
       "sourceText": "{5}{U}{U}: Exile up to two other target nonland permanents you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
-      "highlight": "Exile up to two other target nonland permanents",
-      "value": 2
+      "highlight": "Exile up to two other target nonland permanents"
     },
     {
       "id": "return-battlefield",
       "zone": "Battlefield",
       "controller": "you",
       "sourceText": "{5}{U}{U}: Exile up to two other target nonland permanents you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
-      "highlight": "Return those cards to the battlefield",
-      "value": 2
+      "highlight": "Return those cards to the battlefield"
     },
     {
       "id": "return-enters",
       "event": "entersBattlefield",
       "controller": "you",
       "sourceText": "{5}{U}{U}: Exile up to two other target nonland permanents you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
-      "highlight": "Return those cards to the battlefield",
-      "value": 2
+      "highlight": "Return those cards to the battlefield"
     }
   ],
   "sink": [
@@ -48,8 +44,7 @@
       },
       "sourceText": "Whenever you activate an ability of a creature, draw a card. This ability triggers only once each turn.",
       "highlight": "activate an ability",
-      "oncePerTurn": true,
-      "value": 3
+      "oncePerTurn": true
     },
     {
       "id": "nonland-permanents",
@@ -61,8 +56,7 @@
         ]
       },
       "sourceText": "{5}{U}{U}: Exile up to two other target nonland permanents you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
-      "highlight": "nonland permanents",
-      "value": 4
+      "highlight": "nonland permanents"
     }
   ]
 }

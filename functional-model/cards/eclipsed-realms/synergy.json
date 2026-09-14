@@ -4,8 +4,7 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — Eclipsed Realms is itself a permanent on your battlefield, no special ability text)",
-      "value": 1
+      "sourceText": "(baseline — Eclipsed Realms is itself a permanent on your battlefield, no special ability text)"
     }
   ],
   "sink": []

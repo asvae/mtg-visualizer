@@ -8,9 +8,9 @@
 // `ahriman`, `dwarven-castle-guard`, `cloudbound-moogle`, `ice-flan`,
 // `adelbert-steiner`, `astrologian-s-planisphere`, `cargo-ship`, `summon-
 // bahamut`):
-//   - `{ event: 'cast', from: 'Hand', target: 'self', value: 1 }`
+//   - `{ event: 'cast', from: 'Hand', target: 'self' }`
 //   - `{ event: 'entersBattlefield', to: 'Battlefield', controller: 'you',
-//      subject: 'self', target: 'self', value: 1 }`
+//      subject: 'self', target: 'self' }`
 // `value: 1` chosen directly (not the `-1` placeholder), same rationale as
 // the instant/sorcery recognizer's own doc comment — `compute-weights.mjs`'s
 // `sourceMagnitude` gives a bare zone fact with no token subject a flat
@@ -166,7 +166,7 @@ export function recognizePermanentEntersBattlefieldNormally(input: RecognizerInp
   const facts: RecognizedFact[] = [
     {
       role: 'source',
-      fact: { event: 'cast', from: 'Hand', target: 'self', value: 1, annotations: [...annotations] },
+      fact: { event: 'cast', from: 'Hand', target: 'self', annotations: [...annotations] },
       provenance: { origin: 'parser', rule: RULE },
     },
     {
@@ -177,7 +177,6 @@ export function recognizePermanentEntersBattlefieldNormally(input: RecognizerInp
         controller: 'you',
         subject: 'self',
         target: 'self',
-        value: 1,
         annotations: [...annotations],
       },
       provenance: { origin: 'parser', rule: RULE },

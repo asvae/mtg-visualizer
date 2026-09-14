@@ -4,38 +4,32 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "face": "front"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "dies",
       "controller": "you",
-      "value": 5,
       "face": "front"
     },
     {
       "event": "lifegain",
       "controller": "you",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "lifeloss",
       "controller": "opp",
-      "value": 1,
       "face": "front"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -55,7 +49,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -72,7 +65,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -91,7 +83,6 @@
   "sink": [
     {
       "event": "dies",
-      "value": 1,
       "face": "front"
     },
     {
@@ -102,8 +93,24 @@
           "Creature"
         ]
       },
-      "value": 1,
       "face": "front"
+    },
+    {
+      "event": "attacks",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 26
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "attacks-trigger-structural"
+      }
     }
   ]
 }

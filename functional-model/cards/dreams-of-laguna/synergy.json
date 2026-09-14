@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -21,7 +20,6 @@
       "to": "Graveyard",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -38,7 +36,6 @@
       "event": "cast",
       "from": "Graveyard",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -52,7 +49,6 @@
       "to": "Exile",
       "controller": "you",
       "subject": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -65,7 +61,6 @@
     {
       "event": "surveil",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -78,7 +73,6 @@
     {
       "event": "drawCard",
       "controller": "you",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",

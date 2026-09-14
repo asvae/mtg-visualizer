@@ -2,36 +2,30 @@
   "source": [
     {
       "zone": "Exile",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
+    },
+    {
+      "zone": "Graveyard",
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "value": 1
-    },
-    {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "dies",
-      "target": "self",
-      "value": 4
+      "target": "self"
     },
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -50,7 +44,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -74,8 +67,7 @@
           "Artifact"
         ]
       },
-      "excludeSelf": true,
-      "value": 1
+      "excludeSelf": true
     }
   ]
 }

@@ -2,26 +2,22 @@
   "source": [
     {
       "zone": "Graveyard",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Hand",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     }
   ],
   "sink": [
     {
       "zone": "Graveyard",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     }
   ]
 }

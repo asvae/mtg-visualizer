@@ -2,19 +2,16 @@
   "source": [
     {
       "zone": "Graveyard",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "event": "dies",
-      "controller": "opp",
-      "value": 1
+      "controller": "opp"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -33,7 +30,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -55,8 +51,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     },
     {
       "zone": "Battlefield",
@@ -65,8 +60,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

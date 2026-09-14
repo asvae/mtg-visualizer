@@ -4,14 +4,12 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — Craterhoof Behemoth is itself a permanent on your battlefield)",
-      "value": 1
+      "sourceText": "(baseline — Craterhoof Behemoth is itself a permanent on your battlefield)"
     },
     {
       "event": "grantKeyword",
       "controller": "you",
-      "sourceText": "When this creature enters, creatures you control gain trample and get +X/+X until end of turn.",
-      "value": 1
+      "sourceText": "When this creature enters, creatures you control gain trample and get +X/+X until end of turn."
     }
   ],
   "sink": [
@@ -23,8 +21,7 @@
           "Creature"
         ]
       },
-      "sourceText": "Creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control (needs creatures to affect and to size X).",
-      "value": 1
+      "sourceText": "Creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control (needs creatures to affect and to size X)."
     }
   ]
 }

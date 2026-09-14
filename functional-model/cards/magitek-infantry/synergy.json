@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -23,7 +22,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -39,7 +37,6 @@
     {
       "event": "pump",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -58,7 +55,6 @@
         "eq": "Magitek Infantry"
       },
       "tapped": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -82,7 +78,6 @@
         "min": 1
       },
       "excludeSelf": true,
-      "value": 1,
       "annotations": [
         {
           "target": "oracle",
@@ -98,7 +93,6 @@
       "name": {
         "eq": "Magitek Infantry"
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

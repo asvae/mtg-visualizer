@@ -3,45 +3,38 @@
     {
       "zone": "Battlefield",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_a_treasure_sac"
-      },
-      "value": 1
+      }
     },
     {
       "event": "grantKeyword",
       "keyword": "Lifelink",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "event": "grantKeyword",
       "keyword": "Haste",
-      "controller": "you",
-      "value": 1
+      "controller": "you"
     },
     {
       "zone": "Graveyard",
       "controller": "you",
-      "subject": "self",
-      "value": 1
+      "subject": "self"
     },
     {
       "event": "dies",
-      "target": "self",
-      "value": 1
+      "target": "self"
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -60,7 +53,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -82,8 +74,7 @@
         "has": [
           "Creature"
         ]
-      },
-      "value": 1
+      }
     }
   ]
 }

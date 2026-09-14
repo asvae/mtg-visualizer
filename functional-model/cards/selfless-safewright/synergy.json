@@ -4,8 +4,7 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self",
-      "sourceText": "(baseline — Selfless Safewright is itself a permanent on your battlefield)",
-      "value": 1
+      "sourceText": "(baseline — Selfless Safewright is itself a permanent on your battlefield)"
     }
   ],
   "sink": []

@@ -4,7 +4,6 @@
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -22,7 +21,6 @@
       "to": "Battlefield",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -43,20 +41,22 @@
           "C"
         ]
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
           "line": 1,
-          "start": 0,
-          "end": 13
+          "start": 5,
+          "end": 12
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "addMana-effect-structural"
+      }
     },
     {
       "event": "crew",
       "target": "self",
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -71,7 +71,6 @@
       "type": "Creature",
       "target": "self",
       "untilEndOfTurn": true,
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",
@@ -91,7 +90,6 @@
           "Creature"
         ]
       },
-      "value": -1,
       "annotations": [
         {
           "target": "oracle",

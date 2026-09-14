@@ -2,22 +2,19 @@
   "source": [
     {
       "event": "lifeloss",
-      "controller": "you",
-      "value": 5
+      "controller": "you"
     },
     {
       "zone": "Battlefield",
       "controller": "you",
       "subject": {
         "token": "c_a_treasure_sac"
-      },
-      "value": 5
+      }
     },
     {
       "event": "cast",
       "from": "Hand",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",
@@ -36,7 +33,6 @@
       "controller": "you",
       "subject": "self",
       "target": "self",
-      "value": 1,
       "annotations": [
         {
           "target": "typeLine",

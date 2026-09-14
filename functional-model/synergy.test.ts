@@ -49,14 +49,14 @@ function poolCard(card: CardDefinition, source: Omit<Fact, 'role'>[], sink: Omit
 
 const dualLand = poolCard(
   land('Vector, Imperial Capital'),
-  [{ event: 'addMana', controller: 'you', colors: { hasAny: ['B', 'R'] }, value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+  [{ event: 'addMana', controller: 'you', colors: { hasAny: ['B', 'R'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
   [],
 );
 
 describe('EventFact.colors — produce vs. want matching', () => {
   it('a want for one of the produced colors (hasAny) matches', () => {
     const wantsRed = poolCard(land('Wants Red'), [], [
-      { event: 'addMana', controller: 'you', colors: { has: ['R'] }, value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'addMana', controller: 'you', colors: { has: ['R'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
     ]);
     const groups = findInteractionsForCard('Vector, Imperial Capital', [dualLand, wantsRed]);
     const manaGroup = groups.find((g) => g.direction === 'source' && (g.fact as EventFact).event === 'addMana');
@@ -65,7 +65,7 @@ describe('EventFact.colors — produce vs. want matching', () => {
 
   it('a want for a color NOT in the produced set does not match', () => {
     const wantsGreen = poolCard(land('Wants Green'), [], [
-      { event: 'addMana', controller: 'you', colors: { has: ['G'] }, value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'addMana', controller: 'you', colors: { has: ['G'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
     ]);
     const groups = findInteractionsForCard('Vector, Imperial Capital', [dualLand, wantsGreen]);
     const manaGroup = groups.find((g) => g.direction === 'source' && (g.fact as EventFact).event === 'addMana');
@@ -74,7 +74,7 @@ describe('EventFact.colors — produce vs. want matching', () => {
 
   it('a want using hasAny (any of several acceptable colors) matches if the produced set overlaps', () => {
     const wantsWhiteOrBlack = poolCard(land('Wants White or Black'), [], [
-      { event: 'addMana', controller: 'you', colors: { hasAny: ['W', 'B'] }, value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'addMana', controller: 'you', colors: { hasAny: ['W', 'B'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
     ]);
     const groups = findInteractionsForCard('Vector, Imperial Capital', [dualLand, wantsWhiteOrBlack]);
     const manaGroup = groups.find((g) => g.direction === 'source' && (g.fact as EventFact).event === 'addMana');
@@ -83,7 +83,7 @@ describe('EventFact.colors — produce vs. want matching', () => {
 
   it('a want using not (excludes a color) fails to match a produce that makes it', () => {
     const wantsNonBlack = poolCard(land('Wants Non-Black'), [], [
-      { event: 'addMana', controller: 'you', colors: { not: ['B'] }, value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'addMana', controller: 'you', colors: { not: ['B'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
     ]);
     const groups = findInteractionsForCard('Vector, Imperial Capital', [dualLand, wantsNonBlack]);
     const manaGroup = groups.find((g) => g.direction === 'source' && (g.fact as EventFact).event === 'addMana');
@@ -92,10 +92,10 @@ describe('EventFact.colors — produce vs. want matching', () => {
 
   it('a legacy single-color `color` produce still matches a new `colors`-shaped want (backward compat)', () => {
     const singleGreen = poolCard(land('Single Green Source'), [
-      { event: 'addMana', controller: 'you', color: 'G', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'addMana', controller: 'you', color: 'G', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
     ], []);
     const wantsGreen = poolCard(land('Wants Green Via New Shape'), [], [
-      { event: 'addMana', controller: 'you', colors: { has: ['G'] }, value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'addMana', controller: 'you', colors: { has: ['G'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
     ]);
     const groups = findInteractionsForCard('Single Green Source', [singleGreen, wantsGreen]);
     const manaGroup = groups.find((g) => g.direction === 'source' && (g.fact as EventFact).event === 'addMana');
@@ -211,8 +211,8 @@ describe('describeFact — zone facts', () => {
 
 describe('factsInteract — SOURCE zone-change facts match a SINK presence want on `to` alone, ignoring `from` (2026-09-11 rework — the explicit design goal: "cares about things put into a graveyard, regardless of where they came from")', () => {
   it('a `to: "Graveyard"` produce (with a real `from: "Battlefield"`) matches a bare Graveyard-presence sink want', () => {
-    const dier = poolCard(land('Dies A Lot'), [{ from: 'Battlefield', to: 'Graveyard', controller: 'you', subject: 'self', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>], []);
-    const wantsGraveyard = poolCard(land('Wants Graveyard'), [], [{ zone: 'Graveyard', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const dier = poolCard(land('Dies A Lot'), [{ from: 'Battlefield', to: 'Graveyard', controller: 'you', subject: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>], []);
+    const wantsGraveyard = poolCard(land('Wants Graveyard'), [], [{ zone: 'Graveyard', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
     const groups = findInteractionsForCard('Dies A Lot', [dier, wantsGraveyard]);
     const zoneGroup = groups.find((g) => g.direction === 'source');
     expect(zoneGroup?.matches.map((m) => m.card)).toContain('Wants Graveyard');
@@ -220,16 +220,16 @@ describe('factsInteract — SOURCE zone-change facts match a SINK presence want 
   });
 
   it('a `to: "Battlefield"` produce with NO `from` at all still matches a bare Battlefield-presence sink want (any origin)', () => {
-    const enterer = poolCard(land('Enters A Lot'), [{ to: 'Battlefield', controller: 'you', subject: 'self', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>], []);
-    const wantsBattlefield = poolCard(land('Wants Battlefield'), [], [{ zone: 'Battlefield', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const enterer = poolCard(land('Enters A Lot'), [{ to: 'Battlefield', controller: 'you', subject: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>], []);
+    const wantsBattlefield = poolCard(land('Wants Battlefield'), [], [{ zone: 'Battlefield', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
     const groups = findInteractionsForCard('Enters A Lot', [enterer, wantsBattlefield]);
     const zoneGroup = groups.find((g) => g.direction === 'source');
     expect(zoneGroup?.matches.map((m) => m.card)).toContain('Wants Battlefield');
   });
 
   it('a `to`-shaped produce does NOT match a differently-zoned sink want', () => {
-    const dier = poolCard(land('Dies A Lot 2'), [{ from: 'Battlefield', to: 'Graveyard', controller: 'you', subject: 'self', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>], []);
-    const wantsBattlefield = poolCard(land('Wants Battlefield 2'), [], [{ zone: 'Battlefield', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const dier = poolCard(land('Dies A Lot 2'), [{ from: 'Battlefield', to: 'Graveyard', controller: 'you', subject: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>], []);
+    const wantsBattlefield = poolCard(land('Wants Battlefield 2'), [], [{ zone: 'Battlefield', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
     const groups = findInteractionsForCard('Dies A Lot 2', [dier, wantsBattlefield]);
     const zoneGroup = groups.find((g) => g.direction === 'source');
     expect(zoneGroup).toBeUndefined();
@@ -244,8 +244,8 @@ describe('selfInteractionKind — a merged zone+event fact self-matches via its 
   it('a merged `{event:\'entersBattlefield\', to:\'Battlefield\'}` produce self-matching its OWN zone-shaped Battlefield-presence want is `second-copy-legendary`, not `same-instance`', () => {
     const card = poolCard(
       legendaryCreature('Self Enters Legend'),
-      [{ event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: 'self', target: 'self', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<Fact, 'role'>],
-      [{ zone: 'Battlefield', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>],
+      [{ event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: 'self', target: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<Fact, 'role'>],
+      [{ zone: 'Battlefield', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>],
     );
     const groups = findInteractionsForCard('Self Enters Legend', [card]);
     const zoneGroup = groups.find((g) => g.direction === 'source');
@@ -256,13 +256,82 @@ describe('selfInteractionKind — a merged zone+event fact self-matches via its 
   it('a pure event-only produce (no zone data) self-matching its own event-shaped want is still `same-instance` (unaffected by the fix)', () => {
     const card = poolCard(
       land('Self Lifegain'),
-      [{ event: 'lifegain', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
-      [{ event: 'lifegain', controller: 'you', value: 1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
     );
     const groups = findInteractionsForCard('Self Lifegain', [card]);
     const eventGroup = groups.find((g) => g.direction === 'source');
     const selfMatch = eventGroup?.matches.find((m) => m.card === 'Self Lifegain');
     expect(selfMatch?.selfInteraction).toBe('same-instance');
+  });
+});
+
+describe('printed Lifelink implicitly counts as a real lifegain SOURCE (2026-09-14 — replaces the old hand-authored, redundant `{event:\'lifegain\'}` fact 11 real pool cards used to carry for this exact reason, see synergy.ts\'s own `hasPrintedLifelink`/`syntheticLifelinkFact` doc comments)', () => {
+  function lifelinkCreature(name: string): CardDefinition {
+    return { name, manaCost: '', typeLine: 'Creature — Test Testperson', keywords: ['Lifelink'] };
+  }
+
+  it('a card with printed Lifelink and NO declared lifegain fact still matches a real lifegain-wanting SINK on another card', () => {
+    const lifelinker = poolCard(lifelinkCreature('Bare Lifelinker'), [], []);
+    const payoff = poolCard(land('Lifegain Payoff'), [], [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const pool = [lifelinker, payoff];
+
+    // From the PAYOFF's own perspective (its sink finds the Lifelink producer)...
+    const payoffGroups = findInteractionsForCard('Lifegain Payoff', pool);
+    const sinkGroup = payoffGroups.find((g) => g.direction === 'sink');
+    expect(sinkGroup?.matches.map((m) => m.card)).toContain('Bare Lifelinker');
+
+    // ...AND from the LIFELINKER's own perspective (its implicit produce finds the payoff) —
+    // this is the direction `server/api/graph-links.ts` actually walks for real graph edges
+    // (only `direction === 'source'` groups, keyed off the PRODUCER's own name).
+    const lifelinkerGroups = findInteractionsForCard('Bare Lifelinker', pool);
+    const sourceGroup = lifelinkerGroups.find((g) => g.direction === 'source');
+    expect(sourceGroup?.matches.map((m) => m.card)).toContain('Lifegain Payoff');
+  });
+
+  it('a card with a genuinely SEPARATE, real lifegain ability (no Lifelink at all) is unaffected — still matches normally off its own real fact, not the synthetic one', () => {
+    const genuineGainer = poolCard(
+      land('Genuine Gainer'),
+      [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [],
+    );
+    const payoff = poolCard(land('Lifegain Payoff 2'), [], [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('Genuine Gainer', [genuineGainer, payoff]);
+    const sourceGroup = groups.find((g) => g.direction === 'source');
+    expect(sourceGroup?.fact.annotations).toEqual(FIXTURE_ANNOTATIONS); // the REAL declared fact, not a synthetic one
+    expect(sourceGroup?.matches.map((m) => m.card)).toContain('Lifegain Payoff 2');
+  });
+
+  it('a card printing Lifelink that ALSO already declares its own real lifegain fact is never double-counted — exactly one produce group, not two', () => {
+    const both = poolCard(
+      lifelinkCreature('Lifelink Plus Real Fact'),
+      [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [],
+    );
+    const payoff = poolCard(land('Lifegain Payoff 5'), [], [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('Lifelink Plus Real Fact', [both, payoff]);
+    expect(groups.filter((g) => g.direction === 'source' && g.fact.event === 'lifegain')).toHaveLength(1);
+  });
+
+  it('a card with NO printed Lifelink and no lifegain fact never gets a synthetic produce group', () => {
+    const bystander = poolCard(land('No Lifelink Here'), [], []);
+    const payoff = poolCard(land('Lifegain Payoff 3'), [], [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('No Lifelink Here', [bystander, payoff]);
+    expect(groups.find((g) => g.direction === 'source' && g.fact.event === 'lifegain')).toBeUndefined();
+  });
+
+  it('printed Lifelink on the BACK face alone (a transforming card) still counts — `face` is a rendering hint only, never consulted by the matcher', () => {
+    const backFaceLifelinker: CardDefinition = {
+      name: 'Front Face',
+      manaCost: '',
+      typeLine: 'Creature — Test Testperson',
+      backFace: { name: 'Back Face', manaCost: '', typeLine: 'Creature — Test Testperson', keywords: ['Lifelink'] },
+    };
+    const lifelinker = poolCard(backFaceLifelinker, [], []);
+    const payoff = poolCard(land('Lifegain Payoff 4'), [], [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('Front Face', [lifelinker, payoff]);
+    const sourceGroup = groups.find((g) => g.direction === 'source' && g.fact.event === 'lifegain');
+    expect(sourceGroup?.matches.map((m) => m.card)).toContain('Lifegain Payoff 4');
   });
 });
 
@@ -346,7 +415,7 @@ describe('describeFact — named event branches', () => {
     // Matching stays pure `event` string equality — a `targeted:false` want
     // still matches a `targeted:true` produce of the SAME event, since
     // `targeted` is never compared by `factsInteract`.
-    const producer = poolCard(land('Targeted Producer'), [{ event: 'destroy', targeted: true, value: -1, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>], []);
+    const producer = poolCard(land('Targeted Producer'), [{ event: 'destroy', targeted: true, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>], []);
     const consumer = poolCard(land('Broadcast Consumer'), [], [{ event: 'destroy', targeted: false, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
     const groups = findInteractionsForCard('Targeted Producer', [producer, consumer]);
     const group = groups.find((g) => g.direction === 'source');

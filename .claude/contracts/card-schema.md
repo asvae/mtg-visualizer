@@ -90,8 +90,10 @@ under `app/`/`server/` and have been deleted outright from `synergy.ts`.
   `functionalModel.synergy` facts must NOT contain `sourceText`/`highlight`
   once `card` agent's own serving layer is updated to match (see the
   action items below) — only `annotations` + the real semantic fields
-  (`role`, `event`/`zone`/`to`/`from`, `value`, `controller`, `subject`,
-  `face`, constraints).
+  (`role`, `event`/`zone`/`to`/`from`, `controller`, `subject`,
+  `face`, constraints). **`value` is no longer one of them — see its own
+  dated entry near the end of this file (2026-09-14): removed from the
+  `Fact` type entirely, not merely deprecated.**
 - **New `EventFact.zoneFrom`/`.zoneTo` fields** (2026-09-11, later same
   day; extended twice more the same day) — purely descriptive, spelling
   out the real zone movement a bare event tag otherwise leaves implicit.
@@ -444,6 +446,80 @@ hand-authored facts (unmarked, as always) and parser-derived facts —
     never previously reachable; now that a merged fact can carry more than
     one, `card` may want `factSourceText` to represent all of them (e.g.
     joined text, or the row's own key not silently ignoring later entries).
+
+## `Fact.value` removed from the schema entirely (2026-09-14)
+
+Not a further step in the "deprecated pool-wide" status this field already
+had (this file previously already said `value` was "not consulted by
+anything that actually matches/interacts facts") — a hard, explicit user
+instruction to wipe it out of the project completely: "let's remove value
+from everything (edges, facts, etc). No -1, no nothing."
+
+- `Fact.value`/`Weight`/`factTotal()`/`InteractionMatch.theirTotal`
+  (`functional-model/synergy.ts`) are all gone. A served `Fact` (both the
+  raw `synergy.json` source/sink arrays AND `InteractionGroup.fact`) never
+  carries a `value` key anymore — confirmed via a pool-wide grep, zero
+  remaining `"value"` keys under any fact object in any
+  `cards/<slug>/synergy.json`.
+- `functional-model/scripts/compute-weights.mjs` (whose entire job was
+  computing/writing this field) is deleted outright, not gutted-and-kept.
+- Every recognizer in `functional-model/recognizers/` stopped emitting
+  `value` on facts it produces; `apply-recognizers.mjs`'s dedup/retag logic
+  (which already excluded `value` from its `coreKey` identity comparison)
+  no longer reads or writes `.value` anywhere.
+- `theirTotal`'s only real consumer, `server/api/card/[set]/[number].ts`'s
+  own `dedupMatchesByCard`, now keeps the FIRST-encountered duplicate match
+  per card instead of the highest-`theirTotal` one when collapsing
+  per-fact matches down to one gallery entry per related card — a benign,
+  arbitrary-tiebreak change (`theirTotal` was never part of the served
+  payload either way, so nothing client-visible changes). `card` agent:
+  if a future pass wants a MORE meaningful tiebreak than "first
+  encountered," that's a fresh design decision, not a restoration of the
+  old `value`-based one.
+- **`card`-owned UI cleanup done directly by `engine` this same pass** (small,
+  mechanical, forced by the type removal — flagged here rather than done
+  silently): `app/components/ValueBar.vue` deleted (its only two call
+  sites — `app/components/FunctionalModelText.vue`'s hover tooltip and
+  `app/pages/app/card/[set]/[number].vue`'s Facts-table column — were both
+  already display-disabled or about to become dead code); the Facts-table's
+  `SHOW_FACT_VALUE_COLUMN` flag, its `<td>`, and the value-aware `colspan`
+  branch are gone too, not just toggled off.
+- **New (2026-09-14): printed Lifelink is no longer a hand-authored
+  `Fact` at all.** 11 real pool cards used to carry an explicit
+  `{event:'lifegain', controller:'you'}` SOURCE fact whose entire basis was
+  a literal restatement of the card's own printed Lifelink keyword (no
+  separate lifegain ability text) — dropped pool-wide. Real synergy-
+  matching coverage doesn't regress: `synergy.ts`'s `findInteractionsForCard`
+  now synthesizes the equivalent fact at MATCH TIME (`hasPrintedLifelink`/
+  `syntheticLifelinkFact`) for any card with printed Lifelink (front or
+  back face) that doesn't already declare a real one of its own (Battle
+  Menu's own genuinely separate "Item — you gain 4 life" mode is
+  unaffected, still its own real declared fact). This synthetic fact is
+  NEVER written to any `synergy.json` and deliberately has NO
+  `annotations` (there's no authored oracle-text span to point at — the
+  keyword itself is the anchor, and `synergy.ts` has no access to a card's
+  real Scryfall oracle text to compute one) — safe because nothing in
+  `factsInteract`/`themeOf`/`describeFact` dereferences `annotations` for
+  a bare event fact like this, and nothing in served UI renders an
+  `InteractionGroup.fact`'s `annotations` as visible text (only
+  `group.description`, itself a `describeFact()` string, and
+  `group.matches` are ever shown — checked directly against
+  `app/pages/app/card/[set]/[number].vue`). **Known, deliberate
+  consequence**: these 11 cards' own Facts tab (fed from raw `synergy.json`,
+  NOT from this synthesized-at-match-time path) no longer shows a
+  "lifegain" row at all — intended, not a regression: the point was
+  removing the redundant row, and the printed "Lifelink" keyword is still
+  visible elsewhere on the card display.
+- **Confirmed discrepancy, flagged, NOT silently resolved**: the task that
+  drove this removal named `cecil-dark-knight-cecil-redeemed-paladin` as
+  one of 5 "genuine, no Lifelink keyword at all" cards to leave untouched —
+  but its own `definition.ts` `backFace` (`Cecil, Redeemed Paladin`)
+  DOES declare `keywords: ['Lifelink']`, with no other lifegain-producing
+  ability anywhere on that face. Its `{event:'lifegain', ..., face:'back'}`
+  fact is, on inspection, the exact same redundant-restatement shape as the
+  11 that WERE dropped. Left untouched per the explicit literal instruction
+  ("do NOT touch these 5"), not auto-corrected — a human should decide
+  whether to fold it into the same removal in a follow-up.
 
 - `card` agent must not assume anything about `Effect` kinds or
   `resolveCard()` internals beyond what's in `synergy.json`/`trace.json` —
