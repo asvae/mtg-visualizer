@@ -1,11 +1,12 @@
 import type { CardDefinition, Effect } from '../../card';
+import { flashback } from '../../flashback';
 
 export const gysahlGreens: CardDefinition = {
   name: 'Gysahl Greens',
   manaCost: '{1}{G}',
   typeLine: 'Sorcery',
 
-  alternateCosts: [{ name: 'Flashback', cost: '{6}{G}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{6}{G}')],
 
   effects: [
     // Real TokenScript$ g_2_2_bird_landfall — not in the shared tokens.ts

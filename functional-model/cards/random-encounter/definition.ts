@@ -1,11 +1,12 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { flashback } from '../../flashback';
 
 export const randomEncounter: CardDefinition = {
   name: 'Random Encounter',
   manaCost: '{4}{R}{R}',
   typeLine: 'Sorcery',
 
-  alternateCosts: [{ name: 'Flashback', cost: '{6}{R}{R}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{6}{R}{R}')],
 
   effects: [
     {

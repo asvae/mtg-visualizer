@@ -11,7 +11,11 @@
           "start": 8,
           "end": 11
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     },
     {
       "event": "exile",

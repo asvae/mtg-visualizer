@@ -16,10 +16,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 18,
-          "end": 85
+          "start": 25,
+          "end": 65
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "event": "tap",
@@ -33,7 +37,11 @@
           "start": 11,
           "end": 14
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     },
     {
       "to": "Exile",
@@ -193,10 +201,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 18,
-          "end": 85
+          "start": 25,
+          "end": 65
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -232,6 +244,23 @@
           "end": 54
         }
       ]
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 16
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

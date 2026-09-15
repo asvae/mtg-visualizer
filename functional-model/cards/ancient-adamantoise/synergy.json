@@ -36,6 +36,26 @@
         "origin": "parser",
         "rule": "dies-trigger-structural"
       }
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_treasure_sac"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 38,
+          "end": 71
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     }
   ],
   "sink": [

@@ -18,7 +18,7 @@
         "fn": "cast",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
-        "id": 1815,
+        "id": 4,
         "from": "hand",
         "cost": "{2}{G}"
       },
@@ -55,7 +55,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1813,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -64,7 +64,7 @@
         "fn": "move",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
-        "id": 1815,
+        "id": 4,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -90,7 +90,7 @@
         "fn": "cast",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
-        "id": 1818,
+        "id": 7,
         "from": "hand",
         "cost": "{2}{G}"
       },
@@ -123,7 +123,7 @@
         "fn": "move",
         "card": "Prishe's Wanderings",
         "instanceId": 1,
-        "id": 1818,
+        "id": 7,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

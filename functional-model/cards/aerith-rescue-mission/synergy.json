@@ -14,7 +14,11 @@
           "start": 22,
           "end": 69
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -34,7 +38,11 @@
           "start": 64,
           "end": 97
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "selectUpTo-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -52,7 +60,11 @@
           "start": 30,
           "end": 62
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "selectUpTo-effect-structural"
+      }
     }
   ]
 }

@@ -22,7 +22,7 @@
         "fn": "trigger",
         "card": "Hope Estheim",
         "instanceId": 1,
-        "id": 1174,
+        "id": 8,
         "name": "onEndStep"
       },
       {
@@ -57,7 +57,7 @@
         "fn": "trigger",
         "card": "Hope Estheim",
         "instanceId": 1,
-        "id": 1182,
+        "id": 16,
         "name": "onEndStep"
       },
       {
@@ -86,7 +86,7 @@
         "fn": "cast",
         "card": "Hope Estheim",
         "instanceId": 1,
-        "id": 1184,
+        "id": 18,
         "from": "hand",
         "cost": "{W}{U}"
       },
@@ -94,13 +94,13 @@
         "fn": "enters",
         "card": "Hope Estheim",
         "instanceId": 1,
-        "id": 1184,
+        "id": 18,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Hope Estheim",
-        "sourceId": 1184,
+        "sourceId": 18,
         "target": "opp0",
         "amount": 3
       },
@@ -127,7 +127,7 @@
         "fn": "cast",
         "card": "Hope Estheim",
         "instanceId": 1,
-        "id": 1187,
+        "id": 21,
         "from": "hand",
         "cost": "{W}{U}"
       },
@@ -135,7 +135,7 @@
         "fn": "enters",
         "card": "Hope Estheim",
         "instanceId": 1,
-        "id": 1187,
+        "id": 21,
         "zone": "Battlefield"
       },
       {

@@ -3,6 +3,23 @@
     {
       "zone": "Battlefield",
       "controller": "you"
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 3
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     }
   ],
   "sink": []

@@ -57,9 +57,13 @@
           "target": "oracle",
           "line": 1,
           "start": 43,
-          "end": 115
+          "end": 81
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -91,7 +95,11 @@
           "start": 24,
           "end": 41
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discardSelfCost-structural"
+      }
     },
     {
       "to": "Library",
@@ -108,7 +116,11 @@
           "start": 43,
           "end": 81
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
+      }
     }
   ]
 }

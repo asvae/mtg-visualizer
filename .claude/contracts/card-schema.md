@@ -24,7 +24,50 @@ contract.
   `findInteractionsForCard`, source/sink facts.
 - `trace.json` — `TraceResult[]`, see
   `.claude/contracts/state-event-format.md` for its shape.
-- `progress.json` — review/tagging progress state.
+- `progress.json` — review/tagging progress state. Includes
+  `textCoverageAudited: boolean` and `knownGaps: string[]` — hand-maintained
+  by whichever agent last touched this card's facts, so treat them as
+  advisory, not guaranteed-accurate (a card's own facts can change without
+  someone remembering to update these two fields — confirmed stale on
+  `ashe-princess-of-dalmasca`, 2026-09-15, see below).
+
+### `factsTextCoverage` (informational, engine-computed, 2026-09-15)
+
+A REAL, computed signal — genuinely different from (and stronger than)
+"every fact has an annotation" (`scripts/annotation-coverage.mjs`'s own
+check, which is blind to whether the CARD'S OWN FULL ORACLE TEXT has a
+substantial clause with no fact/annotation pointing at it at all).
+`functional-model/scripts/text-coverage.mjs` (`computeTextCoverage`) unions
+every real `{target:'oracle', ...}` annotation span onto a card's own real
+oracle text, per face, and reports:
+- `ratio` — fraction of real (non-reminder-text, non-punctuation) characters
+  covered by at least one fact's annotation.
+- `gaps` — every real, substantial (20+ real characters after stripping a
+  leading "<ability name/Saga chapter/modal bullet> — " label, since this
+  pool's own narrow-per-clause annotation convention deliberately never
+  anchors those) contiguous uncovered span, as `{face, line, start, end,
+  text}`.
+
+Run via `npx vite-node functional-model/scripts/verify-text-coverage.mjs
+[--threshold=0.85] [slug...]` — **informational only, never a hard-fail**
+(real, honest partial coverage is a normal, expected state for most of this
+pool — a 2026-09-15 whole-pool run found 246/300 v2-shaped cards below the
+default 85% threshold, almost entirely cards whose own `progress.json`
+never claimed full coverage in the first place, not a mass discovery of
+stale metadata). Not wired into `npm run test`/CI for that reason; a
+per-card `card` agent UI surfacing this (a "facts may be incomplete" badge,
+e.g.) should treat a LOW ratio as "worth a human glance," never as a defect
+to auto-fix.
+
+**Real motivating case**: `ashe-princess-of-dalmasca` (fin/7) — its own
+`progress.json` claimed `textCoverageAudited: true`/`knownGaps: []`, but
+`computeTextCoverage` found two real, substantial, genuinely uncovered
+clauses ("look at the top five cards of your library" and "Put the rest on
+the bottom of your library in a random order" — both plausibly inert for
+synergy purposes, a same-zone Library reposition with no external hook, but
+real oracle text nonetheless with zero fact/annotation pointing at them).
+Reset to `textCoverageAudited: false` with a real `knownGaps` entry
+recording this finding — see that card's own `progress.json`.
 
 ## Served shape (card agent owns, `server/api/_cardShaping.ts`)
 

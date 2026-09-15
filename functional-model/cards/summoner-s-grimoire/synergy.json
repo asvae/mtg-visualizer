@@ -16,6 +16,18 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 10,
+          "end": 19
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipmentWantsCreature-sink-structural"
       }
     }
   ]

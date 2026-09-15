@@ -9,6 +9,29 @@
       "event": "grantKeyword",
       "keyword": "Trample",
       "controller": "you"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 16,
+          "end": 26
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -19,6 +42,18 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 26
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
       }
     }
   ]

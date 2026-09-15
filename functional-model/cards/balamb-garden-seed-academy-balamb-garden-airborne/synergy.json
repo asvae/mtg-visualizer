@@ -34,6 +34,24 @@
         "origin": "parser",
         "rule": "drawCard-effect-structural"
       }
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 3
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     }
   ],
   "sink": []

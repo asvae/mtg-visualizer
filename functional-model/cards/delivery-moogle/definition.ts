@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 export const deliveryMoogle: CardDefinition = {
   name: 'Delivery Moogle',
@@ -14,55 +14,44 @@ export const deliveryMoogle: CardDefinition = {
       effects: [
         {
           // "Search your library and/or graveyard for an artifact card with
-          // mana value 2 or less" — a genuine two-zone search (real Forge
-          // Origin$ Library | OriginAlternative$ Graveyard), which the
-          // declarative `move` kind can't express (`from` is exactly one
-          // zone). Modeled fully via `custom` instead of narrowing to
-          // Library-only, since both zone reads are already real
-          // primitives (`getCardsIn`) this model has everywhere else.
+          // mana value 2 or less, reveal it, and put it into your hand"
+          // (real Forge dual-`Origin` shape, `Origin$ Library |
+          // OriginAlternative$ Graveyard`) — MIGRATED (2026-09-15) off a
+          // `kind:'custom'` closure onto the real declarative `move` kind,
+          // now that `from` accepts `ZoneType[]` and a new `maxCmc` field
+          // exists (both added this same pass — see `card.ts`'s own
+          // `move` doc comments for the full real motivation/citation;
+          // this was the one real card in the whole pool forcing both
+          // additions, checked directly). ONE combined pool across BOTH
+          // zones (never one pick per zone — CR 701.19 makes no
+          // distinction between them once both are eligible), same real
+          // primitive (`getCardsIn`) the old closure already used, now
+          // expressed as plain data instead of an opaque closure (per
+          // this pool's own "combinator/data-shaped, not raw closures"
+          // authoring default) — no `custom`/`program` needed at all,
+          // since `move`'s own existing declarative vocabulary (widened
+          // this pass) already covers this shape exactly.
           //
-          // 2026-09-11 correction: an earlier version of this comment
-          // claimed mana value couldn't be filtered here at all ("not
-          // tracked anywhere on Card/RealCard") — checked again against
-          // interfaces.ts/state.ts/harness.ts while migrating this card's
-          // synergy facts and that claim was simply WRONG, not a real
-          // engine gap: `Card.getCMC()` is a real, cited interface method
-          // (interfaces.ts ~line 106, Card.java ~line 7227), backed by a
-          // real `RealCard.getCMC` (state.ts) and already wired into
-          // `harness.ts`'s own `loggingCard` wrap (`read:getCMC` trace
-          // evidence) — the exact same "real primitive already exists
-          // elsewhere in this model" situation `isArtifact` was already in
-          // above. The stale claim's own citation ("same real gap
-          // cloud-midgar-mercenary's own comment already flags") also
-          // doesn't exist — grepped that file, it has no mana-value
-          // filter or comment about one at all (Cloud's own search has no
-          // mv restriction to begin with). Fixed for real below rather
-          // than left as a documented-but-false gap. "Shuffle" has no
-          // library-reorder consequence anything downstream reads, so it's
-          // not modeled (state.ts's own header rules out anything beyond
-          // the action vocabulary card.ts/harness.ts actually use).
-          //
-          // The graveyard branch is independently exercised by its own
-          // scenario (2026-09-11) via `harness.ts`'s new
-          // `PlayerState.graveyardArtifactCount` (mirrors the pre-existing
-          // `libraryArtifactCount`) — this was a real, fixable harness gap
-          // (a missing setup field), not a permanent engine limitation.
-          // Neither seeded filler artifact (library or graveyard) is given
-          // an explicit `cmc` (defaults to `RealCard.cmc ?? 0`, i.e. 0),
-          // so no scenario here currently proves the mv-2-or-less filter
-          // actually EXCLUDES a real >2-mv candidate — both real scenarios
-          // only demonstrate it correctly ADMITTING a 0-mv one. A future
-          // scenario wanting that negative case would need a
-          // `libraryArtifactCmc`/`graveyardArtifactCmc`-style harness field
-          // this task didn't need to add.
-          kind: 'custom',
-          describe: 'search your library and/or graveyard for an artifact card with mana value 2 or less and put it into your hand',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const pool = [...ctx.you.getCardsIn('Library'), ...ctx.you.getCardsIn('Graveyard')].filter((c) => c.isArtifact() && c.getCMC() <= 2);
-            if (pool.length === 0) return;
-            const target = actions.chooseTarget(pool);
-            actions.moveTo(target, 'Hand');
-          },
+          // `shuffleAfter: true` (2026-09-15) — the OLD closure never
+          // modeled "then shuffle" at all (a real, silent omission, not a
+          // deliberate decision — no comment ever justified dropping it).
+          // Real CR 701.19 requires shuffling after a library search;
+          // since this model has no "which zone did the chosen card
+          // actually come from" granularity below the combined-pool level
+          // (same ceiling every other library-search card in this pool
+          // already lives with), this sets the same unconditional
+          // `shuffleAfter` every single-zone library search in this pool
+          // already uses (Cloudbound Moogle's own Plainscycling, e.g.) —
+          // the closest real approximation of "if you search your library
+          // this way, shuffle" this model can express.
+          kind: 'move',
+          owner: 'you',
+          from: ['Library', 'Graveyard'],
+          to: 'Hand',
+          qty: 1,
+          validType: 'artifact',
+          maxCmc: 2,
+          shuffleAfter: true,
         } satisfies Effect,
       ],
     },

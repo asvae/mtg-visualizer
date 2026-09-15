@@ -24,6 +24,26 @@
     {
       "event": "damage",
       "controller": "you"
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_1_1_hero"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 39,
+          "end": 81
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     }
   ],
   "sink": []

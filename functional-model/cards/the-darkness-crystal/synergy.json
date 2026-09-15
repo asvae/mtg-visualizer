@@ -8,6 +8,23 @@
     {
       "event": "dies",
       "target": "self"
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 11,
+          "end": 14
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     }
   ],
   "sink": [

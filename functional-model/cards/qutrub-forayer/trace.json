@@ -20,7 +20,7 @@
         "fn": "trigger",
         "card": "Qutrub Forayer",
         "instanceId": 1,
-        "id": 1864,
+        "id": 4,
         "name": "onEnter"
       },
       {
@@ -50,7 +50,7 @@
       {
         "fn": "destroy",
         "target": "Qutrub Forayer",
-        "id": 1864,
+        "id": 4,
         "controller": "you"
       }
     ]
@@ -74,7 +74,7 @@
         "fn": "trigger",
         "card": "Qutrub Forayer",
         "instanceId": 1,
-        "id": 1868,
+        "id": 8,
         "name": "onEnter"
       },
       {
@@ -87,14 +87,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1866,
+        "id": 6,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1867,
+        "id": 7,
         "zone": "Exile",
         "controller": "you"
       }
@@ -119,7 +119,7 @@
         "fn": "trigger",
         "card": "Qutrub Forayer",
         "instanceId": 1,
-        "id": 1871,
+        "id": 11,
         "name": "onEnter"
       },
       {
@@ -132,7 +132,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1870,
+        "id": 10,
         "zone": "Exile",
         "controller": "you"
       }

@@ -175,6 +175,31 @@ import { recognizeGainLifeEffectStructural } from '../recognizers/gainLife-effec
 import { recognizePtFormulaScalingPumpStructural } from '../recognizers/ptFormula-scalingPump-structural.ts';
 import { recognizeDigRevealEffectStructural } from '../recognizers/digReveal-effect-structural.ts';
 import { recognizeTriggerDoublingSelfAndAttachedEquipmentStructural } from '../recognizers/triggerDoubling-selfAndAttachedEquipment-structural.ts';
+// 2026-09-15 follow-up (fin/5,6,7,8,9,10 recognizer-coverage batch — see
+// each new recognizer's own module doc comment for its real pool-wide
+// check). All 8 STRUCTURAL (read `effects`/`triggers`/`abilities` off
+// `StructuralRecognizerInput`), same family as destroy/drawCard/gainLife
+// above. `recognizeMoveEffectStructural` itself is NOT new (authored
+// 2026-09-14) — it was simply never registered into this real pipeline
+// until now, a genuine pre-existing gap this pass also closes.
+import { recognizeMoveEffectStructural } from '../recognizers/move-effect-structural.ts';
+import { recognizeMoveSearchLibraryEffectStructural } from '../recognizers/moveSearchLibrary-effect-structural.ts';
+import { recognizeEntersBattlefieldSelfTriggerStructural } from '../recognizers/entersBattlefield-self-trigger-structural.ts';
+import { recognizePumpSelfEffectStructural } from '../recognizers/pumpSelf-effect-structural.ts';
+import { recognizePumpTargetEffectStructural } from '../recognizers/pumpTarget-effect-structural.ts';
+import { recognizePumpAllAttackingEffectStructural } from '../recognizers/pumpAllAttacking-effect-structural.ts';
+import { recognizeSelectUpToEffectStructural } from '../recognizers/selectUpTo-effect-structural.ts';
+import { recognizeTokenCreationStructural } from '../recognizers/token-creation-structural.ts';
+// 2026-09-15 follow-up (fin/11-15 audit).
+import { recognizeDiscardSelfCostStructural } from '../recognizers/discardSelfCost-structural.ts';
+import { recognizeTapTargetEffectStructural } from '../recognizers/tapTarget-effect-structural.ts';
+import { recognizeTapSelfCostStructural } from '../recognizers/tapSelfCost-structural.ts';
+import { recognizeContinuousPTGrantsEquippedStructural } from '../recognizers/continuousPTGrantsEquipped-structural.ts';
+import { recognizeSequenceExileReturnEffectStructural } from '../recognizers/sequenceExileReturn-effect-structural.ts';
+import { recognizeTapAllQueryEffectStructural } from '../recognizers/tapAllQuery-effect-structural.ts';
+import { recognizeEquipmentWantsCreatureSinkStructural } from '../recognizers/equipmentWantsCreature-sink-structural.ts';
+import { recognizePreventDamageAllEffectStructural } from '../recognizers/preventDamageAll-effect-structural.ts';
+import { recognizeMoveSearchLibraryOrGraveyardEffectStructural } from '../recognizers/moveSearchLibraryOrGraveyard-effect-structural.ts';
 
 const cardsDir = new URL('../cards/', import.meta.url);
 const dataDir = new URL('../../data/', import.meta.url);
@@ -289,6 +314,27 @@ const RECOGNIZERS = [
   { id: 'ptFormula-scalingPump-structural', recognize: recognizePtFormulaScalingPumpStructural },
   { id: 'digReveal-effect-structural', recognize: recognizeDigRevealEffectStructural },
   { id: 'triggerDoubling-selfAndAttachedEquipment-structural', recognize: recognizeTriggerDoublingSelfAndAttachedEquipmentStructural },
+  // 2026-09-15 follow-up (fin/5,6,7,8,9,10 recognizer-coverage batch — see
+  // each new recognizer's own module doc comment for its real pool-wide
+  // check, and `move-effect-structural.ts`'s own header for why it's only
+  // being registered here now despite existing since 2026-09-14).
+  { id: 'move-effect-structural', recognize: recognizeMoveEffectStructural },
+  { id: 'moveSearchLibrary-effect-structural', recognize: recognizeMoveSearchLibraryEffectStructural },
+  { id: 'entersBattlefield-self-trigger-structural', recognize: recognizeEntersBattlefieldSelfTriggerStructural },
+  { id: 'pumpSelf-effect-structural', recognize: recognizePumpSelfEffectStructural },
+  { id: 'pumpTarget-effect-structural', recognize: recognizePumpTargetEffectStructural },
+  { id: 'pumpAllAttacking-effect-structural', recognize: recognizePumpAllAttackingEffectStructural },
+  { id: 'selectUpTo-effect-structural', recognize: recognizeSelectUpToEffectStructural },
+  { id: 'token-creation-structural', recognize: recognizeTokenCreationStructural },
+  { id: 'discardSelfCost-structural', recognize: recognizeDiscardSelfCostStructural },
+  { id: 'tapTarget-effect-structural', recognize: recognizeTapTargetEffectStructural },
+  { id: 'tapSelfCost-structural', recognize: recognizeTapSelfCostStructural },
+  { id: 'continuousPTGrantsEquipped-structural', recognize: recognizeContinuousPTGrantsEquippedStructural },
+  { id: 'sequenceExileReturn-effect-structural', recognize: recognizeSequenceExileReturnEffectStructural },
+  { id: 'tapAllQuery-effect-structural', recognize: recognizeTapAllQueryEffectStructural },
+  { id: 'equipmentWantsCreature-sink-structural', recognize: recognizeEquipmentWantsCreatureSinkStructural },
+  { id: 'preventDamageAll-effect-structural', recognize: recognizePreventDamageAllEffectStructural },
+  { id: 'moveSearchLibraryOrGraveyard-effect-structural', recognize: recognizeMoveSearchLibraryOrGraveyardEffectStructural },
 ];
 
 /** Same real-oracle-text-by-Scryfall-name loader `compute-annotations.mjs`
@@ -816,12 +862,21 @@ async function main() {
         triggers: card.triggers,
         abilities: card.abilities,
         // Card-definition-level fields (never inside `effects`/`triggers`/
-        // `abilities`) three 2026-09-14 recognizers need —
+        // `abilities`) recognizers need —
         // `flashback-alternateCost-structural`/`ptFormula-scalingPump-
-        // structural`/`triggerDoubling-selfAndAttachedEquipment-structural`.
+        // structural`/`triggerDoubling-selfAndAttachedEquipment-structural`
+        // (2026-09-14), `tapSelfCost-structural` (2026-09-15, needs
+        // `activationCost` alongside `abilities` for its own `cost` strings
+        // — `abilities` is already passed above for the `effects`-walking
+        // family, reused here rather than duplicated).
         alternateCosts: card.alternateCosts,
         ptFormula: card.ptFormula,
         triggerDoubling: card.triggerDoubling,
+        activationCost: card.activationCost,
+        // `continuousPTGrantsEquipped-structural` (2026-09-15, fin/11-15
+        // audit) — same card-definition-level field family as the others
+        // above.
+        continuousPTGrants: card.continuousPTGrants,
       },
     ];
     if (card.backFace) {
@@ -836,6 +891,8 @@ async function main() {
         alternateCosts: card.backFace.alternateCosts,
         ptFormula: card.backFace.ptFormula,
         triggerDoubling: card.backFace.triggerDoubling,
+        activationCost: card.backFace.activationCost,
+        continuousPTGrants: card.backFace.continuousPTGrants,
       });
     }
 
@@ -945,6 +1002,26 @@ async function main() {
         alternateCosts: face.alternateCosts,
         ptFormula: face.ptFormula,
         triggerDoubling: face.triggerDoubling,
+        // `activationCost` (2026-09-15 bug fix, `tapSelfCost-structural`'s
+        // own wiring pass) — `faces` above already carried this field, but
+        // this per-face `input` object never copied it across, so every
+        // recognizer reading `input.activationCost` (only `tapSelfCost-
+        // structural.ts` today) silently saw `undefined` for every card,
+        // including Coeurl (the recognizer's own motivating case) — found
+        // by tracing why Coeurl's on-disk AI-authored self-tap fact wasn't
+        // being retagged despite the recognizer matching correctly in
+        // isolated tests: the real production input just never had the
+        // field at all.
+        activationCost: face.activationCost,
+        // `continuousPTGrants` (2026-09-15, `continuousPTGrantsEquipped-
+        // structural`'s own wiring pass) — added to BOTH `faces` above and
+        // here in the same pass this time, per the note right above
+        // `activationCost`'s own equivalent fix: that field was added to
+        // `faces` alone first, then silently missed here for a full run
+        // before the gap was found (tracing why Coeurl's own AI-authored
+        // self-tap fact wasn't retagging) — not repeating that miss for a
+        // second field.
+        continuousPTGrants: face.continuousPTGrants,
         // See `recognizers/types.ts`'s own `RecognizerInput.isBackFace` doc
         // comment: `permanent-enters-battlefield-normally` used to be the
         // one recognizer that read this (retired 2026-09-14 — see this

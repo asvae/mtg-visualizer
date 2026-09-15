@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect } from '../../card';
+import { flashback } from '../../flashback';
 
 export const sorceresssSchemes: CardDefinition = {
   name: "Sorceress's Schemes",
@@ -23,6 +24,13 @@ export const sorceresssSchemes: CardDefinition = {
   // available approximation; it is real overbroad (would also let this
   // effect "return" a creature or land card sitting in the same
   // graveyard, which the printed card cannot).
+  //
+  // recognizer-exception: move-effect-structural — `validType:'any'` builds
+  // "target card you own," but the real text ("target INSTANT OR SORCERY
+  // card ... you own") never contains that phrase — a real, pre-existing,
+  // documented approximation (see the comment above), not something this
+  // recognizer should silently paper over. See that recognizer's own
+  // module doc comment.
   effects: [
     { kind: 'move', owner: 'you', from: 'Graveyard', to: 'Hand', qty: 1, target: true, validType: 'any' } satisfies Effect,
     {
@@ -35,5 +43,5 @@ export const sorceresssSchemes: CardDefinition = {
     } satisfies Effect,
   ],
 
-  alternateCosts: [{ name: 'Flashback', cost: '{4}{R}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{4}{R}')],
 };

@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect } from '../../card';
+import { flashback } from '../../flashback';
 
 export const laughingMad: CardDefinition = {
   name: 'Laughing Mad',
@@ -10,7 +11,7 @@ export const laughingMad: CardDefinition = {
   // happens when this resolves" (see card.ts's own CardDefinition.effects
   // doc comment), so it doesn't belong here, same reasoning every other
   // card's own mana cost/equip cost never shows up as an `Effect` either.
-  alternateCosts: [{ name: 'Flashback', cost: '{3}{R}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{3}{R}')],
 
   effects: [{ kind: 'drawCard', amount: 2 } satisfies Effect],
 };

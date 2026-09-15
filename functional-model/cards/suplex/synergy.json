@@ -11,6 +11,30 @@
     },
     {
       "zone": "Exile"
+    },
+    {
+      "from": "Battlefield",
+      "to": "Exile",
+      "target": {
+        "types": {
+          "has": [
+            "Artifact"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 8,
+          "end": 23
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     }
   ],
   "sink": [

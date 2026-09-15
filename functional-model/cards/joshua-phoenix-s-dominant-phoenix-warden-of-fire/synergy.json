@@ -60,6 +60,24 @@
         "origin": "parser",
         "rule": "saga-lore-and-sacrifice-structural"
       }
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 11,
+          "end": 14
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     }
   ],
   "sink": [

@@ -17,7 +17,7 @@
         "fn": "cast",
         "card": "Reach the Horizon",
         "instanceId": 1,
-        "id": 1897,
+        "id": 4,
         "from": "hand",
         "cost": "{3}{G}"
       },
@@ -43,7 +43,7 @@
         "fn": "move",
         "card": "Reach the Horizon",
         "instanceId": 1,
-        "id": 1897,
+        "id": 4,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

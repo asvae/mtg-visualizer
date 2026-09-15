@@ -14,7 +14,7 @@
         "fn": "cast",
         "card": "Laughing Mad",
         "instanceId": 1,
-        "id": 1422,
+        "id": 2,
         "from": "hand",
         "cost": "{2}{R}"
       },
@@ -30,7 +30,7 @@
         "fn": "move",
         "card": "Laughing Mad",
         "instanceId": 1,
-        "id": 1422,
+        "id": 2,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -52,7 +52,7 @@
         "fn": "cast",
         "card": "Laughing Mad",
         "instanceId": 1,
-        "id": 1424,
+        "id": 4,
         "from": "graveyard",
         "cost": "{3}{R}"
       },
@@ -68,7 +68,7 @@
         "fn": "move",
         "card": "Laughing Mad",
         "instanceId": 1,
-        "id": 1424,
+        "id": 4,
         "from": "stack",
         "to": "Exile",
         "cardType": "Instant"

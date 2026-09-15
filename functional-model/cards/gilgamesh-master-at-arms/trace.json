@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Gilgamesh, Master-at-Arms",
         "instanceId": 1,
-        "id": 1076,
+        "id": 4,
         "name": "onEnter"
       },
       {
@@ -74,9 +74,9 @@
       {
         "fn": "equip",
         "equipment": "you-library-artifact-0",
-        "equipmentId": 1074,
+        "equipmentId": 2,
         "target": "Gilgamesh, Master-at-Arms",
-        "id": 1076
+        "id": 4
       }
     ]
   },
@@ -98,7 +98,7 @@
         "fn": "trigger",
         "card": "Gilgamesh, Master-at-Arms",
         "instanceId": 1,
-        "id": 1081,
+        "id": 9,
         "name": "onAttack"
       },
       {

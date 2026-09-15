@@ -45,6 +45,37 @@
 // of those (this pass found 2 — see dragoon-s-lance/machinist-s-arsenal's
 // own `definition.ts` comments) stays a `kind:'custom'` closure until that
 // follow-up lands, rather than being force-fit here.
+//
+// **`SelectUpTo`/`ApplyToBound`/`BoundSet` (2026-09-15) — the `Bind` case
+// above, landed for real, scoped narrowly.** Motivating real card:
+// `aerith-rescue-mission`'s own "Take 59 Flights of Stairs" mode ("Tap up to
+// three target creatures. Put a stun counter on one of them.") — a real
+// cross-step reference (the counter-placement step needs to know WHICH
+// object(s) the earlier selection step picked), the exact shape this file's
+// header used to call out of scope. Kept intentionally narrow, same "only
+// the node kinds a real card needs" discipline as every other node here:
+// - `SelectUpTo` picks up to `max` DISTINCT items from a `Query`/`Filter`
+//   pool (via `actions.chooseTarget`, same pool-exhaustion loop `card.ts`'s
+//   own `resolveTargets` already uses for a targeted `move`/`destroy`/etc.),
+//   binds them under a name, then runs `then` with that binding visible.
+// - `BoundSet` is a THIRD `Each.input` variant (alongside `Query`/`Filter`)
+//   that reads a previously-bound selection instead of querying the board
+//   again — this is how "tap EACH of the ones just picked" is expressed.
+// - `ApplyToBound` applies one `EachAction` to a SINGLE item at a fixed
+//   `index` into a binding (`index: 0` = "one of them," the real card's own
+//   "put a stun counter on one of them" — this engine has no player-
+//   decision system, so, same as every other `optional`/`chooseTarget`
+//   convention in this codebase, "one of them" deterministically means the
+//   first one actually picked, not a genuine choice).
+// A binding is plain runtime data (`Bindings`, a `Record<string, Card[]>`),
+// threaded through `runProgram`'s own recursive calls — never persisted
+// anywhere outside one `program` effect's own resolution, same lifetime a
+// local variable would have in the equivalent imperative closure. No static
+// scope-checking exists (an `ApplyToBound`/`BoundSet` naming a binding no
+// enclosing `SelectUpTo` ever defines simply resolves to an empty list at
+// runtime/no items to walk) — same "closed vocabulary, no executable
+// functions, but no compile-time scope proof either" tradeoff every other
+// node in this file already accepts.
 import type { Card } from './interfaces';
 import type { Actions, EffectContext } from './card';
 // Type-only import from `card.ts`, which itself imports `ProgramNode` (below)
@@ -65,7 +96,24 @@ import type { Actions, EffectContext } from './card';
 export interface Query {
   kind: 'query';
   source: 'creaturesInPlay';
-  owner: 'you' | 'opponents';
+  /** `'any'` (2026-09-15) — BOTH sides unioned, real motivating case:
+   * `aerith-rescue-mission`'s own "Tap up to three target creatures" (no
+   * owner restriction printed at all, unlike every prior migrated closure's
+   * own `you`/`opponents`-scoped need) — same real pool composition
+   * (`[...ctx.you.getCreaturesInPlay(), ...ctx.opponents.flatMap(p =>
+   * p.getCreaturesInPlay())]`) the closure it replaces already used. */
+  owner: 'you' | 'opponents' | 'any';
+}
+
+/** A THIRD `Each.input` source (alongside `Query`/`Filter`) — reads a
+ * previously-bound `SelectUpTo` selection by name instead of querying the
+ * board again (see this file's own header, "`SelectUpTo`/`ApplyToBound`/
+ * `BoundSet`"). Never itself narrowed by a `Filter` (no real card needs to
+ * filter a selection it just made) — extend `Filter.input`'s own union the
+ * day one does. */
+export interface BoundSet {
+  kind: 'bound';
+  name: string;
 }
 
 /** A named, parameterized predicate over a `Query`/`Filter`'s own result —
@@ -122,7 +170,37 @@ export type EachAction = { action: 'putCounter'; counterType: string; amount: Va
 
 export interface Each {
   kind: 'each';
-  input: Query | Filter;
+  input: Query | Filter | BoundSet;
+  action: EachAction;
+}
+
+// ---------------------------------------------------------------------------
+// SelectUpTo / ApplyToBound — see this file's own header, "`SelectUpTo`/
+// `ApplyToBound`/`BoundSet`," for the real motivating card and design.
+
+/** Picks up to `max` DISTINCT items from `from` (via `actions.chooseTarget`,
+ * same pool-exhaustion loop `card.ts`'s own `resolveTargets` already uses),
+ * binds the picked list under `as`, then runs `then` with that binding
+ * visible (to a nested `Each{input:{kind:'bound',...}}` or `ApplyToBound`). */
+export interface SelectUpTo {
+  kind: 'selectUpTo';
+  from: Query | Filter;
+  max: number;
+  as: string;
+  then: ProgramNode[];
+}
+
+/** Applies one `EachAction` to a SINGLE item at `index` into a named
+ * binding — "put a stun counter on ONE of them" (`index: 0`, the first item
+ * `SelectUpTo` actually picked; see this file's own header for why "one of
+ * them" is deterministic here, not a genuine player choice). A no-op
+ * (matches this card's own real "if tapped.length > 0" guard) when the
+ * binding has fewer than `index + 1` items — a `SelectUpTo` pool can
+ * legitimately exhaust before reaching `max`. */
+export interface ApplyToBound {
+  kind: 'applyToBound';
+  name: string;
+  index: number;
   action: EachAction;
 }
 
@@ -180,7 +258,7 @@ export interface Sequence {
  * `program` field holds — one of the three "does something" shapes above
  * (`Query`/`Filter`/`Aggregate`/`ValueRef` are never top-level themselves,
  * only ever nested inputs to one of these). */
-export type ProgramNode = Each | Branch | Sequence;
+export type ProgramNode = Each | Branch | Sequence | SelectUpTo | ApplyToBound;
 
 // ---------------------------------------------------------------------------
 // Fluent builder layer — construction-only ergonomics over the SAME AST types
@@ -224,7 +302,7 @@ export type ProgramNode = Each | Branch | Sequence;
  * each consumes the chain and returns a plain, finished AST value (an `Each`
  * `ProgramNode`, or an `Aggregate`, itself already a valid `ValueRef`). */
 export class QueryChain {
-  constructor(private readonly node: Query | Filter) {}
+  constructor(readonly node: Query | Filter) {}
 
   /** Narrows this chain by one more `FilterPredicate` (see that type's own
    * doc comment for what each `field` means). */
@@ -264,6 +342,10 @@ export const you = {
 };
 export const opponents = {
   creaturesInPlay: (): QueryChain => new QueryChain({ kind: 'query', source: 'creaturesInPlay', owner: 'opponents' }),
+};
+/** Both sides unioned — see `Query.owner`'s own doc comment. */
+export const anyPlayer = {
+  creaturesInPlay: (): QueryChain => new QueryChain({ kind: 'query', source: 'creaturesInPlay', owner: 'any' }),
 };
 
 /** Every leaf/terminal builder below accepts a plain `number` wherever a
@@ -330,16 +412,47 @@ export function sequence(...steps: SequenceStep['to'][]): Sequence {
   return { kind: 'sequence', steps: steps.map((to) => ({ action: 'moveSelf', to })) };
 }
 
+/** A named binding's own selection, for use as an `Each.input` (e.g.
+ * `{kind:'each', input:bound('tapped'), action:tap()}` — "tap each of the
+ * ones just picked"). See this file's own header,
+ * "`SelectUpTo`/`ApplyToBound`/`BoundSet`." */
+export function bound(name: string): BoundSet {
+  return { kind: 'bound', name };
+}
+
+/** Picks up to `max` distinct items from `from` and binds them under `as`
+ * for `then` to reference (via `bound(as)`/`applyToBound(as, ...)`). Accepts
+ * either a raw `Query`/`Filter` node or a fluent `QueryChain`
+ * (`anyPlayer.creaturesInPlay()`, etc.) — same "builder or raw AST, either
+ * way" ergonomics every other node in this file's fluent layer already
+ * has. */
+export function selectUpTo(from: Query | Filter | QueryChain, max: number, as: string, then: ProgramNode[]): SelectUpTo {
+  return { kind: 'selectUpTo', from: from instanceof QueryChain ? from.node : from, max, as, then };
+}
+
+/** Applies `action` to the item at `index` of a previously-bound selection
+ * (`index: 0` = "one of them" — see `ApplyToBound`'s own doc comment). */
+export function applyToBound(name: string, index: number, action: EachAction): ApplyToBound {
+  return { kind: 'applyToBound', name, index, action };
+}
+
 // ---------------------------------------------------------------------------
 // Concrete interpreter — reads the AST and executes against a real
 // `EffectContext`/`Actions`, exactly like `custom`'s own `run(ctx, actions)`.
 
-function resolveQuery(input: Query | Filter, ctx: EffectContext): Card[] {
+/** A `SelectUpTo`'s own picked list, keyed by its `as` name — plain runtime
+ * data threaded through `runProgram`'s own recursive calls, never persisted
+ * anywhere outside one `program` effect's own resolution (see this file's
+ * own header, "`SelectUpTo`/`ApplyToBound`/`BoundSet`"). */
+type Bindings = Record<string, Card[]>;
+
+function resolveQuery(input: Query | Filter | BoundSet, ctx: EffectContext, bindings: Bindings): Card[] {
+  if (input.kind === 'bound') return bindings[input.name] ?? [];
   if (input.kind === 'query') {
-    const players = input.owner === 'you' ? [ctx.you] : ctx.opponents;
+    const players = input.owner === 'you' ? [ctx.you] : input.owner === 'opponents' ? ctx.opponents : [ctx.you, ...ctx.opponents];
     return players.flatMap((p) => p.getCreaturesInPlay());
   }
-  const base = resolveQuery(input.input, ctx);
+  const base = resolveQuery(input.input, ctx, bindings);
   const predicate = input.predicate;
   switch (predicate.field) {
     case 'subtype': {
@@ -359,7 +472,10 @@ function resolveQuery(input: Query | Filter, ctx: EffectContext): Card[] {
 }
 
 function resolveAggregate(agg: Aggregate, ctx: EffectContext): number {
-  const items = resolveQuery(agg.input, ctx);
+  // `Aggregate.input` stays typed `Query | Filter` (never `BoundSet` — no
+  // real card needs to sum/count a selection yet, see this file's own
+  // header), so no binding lookup is ever needed here; `{}` is inert.
+  const items = resolveQuery(agg.input, ctx, {});
   if (agg.op === 'count') return items.length;
   if (!agg.field) throw new Error("Aggregate op:'sum' requires a field");
   const field = agg.field;
@@ -438,10 +554,10 @@ function runEachAction(action: EachAction, item: Card, resolvedAmount: number | 
  * `run(ctx, actions)`. Genuine game resolution, not a simulation: every leaf
  * action goes through the same real `Actions`/`EffectContext` every other
  * declarative `Effect` kind already uses. */
-export function runProgram(node: ProgramNode, ctx: EffectContext, actions: Actions): void {
+export function runProgram(node: ProgramNode, ctx: EffectContext, actions: Actions, bindings: Bindings = {}): void {
   switch (node.kind) {
     case 'each': {
-      const items = resolveQuery(node.input, ctx);
+      const items = resolveQuery(node.input, ctx, bindings);
       // Resolved ONCE, before the loop — see `runEachAction`'s own doc
       // comment for why this must not be re-read per item.
       const resolvedAmount = node.action.action === 'putCounter' ? resolveValue(node.action.amount, ctx) : undefined;
@@ -452,11 +568,33 @@ export function runProgram(node: ProgramNode, ctx: EffectContext, actions: Actio
       const left = resolveValue(node.condition.left, ctx);
       const right = resolveValue(node.condition.right, ctx);
       const branch = evalCompareOp(left, node.condition.op, right) ? node.then : (node.else ?? []);
-      for (const step of branch) runProgram(step, ctx, actions);
+      for (const step of branch) runProgram(step, ctx, actions, bindings);
       return;
     }
     case 'sequence': {
       for (const step of node.steps) actions.moveTo(ctx.self, step.to);
+      return;
+    }
+    case 'selectUpTo': {
+      // Same pool-exhaustion "pick up to N distinct items" loop `card.ts`'s
+      // own `resolveTargets` already uses for a targeted `move`/`destroy`/
+      // `putCounterTarget`/etc. — see this file's own header.
+      const pool = resolveQuery(node.from, ctx, bindings);
+      const picked: Card[] = [];
+      for (let i = 0; i < node.max; i++) {
+        const remaining = pool.filter((c) => !picked.includes(c));
+        if (remaining.length === 0) break;
+        picked.push(actions.chooseTarget(remaining));
+      }
+      const nextBindings: Bindings = { ...bindings, [node.as]: picked };
+      for (const step of node.then) runProgram(step, ctx, actions, nextBindings);
+      return;
+    }
+    case 'applyToBound': {
+      const item = (bindings[node.name] ?? [])[node.index];
+      if (!item) return; // fewer than index+1 items actually picked — a no-op, see this node's own doc comment
+      const resolvedAmount = node.action.action === 'putCounter' ? resolveValue(node.action.amount, ctx) : undefined;
+      runEachAction(node.action, item, resolvedAmount, actions);
       return;
     }
     default: {
@@ -479,7 +617,7 @@ export function runProgram(node: ProgramNode, ctx: EffectContext, actions: Actio
  * a future consumer wanting structured data should read the AST node
  * directly, this is a human-facing trace of the walk). */
 export interface WalkEvent {
-  node: 'query' | 'filter' | 'aggregate' | 'each' | 'branch' | 'sequence';
+  node: 'query' | 'filter' | 'aggregate' | 'each' | 'branch' | 'sequence' | 'bound' | 'selectUpTo' | 'applyToBound';
   detail: string;
 }
 
@@ -524,7 +662,11 @@ function describeEachAction(a: EachAction): string {
   }
 }
 
-function walkQuery(input: Query | Filter, events: WalkEvent[]): void {
+function walkQuery(input: Query | Filter | BoundSet, events: WalkEvent[]): void {
+  if (input.kind === 'bound') {
+    events.push({ node: 'bound', detail: `bound(${input.name})` });
+    return;
+  }
   if (input.kind === 'query') {
     events.push({ node: 'query', detail: `creaturesInPlay(${input.owner})` });
     return;
@@ -573,6 +715,16 @@ export function walkProgram(node: ProgramNode, events: WalkEvent[] = []): WalkEv
     case 'sequence':
       for (const step of node.steps) events.push({ node: 'sequence', detail: `moveSelf -> ${step.to}` });
       return events;
+    case 'selectUpTo': {
+      walkQuery(node.from, events);
+      events.push({ node: 'selectUpTo', detail: `selectUpTo(${node.max}) as ${node.as}` });
+      for (const step of node.then) walkProgram(step, events);
+      return events;
+    }
+    case 'applyToBound': {
+      events.push({ node: 'applyToBound', detail: `applyToBound(${node.name}[${node.index}], ${describeEachAction(node.action)})` });
+      return events;
+    }
     default: {
       const _exhaustive: never = node;
       throw new Error(`unhandled program node: ${JSON.stringify(_exhaustive)}`);

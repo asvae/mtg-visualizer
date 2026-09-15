@@ -16,6 +16,26 @@
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self"
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_treasure_sac"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 97,
+          "end": 120
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     }
   ],
   "sink": []

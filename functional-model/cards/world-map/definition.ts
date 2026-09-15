@@ -10,6 +10,15 @@ import type { CardDefinition, Effect } from '../../card';
 // filter anywhere in this model (`move`'s own `validType` is type-only) —
 // the first ability's "basic land card" is approximated as any land, same
 // real, documented gap reach-the-horizon's own comment already covers.
+//
+// recognizer-exception: moveSearchLibrary-effect-structural — the first
+// ability's own real text ("Search your library for A BASIC land card")
+// needs a real MTG SUPERTYPE ("basic") this engine has no concept of
+// anywhere (checked directly: no `isBasic`/supertype field on
+// `interfaces.ts`/`state.ts`) — a genuinely bigger gap (new
+// supertype-tracking engine surface) than any single-word `validType`/
+// `subtype` template can express, not attempted in this pass. See that
+// recognizer's own module doc comment (names this exact card).
 export const worldMap: CardDefinition = {
   name: 'World Map',
   manaCost: '{1}',

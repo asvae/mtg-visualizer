@@ -1,4 +1,3 @@
 {
-  "effects": { "highlight": "Attacking creatures get +2/+0 until end of turn.", "line": 0 },
-  "effects[0].authoredFact[0]": { "highlight": "get +2/+0", "line": 0 }
+  "effects": { "highlight": "Attacking creatures get +2/+0 until end of turn.", "line": 0 }
 }

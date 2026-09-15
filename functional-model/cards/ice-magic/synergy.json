@@ -15,10 +15,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 19,
-          "end": 61
+          "start": 26,
+          "end": 41
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "from": "Battlefield",
@@ -36,9 +40,19 @@
           "target": "oracle",
           "line": 2,
           "start": 19,
-          "end": 104
+          "end": 34
+        },
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 22,
+          "end": 37
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -55,8 +69,24 @@
           "line": 1,
           "start": 26,
           "end": 41
+        },
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 19,
+          "end": 34
+        },
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 22,
+          "end": 37
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     }
   ]
 }

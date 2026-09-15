@@ -885,9 +885,18 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
     // `pool[0]` default, which stays the fallback when unset or nothing
     // in `pool` matches.
     chooseTarget: (pool, predicate) => (predicate && pool.find(predicate)) || pool[0]!,
-    move: (player, from, to, qty, validType) => {
+    move: (player, from, to, qty, validType, subtype, maxCmc) => {
       const real = playerOf(player);
-      const fromArr = from === 'Hand' ? real.hand : from === 'Library' ? real.library : from === 'Graveyard' ? real.graveyard : from === 'Battlefield' ? real.battlefield : real.exile;
+      const zoneArr = (zone: ZoneType) => (zone === 'Hand' ? real.hand : zone === 'Library' ? real.library : zone === 'Graveyard' ? real.graveyard : zone === 'Battlefield' ? real.battlefield : real.exile);
+      // `from: ZoneType | ZoneType[]` (2026-09-15, Delivery Moogle's own
+      // real two-zone "library and/or graveyard" search) — normalized to
+      // an array here (a bare scalar becomes a one-element array), then
+      // every named zone's own real card array is concatenated into ONE
+      // combined pool, same "union, not one pick per zone" real CR 701.19
+      // behavior `card.ts`'s own `case 'move'` targeted branch already
+      // established for this same field.
+      const fromZones = Array.isArray(from) ? from : [from];
+      const fromArr = fromZones.flatMap(zoneArr);
       // Type-checked via `loggingCard` (not raw `effectiveTypes(c)`) so a
       // land/creature/artifact-typed search logs real `read:*` evidence per
       // candidate — same fix `sacrifice`'s own `matches` already got, for
@@ -896,6 +905,20 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       // like `reach-the-horizon`'s own) with zero trace evidence for
       // verify-synergy.mjs to check against.
       const matches = (c: RealCard) => {
+        if (subtype) {
+          // Real, narrower search (2026-09-15, `move.subtype`'s own doc
+          // comment — `Cloud, Midgar Mercenary`'s own tutor-Equipment):
+          // reuses `hasSubtype` the SAME way the pre-existing TARGETED
+          // branch's own `subtype` filter already does (`card.ts`'s own
+          // `case 'move'`, `target:true` path), via the logged `Card`
+          // interface so this still emits real `read:hasSubtype` evidence.
+          if (!loggingCard(state, c, log).hasSubtype(subtype)) return false;
+        }
+        // `maxCmc` (2026-09-15, Delivery Moogle's own real "mana value 2
+        // or less") — same real `Card.getCMC()` read every other CMC
+        // check in this file already uses, via `loggingCard` so this still
+        // emits real `read:getCMC` evidence.
+        if (maxCmc !== undefined && loggingCard(state, c, log).getCMC() > maxCmc) return false;
         if (!validType || validType === 'any') return true;
         const wrapped = loggingCard(state, c, log);
         switch (validType) {
@@ -911,7 +934,7 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       };
       const chosen = fromArr.filter(matches).slice(0, qty);
       for (const c of chosen) state.move(c, to);
-      log.push({ fn: 'move', player: player.getName(), from, to, qty, validType });
+      log.push({ fn: 'move', player: player.getName(), from, to, qty, validType, subtype, ...(maxCmc !== undefined ? { maxCmc } : {}) });
       return chosen.map((c) => loggingCard(state, c, log));
     },
     sacrifice: (player, qty, validType, notSelf, tokenFilter) => {

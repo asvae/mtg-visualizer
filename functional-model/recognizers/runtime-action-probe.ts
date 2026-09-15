@@ -150,6 +150,7 @@ function mkFakeCard(
     getName: () => opts.name ?? `Fake Card ${id}`,
     getCounters: (t: string) => opts.counters?.[t] ?? 0,
     isToken: () => false,
+    isAttacking: () => false,
     getOwner: () => null as unknown as Player,
     getController: () => null as unknown as Player,
     getNetPower: () => 2,

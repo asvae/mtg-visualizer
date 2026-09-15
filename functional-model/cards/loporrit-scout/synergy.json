@@ -1,5 +1,22 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "pump",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 60,
+          "end": 70
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpSelf-effect-structural"
+      }
+    }
+  ],
   "sink": [
     {
       "event": "entersBattlefield",

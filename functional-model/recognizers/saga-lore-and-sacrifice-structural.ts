@@ -58,18 +58,16 @@
 //     card "likely still uses a custom effect for its own unique ability"
 //     was checked directly and found wrong; chapter III's own real work is
 //     a plain declarative `sacrifice` Effect, not an opaque closure).
-//   - `summon-leviathan` and `crystal-fragments-summon-alexander` (the
-//     back face) are the two real, DELIBERATE divergences from today's
-//     existing hand-authored data this recognizer produces: both already
-//     carry a hand-authored `sacrifice`+`dies` self-pair in their real
-//     `synergy.json`, but their own final chapters use a `custom` effect
-//     for an entirely unrelated reason (a batch type-filtered bounce /
-//     tap-all-opponents-creatures effect this model's declarative
-//     vocabulary has no other way to express — see each card's own
-//     `definition.ts` comment), not a transform-back. This recognizer
-//     declines the pair for both anyway, per the letter of the rule above
-//     — same `zack-fair`-style "a recognizer declining to add a fact never
-//     removes or contradicts an already-authored one" precedent
+//   - `summon-leviathan` is the one real, remaining DELIBERATE divergence
+//     from today's existing hand-authored data this recognizer produces:
+//     it already carries a hand-authored `sacrifice`+`dies` self-pair in
+//     its real `synergy.json`, but its own final chapter uses a `custom`
+//     effect for an entirely unrelated reason (a batch bounce this model's
+//     declarative vocabulary has no other way to express — see that
+//     card's own `definition.ts` comment), not a transform-back. This
+//     recognizer declines the pair anyway, per the letter of the rule
+//     above — same `zack-fair`-style "a recognizer declining to add a
+//     fact never removes or contradicts an already-authored one" precedent
 //     `permanent-enters-battlefield-normally.ts`'s own module doc comment
 //     already establishes. Worth a human eventually teaching this
 //     recognizer to tell "custom effect that also transforms back" apart
@@ -77,6 +75,12 @@
 //     static insight into what a `custom` closure's `run` body actually
 //     does — out of reach for ANY recognizer in this family by
 //     construction, not something this one case could fix in isolation.
+//     `crystal-fragments-summon-alexander` (the back face) USED to be a
+//     second real divergence of this exact shape, but its own final
+//     chapter is a `kind:'program'` `Each` (never `custom`), so
+//     `chapterHasCustomEffect`'s 2026-09-15 refinement (see that function's
+//     own doc comment) now correctly ACCEPTS the pair for it instead of
+//     declining — no longer a divergence.
 //
 // **`value` on both produced facts is a FIXED `1`**, same convention every
 // prior structural recognizer in this catalog establishes — checked the
@@ -158,11 +162,34 @@ function maxChapterOf(input: StructuralRecognizerInput): number {
  * is real, valuable, future work this pass doesn't attempt — same
  * conservative-by-construction discipline this whole recognizer already
  * follows, just extended to cover the new node kind.
+ *
+ * **Refined 2026-09-15 (fin/11-15 audit)** — no longer blocks on EVERY
+ * `program` effect, only a `program` whose own top-level `ProgramNode` is a
+ * `Sequence` (`combinator.ts`'s own `sequence()` builder). Checked directly
+ * against `combinator.ts`'s own header before narrowing this (not assumed):
+ * `Sequence` is used pool-wide for EXACTLY ONE real purpose — "the 3
+ * migrated exile-then-return-to-battlefield closures" (that file's own
+ * words) — so `kind:'sequence'` really is a reliable, structural
+ * transform-back signal on its own, unlike `program` generally. A `program`
+ * built from any OTHER `ProgramNode` (`Each`/`Branch`/`SelectUpTo`/
+ * `ApplyToBound` — e.g. Crystal Fragments/Summon: Alexander's own chapter
+ * III, `opponents.creaturesInPlay().each(tap())`, an `Each` over a `Query`)
+ * is NOT a transform-back and no longer blocks the sacrifice+dies pair.
+ * `kind:'custom'` (a genuinely opaque closure, `structural-effects.ts`'s own
+ * "wall no static source can see through") still unconditionally blocks —
+ * unaffected by this change. Re-checked the full real pool after narrowing:
+ * `jill-shiva-s-dominant-shiva-warden-of-ice`/`summon-leviathan` still
+ * correctly decline (their own final chapters are still plain `kind:'custom'`
+ * closures, never migrated to `program`); `dion-bahamut-s-dominant-bahamut-
+ * warden-of-light` still correctly declines (its own chapter III is a real
+ * `sequence('Exile','Battlefield')`); `crystal-fragments-summon-alexander`
+ * is the one real card whose outcome changes — now correctly ACCEPTS the
+ * pair (its own chapter III program is an `Each`, never a `Sequence`).
  */
 function chapterHasCustomEffect(effects: Effect[] | undefined): boolean {
   const collected: Effect[] = [];
   collectEffects(effects, collected);
-  return collected.some((e) => e.kind === 'custom' || e.kind === 'program');
+  return collected.some((e) => e.kind === 'custom' || (e.kind === 'program' && e.program.kind === 'sequence'));
 }
 
 /** `[start, end)` span of the literal word `Saga` inside `typeLine` — never

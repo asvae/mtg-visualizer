@@ -3,11 +3,6 @@
     {
       "event": "pump",
       "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        },
         "equippedBySelf": true
       },
       "face": "front",
@@ -15,10 +10,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 18,
+          "start": 0,
           "end": 28
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
     },
     {
       "to": "Exile",
@@ -31,9 +30,13 @@
           "target": "oracle",
           "line": 1,
           "start": 11,
-          "end": 31
+          "end": 66
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "event": "entersBattlefield",
@@ -47,10 +50,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 38,
-          "end": 78
+          "start": 11,
+          "end": 66
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "event": "preventDamage",
@@ -70,7 +77,11 @@
           "start": 8,
           "end": 81
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "preventDamageAll-effect-structural"
+      }
     },
     {
       "event": "tap",
@@ -91,7 +102,11 @@
           "start": 6,
           "end": 46
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapAllQuery-effect-structural"
+      }
     },
     {
       "event": "sacrifice",
@@ -99,12 +114,15 @@
       "face": "back",
       "annotations": [
         {
-          "target": "oracle",
-          "line": 0,
-          "start": 67,
-          "end": 86
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     },
     {
       "event": "dies",
@@ -116,12 +134,15 @@
       "face": "back",
       "annotations": [
         {
-          "target": "oracle",
-          "line": 0,
-          "start": 67,
-          "end": 86
+          "target": "typeLine",
+          "start": 23,
+          "end": 27
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "saga-lore-and-sacrifice-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -158,7 +179,11 @@
           "start": 0,
           "end": 9
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipmentWantsCreature-sink-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -176,7 +201,11 @@
           "start": 6,
           "end": 46
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapAllQuery-effect-structural"
+      }
     }
   ]
 }

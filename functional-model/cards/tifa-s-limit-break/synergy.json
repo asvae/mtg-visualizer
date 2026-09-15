@@ -4,6 +4,29 @@
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 37,
+          "end": 47
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -13,6 +36,18 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 21,
+          "end": 47
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
       }
     }
   ]

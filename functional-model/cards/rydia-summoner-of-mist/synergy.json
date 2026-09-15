@@ -28,6 +28,23 @@
         "origin": "parser",
         "rule": "drawCard-effect-structural"
       }
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 14,
+          "end": 17
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     }
   ],
   "sink": [

@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { flashback } from '../../flashback';
 import { TOKENS } from '../../tokens.ts';
 
 export const retrieveTheEsper: CardDefinition = {
@@ -8,7 +9,7 @@ export const retrieveTheEsper: CardDefinition = {
 
   // Flashback {5}{U}, then exile — real `AlternateCost`, not a second
   // effects branch.
-  alternateCosts: [{ name: 'Flashback', cost: '{5}{U}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{5}{U}')],
 
   // "Then IF this spell was cast from a graveyard, put two +1/+1 counters
   // on THAT token" — the counters target the token THIS effect just

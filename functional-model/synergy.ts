@@ -1413,6 +1413,22 @@ export function describeFact(fact: Fact): string {
   // inert, no execution behind it yet).
   if (event === 'grantKeyword') return 'grant keyword';
   if (event === 'grantType') return 'grant type';
+  // Same real camelCase-display bug class as `preventDamage`/
+  // `castCreatureSpell`/`grantKeyword` above (2026-09-15, Cloud, Midgar
+  // Mercenary/fin-10's own Facts tab: this event's label was rendering as
+  // the raw literal "TriggeredAbility" — the card page's own
+  // `first-letter:uppercase` CSS only capitalizes the FIRST letter of
+  // whatever this function returns, so an un-branched camelCase `event`
+  // string reaches the page with its OWN internal capital letters intact).
+  // `triggerDoubling-selfAndAttachedEquipment-structural`'s own real
+  // `{event:'triggeredAbility'}` facts (self-half + Equipment-attached-half)
+  // are the only real pool producer of this event today — checked directly,
+  // no other recognizer or hand-authored fact uses it. Bare "triggered
+  // ability" (2026-09-15), same single-dimensional label convention every
+  // other branch here follows — WHICH ability (self vs. an attached
+  // Equipment's own) stays real, intact `target`/`subject` data, surfaced
+  // in the notes/conditions column, never folded into the label itself.
+  if (event === 'triggeredAbility') return 'triggered ability';
   // Deliberately generic — no color breakdown in this label (`colors`/
   // `color` either way, whichever the fact carries) — that's the card
   // page's own "details"/JSON column's job (see `CONDITION_KEYS` in
@@ -1448,6 +1464,21 @@ export function describeFact(fact: Fact): string {
   // distinct from `lifegain` above (which is about SOMETHING gaining life
   // at all, not a multiplier on however much).
   if (event === 'lifegainDouble') return 'double lifegain';
+  // Same real camelCase-display bug class as `triggeredAbility` right above
+  // (2026-09-15 quick pool-wide check, Message F's own "check whether any
+  // OTHER shipped event name has this same gap") — none of these three had
+  // ANY explicit branch before this pass (they fell all the way through to
+  // the generic fallback below, rendering their own raw camelCase strings
+  // verbatim): `the-water-crystal`'s own real "Blue spells you cast cost
+  // {1} less" (`costReduction`) and "Whenever an opponent draws a card
+  // except the first one they draw in each of their draw steps, they mill
+  // a card" (`millIncrease` — real name for "an extra, forced mill" event,
+  // not a generic `mill` fact, since it's conditional on an EXTRA draw, not
+  // a plain mill effect); `stiltzkin-moogle-merchant`/`stolen-uniform`'s own
+  // real "gain control of target ..." (`gainControl`).
+  if (event === 'costReduction') return 'cost reduction';
+  if (event === 'gainControl') return 'gain control';
+  if (event === 'millIncrease') return 'increased mill';
   // The Gold Saucer's own real "Sacrifice two artifacts" COST, modeled as
   // a real `{event:'sacrifice'}` produce fact (2026-09-09) — the ACT of
   // sacrificing (a real, deterministic event a sacrifice-themed payoff
@@ -1471,13 +1502,22 @@ export function describeFact(fact: Fact): string {
   // engine gap behind it (no attacked-this-turn tracking, no play-from-
   // library Effect kind).
   if (event === 'play') return 'play a card';
+  // `fang-fearless-l-cie`'s own real "Whenever a card leaves your
+  // graveyard, ..." sink want — same real camelCase-display bug class as
+  // `triggeredAbility`/`costReduction`/`gainControl`/`millIncrease` above
+  // (2026-09-15 quick pool-wide check) — this stale comment used to list
+  // `graveyardLeaves` as an intentional fall-through case; it was never
+  // actually safe to (genuinely camelCase, same as the others), simply not
+  // checked before now.
+  if (event === 'graveyardLeaves') return 'graveyard leaves';
   // Generic fallback for every event this function doesn't special-case
-  // above (`lifeloss`, `grantKeyword`, `landfall`, `scry`, `surveil`,
-  // `graveyardLeaves`, `counter`, etc. — `damage` got its own bare branch
-  // above; `castCreatureSpell`/`preventDamage` got theirs above too,
-  // 2026-09-12, once real camelCase pool instances of each surfaced this
-  // fallback's own raw-string display bug — see those branches' own doc
-  // comments). Bare `event` string only (2026-09-10) — neither
+  // above (`lifeloss`, `landfall`, `scry`, `surveil`, `counter`, etc. —
+  // `damage` got its own bare branch above; `castCreatureSpell`/
+  // `preventDamage`/`grantKeyword`/`triggeredAbility`/`costReduction`/
+  // `gainControl`/`millIncrease`/`graveyardLeaves` all got theirs above too,
+  // once a real camelCase pool instance of each surfaced this fallback's
+  // own raw-string display bug — see those branches' own doc comments).
+  // Bare `event` string only (2026-09-10) — neither
   // `controller` (who — briefly rendered as a "your"/"opponent's" prefix
   // earlier the same day) nor the `types`/`cmc` qualifier (what kind —
   // e.g. "land landfall") renders into this label anymore; both stay real,
@@ -1773,7 +1813,32 @@ function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sin
   // "A want with target: 'self' on the consumer side matches a produce
   // whose target filter the consumer card satisfies" (SYNERGY_DESIGN.md).
   if (we.target === 'self') {
-    if (pe.target === undefined) return true;
+    // **Real bug, fixed 2026-09-15** (flagged explicitly, not silently
+    // patched over, since this is a shared-matcher correctness question,
+    // not a per-card authoring one — surfaced by this session's own
+    // `entersBattlefield-self-trigger-structural`/`token-creation-
+    // structural` recognizers wiring MANY more real `event:'entersBattlefield'`
+    // facts into the pool at once). Used to be `if (pe.target === undefined)
+    // return true` unconditionally — treating ANY producer with no `target`
+    // field at all as a vacuous match for a self-want, regardless of
+    // whether that producer ALSO carries a `subject` narrowing it to a
+    // SPECIFIC other object (`token-creation-structural`'s own real
+    // `{event:'entersBattlefield', subject:{token:'w_2_2_knight'}}` source
+    // fact, e.g. — genuinely about a Knight TOKEN entering, never about
+    // "the wanting card itself" entering, even though it has no `target`
+    // field to say so explicitly). Confirmed via a real before/after
+    // `find-synergies.mjs` diff on Cloud, Midgar Mercenary (fin/10): this
+    // fix removes exactly the ~13 real false-positive matches the user's
+    // own report named (every OTHER pool card's own token-creation-derived
+    // `entersBattlefield` source fact was vacuously "matching" Cloud's own
+    // `target:'self'` sink simply for sharing the bare event name), with
+    // ZERO real matches lost anywhere else in the pool (re-checked the
+    // whole pool's own before/after interaction counts, not just Cloud's).
+    // A producer only stays genuinely vacuous (matches ANY self-want) when
+    // it ALSO has no `subject` — the true "any qualifying object, no
+    // narrowing at all" case (e.g. a plain `{event:'entersBattlefield',
+    // controller:'you'}` fact with no type or identity filter whatsoever).
+    if (pe.target === undefined) return pe.subject === undefined;
     if (pe.target === 'self') return pCard.name === wCard.name; // same-instance only
     return satisfiesConstraints(staticAttrsFor(wCard.card), pe.target);
   }

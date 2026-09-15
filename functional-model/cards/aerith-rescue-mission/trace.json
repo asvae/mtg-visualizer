@@ -144,19 +144,19 @@
       {
         "fn": "tap",
         "target": "Hero",
-        "id": 65,
+        "id": 11,
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "Cat",
-        "id": 71,
+        "id": 17,
         "controller": "opp0"
       },
       {
         "fn": "putCounter",
         "target": "Hero",
-        "id": 65,
+        "id": 11,
         "counterType": "stun",
         "amount": 1,
         "controller": "you"

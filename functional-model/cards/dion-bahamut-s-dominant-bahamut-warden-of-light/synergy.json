@@ -36,7 +36,11 @@
           "start": 18,
           "end": 58
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     },
     {
       "to": "Exile",
@@ -49,9 +53,13 @@
           "target": "oracle",
           "line": 2,
           "start": 16,
-          "end": 99
+          "end": 61
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -66,9 +74,13 @@
           "target": "oracle",
           "line": 2,
           "start": 16,
-          "end": 99
+          "end": 61
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "event": "tap",
@@ -82,7 +94,11 @@
           "start": 11,
           "end": 14
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -177,9 +193,13 @@
           "target": "oracle",
           "line": 2,
           "start": 44,
-          "end": 108
+          "end": 92
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -194,9 +214,13 @@
           "target": "oracle",
           "line": 2,
           "start": 44,
-          "end": 108
+          "end": 92
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -250,6 +274,23 @@
           "end": 42
         }
       ]
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 16
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

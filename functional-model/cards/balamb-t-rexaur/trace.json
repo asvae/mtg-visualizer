@@ -134,11 +134,10 @@
         "for": "Balamb T-Rexaur"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 1,
-        "creatureCount": 0
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Forest",
+        "result": true
       },
       {
         "fn": "read:isLand",
@@ -146,17 +145,13 @@
         "result": true
       },
       {
-        "fn": "read:hasSubtype",
-        "target": "Forest",
-        "subtype": "Forest",
-        "result": true
-      },
-      {
-        "fn": "moveTo",
-        "target": "Forest",
-        "id": 13,
-        "zone": "Hand",
-        "controller": "you"
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land",
+        "subtype": "Forest"
       },
       {
         "fn": "shuffleLibrary",

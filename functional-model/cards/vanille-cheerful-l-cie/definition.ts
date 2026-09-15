@@ -18,6 +18,14 @@ export const vanilleCheerfulLCie: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      // recognizer-exception: move-effect-structural — the second effect's
+      // own `target:true` models a resolution-time SELECTION ("mill two
+      // cards, then return A permanent card from your graveyard to your
+      // hand" — a resolution-time pick among whatever's already in the
+      // graveyard, never phrased with the word "target"), not a real
+      // CR-targeted ability; this recognizer's own "target <type>" template
+      // correctly never matches. See that recognizer's own module doc
+      // comment.
       effects: [
         { kind: 'move', owner: 'you', from: 'Library', to: 'Graveyard', qty: 2 } satisfies Effect,
         // Real `ChangeType$ Permanent.YouOwn` — no 'permanent' validType

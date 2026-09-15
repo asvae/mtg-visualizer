@@ -32,7 +32,13 @@ export const chocoSeekerOfParadise: CardDefinition = {
     },
     {
       name: 'onLandfall',
-      effects: [{ kind: 'pumpSelf', power: 1, toughness: 0 } satisfies Effect],
+      // Real "Choco gets +1/+0 UNTIL END OF TURN" — `untilEndOfTurn: true`
+      // (2026-09-15, same real gap `ambrosia-whiteheart`'s own identical
+      // Landfall pump already closed 2026-09-14: a bare `pumpSelf` is a
+      // PERMANENT `layers.add` entry with no expiry at all, even though the
+      // printed text says otherwise — `state.ts`'s own `pump`/
+      // `clearUntilEndOfTurnPumps` doc comments).
+      effects: [{ kind: 'pumpSelf', power: 1, toughness: 0, untilEndOfTurn: true } satisfies Effect],
     },
   ],
 };

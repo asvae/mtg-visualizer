@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect, EffectContext } from '../../card';
+import { flashback } from '../../flashback';
 import { TOKENS } from '../../tokens.ts';
 
 export const theFinalDays: CardDefinition = {
@@ -6,7 +7,7 @@ export const theFinalDays: CardDefinition = {
   manaCost: '{2}{B}{B}',
   typeLine: 'Sorcery',
 
-  alternateCosts: [{ name: 'Flashback', cost: '{4}{B}{B}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{4}{B}{B}')],
 
   effects: [
     {

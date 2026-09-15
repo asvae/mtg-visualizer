@@ -18,7 +18,11 @@
           "start": 83,
           "end": 123
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapTarget-effect-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -72,10 +76,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 87,
+          "start": 83,
           "end": 123
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapTarget-effect-structural"
+      }
     }
   ]
 }

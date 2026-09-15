@@ -65,11 +65,15 @@
       "annotations": [
         {
           "target": "oracle",
-          "line": 1,
-          "start": 5,
-          "end": 8
+          "line": 0,
+          "start": 0,
+          "end": 3
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     },
     {
       "event": "sacrifice",

@@ -1,11 +1,12 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { flashback } from '../../flashback';
 
 export const callTheMountainChocobo: CardDefinition = {
   name: 'Call the Mountain Chocobo',
   manaCost: '{3}{R}',
   typeLine: 'Sorcery',
 
-  alternateCosts: [{ name: 'Flashback', cost: '{5}{R}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{5}{R}')],
 
   effects: [
     {

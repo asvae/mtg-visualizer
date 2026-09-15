@@ -108,12 +108,12 @@ describe('Recognizer E — Saga lore-counter + sacrifice/dies, read structurally
     expect(result.facts).toHaveLength(1);
   });
 
-  it('declines the sacrifice+dies pair for Summon: Alexander (Crystal Fragments\' own back face) — chapter III\'s real `custom` ("tap all creatures your opponents control") is for an UNRELATED reason, not a transform-back; a real, deliberate divergence from this card\'s own existing hand-authored sacrifice+dies facts', () => {
+  it('accepts the sacrifice+dies pair for Summon: Alexander (Crystal Fragments\' own back face) — chapter III\'s real `program` (`Each` over `opponents.creaturesInPlay()`, "tap all creatures your opponents control") is a real, structurally-distinguishable NON-Sequence program, not a transform-back, so 2026-09-15\'s `chapterHasCustomEffect` refinement no longer blocks it', () => {
     const backDef = crystalFragmentsSummonAlexander.backFace!;
     const result = recognizeSagaLoreAndSacrificeStructural(structuralInput('Crystal Fragments // Summon: Alexander', backDef, 'back'));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts).toHaveLength(1);
+    expect(result.facts).toHaveLength(3);
   });
 
   it('declines the front face of a transforming Saga (Jecht, Reluctant Guardian himself) — the FRONT face is not itself a Saga at all, only the back face is', () => {

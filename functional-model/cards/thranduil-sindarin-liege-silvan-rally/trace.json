@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Thranduil, Sindarin Liege",
         "instanceId": 1,
-        "id": 2810,
+        "id": 2,
         "name": "onLandfall"
       },
       {
@@ -43,7 +43,7 @@
         "fn": "cast",
         "card": "Thranduil, Sindarin Liege",
         "instanceId": 1,
-        "id": 2813,
+        "id": 5,
         "from": "hand",
         "cost": "{2}{G/U}{G/U}"
       },
@@ -51,7 +51,7 @@
         "fn": "enters",
         "card": "Thranduil, Sindarin Liege",
         "instanceId": 1,
-        "id": 2813,
+        "id": 5,
         "zone": "Battlefield"
       },
       {
@@ -80,7 +80,7 @@
         "fn": "cast",
         "card": "Silvan Rally",
         "instanceId": 1,
-        "id": 2820,
+        "id": 12,
         "from": "hand",
         "cost": "{1}{G/U}{G/U}"
       },
@@ -121,14 +121,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-land-0",
-        "id": 2816,
+        "id": 8,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-library-land-1",
-        "id": 2817,
+        "id": 9,
         "zone": "Hand",
         "controller": "you"
       },
@@ -136,7 +136,7 @@
         "fn": "move",
         "card": "Silvan Rally",
         "instanceId": 1,
-        "id": 2820,
+        "id": 12,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"
@@ -161,7 +161,7 @@
         "fn": "cast",
         "card": "Silvan Rally",
         "instanceId": 1,
-        "id": 2826,
+        "id": 18,
         "from": "hand",
         "cost": "{1}{G/U}{G/U}"
       },
@@ -202,14 +202,14 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2822,
+        "id": 14,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2823,
+        "id": 15,
         "zone": "Hand",
         "controller": "you"
       },
@@ -217,7 +217,7 @@
         "fn": "move",
         "card": "Silvan Rally",
         "instanceId": 1,
-        "id": 2826,
+        "id": 18,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

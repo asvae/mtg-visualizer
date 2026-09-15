@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Cantankerous Keepers",
         "instanceId": 1,
-        "id": 312,
+        "id": 2,
         "from": "hand",
         "cost": "{5}{G}"
       },
@@ -21,7 +21,7 @@
         "fn": "enters",
         "card": "Cantankerous Keepers",
         "instanceId": 1,
-        "id": 312,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]
@@ -46,7 +46,7 @@
         "fn": "trigger",
         "card": "Cantankerous Keepers",
         "instanceId": 1,
-        "id": 318,
+        "id": 8,
         "name": "onEnter"
       },
       {
@@ -90,14 +90,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-Elf-0",
-        "id": 314,
+        "id": 4,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "you-library-Elf-1",
-        "id": 315,
+        "id": 5,
         "zone": "Hand",
         "controller": "you"
       }
@@ -121,7 +121,7 @@
         "fn": "trigger",
         "card": "Cantankerous Keepers",
         "instanceId": 1,
-        "id": 324,
+        "id": 14,
         "name": "onEnter"
       },
       {

@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Summon: Titan",
         "instanceId": 1,
-        "id": 2552,
+        "id": 10,
         "name": "chapterI"
       },
       {
@@ -47,7 +47,7 @@
         "fn": "trigger",
         "card": "Summon: Titan",
         "instanceId": 1,
-        "id": 2557,
+        "id": 15,
         "name": "chapterII"
       },
       {
@@ -116,7 +116,7 @@
         "fn": "trigger",
         "card": "Summon: Titan",
         "instanceId": 1,
-        "id": 2562,
+        "id": 20,
         "name": "chapterIII"
       },
       {
@@ -137,7 +137,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2559,
+        "id": 17,
         "power": 2,
         "toughness": 2
       },
@@ -171,7 +171,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2559,
+        "id": 17,
         "keyword": "Trample"
       }
     ]

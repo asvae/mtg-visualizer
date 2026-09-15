@@ -124,7 +124,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Treasure",
-        "id": 1314,
+        "id": 24,
         "zone": "Hand",
         "controller": "opp0"
       },
@@ -177,7 +177,7 @@
       {
         "fn": "tap",
         "target": "Jill, Shiva's Dominant",
-        "id": 1326,
+        "id": 36,
         "controller": "you"
       },
       {
@@ -208,14 +208,14 @@
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1326,
+        "id": 36,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1326,
+        "id": 36,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -293,7 +293,7 @@
       {
         "fn": "grantKeyword",
         "target": "Hero",
-        "id": 1292,
+        "id": 2,
         "keyword": "Unblockable"
       },
       {
@@ -407,7 +407,7 @@
       {
         "fn": "grantKeyword",
         "target": "Hero",
-        "id": 1292,
+        "id": 2,
         "keyword": "Unblockable"
       },
       {
@@ -458,20 +458,20 @@
       {
         "fn": "tap",
         "target": "Forest",
-        "id": 1315,
+        "id": 25,
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1326,
+        "id": 36,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jill, Shiva's Dominant",
-        "id": 1326,
+        "id": 36,
         "zone": "Battlefield",
         "controller": "you"
       },

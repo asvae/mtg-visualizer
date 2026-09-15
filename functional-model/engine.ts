@@ -1374,6 +1374,10 @@ export function declareAttackers(engine: GameEngine, attackers: RealCard[]): Act
   // game-wide at the next real Cleanup (`turn.ts`'s own Cleanup branch).
   for (const creature of attackers) creature.attackedThisTurn = true;
   engine.attackers = attackers;
+  // Dual-write to `GameState` too (`state.ts`'s own `attackers` field doc
+  // comment) — `Card.isAttacking()` only ever sees a `GameState`, never a
+  // `GameEngine`.
+  engine.state.attackers = attackers;
   engine.blockers = new Map();
   // Real `TriggerType.Attacks` auto-fire (ENGINE_GAPS.md — attack-triggered-
   // ability auto-dispatch), see `fireOnAttackTriggers`'s own doc comment.

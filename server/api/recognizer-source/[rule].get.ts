@@ -110,6 +110,27 @@ export const RECOGNIZER_IDS: RecognizerId[] = [
   'ptFormula-scalingPump-structural',
   'digReveal-effect-structural',
   'triggerDoubling-selfAndAttachedEquipment-structural',
+  // 2026-09-15 follow-up (fin/5,6,7,8,9,10 recognizer-coverage batch) —
+  // mirrors `functional-model/recognizers/types.ts`'s own `RecognizerId`
+  // union addition the same day.
+  'move-effect-structural',
+  'moveSearchLibrary-effect-structural',
+  'entersBattlefield-self-trigger-structural',
+  'pumpSelf-effect-structural',
+  'pumpTarget-effect-structural',
+  'pumpAllAttacking-effect-structural',
+  'selectUpTo-effect-structural',
+  'token-creation-structural',
+  'discardSelfCost-structural',
+  'tapTarget-effect-structural',
+  'tapSelfCost-structural',
+  // fin/11-15 audit follow-up, same pass as its own wiring.
+  'continuousPTGrantsEquipped-structural',
+  'sequenceExileReturn-effect-structural',
+  'tapAllQuery-effect-structural',
+  'equipmentWantsCreature-sink-structural',
+  'preventDamageAll-effect-structural',
+  'moveSearchLibraryOrGraveyard-effect-structural',
 ];
 
 export default defineEventHandler((event) => {

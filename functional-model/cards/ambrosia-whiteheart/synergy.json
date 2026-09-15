@@ -8,10 +8,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 41,
-          "end": 97
+          "start": 48,
+          "end": 77
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "event": "pump",
@@ -23,7 +27,11 @@
           "start": 67,
           "end": 77
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpSelf-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -37,7 +45,11 @@
           "start": 48,
           "end": 77
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "event": "landfall",
@@ -53,6 +65,22 @@
       "provenance": {
         "origin": "parser",
         "rule": "landfall-trigger-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 31
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

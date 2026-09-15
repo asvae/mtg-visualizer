@@ -17,7 +17,7 @@
         "fn": "cast",
         "card": "Fight On!",
         "instanceId": 1,
-        "id": 922,
+        "id": 4,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -41,14 +41,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 920,
+        "id": 2,
         "zone": "Hand",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 921,
+        "id": 3,
         "zone": "Hand",
         "controller": "you"
       },
@@ -56,7 +56,7 @@
         "fn": "move",
         "card": "Fight On!",
         "instanceId": 1,
-        "id": 922,
+        "id": 4,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -81,7 +81,7 @@
         "fn": "cast",
         "card": "Fight On!",
         "instanceId": 1,
-        "id": 925,
+        "id": 7,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -100,7 +100,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 924,
+        "id": 6,
         "zone": "Hand",
         "controller": "you"
       },
@@ -108,7 +108,7 @@
         "fn": "move",
         "card": "Fight On!",
         "instanceId": 1,
-        "id": 925,
+        "id": 7,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -133,7 +133,7 @@
         "fn": "cast",
         "card": "Fight On!",
         "instanceId": 1,
-        "id": 927,
+        "id": 9,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -148,7 +148,7 @@
         "fn": "move",
         "card": "Fight On!",
         "instanceId": 1,
-        "id": 927,
+        "id": 9,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

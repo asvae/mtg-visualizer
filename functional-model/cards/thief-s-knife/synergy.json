@@ -18,8 +18,6 @@
     },
     {
       "event": "pump",
-      "power": 1,
-      "toughness": 1,
       "target": {
         "equippedBySelf": true
       },
@@ -30,7 +28,11 @@
           "start": 0,
           "end": 28
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
     },
     {
       "event": "grantType",
@@ -80,7 +82,11 @@
           "start": 0,
           "end": 9
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipmentWantsCreature-sink-structural"
+      }
     }
   ]
 }

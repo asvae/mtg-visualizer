@@ -67,18 +67,9 @@
         "name": "onEnter"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 3,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Graveyard",
-        "count": 0,
-        "creatureCount": 0
+        "fn": "read:getCMC",
+        "target": "you-library-artifact-0",
+        "result": 0
       },
       {
         "fn": "read:isArtifact",
@@ -87,7 +78,7 @@
       },
       {
         "fn": "read:getCMC",
-        "target": "you-library-artifact-0",
+        "target": "Forest",
         "result": 0
       },
       {
@@ -96,16 +87,30 @@
         "result": false
       },
       {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
         "fn": "read:isArtifact",
         "target": "Forest",
         "result": false
       },
       {
-        "fn": "moveTo",
-        "target": "you-library-artifact-0",
-        "id": 561,
-        "zone": "Hand",
-        "controller": "you"
+        "fn": "move",
+        "player": "you",
+        "from": [
+          "Library",
+          "Graveyard"
+        ],
+        "to": "Hand",
+        "qty": 1,
+        "validType": "artifact",
+        "maxCmc": 2
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
       }
     ],
     "actions": [
@@ -191,18 +196,9 @@
         "name": "onEnter"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 3,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Graveyard",
-        "count": 1,
-        "creatureCount": 0
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
       },
       {
         "fn": "read:isArtifact",
@@ -210,9 +206,9 @@
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:getCMC",
         "target": "Forest",
-        "result": false
+        "result": 0
       },
       {
         "fn": "read:isArtifact",
@@ -220,9 +216,14 @@
         "result": false
       },
       {
+        "fn": "read:getCMC",
+        "target": "Forest",
+        "result": 0
+      },
+      {
         "fn": "read:isArtifact",
-        "target": "you-gy-artifact-0",
-        "result": true
+        "target": "Forest",
+        "result": false
       },
       {
         "fn": "read:getCMC",
@@ -230,11 +231,25 @@
         "result": 0
       },
       {
-        "fn": "moveTo",
+        "fn": "read:isArtifact",
         "target": "you-gy-artifact-0",
-        "id": 577,
-        "zone": "Hand",
-        "controller": "you"
+        "result": true
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": [
+          "Library",
+          "Graveyard"
+        ],
+        "to": "Hand",
+        "qty": 1,
+        "validType": "artifact",
+        "maxCmc": 2
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
       }
     ],
     "actions": [

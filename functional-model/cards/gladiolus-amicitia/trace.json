@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
-        "id": 1090,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -53,7 +53,7 @@
         "fn": "trigger",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
-        "id": 1093,
+        "id": 6,
         "name": "onLandfall"
       },
       {
@@ -64,7 +64,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1092,
+        "id": 5,
         "power": 2,
         "toughness": 2
       },
@@ -88,7 +88,7 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1092,
+        "id": 5,
         "keyword": "Trample"
       }
     ]
@@ -108,7 +108,7 @@
         "fn": "cast",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
-        "id": 1095,
+        "id": 8,
         "from": "hand",
         "cost": "{4}{R}{G}"
       },
@@ -116,7 +116,7 @@
         "fn": "enters",
         "card": "Gladiolus Amicitia",
         "instanceId": 1,
-        "id": 1095,
+        "id": 8,
         "zone": "Battlefield"
       },
       {

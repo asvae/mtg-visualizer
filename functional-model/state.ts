@@ -707,6 +707,24 @@ export class GameState {
    */
   flippedCoinThisTurn = new Set<number>();
 
+  /**
+   * This combat's declared attackers (508.1) — the SAME array `engine.ts`'s
+   * own `GameEngine.attackers` already tracks (that struct's own doc
+   * comment: set fresh by `declareAttackers` on success, empty otherwise);
+   * dual-written here too (2026-09-15, ENGINE_GAPS.md — Auron's Inspiration/
+   * fin-8's own "Attacking creatures get +2/+0" closure) SPECIFICALLY so a
+   * `Card`'s own `isAttacking()` (below) can answer "is THIS creature
+   * currently attacking" without `wrapCard`/`loggingCard` needing a
+   * `GameEngine` reference at all — those wrappers only ever see a
+   * `GameState`, by design (this file's own header: `harness.ts`'s flat
+   * scenario path has no `GameEngine` concept whatsoever, only
+   * `engine-trace.ts`'s real pilot does). `engine.ts`'s own 8 existing
+   * `engine.attackers` read/write sites are UNCHANGED — this is a genuine
+   * dual-write, not a relocation, to avoid touching that file's own
+   * already-verified combat-resolution logic for an unrelated feature.
+   */
+  attackers: RealCard[] = [];
+
   /** Schedules `run` to fire the next time the game enters `phase` (see `DelayedTrigger` above) — real 603.7 duration only, not a repeating/every-turn trigger: fires once, then this entry is gone (drained by `turn.ts`'s `advancePhase`). */
   scheduleDelayedTrigger(phase: Phase, run: () => void): void {
     this.delayedTriggers.push({ phase, run });
@@ -1488,6 +1506,16 @@ export function wrapCard(state: GameState, real: RealCard): Card {
     isEnchantment: () => effectiveTypes(real).includes('Enchantment'),
     isArtifact: () => effectiveTypes(real).includes('Artifact'),
     isTapped: () => real.tapped,
+    // Real CR 506.4 "attacking" status (508.1) — reads `state.attackers`
+    // (this file's own dual-write, see that field's own doc comment), NOT
+    // `engine.attackers` directly (`wrapCard` only ever sees a `GameState`,
+    // never a `GameEngine`). Always `false` on `harness.ts`'s own flat
+    // scenario path (that file's own `loggingCard` — a SEPARATE wrapper,
+    // see below — never populates `state.attackers` at all, since that
+    // path has no combat-phase simulation whatsoever), matching real
+    // pre-combat/no-attack-declared board state honestly rather than
+    // guessing.
+    isAttacking: () => state.attackers.some((a) => a.id === real.id),
     getCMC: () => real.cmc ?? 0,
     getAttachedTo: () => (real.attachedToId !== undefined ? wrapCard(state, state.cards.get(real.attachedToId)!) : undefined),
     getEquippedBy: () => [...state.cards.values()].filter((c) => c.attachedToId === real.id).map((c) => wrapCard(state, c)),

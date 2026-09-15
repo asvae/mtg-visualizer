@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Sidequest: Raise a Chocobo",
         "instanceId": 1,
-        "id": 2241,
+        "id": 2,
         "name": "onEnter"
       },
       {
@@ -43,7 +43,7 @@
         "fn": "trigger",
         "card": "Sidequest: Raise a Chocobo",
         "instanceId": 1,
-        "id": 2244,
+        "id": 5,
         "name": "onMainPhase"
       }
     ]
@@ -67,7 +67,7 @@
         "fn": "trigger",
         "card": "Black Chocobo",
         "instanceId": 1,
-        "id": 2247,
+        "id": 8,
         "name": "onTransform"
       },
       {
@@ -107,7 +107,7 @@
         "fn": "trigger",
         "card": "Black Chocobo",
         "instanceId": 1,
-        "id": 2251,
+        "id": 12,
         "name": "onLandfall"
       },
       {
@@ -124,7 +124,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2249,
+        "id": 10,
         "power": 1,
         "toughness": 0
       },
@@ -137,7 +137,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2250,
+        "id": 11,
         "power": 1,
         "toughness": 0
       },
@@ -150,7 +150,7 @@
       {
         "fn": "pump",
         "target": "Black Chocobo",
-        "id": 2251,
+        "id": 12,
         "power": 1,
         "toughness": 0
       }
@@ -175,7 +175,7 @@
         "fn": "trigger",
         "card": "Black Chocobo",
         "instanceId": 1,
-        "id": 2255,
+        "id": 16,
         "name": "onLandfall"
       },
       {
@@ -204,7 +204,7 @@
       {
         "fn": "pump",
         "target": "Black Chocobo",
-        "id": 2255,
+        "id": 16,
         "power": 1,
         "toughness": 0
       }

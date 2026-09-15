@@ -70,7 +70,7 @@
       {
         "fn": "moveTo",
         "target": "Magitek Armor",
-        "id": 980,
+        "id": 14,
         "zone": "Hand",
         "controller": "you"
       },
@@ -148,7 +148,7 @@
       {
         "fn": "moveTo",
         "target": "Cargo Ship",
-        "id": 981,
+        "id": 15,
         "zone": "Battlefield",
         "controller": "you"
       },

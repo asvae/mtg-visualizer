@@ -57,6 +57,29 @@
         "origin": "parser",
         "rule": "destroy-effect-structural"
       }
+    },
+    {
+      "event": "tap",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 5,
+          "end": 8
+        },
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 8
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     }
   ],
   "sink": [

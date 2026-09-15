@@ -400,9 +400,9 @@ export type Effect =
     }
   | { kind: 'drawCard'; amount?: Computed<number> }
   | {
-      /** Forge's own `PumpAll` (Warren Elder's own "creatures you control get +1/+1 until end of turn") — every creature matching `predicate` gets the same delta, as opposed to `custom`'s one-target `pump`. Only `'creatures-you-control'` modeled so far; extend the union as more predicates show up. */
+      /** Forge's own `PumpAll` (Warren Elder's own "creatures you control get +1/+1 until end of turn") — every creature matching `predicate` gets the same delta, as opposed to `custom`'s one-target `pump`. `'attacking-creatures'` (2026-09-15, ENGINE_GAPS.md — Auron's Inspiration/fin-8's own real "Attacking creatures get +2/+0," a genuinely SYMMETRIC broadcast, unlike `'creatures-you-control'` — see `Card.isAttacking()`'s own doc comment for the real 508.1 status this reads) broadcasts across `ctx.you` AND `ctx.opponents` both, the one real exception to every other `pumpAll` predicate's own `ctx.you`-only scope. */
       kind: 'pumpAll';
-      predicate: 'creatures-you-control';
+      predicate: 'creatures-you-control' | 'attacking-creatures';
       power: Computed<number>;
       toughness: Computed<number>;
       /** Forge's own real `Creature.YouCtrl+Other` shape ("OTHER creatures you control get...") — excludes `ctx.self` from the affected set, same reasoning as `sacrifice`/`move`'s own `notSelf`. */
@@ -469,10 +469,37 @@ export type Effect =
       kind: 'move';
       /** Restricts the candidate pool to one side — omit for the default, every player's matching cards (Jill/Eject/Ice Magic's own real "target [nonland permanent/creature]," no controller clause at all). Same owner-restriction convention `destroy`/`pumpTarget`/`putCounterTarget`/etc. already use — this field used to be required, forcing every `move` effect to hardcode one side even when the real card has no such restriction (confirmed bug, fixed 2026-09-06 — see those three cards' own former comments). */
       owner?: EffectOwner;
-      from: ZoneType;
+      /**
+       * `ZoneType[]` (2026-09-15, Delivery Moogle's own real "search your
+       * library AND/OR GRAVEYARD" — Forge's own real dual-`Origin` shape,
+       * `Origin$ Library | OriginAlternative$ Graveyard`) — a genuine
+       * UNION search across more than one hidden zone at once, ONE combined
+       * pool (never one pick per zone; CR 701.19 makes no distinction
+       * between the zones once they're both eligible). Every OTHER real
+       * `move` effect in this pool still sets a single scalar `ZoneType`
+       * (checked directly — Delivery Moogle is the only real card needing
+       * more than one); `case 'move'` below (and `interfaces.ts`'s own
+       * `move` signature/`harness.ts`'s own implementation) normalize a
+       * scalar to a one-element array internally rather than branching
+       * types, so nothing downstream needs its own array-vs-scalar check.
+       */
+      from: ZoneType | ZoneType[];
       to: ZoneType;
       qty: Computed<number>;
       validType?: 'creature' | 'artifact' | 'land' | 'any';
+      /**
+       * Real CR 702.13e/generic "with mana value N or less" restriction on
+       * the searched/moved card itself (Delivery Moogle's own real "an
+       * artifact card with mana value 2 or less" — no existing `move`
+       * field could express this at all before this pass: `validType`/
+       * `subtype` both filter TYPE, never a numeric card property). Reuses
+       * `Card.getCMC()` (interfaces.ts, already cited elsewhere in this
+       * file) — an upper bound only (no real pool card needs a `min`/`eq`
+       * mana-value search filter yet, so this stays a plain number rather
+       * than the fuller `NumConstraint` shape `synergy.ts`'s own `Fact.cmc`
+       * uses for the FACT side of this same claim).
+       */
+      maxCmc?: number;
       target?: boolean;
       /** "return ANOTHER permanent you control" (Ambrosia Whiteheart) — excludes `ctx.self` from the candidate pool, same reasoning as `sacrifice`'s own `notSelf`. */
       notSelf?: boolean;
@@ -487,9 +514,16 @@ export type Effect =
        * own `ChangeType$ Plains` on the expanded `TypeCycling` ability,
        * `CardFactoryUtil.java` ~line 3740). Same `subtype` vocabulary
        * `pumpAll`/`putCounterAll` already use for a creature-type filter,
-       * generalized here to the TARGETED branch of `move` (only meaningful
-       * alongside `target: true` — an untargeted batch `move` has no real
-       * FIN card needing this yet, so it's not read there).
+       * originally read only alongside the TARGETED branch of `move`.
+       * **2026-09-15**: now ALSO read for the UNTARGETED branch
+       * (`Cloud, Midgar Mercenary`/fin-10's own real "search your library
+       * for an Equipment card" — `validType` alone has no `Equipment`
+       * option at all; `interfaces.ts`'s own `move` signature and
+       * `harness.ts`'s own implementation both gained a matching `subtype`
+       * param the same pass). The doc comment used to say "an untargeted
+       * batch `move` has no real FIN card needing this yet, so it's not
+       * read there" — no longer true, see `card.ts`'s own `case 'move'`
+       * untargeted branch below.
        */
       subtype?: string;
       /**
@@ -2086,7 +2120,14 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     case 'pumpAll': {
       const power = resolve(effect.power, ctx);
       const toughness = resolve(effect.toughness, ctx);
-      for (const creature of ctx.you.getCreaturesInPlay()) {
+      // `'attacking-creatures'` is the one real SYMMETRIC predicate (both
+      // `ctx.you` AND `ctx.opponents`) — every other predicate here stays
+      // `ctx.you`-only, unchanged.
+      const pool =
+        effect.predicate === 'attacking-creatures'
+          ? [ctx.you, ...ctx.opponents].flatMap((p) => p.getCreaturesInPlay()).filter((c) => c.isAttacking())
+          : ctx.you.getCreaturesInPlay();
+      for (const creature of pool) {
         if (effect.notSelf && creature.getId() === ctx.self.getId()) continue;
         if (effect.subtype && !creature.hasSubtype(effect.subtype)) continue;
         actions.pump(creature, power, toughness, { untilEndOfTurn: effect.untilEndOfTurn });
@@ -2116,6 +2157,11 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     case 'move': {
       const qty = resolve(effect.qty, ctx);
       const players = playersFor(effect.owner ?? 'each', ctx);
+      // Normalize once here — every branch below (and every recognizer)
+      // deals with a single, real scalar `ZoneType` array, never has to
+      // branch on `Array.isArray(effect.from)` itself. See `from`'s own
+      // doc comment above for why a real card ever needs more than one.
+      const fromZones = Array.isArray(effect.from) ? effect.from : [effect.from];
       if (effect.target) {
         // Real MTG rule (601.2c): ALL targets are chosen together, once,
         // when the spell is cast — BEFORE it resolves. The effect is then
@@ -2132,12 +2178,17 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         // uses), not a per-player loop — `qty` is a total across whichever
         // players `owner` resolves to (Jill's own "up to ONE nonland
         // permanent," any player's, means ONE total, not one per side).
+        // Same flattening now also unions every zone in `fromZones` (real
+        // motivating case is untargeted — see below — but the targeted
+        // branch gets the identical treatment for free, no real card needs
+        // it there yet).
         const pool = players
-          .flatMap((player) => player.getCardsIn(effect.from))
+          .flatMap((player) => fromZones.flatMap((zone) => player.getCardsIn(zone)))
           .filter((c) => matchesValidType(c, effect.validType))
           .filter((c) => !effect.subtype || c.hasSubtype(effect.subtype))
           .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId())
-          .filter((c) => !effect.nonLand || !c.isLand());
+          .filter((c) => !effect.nonLand || !c.isLand())
+          .filter((c) => effect.maxCmc === undefined || c.getCMC() <= effect.maxCmc);
         const targets = resolveTargets(pool, qty, ctx, actions);
         for (const target of targets) actions.moveTo(target, effect.to);
       } else {
@@ -2145,7 +2196,23 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         // scoped to one Player at a time (Suplex/Triple Triad's own
         // `owner:'each'` batch effects genuinely apply independently per
         // player, not as one shared cross-player pool).
-        for (const player of players) actions.move(player, effect.from, effect.to, qty, effect.validType);
+        // `effect.subtype` (2026-09-15) is now read for the untargeted
+        // branch too — `move.subtype`'s own doc comment used to say "not
+        // read there," closed for real by `Cloud, Midgar Mercenary`'s own
+        // tutor-Equipment need (ENGINE_GAPS.md).
+        //
+        // `fromZones` (2026-09-15) — `actions.move` itself now takes the
+        // real array (Delivery Moogle's own two-zone search); passing
+        // `effect.from` straight through (not the normalized-to-array
+        // `fromZones` local) is deliberate: `interfaces.ts`'s own `move`
+        // signature accepts EITHER shape and normalizes internally too
+        // (see that declaration's own doc comment) — no reason to
+        // normalize twice.
+        //
+        // `effect.maxCmc` (2026-09-15) — same real "mana value N or less"
+        // filter as the targeted branch above, now threaded through to
+        // `actions.move` for the untargeted (batch search) shape.
+        for (const player of players) actions.move(player, effect.from, effect.to, qty, effect.validType, effect.subtype, effect.maxCmc);
       }
       // Real 601.2/701.19 "then shuffle" — see `shuffleAfter`'s own doc
       // comment above for why this is a search-specific requirement, not
@@ -2372,7 +2439,11 @@ export function synergyTags(card: CardDefinition): string[] {
         tags.push(`sacrifice:${effect.validType}`);
         break;
       case 'move':
-        tags.push(`move:${effect.from}->${effect.to}`);
+        // `Array.isArray` check (2026-09-15, `from`'s own widening) —
+        // `${effect.from}` alone would silently stringify a real 2-zone
+        // array via `Array.prototype.toString` (comma-joined, no real
+        // delimiter) instead of a clearer, deliberate `/`-joined tag.
+        tags.push(`move:${Array.isArray(effect.from) ? effect.from.join('/') : effect.from}->${effect.to}`);
         break;
       case 'putCounter':
         tags.push(`counters:${effect.counterType}`);

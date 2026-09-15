@@ -20,7 +20,7 @@
         "fn": "cast",
         "card": "Overture",
         "instanceId": 1,
-        "id": 1290,
+        "id": 10,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -42,7 +42,7 @@
         "fn": "move",
         "card": "Overture",
         "instanceId": 1,
-        "id": 1290,
+        "id": 10,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

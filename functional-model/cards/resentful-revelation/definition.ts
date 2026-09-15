@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect } from '../../card';
+import { flashback } from '../../flashback';
 
 export const resentfulRevelation: CardDefinition = {
   name: 'Resentful Revelation',
@@ -21,10 +22,17 @@ export const resentfulRevelation: CardDefinition = {
   // originally the 2nd/3rd of the "top three" — to the graveyard. Net real
   // board state after both matches Forge's own `DigNum$3 | ChangeNum$1 |
   // DestinationZone2$Graveyard` exactly.
+  //
+  // recognizer-exception: move-effect-structural — the first effect's own
+  // `target:true` models a resolution-time SELECTION ("look at the top
+  // three, put ONE into your hand"), not a real CR-targeted ability; the
+  // real text never uses the word "target" at all, so this recognizer's own
+  // "target <type>" template correctly never matches. See that
+  // recognizer's own module doc comment.
   effects: [
     { kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, target: true } satisfies Effect,
     { kind: 'move', owner: 'you', from: 'Library', to: 'Graveyard', qty: 2 } satisfies Effect,
   ],
 
-  alternateCosts: [{ name: 'Flashback', cost: '{6}{B}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{6}{B}')],
 };

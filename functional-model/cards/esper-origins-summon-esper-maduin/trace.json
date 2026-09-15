@@ -17,7 +17,7 @@
         "fn": "cast",
         "card": "Esper Origins",
         "instanceId": 1,
-        "id": 826,
+        "id": 4,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -35,7 +35,7 @@
         "fn": "move",
         "card": "Esper Origins",
         "instanceId": 1,
-        "id": 826,
+        "id": 4,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -60,7 +60,7 @@
         "fn": "cast",
         "card": "Esper Origins",
         "instanceId": 1,
-        "id": 830,
+        "id": 8,
         "from": "graveyard",
         "cost": "{3}{G}"
       },
@@ -77,21 +77,21 @@
       {
         "fn": "moveTo",
         "target": "Esper Origins",
-        "id": 830,
+        "id": 8,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Esper Origins",
-        "id": 830,
+        "id": 8,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "putCounter",
         "target": "Esper Origins",
-        "id": 830,
+        "id": 8,
         "counterType": "finality",
         "amount": 1,
         "controller": "you"
@@ -100,7 +100,7 @@
         "fn": "move",
         "card": "Esper Origins",
         "instanceId": 1,
-        "id": 830,
+        "id": 8,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"
@@ -126,7 +126,7 @@
         "fn": "trigger",
         "card": "Summon: Esper Maduin",
         "instanceId": 1,
-        "id": 833,
+        "id": 11,
         "name": "chapterI"
       },
       {
@@ -140,7 +140,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 832,
+        "id": 10,
         "zone": "Hand",
         "controller": "you"
       }
@@ -162,7 +162,7 @@
         "fn": "trigger",
         "card": "Summon: Esper Maduin",
         "instanceId": 1,
-        "id": 835,
+        "id": 13,
         "name": "chapterII"
       }
     ]
@@ -186,7 +186,7 @@
         "fn": "trigger",
         "card": "Summon: Esper Maduin",
         "instanceId": 1,
-        "id": 839,
+        "id": 17,
         "name": "chapterIII"
       },
       {
@@ -197,14 +197,14 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 837,
+        "id": 15,
         "power": 2,
         "toughness": 2
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 838,
+        "id": 16,
         "power": 2,
         "toughness": 2
       },
@@ -216,13 +216,13 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 837,
+        "id": 15,
         "keyword": "Trample"
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 838,
+        "id": 16,
         "keyword": "Trample"
       }
     ]

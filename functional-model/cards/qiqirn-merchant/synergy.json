@@ -10,8 +10,18 @@
           "line": 0,
           "start": 5,
           "end": 8
+        },
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 8
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     },
     {
       "event": "drawCard",

@@ -11,7 +11,11 @@
           "start": 11,
           "end": 14
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     },
     {
       "event": "grantKeyword",

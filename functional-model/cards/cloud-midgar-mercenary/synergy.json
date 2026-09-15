@@ -16,7 +16,11 @@
           "start": 19,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -27,10 +31,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 5,
+          "start": 0,
           "end": 17
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     },
     {
       "event": "triggeredAbility",
@@ -86,7 +94,11 @@
           "start": 19,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
+      }
     }
   ]
 }

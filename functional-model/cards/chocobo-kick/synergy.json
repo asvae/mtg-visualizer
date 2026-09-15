@@ -12,6 +12,31 @@
     {
       "zone": "Hand",
       "controller": "you"
+    },
+    {
+      "from": "Battlefield",
+      "to": "Hand",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Land"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 14,
+          "end": 32
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     }
   ],
   "sink": [

@@ -6,6 +6,5 @@
   "triggers[0]": {
     "highlight": "When Cloud enters, search your library for an Equipment card, reveal it, put it into your hand, then shuffle.",
     "line": 0
-  },
-  "authoredFacts[0]": { "highlight": "Cloud enters", "line": 0 }
+  }
 }

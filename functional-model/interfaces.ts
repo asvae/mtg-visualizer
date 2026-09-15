@@ -105,6 +105,19 @@ export interface Card extends GameEntity {
   isArtifact(): boolean;
   /** Card.java ~line 4641 — `public final boolean isTapped()`. */
   isTapped(): boolean;
+  /**
+   * Real CR 506.4/508.1 "attacking" status — Combat.java's own
+   * `isAttacking(Card)` (forge-game/.../combat/Combat.java). Added
+   * 2026-09-15 (ENGINE_GAPS.md — Auron's Inspiration/fin-8's own "Attacking
+   * creatures get +2/+0" closure): true for ANY currently-declared attacker,
+   * either player's (this effect's own real text has no "you control"
+   * qualifier), for as long as `engine.ts`'s own `GameEngine.attackers`
+   * (dual-written to `state.ts`'s `GameState.attackers` — see that field's
+   * own doc comment) holds this card's id. Always `false` on a plain
+   * `harness.ts` flat scenario (no combat-phase simulation exists there at
+   * all) — a real, honest limitation, not a guess.
+   */
+  isAttacking(): boolean;
   /** Card.java ~line 7227 — `public int getCMC()`, real mana value. */
   getCMC(): number;
   /** Card.java ~line 3907 — `public final Card getAttachedTo()`: for an Equipment/Aura, what it's currently attached to (undefined when unattached). */
@@ -306,7 +319,31 @@ export declare function moveTo(target: Card, zone: ZoneType): void;
  * method either way — same "no equivalent-weight method to mirror, this is
  * a readability shim" reasoning as `controls`/`chooseTarget` below.
  */
-export declare function move(player: Player, from: ZoneType, to: ZoneType, qty: number, validType?: string): Card[];
+/**
+ * `subtype` (2026-09-15, ENGINE_GAPS.md — Cloud, Midgar Mercenary/fin-10's
+ * own tutor-Equipment closure) — narrows an UNTARGETED batch search finer
+ * than `validType` alone can (`card.ts`'s own `move.subtype` doc comment
+ * already established this exact field for the TARGETED branch,
+ * Cloudbound Moogle's own Plainscycling; this is that same field read for
+ * the untargeted branch too, the one case that field's own doc comment
+ * said "no real FIN card needing this yet" — now one does). Omit for the
+ * pre-existing, unrestricted-by-subtype search every other untargeted
+ * `move` caller already uses.
+ *
+ * `from: ZoneType | ZoneType[]` and `maxCmc` (2026-09-15, Delivery
+ * Moogle's own real "search your library and/or graveyard for an artifact
+ * card with mana value 2 or less") — see `card.ts`'s own `move` Effect
+ * `from`/`maxCmc` doc comments for the full real motivation; this
+ * primitive-level implementation just needs to union whichever zone(s)
+ * `from` names into ONE pool (never one pick per zone) and, when
+ * `maxCmc` is set, filter the pool to `Card.getCMC() <= maxCmc` before
+ * taking `qty`. No other real caller passes more than one zone or sets
+ * `maxCmc` — every existing call site keeps working unchanged (a bare
+ * `ZoneType` is still a completely valid `ZoneType | ZoneType[]` value,
+ * and an omitted `maxCmc` keeps the pool completely unfiltered by mana
+ * value, exactly as before).
+ */
+export declare function move(player: Player, from: ZoneType | ZoneType[], to: ZoneType, qty: number, validType?: string, subtype?: string, maxCmc?: number): Card[];
 
 /** Convenience wrapper over `Card.setController(...)`/a control-change effect. */
 export declare function gainControl(controller: Player, target: Card): void;

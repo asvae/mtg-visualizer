@@ -62,7 +62,11 @@
           "start": 10,
           "end": 19
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipmentWantsCreature-sink-structural"
+      }
     }
   ]
 }

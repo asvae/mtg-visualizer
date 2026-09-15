@@ -13,6 +13,22 @@
     {
       "event": "dies",
       "target": "self"
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 53,
+          "end": 63
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpSelf-effect-structural"
+      }
     }
   ],
   "sink": [

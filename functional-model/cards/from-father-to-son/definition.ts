@@ -1,11 +1,12 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { flashback } from '../../flashback';
 
 export const fromFatherToSon: CardDefinition = {
   name: 'From Father to Son',
   manaCost: '{1}{W}',
   typeLine: 'Sorcery',
 
-  alternateCosts: [{ name: 'Flashback', cost: '{4}{W}{W}{W}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{4}{W}{W}{W}')],
 
   effects: [
     {

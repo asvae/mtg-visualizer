@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect } from '../../card';
+import { flashback } from '../../flashback';
 
 export const memoriesReturning: CardDefinition = {
   name: 'Memories Returning',
@@ -17,7 +18,7 @@ export const memoriesReturning: CardDefinition = {
   // is missing from this specific card's own printed text. Its own real
   // `cast`/`Exile` facts stay hand-authored, anchored to the bare
   // "Flashback {7}{U}{U}" line instead (see synergy.json).
-  alternateCosts: [{ name: 'Flashback', cost: '{7}{U}{U}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{7}{U}{U}')],
 
   // Real 4-step DB$ Dig chain: reveal top 5, you take 1, opponent bottoms
   // 1, you take 1 more, opponent bottoms the last 1, you take the final

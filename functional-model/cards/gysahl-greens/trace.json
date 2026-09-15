@@ -14,7 +14,7 @@
         "fn": "cast",
         "card": "Gysahl Greens",
         "instanceId": 1,
-        "id": 1136,
+        "id": 2,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -31,7 +31,7 @@
         "fn": "move",
         "card": "Gysahl Greens",
         "instanceId": 1,
-        "id": 1136,
+        "id": 2,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -53,7 +53,7 @@
         "fn": "cast",
         "card": "Gysahl Greens",
         "instanceId": 1,
-        "id": 1139,
+        "id": 5,
         "from": "graveyard",
         "cost": "{6}{G}"
       },
@@ -70,7 +70,7 @@
         "fn": "move",
         "card": "Gysahl Greens",
         "instanceId": 1,
-        "id": 1139,
+        "id": 5,
         "from": "stack",
         "to": "Exile",
         "cardType": "Sorcery"

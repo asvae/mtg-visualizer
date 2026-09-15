@@ -13,6 +13,13 @@ import { TOKENS } from '../../tokens.ts';
 // real gap eject's own comment documents. `owner: 'you'` stands in for the
 // representative/common case (your own graveyard), same approximation
 // eject makes with `'opponents'`.
+//
+// recognizer-exception: move-effect-structural — `owner:'you'` builds "a
+// permanent you control," but the real text ("Exile target card from A
+// GRAVEYARD," no ownership restriction at all) never contains that phrase
+// — a real, pre-existing approximation this card's own comment above
+// already names, not something this recognizer should silently paper over.
+// See that recognizer's own module doc comment.
 export const magicPot: CardDefinition = {
   name: 'Magic Pot',
   manaCost: '{3}',

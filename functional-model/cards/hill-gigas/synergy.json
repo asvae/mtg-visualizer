@@ -4,7 +4,67 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self"
+    },
+    {
+      "from": "Library",
+      "to": "Hand",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Mountain"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 45,
+          "end": 84
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
+      }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Library",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Mountain"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 45,
+          "end": 84
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
+      }
+    },
+    {
+      "event": "discard",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 26,
+          "end": 43
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discardSelfCost-structural"
+      }
+    }
+  ]
 }

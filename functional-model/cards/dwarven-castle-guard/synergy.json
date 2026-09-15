@@ -34,7 +34,11 @@
           "start": 25,
           "end": 67
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     }
   ],
   "sink": [

@@ -172,11 +172,10 @@
         "for": "Ice Flan"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 1,
-        "creatureCount": 0
+        "fn": "read:hasSubtype",
+        "target": "Island",
+        "subtype": "Island",
+        "result": true
       },
       {
         "fn": "read:isLand",
@@ -184,17 +183,13 @@
         "result": true
       },
       {
-        "fn": "read:hasSubtype",
-        "target": "Island",
-        "subtype": "Island",
-        "result": true
-      },
-      {
-        "fn": "moveTo",
-        "target": "Island",
-        "id": 15,
-        "zone": "Hand",
-        "controller": "you"
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land",
+        "subtype": "Island"
       },
       {
         "fn": "shuffleLibrary",

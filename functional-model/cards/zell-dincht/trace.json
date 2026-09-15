@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Zell Dincht",
         "instanceId": 1,
-        "id": 3218,
+        "id": 4,
         "name": "onEndStep"
       },
       {
@@ -63,7 +63,7 @@
         "fn": "trigger",
         "card": "Zell Dincht",
         "instanceId": 1,
-        "id": 3220,
+        "id": 6,
         "name": "onEndStep"
       },
       {

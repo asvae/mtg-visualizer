@@ -82,7 +82,11 @@
           "start": 24,
           "end": 27
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapSelfCost-structural"
+      }
     },
     {
       "event": "putCounter",

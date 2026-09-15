@@ -30,7 +30,19 @@
   "sink": [
     {
       "event": "discard",
-      "target": "self"
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 24,
+          "end": 41
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discardSelfCost-structural"
+      }
     }
   ]
 }

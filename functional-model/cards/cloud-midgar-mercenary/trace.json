@@ -77,44 +77,58 @@
         "name": "onEnter"
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Equipment",
         "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Ultima Weapon",
+        "subtype": "Equipment",
+        "result": true
       },
       {
         "fn": "read:isArtifact",
@@ -127,7 +141,8 @@
         "from": "Library",
         "to": "Hand",
         "qty": 1,
-        "validType": "artifact"
+        "validType": "artifact",
+        "subtype": "Equipment"
       },
       {
         "fn": "cast",
@@ -290,9 +305,9 @@
       {
         "fn": "equip",
         "equipment": "Ultima Weapon",
-        "equipmentId": 426,
+        "equipmentId": 31,
         "target": "Cloud, Midgar Mercenary",
-        "id": 425
+        "id": 30
       },
       {
         "fn": "phase",
@@ -303,12 +318,12 @@
       {
         "fn": "tap",
         "target": "Cloud, Midgar Mercenary",
-        "id": 425
+        "id": 30
       },
       {
         "fn": "attack",
         "card": "Cloud, Midgar Mercenary",
-        "id": 425
+        "id": 30
       },
       {
         "fn": "trigger",
@@ -336,7 +351,7 @@
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 415,
+        "id": 20,
         "controller": "opp0"
       },
       {
@@ -360,7 +375,7 @@
       {
         "fn": "destroy",
         "target": "Hill Gigas",
-        "id": 416,
+        "id": 21,
         "controller": "opp0"
       }
     ],
@@ -379,39 +394,39 @@
       },
       {
         "label": "Cast Ultima Weapon ({7})",
-        "from": 15
+        "from": 16
       },
       {
         "label": "Resolve",
-        "from": 23
-      },
-      {
-        "label": "Pass turn (you)",
         "from": 24
       },
       {
+        "label": "Pass turn (you)",
+        "from": 25
+      },
+      {
         "label": "Pass turn (opp0)",
-        "from": 35
+        "from": 36
       },
       {
         "label": "Equip {7}: attach Ultima Weapon to Cloud",
-        "from": 38
+        "from": 39
       },
       {
         "label": "Resolve",
-        "from": 46
+        "from": 47
       },
       {
         "label": "Advance to Declare Attackers",
-        "from": 48
-      },
-      {
-        "label": "Declare Cloud (equipped, +7/+7) as attacker",
         "from": 49
       },
       {
+        "label": "Declare Cloud (equipped, +7/+7) as attacker",
+        "from": 50
+      },
+      {
         "label": "Ultima Weapon's own attack trigger fires (equipped creature attacks) — doubled by Cloud's own equipped static",
-        "from": 51
+        "from": 52
       }
     ]
   }

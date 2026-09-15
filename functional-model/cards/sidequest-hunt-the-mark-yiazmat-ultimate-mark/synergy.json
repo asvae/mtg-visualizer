@@ -70,6 +70,27 @@
         "origin": "parser",
         "rule": "destroy-effect-structural"
       }
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_a_treasure_sac"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 93,
+          "end": 116
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     }
   ],
   "sink": [

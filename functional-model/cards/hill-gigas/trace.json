@@ -1,11 +1,21 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "enters the battlefield, no other effect (Mountaincycling not modeled — see definition.ts comment)",
+      "setup": "you: 6 Mountain(s)",
+      "action": "engine playthrough: cast -> resolve -> enters",
+      "result": "Hill Gigas is cast ({4}{R}{R} paid) and enters the battlefield, no ETB of its own (Trample/Haste only).",
       "raw": {
-        "result": "enters the battlefield, no other effect (Mountaincycling not modeled — see definition.ts comment)"
+        "result": "Hill Gigas is cast ({4}{R}{R} paid) and enters the battlefield, no ETB of its own (Trample/Haste only).",
+        "you": {
+          "basicLands": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        }
       }
     },
     "log": [
@@ -13,16 +23,138 @@
         "fn": "cast",
         "card": "Hill Gigas",
         "instanceId": 1,
-        "id": 1166,
         "from": "hand",
         "cost": "{4}{R}{R}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Hill Gigas"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Hill Gigas"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Hill Gigas"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Hill Gigas"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Hill Gigas"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Mountain",
+        "for": "Hill Gigas"
       },
       {
         "fn": "enters",
         "card": "Hill Gigas",
         "instanceId": 1,
-        "id": 1166,
         "zone": "Battlefield"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Cast Hill Gigas ({4}{R}{R})",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 7
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "you: 3 Forest(s)",
+      "action": "engine playthrough: Mountaincycling activated from hand -> discard self -> search library -> shuffle",
+      "result": "Mountaincycling {2} is activated from hand: {2} is paid, Hill Gigas is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Mountain card, putting it into hand, then shuffling.",
+      "raw": {
+        "result": "Mountaincycling {2} is activated from hand: {2} is paid, Hill Gigas is genuinely discarded (never cast, never enters the battlefield) as part of the cost, then the ability resolves for real — searching the library for the real Mountain card, putting it into hand, then shuffling.",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        }
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Hill Gigas",
+        "instanceId": 1,
+        "cost": "{2}, Discard this card",
+        "ability": "cycling"
+      },
+      {
+        "fn": "discard",
+        "target": "Hill Gigas",
+        "id": 14,
+        "controller": "you"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Hill Gigas"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Hill Gigas"
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Mountain",
+        "subtype": "Mountain",
+        "result": true
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Mountain",
+        "result": true
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land",
+        "subtype": "Mountain"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Activate Mountaincycling ({2}, Discard this card): search for a Mountain",
+        "from": 0
+      },
+      {
+        "label": "Resolve",
+        "from": 4
       }
     ]
   }

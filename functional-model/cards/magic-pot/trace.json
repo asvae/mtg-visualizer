@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Magic Pot",
         "instanceId": 1,
-        "id": 1497,
+        "id": 2,
         "name": "onDies"
       },
       {
@@ -43,7 +43,7 @@
         "fn": "activate",
         "card": "Magic Pot",
         "instanceId": 1,
-        "id": 1501,
+        "id": 6,
         "cost": "{2}, {T}"
       },
       {
@@ -56,7 +56,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1500,
+        "id": 5,
         "zone": "Exile",
         "controller": "you"
       }

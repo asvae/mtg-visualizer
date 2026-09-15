@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { flashback } from '../../flashback';
 
 // A transforming DFC whose FRONT face is a Sorcery with Flashback and whose
 // BACK face is a Saga — same `backFace` shape jecht-reluctant-guardian-
@@ -10,7 +11,7 @@ export const esperOriginsSummonEsperMaduin: CardDefinition = {
   manaCost: '{1}{G}',
   typeLine: 'Sorcery',
 
-  alternateCosts: [{ name: 'Flashback', cost: '{3}{G}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{3}{G}')],
 
   effects: [
     { kind: 'surveil', qty: 2 } satisfies Effect,

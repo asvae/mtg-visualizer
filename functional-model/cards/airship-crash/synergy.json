@@ -35,7 +35,19 @@
     },
     {
       "event": "discard",
-      "target": "self"
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 18,
+          "end": 35
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discardSelfCost-structural"
+      }
     }
   ]
 }

@@ -14,7 +14,11 @@
           "start": 11,
           "end": 51
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     },
     {
       "event": "pump",
@@ -33,7 +37,11 @@
           "start": 28,
           "end": 38
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
     },
     {
       "event": "destroy",
@@ -121,7 +129,11 @@
           "start": 12,
           "end": 56
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
     },
     {
       "to": "Battlefield",

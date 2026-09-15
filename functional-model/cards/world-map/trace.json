@@ -17,7 +17,7 @@
         "fn": "activate",
         "card": "World Map",
         "instanceId": 1,
-        "id": 3166,
+        "id": 4,
         "cost": "{1}, {T}, Sacrifice this artifact",
         "ability": "searchBasic"
       },
@@ -59,7 +59,7 @@
         "fn": "activate",
         "card": "World Map",
         "instanceId": 1,
-        "id": 3170,
+        "id": 8,
         "cost": "{3}, {T}, Sacrifice this artifact",
         "ability": "searchAny"
       },

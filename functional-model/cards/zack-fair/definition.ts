@@ -34,6 +34,13 @@ export const zackFair: CardDefinition = {
   // self — and never contains the literal "+1/+1" substring either, so it
   // correctly never falsely matches). See that recognizer's own module doc
   // comment.
+  //
+  // recognizer-exception: entersBattlefield-self-trigger-structural — same
+  // real CR 614.12 divergence, a different recognizer: `on:'enter'` IS set
+  // (see this trigger's own comment above), but the real text has no "When/
+  // Whenever" trigger-condition wording at all ("Zack Fair enters WITH a
+  // +1/+1 counter" is a replacement effect, not a triggered ability) — see
+  // that recognizer's own module doc comment for the full reasoning.
   triggers: [
     {
       name: 'onEnter',

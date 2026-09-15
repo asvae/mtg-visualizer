@@ -18,7 +18,11 @@
           "start": 26,
           "end": 66
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapTarget-effect-structural"
+      }
     },
     {
       "event": "tap",

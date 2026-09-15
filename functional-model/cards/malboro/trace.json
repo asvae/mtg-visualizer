@@ -156,11 +156,10 @@
         "for": "Malboro"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 1,
-        "creatureCount": 0
+        "fn": "read:hasSubtype",
+        "target": "Swamp",
+        "subtype": "Swamp",
+        "result": true
       },
       {
         "fn": "read:isLand",
@@ -168,17 +167,13 @@
         "result": true
       },
       {
-        "fn": "read:hasSubtype",
-        "target": "Swamp",
-        "subtype": "Swamp",
-        "result": true
-      },
-      {
-        "fn": "moveTo",
-        "target": "Swamp",
-        "id": 58,
-        "zone": "Hand",
-        "controller": "you"
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "land",
+        "subtype": "Swamp"
       },
       {
         "fn": "shuffleLibrary",

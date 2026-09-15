@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, AuthoredFact } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 export const cloudMidgarMercenary: CardDefinition = {
   name: 'Cloud, Midgar Mercenary',
@@ -29,51 +29,46 @@ export const cloudMidgarMercenary: CardDefinition = {
     {
       name: 'onEnter',
       on: 'enter',
-      // Real search targets Equipment specifically; this model's `move`
-      // validType union only distinguishes creature/artifact/any (no
-      // Equipment subtype tracking on generic library cards — see
-      // state.ts's RealCard), so 'artifact' is the closest honest match,
-      // not a claim this is subtype-precise.
+      // Real search targets Equipment specifically. `validType:'artifact'`
+      // stays (Equipment cards ARE artifacts — CR 301.5c — so this is a
+      // true, if broader, structural fact), now paired with `subtype:
+      // 'Equipment'` (2026-09-15) for the precise real printed word.
       //
-      // Mechanization pass (2026-09-14): this effect's own `to:'Hand',
-      // from:'Library'` source/sink fact pair stays hand-authored — checked
-      // the whole pool for a general "search library, put into hand"
-      // recognizer first (real, clean, closed Magic template: "[You may
-      // ]search your library for a[n] <type> card, reveal it, put it into
-      // your hand, then shuffle" — `world-map`, `sazh-katzroy` both share it
-      // verbatim). Every real candidate this shape, including THIS card, has
-      // a confirmed, systemic divergence between the structured `validType`
-      // field and the actual printed type word: this card's own real text
-      // says "an EQUIPMENT card" (never "artifact," per the comment right
-      // above), Sazh Katzroy's says "a Bird or basic land card" (its own
-      // `validType:'any'` is a documented approximation, not "any card"),
-      // World Map's first ability says "a BASIC land card" (its own
-      // `validType:'land'` omits "basic"). A recognizer keyed on `validType`
-      // alone would either guess wrong or need a `subtype` field this
-      // effect shape doesn't carry for an untargeted move (`card.ts`'s own
-      // `move.subtype` doc comment: "only meaningful alongside `target:
-      // true`") — not a safe generalization with the data available today;
-      // not attempted here.
-      effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, validType: 'artifact' } satisfies Effect],
+      // Mechanization pass (2026-09-14, closed for real 2026-09-15): this
+      // effect's own `to:'Hand', from:'Library'` source/sink fact pair used
+      // to stay hand-authored — the whole pool has a general "search
+      // library, put into hand" template ("[You may ]search your library
+      // for a[n] <type> card, reveal it, put it into your hand, then
+      // shuffle" — `world-map`, `sazh-katzroy` both share it verbatim), but
+      // every real candidate including THIS card had a confirmed divergence
+      // between the structured `validType` field and the actual printed
+      // type word (this card's own real text says "an EQUIPMENT card,"
+      // never "artifact"). Closed by threading `move`'s own `subtype` field
+      // (previously read only on the TARGETED branch — `card.ts`'s own
+      // doc comment) through to the UNTARGETED branch too (`card.ts`'s
+      // `case 'move'`, `interfaces.ts`'s `move` signature, `harness.ts`'s
+      // `move` implementation, all updated the same pass) — the new
+      // `recognizers/moveSearchLibrary-effect-structural.ts` now derives
+      // this card's own source+sink pair for real (see that recognizer's
+      // own module doc comment for the general rule, and for why Sazh
+      // Katzroy/World Map still correctly, specifically decline — a
+      // compound OR-restriction and a missing "Basic" supertype concept in
+      // this engine, neither one this card's own gap).
+      effects: [
+        { kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, validType: 'artifact', subtype: 'Equipment' } satisfies Effect,
+      ],
     },
   ],
-  // Tier 3 (`CardDefinition.authoredFacts`). This card's `onEnter` trigger
-  // DOES set the closed, typed `Trigger.on: 'enter'` field — but that alone
-  // is NOT a safe general rule for deriving this sink: `ambrosia-whiteheart`'s
-  // own `onEnter` trigger (this same 10-card sample) ALSO sets `on: 'enter'`
-  // and has NO equivalent sink in its real, hand-authored `synergy.json` — a
-  // genuine, confirmed inconsistency this trial surfaced, not a rule this
-  // recognizer approach can safely generalize from without risking a false
-  // positive on Ambrosia. Authored per-card instead, matching this card's own
-  // real `synergy.json` sink fact byte-for-byte. Not wired into
-  // `apply-recognizers.mjs`/`synergy.json` generation. Own annotation:
-  // `definition-annotations.json`, keyed `"authoredFacts[0]"`.
-  authoredFacts: [
-    {
-      role: 'sink',
-      event: 'entersBattlefield',
-      target: 'self',
-      value: 1,
-    },
-  ] satisfies AuthoredFact[],
+  // Tier-3 `authoredFacts` sink (`{event:'entersBattlefield', target:'self'}`)
+  // REMOVED 2026-09-15 — the earlier comment here worried that a bare
+  // `on:'enter'` gate alone wasn't a safe general rule (Ambrosia Whiteheart's
+  // own `onEnter` trigger also sets `on:'enter'` with no equivalent sink in
+  // its own hand-authored data at the time). Resolved for real: the new
+  // `recognizers/entersBattlefield-self-trigger-structural.ts` doesn't stop
+  // at the bare `on:'enter'` gate — it ALSO requires a real, text-verified
+  // "When/Whenever <self> enters" clause before asserting this sink, which
+  // correctly derives it for THIS card (and for Ambrosia, once her own
+  // trigger's real "When Ambrosia Whiteheart enters" clause is verified too
+  // — see that recognizer's own module doc comment for the full, real
+  // whole-pool check, 14 cards, only one genuine decline).
 };

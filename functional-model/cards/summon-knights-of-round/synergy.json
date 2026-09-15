@@ -14,7 +14,11 @@
           "start": 17,
           "end": 62
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     },
     {
       "event": "pump",

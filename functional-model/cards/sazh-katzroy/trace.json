@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Sazh Katzroy",
         "instanceId": 1,
-        "id": 2067,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -48,7 +48,7 @@
         "fn": "trigger",
         "card": "Sazh Katzroy",
         "instanceId": 1,
-        "id": 2070,
+        "id": 6,
         "name": "onAttack"
       },
       {
@@ -59,7 +59,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2069,
+        "id": 5,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -73,7 +73,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2069,
+        "id": 5,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -95,7 +95,7 @@
         "fn": "trigger",
         "card": "Sazh Katzroy",
         "instanceId": 1,
-        "id": 2072,
+        "id": 8,
         "name": "onAttack"
       },
       {
@@ -106,7 +106,7 @@
       {
         "fn": "putCounter",
         "target": "Sazh Katzroy",
-        "id": 2072,
+        "id": 8,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -120,7 +120,7 @@
       {
         "fn": "putCounter",
         "target": "Sazh Katzroy",
-        "id": 2072,
+        "id": 8,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -142,7 +142,7 @@
         "fn": "cast",
         "card": "Sazh Katzroy",
         "instanceId": 1,
-        "id": 2074,
+        "id": 10,
         "from": "hand",
         "cost": "{3}{G}"
       },
@@ -150,7 +150,7 @@
         "fn": "enters",
         "card": "Sazh Katzroy",
         "instanceId": 1,
-        "id": 2074,
+        "id": 10,
         "zone": "Battlefield"
       },
       {

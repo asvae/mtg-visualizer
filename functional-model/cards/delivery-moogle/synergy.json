@@ -19,7 +19,11 @@
           "start": 34,
           "end": 46
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibraryOrGraveyard-effect-structural"
+      }
     },
     {
       "to": "Hand",
@@ -40,7 +44,11 @@
           "start": 54,
           "end": 63
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibraryOrGraveyard-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -62,7 +70,11 @@
           "start": 34,
           "end": 46
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibraryOrGraveyard-effect-structural"
+      }
     },
     {
       "to": "Graveyard",
@@ -82,7 +94,27 @@
           "start": 54,
           "end": 63
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibraryOrGraveyard-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

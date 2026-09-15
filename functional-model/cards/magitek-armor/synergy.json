@@ -14,7 +14,11 @@
           "start": 26,
           "end": 68
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     },
     {
       "event": "crew",

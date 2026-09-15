@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect } from '../../card';
+import { flashback } from '../../flashback';
 
 export const dreamsOfLaguna: CardDefinition = {
   name: 'Dreams of Laguna',
@@ -8,7 +9,7 @@ export const dreamsOfLaguna: CardDefinition = {
   // Same real Flashback shape the-final-days/definition.ts already establishes
   // — a second, alternate-cost cast mode, exiled afterward instead of
   // returning to the graveyard.
-  alternateCosts: [{ name: 'Flashback', cost: '{3}{U}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{3}{U}')],
 
   effects: [
     { kind: 'surveil', qty: 1 } satisfies Effect,

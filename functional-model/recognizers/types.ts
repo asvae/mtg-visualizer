@@ -107,7 +107,37 @@ export type RecognizerId =
   | 'gainLife-effect-structural'
   | 'ptFormula-scalingPump-structural'
   | 'digReveal-effect-structural'
-  | 'triggerDoubling-selfAndAttachedEquipment-structural';
+  | 'triggerDoubling-selfAndAttachedEquipment-structural'
+  // 2026-09-15 follow-up (fin/5,6,7,8,9,10 recognizer-coverage batch,
+  // closing the last of these cards' own remaining AI-authored facts):
+  // `moveSearchLibrary-effect-structural` (untargeted "search library, put
+  // in hand" template), `move-effect-structural` (finally wired into the
+  // real pipeline — it existed since 2026-09-14 but was never registered),
+  // `entersBattlefield-self-trigger-structural`, `pumpSelf-effect-
+  // structural`, `pumpTarget-effect-structural`, `pumpAllAttacking-effect-
+  // structural`, `selectUpTo-effect-structural`, `token-creation-
+  // structural`.
+  | 'moveSearchLibrary-effect-structural'
+  | 'move-effect-structural'
+  | 'entersBattlefield-self-trigger-structural'
+  | 'pumpSelf-effect-structural'
+  | 'pumpTarget-effect-structural'
+  | 'pumpAllAttacking-effect-structural'
+  | 'selectUpTo-effect-structural'
+  | 'token-creation-structural'
+  // 2026-09-15 follow-up (fin/11-15 audit — cloudbound-moogle/fin-11's own
+  // last remaining AI-authored fact).
+  | 'discardSelfCost-structural'
+  // 2026-09-15 follow-up (fin/11-15 audit — Coeurl/fin-12's own AI-
+  // authored tap-target facts).
+  | 'tapTarget-effect-structural'
+  | 'tapSelfCost-structural'
+  | 'continuousPTGrantsEquipped-structural'
+  | 'sequenceExileReturn-effect-structural'
+  | 'tapAllQuery-effect-structural'
+  | 'equipmentWantsCreature-sink-structural'
+  | 'preventDamageAll-effect-structural'
+  | 'moveSearchLibraryOrGraveyard-effect-structural';
 
 /**
  * `FactProvenance` itself is now DEFINED on `Fact` (`synergy.ts`, wired in

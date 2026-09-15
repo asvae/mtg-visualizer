@@ -18,7 +18,7 @@
         "fn": "trigger",
         "card": "Joshua, Phoenix's Dominant",
         "instanceId": 1,
-        "id": 1332,
+        "id": 6,
         "name": "onEnter"
       },
       {
@@ -56,20 +56,20 @@
         "fn": "activate",
         "card": "Joshua, Phoenix's Dominant",
         "instanceId": 1,
-        "id": 1334,
+        "id": 8,
         "cost": "{3}{R}{W}, {T} (activate only as a sorcery)"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1334,
+        "id": 8,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1334,
+        "id": 8,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -94,13 +94,13 @@
         "fn": "trigger",
         "card": "Phoenix, Warden of Fire",
         "instanceId": 1,
-        "id": 1337,
+        "id": 11,
         "name": "chapterI"
       },
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
-        "sourceId": 1337,
+        "sourceId": 11,
         "target": "opp0",
         "amount": 2
       },
@@ -131,13 +131,13 @@
         "fn": "trigger",
         "card": "Phoenix, Warden of Fire",
         "instanceId": 1,
-        "id": 1340,
+        "id": 14,
         "name": "chapterII"
       },
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
-        "sourceId": 1340,
+        "sourceId": 14,
         "target": "opp0",
         "amount": 2
       },
@@ -168,7 +168,7 @@
         "fn": "trigger",
         "card": "Phoenix, Warden of Fire",
         "instanceId": 1,
-        "id": 1344,
+        "id": 18,
         "name": "chapterIII"
       },
       {
@@ -191,28 +191,28 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1342,
+        "id": 16,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1343,
+        "id": 17,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
-        "id": 1344,
+        "id": 18,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Phoenix, Warden of Fire",
-        "id": 1344,
+        "id": 18,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -236,7 +236,7 @@
         "fn": "cast",
         "card": "Phoenix, Warden of Fire",
         "instanceId": 1,
-        "id": 1346,
+        "id": 20,
         "from": "hand",
         "cost": ""
       },
@@ -244,13 +244,13 @@
         "fn": "enters",
         "card": "Phoenix, Warden of Fire",
         "instanceId": 1,
-        "id": 1346,
+        "id": 20,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Phoenix, Warden of Fire",
-        "sourceId": 1346,
+        "sourceId": 20,
         "target": "opp0",
         "amount": 3
       },
@@ -277,20 +277,20 @@
         "fn": "activate",
         "card": "Joshua, Phoenix's Dominant",
         "instanceId": 1,
-        "id": 1349,
+        "id": 23,
         "cost": "{3}{R}{W}, {T} (activate only as a sorcery)"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1349,
+        "id": 23,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Joshua, Phoenix's Dominant",
-        "id": 1349,
+        "id": 23,
         "zone": "Battlefield",
         "controller": "you"
       },

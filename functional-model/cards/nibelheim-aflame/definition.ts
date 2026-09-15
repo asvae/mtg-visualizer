@@ -1,11 +1,12 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { flashback } from '../../flashback';
 
 export const nibelheimAflame: CardDefinition = {
   name: 'Nibelheim Aflame',
   manaCost: '{2}{R}{R}',
   typeLine: 'Sorcery',
 
-  alternateCosts: [{ name: 'Flashback', cost: '{5}{R}{R}', from: 'graveyard', thenExile: true }],
+  alternateCosts: [flashback('{5}{R}{R}')],
 
   effects: [
     {

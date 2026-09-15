@@ -16,13 +16,37 @@
         "has": [
           "Swamp"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 42,
+          "end": 78
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
       }
     }
   ],
   "sink": [
     {
       "event": "discard",
-      "target": "self"
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 23,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discardSelfCost-structural"
+      }
     },
     {
       "to": "Library",
@@ -31,6 +55,18 @@
         "has": [
           "Swamp"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 42,
+          "end": 78
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveSearchLibrary-effect-structural"
       }
     }
   ]

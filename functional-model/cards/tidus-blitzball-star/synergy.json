@@ -30,6 +30,29 @@
     {
       "event": "dies",
       "target": "self"
+    },
+    {
+      "event": "tap",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 64
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapTarget-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -40,6 +63,18 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 64
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapTarget-effect-structural"
       }
     },
     {
