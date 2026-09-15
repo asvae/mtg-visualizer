@@ -49,15 +49,6 @@ its owner's graveyard. The explanation should identify the precise event and
 timing involved rather than reducing every such interaction to generic
 recursion or protection.
 
-### More precisely defined weights
-
-Define weights relative to all sets by analyzing every card that does the
-same thing and placing the cards on a best-to-worst scale. The best card would
-receive a weight of 10 and the worst a weight of 0.1.
-
-Prefer rounded values. Use decimals only when they represent a meaningful
-difference; avoid implying precision for very small differences.
-
 ### Computed theme groups
 
 Derive useful theme groups from structured card facts instead of requiring
@@ -156,14 +147,6 @@ Determine and show how unique a card is: whether it mostly duplicates effects
 other cards already do (in general, not within a specific selection), or
 whether it fills a tight niche worth exploring. Precompute this analysis in
 advance and cache it server-side rather than computing it on demand.
-
-### No-weights mode
-
-A mode that drops relation/theme weighting (produce/consume strength, node
-sizing, anything implying a card or theme is "strong") entirely. Some users
-want to judge strength themselves and only want help grouping themes and
-finding cards that share them — not a tool that editorializes about what's
-good.
 
 ## Application experience
 
