@@ -5,11 +5,15 @@ export const theEarthCrystal: CardDefinition = {
   manaCost: '{2}{G}{G}',
   typeLine: 'Legendary Artifact',
 
+  // "Green spells you cast cost {1} less to cast." — real, structured
+  // `SpellCostReductionGrant` machinery (The Water Crystal's/The Wind
+  // Crystal's own precedent) already exists for this exact shape; an
+  // earlier version of this card left it as inert freeform text instead
+  // ("no cost-reduction machinery exists anywhere in this model" — stale,
+  // predating that field's own addition), fixed for real below.
+  spellCostReductionGrants: [{ amount: 1, colors: ['G'] }],
+
   staticAbilities: [
-    // Real cost-reduction static — no cost-reduction machinery exists
-    // anywhere in this model, same treatment travel-the-overworld's own
-    // Affinity gets.
-    'Green spells you cast cost {1} less to cast.',
     // Real REPLACEMENT effect doubling +1/+1 counters put on your
     // creatures — no replacement-effect machinery exists anywhere in this
     // model (state.ts's own header rules this out, same treatment

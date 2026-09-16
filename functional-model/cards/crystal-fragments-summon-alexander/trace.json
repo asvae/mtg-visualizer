@@ -150,14 +150,14 @@
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "id": 524,
+        "id": 33,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Crystal Fragments",
-        "id": 524,
+        "id": 33,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -186,22 +186,22 @@
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 522,
+        "id": 31,
         "keyword": "DamagePrevention",
         "untilEndOfTurn": true
       },
       {
         "fn": "damagePrevented",
         "source": "Coeurl",
-        "sourceId": 523,
+        "sourceId": 32,
         "target": "Dwarven Castle Guard",
-        "id": 522,
+        "id": 31,
         "amount": 3
       },
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 522,
+        "id": 31,
         "keyword": "DamagePrevention",
         "removed": true
       },
@@ -275,7 +275,7 @@
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 522,
+        "id": 31,
         "keyword": "DamagePrevention",
         "untilEndOfTurn": true
       },
@@ -288,7 +288,7 @@
       {
         "fn": "grantKeyword",
         "target": "Dwarven Castle Guard",
-        "id": 522,
+        "id": 31,
         "keyword": "DamagePrevention",
         "removed": true
       },
@@ -334,7 +334,7 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 523,
+        "id": 32,
         "controller": "opp0"
       },
       {

@@ -200,6 +200,88 @@ import { recognizeTapAllQueryEffectStructural } from '../recognizers/tapAllQuery
 import { recognizeEquipmentWantsCreatureSinkStructural } from '../recognizers/equipmentWantsCreature-sink-structural.ts';
 import { recognizePreventDamageAllEffectStructural } from '../recognizers/preventDamageAll-effect-structural.ts';
 import { recognizeMoveSearchLibraryOrGraveyardEffectStructural } from '../recognizers/moveSearchLibraryOrGraveyard-effect-structural.ts';
+import { recognizeContinuousTypeGrantsEquippedStructural } from '../recognizers/continuousTypeGrantsEquipped-structural.ts';
+import { recognizeContinuousKeywordGrantsEquippedStructural } from '../recognizers/continuousKeywordGrantsEquipped-structural.ts';
+import { recognizeContinuousKeywordGrantsSubtypeStructural } from '../recognizers/continuousKeywordGrantsSubtype-structural.ts';
+import { recognizeContinuousPTGrantsSubtypeStructural } from '../recognizers/continuousPTGrantsSubtype-structural.ts';
+import { recognizeGrantKeywordAllEffectStructural } from '../recognizers/grantKeywordAll-effect-structural.ts';
+import { recognizeJobSelectCreateTokenAndEquipEffectStructural } from '../recognizers/jobSelectCreateTokenAndEquip-effect-structural.ts';
+import { recognizeCostReductionTappedTargetStructural } from '../recognizers/costReductionTappedTarget-structural.ts';
+import { recognizeMoveConditionalDestinationByCastFromEffectStructural } from '../recognizers/moveConditionalDestinationByCastFrom-effect-structural.ts';
+import { recognizeDiesOtherPermanentsOncePerTurnTriggerStructural } from '../recognizers/diesOtherPermanentsOncePerTurn-trigger-structural.ts';
+import { recognizeMoveSearchLibraryNamedSelfEffectStructural } from '../recognizers/moveSearchLibraryNamedSelf-effect-structural.ts';
+import { recognizeCrewCostStructural } from '../recognizers/crewCost-structural.ts';
+import { recognizeAnimateSelfCreatureEffectStructural } from '../recognizers/animateSelfCreature-effect-structural.ts';
+import { recognizeManaAbilitiesSimpleStructural } from '../recognizers/manaAbilitiesSimple-structural.ts';
+import { recognizePumpAllCreaturesYouControlEffectStructural } from '../recognizers/pumpAllCreaturesYouControl-effect-structural.ts';
+import { recognizeSacrificeCostNamedTypeStructural } from '../recognizers/sacrificeCostNamedType-structural.ts';
+import { recognizeSacrificeSelfCostStructural } from '../recognizers/sacrificeSelfCost-structural.ts';
+import { recognizeExileSelfCostStructural } from '../recognizers/exileSelfCost-structural.ts';
+import { recognizePutCounterAllEffectStructural } from '../recognizers/putCounterAll-effect-structural.ts';
+import { recognizeSurveilEffectStructural } from '../recognizers/surveil-effect-structural.ts';
+import { recognizeGrantKeywordTargetEffectStructural } from '../recognizers/grantKeywordTarget-effect-structural.ts';
+import { recognizePtFormulaSetToCreaturesControlledStructural } from '../recognizers/ptFormulaSetToCreaturesControlled-structural.ts';
+import { recognizeDealDamageTargetEffectStructural } from '../recognizers/dealDamageTarget-effect-structural.ts';
+import { recognizeSpellCostReductionGrantsStructural } from '../recognizers/spellCostReductionGrants-structural.ts';
+import { recognizeLifegainDoubleKeywordStructural } from '../recognizers/lifegainDoubleKeyword-structural.ts';
+import { recognizeSacrificeEffectStructural } from '../recognizers/sacrifice-effect-structural.ts';
+import { recognizeDiscardEffectStructural } from '../recognizers/discard-effect-structural.ts';
+import { recognizeUntapTargetEffectStructural } from '../recognizers/untapTarget-effect-structural.ts';
+import { recognizeGrantKeywordSelfEffectStructural } from '../recognizers/grantKeywordSelf-effect-structural.ts';
+import { recognizePlayFromLibraryTopEffectStructural } from '../recognizers/playFromLibraryTop-effect-structural.ts';
+import { recognizeTapAllEffectStructural } from '../recognizers/tapAll-effect-structural.ts';
+// 2026-09-16 (fin/26-50 re-triage follow-up) — `Trigger.name`-keyed
+// `onCast<Type>Spell` family, same `Trigger[]`-reading structural family as
+// `dies-trigger-structural`/`attacks-trigger-structural`'s own named-trigger
+// siblings — see that recognizer's own module doc comment for the full
+// 8-card real-pool sweep.
+import { recognizeCastTypeSpellTriggerStructural } from '../recognizers/castTypeSpell-trigger-structural.ts';
+// Same pass — `kind:'program'` `SelectUpTo`->`ApplyToBound(gainControl)`
+// single-step shape, see that recognizer's own module doc comment.
+import { recognizeSelectUpToGainControlEffectStructural } from '../recognizers/selectUpToGainControl-effect-structural.ts';
+// 2026-09-16 (program-AST generalization pass) — the shared, general
+// `program-ast-walker.ts` walk's own 2 real consumers (`destroy`/`equip`
+// `EachAction`s reached through arbitrary `Query`/`Filter`/`Each`/
+// `SelectUpTo`/`ApplyToBound` nesting, not one fixed top-level shape) — see
+// that walker's own module doc comment for the full design.
+import { recognizeDestroyProgramEffectStructural } from '../recognizers/destroyProgram-effect-structural.ts';
+import { recognizeEquipProgramEffectStructural } from '../recognizers/equipProgram-effect-structural.ts';
+import { recognizePumpProgramEffectStructural } from '../recognizers/pumpProgram-effect-structural.ts';
+import { recognizeDealDamageEachMagnitudeEffectStructural } from '../recognizers/dealDamageEachMagnitude-effect-structural.ts';
+// 2026-09-16 (engine-lane primitive build, Venat/Hydaelyn's own Blessing of
+// Light) — `kind:'putCounter'`/`'grantKeyword'` program-AST occurrence
+// support, plus the new bare `DrawCard` ProgramNode's own recognizer — see
+// each file's own module doc comment.
+import { recognizePutCounterProgramEffectStructural } from '../recognizers/putCounterProgram-effect-structural.ts';
+import { recognizeGrantKeywordProgramEffectStructural } from '../recognizers/grantKeywordProgram-effect-structural.ts';
+import { recognizeDrawCardProgramEffectStructural } from '../recognizers/drawCardProgram-effect-structural.ts';
+// 2026-09-16 (card-results/fin-76-100 re-triage backlog) — `kind:
+// 'loseLife'`'s own real sibling of `gainLife-effect-structural`, `kind:
+// 'counter'`'s own real recognizer, and The Water Crystal's own real
+// `kind:'mill'`/`millModifierGrants` pair — see each recognizer's own
+// module doc comment.
+import { recognizeLoseLifeEffectStructural } from '../recognizers/loseLife-effect-structural.ts';
+import { recognizeCounterEffectStructural } from '../recognizers/counter-effect-structural.ts';
+import { recognizeMillEffectStructural } from '../recognizers/mill-effect-structural.ts';
+import { recognizeMillModifierGrantsStructural } from '../recognizers/millModifierGrants-structural.ts';
+// Cecil, Dark Knight // Cecil, Redeemed Paladin's back face migration
+// follow-up (engine-core, 2026-09-16) — the `'attacking-creatures'`
+// predicate's own real `grantKeywordAll` sibling of `pumpAllAttacking-
+// effect-structural`.
+import { recognizeGrantKeywordAllAttackingEffectStructural } from '../recognizers/grantKeywordAllAttacking-effect-structural.ts';
+// "At the beginning of combat on your turn," trigger-precondition text
+// recognizer (2026-09-16, weapons-vendor's own remaining coverage gap) —
+// plain TEXT, same family as `attacks-trigger-structural`/`dies-trigger-
+// structural` — see that recognizer's own module doc comment for the full
+// 9-occurrence whole-pool sweep.
+import { recognizeBeginCombatTriggerStructural } from '../recognizers/beginCombat-trigger-structural.ts';
+// 2026-09-16 (card-results-lane recognizer escalation — 7-item batch): see
+// each new recognizer's own module doc comment for its real whole-pool
+// check.
+import { recognizeWinCoinFlipStructural } from '../recognizers/winCoinFlip-structural.ts';
+import { recognizeScryOrSurveilTriggerStructural } from '../recognizers/scryOrSurveilTrigger-structural.ts';
+import { recognizeEntersTriggerTypeFilterSinkStructural } from '../recognizers/entersTriggerTypeFilter-sink-structural.ts';
+import { checkAllVerifiedSnapshots } from './check-verified-regressions.mjs';
 
 const cardsDir = new URL('../cards/', import.meta.url);
 const dataDir = new URL('../../data/', import.meta.url);
@@ -335,6 +417,76 @@ const RECOGNIZERS = [
   { id: 'equipmentWantsCreature-sink-structural', recognize: recognizeEquipmentWantsCreatureSinkStructural },
   { id: 'preventDamageAll-effect-structural', recognize: recognizePreventDamageAllEffectStructural },
   { id: 'moveSearchLibraryOrGraveyard-effect-structural', recognize: recognizeMoveSearchLibraryOrGraveyardEffectStructural },
+  // 2026-09-15 follow-up (fin/16-25 AI-fact-elimination pass) — 3 more
+  // CARD-DEFINITION-LEVEL siblings of `continuousPTGrantsEquipped-structural`
+  // above (`continuousTypeGrants`/`continuousKeywordGrants`, both
+  // `equippedBySelf` AND `subtype`-scoped shapes), plus a STRUCTURAL
+  // (`effects`-reading) recognizer for `kind:'grantKeywordAll'` — see each
+  // file's own module doc comment for its real pool-wide check.
+  { id: 'continuousTypeGrantsEquipped-structural', recognize: recognizeContinuousTypeGrantsEquippedStructural },
+  { id: 'continuousKeywordGrantsEquipped-structural', recognize: recognizeContinuousKeywordGrantsEquippedStructural },
+  { id: 'continuousKeywordGrantsSubtype-structural', recognize: recognizeContinuousKeywordGrantsSubtypeStructural },
+  // 2026-09-16 (static-ability audit) — the `subtype`-scoped sibling of
+  // `continuousPTGrantsEquipped-structural` above, same family split
+  // `continuousKeywordGrantsSubtype-structural` already establishes.
+  { id: 'continuousPTGrantsSubtype-structural', recognize: recognizeContinuousPTGrantsSubtypeStructural },
+  { id: 'grantKeywordAll-effect-structural', recognize: recognizeGrantKeywordAllEffectStructural },
+  // Same pass — EXECUTES a `kind:'custom'` effect's own closure (same
+  // "runtime-action-probe" family as `putCounter-broadcast-structural`
+  // above), covering the "Job select" create-token-then-self-attach
+  // Equipment template.
+  { id: 'jobSelectCreateTokenAndEquip-effect-structural', recognize: recognizeJobSelectCreateTokenAndEquipEffectStructural },
+  // Same pass — CARD-DEFINITION-LEVEL (reads `costReduction`, never
+  // `effects`), same family as `continuousPTGrantsEquipped-structural`
+  // above.
+  { id: 'costReductionTappedTarget-structural', recognize: recognizeCostReductionTappedTargetStructural },
+  { id: 'moveConditionalDestinationByCastFrom-effect-structural', recognize: recognizeMoveConditionalDestinationByCastFromEffectStructural },
+  { id: 'diesOtherPermanentsOncePerTurn-trigger-structural', recognize: recognizeDiesOtherPermanentsOncePerTurnTriggerStructural },
+  { id: 'moveSearchLibraryNamedSelf-effect-structural', recognize: recognizeMoveSearchLibraryNamedSelfEffectStructural },
+  { id: 'crewCost-structural', recognize: recognizeCrewCostStructural },
+  { id: 'animateSelfCreature-effect-structural', recognize: recognizeAnimateSelfCreatureEffectStructural },
+  { id: 'manaAbilitiesSimple-structural', recognize: recognizeManaAbilitiesSimpleStructural },
+  { id: 'pumpAllCreaturesYouControl-effect-structural', recognize: recognizePumpAllCreaturesYouControlEffectStructural },
+  { id: 'sacrificeCostNamedType-structural', recognize: recognizeSacrificeCostNamedTypeStructural },
+  { id: 'sacrificeSelfCost-structural', recognize: recognizeSacrificeSelfCostStructural },
+  { id: 'exileSelfCost-structural', recognize: recognizeExileSelfCostStructural },
+  { id: 'putCounterAll-effect-structural', recognize: recognizePutCounterAllEffectStructural },
+  { id: 'surveil-effect-structural', recognize: recognizeSurveilEffectStructural },
+  { id: 'grantKeywordTarget-effect-structural', recognize: recognizeGrantKeywordTargetEffectStructural },
+  { id: 'ptFormulaSetToCreaturesControlled-structural', recognize: recognizePtFormulaSetToCreaturesControlledStructural },
+  { id: 'dealDamageTarget-effect-structural', recognize: recognizeDealDamageTargetEffectStructural },
+  { id: 'spellCostReductionGrants-structural', recognize: recognizeSpellCostReductionGrantsStructural },
+  { id: 'lifegainDoubleKeyword-structural', recognize: recognizeLifegainDoubleKeywordStructural },
+  // 2026-09-16 (card-results/fin-51-75 triage backlog) — see each
+  // recognizer's own module doc comment.
+  { id: 'sacrifice-effect-structural', recognize: recognizeSacrificeEffectStructural },
+  { id: 'discard-effect-structural', recognize: recognizeDiscardEffectStructural },
+  { id: 'untapTarget-effect-structural', recognize: recognizeUntapTargetEffectStructural },
+  { id: 'grantKeywordSelf-effect-structural', recognize: recognizeGrantKeywordSelfEffectStructural },
+  { id: 'playFromLibraryTop-effect-structural', recognize: recognizePlayFromLibraryTopEffectStructural },
+  { id: 'tapAll-effect-structural', recognize: recognizeTapAllEffectStructural },
+  { id: 'castTypeSpell-trigger-structural', recognize: recognizeCastTypeSpellTriggerStructural },
+  { id: 'selectUpToGainControl-effect-structural', recognize: recognizeSelectUpToGainControlEffectStructural },
+  { id: 'destroyProgram-effect-structural', recognize: recognizeDestroyProgramEffectStructural },
+  { id: 'equipProgram-effect-structural', recognize: recognizeEquipProgramEffectStructural },
+  { id: 'pumpProgram-effect-structural', recognize: recognizePumpProgramEffectStructural },
+  { id: 'dealDamageEachMagnitude-effect-structural', recognize: recognizeDealDamageEachMagnitudeEffectStructural },
+  { id: 'putCounterProgram-effect-structural', recognize: recognizePutCounterProgramEffectStructural },
+  { id: 'grantKeywordProgram-effect-structural', recognize: recognizeGrantKeywordProgramEffectStructural },
+  { id: 'drawCardProgram-effect-structural', recognize: recognizeDrawCardProgramEffectStructural },
+  // 2026-09-16 (card-results/fin-76-100 re-triage backlog + engine-core's
+  // Cecil migration follow-up) — see each recognizer's own module doc
+  // comment.
+  { id: 'loseLife-effect-structural', recognize: recognizeLoseLifeEffectStructural },
+  { id: 'counter-effect-structural', recognize: recognizeCounterEffectStructural },
+  { id: 'mill-effect-structural', recognize: recognizeMillEffectStructural },
+  { id: 'millModifierGrants-structural', recognize: recognizeMillModifierGrantsStructural },
+  { id: 'grantKeywordAllAttacking-effect-structural', recognize: recognizeGrantKeywordAllAttackingEffectStructural },
+  { id: 'beginCombat-trigger-structural', recognize: recognizeBeginCombatTriggerStructural },
+  // 2026-09-16 (card-results-lane recognizer escalation — 7-item batch).
+  { id: 'winCoinFlip-structural', recognize: recognizeWinCoinFlipStructural },
+  { id: 'scryOrSurveilTrigger-structural', recognize: recognizeScryOrSurveilTriggerStructural },
+  { id: 'entersTriggerTypeFilter-sink-structural', recognize: recognizeEntersTriggerTypeFilterSinkStructural },
 ];
 
 /** Same real-oracle-text-by-Scryfall-name loader `compute-annotations.mjs`
@@ -476,7 +628,7 @@ function isV2Shaped(synergy) {
  * normalization (no accidental collision between a `zone`-shaped fact and
  * an unrelated `to`-shaped one that happen to share every other key).
  */
-function coreKey(fact, { normalizeSelfSubject = true } = {}) {
+function coreKey(fact, { normalizeSelfSubject = true, extraKeys = [] } = {}) {
   // `types`/`power` added 2026-09-14 (destroy-effect-structural's own new
   // paired-SINK follow-up, fin/9 Battle Menu) — a real, confirmed collision
   // this pass's own whole-pool run surfaced: TWO genuinely distinct
@@ -498,7 +650,153 @@ function coreKey(fact, { normalizeSelfSubject = true } = {}) {
   // instead of being silently skipped) — every other card's own existing
   // `types`/`power`-bearing sink facts are either already unique on `to`
   // alone or already carry no such collision to begin with.
-  const keys = ['event', 'to', 'from', 'zone', 'subject', 'target', 'face', 'types', 'power'];
+  // `keyword`/`counterType` added 2026-09-16 (fin/26-50 pass, `restoration-
+  // magic`'s own real 4-way collision surfaced this) — a SECOND real,
+  // confirmed collision of the identical class the `types`/`power` fix
+  // above already documents: TWO genuinely distinct `event:'grantKeyword'`
+  // (or `event:'putCounter'`) facts on the SAME card, differing ONLY in
+  // WHICH keyword/counter type they grant, silently shared one bare key
+  // once `keyword`/`counterType` were left out of it — confirmed via a
+  // real, checked-in whole-pool grep (not hypothetical) BEFORE adding this:
+  // `restoration-magic` (Hexproof vs. Indestructible, 4-way), `the-wind-
+  // crystal` (Flying vs. Lifelink), `ardyn-the-usurper` (Menace vs.
+  // Lifelink vs. Haste, 3-way), `zidane-tantalus-thief` (Lifelink vs.
+  // Haste) — all 4 real cards' own genuinely-distinct keyword facts were
+  // being silently merged by `mergeRecognizedFactsByIdentity`'s own reuse of
+  // this same function (see that function's own doc comment), which then
+  // broke the main retag loop's own single-annotation exact-match against
+  // the (correctly still-separate) existing hand-authored facts — same
+  // "genuinely different real claim deserves a genuinely distinct key"
+  // reasoning as `types`/`power`'s own addition above, re-verified pool-wide
+  // before adding (confirmed the only 4 cards whose retag outcome changes at
+  // all are the 4 named above; every other card's own existing
+  // `grantKeyword`/`putCounter` facts are already unique on the other keys
+  // alone).
+  // **`targeted` tried and REVERTED (2026-09-16, fin/26-50 pass)** — a
+  // THIRD real collision of the identical class the `types`/`power` and
+  // `keyword`/`counterType` fixes above both document (`restoration-
+  // magic`'s own Curaga tier vs. Cure/Cura tiers, both granting the
+  // identical keyword with the identical empty `target:{}` constraint,
+  // differing only on `targeted`) looked at first like the same fix — but
+  // adding `targeted` to this key list is NOT safe the way `keyword`/
+  // `counterType` were: many existing hand-authored broadcast-shaped facts
+  // OMIT `targeted` entirely (rather than explicitly recording `false`),
+  // while every recognizer here (`grantKeywordAll-effect-structural`,
+  // e.g.) always explicitly sets `targeted:false` on its own output — the
+  // `k in fact` presence check below then treats "key absent" and "key
+  // present as `false`" as two DIFFERENT reduced shapes, so pool-wide this
+  // regressed several existing broadcast facts from a clean retag to a
+  // spurious duplicate append (confirmed via a real before/after pool-wide
+  // run, reverted immediately). `restoration-magic`'s own genuine
+  // Cure/Cura-vs-Curaga collision is instead resolved narrowly, right
+  // below, without touching this shared key list at all.
+  //
+  // `amount` added 2026-09-16 (recognizer-lane `pumpProgram-effect-
+  // structural.ts` triage, `you're-not-alone`'s own real motivating card) —
+  // a FOURTH real collision of the identical class the `types`/`power` and
+  // `keyword`/`counterType` fixes above both document: `you're-not-alone`'s
+  // own real, pre-existing, hand-authored sink pair — a bare "wants a
+  // target creature present" sink (`{to:'Battlefield', types:{has:
+  // ['Creature']}}`) and a "wants 3+ creatures you control" MAGNITUDE sink
+  // (`{to:'Battlefield', controller:'you', types:{has:['Creature']}, amount:
+  // {min:3}}`, same real shape `ptFormula-scalingPump-structural.ts`'s own
+  // `thresholdBonus` branch already builds for a different structural gate)
+  // — reduce to the IDENTICAL coreKey without this addition (`controller`
+  // is already, deliberately, not part of this key — see this function's
+  // own opening comment — and `amount` wasn't either, until now), which
+  // would make `mergeRecognizedFactsByIdentity` (this file's own runner-
+  // level grouping pass, scoped to ONE recognizer's OWN freshly-computed
+  // output) wrongly collapse these two genuinely different real claims into
+  // one, silently dropping whichever one didn't survive as `group[0]`.
+  // Strictly ADDITIVE, safe pool-wide by construction (not merely checked):
+  // `k in fact` gates every key here, so a fact with no `amount` field at
+  // all (the overwhelming majority of this pool) produces a byte-identical
+  // `reduced` object before and after this addition — the only facts this
+  // can possibly change the coreKey of are ones that already carry
+  // `amount`, a real, small, enumerable set (grepped whole pool: gaelicat/
+  // gigantoad/magitek-infantry/scorpion-sentinel/you're-not-alone, 5 real
+  // cards) — confirmed the first 4 each carry exactly ONE `amount`-bearing
+  // fact per card (no same-coreKey sibling to newly split apart, so their
+  // own retag behavior is unchanged either way) and only you're-not-alone
+  // has the real 2-sink collision this fix is for.
+  //
+  // `tapped` added 2026-09-16 (engine-lane `dealDamageTarget.tapped`
+  // primitive build, `summon-primal-garuda`'s own real motivating card) —
+  // a FIFTH real collision of the identical class: a top-level (SINK-shaped
+  // `Constraints`) `tapped` field, unlike `target.tapped` (already covered
+  // for free — `target` is a whole-object key already), sits as a SIBLING
+  // of `to`/`controller`/`types`, exactly where `power` does. Garuda's own
+  // 2 real, pre-existing sink facts — Aerial Blast's "wants a TAPPED
+  // creature an opponent controls present" (`{to:'Battlefield', controller:
+  // 'opp', types:{has:['Creature']}, tapped:true}`) and Slipstream's "wants
+  // a creature you control present" (`{to:'Battlefield', controller:'you',
+  // types:{has:['Creature']}}`) — reduced to the IDENTICAL coreKey without
+  // this addition (`controller`, again, deliberately excluded), silently
+  // merging two genuinely different real wants (a TAPPED, OPPONENT-
+  // controlled creature vs. an untapped-status-agnostic, YOU-controlled
+  // one) into one and leaving BOTH unretaggable (confirmed live: 0 sink
+  // retags on Garuda before this fix, despite `dealDamageTarget-effect-
+  // structural.ts`'s own freshly-added `tapped` support producing the
+  // correct fact). Same `k in fact` gate, same pool-wide safety argument as
+  // `amount` above — grepped whole pool for every V2-shaped fact carrying a
+  // TOP-LEVEL `tapped` field (not nested under `target`, already safe):
+  // `fate-of-the-sun-cryst`/`phoenix-down`/`magitek-infantry` each carry
+  // exactly one such fact with no same-coreKey sibling to newly split apart
+  // (their own `types`/`target`/`name` fields already disambiguate them),
+  // confirmed unaffected; only Garuda has the real 2-sink collision.
+  //
+  // `excludeSelf` added 2026-09-16 (engine-lane `putCounter`/`grantKeyword`
+  // program-AST occurrence support, `venat-heart-of-hydaelyn-hydaelyn-the-
+  // mothercrystal`'s own real motivating card) — a SIXTH real collision of
+  // the identical class, same shape as `tapped` immediately above: a
+  // top-level SINK `excludeSelf` field sits as a SIBLING of `to`/
+  // `controller`/`types`, not nested under `target` (a source-side-only
+  // field), so it was previously silently dropped from the key the exact
+  // same way `tapped` was — confirmed live on Venat's own back face: the
+  // freshly-derived `putCounterProgram-effect-structural` sink (`{to:
+  // 'Battlefield', controller:'you', types:{has:['Creature']}, excludeSelf:
+  // true}`, for the real "another target creature you control" want)
+  // reduced to the SAME bare coreKey as the pre-existing, less-precise
+  // on-disk sink (identical shape minus `excludeSelf`) and silently retagged
+  // it in place WITHOUT ever gaining the `excludeSelf` field (the retag path
+  // only ever copies `annotations`/`provenance`, never other fields — same
+  // mechanism the `tapped` fix's own comment already documents). Same `k in
+  // fact` gate, same pool-wide safety argument — grepped whole pool for
+  // every fact (source OR sink) carrying `excludeSelf` (10 real cards:
+  // reno-and-rude/sidequest-hunt-the-mark.../magitek-infantry/phantom-train/
+  // summon-choco-mog/loporrit-scout/gladiolus-amicitia/ahriman/woodland-
+  // weavemaster/summon-knights-of-round) and confirmed by script (grouping
+  // every sink by its OWN bare-key-minus-excludeSelf shape) that NONE
+  // currently shares a bare coreKey with an excludeSelf-DIFFERING sibling on
+  // the same card — this addition only ever SPLITS a currently-merged group
+  // apart when a real difference exists, never un-merges an already-correct
+  // single-candidate match.
+  //
+  // `attacking` added 2026-09-16 (recognizer-lane escalation,
+  // `untapTarget-effect-structural.ts`'s own `validType:'attacking'`
+  // widening, Sage's Nouliths' own real motivating card) — a SEVENTH real
+  // collision of the identical class every addition above documents: a
+  // top-level SINK `attacking` field sits as a SIBLING of `to`/`controller`/
+  // `types`, exactly where `tapped`/`excludeSelf` do. Sage's Nouliths' own 2
+  // real, pre-existing sink facts — `equipmentWantsCreature-sink-
+  // structural`'s "wants a creature you control present" (`{to:
+  // 'Battlefield', controller:'you', types:{has:['Creature']}}`) and the
+  // untap effect's own "wants an attacking creature present" (`{to:
+  // 'Battlefield', controller:'opp', types:{has:['Creature']}, attacking:
+  // true}`) — reduced to the IDENTICAL bare coreKey without this addition
+  // (`controller`, again, deliberately excluded), silently merging two
+  // genuinely different real wants and leaving the SECOND unretaggable
+  // (confirmed live: `untapTarget-effect-structural`'s own freshly-widened
+  // sink for this card silently found "already covered" instead of
+  // retagging, before this fix). Same `k in fact` gate, same pool-wide
+  // safety argument as `tapped`/`excludeSelf` above — grepped whole pool for
+  // every fact (source OR sink) carrying a top-level `attacking` field (3
+  // real cards: auron-s-inspiration, cecil-dark-knight-cecil-redeemed-
+  // paladin, sage-s-nouliths) and confirmed only Sage's Nouliths has 2 sink
+  // facts on the SAME card sharing a bare-key-minus-`attacking` shape — this
+  // addition only ever SPLITS that one currently-merged group apart, never
+  // un-merges an already-correct single-candidate match anywhere else.
+  const keys = ['event', 'to', 'from', 'zone', 'subject', 'target', 'face', 'types', 'power', 'keyword', 'counterType', 'amount', 'tapped', 'excludeSelf', 'attacking', ...extraKeys];
   const reduced = {};
   for (const k of keys) if (k in fact) reduced[k] = fact[k];
   if (normalizeSelfSubject && reduced.target === 'self' && (reduced.subject === 'self' || reduced.subject === undefined)) {
@@ -512,7 +810,86 @@ function coreKey(fact, { normalizeSelfSubject = true } = {}) {
     reduced.to = reduced.zone;
     delete reduced.zone;
   }
-  return JSON.stringify(reduced, Object.keys(reduced).sort());
+  // `has`/`hasAny`/`not` ARRAY ORDER normalization (2026-09-16, `sacrifice-
+  // effect-structural`/`tapTarget-effect-structural`'s own `creature-or-
+  // artifact` widening pass surfaced this) — a REAL, confirmed collision of
+  // the identical class the `types`/`power` fix above already documents,
+  // one level more subtle: TWO facts whose `types` constraint names the
+  // EXACT SAME SET of type words, just in a DIFFERENT array order (a
+  // `hasAny` disjunction is semantically a SET — "Artifact or Creature"
+  // means the identical real thing as "Creature or Artifact" — order was
+  // never meaningful), used to hash to two DIFFERENT `coreKey`s, since
+  // `stableStringify` sorts object KEYS but never touches array element
+  // order. Confirmed real, not hypothetical: `ice-flan`'s own pre-existing
+  // hand-authored `hasAny:['Artifact','Creature']` tap/sink facts silently
+  // failed to retag-match `tapTarget-effect-structural`'s own freshly
+  // recognized `hasAny:['Creature','Artifact']` (a fixed, arbitrary but
+  // internally-consistent canonical order this recognizer always emits,
+  // never derived from which order a given card happens to print) —
+  // appended as a visible near-duplicate instead of retagging in place,
+  // caught and reverted before landing (`git diff` before/after, same
+  // "matoya-archon-elder"-style discipline this script's own header already
+  // documents). Fixed by sorting `has`/`hasAny`/`not` array COPIES (never
+  // the original `fact.target`/`fact.types` objects in place — those still
+  // get written to disk byte-for-byte as the recognizer produced them,
+  // only THIS reduced-key computation sees the sorted copy) before hashing.
+  // Verified pool-wide: re-running `apply-recognizers.mjs` after this fix
+  // correctly retags ice-flan's own 2 existing facts in place (0 duplicates
+  // remain), and a full pool-wide diff confirms no OTHER card's own
+  // retag/append outcome changes as a side effect of this fix.
+  const sortTypeArrays = (types) => {
+    if (!types || typeof types !== 'object') return types;
+    const copy = { ...types };
+    for (const k of ['has', 'hasAny', 'not']) if (Array.isArray(copy[k])) copy[k] = [...copy[k]].sort();
+    return copy;
+  };
+  if (reduced.types) reduced.types = sortTypeArrays(reduced.types);
+  if (reduced.target && typeof reduced.target === 'object' && reduced.target.types) {
+    reduced.target = { ...reduced.target, types: sortTypeArrays(reduced.target.types) };
+  }
+  return stableStringify(reduced);
+}
+
+/**
+ * **Real bug fixed 2026-09-15 (fin/16-25 pass — Fate of the Sun-Cryst's own
+ * two remaining unprovenanced sinks surfaced it)**: `coreKey` used to return
+ * `JSON.stringify(reduced, Object.keys(reduced).sort())` — passing an ARRAY
+ * as `JSON.stringify`'s second argument makes it act as a property-name
+ * ALLOWLIST applied RECURSIVELY AT EVERY NESTING LEVEL, not just "sort the
+ * top-level keys" (the intended effect). Since a `Constraints` object's own
+ * real nested field names (`not`/`has`/`min`/`max`/`eq`, `synergy.ts`) are
+ * never themselves one of `reduced`'s own top-level key names
+ * (`event`/`to`/`from`/`zone`/`subject`/`target`/`face`/`types`/`power`),
+ * EVERY nested `types`/`target` object silently serialized as a bare `{}`
+ * regardless of its real content — meaning `{types:{has:['Creature']}}` and
+ * `{types:{not:['Land']}}` (or ANY two different `types`/`target` shapes)
+ * were INDISTINGUISHABLE to every retag/append decision in this script,
+ * differing only when the mere PRESENCE of a tracked key (not its value)
+ * happened to differ (the 2026-09-14 "Battle Menu" fix above only "worked"
+ * for this accidental reason — one candidate had a `power` key at all, the
+ * other didn't; neither candidate's own `types`/`power` VALUE was ever
+ * actually compared). Confirmed via a direct real-node repro
+ * (`JSON.stringify({a:1,b:{x:1}}, ['a','b'])` → `{"a":1,"b":{}}`) before
+ * writing this fix, not assumed. Real, checked impact: Fate of the Sun-
+ * Cryst's own two sink facts (types:{not:['Land']} vs
+ * types:{has:['Creature']}) reduced to the IDENTICAL coreKey
+ * `{"to":"Battlefield","types":{}}` — a real cross-fact collision that
+ * silently blocked `destroy-effect-structural`'s own already-matching sink
+ * from ever retagging the first one (the 2-candidate branch's own
+ * exact-annotation-match requirement correctly refused to guess between the
+ * two ambiguous candidates, which is the RIGHT behavior GIVEN a genuinely
+ * ambiguous key — the real bug was the key itself being wrongly ambiguous
+ * in the first place). `stableStringify` sorts keys at EVERY nesting level
+ * (recursively), the actually-correct way to get an order-independent,
+ * content-faithful canonical string.
+ */
+function stableStringify(value) {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const keys = Object.keys(value).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
 }
 
 /**
@@ -569,7 +946,22 @@ function coreKey(fact, { normalizeSelfSubject = true } = {}) {
 function mergeRecognizedFactsByIdentity(entries) {
   const groups = new Map();
   for (const entry of entries) {
-    const key = `${entry.role}::${coreKey(entry.fact)}`;
+    // `extraKeys: ['targeted']` (2026-09-16, fin/26-50 pass) — safe HERE
+    // specifically (never for the shared `coreKey` calls against
+    // PRE-EXISTING hand-authored facts elsewhere in this script) because
+    // every entry reaching this function is a FRESHLY-COMPUTED recognizer
+    // output, and every recognizer in this catalog always explicitly sets
+    // `targeted` (true or false) on its own emitted fact — the "omitted
+    // vs. explicit `false`" ambiguity that made a pool-wide `targeted`
+    // addition to the shared key list unsafe (see `coreKey`'s own doc
+    // comment on the reverted attempt) simply can't occur among entries
+    // this function ever sees. Real, confirmed motivating case:
+    // `restoration-magic`'s own Curaga tier (`grantKeywordAll`, board-wide,
+    // `targeted:false`) and Cure/Cura tiers (`grantKeywordTarget`, a single
+    // CHOSEN target, `targeted:true`) both grant the identical keyword with
+    // the identical empty `target:{}` constraint — two genuinely different
+    // real claims that were being wrongly merged into one before this.
+    const key = `${entry.role}::${coreKey(entry.fact, { extraKeys: ['targeted'] })}`;
     const list = groups.get(key);
     if (list) list.push(entry);
     else groups.set(key, [entry]);
@@ -695,6 +1087,73 @@ function mergeDuplicateFacts(facts, slug) {
 }
 
 /**
+ * A THIRD existing-facts self-heal (2026-09-16, card-results/fin-51-75
+ * triage backlog item #11 — a real process gap that agent's own pass
+ * surfaced on `matoya-archon-elder`, and this session's own `sacrifice-
+ * effect-structural`/`grantKeywordTarget-effect-structural` widening passes
+ * independently re-hit TWICE more, on `sidequest-hunt-the-mark-yiazmat-
+ * ultimate-mark` and `jill-shiva-s-dominant-shiva-warden-of-ice`): a card's
+ * own `source` array can already carry 2+ facts, from BEFORE any recognizer
+ * ever touched it, that are pure AUTHORING-TIME duplicates of the exact
+ * same real claim — same `coreKey`, NEITHER carrying `provenance` yet
+ * (unlike `mergeDuplicateFacts` above, whose confirmed bug shape is exactly
+ * ONE unprovenanced survivor plus one-or-more ALREADY-provenanced donors).
+ * Every real case checked this session hand-fixed (not self-healed) before
+ * this function existed — this closes the gap so a future occurrence
+ * doesn't need another manual hand-edit.
+ *
+ * **The real, decisive signal that makes this safe to auto-merge, not just
+ * a coincidence**: every member of the group ALSO shares an IDENTICAL
+ * `annotations` array (byte-for-byte) with every other member — this is
+ * what tells a genuine pre-existing duplicate apart from
+ * `matoya-archon-elder`'s own real near-miss (2 real, DIFFERENT claims
+ * that happen to share a bare `coreKey` — one anchored to the real "draw a
+ * card" clause, one to a reminder-text parenthetical — which do NOT share
+ * identical annotations, and so correctly never reach this function's own
+ * merge branch at all). A group with even one member whose `annotations`
+ * differs from the rest is left completely untouched, exactly like
+ * `matoya-archon-elder`'s own case, not guessed at.
+ *
+ * Scoped to `source` only, same restraint `mergeDuplicateFacts`/
+ * `mergeSameRuleExistingFacts` both already apply for the identical reason
+ * (no recognizer in this catalog has ever produced a `role:'sink'` fact, so
+ * a pre-existing authoring-time SINK duplicate is a real, different
+ * question this pass hasn't checked and doesn't touch).
+ */
+function mergeIdenticalUnprovenancedDuplicates(facts, slug) {
+  const groups = new Map();
+  for (const f of facts) {
+    const key = coreKey(f);
+    const list = groups.get(key);
+    if (list) list.push(f);
+    else groups.set(key, [f]);
+  }
+  const merged = [];
+  let mergedCount = 0;
+  for (const group of groups.values()) {
+    if (group.length === 1 || group.some((f) => f.provenance)) {
+      merged.push(...group);
+      continue;
+    }
+    const firstAnnotationsJSON = JSON.stringify(group[0].annotations);
+    if (!group.every((f) => JSON.stringify(f.annotations) === firstAnnotationsJSON)) {
+      // Not the confirmed shape — a same-coreKey, all-unprovenanced group
+      // whose members DISAGREE on annotations is `matoya-archon-elder`'s
+      // own real near-miss shape (2 genuinely different real claims), left
+      // untouched, not logged as a NOTE (same reasoning `mergeSameRuleExistingFacts`
+      // already gives for not logging its own overwhelmingly-common
+      // legitimately-distinct case).
+      merged.push(...group);
+      continue;
+    }
+    console.log(`${slug}: self-heal — collapsed ${group.length} pure authoring-time duplicate fact(s) (identical coreKey AND identical annotations, neither provenanced) into 1`);
+    merged.push(group[0]);
+    mergedCount += group.length - 1;
+  }
+  return { merged, mergedCount };
+}
+
+/**
  * A second, narrower existing-facts self-heal (2026-09-13, same follow-up
  * pass that adds `mergeRecognizedFactsByIdentity` above) — closes the one
  * real gap that pass, on its own, can't reach: a card whose own
@@ -802,7 +1261,26 @@ async function main() {
   //     run (annotations unioned into one fact before comparing against
   //     what's on disk — never touches anything already on disk itself).
   let factsMergedSameRule = 0;
+  // `mergeIdenticalUnprovenancedDuplicates`'s own narrow existing-on-disk
+  // self-heal (2026-09-16, card-results/fin-51-75 triage backlog item #11)
+  // — a FOURTH, genuinely different merge tally from the two above: a
+  // pre-existing, pure AUTHORING-TIME duplicate pair (neither side ever
+  // provenanced, identical `coreKey` AND identical `annotations`). Kept as
+  // its own counter/label rather than folded into `factsMerged` above
+  // (which is specifically the SUBJECT-NORMALIZATION bug's own tally, a
+  // different real cause) — see that function's own doc comment.
+  let factsMergedIdenticalUnprovenanced = 0;
   let recognizerAnnotationsMerged = 0;
+  // `factsTriggeredByBackfilled` (2026-09-16, causal-links "widen populate"
+  // pass) — counts real, existing on-disk facts whose own `triggeredBy` got
+  // synced from a recognizer's freshly-computed value below, INCLUDING the
+  // case where every other field (`annotations`/`provenance`) already agreed
+  // and would otherwise short-circuit as "already present" — see the retag
+  // loop's own comment for why `triggeredBy` alone is deliberately synced
+  // even then (purely additive/informational, never part of `coreKey`
+  // identity, always deterministically re-derivable from the same real
+  // `CardDefinition` structure a recognizer already reads).
+  let factsTriggeredByBackfilled = 0;
   const retaggedByRule = {};
   let skippedNoSynergy = 0;
   let skippedNotV2 = 0;
@@ -877,6 +1355,26 @@ async function main() {
         // audit) — same card-definition-level field family as the others
         // above.
         continuousPTGrants: card.continuousPTGrants,
+        continuousTypeGrants: card.continuousTypeGrants,
+        continuousKeywordGrants: card.continuousKeywordGrants,
+        costReduction: card.costReduction,
+        // `crewCost-structural` (2026-09-15, fin/16-25 pass) — same
+        // card-definition-level field family as the others above.
+        crewCost: card.crewCost,
+        // `manaAbilitiesSimple-structural` (2026-09-15, fin/26-50 pass) —
+        // same card-definition-level field family as the others above.
+        manaAbilities: card.manaAbilities,
+        // `spellCostReductionGrants-structural` (2026-09-16, fin/26-50
+        // pass) — same card-definition-level field family as the others
+        // above.
+        spellCostReductionGrants: card.spellCostReductionGrants,
+        // `lifegainDoubleKeyword-structural` (2026-09-16, fin/26-50 pass) —
+        // same card-definition-level field family as the others above.
+        keywords: card.keywords,
+        // `millModifierGrants-structural` (2026-09-16, card-results/
+        // fin-76-100 re-triage backlog) — same card-definition-level field
+        // family as the others above.
+        millModifierGrants: card.millModifierGrants,
       },
     ];
     if (card.backFace) {
@@ -893,6 +1391,14 @@ async function main() {
         triggerDoubling: card.backFace.triggerDoubling,
         activationCost: card.backFace.activationCost,
         continuousPTGrants: card.backFace.continuousPTGrants,
+        continuousTypeGrants: card.backFace.continuousTypeGrants,
+        continuousKeywordGrants: card.backFace.continuousKeywordGrants,
+        costReduction: card.backFace.costReduction,
+        crewCost: card.backFace.crewCost,
+        manaAbilities: card.backFace.manaAbilities,
+        spellCostReductionGrants: card.backFace.spellCostReductionGrants,
+        keywords: card.backFace.keywords,
+        millModifierGrants: card.backFace.millModifierGrants,
       });
     }
 
@@ -903,6 +1409,17 @@ async function main() {
     // post-fix state as its baseline. Runs every time, not just once — a
     // no-op (0 merges) once the pool is clean, confirmed idempotent.
     const { merged: existingSourceStep1, mergedCount: mergedCountBug } = mergeDuplicateFacts(raw.source ?? [], slug);
+    // Third self-heal (see `mergeIdenticalUnprovenancedDuplicates`'s own doc
+    // comment) — a pure AUTHORING-TIME duplicate pair (neither side ever
+    // touched by any recognizer, identical coreKey AND identical
+    // annotations) predating this whole pipeline. Chained here, before the
+    // same-rule merge below, since either order is safe (the two functions'
+    // own gates are mutually exclusive: one requires every member
+    // unprovenanced, the other requires every member ALREADY provenanced).
+    const { merged: existingSourceStep1b, mergedCount: mergedCountIdenticalUnprovenanced } = mergeIdenticalUnprovenancedDuplicates(
+      existingSourceStep1,
+      slug,
+    );
     // Second self-heal, chained on the first's output (see
     // `mergeSameRuleExistingFacts`'s own doc comment) — closes the one real
     // gap `mergeRecognizedFactsByIdentity` can't reach on its own: a card
@@ -910,10 +1427,11 @@ async function main() {
     // retagged individually with the identical recognizer rule (the exact
     // `qiqirn-merchant` shape). Also runs every time, also idempotent (0
     // merges once nothing on disk still needs it).
-    const { merged: existingSource, mergedCount: mergedCountSameRule } = mergeSameRuleExistingFacts(existingSourceStep1, slug);
+    const { merged: existingSource, mergedCount: mergedCountSameRule } = mergeSameRuleExistingFacts(existingSourceStep1b, slug);
     const existingSink = raw.sink ?? [];
-    const mergedCount = mergedCountBug + mergedCountSameRule;
+    const mergedCount = mergedCountBug + mergedCountIdenticalUnprovenanced + mergedCountSameRule;
     factsMerged += mergedCountBug;
+    factsMergedIdenticalUnprovenanced += mergedCountIdenticalUnprovenanced;
     factsMergedSameRule += mergedCountSameRule;
     // Map of coreKey -> Fact[] (not Fact, not a bare Set) — TWO real reasons:
     //   (1) a `coreKey` MATCH against an existing fact needs the real object
@@ -989,6 +1507,7 @@ async function main() {
     }
 
     let retaggedThisCard = 0;
+    let triggeredByBackfilledThisCard = 0;
     let recognizerAnnotationsMergedThisCard = 0;
     const toAppend = { source: [], sink: [] };
     for (const face of faces) {
@@ -1022,6 +1541,36 @@ async function main() {
         // self-tap fact wasn't retagging) — not repeating that miss for a
         // second field.
         continuousPTGrants: face.continuousPTGrants,
+        continuousTypeGrants: face.continuousTypeGrants,
+        continuousKeywordGrants: face.continuousKeywordGrants,
+        costReduction: face.costReduction,
+        // `crewCost` (2026-09-15, `crewCost-structural`'s own wiring pass) —
+        // added to BOTH `faces` above and here in the SAME pass this time,
+        // per the `activationCost`/`continuousPTGrants` note right above —
+        // not repeating that miss for a third/fourth field.
+        crewCost: face.crewCost,
+        // `manaAbilities` (2026-09-15, `manaAbilitiesSimple-structural`'s own
+        // wiring pass) — added to BOTH `faces` above and here in the SAME
+        // pass this time, per the `activationCost`/`continuousPTGrants`/
+        // `crewCost` note right above — not repeating that miss for a fifth
+        // field.
+        manaAbilities: face.manaAbilities,
+        // `spellCostReductionGrants` (2026-09-16, `spellCostReductionGrants-
+        // structural`'s own wiring pass) — added to BOTH `faces` above and
+        // here in the SAME pass this time, per the `activationCost`/
+        // `continuousPTGrants`/`crewCost`/`manaAbilities` note right above —
+        // not repeating that miss for a sixth field.
+        spellCostReductionGrants: face.spellCostReductionGrants,
+        // `keywords` (2026-09-16, `lifegainDoubleKeyword-structural`'s own
+        // wiring pass) — added to BOTH `faces` above and here in the SAME
+        // pass this time, per the `activationCost`/etc. note right above.
+        keywords: face.keywords,
+        // `millModifierGrants` (2026-09-16, `millModifierGrants-
+        // structural`'s own wiring pass) — added to BOTH `faces` above and
+        // here in the SAME pass this time, per the `activationCost`/etc.
+        // note right above — not repeating that recurring miss for a
+        // seventh field.
+        millModifierGrants: face.millModifierGrants,
         // See `recognizers/types.ts`'s own `RecognizerInput.isBackFace` doc
         // comment: `permanent-enters-battlefield-normally` used to be the
         // one recognizer that read this (retired 2026-09-14 — see this
@@ -1133,6 +1682,35 @@ async function main() {
           existingFact = candidates.find((f) => JSON.stringify(f.annotations) === factAnnotationsJSON);
         }
         if (existingFact) {
+          // `Fact.triggeredBy` backfill (2026-09-16, causal-links "widen
+          // populate" pass) — synced FIRST, independently of the
+          // annotations/provenance comparison right below, and independently
+          // of whether this branch ends up a no-op retag-wise. Deliberately
+          // the ONE exception to this script's own "additive, never touches
+          // an existing fact's other fields on a coreKey match" rule (this
+          // file's own header): `triggeredBy` is purely informational (never
+          // part of `coreKey`, never consulted by `factsInteract`/`themeOf` —
+          // see `synergy.ts`'s own doc comment) and always deterministically
+          // RE-DERIVED from the same real `CardDefinition` structure this
+          // recognizer already reads, the same way `annotations`/`provenance`
+          // themselves already get unconditionally overwritten on every
+          // match — so overwriting a stale/missing value here can never
+          // silently corrupt or invent data, only keep this one field in
+          // sync with what the recognizer's own logic actually computes
+          // today. Real motivating case: the ~15+ pre-existing facts
+          // `entersBattlefield-self-trigger-structural.ts` (and every
+          // recognizer widened the same pass) already matched in a PRIOR
+          // run, before `triggeredBy` existed at all — those facts'
+          // `annotations`/`provenance` already agree with this run's fresh
+          // output (the short-circuit below would otherwise skip them
+          // entirely, forever). Only ever SETS a real string value (never
+          // clears one back to `undefined` — no recognizer here ever regains
+          // less structural information than a prior run already gave it).
+          if (fact.triggeredBy !== undefined && existingFact.triggeredBy !== fact.triggeredBy) {
+            existingFact.triggeredBy = fact.triggeredBy;
+            factsTriggeredByBackfilled++;
+            triggeredByBackfilledThisCard++;
+          }
           // `coreKey` matched — replace `annotations` with the recognizer's
           // own freshly-computed ones and set a bare `provenance`
           // (2026-09-14: no distinction anymore between "first time this
@@ -1175,7 +1753,14 @@ async function main() {
       }
     }
 
-    if (toAppend.source.length === 0 && toAppend.sink.length === 0 && retaggedThisCard === 0 && mergedCount === 0) continue;
+    if (
+      toAppend.source.length === 0 &&
+      toAppend.sink.length === 0 &&
+      retaggedThisCard === 0 &&
+      mergedCount === 0 &&
+      triggeredByBackfilledThisCard === 0
+    )
+      continue;
 
     // `existingSource`/`existingSink` are the SAME object references any
     // in-place retag (or duplicate-merge) above mutated directly, so
@@ -1189,19 +1774,20 @@ async function main() {
     await writeFile(synergyUrl, JSON.stringify(out, null, 2) + '\n', 'utf8');
     written++;
     const retagNote = retaggedThisCard > 0 ? `, retagged ${retaggedThisCard} existing fact(s)` : '';
+    const triggeredByNote = triggeredByBackfilledThisCard > 0 ? `, backfilled triggeredBy on ${triggeredByBackfilledThisCard} existing fact(s)` : '';
     const mergeNote = mergedCount > 0 ? `, merged ${mergedCount} duplicate fact(s)` : '';
     const recognizerMergeNote =
       recognizerAnnotationsMergedThisCard > 0
         ? `, merged ${recognizerAnnotationsMergedThisCard} freshly-recognized duplicate fact(s) by identity (annotations unioned)`
         : '';
-    console.log(`${slug}: +${toAppend.source.length} source, +${toAppend.sink.length} sink parser fact(s)${retagNote}${mergeNote}${recognizerMergeNote}`);
+    console.log(`${slug}: +${toAppend.source.length} source, +${toAppend.sink.length} sink parser fact(s)${retagNote}${triggeredByNote}${mergeNote}${recognizerMergeNote}`);
   }
 
   const retagBreakdown = Object.entries(retaggedByRule)
     .map(([rule, n]) => `${rule}: ${n}`)
     .join(', ');
   console.log(
-    `\nWrote ${written} synergy.json files. ${factsAdded} new parser-derived fact(s) added, ${factsRetagged} existing hand-authored fact(s) retagged with provenance (${retagBreakdown || 'none'}), ${factsAlreadyPresent} already covered/already-provenanced (skipped), ${factsMerged} duplicate fact(s) merged (existing-fact self-heal, subject-normalization bug), ${factsMergedSameRule} duplicate fact(s) merged (existing-fact self-heal, same-rule identity), ${recognizerAnnotationsMerged} recognizer annotation(s) merged into a shared fact (new runner-level identity grouping). ` +
+    `\nWrote ${written} synergy.json files. ${factsAdded} new parser-derived fact(s) added, ${factsRetagged} existing hand-authored fact(s) retagged with provenance (${retagBreakdown || 'none'}), ${factsTriggeredByBackfilled} existing fact(s) backfilled with triggeredBy, ${factsAlreadyPresent} already covered/already-provenanced (skipped), ${factsMerged} duplicate fact(s) merged (existing-fact self-heal, subject-normalization bug), ${factsMergedIdenticalUnprovenanced} duplicate fact(s) merged (existing-fact self-heal, pure authoring-time duplicate), ${factsMergedSameRule} duplicate fact(s) merged (existing-fact self-heal, same-rule identity), ${recognizerAnnotationsMerged} recognizer annotation(s) merged into a shared fact (new runner-level identity grouping). ` +
       `${skippedNoSynergy} card(s) skipped (no synergy.json), ${skippedNotV2} skipped (not v2-shaped), ${skippedNoOracle} skipped (no real oracle text found).`,
   );
 
@@ -1221,6 +1807,18 @@ async function main() {
     }
     process.exitCode = 1;
   }
+
+  // Verified-snapshot regression guard (`.claude/contracts/card-schema.md`'s
+  // "Verified-snapshot regression guard" section) — run FULL POOL here
+  // regardless of what slugs this run of apply-recognizers.mjs was itself
+  // scoped to (this diffing is cheap JSON comparison, nearly free next to
+  // the recognizer/engine work above), so a recognizer change that quietly
+  // drifts a human-reviewed card's facts away from its confirmed baseline
+  // is always caught by the same run that could have caused it, not left to
+  // a separate manual step someone forgets to run.
+  console.log('\nRunning pool-wide verified-snapshot regression check (functional-model/scripts/check-verified-regressions.mjs)...');
+  const { mismatchedSlugs } = await checkAllVerifiedSnapshots();
+  if (mismatchedSlugs.length > 0) process.exitCode = 1;
 }
 
-main();
+await main();

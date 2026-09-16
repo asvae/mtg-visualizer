@@ -24,8 +24,14 @@ describe("preventDamageAll-effect-structural — Summon: Alexander's own chapter
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts).toHaveLength(2);
+    // `Fact.triggeredBy` (2026-09-16, "widen populate" pass) — a real
+    // multi-trigger-same-line case (same "repeats, not a typo" pattern as
+    // `dealDamage-effect-structural.test.ts`'s own Phoenix, Warden of Fire
+    // case): chapterI and chapterII are two separate real triggers sharing
+    // byte-identical printed text, so the two facts now genuinely diverge
+    // only in `triggeredBy`.
     for (const f of result.facts) {
-      expect(f).toEqual({
+      expect(f).toMatchObject({
         role: 'source',
         fact: {
           event: 'preventDamage',
@@ -37,6 +43,7 @@ describe("preventDamageAll-effect-structural — Summon: Alexander's own chapter
         provenance: { origin: 'parser', rule: 'preventDamageAll-effect-structural' },
       });
     }
+    expect(result.facts.map((f) => f.fact.triggeredBy).sort()).toEqual(['chapterI', 'chapterII']);
   });
 
   it('declines a real card with no grantKeywordAll DamagePrevention effect at all (Ahriman)', () => {

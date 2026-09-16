@@ -23,17 +23,43 @@
         }
       },
       "targeted": true,
+      "untilEndOfTurn": true,
       "annotations": [
         {
           "target": "oracle",
           "line": 0,
-          "start": 16,
-          "end": 26
+          "start": 0,
+          "end": 60
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "pumpTarget-effect-structural"
+      }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Haste",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 37,
+          "end": 42
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordTarget-effect-structural"
       }
     }
   ],
@@ -51,7 +77,13 @@
           "target": "oracle",
           "line": 0,
           "start": 0,
-          "end": 26
+          "end": 15
+        },
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 60
         }
       ],
       "provenance": {

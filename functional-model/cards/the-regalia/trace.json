@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "The Regalia",
         "instanceId": 1,
-        "id": 2725,
+        "id": 2,
         "name": "onAttacks"
       }
     ]
@@ -34,15 +34,24 @@
         "fn": "cast",
         "card": "The Regalia",
         "instanceId": 1,
-        "id": 2727,
+        "id": 4,
         "from": "hand",
         "cost": "{4}"
+      },
+      {
+        "fn": "animate",
+        "target": "The Regalia",
+        "id": 4,
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
       },
       {
         "fn": "enters",
         "card": "The Regalia",
         "instanceId": 1,
-        "id": 2727,
+        "id": 4,
         "zone": "Battlefield"
       },
       {

@@ -1,0 +1,87 @@
+{
+  "capturedAt": "2026-09-16T21:31:51.277Z",
+  "facts": {
+    "source": [
+      {
+        "to": "Hand",
+        "from": "Library",
+        "controller": "you",
+        "types": {
+          "has": [
+            "Artifact"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 75,
+            "end": 140
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "digReveal-effect-structural"
+        },
+        "triggeredBy": "onAttack"
+      }
+    ],
+    "sink": [
+      {
+        "to": "Library",
+        "controller": "you",
+        "types": {
+          "has": [
+            "Artifact"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 75,
+            "end": 98
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "digReveal-effect-structural"
+        }
+      },
+      {
+        "event": "attacks",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 0,
+            "end": 21
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "attacks-trigger-structural"
+        }
+      }
+    ]
+  },
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 0,
+      "start": 21,
+      "end": 75,
+      "kind": "rules",
+      "note": "\", look at the top five cards of your library. You may\" — the dig's own qty:5 same-zone Library lookup itself (as opposed to the qty:1 reveal/take-to-hand half, which IS a real Fact). No fact/consumer vocabulary exists for 'look at N cards of your own library' — a private information-gathering action with no zone change, no external hook any other card could plausibly produce/consume/want."
+    },
+    {
+      "target": "oracle",
+      "line": 0,
+      "start": 140,
+      "end": 203,
+      "kind": "rules",
+      "note": "\". Put the rest on the bottom of your library in a random order.\" — the dig's own unchosen-4-cards destination. A real, CR-mechanical consequence (same zone, Library -> Library) but no fact/consumer vocabulary exists for it — same reasoning as the qty:5 lookup span above, and the same reasoning `digReveal-effect-structural.ts`'s own module doc comment already gives for never anchoring this recognizer's own facts beyond the 'reveal ... and put it into your hand' clause."
+    }
+  ]
+}

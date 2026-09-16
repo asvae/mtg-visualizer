@@ -24,7 +24,7 @@
         "fn": "cast",
         "card": "Clash of the Eikons",
         "instanceId": 1,
-        "id": 387,
+        "id": 5,
         "from": "hand",
         "cost": "{G}"
       },
@@ -46,9 +46,9 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 384,
+        "sourceId": 2,
         "target": "Grizzly Bears",
-        "id": 386,
+        "id": 4,
         "amount": 3
       },
       {
@@ -59,16 +59,16 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 386,
+        "sourceId": 4,
         "target": "Grizzly Bears",
-        "id": 384,
+        "id": 2,
         "amount": 2
       },
       {
         "fn": "move",
         "card": "Clash of the Eikons",
         "instanceId": 1,
-        "id": 387,
+        "id": 5,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -93,7 +93,7 @@
         "fn": "cast",
         "card": "Clash of the Eikons",
         "instanceId": 1,
-        "id": 390,
+        "id": 8,
         "from": "hand",
         "cost": "{G}"
       },
@@ -107,7 +107,7 @@
       {
         "fn": "putCounter",
         "target": "you-enchantment-0",
-        "id": 389,
+        "id": 7,
         "counterType": "LORE",
         "amount": -1,
         "controller": "you"
@@ -116,7 +116,7 @@
         "fn": "move",
         "card": "Clash of the Eikons",
         "instanceId": 1,
-        "id": 390,
+        "id": 8,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -141,7 +141,7 @@
         "fn": "cast",
         "card": "Clash of the Eikons",
         "instanceId": 1,
-        "id": 393,
+        "id": 11,
         "from": "hand",
         "cost": "{G}"
       },
@@ -155,7 +155,7 @@
       {
         "fn": "putCounter",
         "target": "you-enchantment-0",
-        "id": 392,
+        "id": 10,
         "counterType": "LORE",
         "amount": 1,
         "controller": "you"
@@ -164,7 +164,7 @@
         "fn": "move",
         "card": "Clash of the Eikons",
         "instanceId": 1,
-        "id": 393,
+        "id": 11,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

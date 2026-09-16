@@ -22,7 +22,11 @@
           "start": 5,
           "end": 43
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     },
     {
       "event": "drawCard",
@@ -56,10 +60,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 5,
+          "start": 15,
           "end": 43
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     }
   ]
 }

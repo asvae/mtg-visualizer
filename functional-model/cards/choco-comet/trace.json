@@ -14,7 +14,7 @@
         "fn": "cast",
         "card": "Choco-Comet",
         "instanceId": 1,
-        "id": 346,
+        "id": 2,
         "from": "hand",
         "cost": "{X}{R}{R}"
       },
@@ -31,7 +31,7 @@
         "fn": "move",
         "card": "Choco-Comet",
         "instanceId": 1,
-        "id": 346,
+        "id": 2,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

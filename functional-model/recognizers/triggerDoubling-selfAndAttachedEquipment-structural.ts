@@ -44,8 +44,22 @@
 // gets, ENGINE_DESIGN.md) — one for Cloud's own triggered abilities
 // (`{event:'triggeredAbility', target:'self'}`), one for an attached
 // Equipment's (`{event:'triggeredAbility', target:{types:{has:['Equipment']},
-// attachedToSelf:true}}`), each anchored to its own real sub-span within the
-// single real sentence.
+// attachedToSelf:true}}`).
+//
+// **Widened 2026-09-16 (`verify-text-coverage.mjs` pass): both facts now
+// share ONE annotation spanning the WHOLE sentence**, not just their own
+// narrower "a triggered ability of Cloud"/"an Equipment attached to it"
+// sub-clause — the previous narrower spans left "As long as Cloud is
+// equipped, if" (the real condition gating BOTH facts — this grant only
+// applies while genuinely equipped, `state.ts`'s own
+// `triggerDoublingGrantApplies`) and "triggers, that ability triggers an
+// additional time" (the real consequence BOTH facts share — the doubling
+// itself) permanently uncovered. Same "the surrounding clause is squarely
+// part of what the Fact claims" reasoning `dealDamage-effect-structural.ts`'s
+// own subject-prefix widening already established, applied to a shared
+// condition/consequence frame rather than a subject — real, accepted
+// duplication (the identical real sentence backs both facts), only 1 real
+// pool card uses this recognizer, confirmed before widening.
 import type { CardDefinition } from '../card';
 import type { RecognizedFact, RecognizerInput, RecognizerResult } from './types';
 import { toLineOffset } from './types';
@@ -77,38 +91,31 @@ export function recognizeTriggerDoublingSelfAndAttachedEquipmentStructural(input
     return { matched: false, reason: 'no triggerDoubling entry with scope:"selfAndAttachedEquipment" on this face' };
   }
 
-  const selfPattern = new RegExp(`\\ba triggered ability of ${selfSubjectAlternation(input.name)}\\b`, 'i');
-  const equipmentPattern = /\ban Equipment attached to it\b/i;
-
-  const selfMatches = [...input.oracleText.matchAll(new RegExp(selfPattern.source, selfPattern.flags + 'g'))];
-  if (selfMatches.length !== 1) {
+  const subject = selfSubjectAlternation(input.name);
+  const sentencePattern = new RegExp(
+    `\\bAs long as ${subject} is equipped, if a triggered ability of ${subject} or an Equipment attached to it triggers, ` +
+      `that ability triggers an additional time\\b`,
+    'i',
+  );
+  const sentenceMatches = [...input.oracleText.matchAll(new RegExp(sentencePattern.source, sentencePattern.flags + 'g'))];
+  if (sentenceMatches.length !== 1) {
     return {
       matched: false,
       kind: 'mismatch',
-      reason: `expected clause /${selfPattern.source}/ matched ${selfMatches.length} times (expected exactly 1) in oracle text "${input.oracleText}"`,
-    };
-  }
-  const equipmentMatches = [...input.oracleText.matchAll(new RegExp(equipmentPattern.source, equipmentPattern.flags + 'g'))];
-  if (equipmentMatches.length !== 1) {
-    return {
-      matched: false,
-      kind: 'mismatch',
-      reason: `expected clause /${equipmentPattern.source}/ matched ${equipmentMatches.length} times (expected exactly 1) in oracle text "${input.oracleText}"`,
+      reason: `expected clause /${sentencePattern.source}/ matched ${sentenceMatches.length} times (expected exactly 1) in oracle text "${input.oracleText}"`,
     };
   }
 
-  const selfMatch = selfMatches[0]!;
-  const selfAnnotation = toLineOffset(input.oracleText, selfMatch.index!, selfMatch.index! + selfMatch[0]!.length);
-  const equipmentMatch = equipmentMatches[0]!;
-  const equipmentAnnotation = toLineOffset(input.oracleText, equipmentMatch.index!, equipmentMatch.index! + equipmentMatch[0]!.length);
-  if (!selfAnnotation || !equipmentAnnotation) {
+  const sentenceMatch = sentenceMatches[0]!;
+  const annotation = toLineOffset(input.oracleText, sentenceMatch.index!, sentenceMatch.index! + sentenceMatch[0]!.length);
+  if (!annotation) {
     return { matched: false, reason: 'matched span did not resolve to a single real oracle-text line' };
   }
 
   const facts: RecognizedFact[] = [
     {
       role: 'sink',
-      fact: { event: 'triggeredAbility', target: 'self', annotations: [selfAnnotation] },
+      fact: { event: 'triggeredAbility', target: 'self', annotations: [annotation] },
       provenance: { origin: 'parser', rule: RULE },
     },
     {
@@ -116,7 +123,7 @@ export function recognizeTriggerDoublingSelfAndAttachedEquipmentStructural(input
       fact: {
         event: 'triggeredAbility',
         target: { types: { has: ['Equipment'] }, attachedToSelf: true },
-        annotations: [equipmentAnnotation],
+        annotations: [annotation],
       },
       provenance: { origin: 'parser', rule: RULE },
     },

@@ -18,13 +18,39 @@
 // `NODE_ENV === 'production'` check this same route family already uses
 // (server/api/card/[set]/[number].ts's own `loadJsonFresh`).
 //
-// POST /api/card/review-status, body { name: string, field: 'review' | 'scenariosReview' | 'interactionsReview', reviewed: boolean, set?: string, number?: string }
+// POST /api/card/review-status, body { name: string, field: 'review' | 'scenariosReview' | 'interactionsReview', reviewed: boolean, set?: string, number?: string, reviewCaveat?: string }
 //
 // `set`/`number` are only used for the `review` axis (FACTS review — see
 // below) — the calling UI is always the card page at that exact
 // /app/card/:set/:number route, so it already has both to hand
 // (route.params) rather than this route needing its own by-name search
 // across every set.
+//
+// `reviewCaveat` (2026-09-17, "Confirm (Uncertain)" UI action) — ONLY
+// meaningful when `field === 'review'` and `reviewed === true`; ignored
+// entirely for the other two axes and for `reviewed === false` (Unconfirm
+// leaves a card's `reviewCaveat` untouched, same "un-reviewing doesn't erase
+// evidence of prior review" reasoning the pre-existing `oracleTextSnapshot`
+// field below already follows). See `functional-model/card-status.ts`'s own
+// `uncertain`-bucket header for what this field MEANS (a human-authored,
+// free-text note for "facts are as complete as they can be, but here's one
+// specific known conceptual modeling gap") — this route only handles
+// REACHING that state via a real request, not the classification itself.
+//
+// - Non-empty (after trim): written to `progress.json.reviewCaveat`
+//   (`review` is still set to `'human'`, unchanged — an "uncertain confirm"
+//   IS a real review pass, just with a caveat attached, never a weaker kind
+//   of confirm).
+// - Omitted/empty on a PLAIN confirm click (the pre-existing button, body
+//   simply has no `reviewCaveat` key at all): if this card previously had a
+//   `reviewCaveat` set, it is CLEARED — a plain "yes, this is clean" confirm
+//   supersedes a stale caveat claim (the caveat was about a PRIOR review
+//   pass; a fresh clean one says nothing like it remains). Confirmed this
+//   can't create some other inconsistency: `functional-model/card-status.ts`'s
+//   own `classifyCardStatus` and `scripts/check-verified-regressions.mjs`
+//   both only ever READ `reviewCaveat` (never write it, never diff it into
+//   the verified-snapshot regression check below) — clearing it here has no
+//   knock-on effect on either.
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -134,7 +160,79 @@ export default defineEventHandler(async (event) => {
     }
   }
   const [unreviewedValue, reviewedValue] = REVIEW_FIELD_VALUES[field]!;
+  const previousFieldValue = progress[field];
   progress[field] = reviewed ? reviewedValue : unreviewedValue;
+
+  // `reviewCaveat` — only the `review` axis has one; see this file's own
+  // header comment above for the full plain-confirm-clears-it /
+  // uncertain-confirm-writes-it contract. `caveatChanged` feeds the
+  // widened snapshot condition immediately below: a caveat being added,
+  // edited, or cleared is just as much a deliberate "I looked at this card
+  // RIGHT NOW" moment as a fresh ai/regression -> human transition is, even
+  // when `review` itself was already `'human'` going in (e.g. an
+  // "Uncertain confirm" click on an already-verified card, or a plain
+  // confirm click that clears an old caveat off an already-uncertain one)
+  // — so it must re-baseline the verified-snapshot the exact same way.
+  let caveatChanged = false;
+  if (field === 'review' && reviewed) {
+    const previousCaveat = typeof progress.reviewCaveat === 'string' ? progress.reviewCaveat : undefined;
+    const rawCaveat: unknown = body?.reviewCaveat;
+    const trimmedCaveat = typeof rawCaveat === 'string' ? rawCaveat.trim() : undefined;
+    const nextCaveat = trimmedCaveat && trimmedCaveat.length > 0 ? trimmedCaveat : undefined;
+    if (nextCaveat) {
+      progress.reviewCaveat = nextCaveat;
+    } else if ('reviewCaveat' in progress) {
+      delete progress.reviewCaveat;
+    }
+    caveatChanged = (previousCaveat ?? '') !== (nextCaveat ?? '');
+  }
+  // `reviewed === false` (Unconfirm): `reviewCaveat` deliberately left
+  // untouched, same "un-reviewing doesn't erase evidence of prior review"
+  // reasoning as `oracleTextSnapshot` below.
+
+  // Verified-snapshot regression guard (`.claude/contracts/card-schema.md`'s
+  // own "Verified snapshot regression guard" section,
+  // `functional-model/scripts/check-verified-regressions.mjs` is the other
+  // half) — the moment a human confirms this card's FACTS review, freeze
+  // this card's current `synergy.json` facts (+ its `progress.json`'s own
+  // `annotatedNonFactSpans`, if any) into `cards/<slug>/
+  // verified-snapshot.json`. A later recognizer/definition/annotation change
+  // that silently drifts a reviewed card's facts away from this frozen
+  // baseline gets caught (and the stale 'human' flag auto-reset) by that
+  // script, not by hoping someone remembers to re-review by hand.
+  //
+  // Widened condition (2026-09-17, "Confirm (Uncertain)" UI action) — not
+  // JUST a real 'ai'/'regression' -> 'human' transition anymore
+  // (`previousFieldValue !== 'human'`), but ALSO any request where this
+  // card's `reviewCaveat` itself changed (`caveatChanged`, above) even when
+  // `review` was already `'human'` going in. Both are the same underlying
+  // event: a human deliberately re-affirming (or downgrading the confidence
+  // of) this exact review right now — an "Uncertain confirm" click on an
+  // already-verified card, or a plain confirm that clears a stale caveat off
+  // an already-uncertain one, is exactly the moment to freshen the baseline,
+  // not a no-op re-POST of an unchanged value (which still correctly skips
+  // the snapshot, same as before this widening).
+  if (field === 'review' && reviewed && (previousFieldValue !== 'human' || caveatChanged)) {
+    const synergyPath = join(dir, 'synergy.json');
+    if (existsSync(synergyPath)) {
+      try {
+        const synergy = JSON.parse(readFileSync(synergyPath, 'utf8'));
+        const verifiedSnapshot: Record<string, unknown> = {
+          capturedAt: new Date().toISOString(),
+          facts: { source: synergy.source ?? [], sink: synergy.sink ?? [] },
+        };
+        if (Array.isArray(progress.annotatedNonFactSpans)) {
+          verifiedSnapshot.annotatedNonFactSpans = progress.annotatedNonFactSpans;
+        }
+        writeFileSync(join(dir, 'verified-snapshot.json'), JSON.stringify(verifiedSnapshot, null, 2) + '\n', 'utf8');
+      } catch {
+        // malformed synergy.json — skip the snapshot rather than fail the
+        // whole review-status write; this card just won't be covered by the
+        // regression guard until its synergy.json is valid and it's
+        // re-reviewed.
+      }
+    }
+  }
 
   // Snapshot on every confirm (not just the first), so re-reviewing after a
   // fix re-baselines the staleness check too. Un-reviewing (`reviewed ===
@@ -157,5 +255,15 @@ export default defineEventHandler(async (event) => {
   mkdirSync(dir, { recursive: true });
   writeFileSync(progressPath, JSON.stringify(progress, null, 2) + '\n', 'utf8');
 
-  return { [field]: progress[field] };
+  // Echo the current `reviewCaveat` back alongside `review` (only that axis
+  // has one) — lets the caller reconcile its own local state (e.g. pre-fill
+  // the "Confirm (Uncertain)" prompt on a later click) without a second
+  // round trip. `null`, not `undefined`, when absent (JSON-safe, and matches
+  // this route family's existing "explicit null over undefined" convention
+  // for optional fields elsewhere in this codebase).
+  const responseBody: Record<string, unknown> = { [field]: progress[field] };
+  if (field === 'review') {
+    responseBody.reviewCaveat = typeof progress.reviewCaveat === 'string' ? progress.reviewCaveat : null;
+  }
+  return responseBody;
 });

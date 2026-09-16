@@ -19,7 +19,7 @@
         "fn": "trigger",
         "card": "Ardyn, the Usurper",
         "instanceId": 1,
-        "id": 155,
+        "id": 4,
         "name": "onBeginCombat"
       },
       {
@@ -44,7 +44,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 154,
+        "id": 3,
         "zone": "Exile",
         "controller": "opp0"
       },
@@ -74,7 +74,7 @@
         "fn": "cast",
         "card": "Ardyn, the Usurper",
         "instanceId": 1,
-        "id": 158,
+        "id": 7,
         "from": "hand",
         "cost": "{5}{B}{B}{B}"
       },
@@ -82,7 +82,7 @@
         "fn": "enters",
         "card": "Ardyn, the Usurper",
         "instanceId": 1,
-        "id": 158,
+        "id": 7,
         "zone": "Battlefield"
       },
       {

@@ -24,6 +24,29 @@
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
       }
+    },
+    {
+      "event": "sacrifice",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Frog"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 14
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeCostNamedType-structural"
+      }
     }
   ],
   "sink": [
@@ -34,6 +57,27 @@
         "has": [
           "Creature"
         ]
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Frog"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 15,
+          "end": 21
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeCostNamedType-structural"
       }
     }
   ]

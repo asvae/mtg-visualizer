@@ -207,3 +207,27 @@ class the `grantKeyword` entry above documents (Ambrosia Whiteheart's own
 Landfall pump, Battle Menu's own Ability-mode pump) — a `pump` entry with
 no `removed`/`untilEndOfTurn` distinction at all is unaffected (a bare pump
 is permanent-within-the-replay, same as before this closure).
+
+## `fn:'endTurn'` + `move ... to:'Exile'` for a resolving spell (2026-09-16, additive; ENGINE_GAPS.md gap #29)
+
+A new `fn:'endTurn'` entry (bare, `{fn:'endTurn'}`) marks a card's real
+721.1a "end the turn" effect firing (Ultima, fin/38's own "End the turn.").
+No new fields of its own — everything it causes shows up as its own
+already-existing entry kinds, in real causal order: zero-or-more
+`{fn:'move', card, id, from:'stack', to:'Exile'}` entries (one per OTHER
+real card `engine.ts`'s own `endTurn` found still on the stack and exiled —
+legally always empty for a sorcery-speed source like Ultima, but real and
+general for a future instant-speed one), then the SAME `discard`/
+`grantKeyword removed:true`/`pump removed:true` entries a normal Cleanup
+crossing already produces (`logAutomaticPhaseEntry`, reused as-is), then a
+`{fn:'phase', phase:'Cleanup', turn, player}` entry marking the direct jump.
+Separately, the RESOLVING spell/ability's own post-resolution `move` entry
+(the one every instant/sorcery resolution already logs) now carries
+`to:'Exile'` instead of `to:'Graveyard'` when its own `kind:'endTurn'`
+effect ran — real Gatherer ruling on this ability ("This includes Time
+Stop, though it will continue to resolve") — additive to the pre-existing
+`thenExile`/Flashback check on that same entry, not a new entry of its own.
+No renderer action required for any of this — same "describe generically
+off `fn`" contract every other entry already has; `to:'Exile'` on a `move`
+entry is not a new value (Flashback/Jump-start's own `thenExile` already
+produces it).

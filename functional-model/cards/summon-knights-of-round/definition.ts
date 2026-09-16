@@ -27,7 +27,7 @@ export const summonKnightsOfRound: CardDefinition = {
       // mutation on the same cards.
       name: 'chapterV',
       effects: [
-        { kind: 'pumpAll', predicate: 'creatures-you-control', power: 2, toughness: 2, notSelf: true } satisfies Effect,
+        { kind: 'pumpAll', predicate: 'creatures-you-control', power: 2, toughness: 2, notSelf: true, untilEndOfTurn: true } satisfies Effect,
         { kind: 'putCounterAll', predicate: 'creatures-you-control', counterType: 'Indestructible', amount: 1, notSelf: true } satisfies Effect,
       ],
     },

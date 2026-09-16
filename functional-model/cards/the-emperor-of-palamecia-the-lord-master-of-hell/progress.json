@@ -2,10 +2,23 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"The Emperor of Palamecia\",\"zone\":\"Exile\"}) with no matching declared produce",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (collateral, fin/20-47 text-coverage pass on cargo-ship/fin/47): this card's own \"Spend this mana only to cast a noncreature spell\" restriction was real, typed (`ManaAbility.restriction`), and deliberately unenforced but had no annotation/`annotatedNonFactSpans` entry at all — found while checking cargo-ship's own identical restriction clause pool-wide. Added a real `annotatedNonFactSpans` entry (`kind:'rules'`) for exactly this clause. Coverage 18% -> improved (this card's own separate, unrelated, pre-existing gaps — the onNoncreatureSpellCast trigger's own transform consequence, the back-face X-counting clause — are real, already named in this card's own `knownGaps` below, out of that task's own scope, not touched). `review` was already 'ai'.\n\ntrace has moveTo ({\"fn\":\"moveTo\",\"target\":\"The Emperor of Palamecia\",\"zone\":\"Exile\"}) with no matching declared produce",
   "textCoverageAudited": false,
   "knownGaps": [
-    "transform exile half unexplained; onNoncreatureSpellCast trigger unmapped, no want declared"
+    "transform exile half unexplained; onNoncreatureSpellCast trigger unmapped, no want declared",
+    "The mana ability's own restriction (\"Spend this mana only to cast a noncreature spell\") remains real, typed, but deliberately unenforced (no spendable mana-pool mechanism exists anywhere in this engine) — see cargo-ship's own knownGaps entry for the full reasoning (shared, pool-wide gap).",
+    "NEWLY SURFACED 2026-09-16 (fin/20-47 text-coverage pass, while fixing the restriction gap above): this card's own mana PRODUCTION half (\"{T}: Add {U} or {R}.\") has NO addMana Fact at all — `manaAbilitiesSimple-structural.ts` deliberately declines any `manaAbilities` entry with `restriction` set (its own module doc comment: \"no confirmed simple template here\"), and no OTHER recognizer covers a restricted `manaAbilities` entry's own production half either. Freya Crescent shares this identical gap (also no addMana fact) but its own shorter remainder text never crossed `text-coverage.mjs`'s 20-char reporting threshold, so it stayed invisible until checked directly. A real, separate, not-yet-built recognizer gap (a `manaAbilitiesSimple`-shaped variant that still emits the addMana fact even when `restriction` is set, pairing it with a `rules`-kind `annotatedNonFactSpans` for the restriction itself) — not attempted here, out of this task's own scope (annotation-only, not new-Fact authoring)."
+  ],
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 0,
+      "start": 21,
+      "end": 70,
+      "face": "front",
+      "kind": "rules",
+      "note": "Real, accepted, currently-unmodeled rules text — the mana ability's own \"Spend this mana only to cast a noncreature spell\" restriction. No Fact backs this: this engine tracks no spendable mana pool at all, so nothing could constrain what a produced mana unit is later spent on. Same real gap as cargo-ship/freya-crescent's own identical restriction, see cargo-ship's own knownGaps entry for the full reasoning."
+    }
   ]
 }

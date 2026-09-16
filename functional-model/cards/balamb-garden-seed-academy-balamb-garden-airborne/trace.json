@@ -13,20 +13,20 @@
         "fn": "activate",
         "card": "Balamb Garden, SeeD Academy",
         "instanceId": 1,
-        "id": 193,
+        "id": 2,
         "cost": "{5}{G}{U}, {T} (costs {1} less for each other Town you control)"
       },
       {
         "fn": "moveTo",
         "target": "Balamb Garden, SeeD Academy",
-        "id": 193,
+        "id": 2,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Balamb Garden, SeeD Academy",
-        "id": 193,
+        "id": 2,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -48,7 +48,7 @@
         "fn": "trigger",
         "card": "Balamb Garden, Airborne",
         "instanceId": 1,
-        "id": 195,
+        "id": 4,
         "name": "onAttacks"
       },
       {
@@ -73,15 +73,24 @@
         "fn": "cast",
         "card": "Balamb Garden, Airborne",
         "instanceId": 1,
-        "id": 197,
+        "id": 6,
         "from": "hand",
         "cost": ""
+      },
+      {
+        "fn": "animate",
+        "target": "Balamb Garden, Airborne",
+        "id": 6,
+        "types": [
+          "Artifact",
+          "Creature"
+        ]
       },
       {
         "fn": "enters",
         "card": "Balamb Garden, Airborne",
         "instanceId": 1,
-        "id": 197,
+        "id": 6,
         "zone": "Battlefield"
       },
       {

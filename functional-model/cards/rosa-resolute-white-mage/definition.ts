@@ -21,7 +21,14 @@ export const rosaResoluteWhiteMage: CardDefinition = {
       name: 'onBeginCombat',
       effects: [
         { kind: 'putCounterTarget', validType: 'creature', counterType: '+1/+1', amount: 1, owner: 'you' } satisfies Effect,
-        { kind: 'grantKeywordTarget', keyword: 'Lifelink', validType: 'creature', owner: 'you' } satisfies Effect,
+        // recognizer-exception: grantKeywordTarget-effect-structural — the
+        // real printed text says "IT gains lifelink" (an anaphoric
+        // reference back to the SAME sentence's own `putCounterTarget`
+        // effect above, never the literal words "target creature you
+        // control gains") — see this file's own module comment for the
+        // real two-separate-effects-one-shared-target shape; a confirmed
+        // mismatch, not a bug.
+        { kind: 'grantKeywordTarget', keyword: 'Lifelink', validType: 'creature', owner: 'you', untilEndOfTurn: true } satisfies Effect,
       ],
     },
   ],

@@ -35,7 +35,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "token-creation-structural"
-      }
+      },
+      "triggeredBy": "onNoncreatureSpellCast4Mana"
     }
   ],
   "sink": []

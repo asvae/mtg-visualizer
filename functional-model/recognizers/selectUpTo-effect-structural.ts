@@ -48,10 +48,30 @@
 //   catalog's own `NUMBER_WORDS`-style vocabulary, extended here only as far
 //   as a real card needs — `aerith-rescue-mission`'s own `max:3` is the only
 //   real value to verify against).
+//
+// **2026-09-16 widening**: the `each(bound, tap())` step itself now ALSO
+// derives its own `{event:'tap', ...}` SOURCE fact (same shape
+// `tapTarget-effect-structural.ts` already establishes for its own simpler,
+// non-select `kind:'tapTarget'` effects), additive alongside the pre-existing
+// putCounter SOURCE + "wants creatures present" SINK. Re-checked the whole
+// pool of real `selectUpTo(` users (13 real cards as of this widening:
+// aerith-rescue-mission, beatrix-loyal-general, coliseum-behemoth,
+// gilgamesh-master-at-arms, stiltzkin-moogle-merchant, stolen-uniform,
+// slash-of-light, unexpected-request, venat-heart-of-hydaelyn-hydaelyn-the-
+// mothercrystal, weapons-vendor, zidane-tantalus-thief, you-re-not-alone,
+// zack-fair) for any OTHER real `each(bound, tap())`/`tap()`-shaped `then`
+// step — `aerith-rescue-mission` is the only one; every other real user's
+// own `then` array uses `applyToBound`/`gainControl`/`equipTo`/`untap`/
+// `grantKeyword`/`pumpEach`/`dealDamageEach`/`destroyEach`/`drawCard`/
+// `branch`, never a bare `each(bound, tap())` step, so `readShape`'s own
+// exact-shape gate (see above) still correctly declines all 12 of them —
+// this widening only ever fires for the one real card that already passed
+// the pre-existing gate. See the new fact's own inline comment (right above
+// its `facts.push` call) for the span-choice reasoning.
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 export type { StructuralRecognizerInput };
 
@@ -103,14 +123,18 @@ function readShape(effect: ProgramEffect): { max: number; counterType: string } 
  * the WHOLE face rather than partially claiming the ones that did verify.
  */
 export function recognizeSelectUpToEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const programEffects = allEffects(input).filter(isProgramEffect).filter((e) => e.program.kind === 'selectUpTo');
+  const programEffects = allEffects(input).map((o) => o.effect).filter(isProgramEffect).filter((e) => e.program.kind === 'selectUpTo');
   if (programEffects.length === 0) {
     return { matched: false, reason: "no kind:'program' Effect whose own program is a SelectUpTo on this face" };
   }
 
   const facts: RecognizedFact[] = [];
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of programEffects) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     const shape = readShape(effect);
     if (!shape) {
       return {
@@ -121,8 +145,10 @@ export function recognizeSelectUpToEffectStructural(input: StructuralRecognizerI
     const maxWord = NUMBER_WORDS[shape.max]!;
     const creatureWord = shape.max === 1 ? 'creature' : 'creatures';
 
-    const tapPattern = new RegExp(`\\bTap up to ${maxWord} target ${creatureWord}\\b`, 'i');
-    const tapMatches = [...input.oracleText.matchAll(new RegExp(tapPattern.source, tapPattern.flags + 'g'))];
+    const tapPattern = new RegExp(`\\bTap (up to ${maxWord} target ${creatureWord})\\b`, 'id');
+    const tapMatches = [...input.oracleText.matchAll(new RegExp(tapPattern.source, tapPattern.flags + 'g'))] as Array<
+      RegExpMatchArray & { indices: Array<[number, number] | undefined> }
+    >;
     if (tapMatches.length !== 1) {
       return {
         matched: false,
@@ -130,11 +156,12 @@ export function recognizeSelectUpToEffectStructural(input: StructuralRecognizerI
         reason: `expected clause /${tapPattern.source}/ matched ${tapMatches.length} times (want exactly 1) in oracle text "${input.oracleText}"`,
       };
     }
-    const tapStart = tapMatches[0]!.index!;
-    const tapEnd = tapStart + tapMatches[0]![0]!.length;
+    const [tapStart, tapEnd] = tapMatches[0]!.indices[0]!; // full clause, "Tap up to N target creatures"
+    const [objectStart, objectEnd] = tapMatches[0]!.indices[1]!; // narrow object-phrase, "up to N target creatures"
     const tapAnnotation = toLineOffset(input.oracleText, tapStart, tapEnd);
-    if (!tapAnnotation) {
-      return { matched: false, reason: `matched span [${tapStart},${tapEnd}) did not resolve to a single real oracle-text line` };
+    const tapObjectAnnotation = toLineOffset(input.oracleText, objectStart, objectEnd);
+    if (!tapAnnotation || !tapObjectAnnotation) {
+      return { matched: false, reason: `matched span [${tapStart},${tapEnd}) (or its own inner object-phrase span) did not resolve to a single real oracle-text line` };
     }
 
     const counterPattern = new RegExp(`\\bPut a ${escapeRegExp(shape.counterType)} counter on one of them\\b`, 'i');
@@ -153,6 +180,40 @@ export function recognizeSelectUpToEffectStructural(input: StructuralRecognizerI
       return { matched: false, reason: `matched span [${counterStart},${counterEnd}) did not resolve to a single real oracle-text line` };
     }
 
+    // **2026-09-16 widening (user-confirmed gap)**: the `each(bound, tap())`
+    // step itself used to produce NO fact at all — only the paired
+    // `putCounter` SOURCE + "wants creatures present" SINK were derived, even
+    // though the effect's own FIRST real action is "Tap up to three target
+    // creatures," a genuine producible board event exactly like
+    // `tapTarget-effect-structural.ts`'s own simpler (non-select) `kind:
+    // 'tapTarget'` effects already model (`{event:'tap', target, targeted:
+    // true, annotations:[...]}` — same fact shape, copied verbatim from that
+    // file, not invented). Additive only — coexists with the putCounter
+    // SOURCE/sink pair below, never replaces either.
+    //
+    // Span choice (revised 2026-09-17, real user-reported bug): the tap
+    // SOURCE fact anchors to the WHOLE clause ("Tap up to three target
+    // creatures"), while the SINK anchors to just the narrower object-phrase
+    // ("up to three target creatures," excluding the "Tap" verb) — the SAME
+    // split `putCounterTarget-effect-structural.ts`/`pumpAllAttacking-
+    // effect-structural.ts` already establish: the target is part of the
+    // action's own description (so SOURCE keeps it), but the SINK only ever
+    // claims "creatures exist to be this action's target," never the verb
+    // itself, so it shouldn't include "Tap." This file used to have the SINK
+    // reuse the SOURCE's own whole-clause span (including "Tap") — the same
+    // reuse bug the pool-wide audit fixed elsewhere, just not caught here
+    // since this fact shape predates that sweep.
+    facts.push({
+      role: 'source',
+      fact: {
+        event: 'tap',
+        target: { types: { has: ['Creature'] } },
+        targeted: true,
+        annotations: [tapAnnotation],
+        ...(triggeredBy ? { triggeredBy } : {}),
+      },
+      provenance: { origin: 'parser', rule: RULE },
+    });
     facts.push({
       role: 'source',
       fact: {
@@ -161,6 +222,7 @@ export function recognizeSelectUpToEffectStructural(input: StructuralRecognizerI
         target: { types: { has: ['Creature'] } },
         targeted: true,
         annotations: [counterAnnotation],
+        ...(triggeredBy ? { triggeredBy } : {}),
       },
       provenance: { origin: 'parser', rule: RULE },
     });
@@ -169,7 +231,7 @@ export function recognizeSelectUpToEffectStructural(input: StructuralRecognizerI
       fact: {
         to: 'Battlefield',
         types: { has: ['Creature'] },
-        annotations: [tapAnnotation],
+        annotations: [tapObjectAnnotation],
       },
       provenance: { origin: 'parser', rule: RULE },
     });

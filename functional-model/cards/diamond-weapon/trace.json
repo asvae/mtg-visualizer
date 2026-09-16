@@ -123,12 +123,12 @@
       {
         "fn": "tap",
         "target": "Hill Gigas",
-        "id": 624
+        "id": 34
       },
       {
         "fn": "attack",
         "card": "Hill Gigas",
-        "id": 624
+        "id": 34
       },
       {
         "fn": "phase",
@@ -139,14 +139,14 @@
       {
         "fn": "block",
         "blocker": "Diamond Weapon",
-        "blockerId": 623,
+        "blockerId": 33,
         "attacker": "Hill Gigas",
-        "attackerId": 624
+        "attackerId": 34
       },
       {
         "fn": "damagePrevented",
         "target": "Diamond Weapon",
-        "id": 623,
+        "id": 33,
         "cause": "combat"
       }
     ],

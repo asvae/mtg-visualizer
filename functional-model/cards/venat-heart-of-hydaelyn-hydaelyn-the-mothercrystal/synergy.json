@@ -15,7 +15,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onCastLegendarySpell"
     },
     {
       "to": "Exile",
@@ -33,10 +34,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 29,
+          "start": 35,
           "end": 59
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "to": "Exile",
@@ -89,50 +94,6 @@
       }
     },
     {
-      "event": "putCounter",
-      "counterType": "+1/+1",
-      "controller": "you",
-      "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        }
-      },
-      "targeted": true,
-      "face": "back",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 61,
-          "end": 119
-        }
-      ]
-    },
-    {
-      "event": "grantKeyword",
-      "keyword": "Indestructible",
-      "controller": "you",
-      "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        }
-      },
-      "targeted": true,
-      "face": "back",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 121,
-          "end": 166
-        }
-      ]
-    },
-    {
       "event": "drawCard",
       "controller": "you",
       "face": "back",
@@ -143,7 +104,65 @@
           "start": 168,
           "end": 210
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCardProgram-effect-structural"
+      }
+    },
+    {
+      "event": "putCounter",
+      "counterType": "+1/+1",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 61,
+          "end": 119
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterProgram-effect-structural"
+      }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Indestructible",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 121,
+          "end": 166
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordProgram-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -163,10 +182,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 9,
-          "end": 35
+          "start": 0,
+          "end": 92
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "castTypeSpell-trigger-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -183,7 +206,28 @@
           "start": 35,
           "end": 59
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 20,
+          "end": 60
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -193,7 +237,7 @@
           "Creature"
         ]
       },
-      "face": "back",
+      "excludeSelf": true,
       "annotations": [
         {
           "target": "oracle",
@@ -201,7 +245,12 @@
           "start": 84,
           "end": 119
         }
-      ]
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterProgram-effect-structural"
+      }
     }
   ]
 }

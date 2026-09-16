@@ -19,7 +19,7 @@
         "fn": "trigger",
         "card": "Vaan, Street Thief",
         "instanceId": 1,
-        "id": 3037,
+        "id": 4,
         "name": "onScoutsDealCombatDamage"
       },
       {
@@ -60,7 +60,7 @@
         "fn": "trigger",
         "card": "Vaan, Street Thief",
         "instanceId": 1,
-        "id": 3042,
+        "id": 9,
         "name": "onCastSpellYouDontOwn"
       },
       {
@@ -77,7 +77,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 3040,
+        "id": 7,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -91,7 +91,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 3041,
+        "id": 8,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -105,7 +105,7 @@
       {
         "fn": "putCounter",
         "target": "Vaan, Street Thief",
-        "id": 3042,
+        "id": 9,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -130,7 +130,7 @@
         "fn": "trigger",
         "card": "Vaan, Street Thief",
         "instanceId": 1,
-        "id": 3046,
+        "id": 13,
         "name": "onCastSpellYouDontOwn"
       },
       {
@@ -183,7 +183,7 @@
       {
         "fn": "putCounter",
         "target": "Vaan, Street Thief",
-        "id": 3046,
+        "id": 13,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

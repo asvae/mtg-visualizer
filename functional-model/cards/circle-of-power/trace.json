@@ -20,7 +20,7 @@
         "fn": "cast",
         "card": "Circle of Power",
         "instanceId": 1,
-        "id": 378,
+        "id": 3,
         "from": "hand",
         "cost": "{3}{B}"
       },
@@ -60,9 +60,10 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 377,
+        "id": 2,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:hasSubtype",
@@ -73,9 +74,10 @@
       {
         "fn": "pump",
         "target": "Wizard",
-        "id": 379,
+        "id": 4,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -91,8 +93,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 377,
-        "keyword": "Lifelink"
+        "id": 2,
+        "keyword": "Lifelink",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:hasSubtype",
@@ -103,14 +106,15 @@
       {
         "fn": "grantKeyword",
         "target": "Wizard",
-        "id": 379,
-        "keyword": "Lifelink"
+        "id": 4,
+        "keyword": "Lifelink",
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
         "card": "Circle of Power",
         "instanceId": 1,
-        "id": 378,
+        "id": 3,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -132,7 +136,7 @@
         "fn": "cast",
         "card": "Circle of Power",
         "instanceId": 1,
-        "id": 381,
+        "id": 6,
         "from": "hand",
         "cost": "{3}{B}"
       },
@@ -172,9 +176,10 @@
       {
         "fn": "pump",
         "target": "Wizard",
-        "id": 382,
+        "id": 7,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -190,14 +195,15 @@
       {
         "fn": "grantKeyword",
         "target": "Wizard",
-        "id": 382,
-        "keyword": "Lifelink"
+        "id": 7,
+        "keyword": "Lifelink",
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
         "card": "Circle of Power",
         "instanceId": 1,
-        "id": 381,
+        "id": 6,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

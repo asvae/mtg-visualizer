@@ -37,7 +37,19 @@ export const dionBahamutsDominant: CardDefinition = {
     },
   ],
 
-  activationCost: '{4}{W}{W}, {T}',
+  // "Activate only as a sorcery" (2026-09-16 fix, `verify-text-coverage.mjs`
+  // widening pass) — the real printed restriction text was missing from
+  // this string entirely, a genuine engine-correctness gap: Dion's own
+  // typeLine ("Legendary Creature — Human Noble Knight") isn't an
+  // Equipment, so `engine.ts`'s `isEquipment(card)` fallback (301.5c) never
+  // covers it the way it accidentally does for crystal-fragments-summon-
+  // alexander's own identically-shaped transform ability, and this
+  // `activationCost` string carried no `/activate only as a sorcery/i`
+  // text either — so nothing enforced this real timing restriction at all
+  // before this fix (confirmed: `jill-shiva-s-dominant-shiva-warden-of-ice`,
+  // the third card sharing this exact front/back Saga shape, already had
+  // this same text; Dion alone was missing it).
+  activationCost: '{4}{W}{W}, {T} (activate only as a sorcery)',
   effects: [
     {
       // MIGRATED (2026-09-14) off a `kind:'custom'` closure onto the real

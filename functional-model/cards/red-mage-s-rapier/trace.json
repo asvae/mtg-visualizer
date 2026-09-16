@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Red Mage's Rapier",
         "instanceId": 1,
-        "id": 1899,
+        "id": 2,
         "name": "onEnter"
       },
       {
@@ -29,9 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Red Mage's Rapier",
-        "equipmentId": 1899,
+        "equipmentId": 2,
         "target": "Hero",
-        "id": 1900
+        "id": 3
       }
     ]
   },
@@ -52,7 +52,7 @@
         "fn": "activate",
         "card": "Red Mage's Rapier",
         "instanceId": 1,
-        "id": 1904,
+        "id": 7,
         "cost": "{3}"
       },
       {
@@ -63,9 +63,9 @@
       {
         "fn": "equip",
         "equipment": "Red Mage's Rapier",
-        "equipmentId": 1904,
+        "equipmentId": 7,
         "target": "Grizzly Bears",
-        "id": 1902
+        "id": 5
       }
     ]
   },
@@ -87,7 +87,7 @@
         "fn": "trigger",
         "card": "Red Mage's Rapier",
         "instanceId": 1,
-        "id": 1907,
+        "id": 10,
         "name": "onEquippedCastsNoncreatureSpell"
       },
       {
@@ -98,7 +98,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1906,
+        "id": 9,
         "power": 2,
         "toughness": 0
       }

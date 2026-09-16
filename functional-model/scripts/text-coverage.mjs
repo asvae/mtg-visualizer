@@ -82,13 +82,30 @@ function isGapWorthy(ch) {
 
 /**
  * Computes this card's own real per-line coverage. `facts` is the raw
- * `{source, sink}` shape off `synergy.json`. Returns `{ ratio, gaps }` —
- * `ratio` is `coveredGapWorthyChars / totalGapWorthyChars` (1 when the face
- * has no gap-worthy characters at all, e.g. a vanilla creature with no
- * oracle text); `gaps` is every real contiguous uncovered run of 4+
- * gap-worthy characters, as `{ face, line, start, end, text }`.
+ * `{source, sink}` shape off `synergy.json`. `nonFactAnnotations` (2026-09-16,
+ * the annotation-taxonomy plumbing — see `progress.json`'s own
+ * `annotatedNonFactSpans` field, `.claude/contracts/card-schema.md`) is an
+ * OPTIONAL, separate array of spans that are real and accounted-for but
+ * deliberately carry no `Fact` at all — same `{target, line, start, end}`
+ * span shape `AnnotationRef` already uses, just reused outside the Fact
+ * chain (a `Fact.annotations` entry's own hard invariant is "must back a
+ * real Fact," which a `kind:'definition-path'`/`'rules'`/`'lore'` span by
+ * definition doesn't). Marked covered via the EXACT SAME per-line loop as a
+ * real Fact's own annotations, immediately below it — computationally
+ * identical treatment, only the reporting distinguishes them (`gaps`
+ * doesn't know or care which loop covered a given character; a
+ * `nonFactAnnotations` entry closes a gap exactly as effectively as a
+ * `Fact.annotations` one). Only `target:'oracle'` entries do anything here
+ * (same as a real Fact's own `target:'typeLine'` annotations — this
+ * function only ever scans `oracleByFace`, never a type line at all, so a
+ * `target:'typeLine'` non-Fact span is a legitimate no-op input here, not
+ * an error). Returns `{ ratio, gaps }` — `ratio` is
+ * `coveredGapWorthyChars / totalGapWorthyChars` (1 when the face has no
+ * gap-worthy characters at all, e.g. a vanilla creature with no oracle
+ * text); `gaps` is every real contiguous uncovered run of 4+ gap-worthy
+ * characters, as `{ face, line, start, end, text }`.
  */
-export function computeTextCoverage(facts, oracleByFace) {
+export function computeTextCoverage(facts, oracleByFace, nonFactAnnotations = []) {
   const gaps = [];
   let totalGapWorthy = 0;
   let coveredGapWorthy = 0;
@@ -109,6 +126,18 @@ export function computeTextCoverage(facts, oracleByFace) {
           for (let i = ann.start; i < ann.end && i < arrLine.length; i++) arrLine[i] = true;
         }
       }
+    }
+
+    // Real, accounted-for spans with no `Fact` at all (`progress.json`'s
+    // `annotatedNonFactSpans` — see this function's own doc comment above).
+    // Structurally identical loop to the real-Fact one directly above; only
+    // the source array differs.
+    for (const span of nonFactAnnotations) {
+      if (span.target !== 'oracle') continue;
+      if ((span.face ?? 'front') !== face) continue;
+      const arrLine = coveredPerLine[span.line];
+      if (!arrLine) continue;
+      for (let i = span.start; i < span.end && i < arrLine.length; i++) arrLine[i] = true;
     }
 
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {

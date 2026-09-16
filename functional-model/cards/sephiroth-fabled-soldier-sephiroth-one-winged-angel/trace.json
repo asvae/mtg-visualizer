@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
-        "id": 2118,
+        "id": 3,
         "name": "onEnterOrAttacks"
       },
       {
@@ -57,7 +57,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
-        "id": 2120,
+        "id": 5,
         "name": "onEnterOrAttacks"
       },
       {
@@ -95,7 +95,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
-        "id": 2123,
+        "id": 8,
         "name": "onCreatureDies"
       },
       {
@@ -131,7 +131,7 @@
         "fn": "trigger",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
-        "id": 2126,
+        "id": 11,
         "name": "onCreatureDies"
       },
       {
@@ -147,14 +147,14 @@
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
-        "id": 2126,
+        "id": 11,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Sephiroth, Fabled SOLDIER",
-        "id": 2126,
+        "id": 11,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -179,7 +179,7 @@
         "fn": "trigger",
         "card": "Sephiroth, One-Winged Angel",
         "instanceId": 1,
-        "id": 2129,
+        "id": 14,
         "name": "onAnyCreatureDies"
       },
       {
@@ -216,7 +216,7 @@
         "fn": "trigger",
         "card": "Sephiroth, One-Winged Angel",
         "instanceId": 1,
-        "id": 2133,
+        "id": 18,
         "name": "onAttack"
       },
       {
@@ -269,7 +269,7 @@
         "fn": "trigger",
         "card": "Sephiroth, One-Winged Angel",
         "instanceId": 1,
-        "id": 2137,
+        "id": 22,
         "name": "onAttack"
       },
       {
@@ -307,7 +307,7 @@
         "fn": "cast",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
-        "id": 2139,
+        "id": 24,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -315,7 +315,7 @@
         "fn": "enters",
         "card": "Sephiroth, Fabled SOLDIER",
         "instanceId": 1,
-        "id": 2139,
+        "id": 24,
         "zone": "Battlefield"
       },
       {

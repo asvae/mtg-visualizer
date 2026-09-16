@@ -4,7 +4,48 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self"
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 44,
+          "end": 68
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "amount": {
+        "min": 7
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 11,
+          "end": 42
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
+    }
+  ]
 }

@@ -69,7 +69,13 @@ export interface RealCard {
    * CURRENT board state every time P/T is read (713.1), not fixed at the
    * moment a continuous effect was created.
    */
-  ptFormula?: { kind: 'addPerEquipmentControlled'; power: number; toughness: number } | { kind: 'setToCreaturesControlled' };
+  ptFormula?:
+    | { kind: 'addPerEquipmentControlled'; power: number; toughness: number }
+    | { kind: 'setToCreaturesControlled' }
+    | { kind: 'thresholdBonus'; power: number; toughness: number; condition: { type: string; min: number; excludeSelf?: boolean } }
+    | { kind: 'addPerGraveyardCount'; power: number; toughness: number }
+    | { kind: 'setToGraveyardPermanentCount' }
+    | { kind: 'addPerLandControlled'; power: number; toughness: number };
   /** Real mana value (Card.java's own `getCMC()`, ~line 7227) — omit when nothing needs it (most cards, and every generated filler object). Dark Confidant's own upkeep life-loss is the reference case (needs a REAL number off the revealed card, not a `triggerInput`-supplied stand-in). */
   cmc?: number;
   /** Real 120.3 "damage marked on it" — `Card.java`'s own `damage` field (~line 219/`addDamage`). Persists across multiple `dealDamage` calls (a creature blocked by two attackers accumulates both) until cleared — 514.2's own cleanup-step clearing is a real, separate, not-yet-implemented gap (ENGINE_GAPS.md's turn-structure-completeness item), so this only ever goes up within a single test/pilot session today. Consumed by `isLethallyDamaged`/`sba.ts`'s `checkStateBasedActions` (704.5g); never read by `state.ts` itself for anything else. */
@@ -98,7 +104,12 @@ export interface RealCard {
   /** Real, query-time continuous keyword grant(s) (613, ENGINE_GAPS.md gap #14) — see `card.ts`'s own `CardDefinition.continuousKeywordGrants` doc comment for the two real Forge shapes (Dion's turn-conditional Dragonfire Dive, Ardyn's unconditional Demons grant). Copied from the resolving `CardDefinition` at `addCard` time, same convention `ptFormula`/`manaAbilities` already establish — `RealCard` never holds a live reference back to its own `CardDefinition`. Consumed by `effectiveKeywords` below, not read directly anywhere else. */
   continuousKeywordGrants?: { keywords: string[]; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
   /** Real, query-time continuous P/T grant(s) (613.3, layer 7c, ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12) — see `card.ts`'s own `CardDefinition.continuousPTGrants` doc comment for the real Forge citation and the 5 real fixed-delta cards it covers (Dragoon's Lance/Paladin's Arms/Crystal Fragments/White Mage's Staff/Sage's Nouliths). Same copy-at-resolve-time convention as `continuousKeywordGrants` right above. Consumed by `effectivePT` below, not read directly anywhere else. */
-  continuousPTGrants?: { power: number; toughness: number; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
+  continuousPTGrants?: (({ power: number; toughness: number } | { scalePerType: { type: string; power: number; toughness: number } } | { scalePerSelfCounter: { counterType: string; power: number; toughness: number } }) & {
+    includeSelf: boolean;
+    subtype?: string;
+    onlyDuringYourTurn?: boolean;
+    equippedBySelf?: boolean;
+  })[];
   /** Real, query-time continuous creature-TYPE grant(s) (613.3, layer 4, ENGINE_GAPS.md gap #14's own follow-up, closed 2026-09-12) — see `card.ts`'s own `CardDefinition.continuousTypeGrants` doc comment for the real Forge citation and the 6 real cards it covers (Dragoon's Lance/Machinist's Arsenal/Paladin's Arms/White Mage's Staff/Sage's Nouliths/Astrologian's Planisphere — a creature-subtype broadcast, e.g. 'Knight', not a card-type change). Same copy-at-resolve-time convention as `continuousKeywordGrants` above. Consumed by `effectiveSubtypes` below, not read directly anywhere else. */
   continuousTypeGrants?: { types: string[]; includeSelf: boolean; subtype?: string; onlyDuringYourTurn?: boolean; equippedBySelf?: boolean }[];
   /**
@@ -388,7 +399,47 @@ function qualifiesForContinuousGrant(
 ): boolean {
   if (grant.onlyDuringYourTurn && !isActiveOrDefault(state, source.controllerId)) return false;
   const isSelf = grant.includeSelf && source.id === card.id;
-  const isMatchingOther = grant.subtype !== undefined && card.controllerId === source.controllerId && card.subtypes.includes(grant.subtype);
+  // Two real, genuinely different `subtype: undefined` shapes (2026-09-16,
+  // static-ability audit — this branch used to require `grant.subtype !==
+  // undefined` unconditionally, which silently made a bare, no-subtype
+  // "other permanents" broadcast permanently inert — a real bug, not just
+  // an inert simplification: The Fire Crystal's own real
+  // `{keywords:['Haste'], includeSelf:false}` — no `subtype` at all,
+  // "Creatures you control have haste" — could never actually apply to
+  // ANY creature, since `isSelf` is false (`includeSelf:false`) and the old
+  // `isMatchingOther` required a defined `subtype`. Freya Crescent's/Kain,
+  // Traitorous Dragoon's/Tonberry's own real "Jump"/"Chef's Knife" grants
+  // (`{keywords:[...], includeSelf:true}`, also no `subtype` — "<Name> has
+  // <keyword(s)>", never "and other creatures you control have...") are the
+  // OTHER real no-`subtype` shape — genuinely self-only, no broadcast to
+  // any other creature at all. The same field shape (`subtype: undefined`)
+  // has to mean both things depending on `includeSelf`: `true` → self-only
+  // (no broadcast — `isMatchingOther` stays false, `isSelf` alone carries
+  // it), `false` → broadcast to every OTHER creature the source's
+  // controller controls (any subtype, no self-reference since the source
+  // isn't included) — mirrors 613.3, layer 6 "creatures you control gain
+  // X" static grants generally, not just the same-subtype-restricted
+  // sibling case just above it.
+  const isMatchingOther =
+    grant.subtype !== undefined
+      ? // Explicit `card.id !== source.id` (2026-09-16, static-ability
+        // audit) — "OTHER <Subtype>s you control" always excludes the
+        // granting permanent itself from this branch specifically, even
+        // when `includeSelf` is false; self-inclusion is `isSelf`'s own
+        // job alone. Every real card checked before this fix (Ardyn's own
+        // 'Demon', Dion's own 'Knight') happened to never collide (neither
+        // is itself a member of its own broadcast subtype), so this was
+        // previously unexercised — but 'Legendary' (Serah Farron's own
+        // "Legendary creatures you control get +2/+2") genuinely CAN
+        // collide: Crystallized Serah is itself a Legendary permanent, and
+        // without this exclusion would have silently granted itself the
+        // bonus too despite its own real `includeSelf:false` (it isn't a
+        // Creature, so real Forge never grants it the bonus either).
+        card.id !== source.id && card.controllerId === source.controllerId && card.subtypes.includes(grant.subtype)
+      : !grant.includeSelf &&
+        !grant.equippedBySelf &&
+        card.controllerId === source.controllerId &&
+        effectiveTypes(card).includes('Creature');
   const isEquipped = grant.equippedBySelf === true && source.attachedToId === card.id;
   return isSelf || isMatchingOther || isEquipped;
 }
@@ -576,6 +627,14 @@ export function effectivePT(state: GameState, card: RealCard): [number, number] 
     const equipmentCount = controller ? controller.battlefield.filter((c) => c.subtypes.includes('Equipment')).length : 0;
     base += card.ptFormula.power * equipmentCount;
     baseT += card.ptFormula.toughness * equipmentCount;
+  } else if (card.ptFormula?.kind === 'addPerLandControlled') {
+    // Same real ADD-scaling shape as `addPerEquipmentControlled` above
+    // (Zell Dincht's own real "gets +1/+0 for each land you control,"
+    // closed 2026-09-16 static-ability audit) — counts the controller's
+    // own battlefield LANDS instead of Equipment.
+    const landCount = controller ? controller.battlefield.filter((c) => effectiveTypes(c).includes('Land')).length : 0;
+    base += card.ptFormula.power * landCount;
+    baseT += card.ptFormula.toughness * landCount;
   } else if (card.ptFormula?.kind === 'setToCreaturesControlled') {
     // Real `SetPower$ X` ONLY (Snow Villiers' own `PT:*/3`) — toughness
     // stays whatever the card's own real printed base is (`pt`/`baseToughness`),
@@ -584,6 +643,41 @@ export function effectivePT(state: GameState, card: RealCard): [number, number] 
     // not assumed for free just because this one exists.
     const creatureCount = controller ? controller.battlefield.filter((c) => effectiveTypes(c).includes('Creature')).length : 0;
     base = creatureCount;
+  } else if (card.ptFormula?.kind === 'thresholdBonus') {
+    // Real Forge `IsPresent$ <Type>[.Other]+YouCtrl | PresentCompare$
+    // GE<min>` — a fixed bonus that's either fully on or fully off, gated
+    // on a live count of the controller's own battlefield (real
+    // Gaelicat/Magitek Infantry citations on `card.ts`'s own doc comment).
+    const { type, min, excludeSelf } = card.ptFormula.condition;
+    const count = controller
+      ? controller.battlefield.filter((c) => (excludeSelf ? c.id !== card.id : true) && effectiveTypes(c).includes(type)).length
+      : 0;
+    if (count >= min) {
+      base += card.ptFormula.power;
+      baseT += card.ptFormula.toughness;
+    }
+  } else if (card.ptFormula?.kind === 'addPerGraveyardCount') {
+    // Real Forge `Count$Valid Card.YouOwn+nonCreature+nonLand/GraveyardOnly`
+    // (Xande, Dark Mage's own real "+1/+1 for each noncreature, nonland
+    // card in your graveyard," closed 2026-09-16 static-ability audit) —
+    // same ADD-scaling shape as `addPerEquipmentControlled` above, counting
+    // the controller's own GRAVEYARD instead of their battlefield.
+    const count = controller ? controller.graveyard.filter((c) => !effectiveTypes(c).includes('Creature') && !effectiveTypes(c).includes('Land')).length : 0;
+    base += card.ptFormula.power * count;
+    baseT += card.ptFormula.toughness * count;
+  } else if (card.ptFormula?.kind === 'setToGraveyardPermanentCount') {
+    // Real Forge `SetPower$ X | SVar:X:Count$Valid Card.YouOwn+IsPermanentCard/GraveyardOnly`
+    // (Neo Exdeath, Dimension's End's own real "Neo Exdeath's power is
+    // equal to the number of permanent cards in your graveyard," closed
+    // 2026-09-16 static-ability audit) — same SET shape as
+    // `setToCreaturesControlled` above (POWER only, toughness stays this
+    // card's own real printed base), counting the controller's own
+    // graveyard for a permanent-card type (Creature/Artifact/Enchantment/
+    // Land — same real filter this same card's own front-face `onEndStep`
+    // transform condition already uses, kept identical for consistency).
+    base = controller
+      ? controller.graveyard.filter((c) => ['Creature', 'Artifact', 'Enchantment', 'Land'].some((t) => effectiveTypes(c).includes(t))).length
+      : 0;
   }
   // Real layer 7c: a FIXED-delta continuous P/T grant broadcast from
   // another (or the same) permanent — same real, query-time mechanism
@@ -597,7 +691,32 @@ export function effectivePT(state: GameState, card: RealCard): [number, number] 
   for (const source of state.cards.values()) {
     if (source.zone !== 'Battlefield' || !source.continuousPTGrants) continue;
     for (const grant of source.continuousPTGrants) {
-      if (qualifiesForContinuousGrant(state, source, grant, card)) {
+      if (!qualifiesForContinuousGrant(state, source, grant, card)) continue;
+      if ('scalePerType' in grant) {
+        // Real Forge `Count$Valid <Type>.YouCtrl/Times.N` — the SAME live
+        // per-count scaling `ptFormula.kind:'addPerEquipmentControlled'`
+        // already uses for a SELF-only CDA, applied here to a BROADCAST
+        // grant instead (Machinist's Arsenal's own real "+2/+2 for each
+        // artifact you control," closed 2026-09-15). "You control" is real
+        // Forge's own `YouCtrl` — the GRANTING permanent's own controller
+        // (`source.controllerId`), not necessarily the equipped creature's
+        // controller (they're the same player in every real pool case
+        // today, but the two are conceptually distinct).
+        const grantingController = state.players.get(source.controllerId);
+        const scaleCount = grantingController ? grantingController.battlefield.filter((c) => effectiveTypes(c).includes(grant.scalePerType.type)).length : 0;
+        base += grant.scalePerType.power * scaleCount;
+        baseT += grant.scalePerType.toughness * scaleCount;
+      } else if ('scalePerSelfCounter' in grant) {
+        // Real Forge `Count$CardCounters.<TYPE>` — same real ADD-scaling
+        // mechanism as `scalePerType` just above, but counting a counter on
+        // the GRANTING permanent itself (Excalibur II's own real "+1/+1 for
+        // each charge counter on Excalibur II," closed 2026-09-16) rather
+        // than a creature type its controller controls — no board sweep
+        // needed, `source.counters` is already live.
+        const scaleCount = source.counters[grant.scalePerSelfCounter.counterType] ?? 0;
+        base += grant.scalePerSelfCounter.power * scaleCount;
+        baseT += grant.scalePerSelfCounter.toughness * scaleCount;
+      } else {
         base += grant.power;
         baseT += grant.toughness;
       }
@@ -754,7 +873,7 @@ export class GameState {
       baseToughness: opts.baseToughness ?? 1,
       counters: {},
       layers: new LayerSet(),
-      tapped: false,
+      tapped: opts.tapped ?? false,
       ownerId: owner.id,
       controllerId: owner.id,
       zone,

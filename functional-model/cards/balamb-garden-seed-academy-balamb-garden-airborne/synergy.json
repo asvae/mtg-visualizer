@@ -33,7 +33,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onAttacks"
     },
     {
       "event": "tap",
@@ -52,7 +53,89 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "crew",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
+    },
+    {
+      "event": "grantType",
+      "type": "Creature",
+      "target": "self",
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 89,
+          "end": 135
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "animateSelfCreature-effect-structural"
+      }
+    },
+    {
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "hasAny": [
+          "G",
+          "U"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 19
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 26,
+          "end": 47
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
+    }
+  ]
 }

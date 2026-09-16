@@ -14,7 +14,7 @@ export const emetSelchUnsundered: CardDefinition = {
     // discard" — modeled as two independently-named triggers with
     // identical effects, same shape Namazu Trader's own ETB-vs-attack pair
     // already established.
-    { name: 'onEnter', effects: [{ kind: 'drawCard' } satisfies Effect, { kind: 'discard', owner: 'you', qty: 1 } satisfies Effect] },
+    { name: 'onEnter', on: 'enter', effects: [{ kind: 'drawCard' } satisfies Effect, { kind: 'discard', owner: 'you', qty: 1 } satisfies Effect] },
     { name: 'onAttacks', effects: [{ kind: 'drawCard' } satisfies Effect, { kind: 'discard', owner: 'you', qty: 1 } satisfies Effect] },
     {
       name: 'onUpkeep',

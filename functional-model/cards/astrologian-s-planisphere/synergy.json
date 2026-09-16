@@ -12,9 +12,14 @@
           "target": "oracle",
           "line": 0,
           "start": 40,
-          "end": 82
+          "end": 106
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "jobSelectCreateTokenAndEquip-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "grantType",
@@ -29,7 +34,11 @@
           "start": 18,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousTypeGrantsEquipped-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -67,6 +76,22 @@
       "provenance": {
         "origin": "parser",
         "rule": "equipmentWantsCreature-sink-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 12,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

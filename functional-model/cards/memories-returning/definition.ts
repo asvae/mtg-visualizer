@@ -6,18 +6,22 @@ export const memoriesReturning: CardDefinition = {
   manaCost: '{2}{U}{U}',
   typeLine: 'Sorcery',
 
-  // recognizer-exception: flashback-alternateCost-structural — this card's
-  // own checked-in Scryfall oracle text (data/fin/fin_scryfall.json) prints
-  // a genuinely bare "Flashback {7}{U}{U}" with NO reminder-text
-  // parenthetical at all, unlike every other real Flashback card in this
-  // pool (all 13 others print the full "(You may cast this card from your
-  // graveyard for its flashback cost. Then exile it.)" explanation
-  // verbatim) — a real, confirmed data divergence, not a recognizer bug; the
-  // mechanic itself is unaffected (`alternateCosts` below is still real and
-  // correct), only the TEXT this recognizer needs to anchor an annotation to
-  // is missing from this specific card's own printed text. Its own real
-  // `cast`/`Exile` facts stay hand-authored, anchored to the bare
-  // "Flashback {7}{U}{U}" line instead (see synergy.json).
+  // This card's own checked-in Scryfall oracle text (data/fin/
+  // fin_scryfall.json) prints a genuinely bare "Flashback {7}{U}{U}" with NO
+  // reminder-text parenthetical at all, unlike every other real Flashback
+  // card in this pool (all 13 others print the full "(You may cast this
+  // card from your graveyard for its flashback cost. Then exile it.)"
+  // explanation verbatim) — a real, confirmed data divergence (independently
+  // confirmed via both Forge's and XMage's own real card sources), not a
+  // recognizer bug; the mechanic itself is unaffected (`alternateCosts`
+  // below is still real and correct). **Closed 2026-09-16**:
+  // `flashback-alternateCost-structural.ts` now has a real bare-heading
+  // fallback branch for exactly this shape (see its own module doc
+  // comment) — this card's own `cast`/`Exile` facts are recognizer-derived
+  // again, anchored to the bare "Flashback {7}{U}{U}" heading itself (the
+  // only real text this card's own printed line offers), no longer
+  // hand-authored and no longer needing a `// recognizer-exception:`
+  // marker (the recognizer genuinely matches now, it never mismatches).
   alternateCosts: [flashback('{7}{U}{U}')],
 
   // Real 4-step DB$ Dig chain: reveal top 5, you take 1, opponent bottoms

@@ -24,7 +24,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onDealsCombatDamage"
     }
   ],
   "sink": [
@@ -35,6 +36,22 @@
         "has": [
           "Creature"
         ]
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 21
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

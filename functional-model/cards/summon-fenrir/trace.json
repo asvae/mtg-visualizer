@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
-        "id": 2409,
+        "id": 5,
         "name": "chapterI"
       },
       {
@@ -45,7 +45,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2406,
+        "id": 2,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -66,7 +66,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
-        "id": 2411,
+        "id": 7,
         "name": "chapterII"
       }
     ]
@@ -92,7 +92,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
-        "id": 2415,
+        "id": 11,
         "name": "chapterIII"
       },
       {
@@ -142,7 +142,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
-        "id": 2419,
+        "id": 15,
         "name": "chapterIII"
       },
       {
@@ -192,7 +192,7 @@
         "fn": "trigger",
         "card": "Summon: Fenrir",
         "instanceId": 1,
-        "id": 2423,
+        "id": 19,
         "name": "chapterIII"
       },
       {

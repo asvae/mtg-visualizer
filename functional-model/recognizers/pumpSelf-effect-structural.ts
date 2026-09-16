@@ -39,15 +39,39 @@
 //     in each card's own `definition.ts` (each with its own dated comment),
 //     not worked around here.
 //
-// **Annotation convention, confirmed against BOTH real pre-existing
-// hand-authored facts this recognizer supersedes** (`ambrosia-whiteheart`'s
-// own former source fact, chars 67-77 of its own line 2 — "gets +1/+0",
-// NOT the subject name) — the derived annotation covers ONLY the "gets
-// ±P/±T" suffix, never the subject text before it.
+// **Annotation convention** — originally confirmed against a real
+// pre-existing hand-authored fact this recognizer supersedes
+// (`ambrosia-whiteheart`'s own former source fact, chars 67-77 of its own
+// line 2 — "gets +1/+0", NOT the subject name): the derived annotation used
+// to cover ONLY the "gets ±P/±T" suffix, never the subject text before it.
+//
+// **Widened 2026-09-16** (`verify-text-coverage.mjs` flagged the subject
+// clause itself as a real gap — e.g. `ambrosia-whiteheart`'s own
+// "...enters, Ambrosia Whiteheart gets +1/+0..." left ", Ambrosia
+// Whiteheart" sitting uncovered between the paired Landfall-trigger fact's
+// own annotation and this recognizer's former "gets +1/+0"-only span): the
+// subject is WHO gets the pump, squarely part of what the `pump` Fact
+// claims, not flavor — same reasoning `dealDamage-effect-structural.ts`'s
+// own subject-prefix widening already used for the identical class of gap.
+// The `pattern` built just above already MATCHES the subject via
+// `selfSubjectAlternation` (needed to require the whole clause is
+// contiguous); the annotation now covers the FULL match (`[fullStart,
+// fullEnd)` — subject through the "gets ±P/±T[ until end of turn]" suffix),
+// not just the suffix's own narrower span. Real, whole-pool check (the 5
+// real cards with a literal, migrated `pumpSelf` fact — `ambrosia-
+// whiteheart`, `choco-seeker-of-paradise`, `jumbo-cactuar`, `loporrit-
+// scout`; `woodland-weavemaster` is still v1-schema, out of this
+// pipeline's scope entirely) confirmed none of them has any OTHER fact
+// whose own annotation depends on the now-widened span staying narrow —
+// each card's own paired trigger fact (Landfall/`entersBattlefield`/
+// `attacks`) already ends its own annotation right at the comma/label
+// boundary immediately BEFORE the subject text this widening newly claims,
+// never overlapping it.
+
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 export type { StructuralRecognizerInput };
 
@@ -82,14 +106,18 @@ function selfSubjectAlternation(name: string): string {
 }
 
 export function recognizePumpSelfEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const pumpEffects = allEffects(input).filter(isPumpSelfEffect);
+  const pumpEffects = allEffects(input).map((o) => o.effect).filter(isPumpSelfEffect);
   if (pumpEffects.length === 0) {
     return { matched: false, reason: "no kind:'pumpSelf' Effect on this face" };
   }
 
   const facts: RecognizedFact[] = [];
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of pumpEffects) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     if (typeof effect.power !== 'number' || typeof effect.toughness !== 'number') {
       return {
         matched: false,
@@ -100,7 +128,7 @@ export function recognizePumpSelfEffectStructural(input: StructuralRecognizerInp
     const subject = selfSubjectAlternation(input.name);
     const numbers = `${escapeRegExp(formatSigned(effect.power))}\\/${escapeRegExp(formatSigned(effect.toughness))}`;
     const suffix = effect.untilEndOfTurn ? ' until end of turn' : '';
-    const pattern = new RegExp(`\\b${subject} (gets ${numbers})${suffix}\\b`, 'i');
+    const pattern = new RegExp(`\\b${subject} (?:gets ${numbers})${suffix}\\b`, 'i');
     const globalPattern = new RegExp(pattern.source, pattern.flags + 'g');
     const matches = [...input.oracleText.matchAll(globalPattern)];
     if (matches.length !== 1) {
@@ -112,22 +140,18 @@ export function recognizePumpSelfEffectStructural(input: StructuralRecognizerInp
     }
 
     const m = matches[0]!;
-    const group = m[1]!; // "gets ±P/±T" — the ONLY part this recognizer annotates
     const fullStart = m.index!;
     const fullEnd = fullStart + m[0]!.length;
-    // `group` is always a SUFFIX of the full match (subject text always
-    // precedes it, nothing follows it inside the match) — compute its own
-    // offset arithmetically rather than needing the `d` regex flag.
-    const groupEnd = fullEnd - suffix.length;
-    const groupStart = groupEnd - group.length;
-    const annotation = toLineOffset(input.oracleText, groupStart, groupEnd);
+    // Annotate the WHOLE match (subject through "gets ±P/±T[ until end of
+    // turn]") — see module doc comment's 2026-09-16 widening note.
+    const annotation = toLineOffset(input.oracleText, fullStart, fullEnd);
     if (!annotation) {
-      return { matched: false, reason: `matched span [${groupStart},${groupEnd}) did not resolve to a single real oracle-text line` };
+      return { matched: false, reason: `matched span [${fullStart},${fullEnd}) did not resolve to a single real oracle-text line` };
     }
 
     facts.push({
       role: 'source',
-      fact: { event: 'pump', target: 'self', annotations: [annotation] },
+      fact: { event: 'pump', target: 'self', annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

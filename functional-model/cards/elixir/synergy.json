@@ -20,6 +20,23 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "exile",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 29
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "exileSelfCost-structural"
+      }
     }
   ],
   "sink": [

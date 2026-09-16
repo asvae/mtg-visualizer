@@ -5,12 +5,17 @@ export const theFireCrystal: CardDefinition = {
   manaCost: '{2}{R}{R}',
   typeLine: 'Legendary Artifact',
 
-  // Both real continuous static abilities — no Effect kind covers a cost
-  // reduction, and "creatures you control have haste" is an always-on
-  // grant (not a one-time resolvable effect), same `staticAbilities`
-  // treatment ardyn-the-usurper's own "Demons you control have menace,
-  // lifelink, and haste" already establishes for this exact shape.
-  staticAbilities: ['Red spells you cast cost {1} less to cast.', 'Creatures you control have haste.'],
+  // Both real, now-mechanical fields — an earlier version of this card left
+  // both as inert freeform `staticAbilities` text ("no Effect kind covers a
+  // cost reduction" / a bare always-on grant); real, structured machinery
+  // for both already exists elsewhere in the pool (The Water Crystal's/The
+  // Wind Crystal's own `spellCostReductionGrants`; Ardyn, the Usurper's own
+  // `continuousKeywordGrants`, here with no `subtype` at all since Haste
+  // applies to EVERY creature you control, not one subtype of them) — this
+  // card just never got migrated onto either; fixed for real now rather
+  // than left stale.
+  spellCostReductionGrants: [{ amount: 1, colors: ['R'] }],
+  continuousKeywordGrants: [{ keywords: ['Haste'], includeSelf: false }],
 
   // "Create a token that's a copy of target creature you control." No
   // declarative Effect kind copies a chosen target's own real stats into a

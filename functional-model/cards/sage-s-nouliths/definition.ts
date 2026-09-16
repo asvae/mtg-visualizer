@@ -20,10 +20,20 @@ export const sagesNouliths: CardDefinition = {
 
   // Job select — same real ETB mechanic (create a 1/1 Hero token, attach
   // this to it) as dragoon-s-lance/machinist-s-arsenal/paladin-s-arms'
-  // own onEnter trigger.
+  // own onEnter trigger. `on: 'enter'` (2026-09-16, found while converting
+  // this card's own scenario to a real engine-piloted trace) — WITHOUT
+  // this, `engine.ts`'s own real auto-fire (`card.triggers?.find((t) =>
+  // t.on === 'enter')`) never fires this trigger at all; only the OLD
+  // declarative `harness.ts` scenario style's own name-fired `sequence`
+  // masked that (it fires a named trigger directly, ignoring `on`
+  // entirely). Its dragoon-s-lance/machinist-s-arsenal/paladin-s-arms
+  // siblings share this SAME real gap (checked, not fixed here — none of
+  // them have an engine-piloted scenario yet either, so it's currently
+  // unobservable for them too; flagged for the definition lane to sweep).
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',
@@ -37,40 +47,29 @@ export const sagesNouliths: CardDefinition = {
     },
     // The granted "whenever this creature attacks, untap target attacking
     // creature" — granted TO the equipped creature by Sage's Nouliths' own
-    // static ability, modeled here as if it were Sage's Nouliths' own
-    // trigger, same real-source simplification ninja-s-blades'/buster-
-    // sword's/ultima-weapon's own `onEquippedDealsDamage`/`onEquippedAttacks`
-    // already establish (the real source is whichever creature is equipped,
-    // not this permanent) — the SAME conceptual "grants a whole new
-    // triggered ability to another permanent" gap white-mage-s-staff's own
-    // lifegain grant and astrologian-s-planisphere's own putCounter grant
-    // document (no `Effect`/`Actions` member anywhere in this model actually
-    // grants a fresh trigger+effect pair to ANOTHER permanent), but this
-    // card's own version of the simplification was ALREADY WIRED (pre-dates
-    // this migration pass) rather than left deliberately unwired the way
-    // White Mage's Staff's was — so unlike that card's own inert `lifegain`
-    // fact, `synergy.json`'s own `event:'untap'` fact here is REAL,
-    // evidenced vocabulary (`event:'untap'` promoted off `PARKED_ACTION_FNS`
-    // the same day by Magic Damper/fin-61's own `untapTarget` Effect), with
-    // genuine `fn:'untap'` trace evidence from this exact trigger firing
-    // (see `scenarios.ts`) — no `verify-synergy.mjs` exemption needed for
-    // it, only for the sibling `pump`/`grantType` static-broadcast facts
-    // below (still real gaps, no layer-7c pipeline). No declarative "untap
-    // a chosen target" Effect kind exists (only `tapTarget`), so `custom`
-    // calling the real `untap` action directly.
+    // static ability. Real, executable auto-fire via `on: 'equippedAttacks'`
+    // (closed 2026-09-16, card.ts's own `Trigger.on` doc comment — the SAME
+    // primitive White Mage's Staff's own lifegain grant now uses too, closed
+    // the same pass; previously this trigger fired only via a manual
+    // `pilotFireTrigger` call in `scenarios.ts`, same "underlying event has
+    // to actually happen first, THEN the trigger fires manually" gap that
+    // file's own prior comment documented). `synergy.json`'s own
+    // `event:'untap'` fact here is REAL, evidenced vocabulary (`event:'untap'`
+    // promoted off `PARKED_ACTION_FNS` the same day by Magic Damper/fin-61's
+    // own `untapTarget` Effect), with genuine `fn:'untap'` trace evidence
+    // from this exact trigger firing, now for real off the engine's own
+    // `declareAttackers` call (see `scenarios.ts`) — no `verify-synergy.mjs`
+    // exemption needed for it, only for the sibling `pump`/`grantType`
+    // static-broadcast facts below (still real gaps, no layer-7c pipeline).
+    // `untapTarget`'s own declarative `validType: 'attacking'` pool is
+    // genuinely "any attacking creature" (real printed text — no "equipped
+    // creature" self-reference needed in the EFFECT at all, only in the
+    // trigger CONDITION, which `on: 'equippedAttacks'` now covers), so this
+    // card closes fully with zero new Effect vocabulary too.
     {
       name: 'onEquippedAttacks',
-      effects: [
-        {
-          kind: 'custom',
-          describe: 'untap target attacking creature',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const pool = [...ctx.you.getCreaturesInPlay(), ...ctx.opponents.flatMap((p) => p.getCreaturesInPlay())];
-            const target = actions.chooseTarget(pool);
-            if (target) actions.untap(target);
-          },
-        } satisfies Effect,
-      ],
+      on: 'equippedAttacks',
+      effects: [{ kind: 'untapTarget', validType: 'attacking' } satisfies Effect],
     },
   ],
 

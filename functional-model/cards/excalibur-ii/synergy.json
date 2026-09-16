@@ -15,7 +15,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onLifeGained"
     },
     {
       "zone": "Graveyard",
@@ -25,6 +26,24 @@
     {
       "event": "dies",
       "target": "self"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 68
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [

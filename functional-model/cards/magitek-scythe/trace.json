@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Magitek Scythe",
         "instanceId": 1,
-        "id": 1513,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -28,9 +28,9 @@
       {
         "fn": "equip",
         "equipment": "Magitek Scythe",
-        "equipmentId": 1513,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 1512
+        "id": 2
       },
       {
         "fn": "read:getCardsIn",
@@ -52,8 +52,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1512,
-        "keyword": "FirstStrike"
+        "id": 2,
+        "keyword": "FirstStrike",
+        "untilEndOfTurn": true
       }
     ]
   },
@@ -74,7 +75,7 @@
         "fn": "activate",
         "card": "Magitek Scythe",
         "instanceId": 1,
-        "id": 1516,
+        "id": 6,
         "cost": "Equip {2}"
       },
       {
@@ -85,9 +86,9 @@
       {
         "fn": "equip",
         "equipment": "Magitek Scythe",
-        "equipmentId": 1516,
+        "equipmentId": 6,
         "target": "Grizzly Bears",
-        "id": 1515
+        "id": 5
       }
     ]
   }

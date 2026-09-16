@@ -4,6 +4,27 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self"
+    },
+    {
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "C"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
   "sink": []

@@ -41,6 +41,7 @@ export const cloudboundMoogle: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'putCounterTarget', validType: 'creature', counterType: '+1/+1', amount: 1, qty: 1 } satisfies Effect],
     },
   ],

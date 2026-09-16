@@ -6,7 +6,11 @@ export const kainTraitorousDragoon: CardDefinition = {
   manaCost: '{2}{B}',
   typeLine: 'Legendary Creature — Human Knight',
 
+  // "Jump" — same real self-only, `onlyDuringYourTurn` conditional grant as
+  // freya-crescent's own identical shape; now real, executable
+  // `continuousKeywordGrants` (2026-09-16, static-ability audit follow-up).
   staticAbilities: ['Jump — during your turn, Kain has flying.'],
+  continuousKeywordGrants: [{ keywords: ['Flying'], includeSelf: true, onlyDuringYourTurn: true }],
 
   triggers: [
     {

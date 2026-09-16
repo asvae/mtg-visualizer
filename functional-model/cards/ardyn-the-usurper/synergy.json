@@ -15,10 +15,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 24,
-          "end": 30
+          "start": 0,
+          "end": 51
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -35,10 +39,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 32,
-          "end": 40
+          "start": 0,
+          "end": 51
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -55,10 +63,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 46,
+          "start": 0,
           "end": 51
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
     },
     {
       "event": "lifegain",
@@ -151,6 +163,22 @@
           "end": 108
         }
       ]
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 14,
+          "end": 54
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
+      }
     }
   ]
 }

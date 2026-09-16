@@ -24,16 +24,75 @@
 // between" discipline `move-effect-structural.ts`'s own `optional`/`notSelf`
 // handling already established.
 //
-// **Two, and only two, real reasons a qualifying `createToken` effect
-// declines** (both checked against the real, NAMED pool below, not a
-// blanket "declines" bucket):
-//   - **Non-literal `amount`** (`Computed<number>`, a closure) — no real
-//     template for a formula-dependent quantity string (`moogles-valor`,
-//     `rufus-shinra`, `the-final-days`, `the-wandering-minstrel` all
-//     confirmed real cases: each one's own printed clause uses a
-//     board-state-dependent count/conditional, e.g. "if you don't control a
-//     creature named Darkstar," that no fixed English quantifier word could
-//     represent honestly).
+// **`amount: Computed<number>` — one real closed template added 2026-09-16
+// (recognizer-lane task, `feedback_no_magic_strings_abilities`/task-pushback
+// follow-up: this was previously a blanket permanent decline for EVERY
+// non-literal amount; re-litigated per-card against real oracle text
+// instead of accepted as-is)**: Magic's own real templating language has a
+// genuine literal quantifier phrase for "however many of a type you
+// control, make one token PER" — "For each <type> you control, create
+// <a|an> ... token" (Moogles' Valor's own real printed clause, confirmed
+// via `forge-lookup.mjs`: `SVar:X:Count$Valid Creature.YouCtrl`, `TokenAmount$
+// X`). This recognizer never introspects the closure itself (opaque, same
+// as every other `Computed` field this pool's structural recognizers
+// already decline to peek inside — see `ptFormula-scalingPump-structural
+// .ts`'s own `addPerEquipmentControlled` branch for the same "read the
+// printed English, not the runtime closure" discipline); it gates on the
+// literal, real anchor phrase `/\bfor each\b[^.,]*\byou control\b\s*,\s*
+// create\b/i` being present in the SAME sentence as the token's own
+// structural identity (subtype noun/P-T/tapped, same suffix the
+// literal-number branch already requires) before asserting anything —
+// **checked against the real, NAMED remaining pool below, not a blanket
+// "non-literal declines" bucket**:
+//   - `moogles-valor` — the one real, confirmed MATCH for this template
+//     (2026-09-16).
+//   - `rufus-shinra` — genuinely NOT this shape: "if you don't control a
+//     creature named Darkstar, create Darkstar..." is a NAMED-creature
+//     PRESENCE check (0-or-1, no "for each" scaling at all), confirmed via
+//     `forge-lookup.mjs` (`IsPresent$ Creature.YouCtrl+namedDarkstar |
+//     PresentCompare$ EQ0`). Would decline this amount-anchor check too (no
+//     "for each" anywhere in the printed text) — but in practice declines
+//     one check earlier, via the inline-`TokenInfo`/no-`TOKENS`-registry
+//     reason below (Darkstar's own token is a one-off literal, not a
+//     registry reference).
+//   - `the-final-days` — genuinely NOT this shape either: "Create two
+//     tapped 2/2 black Horror creature tokens. If this spell was cast from a
+//     graveyard, instead create X of those tokens, where X is the number of
+//     creature cards in your graveyard." is a two-branch CONDITIONAL (a
+//     fixed "two" normally, a "where X is the number of..." replacement only
+//     when cast from graveyard) — no "for each ... you control" phrase
+//     anywhere. This one IS a `TOKENS` registry token, so it genuinely
+//     reaches (and correctly fails) this amount-anchor check.
+//   - `the-wandering-minstrel` — genuinely NOT this shape either: "if you
+//     control five or more Towns, create a 2/2 Elemental creature token" is
+//     a THRESHOLD gate (0-or-1, same family as `ptFormula-scalingPump-
+//     structural.ts`'s own `thresholdBonus` branch), not a per-instance
+//     "for each" scaling count. Same as rufus-shinra: would decline this
+//     check too, but in practice declines one check earlier (its Elemental
+//     token is also an inline literal, no registry id).
+//   All three re-verified directly against real Forge script text
+//   (2026-09-16), not assumed from this comment's own prior characterization
+//   — the prior version of this comment lumped all 4 under one blanket
+//   "non-literal amount, no template" reason; that was accurate as a
+//   decline VERDICT for 3 of the 4 but imprecise about WHY, and simply wrong
+//   that no template could ever exist for the 4th.
+//
+// **Still exactly 1 SOURCE fact per matching effect, even for this new
+// branch — no paired sink** (matches this recognizer's own single-fact
+// convention for every other one of its 17 pre-existing real matches,
+// checked directly before writing this branch; also matches
+// `continuousPTGrantsEquipped-structural.ts`'s own `scalePerType`/
+// `scalePerSelfCounter` branches, the more directly analogous "widen an
+// existing structural-Effect recognizer to also cover a board-count-scaled
+// version of the same claim" precedent — NOT `ptFormula-scalingPump-
+// structural.ts`'s own 2-fact source+sink convention, which is a
+// DIFFERENT real claim family: a self-pump CDA mirroring a card's own
+// pre-existing hand-authored pair, not a token-creation ETB fact at all).
+// The counted type itself is deliberately never asserted as a `Fact` claim
+// (unlike `ptFormula`'s sink) — it's never available structurally (buried
+// inside an opaque closure), only confirmed to be PRESENT as a literal
+// quantifier phrase in the anchor text.
+//
 //   - **`effect.token` is not a `TOKENS.<key>` registry reference** — this
 //     recognizer resolves the derived fact's `subject: {token: '<id>'}`
 //     via REVERSE lookup against `tokens.ts`'s own shared `TOKENS` registry
@@ -71,20 +130,21 @@
 // shared runner-level `mergeRecognizedFactsByIdentity` pass does that
 // collapsing, not this recognizer).
 //
-// **Real, whole-pool check confirming exactly 17 real matches** (2026-09-15):
-// `aerith-rescue-mission`, `ancient-adamantoise`, `battle-menu`, `dion-
-// bahamut-s-dominant-bahamut-warden-of-light` (front face), `dragoon-s-
-// wyvern`, `dwarven-castle-guard`, `magic-pot`, `magitek-armor`, `namazu-
-// trader`, `prompto-argentum`, `sidequest-hunt-the-mark-yiazmat-ultimate-
-// mark`, `summon-knights-of-round`, `tellah-great-sage`, `the-crystal-s-
-// chosen`, `thranduil-sindarin-liege-silvan-rally`, `undercity-dire-rat`,
-// `zidane-tantalus-thief` — re-check this comment if a future card changes
-// that count.
+// **Real, whole-pool check confirming exactly 18 real matches** (2026-09-16,
+// was 17 as of 2026-09-15 — `moogles-valor` added by the "for each ... you
+// control" branch above): `aerith-rescue-mission`, `ancient-adamantoise`,
+// `battle-menu`, `dion-bahamut-s-dominant-bahamut-warden-of-light` (front
+// face), `dragoon-s-wyvern`, `dwarven-castle-guard`, `magic-pot`,
+// `magitek-armor`, `moogles-valor`, `namazu-trader`, `prompto-argentum`,
+// `sidequest-hunt-the-mark-yiazmat-ultimate-mark`, `summon-knights-of-round`,
+// `tellah-great-sage`, `the-crystal-s-chosen`, `thranduil-sindarin-liege-
+// silvan-rally`, `undercity-dire-rat`, `zidane-tantalus-thief` — re-check
+// this comment if a future card changes that count.
 import type { Effect } from '../card';
 import { TOKENS } from '../tokens';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 export type { StructuralRecognizerInput };
 
@@ -114,15 +174,21 @@ function registryIdFor(token: CreateTokenEffect['token']): string | undefined {
   return Object.entries(TOKENS).find(([, v]) => v === token)?.[0];
 }
 
-/** The real, closed regex this effect's own structured data implies — see
- * module doc comment for the full rule and the two real decline reasons.
- * `undefined` when `amount` isn't a literal number 0-10 (no real card in
- * this pool needs a quantity above ten). */
-function buildExpectedPattern(effect: CreateTokenEffect): RegExp | undefined {
-  if (typeof effect.amount !== 'number') return undefined;
-  const qtyWord = effect.amount === 1 ? '(?:a|an|one)' : NUMBER_WORDS[effect.amount];
-  if (!qtyWord) return undefined;
+/** Real, literal anchor confirming the one confirmed "for each <type> you
+ * control, create ..." per-instance quantifier template — see module doc
+ * comment for the full real-pool citation (why this is narrowly gated to
+ * this exact run of words, not a bare "for each" scan, and why the 3 other
+ * real non-literal-amount cards in the pool correctly fail this check). */
+const FOR_EACH_YOU_CONTROL_CREATE = /\bfor each\b[^.,]*\byou control\b\s*,\s*create\b/i;
 
+/** The real, closed regex this effect's own structured data implies — see
+ * module doc comment for the full rule and the real decline reasons.
+ * `undefined` when `amount` is a literal number outside 0-10 (no real card
+ * in this pool needs a quantity above ten), or a non-literal `Computed`
+ * amount whose own face's oracle text doesn't carry the one confirmed
+ * "for each ... you control, create" anchor (see module doc comment: this
+ * is a real, deliberate per-card gate, not a guess). */
+function buildExpectedPattern(effect: CreateTokenEffect, oracleText: string): RegExp | undefined {
   const token = effect.token;
   const isCreature = token.types.includes('Creature');
   const subtypeWords = token.types.filter((t) => t !== 'Legendary' && t !== 'Creature' && t !== 'Artifact');
@@ -133,7 +199,27 @@ function buildExpectedPattern(effect: CreateTokenEffect): RegExp | undefined {
   // never required, since most tokens in this pool have no such name.
   const namePrefix = token.types.includes('Legendary') ? `(?:${escapeRegExp(token.name)}, )?` : '';
 
-  const parts = [`\\bcreate ${namePrefix}${qtyWord}\\b`];
+  let quantifierPart: string;
+  if (typeof effect.amount === 'number') {
+    const qtyWord = effect.amount === 1 ? '(?:a|an|one)' : NUMBER_WORDS[effect.amount];
+    if (!qtyWord) return undefined;
+    quantifierPart = `\\bcreate ${namePrefix}${qtyWord}\\b`;
+  } else {
+    // Non-literal `Computed<number>` amount (a closure, opaque to this
+    // recognizer — see module doc comment). Only the one real confirmed
+    // "for each <type> you control, create a/an ..." per-instance template
+    // qualifies; gate on that literal generic anchor being present in this
+    // face's own oracle text BEFORE building anything stricter, so every
+    // OTHER real non-literal-amount shape in the pool (rufus-shinra's
+    // named-creature presence check, the-final-days's cast-from-graveyard
+    // conditional count, the-wandering-minstrel's controlled-permanent-count
+    // threshold gate — none of which contain this phrase) still declines
+    // silently (`scope`) rather than forcing a `mismatch` hard-fail.
+    if (!FOR_EACH_YOU_CONTROL_CREATE.test(oracleText)) return undefined;
+    quantifierPart = `\\bfor each [^.,]+ you control,\\s*create ${namePrefix}(?:a|an)\\b`;
+  }
+
+  const parts = [quantifierPart];
   if (isCreature) parts.push(`[^.]*?${escapeRegExp(String(token.basePower))}\\/${escapeRegExp(String(token.baseToughness))}`);
   parts.push(`[^.]*?\\b${escapeRegExp(noun)}s?\\b`);
   parts.push(`[^.]*?\\btokens?\\b`);
@@ -141,13 +227,17 @@ function buildExpectedPattern(effect: CreateTokenEffect): RegExp | undefined {
 }
 
 export function recognizeTokenCreationStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const effects = allEffects(input).filter(isCreateTokenEffect);
+  const effects = allEffects(input).map((o) => o.effect).filter(isCreateTokenEffect);
   if (effects.length === 0) {
     return { matched: false, reason: "no kind:'createToken' Effect on this face" };
   }
 
   const facts: RecognizedFact[] = [];
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
   for (const effect of effects) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     const tokenId = registryIdFor(effect.token);
     if (!tokenId) {
       return {
@@ -155,11 +245,11 @@ export function recognizeTokenCreationStructural(input: StructuralRecognizerInpu
         reason: `this face's own createToken effect uses an inline TokenInfo literal (${JSON.stringify(effect.token)}) with no matching TOKENS registry entry — no canonical id derivable (see module doc comment: color isn't tracked structurally)`,
       };
     }
-    const pattern = buildExpectedPattern(effect);
+    const pattern = buildExpectedPattern(effect, input.oracleText);
     if (!pattern) {
       return {
         matched: false,
-        reason: `a createToken effect on this face (${JSON.stringify(effect)}) has a non-literal or unconfirmed amount — no real fixed-quantifier template to verify (see module doc comment)`,
+        reason: `a createToken effect on this face (${JSON.stringify(effect)}) has a non-literal or unconfirmed amount, and this face's own oracle text has no confirmed "for each ... you control, create" anchor either — no real quantifier template to verify (see module doc comment)`,
       };
     }
     const m = pattern.exec(input.oracleText);
@@ -178,7 +268,7 @@ export function recognizeTokenCreationStructural(input: StructuralRecognizerInpu
     }
     facts.push({
       role: 'source',
-      fact: { event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: { token: tokenId }, annotations: [annotation] },
+      fact: { event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: { token: tokenId }, annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

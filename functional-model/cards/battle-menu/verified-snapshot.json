@@ -1,0 +1,138 @@
+{
+  "capturedAt": "2026-09-16T21:29:56.920Z",
+  "facts": {
+    "source": [
+      {
+        "event": "entersBattlefield",
+        "to": "Battlefield",
+        "controller": "you",
+        "subject": {
+          "token": "w_2_2_knight"
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 11,
+            "end": 51
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "token-creation-structural"
+        }
+      },
+      {
+        "event": "pump",
+        "target": {
+          "types": {
+            "has": [
+              "Creature"
+            ]
+          }
+        },
+        "targeted": true,
+        "untilEndOfTurn": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 12,
+            "end": 56
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "pumpTarget-effect-structural"
+        }
+      },
+      {
+        "event": "destroy",
+        "target": {
+          "types": {
+            "has": [
+              "Creature"
+            ]
+          },
+          "power": {
+            "min": 4
+          }
+        },
+        "targeted": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 3,
+            "start": 10,
+            "end": 57
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "destroy-effect-structural"
+        }
+      },
+      {
+        "event": "lifegain",
+        "controller": "you",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 4,
+            "start": 9,
+            "end": 24
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "gainLife-effect-structural"
+        }
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 12,
+            "end": 27
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "pumpTarget-effect-structural"
+        }
+      },
+      {
+        "to": "Battlefield",
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "power": {
+          "min": 4
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 3,
+            "start": 18,
+            "end": 57
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "destroy-effect-structural"
+        }
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { applyToBound, equipTo, selectUpTo, you } from '../../combinator';
 
 export const weaponsVendor: CardDefinition = {
   name: 'Weapons Vendor',
@@ -21,26 +22,43 @@ export const weaponsVendor: CardDefinition = {
       // style machinery exists in this model (this model has no player-
       // decision engine anywhere — same simplification namazu-trader's own
       // "if you do" gate already documents: the payoff always happens once
-      // a legal target exists). `equip` has no declarative Effect kind (see
-      // dragoon-s-lance/paladin-s-arms/machinist-s-arsenal's own comments)
-      // — `custom` calling the real `actions.equip` directly, gated on
-      // actually controlling an Equipment, models the real shape.
+      // a legal target exists).
+      //
+      // Migrated 2026-09-16 off a `kind:'custom'` closure onto the
+      // combinator DSL (`equip` gained real `EachAction`/`ApplyToBound`
+      // vocabulary the same day — see `combinator.ts`'s own header —
+      // superseding the old "no declarative Effect kind" comment this used
+      // to carry): nested `selectUpTo(..., 1, ...)` independently picks one
+      // Equipment (`cardType:'artifact'` + `subtype:'Equipment'`, same
+      // Equipment-⊂-Artifact narrowing `beatrix-loyal-general`'s/
+      // `gilgamesh-master-at-arms`'s own migrations already use) and one
+      // creature (bare `creaturesInPlay()`, no subtype narrowing — the real
+      // printed text says "target creature," not a named subtype), then
+      // `applyToBound` attaches the bound Equipment onto the bound creature
+      // via `equipTo`. A no-op when either pool is empty (`SelectUpTo`/
+      // `ApplyToBound`'s own already-documented tolerance), matching the
+      // original closure's own early-return guard. Same real behavior, now
+      // recognizer-readable data instead of an opaque closure.
+      //
+      // RESOLVED (2026-09-16, recognizer-lane triage): `equipProgram-effect-
+      // structural.ts` gained a third confirmed equip-targeted template for
+      // exactly this card's own literal, plainly-worded, independently-
+      // targeted "attach target Equipment you control to target creature you
+      // control" (equipmentTargeted:true + bare, non-subtype-narrowed
+      // target/equipment pools, both owner:'you') — see that recognizer's
+      // own module doc comment for the full 3-template vocabulary and why
+      // `occ.equipmentPool.owner` is the real signal that keeps this
+      // template from misfiring on `stolen-uniform`'s own structurally-
+      // identical-but-textually-different shape. This card's own `equip`
+      // source fact and both paired sink facts are now provenance-backed.
       name: 'onBeginCombat',
       effects: [
         {
-          kind: 'custom',
+          kind: 'program',
           describe: 'if you control an Equipment, you may pay {1}. When you do, attach target Equipment you control to target creature you control',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const equipment = ctx.you.getCardsIn('Battlefield').filter((c) => c.hasSubtype('Equipment'));
-            const creatures = ctx.you.getCreaturesInPlay();
-            if (equipment.length === 0 || creatures.length === 0) return;
-            // `ctx.preferTarget` routed through both real CR 601.2c target
-            // choices (Equipment, then creature) — same convention every
-            // OTHER `chooseTarget` call site in card.ts's own declarative
-            // dispatch already uses; this `custom` effect just has to wire
-            // it manually since it calls `actions.equip` directly.
-            actions.equip(actions.chooseTarget(equipment, ctx.preferTarget), actions.chooseTarget(creatures, ctx.preferTarget));
-          },
+          program: selectUpTo(you.permanentsInPlay().filter('cardType', 'artifact').filter('subtype', 'Equipment'), 1, 'equipment', [
+            selectUpTo(you.creaturesInPlay(), 1, 'creature', [applyToBound('equipment', 0, equipTo('creature', 0))]),
+          ]),
         } satisfies Effect,
       ],
     },

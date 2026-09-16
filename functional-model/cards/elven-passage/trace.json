@@ -17,7 +17,7 @@
         "fn": "activate",
         "card": "Elven Passage",
         "instanceId": 1,
-        "id": 776,
+        "id": 4,
         "cost": "{T}, Pay 1 life, Sacrifice this land"
       },
       {
@@ -28,7 +28,7 @@
       {
         "fn": "moveTo",
         "target": "Elven Passage",
-        "id": 776,
+        "id": 4,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -52,14 +52,14 @@
       {
         "fn": "moveTo",
         "target": "you-library-land-0",
-        "id": 774,
+        "id": 2,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "you-library-land-0",
-        "id": 774,
+        "id": 2,
         "controller": "you"
       }
     ]
@@ -81,7 +81,7 @@
         "fn": "activate",
         "card": "Elven Passage",
         "instanceId": 1,
-        "id": 780,
+        "id": 8,
         "cost": "{T}, Pay 1 life, Sacrifice this land"
       },
       {
@@ -92,7 +92,7 @@
       {
         "fn": "moveTo",
         "target": "Elven Passage",
-        "id": 780,
+        "id": 8,
         "zone": "Graveyard",
         "controller": "you"
       },
@@ -116,14 +116,14 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 778,
+        "id": 6,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "Forest",
-        "id": 778,
+        "id": 6,
         "controller": "you"
       }
     ]

@@ -6,7 +6,13 @@ export const redMagesRapier: CardDefinition = {
   manaCost: '{1}{R}',
   typeLine: 'Artifact — Equipment',
 
+  // Real, mechanical `continuousTypeGrants` (2026-09-16, static-ability
+  // audit follow-up — same already-real query-time machinery
+  // astrologian-s-planisphere's own identical "is a Wizard" shape already
+  // uses).
   staticAbilities: ['Equipped creature is a Wizard in addition to its other types.'],
+
+  continuousTypeGrants: [{ types: ['Wizard'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — same real ETB mechanic (create a 1/1 colorless Hero token,
   // then attach this to it) as dragoon-s-lance/thief-s-knife/machinist-s-
@@ -14,6 +20,7 @@ export const redMagesRapier: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

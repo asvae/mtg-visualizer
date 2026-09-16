@@ -21,6 +21,36 @@
       "event": "dies",
       "target": "self",
       "face": "front"
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Indestructible",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "attacking": true,
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 65,
+          "end": 79
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAllAttacking-effect-structural"
+      },
+      "triggeredBy": "onAttacks"
     }
   ],
   "sink": [
@@ -39,6 +69,28 @@
       "provenance": {
         "origin": "parser",
         "rule": "attacks-trigger-structural"
+      }
+    },
+    {
+      "to": "Battlefield",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "attacking": true,
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 34,
+          "end": 59
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAllAttacking-effect-structural"
       }
     }
   ]

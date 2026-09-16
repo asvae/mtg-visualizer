@@ -18,7 +18,7 @@
         "fn": "trigger",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
-        "id": 259,
+        "id": 5,
         "name": "onBeginCombat"
       },
       {
@@ -44,20 +44,8 @@
         "result": true
       },
       {
-        "fn": "read:hasSubtype",
-        "target": "you-equipment-0",
-        "subtype": "Equipment",
-        "result": true
-      },
-      {
         "fn": "read:isArtifact",
         "target": "you-equipment-1",
-        "result": true
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "you-equipment-1",
-        "subtype": "Equipment",
         "result": true
       },
       {
@@ -66,18 +54,30 @@
         "result": false
       },
       {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-1",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "equipmentId": 257,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 256
+        "id": 2
       },
       {
         "fn": "equip",
         "equipment": "you-equipment-1",
-        "equipmentId": 258,
+        "equipmentId": 4,
         "target": "Grizzly Bears",
-        "id": 256
+        "id": 2
       }
     ]
   },
@@ -99,7 +99,7 @@
         "fn": "trigger",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
-        "id": 263,
+        "id": 9,
         "name": "onBeginCombat"
       },
       {
@@ -120,20 +120,8 @@
         "result": true
       },
       {
-        "fn": "read:hasSubtype",
-        "target": "you-equipment-0",
-        "subtype": "Equipment",
-        "result": true
-      },
-      {
         "fn": "read:isArtifact",
         "target": "you-equipment-1",
-        "result": true
-      },
-      {
-        "fn": "read:hasSubtype",
-        "target": "you-equipment-1",
-        "subtype": "Equipment",
         "result": true
       },
       {
@@ -142,18 +130,30 @@
         "result": false
       },
       {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-0",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "you-equipment-1",
+        "subtype": "Equipment",
+        "result": true
+      },
+      {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "equipmentId": 261,
+        "equipmentId": 7,
         "target": "Beatrix, Loyal General",
-        "id": 263
+        "id": 9
       },
       {
         "fn": "equip",
         "equipment": "you-equipment-1",
-        "equipmentId": 262,
+        "equipmentId": 8,
         "target": "Beatrix, Loyal General",
-        "id": 263
+        "id": 9
       }
     ]
   },
@@ -172,7 +172,7 @@
         "fn": "cast",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
-        "id": 265,
+        "id": 11,
         "from": "hand",
         "cost": "{4}{W}{W}"
       },
@@ -180,7 +180,7 @@
         "fn": "enters",
         "card": "Beatrix, Loyal General",
         "instanceId": 1,
-        "id": 265,
+        "id": 11,
         "zone": "Battlefield"
       },
       {

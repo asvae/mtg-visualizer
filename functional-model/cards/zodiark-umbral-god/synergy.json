@@ -15,16 +15,8 @@
       "controller": "you"
     },
     {
-      "zone": "Graveyard",
-      "controller": "opp"
-    },
-    {
       "event": "dies",
       "controller": "you"
-    },
-    {
-      "event": "dies",
-      "controller": "opp"
     },
     {
       "event": "putCounter",
@@ -41,7 +33,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onCreatureSacrificed"
     }
   ],
   "sink": [
@@ -56,6 +49,22 @@
     },
     {
       "event": "dies"
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 19
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

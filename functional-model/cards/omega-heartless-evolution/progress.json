@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (recognizer-lane escalation batch, engine agent): CLOSED — `putCounterTarget-effect-structural.ts`'s new pronoun-carryover branch (see ice-flan's own progress.json for the full writeup) retags this card's own `putCounter` (Stun) source fact AND its paired `to:'Battlefield'` sink with real provenance — constraint derived off the preceding `tapTarget` effect's own `validType:'creature-or-artifact'` (`types:{hasAny:['Creature','Artifact']}`), matching this card's own real pre-existing fact shape exactly; the non-literal `Computed<number>` `amount` (`ctx.you.getLandsInPlay().length`) does not trip the recognizer's non-positive-amount guard (only a literal `number <= 0` is rejected). `apply-recognizers.mjs omega-heartless-evolution`: 2 existing facts retagged (source + sink), 0 new facts. `verify-synergy.mjs` (scoped + full-pool): 0 hard failures (1 pre-existing, unrelated suppressed `tapTarget-effect-structural` mismatch via this card's own `// recognizer-exception:` marker — this card's real text is \"target nonland permanent,\" a documented approximation, unaffected by this pass). `review` stays \"ai\".",
   "textCoverageAudited": false,
   "knownGaps": []
 }

@@ -50,7 +50,7 @@
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 export type { StructuralRecognizerInput };
 
@@ -85,7 +85,7 @@ function selfSubjectAlternation(name: string): string {
 }
 
 export function recognizeSequenceExileReturnEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const matches_ = allEffects(input).filter(isExileReturnSequence);
+  const matches_ = allEffects(input).map((o) => o.effect).filter(isExileReturnSequence);
   if (matches_.length === 0) {
     return { matched: false, reason: "no kind:'program' Effect whose own program is a Sequence('Exile','Battlefield')" };
   }
@@ -94,8 +94,12 @@ export function recognizeSequenceExileReturnEffectStructural(input: StructuralRe
   const subject = selfSubjectAlternation(input.name);
   const pattern = new RegExp(`\\bExile ${subject}, then return it to the battlefield\\b`, 'i');
   const globalPattern = new RegExp(pattern.source, pattern.flags + 'g');
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
-  for (const _effect of matches_) {
+  for (const effect of matches_) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     const matches = [...input.oracleText.matchAll(globalPattern)];
     if (matches.length !== 1) {
       return {
@@ -112,12 +116,12 @@ export function recognizeSequenceExileReturnEffectStructural(input: StructuralRe
 
     facts.push({
       role: 'source',
-      fact: { to: 'Exile', from: 'Battlefield', subject: 'self', annotations: [annotation] },
+      fact: { to: 'Exile', from: 'Battlefield', subject: 'self', annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
     facts.push({
       role: 'source',
-      fact: { event: 'entersBattlefield', to: 'Battlefield', from: 'Exile', subject: 'self', target: 'self', annotations: [annotation] },
+      fact: { event: 'entersBattlefield', to: 'Battlefield', from: 'Exile', subject: 'self', target: 'self', annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

@@ -4,6 +4,40 @@
       "event": "putCounter",
       "counterType": "stun",
       "target": "self"
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "FirstStrike",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 15,
+          "end": 78
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Deathtouch",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 15,
+          "end": 78
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
     }
   ],
   "sink": [

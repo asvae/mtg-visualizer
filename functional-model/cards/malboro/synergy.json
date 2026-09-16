@@ -22,13 +22,31 @@
           "target": "oracle",
           "line": 1,
           "start": 42,
-          "end": 78
+          "end": 126
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "moveSearchLibrary-effect-structural"
       }
+    },
+    {
+      "event": "lifeloss",
+      "controller": "opp",
+      "targeted": false,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 71,
+          "end": 83
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     }
   ],
   "sink": [
@@ -60,13 +78,29 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 42,
+          "start": 66,
           "end": 78
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "moveSearchLibrary-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 13,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

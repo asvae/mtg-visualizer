@@ -6,6 +6,6 @@
   "notes": "",
   "textCoverageAudited": false,
   "knownGaps": [
-    "extra-land-drop and lands-count-scaling power are both real static text, entirely untracked"
+    "CLOSED 2026-09-16 (static-ability audit, power-scaling half only): 'gets +1/+0 for each land you control' is now real, executable `ptFormula.kind:'addPerLandControlled'` ({power:1, toughness:0}) — same ADD-scaling shape `addPerEquipmentControlled` already establishes, counting the controller's own battlefield lands instead of Equipment. The extra-land-drop permission ('You may play an additional land on each of your turns') remains real static text, correctly still open — no turn-structure land-drop-count tracking exists anywhere in this engine."
   ]
 }

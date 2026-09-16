@@ -13,22 +13,11 @@
           "start": 38,
           "end": 46
         }
-      ]
-    },
-    {
-      "event": "grantKeyword",
-      "keyword": "Indestructible",
-      "target": {},
-      "targeted": true,
-      "untilEndOfTurn": true,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 51,
-          "end": 65
-        }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordTarget-effect-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -43,7 +32,30 @@
           "start": 48,
           "end": 56
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Indestructible",
+      "target": {},
+      "targeted": true,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 51,
+          "end": 65
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordTarget-effect-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -58,7 +70,11 @@
           "start": 61,
           "end": 75
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
     },
     {
       "event": "lifegain",
@@ -89,11 +105,27 @@
       "annotations": [
         {
           "target": "oracle",
+          "line": 3,
+          "start": 20,
+          "end": 42
+        },
+        {
+          "target": "oracle",
           "line": 1,
           "start": 15,
-          "end": 31
+          "end": 83
+        },
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 15,
+          "end": 83
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
     }
   ]
 }

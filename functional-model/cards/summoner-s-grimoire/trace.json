@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Summoner's Grimoire",
         "instanceId": 1,
-        "id": 2564,
+        "id": 2,
         "name": "onEnter"
       },
       {
@@ -29,9 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Summoner's Grimoire",
-        "equipmentId": 2564,
+        "equipmentId": 2,
         "target": "Hero",
-        "id": 2565
+        "id": 3
       }
     ]
   },
@@ -52,7 +52,7 @@
         "fn": "activate",
         "card": "Summoner's Grimoire",
         "instanceId": 1,
-        "id": 2569,
+        "id": 7,
         "cost": "{3}"
       },
       {
@@ -63,9 +63,9 @@
       {
         "fn": "equip",
         "equipment": "Summoner's Grimoire",
-        "equipmentId": 2569,
+        "equipmentId": 7,
         "target": "Grizzly Bears",
-        "id": 2567
+        "id": 5
       }
     ]
   }

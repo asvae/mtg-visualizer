@@ -10,11 +10,20 @@
     },
     {
       "event": "lifeloss",
-      "controller": "you"
-    },
-    {
-      "event": "lifeloss",
-      "controller": "opp"
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 51,
+          "end": 63
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "event": "drawCard",
@@ -30,7 +39,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "event": "putCounter",

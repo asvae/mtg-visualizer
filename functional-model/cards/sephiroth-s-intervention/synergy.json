@@ -6,28 +6,6 @@
       "subject": "self"
     },
     {
-      "event": "dies",
-      "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        }
-      },
-      "provenance": {
-        "origin": "parser",
-        "rule": "destroy-effect-structural"
-      },
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 0,
-          "start": 0,
-          "end": 23
-        }
-      ]
-    },
-    {
       "event": "lifegain",
       "controller": "you",
       "annotations": [
@@ -79,7 +57,7 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 0,
+          "start": 8,
           "end": 23
         }
       ],

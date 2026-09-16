@@ -11,6 +11,24 @@
           ]
         }
       }
+    },
+    {
+      "event": "pump",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 28
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [
@@ -33,6 +51,22 @@
       "provenance": {
         "origin": "parser",
         "rule": "equipmentWantsCreature-sink-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 27,
+          "end": 53
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

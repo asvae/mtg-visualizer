@@ -2,10 +2,10 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (recognizer-lane escalation batch, engine agent): new `recognizers/entersTriggerTypeFilter-sink-structural.ts` (see rook-turret's own progress.json for the full writeup) reads this card's own `onArtifactEnters` trigger name and adds a genuinely NEW real sink fact this card never had at all — `{event:'entersBattlefield', controller:'you', types:{has:['Artifact']}}`, real oracle-anchored provenance (this card's own text uses \"an artifact,\" not \"another,\" matching its own `onArtifactEnters` name's lack of an \"Other\" marker — Golbez himself isn't an Artifact, so the distinction is moot either way). `apply-recognizers.mjs golbez-crystal-collector`: +1 sink fact. `verify-synergy.mjs` (scoped + full-pool): 0 hard failures. This is a genuinely NEW fact, not a retag — the `onArtifactEnters` trigger-name-to-canonical-event MAPPING gap this card's own prior `knownGaps` entry named (a separate, `verify-synergy.mjs`-internal trace-matching concern) is UNRELATED and left untouched (out of this pass's scope). `review` stays \"ai\".",
   "textCoverageAudited": false,
   "knownGaps": [
-    "onArtifactEnters trigger unmapped (same class as rook-turret), currently passes only via loose scenario-diff fallback not real evidence"
+    "onArtifactEnters trigger unmapped (same class as rook-turret) in verify-synergy.mjs's own internal TRIGGER_EVENT_MAP — currently passes only via loose scenario-diff fallback, not real trace evidence. UNRELATED to the 2026-09-16 sink-fact closure above (that's a separate, now-closed Fact-authoring gap) — this trace-matching gap remains open."
   ]
 }

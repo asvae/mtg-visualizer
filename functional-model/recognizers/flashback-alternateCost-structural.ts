@@ -38,6 +38,22 @@
 // for (that file's trigger precondition + consequence are genuinely the same
 // clause; this file's two facts are genuinely two different clauses within
 // the same reminder-text parenthetical).
+//
+// **Bare-heading fallback branch (2026-09-16, recognizer-lane escalation)** —
+// Memories Returning (fin/63) is the sole real one of these 14 Flashback
+// cards whose checked-in Scryfall oracle text prints a genuinely bare
+// "Flashback {7}{U}{U}" with NO reminder-text parenthetical at all
+// (independently confirmed via both Forge's `res/cardsfolder/*/
+// memories_returning.txt` script and XMage's own Java card source as a real
+// printed-card quirk, not a data bug — see this card's own `progress.json`
+// for the full citation). When neither `CAST_CLAUSE_RE` nor (if
+// `alt.thenExile`) `EXILE_CLAUSE_RE` is found at all (0 matches — a
+// genuinely DIFFERENT decline reason from the existing "found 2+, ambiguous"
+// mismatch, which still declines exactly as before), this recognizer falls
+// back to anchoring BOTH facts on just the bare "Flashback <cost>" heading
+// span itself — the only real text this card's own printed line offers —
+// matching this card's own pre-existing hand-authored fact pair exactly
+// (both facts share the identical heading-only span on disk today).
 import type { CardDefinition } from '../card';
 import type { RecognizedFact, RecognizerInput, RecognizerResult } from './types';
 import { toLineOffset } from './types';
@@ -73,15 +89,29 @@ export function recognizeFlashbackAlternateCostStructural(input: FlashbackRecogn
     }
     anyEligible = true;
 
-    // Defensive corroboration — the printed cost heading itself, confirming
-    // this is genuinely the SAME Flashback ability the structured `cost`
-    // field claims, not a coincidental match elsewhere on this face.
-    // No trailing `\b` — a mana cost always ends in `}` (a non-word
-    // character), so a word-boundary assertion right after it never matches
-    // (neither side of that position is a word character at all); the
-    // literal `}` itself is already a distinct-enough anchor.
+    // The printed cost heading itself — confirms this is genuinely the SAME
+    // Flashback ability the structured `cost` field claims, not a
+    // coincidental match elsewhere on this face. No trailing `\b` — a mana
+    // cost always ends in `}` (a non-word character), so a word-boundary
+    // assertion right after it never matches (neither side of that position
+    // is a word character at all); the literal `}` itself is already a
+    // distinct-enough anchor.
+    //
+    // WIDENED (2026-09-16, fin/20-47 pass) — this fact's own annotation now
+    // starts at this heading (not just the later "cast this card..."
+    // sub-clause) so the printed "Flashback <cost>" text itself counts as
+    // covered. Whole-pool check: of all 14 real `name:'Flashback'` users
+    // (this file's own module comment), only From Father to Son's own
+    // heading ("Flashback {4}{W}{W}{W}", 4 mana symbols) is long enough to
+    // clear `text-coverage.mjs`'s 20-real-char gap threshold on its own —
+    // every other real cost here is short enough that this same, real,
+    // previously-uncovered heading text never actually got FLAGGED as a
+    // gap; widening still applies uniformly (a strictly wider, still-
+    // correct annotation for all 14), it just only changes any card's
+    // reported coverage ratio for this one.
     const headingPattern = new RegExp(`\\bFlashback ${escapeRegExp(alt.cost)}`);
-    if (!headingPattern.test(input.oracleText)) {
+    const headingMatch = headingPattern.exec(input.oracleText);
+    if (!headingMatch) {
       return {
         matched: false,
         kind: 'mismatch',
@@ -90,16 +120,19 @@ export function recognizeFlashbackAlternateCostStructural(input: FlashbackRecogn
     }
 
     const castMatches = [...input.oracleText.matchAll(new RegExp(CAST_CLAUSE_RE.source, CAST_CLAUSE_RE.flags + 'g'))];
-    if (castMatches.length !== 1) {
+    if (castMatches.length > 1) {
       return {
         matched: false,
         kind: 'mismatch',
-        reason: `expected clause /${CAST_CLAUSE_RE.source}/ matched ${castMatches.length} times (expected exactly 1) in oracle text "${input.oracleText}"`,
+        reason: `expected clause /${CAST_CLAUSE_RE.source}/ matched ${castMatches.length} times (expected 0 or 1) in oracle text "${input.oracleText}"`,
       };
     }
-    const castMatch = castMatches[0]!;
-    const castStart = castMatch.index!;
-    const castEnd = castStart + castMatch[0]!.length;
+    // 0 matches — the bare-heading fallback (see module doc comment): this
+    // face's own printed text has no reminder-text parenthetical at all, so
+    // anchor to just the "Flashback <cost>" heading itself instead of
+    // declining outright.
+    const castStart = headingMatch.index!;
+    const castEnd = castMatches.length === 1 ? castMatches[0]!.index! + castMatches[0]![0]!.length : headingMatch.index! + headingMatch[0]!.length;
     const castAnnotation = toLineOffset(input.oracleText, castStart, castEnd);
     if (!castAnnotation) {
       return { matched: false, reason: `matched span [${castStart},${castEnd}) did not resolve to a single real oracle-text line` };
@@ -113,16 +146,16 @@ export function recognizeFlashbackAlternateCostStructural(input: FlashbackRecogn
 
     if (alt.thenExile) {
       const exileMatches = [...input.oracleText.matchAll(new RegExp(EXILE_CLAUSE_RE.source, EXILE_CLAUSE_RE.flags + 'g'))];
-      if (exileMatches.length !== 1) {
+      if (exileMatches.length > 1) {
         return {
           matched: false,
           kind: 'mismatch',
-          reason: `expected clause /${EXILE_CLAUSE_RE.source}/ matched ${exileMatches.length} times (expected exactly 1) in oracle text "${input.oracleText}"`,
+          reason: `expected clause /${EXILE_CLAUSE_RE.source}/ matched ${exileMatches.length} times (expected 0 or 1) in oracle text "${input.oracleText}"`,
         };
       }
-      const exileMatch = exileMatches[0]!;
-      const exileStart = exileMatch.index!;
-      const exileEnd = exileStart + exileMatch[0]!.length;
+      // Same bare-heading fallback as the cast clause above when 0 matches.
+      const exileStart = exileMatches.length === 1 ? exileMatches[0]!.index! : headingMatch.index!;
+      const exileEnd = exileMatches.length === 1 ? exileStart + exileMatches[0]![0]!.length : headingMatch.index! + headingMatch[0]!.length;
       const exileAnnotation = toLineOffset(input.oracleText, exileStart, exileEnd);
       if (!exileAnnotation) {
         return { matched: false, reason: `matched span [${exileStart},${exileEnd}) did not resolve to a single real oracle-text line` };

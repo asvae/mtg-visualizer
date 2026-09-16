@@ -118,4 +118,26 @@ export class Stack {
     }
     return obj;
   }
+
+  /**
+   * Real 721.1a "exile all spells and abilities from the stack" (Time
+   * Stop's own real ruling; `EndTurnEffect.java`: `game.getAction()
+   * .exile(new CardCollection(game.getStackZone().getCards()), ...);
+   * game.getStack().clear();`) — drains EVERY remaining item at once (not
+   * one at a time via `resolveTop`'s own LIFO pop-and-resolve), for a
+   * caller (`engine.ts`'s own `endTurn`) to move each item's real
+   * underlying card to Exile instead of ever letting it resolve. Returns
+   * what was drained, in the same top-to-bottom order `items` already held
+   * them, so a caller logging this can report them in real stack order.
+   * The resolving object that TRIGGERED this (Ultima itself, e.g.) is
+   * never among these — `resolveTop` above already popped it before its
+   * own effects (this call included) ever ran; see `card.ts`'s own
+   * `EffectContext.selfToExile` for how THAT card's own post-resolution
+   * zone is separately overridden to Exile.
+   */
+  exileAll(): StackObject[] {
+    const drained = this.items;
+    this.items = [];
+    return drained;
+  }
 }

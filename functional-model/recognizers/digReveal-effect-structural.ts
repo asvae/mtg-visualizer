@@ -66,7 +66,7 @@
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 const RULE = 'digReveal-effect-structural' as const;
 
@@ -88,13 +88,16 @@ function typeWordFor(validType: DigEffect['validType']): string | undefined {
 }
 
 export function recognizeDigRevealEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const candidates = allEffects(input).filter(isDigEffect);
+  const candidates = allEffects(input).map((o) => o.effect).filter(isDigEffect);
   if (candidates.length === 0) {
     return { matched: false, reason: 'no kind:"dig" Effect on this face' };
   }
 
   const facts: RecognizedFact[] = [];
   let anyEligible = false;
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of candidates) {
     const typeWord = typeWordFor(effect.validType);
@@ -102,6 +105,7 @@ export function recognizeDigRevealEffectStructural(input: StructuralRecognizerIn
       continue; // structurally out of scope — see module doc comment; never a 'mismatch'
     }
     anyEligible = true;
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
 
     const sinkPattern = new RegExp(`\\breveal an ${typeWord} card\\b`, 'i');
     const sourcePattern = new RegExp(`\\breveal an ${typeWord} card from among them and put it into your hand\\b`, 'i');
@@ -134,7 +138,7 @@ export function recognizeDigRevealEffectStructural(input: StructuralRecognizerIn
     const typeWordCap = typeWord[0]!.toUpperCase() + typeWord.slice(1);
     facts.push({
       role: 'source',
-      fact: { to: 'Hand', from: 'Library', controller: 'you', types: { has: [typeWordCap] }, annotations: [sourceAnnotation] },
+      fact: { to: 'Hand', from: 'Library', controller: 'you', types: { has: [typeWordCap] }, annotations: [sourceAnnotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
     facts.push({

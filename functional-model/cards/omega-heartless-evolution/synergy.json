@@ -25,7 +25,20 @@
             "Artifact"
           ]
         }
-      }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 115,
+          "end": 162
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "lifegain",
@@ -41,11 +54,39 @@
           "Creature",
           "Artifact"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 115,
+          "end": 162
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
       }
     },
     {
       "zone": "Battlefield",
       "controller": "you"
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 14,
+          "end": 31
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

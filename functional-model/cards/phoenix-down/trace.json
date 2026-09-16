@@ -17,7 +17,7 @@
         "fn": "activate",
         "card": "Phoenix Down",
         "instanceId": 1,
-        "id": 1798,
+        "id": 4,
         "cost": "{1}{W}, {T}, Exile this artifact"
       },
       {
@@ -38,16 +38,26 @@
         "result": true
       },
       {
+        "fn": "read:getCMC",
+        "target": "Grizzly Bears",
+        "result": 0
+      },
+      {
+        "fn": "read:getCMC",
+        "target": "Grizzly Bears",
+        "result": 0
+      },
+      {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1796,
+        "id": 2,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 1796,
+        "id": 2,
         "controller": "you"
       }
     ]
@@ -82,18 +92,40 @@
         "fn": "activate",
         "card": "Phoenix Down",
         "instanceId": 1,
-        "id": 1802,
+        "id": 8,
         "cost": "{1}{W}, {T}, Exile this artifact"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 0
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 0
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "opp0",
-        "count": 1
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Phoenix Down",
+        "subtype": "Skeleton",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Phoenix Down",
+        "subtype": "Spirit",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Phoenix Down",
+        "subtype": "Zombie",
+        "result": false
       },
       {
         "fn": "read:hasSubtype",
@@ -116,7 +148,7 @@
       {
         "fn": "moveTo",
         "target": "Qutrub Forayer",
-        "id": 1801,
+        "id": 7,
         "zone": "Exile",
         "controller": "opp0"
       }

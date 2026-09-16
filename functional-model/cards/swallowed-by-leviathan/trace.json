@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Swallowed by Leviathan",
         "instanceId": 1,
-        "id": 2579,
+        "id": 2,
         "from": "hand",
         "cost": "{2}{U}"
       },
@@ -30,7 +30,7 @@
         "fn": "move",
         "card": "Swallowed by Leviathan",
         "instanceId": 1,
-        "id": 2579,
+        "id": 2,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

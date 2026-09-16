@@ -137,7 +137,162 @@ export type RecognizerId =
   | 'tapAllQuery-effect-structural'
   | 'equipmentWantsCreature-sink-structural'
   | 'preventDamageAll-effect-structural'
-  | 'moveSearchLibraryOrGraveyard-effect-structural';
+  | 'moveSearchLibraryOrGraveyard-effect-structural'
+  // 2026-09-15 follow-up (fin/16-25 AI-fact-elimination pass): 3 more
+  // CARD-DEFINITION-LEVEL siblings of `continuousPTGrantsEquipped-structural`
+  // plus a STRUCTURAL `kind:'grantKeywordAll'` recognizer — see each file's
+  // own module doc comment.
+  | 'continuousTypeGrantsEquipped-structural'
+  | 'continuousKeywordGrantsEquipped-structural'
+  | 'continuousKeywordGrantsSubtype-structural'
+  | 'grantKeywordAll-effect-structural'
+  | 'jobSelectCreateTokenAndEquip-effect-structural'
+  | 'costReductionTappedTarget-structural'
+  | 'moveConditionalDestinationByCastFrom-effect-structural'
+  // G'raha Tia's own remaining unprovenanced sink — a genuinely BROADER
+  // sibling of `dies-trigger-structural`'s self-only precondition (see that
+  // file's own module doc comment for why it correctly declines this case,
+  // and this recognizer's own doc comment for the split).
+  | 'diesOtherPermanentsOncePerTurn-trigger-structural'
+  // Magitek Infantry's own remaining unprovenanced move source+sink —
+  // `move.name:'self'`/`move.tapped`'s own real sibling recognizer.
+  | 'moveSearchLibraryNamedSelf-effect-structural'
+  // `CardDefinition.crewCost`'s own real recognizer (8 real Vehicle cards,
+  // 2 of which — The Regalia/adventurer-s-airship/balamb-garden — had NO
+  // crew fact of any kind before this pass).
+  | 'crewCost-structural'
+  // `kind:'animate', target:'self'`'s own real Creature-grant sibling —
+  // same 8-card Vehicle family `crewCost-structural` covers.
+  | 'animateSelfCreature-effect-structural'
+  // `CardDefinition.manaAbilities`'s own real "simple" recognizer (fin/26-50
+  // pass) — see that recognizer's own module doc comment for the 3
+  // confirmed English templates and the whole-pool scope gate.
+  | 'manaAbilitiesSimple-structural'
+  // `kind:'pumpAll', predicate:'creatures-you-control'`'s own real
+  // recognizer (fin/26-50 pass) — direct sibling of `grantKeywordAll-
+  // effect-structural`/`pumpAllAttacking-effect-structural`.
+  | 'pumpAllCreaturesYouControl-effect-structural'
+  // "Sacrifice a/an <Type>" cost-text recognizer (fin/26-50 pass) — see
+  // that recognizer's own module doc comment for the 4-way real English
+  // shape split and why only this one is in scope.
+  | 'sacrificeCostNamedType-structural'
+  // "Sacrifice <named self>"/"Sacrifice this <type>" self-sacrifice-as-cost
+  // recognizer (2026-09-16, recognizer-lane triage) — the real 4th shape
+  // `sacrificeCostNamedType-structural.ts`'s own module doc comment already
+  // named and deliberately declined; see this recognizer's own module doc
+  // comment for the real 6-card whole-pool check.
+  | 'sacrificeSelfCost-structural'
+  // "Exile this <type>" self-exile-as-cost recognizer (2026-09-16,
+  // recognizer-lane triage), same family/day as `sacrificeSelfCost-
+  // structural` above, real 3-card whole-pool check (ether/elixir/
+  // phoenix-down) — see that recognizer's own module doc comment.
+  | 'exileSelfCost-structural'
+  // `kind:'putCounterAll'`'s own declarative-Effect sibling of
+  // `putCounter-broadcast-structural` (that one covers the identical Fact
+  // shape but for a `kind:'custom'` closure) — fin/26-50 pass.
+  | 'putCounterAll-effect-structural'
+  // `kind:'surveil'`'s own real recognizer (fin/26-50 pass) — 12-card real
+  // pool sweep, see that recognizer's own module doc comment.
+  | 'surveil-effect-structural'
+  // `kind:'grantKeywordTarget'`'s own real recognizer (fin/26-50 pass) —
+  // direct sibling of `grantKeywordAll-effect-structural`/`pumpTarget-
+  // effect-structural`, see that recognizer's own module doc comment.
+  | 'grantKeywordTarget-effect-structural'
+  // `ptFormula.kind:'setToCreaturesControlled'`'s own real recognizer
+  // (fin/26-50 pass, Snow Villiers — the only real pool card).
+  | 'ptFormulaSetToCreaturesControlled-structural'
+  | 'dealDamageTarget-effect-structural'
+  | 'spellCostReductionGrants-structural'
+  | 'lifegainDoubleKeyword-structural'
+  // 2026-09-16 (card-results/fin-51-75 triage backlog): `kind:'sacrifice'`/
+  // `kind:'discard'` bare resolution-effect siblings of `destroy-effect-
+  // structural`/`drawCard-effect-structural` (the backlog's own biggest
+  // and second-biggest wins), plus 3 smaller items from the same backlog —
+  // see each recognizer's own module doc comment.
+  | 'sacrifice-effect-structural'
+  | 'discard-effect-structural'
+  | 'untapTarget-effect-structural'
+  | 'grantKeywordSelf-effect-structural'
+  | 'playFromLibraryTop-effect-structural'
+  // `kind:'tapAll'`'s own bare-Effect sibling of `tapAllQuery-effect-
+  // structural` (that one covers the identical real occurrence's own
+  // combinator-wrapped shape for a DIFFERENT card; this one reads the
+  // direct declarative Effect kind Jill/Shiva's own chapter III uses).
+  | 'tapAll-effect-structural'
+  // `Trigger.name`-keyed `onCast<Type>Spell` family (2026-09-16, fin/26-50
+  // re-triage) — a real sibling of `attacks-trigger-structural`/`dies-
+  // trigger-structural`/`landfall-trigger-structural`/`lifegain-trigger-
+  // structural`, see this recognizer's own module doc comment for the full
+  // 8-card real-pool sweep and why it's keyed on `Trigger.name` rather than a
+  // bare oracle-text scan.
+  | 'castTypeSpell-trigger-structural'
+  // `kind:'program'` `SelectUpTo`->`ApplyToBound(gainControl)` single-step
+  // shape (2026-09-16, fin/26-50 re-triage) — `stiltzkin-moogle-merchant`'s
+  // own real "Target opponent gains control of another target permanent you
+  // control" — a genuinely different `SelectUpTo` template from
+  // `selectUpTo-effect-structural`'s own tap+putCounter shape; see this
+  // recognizer's own module doc comment for why `zidane-tantalus-thief`/
+  // `stolen-uniform`/`unexpected-request` (the rest of `combinator.ts`'s own
+  // named `gainControl` motivating group) are deliberately NOT covered by
+  // this same recognizer.
+  | 'selectUpToGainControl-effect-structural'
+  // `program-ast-walker.ts`'s own general `kind:'program'` AST walk, 4 real
+  // consumers (2026-09-16, program-AST generalization pass; `pumpProgram-`/
+  // `dealDamageEachMagnitude-` added the same day, `'pump'`/`'dealDamage'`
+  // occurrence-support follow-up) — see that walker's own module doc
+  // comment for the shared machinery all four build on.
+  | 'destroyProgram-effect-structural'
+  | 'equipProgram-effect-structural'
+  | 'pumpProgram-effect-structural'
+  | 'dealDamageEachMagnitude-effect-structural'
+  // 2026-09-16 (engine-lane primitive build, Venat/Hydaelyn's own Blessing
+  // of Light) — `kind:'putCounter'`/`'grantKeyword'` program-AST occurrence
+  // support, plus the new bare `DrawCard` ProgramNode's own recognizer.
+  | 'putCounterProgram-effect-structural'
+  | 'grantKeywordProgram-effect-structural'
+  | 'drawCardProgram-effect-structural'
+  // 2026-09-16 (card-results/fin-76-100 re-triage backlog): `kind:
+  // 'loseLife'`'s own real sibling of `gainLife-effect-structural`, `kind:
+  // 'counter'`'s own real recognizer, and The Water Crystal's own real
+  // `kind:'mill'`/`millModifierGrants` pair (ENGINE_GAPS.md gap #19,
+  // closed) — see each recognizer's own module doc comment.
+  | 'loseLife-effect-structural'
+  | 'counter-effect-structural'
+  | 'mill-effect-structural'
+  | 'millModifierGrants-structural'
+  // Cecil, Dark Knight // Cecil, Redeemed Paladin's back face migration
+  // follow-up (engine-core, 2026-09-16) — the `'attacking-creatures'`
+  // predicate's own real `grantKeywordAll` sibling of `pumpAllAttacking-
+  // effect-structural`.
+  | 'grantKeywordAllAttacking-effect-structural'
+  // "At the beginning of combat on your turn," trigger-precondition text
+  // recognizer (2026-09-16, weapons-vendor's own remaining coverage gap) —
+  // same plain-TEXT family as `attacks-trigger-structural`/`dies-trigger-
+  // structural`, a real pool-wide recurring clause (6 real cards) with no
+  // prior recognizer at all — see that recognizer's own module doc comment
+  // for the full whole-pool sweep.
+  | 'beginCombat-trigger-structural'
+  // `'TwoHeadedCoin'` keyword's own real recognizer (2026-09-16,
+  // card-results-lane recognizer escalation) — direct sibling of
+  // `lifegainDoubleKeyword-structural`, see that recognizer's own module
+  // doc comment for the single real pool card (Edgar, King of Figaro).
+  | 'winCoinFlip-structural'
+  // "Whenever you scry or surveil," trigger-precondition text recognizer
+  // (2026-09-16, card-results-lane recognizer escalation) — same plain-TEXT
+  // family as `lifegain-trigger-structural`, sole real pool motivator
+  // Matoya, Archon Elder (fin/62) — see that recognizer's own module doc
+  // comment.
+  //
+  // NOTE: `flashback-alternateCost-structural`'s own bare-`Flashback
+  // {cost}` fallback branch and `putCounterTarget-effect-structural`'s own
+  // pronoun-carryover branch (both 2026-09-16, card-results-lane recognizer
+  // escalation) reuse their EXISTING rule ids above — new branches inside
+  // the same file/rule, not new recognizers, so neither needs a new id here.
+  | 'scryOrSurveilTrigger-structural'
+  // A named `onXEnters` trigger's own type-filter sink recognizer
+  // (2026-09-16, card-results-lane recognizer escalation) — 3 real pool
+  // cards (rook-turret, loporrit-scout, woodland-weavemaster).
+  | 'entersTriggerTypeFilter-sink-structural';
 
 /**
  * `FactProvenance` itself is now DEFINED on `Fact` (`synergy.ts`, wired in

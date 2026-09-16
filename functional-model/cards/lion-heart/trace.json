@@ -19,7 +19,7 @@
         "fn": "trigger",
         "card": "Lion Heart",
         "instanceId": 1,
-        "id": 1453,
+        "id": 4,
         "name": "onEnter"
       },
       {
@@ -35,9 +35,9 @@
       {
         "fn": "dealDamage",
         "source": "Lion Heart",
-        "sourceId": 1453,
+        "sourceId": 4,
         "target": "Grizzly Bears",
-        "id": 1452,
+        "id": 3,
         "amount": 2
       }
     ]
@@ -57,7 +57,7 @@
         "fn": "trigger",
         "card": "Lion Heart",
         "instanceId": 1,
-        "id": 1455,
+        "id": 6,
         "name": "onEnter"
       },
       {
@@ -68,7 +68,7 @@
       {
         "fn": "dealDamage",
         "source": "Lion Heart",
-        "sourceId": 1455,
+        "sourceId": 6,
         "target": "you",
         "amount": 2
       }
@@ -91,7 +91,7 @@
         "fn": "activate",
         "card": "Lion Heart",
         "instanceId": 1,
-        "id": 1458,
+        "id": 9,
         "cost": "{2}"
       },
       {
@@ -102,9 +102,9 @@
       {
         "fn": "equip",
         "equipment": "Lion Heart",
-        "equipmentId": 1458,
+        "equipmentId": 9,
         "target": "Grizzly Bears",
-        "id": 1457
+        "id": 8
       }
     ]
   }

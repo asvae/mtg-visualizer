@@ -8,19 +8,20 @@ export const zellDincht: CardDefinition = {
   pt: [0, 3],
 
   // Real `S:Mode$ Continuous | Affected$ You | AdjustLandPlays$ 1` (extra
-  // land drop) and `S:Mode$ Continuous | Affected$ Card.Self | AddPower$ X
-  // | SVar:X:Count$Valid Land.YouCtrl` (power = lands you control) — the
-  // second is a real layer-7a CDA, but neither of card.ts's own two
-  // `ptFormula` shapes (`addPerEquipmentControlled`, `setToCreaturesControlled`)
-  // covers "power scales with lands controlled" — card.ts's own doc
-  // comment on `ptFormula` explicitly says a formula over a different
-  // count "stays `staticAbilities` text until a real card needs it," so
-  // both statics stay freeform text rather than a fabricated `ptFormula`
-  // variant.
+  // land drop) — a real per-player play-permission static; no "additional
+  // land drop" tracking exists anywhere in this engine's turn structure
+  // (a real, separate, still-open gap), so this half stays text.
+  // `S:Mode$ Continuous | Affected$ Card.Self | AddPower$ X |
+  // SVar:X:Count$Valid Land.YouCtrl` (power = lands you control) is now
+  // real, executable `ptFormula.kind:'addPerLandControlled'` (2026-09-16,
+  // static-ability audit follow-up — same ADD-scaling shape
+  // `addPerEquipmentControlled` already establishes, just counting lands
+  // instead of Equipment).
   staticAbilities: [
     'You may play an additional land on each of your turns.',
     'Zell Dincht gets +1/+0 for each land you control.',
   ],
+  ptFormula: { kind: 'addPerLandControlled', power: 1, toughness: 0 },
 
   triggers: [
     {

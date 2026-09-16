@@ -42,6 +42,12 @@
         "to": "Hand",
         "qty": 1,
         "validType": "land"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Zell Dincht",
+        "power": 1,
+        "toughness": 3
       }
     ]
   },
@@ -78,6 +84,12 @@
         "to": "Hand",
         "qty": 1,
         "validType": "land"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Zell Dincht",
+        "power": 0,
+        "toughness": 3
       }
     ]
   }

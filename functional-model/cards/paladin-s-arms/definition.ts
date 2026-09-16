@@ -33,9 +33,19 @@ export const paladinsArms: CardDefinition = {
 
   // Job select — same real ETB mechanic (create a Hero token, attach this
   // to it) as dragoon-s-lance's/machinist-s-arsenal's own onEnter trigger.
+  //
+  // `on: 'enter'` (2026-09-16, definition-lane sweep — same real gap
+  // sage-s-nouliths' own 2026-09-16 fix found and dragoon-s-lance/
+  // machinist-s-arsenal share: without it, `engine.ts`'s real auto-fire
+  // never fires this trigger, only the old declarative `harness.ts`
+  // name-fired `sequence` masked that. Currently unobservable via trace
+  // (this card's own `scenarios.ts` is still that older
+  // `sequence: ['onEnter', ...]` shape, no engine-piloted trace) — same
+  // documented caveat, not fixed by forcing a scenario rewrite here.
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

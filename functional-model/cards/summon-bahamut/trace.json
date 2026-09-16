@@ -197,7 +197,7 @@
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 2370,
+        "id": 39,
         "controller": "opp0"
       },
       {
@@ -425,7 +425,7 @@
       {
         "fn": "dealDamage",
         "source": "Summon: Bahamut",
-        "sourceId": 2371,
+        "sourceId": 40,
         "target": "opp0",
         "amount": 3
       },

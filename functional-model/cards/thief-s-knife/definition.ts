@@ -33,6 +33,7 @@ export const thiefsKnife: CardDefinition = {
     // lance/machinist-s-arsenal/paladin-s-arms' own onEnter trigger.
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

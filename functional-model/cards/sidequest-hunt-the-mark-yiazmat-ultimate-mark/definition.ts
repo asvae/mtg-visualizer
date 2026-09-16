@@ -9,6 +9,7 @@ export const sidequestHuntTheMark: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       // "destroy up to one target creature" — TargetMin$0/TargetMax$1,
       // documentary `optional` (see card.ts's own `destroy` doc comment —
       // this is the exact Summon: Bahamut-shaped case it cites).
@@ -52,7 +53,7 @@ export const sidequestHuntTheMark: CardDefinition = {
       // happening — same convention ahriman's own sac-cost activated
       // ability uses.
       { kind: 'sacrifice', owner: 'you', validType: 'creature-or-artifact', notSelf: true } satisfies Effect,
-      { kind: 'grantKeywordSelf', keyword: 'Indestructible' } satisfies Effect,
+      { kind: 'grantKeywordSelf', keyword: 'Indestructible', untilEndOfTurn: true } satisfies Effect,
       // "Tap it" — self, via the same pool-based `tapTarget` convention
       // shambling-cie-th's own onEnter uses: by the time this runs, the
       // just-sacrificed fodder creature is already off the battlefield

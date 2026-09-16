@@ -22,7 +22,7 @@
         "fn": "trigger",
         "card": "Zodiark, Umbral God",
         "instanceId": 1,
-        "id": 3260,
+        "id": 11,
         "name": "onEnter"
       },
       {
@@ -111,7 +111,7 @@
         "fn": "trigger",
         "card": "Zodiark, Umbral God",
         "instanceId": 1,
-        "id": 3265,
+        "id": 16,
         "name": "onEnter"
       },
       {
@@ -162,13 +162,13 @@
         "fn": "trigger",
         "card": "Zodiark, Umbral God",
         "instanceId": 1,
-        "id": 3267,
+        "id": 18,
         "name": "onCreatureSacrificed"
       },
       {
         "fn": "putCounter",
         "target": "Zodiark, Umbral God",
-        "id": 3267,
+        "id": 18,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -190,7 +190,7 @@
         "fn": "cast",
         "card": "Zodiark, Umbral God",
         "instanceId": 1,
-        "id": 3269,
+        "id": 20,
         "from": "hand",
         "cost": "{B}{B}{B}{B}{B}"
       },
@@ -198,7 +198,7 @@
         "fn": "enters",
         "card": "Zodiark, Umbral God",
         "instanceId": 1,
-        "id": 3269,
+        "id": 20,
         "zone": "Battlefield"
       },
       {

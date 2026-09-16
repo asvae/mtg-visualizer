@@ -19,25 +19,22 @@
       "face": "back"
     },
     {
-      "event": "dies",
-      "from": "Battlefield",
-      "to": "Graveyard",
+      "event": "surveil",
       "controller": "you",
-      "subject": "self",
-      "target": "self",
       "annotations": [
         {
           "target": "oracle",
-          "line": 1,
-          "start": 0,
-          "end": 15
+          "line": 0,
+          "start": 39,
+          "end": 48
         }
       ],
-      "face": "back",
+      "face": "front",
       "provenance": {
         "origin": "parser",
-        "rule": "dies-trigger-structural"
-      }
+        "rule": "surveil-effect-structural"
+      },
+      "triggeredBy": "onNoncreatureSpellCast"
     }
   ],
   "sink": [

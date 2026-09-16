@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": " 2026-09-16 (recognizer-lane pumpTarget-effect-structural propagation pass): found this card's own pumpTarget Effect was missing `untilEndOfTurn: true` entirely (not just on the emitted Fact) -- real oracle text confirms the pump clause really does end \"until end of turn\" and was wrongly persisting the pump permanently within a scenario (state.pump's own opts.untilEndOfTurn drives real, mechanical 514.2 Cleanup expiry, not just documentary text). Fixed definition.ts to add the field; hand-patched the corresponding synergy.json source Fact too (apply-recognizers.mjs's own additive-only retag path only updates annotations/provenance on a coreKey match, never other fields, so a fresh run alone didn't add it); regenerated trace.json (npx tsx functional-model/scripts/run-scenarios.mjs --slug=<this>) -- new trace confirms the pump fn now logs untilEndOfTurn:true.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

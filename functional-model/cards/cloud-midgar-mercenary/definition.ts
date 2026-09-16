@@ -55,7 +55,24 @@ export const cloudMidgarMercenary: CardDefinition = {
       // compound OR-restriction and a missing "Basic" supertype concept in
       // this engine, neither one this card's own gap).
       effects: [
-        { kind: 'move', owner: 'you', from: 'Library', to: 'Hand', qty: 1, validType: 'artifact', subtype: 'Equipment' } satisfies Effect,
+        {
+          kind: 'move',
+          owner: 'you',
+          from: 'Library',
+          to: 'Hand',
+          qty: 1,
+          validType: 'artifact',
+          subtype: 'Equipment',
+          // `shuffleAfter: true` (2026-09-16 fix, `verify-text-coverage.mjs`
+          // pass) — the real printed text ends "...then shuffle," and this
+          // was a real, previously-unmodeled CR 701.19 consequence, same
+          // silent-omission bug class delivery-moogle's own identical gap
+          // was fixed for one pass earlier (this card's own effect predates
+          // that fix and was never revisited). Same shared `move`
+          // machinery every basic-Landcycling card in this pool already
+          // uses via `cycling.ts`'s `basicLandcycling` factory.
+          shuffleAfter: true,
+        } satisfies Effect,
       ],
     },
   ],

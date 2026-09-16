@@ -20,7 +20,7 @@
         "fn": "trigger",
         "card": "Torgal, A Fine Hound",
         "instanceId": 1,
-        "id": 2871,
+        "id": 3,
         "name": "onFirstHumanCreatureCast"
       },
       {
@@ -72,7 +72,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2870,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -94,7 +94,7 @@
         "fn": "cast",
         "card": "Torgal, A Fine Hound",
         "instanceId": 1,
-        "id": 2873,
+        "id": 5,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -102,7 +102,7 @@
         "fn": "enters",
         "card": "Torgal, A Fine Hound",
         "instanceId": 1,
-        "id": 2873,
+        "id": 5,
         "zone": "Battlefield"
       },
       {

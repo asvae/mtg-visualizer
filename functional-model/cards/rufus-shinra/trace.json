@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Rufus Shinra",
         "instanceId": 1,
-        "id": 2006,
+        "id": 2,
         "name": "onAttacks"
       },
       {
@@ -48,7 +48,7 @@
         "fn": "cast",
         "card": "Rufus Shinra",
         "instanceId": 1,
-        "id": 2009,
+        "id": 5,
         "from": "hand",
         "cost": "{1}{W}{B}"
       },
@@ -56,7 +56,7 @@
         "fn": "enters",
         "card": "Rufus Shinra",
         "instanceId": 1,
-        "id": 2009,
+        "id": 5,
         "zone": "Battlefield"
       },
       {

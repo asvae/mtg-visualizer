@@ -20,6 +20,33 @@
       }
     },
     {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 47,
+          "end": 129
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      },
+      "triggeredBy": "onLandfall"
+    },
+    {
       "event": "grantKeyword",
       "keyword": "Trample",
       "controller": "you",
@@ -28,8 +55,24 @@
           "has": [
             "Creature"
           ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 104,
+          "end": 111
         }
-      }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordTarget-effect-structural"
+      },
+      "triggeredBy": "onLandfall"
     }
   ],
   "sink": [
@@ -56,6 +99,41 @@
         "has": [
           "Creature"
         ]
+      },
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 47,
+          "end": 82
+        },
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 47,
+          "end": 129
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 30
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

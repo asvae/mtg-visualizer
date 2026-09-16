@@ -1,44 +1,59 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {3} activation re-attaches it to the other creature already on the battlefield instead",
+      "setup": "you: 5 Plains(s)",
+      "action": "engine playthrough: cast -> onEnter (Job select) -> Equip {3} re-attach -> real attack declaration -> onEquippedAttacks auto-fires (gainLife)",
+      "result": "White Mage's Staff is cast and enters, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, a real Equip {3} activation re-attaches it to Grizzly Bears instead, that creature attacks for real, and the granted \"you gain 1 life\" ability auto-fires for real off the declared attack itself.",
       "raw": {
-        "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {3} activation re-attaches it to the other creature already on the battlefield instead",
-        "forceCast": true,
+        "result": "White Mage's Staff is cast and enters, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, a real Equip {3} activation re-attaches it to Grizzly Bears instead, that creature attacks for real, and the granted \"you gain 1 life\" ability auto-fires for real off the declared attack itself.",
         "you": {
-          "creaturesCount": 1
-        },
-        "sequence": [
-          "onEnter",
-          {
-            "activate": true
-          }
-        ]
+          "basicLands": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 8
+        }
       }
     },
     "log": [
       {
+        "fn": "enters",
+        "card": "Grizzly Bears",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
         "fn": "cast",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3157,
         "from": "hand",
         "cost": "{1}{W}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Mage's Staff"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Mage's Staff"
       },
       {
         "fn": "enters",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3157,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3157,
         "name": "onEnter"
       },
       {
@@ -53,16 +68,30 @@
       {
         "fn": "equip",
         "equipment": "White Mage's Staff",
-        "equipmentId": 3157,
+        "equipmentId": 15,
         "target": "Hero",
-        "id": 3158
+        "id": 17
       },
       {
         "fn": "activate",
         "card": "White Mage's Staff",
         "instanceId": 1,
-        "id": 3157,
         "cost": "{3}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Mage's Staff"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Mage's Staff"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Plains",
+        "for": "White Mage's Staff"
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -72,9 +101,70 @@
       {
         "fn": "equip",
         "equipment": "White Mage's Staff",
-        "equipmentId": 3157,
+        "equipmentId": 15,
         "target": "Grizzly Bears",
-        "id": 3156
+        "id": 16
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Grizzly Bears",
+        "id": 16
+      },
+      {
+        "fn": "attack",
+        "card": "Grizzly Bears",
+        "id": 16
+      },
+      {
+        "fn": "trigger",
+        "card": "White Mage's Staff",
+        "instanceId": 1,
+        "name": "onEquippedAttacksGainLife"
+      },
+      {
+        "fn": "gainLife",
+        "player": "you",
+        "amount": 1
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Grizzly Bears already on the battlefield",
+        "from": 0
+      },
+      {
+        "label": "Cast White Mage's Staff ({1}{W})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Activate Equip {3}: re-attach to Grizzly Bears",
+        "from": 8
+      },
+      {
+        "label": "Resolve",
+        "from": 12
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 14
+      },
+      {
+        "label": "Declare Grizzly Bears as attacker",
+        "from": 15
       }
     ]
   }

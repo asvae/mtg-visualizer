@@ -92,12 +92,12 @@
       {
         "fn": "tap",
         "target": "Il Mheg Pixie",
-        "id": 1238
+        "id": 16
       },
       {
         "fn": "attack",
         "card": "Il Mheg Pixie",
-        "id": 1238
+        "id": 16
       },
       {
         "fn": "trigger",

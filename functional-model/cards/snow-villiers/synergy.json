@@ -10,7 +10,11 @@
           "start": 16,
           "end": 69
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormulaSetToCreaturesControlled-structural"
+      }
     }
   ],
   "sink": [
@@ -29,7 +33,11 @@
           "start": 34,
           "end": 69
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormulaSetToCreaturesControlled-structural"
+      }
     }
   ]
 }

@@ -204,6 +204,227 @@ it's worth building at all) should cite a real card, not a hypothetical one.
   to its own hand-built `realActions` alongside `putCounter`).
   `scripts/verify-synergy.mjs` full pool: 320 checked, 0 hard failures.
 
+- **Static-ability audit (2026-09-16)** — a pool-wide inventory of every
+  card's inert, freeform `staticAbilities` string (76 cards had one),
+  prioritized/closed the mechanical ones, cross-checked against this file.
+  Single biggest finding: the "stale comment claiming a capability doesn't
+  exist when it actually does" bug class (recurring across this whole
+  multi-session project) hit an entire family at once — 13 real Equipment
+  cards (`buster-sword`/`coral-sword`/`dark-knight-s-greatsword`/
+  `lion-heart`/`magitek-scythe`/`monk-s-fist`/`ninja-s-blades`/
+  `red-mage-s-rapier`/`ultima-weapon`/`warrior-s-sword`/`bard-s-bow`/
+  `genji-glove`/`samurai-s-katana`) had NO `continuousPTGrants`/
+  `continuousTypeGrants`/`continuousKeywordGrants` at all despite the exact
+  same field family already being real and proven on 7-8 sibling cards
+  (dragoon-s-lance/paladin-s-arms/thief-s-knife/white-mage-s-staff/etc) —
+  wired all 13 for real; 12 of 13 auto-tagged into `synergy.json` for free
+  off the ALREADY-EXISTING recognizers, only the 3 keyword-bearing ones
+  needed `continuousKeywordGrantsEquipped-structural.ts` widened (new
+  keyword vocab — Reach/Trample/Haste/DoubleStrike — plus multi-keyword
+  list support, mirroring `grantKeywordAll-effect-structural.ts`'s own
+  Oxford-comma convention). Also found and fixed the identical stale-comment
+  bug on `sidequest-play-blitzball...`'s own back face and
+  `summoner-s-grimoire`'s type grant.
+
+  A SECOND real, genuinely-different closable bucket: 3 cards
+  (`freya-crescent`/`kain-traitorous-dragoon`'s own "Jump — During your
+  turn, has flying," `tonberry`'s own "Chef's Knife — During your turn, has
+  first strike and deathtouch") needed a THIRD real `continuousKeywordGrants`
+  shape — self-only, conditional, no broadcast to any other creature at
+  all — closed via `continuousKeywordGrantsSubtype-structural.ts` (widened
+  to a third subject-noun branch: a Legendary permanent's own short name, or
+  "this creature" for a non-Legendary one). This exposed a REAL ENGINE BUG,
+  not just an untagged fact: `state.ts`'s own `qualifiesForContinuousGrant`
+  used to require `grant.subtype !== undefined` unconditionally for its
+  "other permanents" branch — meaning `the-fire-crystal`'s own real
+  `{keywords:['Haste'], includeSelf:false}` (no `subtype` at all,
+  "Creatures you control have haste") could **never actually apply to any
+  creature at the engine level**, not just at the synergy-fact level (this
+  had been silently broken since that card's own migration in a prior
+  pass). Fixed by branching on `includeSelf` when `subtype` is undefined:
+  `true` → self-only (no broadcast), `false` → broadcast to every other
+  creature the controller controls (any subtype). Also fixed a related,
+  previously-unexercised self-collision risk in the SAME function's
+  subtype-defined branch (a granting permanent whose own subtype happens to
+  match its own broadcast filter would incorrectly include itself despite
+  `includeSelf:false` — added an explicit `card.id !== source.id` exclusion,
+  which mattered for the anthem closure below).
+
+  A THIRD bucket: real Affinity cost-reduction (`bartz-and-boko`/
+  `cantankerous-keepers`/`valkyrie-aerial-unit`) — the `costReduction.
+  perControlled` mechanism gap #7 already closed for Travel the Overworld
+  turned out to already cover these too, just unwired. Valkyrie Aerial
+  Unit's own "Affinity for artifacts" additionally exposed a real, narrow
+  gap in that mechanism itself: `perControlled.subtype` only ever checked
+  `RealCard.subtypes`, never `RealCard.types` — correct for a creature
+  SUBTYPE (Bird/Elf) but wrong for a card TYPE (Artifact), since real
+  Forge's own `Affinity` keyword (`Affinity.java`) resolves both through the
+  same generic valid-checking mechanism. `engine.ts`'s `effectiveCastCost`
+  now checks both. `diamond-weapon`'s own "costs {1} less for each
+  permanent card in your graveyard" stays correctly open — a genuinely
+  different shape (graveyard-counted, multi-type category, not
+  battlefield-counted single subtype/type).
+
+  A FOURTH bucket: 4 new, narrowly-scoped CDA variants, each closing exactly
+  one real card, all following the SAME established "narrow variant per
+  real distinct shape" convention `scalePerType`/`thresholdBonus` already
+  set (never one card each forced into a shared, over-general mechanism):
+  `continuousPTGrants.scalePerSelfCounter` (Excalibur II's own "+1/+1 for
+  each charge counter on Excalibur II" — an ADD scaled by a counter on the
+  GRANTING permanent itself, not a type count), `ptFormula.
+  addPerGraveyardCount` (Xande, Dark Mage's own "+1/+1 for each
+  noncreature, nonland card in your graveyard"), `ptFormula.
+  setToGraveyardPermanentCount` (Neo Exdeath, Dimension's End's own "power
+  is equal to the number of permanent cards in your graveyard" — a SET, not
+  ADD, mirroring `setToCreaturesControlled`'s own POWER-only scoping), and
+  `ptFormula.addPerLandControlled` (Zell Dincht's own "+1/+0 for each land
+  you control"). `ptFormula-scalingPump-structural.ts`/
+  `ptFormulaSetToCreaturesControlled-structural.ts` both widened to match.
+
+  A FIFTH bucket: `continuousPTGrants` with a `subtype` (not
+  `equippedBySelf`) broadcast — `elvish-archdruid`/`thranduil-sindarin-liege`
+  ("Other Elf(ves) you control get +1/+1") and `serah-farron-crystallized-
+  serah`'s own back face ("Legendary creatures you control get +2/+2," no
+  "Other" prefix — Crystallized Serah isn't itself a Creature). New sibling
+  recognizer `continuousPTGrantsSubtype-structural.ts` (mirrors
+  `continuousKeywordGrantsSubtype-structural.ts`), one combined pattern for
+  all 3 real English phrasings. Elvish Archdruid/Thranduil are both
+  cross-set reference cards with NO real oracle text checked in anywhere
+  (`data/*/*_scryfall.json`) — same permanent testing gap
+  `addMana-effect-structural.test.ts`'s own module doc comment already
+  flags for Elvish Archdruid's mana ability — so their own grants are real
+  and mechanically live but can never be auto-tagged into `synergy.json`;
+  only Serah Farron is exercised via the real pipeline. `cid-timeless-
+  artificer`'s own "Artifact creatures and Heroes you control get +1/+1..."
+  stays correctly open (an OR of two subtype groups plus a two-part count —
+  battlefield Artificers AND graveyard Artificer cards — genuinely beyond
+  this single-subtype mechanism).
+
+  **Genuinely unclosable, loud-flagged, left as real `staticAbilities`
+  text** (checked directly, not just inherited from a stale comment):
+  - No generic replacement-effect framework exists anywhere in this engine
+    — `quina-qu-gourmet` (token-creation replacement), `ancient-adamantoise`
+    (damage-redirection replacement), `emet-selch-unsundered-hades-
+    sorcerer-of-eld`'s back face (graveyard->exile replacement),
+    `the-darkness-crystal`/`the-earth-crystal`'s own remaining replacement
+    statics (their `costReduction` halves were already closed in a prior
+    pass), `kuja-genome-sorcerer...`'s back face (damage-doubling
+    replacement). A real, recurring, cross-cutting gap — worth real infra
+    investment if a THIRD+ new card needing it shows up, not a per-card fix.
+  - **Partially closed 2026-09-16** (narrower than originally scoped — see
+    `card.ts`'s own `Trigger.on: 'equippedAttacks'` doc comment for the full
+    real-Forge writeup): the "equipped creature attacks" FAMILY of this gap
+    is now real, executable machinery — `engine.ts`'s widened
+    `fireOnAttackTriggers` auto-fires an Equipment's own trigger the moment
+    the creature it's attached to is declared as an attacker, with `ctx.self`
+    staying the Equipment (an effect that genuinely needs "the equipped
+    creature itself," not just "you," resolves it live via
+    `ctx.self.getAttachedTo()`, same as Genji Glove's own pre-existing untap
+    effect already did). Closed for real: `white-mage-s-staff` (fin/42,
+    "Whenever this creature attacks, you gain 1 life" — the flagship target
+    of this pass), `genji-glove`/`ultima-weapon`/`sage-s-nouliths` (3 more
+    real pool cards found via a whole-pool check, same real shape — the
+    latter's own migration to a real engine-piloted trace is DONE and
+    verified; genji-glove/ultima-weapon's own `on` value is set for real but
+    their `scenarios.ts` files are still the older `harness.ts`-style
+    manual-trigger-name shape, not yet migrated to a real engine-piloted
+    trace that would exercise the new auto-dispatch — deferred, not
+    forgotten, these two were a bonus find, not this pass's own named
+    target). `summoner-s-grimoire` (fin/205) is NOT closed even though its
+    own real Forge script uses the identical `Card.EquippedBy`-style
+    trigger shape — its own granted EFFECT ("you may put a creature card
+    from your hand onto the battlefield. If that card is an enchantment
+    card, it enters tapped and attacking") needs a wholly separate, unbuilt
+    "put a chosen card from hand onto the battlefield, entering
+    tapped+attacking" `Effect`/`Actions` primitive regardless of the trigger
+    plumbing — converting just the trigger condition with no real
+    consequence to attach would be a 100%-no-op migration for zero real
+    closure benefit, so `definition.ts` was left untouched for this card.
+
+    `astrologian-s-planisphere` (fin/46) and `black-mage-s-rod` (fin/90)
+    stay open too, but the diagnosis has changed: their own blocker is NOT
+    "no mechanism grants a trigger to another permanent" (that's now solved,
+    above) — it's that their real Forge trigger occasions (`Mode$
+    SpellCast`/`Mode$ Drawn`, i.e. "whenever you cast a noncreature
+    spell"/"whenever you draw your Nth card each turn") have NO `Trigger.on`
+    auto-fire dispatch anywhere in this engine at all, for ANY card, granted
+    or native — a genuinely different, much larger, still wholly-unbuilt
+    trigger family. Checked pool-wide before declining further: 17+ real
+    FIN cards share this exact same native "whenever you cast a noncreature
+    spell" trigger (`sahagin`, `tellah-great-sage`, `queen-brahne`'s own
+    Prowess, `the-prima-vista`, `prompto-argentum`, `shambling-cie-th`,
+    `red-mage-s-rapier` — another Equipment with this SAME granted shape —
+    among others), several needing real "how much mana was spent casting
+    that spell" magnitude tracking this engine doesn't have either (already
+    flagged elsewhere in this doc; `sahagin`'s own `definition.ts` comment
+    names it directly). Building a real `'castNoncreatureSpell'` (+
+    mana-spent tracking) and `'drawNthCardThisTurn'` auto-fire dispatch pair
+    is a real, worthwhile, but genuinely much bigger cross-cutting
+    investment than this narrow equip-trigger pass — left open, not
+    attempted here, same "worth real infra investment once enough real
+    cards need it" bar this doc's own recurring-gap entries already use.
+  - No per-permanent "chosen value" state to remember an ETB choice across
+    later reads — `cavern-of-souls`/`eclipsed-realms`'s own "choose a
+    creature type" (referenced by a LATER mana-ability restriction),
+    `selfless-safewright`'s own "choose a creature type" (referenced
+    immediately, but there's still no way to pick an otherwise-arbitrary
+    word to build a target pool from).
+  - No mana-ability GRANT mechanism (broadcasting a mana ability onto OTHER
+    permanents, the `manaAbilities` analogue of `continuousKeywordGrants`)
+    — `a-realm-reborn`'s own "Other permanents you control have '{T}: Add
+    one mana of any color.'"
+  - No "cast an arbitrary OTHER card from graveyard/exile" action distinct
+    from a card's own `alternateCosts` — `noctis-prince-of-lucis`'s own
+    graveyard-cast permission for OTHER artifact cards.
+  - No "equipped creatures you control" (any creature with ANY Equipment
+    attached, not one specific Equipment) broadcast filter —
+    `firion-wild-rose-warrior`'s own "Equipped creatures you control have
+    haste," `balthier-and-fran`'s own Vehicle-you-control anthem (a
+    different filter still — Vehicles aren't Creatures until crewed, so
+    even the subtype-broadcast mechanism doesn't reach them).
+  - No turn-NUMBER counter exposed to any Effect/Computed function (only a
+    same-turn boolean) — `starting-town`'s own turn-1-3-conditional
+    enters-tapped.
+  - No coin-flip/random-outcome mechanism — `the-gold-saucer`'s own "Flip a
+    coin. If you win the flip, create a Treasure token."
+  - Cost-reduction/conditional-context gaps already named in gap #7 below,
+    unchanged by this pass — `serah-farron`'s own "first legendary creature
+    spell each turn costs {2} less," `cloud-planet-s-champion`'s own
+    equip-ability cost reduction targeting a specific permanent.
+  - `cloud-planet-s-champion`'s own "during your turn, as long as equipped,
+    has double strike and indestructible" — a real CDA gated on BOTH
+    whose-turn-it-is AND a live attachment-state check simultaneously; no
+    grant shape combines both conditions today (only one real card needs
+    it, correctly left rather than building narrow, one-off machinery).
+  - `the-masamune`'s own "must be blocked if able" (an attacker-declaration-
+    time forced-block rule, no such concept exists) — its own Panharmonicon-
+    style trigger-doubling grant IS already real and closed separately.
+
+  Also fixed this same pass: an operational near-miss, not a content bug —
+  an accidental FULL-POOL (no `--slug`) `run-scenarios.mjs` invocation
+  regenerated all 292 `trace.json` files at once (harmless per-file, but a
+  shared `nextObjectId` counter across the whole run renumbers every
+  object ID, producing a huge, noisy diff unrelated to any real change);
+  reverting that via a blanket `git checkout` on every touched `trace.json`
+  then wiped ~63 OTHER cards' own legitimately-updated `trace.json` files
+  from an EARLIER, still-uncommitted session's work back to a stale
+  pre-migration baseline (2 of those, `gigantoad`/`magitek-infantry`,
+  briefly surfaced as real `verify-synergy.mjs` hard failures as a result).
+  Recovered by regenerating each of the 64 affected slugs individually via
+  `--slug=<slug>` (preserving the existing low-ID-per-card convention,
+  matching how the checked-in baseline was originally generated) —
+  confirmed back to 0 hard failures afterward.
+
+  `npx vitest run functional-model`: 760/760 (+9 vs. this pass's own start)
+  green, 5 skipped (unrelated, pre-existing). `npx tsc --noEmit` — zero NEW
+  errors (same pre-existing TS5097/TS7016/doppelgang/elrond-moon-reader/
+  Jill-Actions/addMana-test/dealDamage-test baseline, none touched this
+  pass). `scripts/verify-synergy.mjs` full pool: 320 checked, 0 hard
+  failures. `scripts/verify-annotation-coverage.mjs`: OK. Full-repo
+  `npx vitest run`: 832/837 (same 5 pre-existing unrelated
+  `tagging/sets/{lea,leb,2ed,arn}`/`card-enrichment-status.json` failures,
+  untouched by this pass).
+
 ## Accepted simplifications — NOT gaps to close
 
 These came up in conversation explicitly ("we don't need AI yet, and we
@@ -825,6 +1046,28 @@ so a future pass doesn't mistake them for missing work:
    an opponent's permanent) and "Cost reduction — board-state-COUNTED, on
    an ACTIVATED ABILITY's own cost" (2 cases: discount with 5 matching
    permanents controlled, correctly unaffordable with 0).
+
+   **Three more real cards wired onto the SAME `perControlled` mechanism,
+   CLOSED (2026-09-16, static-ability audit)**: `bartz-and-boko` ("Affinity
+   for Birds," `{amountPerMatch:1, subtype:'Bird'}`), `cantankerous-keepers`
+   ("Affinity for Elves," `subtype:'Elf'`) — both were simply never wired
+   onto the already-real mechanism, same stale-comment bug class this
+   pass's own header describes. `valkyrie-aerial-unit`'s own "Affinity for
+   artifacts" (`subtype:'Artifact'`) exposed a real, narrow gap in the
+   mechanism ITSELF: `effectiveCastCost`'s own `perControlled` check only
+   ever counted `caster.battlefield` permanents by `subtypes.includes(...)`
+   — correct for a creature SUBTYPE (Bird/Elf) but wrong for a card TYPE
+   (Artifact), since real Forge's own `Affinity` keyword
+   (`forge-game/.../keyword/Affinity.java`) resolves BOTH through the same
+   generic valid-checking mechanism (`Affinity:Bird` and `Affinity:Artifact`
+   are structurally identical to Forge, just parameterized by a subtype vs.
+   a type string). Fixed: `effectiveCastCost` now checks
+   `c.subtypes.includes(subtype) || c.types.includes(subtype)`.
+   `diamond-weapon`'s own "costs {1} less for each permanent card in your
+   graveyard" stays correctly open — genuinely different (GRAVEYARD-
+   counted, not battlefield; a broad multi-type "permanent card" category,
+   not one subtype/type) — `effectiveCastCost` only ever counts
+   `caster.battlefield`.
 8. ~~**Damage-prevention shields — a narrow `dealDamage` hook, NOT full
    614.**~~ **CLOSED (2026-09-12)**. Checked the real pool: only 2 of 312
    FIN cards need a replacement effect at all — Crystal Fragments/Summon:
@@ -1661,14 +1904,72 @@ so a future pass doesn't mistake them for missing work:
     Ward already was), Crystal Fragments (`+1/+1`), White Mage's Staff
     (`+1/+1`/Cleric), Sage's Nouliths (`+1/+0`/Cleric), Astrologian's
     Planisphere (Wizard only — this card has no P/T clause), Machinist's
-    Arsenal (Artificer only — its own "+2/+2 for each artifact you control"
-    is a genuinely VARIABLE, board-state-SCALED bonus, real Forge
+    Arsenal (Artificer, PLUS its own "+2/+2 for each artifact you control"
+    — a genuinely VARIABLE, board-state-SCALED bonus, real Forge
     `SVar:X:Count$Valid Artifact.YouCtrl/Times.2` on the SAME static
-    ability, which `continuousPTGrants`'s deliberately-fixed `{power,
-    toughness}` shape structurally can't represent — stays real
-    `staticAbilities` text only, a real, separate, still-open gap, same
-    class as Gaelicat's/Magitek Infantry's own threshold-CDA gaps, NOT
-    closed by this pass).
+    ability).
+
+    **The scaled-P/T half of Machinist's Arsenal's own gap, CLOSED
+    2026-09-15 (fin/16-25 pass)**: `continuousPTGrants` entries can now
+    ALSO carry `scalePerType: {type, power, toughness}` instead of a fixed
+    `{power, toughness}` pair — the same real `Count$Valid <Type>.YouCtrl/
+    Times.N` scaling mechanism `ptFormula.kind:'addPerEquipmentControlled'`
+    already used for a SELF-only CDA (Adelbert Steiner), now real for a
+    BROADCAST grant too (`state.ts`'s `effectivePT`, the `continuousPTGrants`
+    loop's own new `'scalePerType' in grant` branch, counting the GRANTING
+    permanent's own controller's battlefield — real Forge `YouCtrl`).
+    `continuousPTGrantsEquipped-structural.ts` (the same recognizer/rule id
+    the 7 fixed-delta cards above already use) now has a second branch
+    building "Equipped creature gets ±P/±T for each &lt;type&gt; you control,"
+    checked against Machinist's Arsenal's own real text. No possible trace
+    evidence either way (this card's own `scenarios.ts` is a plain
+    `harness.ts` Scenario[], same structural wall its 6 fixed-delta siblings
+    already hit — `isEquippedPTGrantFact` stays as-is), but the engine
+    mechanism itself and the fact's own provenance are both now real.
+
+    **Gaelicat's/Magitek Infantry's own sibling threshold-CDA gap, closed
+    2026-09-15 (fin/16-25 pass)**: "As long as you control two or more
+    artifacts, this creature gets +2/+0" (Gaelicat)/"This creature gets
+    +1/+0 as long as you control another artifact" (Magitek Infantry) are a
+    genuinely DIFFERENT real Forge shape than `continuousPTGrants` above (a
+    BROADCAST grant from one permanent onto another) or
+    `addPerEquipmentControlled` (a per-unit-SCALED bonus) — a fixed bonus
+    that's either fully ON or fully OFF once a live COUNT THRESHOLD is met,
+    real Forge `S:Mode$ Continuous | Affected$ Card.Self | AddPower$ N |
+    IsPresent$ <Type>[.Other]+YouCtrl | PresentCompare$ GE<min>`
+    (`gaelicat.txt`/`magitek_infantry.txt`). New `card.ts`
+    `ptFormula.kind:'thresholdBonus'` (`condition: {type, min, excludeSelf?}`)
+    — `state.ts`'s `effectivePT` is the real read path, same "recalculated
+    live every read" treatment the other two `ptFormula` kinds already get.
+    `excludeSelf` mirrors Forge's own `.Other+` qualifier (Magitek Infantry
+    is itself an Artifact and must not count toward its own threshold).
+    Generalized to the LAND-count shape too, same pass: Scorpion Sentinel
+    ("seven or more lands" +3/+0) and Gigantoad (same threshold, +2/+2 —
+    this card had ZERO facts of any kind before this pass, not even a bare
+    unbacked `pump`) both migrated. `ptFormula-scalingPump-structural.ts`
+    (the SAME recognizer/rule id `addPerEquipmentControlled` already used,
+    extended with a second branch, not a new sibling recognizer) derives the
+    real `pump` source + zone-shaped `to:'Battlefield', types, amount:{min},
+    excludeSelf?` sink facts from the field, checked against confirmed real
+    English templates for both the "another X" (`min:1, excludeSelf:true`)
+    and "N or more Xs" (`min>=2`) phrasings — no other combination is
+    guessed at without a real card. All 4 cards' own `read:getNetPower`
+    trace evidence is REAL now (Gaelicat 1/3->3/3, Magitek Infantry 1/1->2/1,
+    Scorpion Sentinel 1/4->4/4, Gigantoad 4/4->6/6, each confirmed via a
+    live `effectivePT` recompute against a real board with the threshold
+    met) — Scorpion Sentinel's/Gaelicat's own pre-existing `engine-trace.ts`
+    pilot scripts each had a real, separate bug caught by this same pass:
+    `pilot.state.addCard` is a raw manual `RealCard` build (unlike
+    `harness.ts`'s own generic `runScenario`, which copies
+    `effectiveCard.ptFormula` automatically), so `ptFormula` has to be
+    threaded through the `addCard` call explicitly or the real CDA silently
+    never applies even with the engine mechanism itself fully wired — caught
+    by the trace numbers not matching expectations, not by inspection.
+    `isGaelicatArtifactThresholdPumpFact`/`isMagitekInfantryArtifactThreshold
+    PumpFact`/`isMagitekInfantryArtifactThresholdWant`/
+    `isScorpionSentinelLandThresholdPumpFact`/
+    `isScorpionSentinelLandThresholdWant` (all `verify-synergy.mjs` named
+    exemptions) all REMOVED outright, not left in place.
 
     **Evidence, checked per-card, not assumed uniform** (same "Ardyn vs.
     Dion" distinction this gap's own keyword closure already established):
@@ -2876,6 +3177,320 @@ so a future pass doesn't mistake them for missing work:
     Flan are both `ANNOTATED_CARD_SLUGS` members; their new SINK fact's
     real annotation was authored in `annotations-authoring.json` and baked
     in via `scripts/compute-annotations.mjs`, not left unannotated).
+
+24. **`combinator.ts`'s `SelectUpTo` had no `ctx.declaredTargets`/
+    `ctx.preferTarget` consultation at all — CLOSED (2026-09-16).**
+    Surfaced from TWO independent directions at once: (1) the definition
+    lane's triage of the cardType-filter-sibling batch —
+    `stuck-in-summoner-s-sanctum`/`sleep-magic` (both real Auras) each carry
+    a genuine, load-bearing hand-authored `custom` closure that drains
+    `ctx.declaredTargets` before falling back to `actions.chooseTarget` —
+    the real CR 601.2c/608.2b "target locks in at cast time" reconciliation
+    `card.ts`'s own (private) `resolveTargets` already implements for every
+    declarative targeted `Effect` kind; and (2) the definition lane's own
+    `slash-of-light` combinator migration, which found `SelectUpTo`'s
+    `actions.chooseTarget(remaining)` call also dropped `ctx.preferTarget`
+    entirely — a real testability/determinism regression (that card's own
+    engine-piloted scenario silently started hitting YOUR OWN creature
+    instead of the intended opponent's one, since `preferTarget` no longer
+    did anything). `combinator.ts`'s `selectUpTo` node had NEITHER
+    mechanism — it only ever called a bare `actions.chooseTarget` fresh —
+    so migrating `stuck-in-summoner-s-sanctum`/`sleep-magic` as written
+    would have SILENTLY REGRESSED their own real fix, and every
+    combinator-authored single-target effect (this migration wave's
+    `slash-of-light` included) could never be deterministically pinned to a
+    specific candidate.
+
+    Fixed BOTH in one pass with a new private `selectPool` helper in
+    `combinator.ts` (mirrors `card.ts`'s `resolveTargets` algorithm exactly:
+    drain `ctx.declaredTargets` first, CR 601.2c/608.2b; otherwise fall back
+    to `actions.chooseTarget(remaining, ctx.preferTarget)` — duplicated, not
+    imported, to avoid a genuine runtime `card.ts` <-> `combinator.ts`
+    import cycle; the two files already share a type-only cycle, see
+    `combinator.ts`'s own file header, but `card.ts` also calls `runProgram`
+    at runtime, so a reverse runtime call back would be a real one).
+    `runProgram`'s `'selectUpTo'` case now calls `selectPool` instead of a
+    bare `chooseTarget` loop. This is general — every current and future
+    `SelectUpTo` user gets both fixes, not just the cards that surfaced
+    them. Neither `stuck-in-summoner-s-sanctum` nor `sleep-magic` is
+    migrated to `kind:'program'` by this change — this only makes doing so
+    SAFE for a future pass (their own `custom` closures stay as-is,
+    unchanged). `slash-of-light`'s own real engine-piloted scenario now
+    genuinely targets Ahriman (the opponent's creature, its original
+    pre-migration intent) again — re-verified live via
+    `run-scenarios.mjs --slug=slash-of-light`, not assumed; that card's own
+    `scenarios.ts`/`progress.json` updated from "KNOWN GAP" to "RESOLVED."
+    New tests: `combinator.test.ts`'s new "SelectUpTo consults
+    ctx.declaredTargets" describe block (3 cases: a real declared target is
+    honored over what a fresh `chooseTarget` pool[0] pick would have chosen
+    instead; the pre-existing `chooseTarget`/`preferTarget` fallback
+    behavior is unchanged when `ctx.declaredTargets` is unset; a
+    stale/illegal declared target is dropped per 608.2b rather than
+    replaced with a fresh pick, even if that leaves nothing selected).
+
+    **Also fixed in the same pass: `sandworm`'s own real "then shuffle"
+    bug.** Its onEnter `custom` closure ("destroy target land; its
+    controller may search their library for a basic land card, put it onto
+    the battlefield tapped, then shuffle") searched the library but never
+    actually called `actions.shuffleLibrary` — a real, already-wired
+    primitive (`move`'s own `shuffleAfter` field already uses it
+    declaratively elsewhere) that this hand-authored closure simply forgot,
+    even though its own `describe` string already claimed the shuffle
+    happened. Fixed to call it unconditionally after the search (real
+    701.19: the shuffle follows the SEARCH, not a successful find — same
+    "runs regardless of `moved.length`" pattern `move`'s own
+    `shuffleAfter` already establishes), not just when a land was actually
+    found.
+
+    **The rest of that same 7-item escalation queue — deliberately parked,
+    each for a named reason, not built this pass:**
+    - `airship-crash` ("destroy target artifact, enchantment, or creature
+      with flying" — a 3-way OR with one keyword-gated branch): confirmed
+      singleton — grepped the whole pool for any other `.isX() &&
+      .isY()`-shaped custom closure combining a type check with
+      `hasKeyword`/`hasSubtype`; `call-the-mountain-chocobo`/`the-emperor-
+      of-palamecia-the-lord-master-of-hell` both looked similar at a glance
+      but are a different shape (single-type-plus-subtype and a negated
+      count, both already expressible without a new predicate). A real fix
+      needs a genuinely new capability — a recursive boolean predicate tree
+      (`FilterPredicate` today is a flat, single-condition list, no
+      `{op:'or'|'and', predicates:[...]}` combinator) — for exactly one
+      card. Parked: not worth the structural addition for a singleton,
+      especially since a `program`-DSL migration grants no real provenance
+      gain yet anyway (see below).
+    - `judgment-bolt` ("...and X damage to that creature's CONTROLLER") /
+      `elrond-moon-reader` ("move to zone" + a combinator-modeled
+      `delayUntil`): also each confirmed singletons (grepped for
+      `getController()` and `delayUntil` respectively across the whole
+      pool). Both cards already work correctly today via a real, honest
+      `custom` closure over already-real primitives (`dealDamage`/
+      `getController`/`moveTo`/`delayUntil` all genuinely exist and are
+      exercised) — neither is a correctness bug, only a "stuck on `custom`
+      instead of `program`" classification. Parked for the same reason as
+      `airship-crash`: singleton, no provenance gain from migrating yet.
+    - `sandworm`'s own second half (library search) / `golbez-crystal-
+      collector`: both fall into the already-tracked, separately-scoped
+      ~15-card Library/Graveyard/Exile-`Query.source` expansion (adding
+      `'library'`/`'graveyard'` as real `Query.source` values, alongside
+      today's `'creaturesInPlay'`/`'permanentsInPlay'`) — a genuine future
+      batch item, not new in kind, and not attempted here (its own
+      dedicated pass will cover all ~15 at once, not one card at a time).
+      `golbez-crystal-collector` also separately needs a "read a
+      previously-bound object's own live field (its power) back into a
+      later effect's amount" capability beyond just the Query.source
+      widening — noted for whoever picks up that future pass, not built
+      here.
+
+    **Bigger-picture flag carried over from the coordinator, not
+    independently re-litigated:** migrating a `custom` closure to
+    `kind:'program'` does NOT by itself grant recognizer provenance — today
+    only ONE recognizer (`sequenceExileReturn-effect-structural.ts`) reads
+    combinator AST at all, and it only reads the `Sequence` shape; nothing
+    reads generic `Filter`/`Each`/`Query`/`Aggregate` structure. A generic
+    program-AST-reading recognizer (in progress on the recognizer lane as
+    of this writing — see the new `selectUpToGainControl-effect-
+    structural.ts`/`.test.ts` files) is the real prerequisite for any of
+    the parked items above to pay off in provenance terms; this is the main
+    reason none of the 3 singleton vocab items above were built speculatively
+    this pass despite each being individually buildable.
+
+25. **No "copy a permanent, with overrides" mechanic — real, OPEN, documented
+    (not built), singleton.** `ardyn-the-usurper`'s own beginning-of-combat
+    trigger ("exile up to one target creature card from a graveyard...
+    create a token that's a copy of that card, except it's a 5/5 black
+    Demon") is a real Forge `DB$ CopyPermanent | Defined$ Remembered |
+    SetPower$5 | SetToughness$5 | SetColor$Black | SetCreatureTypes$Demon` —
+    genuinely "copy the exiled card's own copiable values (601.2h — name,
+    other types, ABILITIES), then override P/T/color/creature-type," not
+    just "make a token sharing its name." A real `state.copyPermanent
+    (source, controller)` primitive already exists (copies keywords/types/
+    subtypes/base P&T off a real `RealCard`) but (1) takes a `Card`, whose
+    read-only interface has no `getKeywords()`/enumerable-abilities read at
+    all (only `hasKeyword(single)`), so a `custom` effect can't harvest a
+    chosen card's own full ability set to feed into a fresh `TokenInfo`
+    even if it wanted to, and (2) there's no post-copy "override these
+    specific fields" mutator on `Card` either — this pool's copy-effect
+    need has never come up before Ardyn. `cards/ardyn-the-usurper/
+    definition.ts`'s own `custom` closure only carries the exiled card's
+    NAME onto a fresh, blank 5/5 Demon token — any keywords/triggered
+    abilities the exiled creature itself had are silently dropped (an
+    honest narrowing, not a bug masquerading as correct — same "a basic
+    land card" -> "a land card" category of accepted approximation this
+    pool already has elsewhere). No existing recognizer/vocabulary covers a
+    copy-effect at ALL — `token-creation-structural.ts` only recognizes
+    fixed `TOKENS`-registry creates, never a dynamic copy. Checked the pool:
+    Ardyn is the ONLY real card needing this. Documented per the
+    coordinator's own framing ("worth a new dated entry, not necessarily
+    something to build") — not built this pass; a real fix would need a
+    general "copy with overrides" `TokenInfo`-adjacent capability plus a
+    `Card.getKeywords()`-style read, both nontrivial for exactly one card.
+
+26. **Meld (`AlternateMode:Meld`/`MeldPair`) — entirely unmodeled, real,
+    OPEN, documented (not built).** `fang-fearless-l-cie` (Fang, Fearless
+    l'Cie) and `vanille-cheerful-l-cie` (Vanille, Cheerful l'Cie) each
+    independently meld into a THIRD card, Ragnarok, Divine Deliverance —
+    confirmed via both Forge's own script and Scryfall's `all_parts`
+    (Fang/Vanille both `meld_part`, Ragnarok the `meld_result`), a genuine
+    3-card group, not a 2-card transforming DFC pair. No `CardDefinition`
+    field represents "two independently-cast permanents consume into a
+    third" at all — `backFace` is documented (and every existing user —
+    Jecht/Braska's Final Aeon, Dion/Bahamut, Cecil/gap gap #25's own
+    neighbor above — confirms) as ONE object transforming into its own
+    SECOND face via that same object's own ability; Meld is mechanically
+    different (two separate objects, each with its own independent zone
+    history, replaced by a THIRD new object neither original "is" the way a
+    DFC's back face "is" the same permanent). Both cards' own authors
+    already made the right call independently: Fang/Vanille are each
+    authored as their own standalone, fully-real, independently-castable
+    cards (their own non-Meld text is fully modelable), and Ragnarok,
+    Divine Deliverance itself is SKIPPED entirely rather than force-fit as
+    either card's own `backFace` (which would misrepresent it as reachable
+    by ONE card's own ability alone). This is now documented centrally here
+    per the coordinator's own request — not independently re-discovered or
+    re-argued, both cards' own `definition.ts` comments already carry the
+    full reasoning; not built this pass (no clear path to a 3-object
+    "consume two, create a third" primitive that would pay for itself for
+    exactly one real meld pair in this pool).
+
+27. **`grantKeywordAll` had no `'attacking-creatures'` predicate — CLOSED
+    (2026-09-16).** Surfaced by the same fin/76-100 re-triage as gaps
+    #25/#26 above: Cecil, Redeemed Paladin's back face ("Other attacking
+    creatures gain indestructible until end of turn") was a literal no-op
+    `custom` closure (`run: () => {}`), documented as blocked on "no
+    keyword-grant Effect shape exists yet" — stale by the time this was
+    checked, since `grantKeywordAll` itself already existed (closed for
+    moogles-valor/restoration-magic/dion-bahamut/ardyn-the-usurper), just
+    missing the specific `'attacking-creatures'` predicate VALUE
+    `pumpAll` already has (built 2026-09-15 for Auron's Inspiration —
+    `Card.isAttacking()`, real 508.1 status). Widened `grantKeywordAll.
+    predicate` to `'creatures-you-control' | 'permanents-you-control' |
+    'attacking-creatures'`, mirroring `pumpAll`'s own identical symmetric
+    (both `ctx.you` AND `ctx.opponents`) broadcast exactly. Checked the
+    pool first: Cecil is the only real card needing this predicate on
+    `grantKeywordAll` specifically (`pumpAll`'s own sibling case already
+    covers Auron's Inspiration). Migrated Cecil's back face off the no-op
+    onto `{kind:'grantKeywordAll', predicate:'attacking-creatures',
+    keyword:'Indestructible', notSelf:true, untilEndOfTurn:true}` — a real,
+    mechanically-enforced effect now, not just a documented intent.
+
+    Added the corresponding sink fact to `cecil-...-paladin/synergy.json`
+    (`{to:'Battlefield', types:{has:['Creature']}, attacking:true,
+    face:'back'}`, no provenance — required to clear a real
+    `verify-synergy.mjs` HARD failure the new `getCreaturesInPlay` read
+    introduced). No recognizer templates this specific predicate yet
+    (`grantKeywordAll-effect-structural.ts` declined, as expected —
+    `pumpAllAttacking-effect-structural.ts` is the closest sibling
+    precedent for what a future `grantKeywordAllAttacking-effect-
+    structural.ts` would look like; flagged for the recognizer lane, not
+    built here). **Not re-demonstrated by Cecil's own scenario**: that
+    card's `scenarios.ts` is still the OLD declarative `Scenario[]` style,
+    which has no attacker-declaration support at all (`harness.ts`'s own
+    doc comment) — a genuine before/after proof needs a full
+    engine-piloted rewrite of that WHOLE file (mirroring
+    `auron-s-inspiration`'s own identical-predicate scenario), flagged as a
+    named follow-up (not attempted here — that file also carries the front
+    face's life-threshold transform and the back face's Lifelink probe,
+    which would need converting together, a bigger lift than this fix's
+    own scope). Separately noticed while touching this card, NOT caused by
+    or fixed in this pass: `progress.json`'s own 2026-09-12 note claims a
+    real lifegain SOURCE fact was restored for the back face's printed
+    Lifelink, but no such fact exists in `synergy.json`'s `source` array
+    today (only 4 front-face facts) — a real pre-existing inconsistency,
+    flagged in that card's own `progress.json.knownGaps` for whoever picks
+    it up next.
+
+28. **Spell-copy + event-keyed ("next time X happens") delayed trigger —
+    entirely unmodeled, real, OPEN, documented (not built) — `ether`
+    (fin/53).** Real oracle text: "{T}, Exile this artifact: Add {U}. When
+    you next cast an instant or sorcery spell this turn, copy that spell.
+    You may choose new targets for the copy." The mana-ability half is real
+    and modeled (`kind:'addMana'`); the delayed-trigger spell-copy half is a
+    genuine DOUBLE gap, both pieces checked directly (not assumed), neither
+    exists anywhere in this engine:
+    1. No event-keyed delayed trigger — `interfaces.ts`'s only
+       delayed-trigger primitive is `delayUntil(phase, run)` (real 603.4/
+       603.7, PHASE-keyed — e.g. Elrond, Moon-Reader's own "at the
+       beginning of the next end step"), never a "next time ANY player
+       casts an instant/sorcery this turn" event-keyed observer.
+    2. No spell-copy `Effect` kind — `card.ts`'s `Effect` union has nothing
+       for duplicating an object on the stack; `copyPermanent`
+       (`interfaces.ts`, `CardFactory.copyCard`) only copies a PERMANENT
+       already on the battlefield (Clone-style), and `kind:'counter'`'s own
+       doc comment already explains why there's no stack-object model to
+       copy FROM in the first place (same reason `eject`/`absolute-virtue`'s
+       own "can't be countered" replacement-rule text has nothing to hook
+       into either — no Counter-event/stack-object machinery exists for
+       either gap to intercept).
+    Both primitives would be needed TOGETHER — building either alone
+    wouldn't make this ability real. Checked the whole pool for a prior
+    spell-copy card: none exists, so this is a genuinely new gap, not a
+    rediscovered one. Left as an honest, fully-documented gap (no Fact, no
+    Effect, no `triggers` entry invented) — see `ether`'s own
+    `definition.ts`/`progress.json.knownGaps` for the full writeup. Not
+    attempted this pass (2026-09-16 text-coverage batch) — logged here per
+    that pass's own "genuinely bigger gap, log and move on" instruction,
+    not a one-off card fix.
+29. ~~**No "end the turn" primitive (721.1a) — no Stack-exile mechanism, no
+    mid-turn jump to Cleanup.**~~ **CLOSED (2026-09-16)** — Ultima (fin/38)'s
+    own "Destroy all artifacts and creatures. End the turn." A prior pass
+    (2026-09-12, this card's own migration to the unified Fact model)
+    confirmed the gap and declined to build it; this pass re-derived the gap
+    independently (grepped `turn.ts`/`engine.ts`/`state.ts`/`stack.ts`/
+    `card.ts`'s `Actions` interface directly, not trusting the earlier note)
+    and, per this task's own instruction to push hard before declining,
+    checked real Forge for the actual architecture rather than assuming full
+    generality was required: `forge-game/src/main/java/forge/game/ability/
+    effects/EndTurnEffect.java`'s own `resolve()` performs exactly 4 real
+    steps — (1) exile everything on the stack, including the resolving
+    spell/ability itself (Gatherer's own real Time Stop ruling: "This
+    includes Time Stop, though it will continue to resolve. It also
+    includes spells and abilities that can't be countered"), (2) end combat,
+    (3) check state-based actions, (4) `PhaseHandler.endTurnByEffect()` — a
+    DIRECT `setPhase(PhaseType.CLEANUP); onPhaseBegin();` jump, never a walk
+    through every intervening phase. This confirmed the real primitive is
+    narrow and scoped, not a rebuild of turn-structure machinery: built
+    `turn.ts`'s new `jumpToCleanup(state, turn, players)` (a direct
+    `phaseIndex` jump to Cleanup that reuses the file's own existing,
+    private `runPhaseEntryAction` — so discard-to-max-hand-size/damage-
+    clear/UEOT-clear/etc. are the exact same code a natural Cleanup entry
+    already runs, never duplicated), `stack.ts`'s new `Stack.exileAll()`
+    (drains every remaining stack item at once, real 721.1a's own "all
+    spells and abilities" half), `engine.ts`'s new `endTurn(engine)` (calls
+    `exileAll`, moves each drained real card to Exile, clears
+    `attackers`/`blockers`, calls the existing `checkStateBasedActions`,
+    then `jumpToCleanup`), a new bare `Effect` kind `'endTurn'` (`card.ts`)
+    wired through a genuinely new `Actions.endTurn` (`interfaces.ts`'s own
+    ambient `endTurn(): void`, full `EndTurnEffect.java` citation in its doc
+    comment), and a new `EffectContext.selfToExile` field (set by
+    `applyEffect`'s own `case 'endTurn'`, read back by `engine.ts`'s
+    `resolveTop` wrapper — real 721.1a's "including this card" ruling:
+    additive to the pre-existing `thenExile`/Flashback check, not a
+    replacement for it). `engine-trace.ts`'s `pilotActions` gained a real
+    `endTurn` override (same real-vs-log-only split `queueExtraPhase`
+    already established — `harness.ts`'s own flat-lifecycle path has no
+    real `GameEngine`/`Stack` to act on, so its own `Actions.endTurn` stays
+    a log-only `{fn:'endTurn'}` entry, same accepted scope as its
+    `queueExtraPhase` fallback) that reconstructs Cleanup's own real
+    discard/UEOT-removal log entries via the SAME `logAutomaticPhaseEntry`
+    helper `advanceOneStep` already uses, so the trace shows genuinely-
+    diffed real state, not an asserted claim.
+    **Deliberately still not modeled**: a synergy Fact/vocabulary for the
+    `endTurn` event itself — the forced discard/stack-exile/damage-clear are
+    downside "wash" mechanics no real FIN pool card's own sink vocabulary
+    wants to match against, same category `tapForMana` already established
+    as deliberately unmodeled; revisit only if a real card needs it.
+    **Legally unreachable for Ultima specifically, but not a gap**: the
+    "exile OTHER spells/abilities still on the stack" half of `Stack
+    .exileAll()` can never fire for THIS card, since Ultima is a plain
+    Sorcery — CR 307.1a/117.1a only allows it to be CAST when the stack is
+    already empty, and by strict LIFO resolution anything added in response
+    goes ON TOP and must fully resolve before Ultima's own turn to resolve
+    ever comes around, so nothing can legally be pending underneath it. The
+    primitive is still built to the real, general shape a future
+    instant-speed "end the turn" card (Time Stop itself, printed as an
+    Instant, is the real-Magic reference case for why this matters) could
+    actually exercise. See `cards/ultima/progress.json` for the full,
+    dated writeup and verification results.
 
 ## What's already solid (don't re-litigate)
 

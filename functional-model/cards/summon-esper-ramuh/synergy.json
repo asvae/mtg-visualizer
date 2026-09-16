@@ -1,10 +1,6 @@
 {
   "source": [
     {
-      "event": "damage",
-      "controller": "you"
-    },
-    {
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",
@@ -53,6 +49,58 @@
         "origin": "parser",
         "rule": "saga-lore-and-sacrifice-structural"
       }
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature",
+            "Wizard"
+          ]
+        }
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 34,
+          "end": 39
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      },
+      "triggeredBy": "chapterIII"
+    },
+    {
+      "event": "damage",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 20,
+          "end": 46
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
+      },
+      "triggeredBy": "chapterI"
     }
   ],
   "sink": [
@@ -68,16 +116,45 @@
     },
     {
       "zone": "Battlefield",
-      "controller": "opp"
-    },
-    {
-      "zone": "Battlefield",
       "controller": "you",
       "types": {
         "has": [
           "Creature",
           "Wizard"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 10,
+          "end": 57
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "opp",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 20,
+          "end": 154
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
       }
     }
   ]

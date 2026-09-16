@@ -7,14 +7,15 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 60,
-          "end": 70
+          "start": 46,
+          "end": 88
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "pumpSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onOtherCreatureEnters"
     }
   ],
   "sink": [
@@ -26,7 +27,19 @@
           "Creature"
         ]
       },
-      "excludeSelf": true
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 44
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersTriggerTypeFilter-sink-structural"
+      }
     }
   ]
 }

@@ -31,12 +31,26 @@
       "provenance": {
         "origin": "parser",
         "rule": "gainLife-effect-structural"
-      }
+      },
+      "triggeredBy": "onCreatureDies"
     },
     {
       "event": "lifeloss",
       "controller": "opp",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 60
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      },
+      "triggeredBy": "onCreatureDies"
     },
     {
       "event": "drawCard",
@@ -53,7 +67,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onEnterOrAttacks"
     },
     {
       "event": "lifegain",
@@ -70,7 +85,56 @@
       "provenance": {
         "origin": "parser",
         "rule": "gainLife-effect-structural"
-      }
+      },
+      "triggeredBy": "onAnyCreatureDies"
+    },
+    {
+      "event": "sacrifice",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 38,
+          "end": 84
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      },
+      "triggeredBy": "onEnterOrAttacks"
+    },
+    {
+      "event": "lifeloss",
+      "controller": "opp",
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 125,
+          "end": 153
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      },
+      "triggeredBy": "onAnyCreatureDies"
     }
   ],
   "sink": [
@@ -86,7 +150,19 @@
           "Creature"
         ]
       },
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 38,
+          "end": 84
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     },
     {
       "event": "attacks",
@@ -103,6 +179,29 @@
       "provenance": {
         "origin": "parser",
         "rule": "attacks-trigger-structural"
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 56,
+          "end": 72
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
       }
     }
   ]

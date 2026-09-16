@@ -53,7 +53,15 @@ describe('addMana-effect-structural — real matched clauses', () => {
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { event: 'addMana', colors: { has: ['C'] }, controller: 'you', annotations: [{ target: 'oracle', line: expect.any(Number), start: expect.any(Number), end: expect.any(Number) }] },
+        fact: {
+          event: 'addMana',
+          colors: { has: ['C'] },
+          controller: 'you',
+          annotations: [{ target: 'oracle', line: expect.any(Number), start: expect.any(Number), end: expect.any(Number) }],
+          // `Fact.triggeredBy` (2026-09-16, "widen populate" pass) — Ultima's
+          // own real "Whenever you tap a land for {C}..." trigger.
+          triggeredBy: 'onTapLandForC',
+        },
         provenance: { origin: 'parser', rule: 'addMana-effect-structural' },
       },
       {

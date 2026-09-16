@@ -14,15 +14,16 @@
         "fn": "trigger",
         "card": "Jumbo Cactuar",
         "instanceId": 1,
-        "id": 1367,
+        "id": 2,
         "name": "onAttack"
       },
       {
         "fn": "pump",
         "target": "Jumbo Cactuar",
-        "id": 1367,
+        "id": 2,
         "power": 9999,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       }
     ]
   }

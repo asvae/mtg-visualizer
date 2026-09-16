@@ -7,16 +7,17 @@ export const bartzAndBoko: CardDefinition = {
 
   pt: [4, 3],
 
-  // Real K:Affinity:Bird — a genuine dynamic mana-cost reduction (costs {1}
-  // less per Bird you control). No cost-reduction machinery exists anywhere
-  // in this model (`manaCost` is a fixed printed string) — same treatment
-  // travel-the-overworld's own Affinity for Towns already gets: real text,
-  // not an executed effect.
+  // Real K:Affinity:Bird — now real, executable `costReduction.perControlled`
+  // (2026-09-16, static-ability audit follow-up), the same board-state-
+  // counted mechanism travel-the-overworld's own Affinity for Towns already
+  // uses (ENGINE_GAPS.md gap #7).
   staticAbilities: ['Affinity for Birds (This spell costs {1} less to cast for each Bird you control.)'],
+  costReduction: { perControlled: { amountPerMatch: 1, subtype: 'Bird' } },
 
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           // "Each other Bird you control deals damage equal to its power to

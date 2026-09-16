@@ -19,7 +19,7 @@
         "fn": "trigger",
         "card": "Summon: Esper Ramuh",
         "instanceId": 1,
-        "id": 2387,
+        "id": 4,
         "name": "chapterI"
       },
       {
@@ -37,9 +37,9 @@
       {
         "fn": "dealDamage",
         "source": "Summon: Esper Ramuh",
-        "sourceId": 2387,
+        "sourceId": 4,
         "target": "Grizzly Bears",
-        "id": 2386,
+        "id": 3,
         "amount": 0
       }
     ]
@@ -65,7 +65,7 @@
         "fn": "trigger",
         "card": "Summon: Esper Ramuh",
         "instanceId": 1,
-        "id": 2391,
+        "id": 8,
         "name": "chapterII"
       },
       {
@@ -82,9 +82,10 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2389,
+        "id": 6,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:hasSubtype",
@@ -95,9 +96,10 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2390,
+        "id": 7,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:hasSubtype",
@@ -108,9 +110,10 @@
       {
         "fn": "pump",
         "target": "Summon: Esper Ramuh",
-        "id": 2391,
+        "id": 8,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       }
     ]
   },
@@ -132,7 +135,7 @@
         "fn": "trigger",
         "card": "Summon: Esper Ramuh",
         "instanceId": 1,
-        "id": 2395,
+        "id": 12,
         "name": "chapterII"
       },
       {
@@ -161,9 +164,10 @@
       {
         "fn": "pump",
         "target": "Summon: Esper Ramuh",
-        "id": 2395,
+        "id": 12,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       }
     ]
   },
@@ -188,7 +192,7 @@
         "fn": "trigger",
         "card": "Summon: Esper Ramuh",
         "instanceId": 1,
-        "id": 2398,
+        "id": 15,
         "name": "chapterIII"
       },
       {
@@ -205,9 +209,10 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2397,
+        "id": 14,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:hasSubtype",
@@ -218,9 +223,10 @@
       {
         "fn": "pump",
         "target": "Summon: Esper Ramuh",
-        "id": 2398,
+        "id": 15,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       }
     ]
   }

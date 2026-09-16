@@ -9,6 +9,7 @@ export const magitekArmor: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'createToken', token: TOKENS.c_1_1_hero, amount: 1 } satisfies Effect],
     },
   ],

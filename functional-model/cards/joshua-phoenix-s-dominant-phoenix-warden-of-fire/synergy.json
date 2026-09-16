@@ -28,10 +28,11 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 32,
+          "start": 24,
           "end": 63
         }
-      ]
+      ],
+      "triggeredBy": "chapterI"
     },
     {
       "zone": "Graveyard",
@@ -90,6 +91,23 @@
         ]
       },
       "face": "back"
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 18
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

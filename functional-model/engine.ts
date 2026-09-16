@@ -143,6 +143,7 @@ import {
   queueExtraTurn as turnQueueExtraTurn,
   queueExtraPhase as turnQueueExtraPhase,
   isFirstPhaseGroupOccurrenceThisTurn,
+  jumpToCleanup,
   type TurnState,
   type PhaseGroup,
 } from './turn';
@@ -281,8 +282,11 @@ function costReductionCondition(condition: 'tappedCreatureTarget', declaredTarge
  *  - `card.costReduction.perControlled` — THIS card's own board-state-
  *    COUNTED discount (Travel the Overworld's own "Affinity for Towns" —
  *    ENGINE_GAPS.md gap #7, closed 2026-09-12), unconditional: `caster`'s
- *    real battlefield permanents whose subtypes include
- *    `perControlled.subtype`, counted fresh, times
+ *    real battlefield permanents whose subtypes OR card types include
+ *    `perControlled.subtype` (2026-09-16 widening — real Forge `Affinity`
+ *    counts a card TYPE, e.g. "Affinity for Artifacts," through the exact
+ *    same mechanism as a creature subtype, e.g. "Affinity for Birds" —
+ *    `Affinity.java`'s own `parse()`), counted fresh, times
  *    `perControlled.amountPerMatch` — the same mechanism
  *    `effectiveActivationCost` already uses for `ActivationCostReduction`
  *    on the activated-ability side, applied here to a spell's own cast cost
@@ -332,7 +336,17 @@ export function effectiveCastCost(card: CardDefinition, alt?: AlternateCost, dec
     // without a caster" treatment the broadcast case below already has).
     if (caster) {
       const { amountPerMatch, subtype } = card.costReduction.perControlled;
-      const matchCount = caster.battlefield.filter((c) => c.subtypes.includes(subtype)).length;
+      // Real Forge `Affinity` (`forge-game`'s own `Affinity.java`, checked
+      // 2026-09-16 static-ability audit) resolves its own counted category
+      // through the SAME generic valid-checking Forge uses everywhere else
+      // — a real card TYPE ("Affinity for Artifacts," Valkyrie Aerial Unit's
+      // own real keyword) or a creature SUBTYPE ("Affinity for
+      // Birds"/"Affinity for Elves," Bartz and Boko's/Cantankerous Keepers'
+      // own) are the SAME mechanism in real Forge, just parameterized
+      // differently — `c.types.includes(subtype)` added alongside the
+      // original `c.subtypes.includes(subtype)` so this one field/check
+      // covers both real shapes without new schema.
+      const matchCount = caster.battlefield.filter((c) => c.subtypes.includes(subtype) || c.types.includes(subtype)).length;
       discount += amountPerMatch * matchCount;
     }
   } else if (card.costReduction?.condition && costReductionCondition(card.costReduction.condition, declaredTarget)) {
@@ -1107,7 +1121,13 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       // alternate-cost `thenExile` case) goes to exile instead of its
       // owner's graveyard once it resolves — `castSpell` tagged this
       // `StackObject` from the `AlternateCost` it was cast with.
-      engine.state.move(real, resolved.thenExile ? 'Exile' : 'Graveyard');
+      // `resolved.ctx.selfToExile` (real 721.1a's own "including this card"
+      // ruling, `card.ts`'s own `EffectContext.selfToExile` doc comment) is
+      // the SAME check for a card whose own `kind:'endTurn'` effect just
+      // ran synchronously inside the `resolveCard` call `Stack.resolveTop`
+      // (called above, via `engine.stack.resolveTop`) already made —
+      // independent of, and additive to, the pre-existing `thenExile` path.
+      engine.state.move(real, resolved.thenExile || resolved.ctx.selfToExile ? 'Exile' : 'Graveyard');
     }
   }
   return resolved;
@@ -1207,14 +1227,36 @@ function fireOnTapLandForManaTriggers(engine: GameEngine, controller: RealPlayer
  * that SAME attacker as `ctx.self`. No `cause` is threaded (no real
  * `triggerDoubling` grant in this pool gates on an "attacks" cause today —
  * see `state.ts`'s own `TriggerCause` doc comment).
+ *
+ * Widened (2026-09-16) to ALSO fire `on: 'equippedAttacks'` triggers — see
+ * `card.ts`'s own `Trigger.on` doc comment for the full real-Forge writeup
+ * (Genji Glove/Ultima Weapon's own real `Card.EquippedBy` scope; White
+ * Mage's Staff's own real `AddTrigger$`-granted shape, modeled the same
+ * single way here). For every declared attacker, scans EVERY real card
+ * currently tracked in `engine.state.cards` (not just the attacker's own
+ * controller's battlefield — mirrors `state.ts`'s own reverse
+ * `attachedToId` scan, `getEquippedBy`/`isSelfOrAttached`) for one with a
+ * live `attachedToId === attacker.id` AND its own registered
+ * `resolvedPermanents` entry carrying an `'equippedAttacks'` trigger, firing
+ * it with THAT EQUIPMENT's own registered `ctx`/`actions` — never the
+ * attacker's own — so `ctx.self` stays the Equipment itself, matching
+ * every real `'equippedAttacks'` effect body's own assumption.
  */
 function fireOnAttackTriggers(engine: GameEngine, attackers: RealCard[]): void {
   for (const attacker of attackers) {
     const registered = engine.resolvedPermanents.get(attacker.id);
-    if (!registered) continue;
-    const trigger = registered.card.triggers?.find((t) => t.on === 'attacks');
-    if (!trigger) continue;
-    fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
+    if (registered) {
+      const trigger = registered.card.triggers?.find((t) => t.on === 'attacks');
+      if (trigger) fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
+    }
+    for (const real of engine.state.cards.values()) {
+      if (real.attachedToId !== attacker.id) continue;
+      const equipRegistered = engine.resolvedPermanents.get(real.id);
+      if (!equipRegistered) continue;
+      const equipTrigger = equipRegistered.card.triggers?.find((t) => t.on === 'equippedAttacks');
+      if (!equipTrigger) continue;
+      fireTrigger(engine.state, equipRegistered.card, equipRegistered.ctx, equipRegistered.actions, equipTrigger.name);
+    }
   }
 }
 
@@ -1333,6 +1375,54 @@ export function queueExtraTurn(engine: GameEngine, player: RealPlayer): void {
  */
 export function queueExtraPhase(engine: GameEngine, phaseType: PhaseGroup): void {
   turnQueueExtraPhase(engine.turn, phaseType);
+}
+
+/**
+ * Real 721.1a "end the turn" effect (`interfaces.ts`'s own `endTurn` doc
+ * comment has the full real `EndTurnEffect.java` 4-step citation) — Ultima
+ * (fin/38)'s own "End the turn." is the real FIN card this was built for
+ * (2026-09-16). Performs the real steps THIS file/`turn.ts` own between
+ * them:
+ *   1. Exiles everything still on the real stack (`Stack.exileAll`) — the
+ *      resolving object itself (Ultima, e.g.) is never among these (already
+ *      popped by `Stack.resolveTop` before its own effects, this call
+ *      included, ever ran) — its own "including this card" half is
+ *      `card.ts`'s `EffectContext.selfToExile`, read back by this file's
+ *      own `resolveTop` wrapper once `resolveCard` returns.
+ *   2. Ends combat (508/509's real attacker/blocker state) — this engine's
+ *      own equivalent of real `PhaseHandler.endCombat()`.
+ *   3. Checks state-based actions (`sba.ts`'s own `checkStateBasedActions`,
+ *      the SAME function `doAdvance` already calls on every real Main1
+ *      entry).
+ *   4. Jumps straight to Cleanup (`turn.ts`'s own `jumpToCleanup`, which
+ *      also runs Cleanup's real automatic action exactly once).
+ * Returns the real cards moved to Exile off the stack (empty for any
+ * legally-reachable Ultima scenario — see `cards/ultima/progress.json` for
+ * why: a plain Sorcery can only ever be CAST with an already-empty stack
+ * (307.1a/117.1a), so nothing can legally still be pending underneath it by
+ * the time it resolves; this primitive is still built to the real, general
+ * shape a future instant-speed "end the turn" card could actually exercise).
+ * A bare activated ability drained off the stack this way has no card of
+ * its own to move (Forge's own real ruling covers "spells AND abilities"
+ * only for the exile-from-stack half, not a zone-change — an ability has no
+ * zone to go to).
+ */
+export function endTurn(engine: GameEngine): { exiledCards: RealCard[] } {
+  const drained = engine.stack.exileAll();
+  const exiledCards: RealCard[] = [];
+  for (const obj of drained) {
+    if (obj.isAbility) continue;
+    const real = engine.state.cards.get(obj.ctx.self.getId());
+    if (real) {
+      engine.state.move(real, 'Exile');
+      exiledCards.push(real);
+    }
+  }
+  engine.attackers = [];
+  engine.blockers.clear();
+  checkStateBasedActions(engine.state, engine.players);
+  engine.turn = jumpToCleanup(engine.state, engine.turn, engine.players);
+  return { exiledCards };
 }
 
 /** Real 302.6 (summoning sickness) + 508.1a (a tapped creature can't attack) + 302.6's own Defender clause (302.6's "can't attack" companion rule, 302.6a). Read-only — same "check separately from the mutating action" shape as `canCastSpell`. */

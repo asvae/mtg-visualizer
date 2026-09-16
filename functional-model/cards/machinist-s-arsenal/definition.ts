@@ -7,38 +7,43 @@ export const machinistsArsenal: CardDefinition = {
   typeLine: 'Artifact — Equipment',
 
   // Real X = Count$Valid Artifact.YouCtrl/Times.2 — a live artifact-count-
-  // dependent P/T grant (layer 7c, but recalculated off board state rather
-  // than a fixed delta), same "no live-recalculated CDA machinery" gap
-  // gaelicat/adelbert-steiner's own comments already document; kept as
-  // real text. UNLIKE dragoon-s-lance/paladin-s-arms/crystal-fragments/
-  // white-mage-s-staff/sage-s-nouliths' own identical-SHAPED "+N/+N" clause
-  // (now real via `continuousPTGrants`, ENGINE_GAPS.md gap #14 fully
-  // closed 2026-09-12), THIS card's own bonus is genuinely VARIABLE (scales
-  // with the controller's own artifact count), not a fixed delta —
-  // `continuousPTGrants` is deliberately a plain `{power, toughness}` NUMBER
-  // pair (see `card.ts`'s own doc comment), so it structurally cannot
-  // represent this clause; stays real `staticAbilities` text only, a real,
-  // separate, still-open gap (same class as Gaelicat's/Magitek Infantry's
-  // own threshold-CDA gaps, NOT closed by this pass). The per-artifact-count
-  // SCALING factor is deliberately left unrepresented in the pump fact's own
-  // shape — same "bare event, no numeric sub-fields" treatment
-  // adelbert-steiner's own live-recalculated per-equipment-count pump
-  // already established.
+  // dependent P/T grant (layer 7c, recalculated off board state rather
+  // than a fixed delta). CLOSED 2026-09-15 (fin/16-25 pass) via
+  // `continuousPTGrants`'s new `scalePerType` shape (`card.ts`'s own doc
+  // comment has the real Forge citation) — the same real `Count$Valid...
+  // YouCtrl/Times.N` scaling mechanism `ptFormula.kind:
+  // 'addPerEquipmentControlled'` already uses for a SELF-only CDA
+  // (Adelbert Steiner), now real for a BROADCAST grant too. No possible
+  // trace evidence either way (this card's own `scenarios.ts` is a plain
+  // `harness.ts` Scenario[], same structural wall Dragoon's Lance's/
+  // Paladin's Arms' own identically-shaped fixed-delta grants already hit
+  // — `isEquippedPTGrantFact`, `scripts/verify-synergy.mjs`), but the
+  // engine mechanism itself is now genuinely real and live-recalculated,
+  // not just descriptive text.
   //
   // The "is an Artificer" TYPE-grant half is a DIFFERENT, independently
   // fixed clause (a bare subtype addition, not scaled by anything) — closed
-  // for real below via `continuousTypeGrants`, same mechanism the sibling
-  // cards' own "is a Knight/Cleric/Wizard" grants now use.
-  staticAbilities: ['Equipped creature gets +2/+2 for each artifact you control and is an Artificer in addition to its other types.'],
-
+  // via `continuousTypeGrants`, same mechanism the sibling cards' own "is a
+  // Knight/Cleric/Wizard" grants use.
+  continuousPTGrants: [{ scalePerType: { type: 'Artifact', power: 2, toughness: 2 }, includeSelf: false, equippedBySelf: true }],
   continuousTypeGrants: [{ types: ['Artificer'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — same real ETB mechanic (create a Hero token, attach this
   // to it) as dragoon-s-lance's own onEnter trigger; independent of the
   // Machina Equip ability below, so both fit without a one-slot conflict.
+  //
+  // `on: 'enter'` (2026-09-16, definition-lane sweep — same real gap
+  // sage-s-nouliths' own 2026-09-16 fix found and dragoon-s-lance/
+  // paladin-s-arms share: without it, `engine.ts`'s real auto-fire never
+  // fires this trigger, only the old declarative `harness.ts` name-fired
+  // `sequence` masked that. Currently unobservable via trace (this card's
+  // own `scenarios.ts` is still that older `sequence: ['onEnter', ...]`
+  // shape, no engine-piloted trace) — same documented caveat, not fixed by
+  // forcing a scenario rewrite here.
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

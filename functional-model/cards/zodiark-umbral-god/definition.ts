@@ -35,6 +35,7 @@ export const zodiarkUmbralGod: CardDefinition = {
       // is equivalent in practice, though not a real "exclude every God"
       // filter).
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'sacrifice',

@@ -58,12 +58,12 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 899
+        "id": 22
       },
       {
         "fn": "attack",
         "card": "Coeurl",
-        "id": 899
+        "id": 22
       },
       {
         "fn": "cast",
@@ -134,7 +134,7 @@
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 899,
+        "id": 22,
         "controller": "opp0"
       },
       {
@@ -281,7 +281,7 @@
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 908,
+        "id": 31,
         "controller": "opp0"
       },
       {

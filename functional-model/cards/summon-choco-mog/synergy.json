@@ -1,27 +1,6 @@
 {
   "source": [
     {
-      "event": "pump",
-      "controller": "you",
-      "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        }
-      },
-      "targeted": false,
-      "untilEndOfTurn": true,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 29,
-          "end": 84
-        }
-      ]
-    },
-    {
       "event": "sacrifice",
       "target": "self",
       "annotations": [
@@ -70,6 +49,33 @@
         "origin": "parser",
         "rule": "saga-lore-and-sacrifice-structural"
       }
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 61,
+          "end": 66
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      },
+      "triggeredBy": "chapterIV"
     }
   ],
   "sink": [
@@ -81,6 +87,7 @@
           "Creature"
         ]
       },
+      "excludeSelf": true,
       "annotations": [
         {
           "target": "oracle",
@@ -88,7 +95,11 @@
           "start": 29,
           "end": 84
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      }
     }
   ]
 }

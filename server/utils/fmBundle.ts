@@ -30,6 +30,7 @@ import fmBundleJson from '../../data/functional-model/fm-bundle.json';
 import type { Fact } from '../../functional-model/synergy';
 import type { CardDefinition } from '../../functional-model/card';
 import type { TraceResult } from '../../functional-model/harness';
+import type { CardStatusEntry } from '../../functional-model/card-status';
 
 export interface FmBundleEntry {
   name: string;
@@ -47,9 +48,47 @@ export interface FmBundleEntry {
   synergy: { source: Fact[]; sink: Fact[] } | null;
   traces: TraceResult[];
   review: 'ai' | 'human';
+  // cards/<slug>/progress.json's own `reviewCaveat` (2026-09-17, `uncertain`
+  // bucket) — see server/api/card/[set]/[number].ts's own
+  // `FunctionalModelData.reviewCaveat` doc comment. Optional (a bundle built
+  // before this field existed simply omits it, same tolerance every other
+  // field here already gets) rather than `string | null`, since this is the
+  // BUILD-time raw value, not the served-response shape.
+  reviewCaveat?: string;
   scenariosReview: 'draft' | 'reviewed';
   interactionsReview: 'draft' | 'reviewed';
+  // cards/<slug>/verified-snapshot.json's own `capturedAt` (see server/api/
+  // card/[set]/[number].ts's own `FunctionalModelData.reviewSnapshotAt`
+  // doc comment) — `null` when the card has no verified-snapshot.json.
+  reviewSnapshotAt: string | null;
   source: string;
+  // progress.json's own `annotatedNonFactSpans` (2026-09-16 annotation-
+  // taxonomy rework, see server/api/card/[set]/[number].ts's own
+  // `AnnotatedNonFactSpan` — this bundle only needs the raw shape, not the
+  // type import, since it's plain passthrough JSON either way) — always an
+  // array, `[]` when the card's progress.json has none.
+  annotatedNonFactSpans: Array<{
+    target: 'oracle' | 'typeLine';
+    line?: number;
+    start: number;
+    end: number;
+    face?: 'front' | 'back';
+    kind: 'definition-path' | 'rules' | 'lore';
+    note: string;
+  }>;
+  // Per-card fact-authoring status (2026-09-16) — precomputed here, at
+  // build time, by scripts/build-fm-bundle.mjs using the exact same
+  // classifyCardStatus/computeTextCoverage recipe
+  // functional-model/scripts/compute-card-status.mjs runs pool-wide (that
+  // script's own output is data/fin/fin_card_status.json, still what the
+  // `/app/status` grid page reads) — production can't dynamic-import
+  // definition.ts or scan data/ for oracle text at request time (see
+  // server/api/card/[set]/[number].ts's own header), so this bundle
+  // carries the already-computed value instead. `null` when it couldn't be
+  // computed for this card at all (no definition.ts, the common case for
+  // most of the corpus) — see server/api/card/[set]/[number].ts's own
+  // `FunctionalModelData.cardStatus` doc comment for the dev-vs-prod split.
+  cardStatus: CardStatusEntry | null;
 }
 
 // Cast rather than let TS infer the raw JSON shape (tuple fields like

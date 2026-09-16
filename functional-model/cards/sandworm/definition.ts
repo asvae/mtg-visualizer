@@ -11,6 +11,7 @@ export const sandworm: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           // "Destroy target land" — `destroy`'s own declarative `validType`
@@ -35,10 +36,24 @@ export const sandworm: CardDefinition = {
             const controller = target.getController();
             actions.destroy(target);
             const libraryLands = controller.getCardsIn('Library').filter((c) => c.isLand());
-            if (libraryLands.length === 0) return;
-            const found = actions.chooseTarget(libraryLands);
-            actions.moveTo(found, 'Battlefield');
-            actions.tap(found);
+            if (libraryLands.length > 0) {
+              const found = actions.chooseTarget(libraryLands);
+              actions.moveTo(found, 'Battlefield');
+              actions.tap(found);
+            }
+            // Real "...then shuffle" (601.2/701.19) — genuine bug fix
+            // (2026-09-16, escalation triage): this closure searched the
+            // controller's library but never actually called
+            // `actions.shuffleLibrary`, even though the describe string
+            // above already claimed it did and `Actions.shuffleLibrary` is
+            // a real, already-wired primitive (see `move`'s own
+            // `shuffleAfter` field, card.ts, for the same real primitive
+            // used declaratively elsewhere). Runs even when no basic land
+            // was actually found — 701.19's own "then shuffle" fires off
+            // the SEARCH itself, not off a successful find (same
+            // unconditional-per-search pattern `move`'s own `shuffleAfter`
+            // uses regardless of `moved.length`).
+            actions.shuffleLibrary(controller);
           },
         } satisfies Effect,
       ],

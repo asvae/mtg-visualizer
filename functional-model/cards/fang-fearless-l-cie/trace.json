@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Fang, Fearless l'Cie",
         "instanceId": 1,
-        "id": 874,
+        "id": 2,
         "name": "onGraveyardCardsLeave"
       },
       {
@@ -43,7 +43,7 @@
         "fn": "cast",
         "card": "Fang, Fearless l'Cie",
         "instanceId": 1,
-        "id": 876,
+        "id": 4,
         "from": "hand",
         "cost": "{2}{B}"
       },
@@ -51,7 +51,7 @@
         "fn": "enters",
         "card": "Fang, Fearless l'Cie",
         "instanceId": 1,
-        "id": 876,
+        "id": 4,
         "zone": "Battlefield"
       },
       {

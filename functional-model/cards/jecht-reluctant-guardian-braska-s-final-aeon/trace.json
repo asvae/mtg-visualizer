@@ -17,20 +17,20 @@
         "fn": "trigger",
         "card": "Jecht, Reluctant Guardian",
         "instanceId": 1,
-        "id": 1254,
+        "id": 3,
         "name": "onDealsDamage"
       },
       {
         "fn": "moveTo",
         "target": "Jecht, Reluctant Guardian",
-        "id": 1254,
+        "id": 3,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Jecht, Reluctant Guardian",
-        "id": 1254,
+        "id": 3,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -57,7 +57,7 @@
         "fn": "trigger",
         "card": "Braska's Final Aeon",
         "instanceId": 1,
-        "id": 1260,
+        "id": 9,
         "name": "chapterI"
       },
       {
@@ -95,7 +95,7 @@
         "fn": "trigger",
         "card": "Braska's Final Aeon",
         "instanceId": 1,
-        "id": 1266,
+        "id": 15,
         "name": "chapterIII"
       },
       {

@@ -10,6 +10,7 @@ export const rinoaHeartilly: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       // "Create Angelo, a legendary 1/1 green and white Dog creature
       // token" — `Legendary` folded into `types` alongside the core types
       // (state.ts's own `createToken` strips only Creature/Artifact/

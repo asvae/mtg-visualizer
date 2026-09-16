@@ -19,7 +19,15 @@ export const thranduilSindarinLiege: CardDefinition = {
   typeLine: 'Legendary Creature — Elf Noble',
   pt: [2, 3],
 
+  // Now real, executable `continuousPTGrants` with a `subtype` broadcast
+  // (2026-09-16, static-ability audit) — same real, already-existing
+  // shared broadcast mechanism `elvish-archdruid`'s own identical "Other
+  // Elf(ves) you control get +1/+1" anthem now uses. Also a cross-set
+  // reference card with no real oracle text checked in (same gap
+  // elvish-archdruid's own comment documents) — mechanically real and
+  // live regardless, just not auto-tagged into `synergy.json`.
   staticAbilities: ['Other Elves you control get +1/+1.'],
+  continuousPTGrants: [{ power: 1, toughness: 1, includeSelf: false, subtype: 'Elf' }],
 
   triggers: [
     {

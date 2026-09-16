@@ -2,10 +2,10 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": " 2026-09-16 (recognizer-lane 'sacrifice as cost' triage): new sacrificeSelfCost-structural.ts (real whole-pool check found 6 real matches, not just the 3 this task was originally scoped around -- see that recognizer's own module doc comment) provenances this card's own 'Sacrifice <own name>/this <type>' cost-sacrifice fact. Ran apply-recognizers.mjs --slug=<this> -- as an honest side effect of the additive/idempotent design (this card hadn't been fully reprocessed since several newer recognizers were registered), picked up unrelated, real, incidental fixes too: its own dealDamageTarget-effect-structural fact gained real provenance/annotations it was missing.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "onExpensiveNoncreatureSpellCast trigger's own condition has no want — no vocabulary exists for a generic 'expensive spell cast' event"
+    "onExpensiveNoncreatureSpellCast trigger's own condition has no want \u2014 no vocabulary exists for a generic 'expensive spell cast' event"
   ]
 }

@@ -29,7 +29,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onOpponentCreatureDies"
     }
   ],
   "sink": [
@@ -45,6 +46,22 @@
     {
       "event": "dies",
       "controller": "opp"
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 21
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

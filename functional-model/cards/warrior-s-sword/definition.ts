@@ -9,11 +9,19 @@ export const warriorsSword: CardDefinition = {
   manaCost: '{3}{R}',
   typeLine: 'Artifact — Equipment',
 
+  // Real, mechanical `continuousPTGrants`/`continuousTypeGrants`
+  // (2026-09-16, static-ability audit follow-up — same already-real
+  // query-time machinery white-mage-s-staff's own identical shape already
+  // uses).
   staticAbilities: ['Equipped creature gets +3/+2 and is a Warrior in addition to its other types.'],
+
+  continuousPTGrants: [{ power: 3, toughness: 2, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Warrior'], includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

@@ -41,12 +41,17 @@ export const theWanderingMinstrel: CardDefinition = {
   // Computed fields — same unseedable-Town-subtype testability gap.
   activationCost: '{3}{W}{U}{B}{R}{G}',
   effects: [
+    // `untilEndOfTurn: true` (2026-09-15 fix, fin/26-50 pass) was missing
+    // despite the real oracle text/this doc comment both saying "until end
+    // of turn" — same systemic omission bug class fixed pool-wide earlier
+    // this session.
     {
       kind: 'pumpAll',
       predicate: 'creatures-you-control',
       notSelf: true,
       power: (ctx) => ctx.you.getCardsIn('Battlefield').filter((c) => c.isLand() && c.hasSubtype('Town')).length,
       toughness: (ctx) => ctx.you.getCardsIn('Battlefield').filter((c) => c.isLand() && c.hasSubtype('Town')).length,
+      untilEndOfTurn: true,
     } satisfies Effect,
   ],
 };

@@ -83,7 +83,11 @@ describe('putCounter-broadcast-structural — action-probe classification + verb
       },
       {
         role: 'sink',
-        fact: { to: 'Battlefield', controller: 'you', types: { has: ['Creature', 'Legendary'] }, annotations: [{ target: 'oracle', line: 2, start: 31, end: 90 }] },
+        // Narrowed 2026-09-16 (real user-reported bug: the sink used to
+        // reuse the SOURCE's own whole-clause span [31,90) verbatim — this
+        // sink's own real claim is only "a legendary creature you control
+        // exists", i.e. just the trailing object phrase, not the verb).
+        fact: { to: 'Battlefield', controller: 'you', types: { has: ['Creature', 'Legendary'] }, annotations: [{ target: 'oracle', line: 2, start: 55, end: 90 }] },
         provenance: { origin: 'parser', rule: 'putCounter-broadcast-structural' },
       },
     ]);
@@ -91,6 +95,8 @@ describe('putCounter-broadcast-structural — action-probe classification + verb
     // hand-authored source fact's annotation byte-for-byte.
     const lines = rawStructural.oracleText.split('\n');
     expect(lines[2]!.slice(31, 90)).toBe('put X +1/+1 counters on each legendary creature you control');
+    // Real byproduct check — the sink's own narrower object-phrase span.
+    expect(lines[2]!.slice(55, 90)).toBe('each legendary creature you control');
   });
 
   it('classifies Bahamut, Warden of Light (Dion\'s back face)\'s own PRE-migration chapter I+II closure shape — "Put a +1/+1 counter on each OTHER creature you control" (the "other" variant; chapterI+chapterII both match the SAME real clause, so the SAME pair is returned twice, deduped at the runner level)', () => {
@@ -127,7 +133,16 @@ describe('putCounter-broadcast-structural — action-probe classification + verb
       },
       provenance: { origin: 'parser', rule: 'putCounter-broadcast-structural' },
     });
-    expect(result.facts[1]).toMatchObject({ role: 'sink', fact: { to: 'Battlefield', controller: 'you', types: { has: ['Creature'] } } });
+    // Narrowed 2026-09-16 (same real sink over-selection bug Aerith
+    // Gainsborough surfaced) — sink anchors to just "each other creature you
+    // control" (chars [48,79)), not the whole [25,79) verb clause.
+    expect(result.facts[1]).toEqual({
+      role: 'sink',
+      fact: { to: 'Battlefield', controller: 'you', types: { has: ['Creature'] }, annotations: [{ target: 'oracle', line: 1, start: 48, end: 79 }] },
+      provenance: { origin: 'parser', rule: 'putCounter-broadcast-structural' },
+    });
+    const lines = rawStructural.oracleText.split('\n');
+    expect(lines[1]!.slice(48, 79)).toBe('each other creature you control');
   });
 
   it('classifies The Crystal\'s Chosen\'s own PRE-migration 2nd-effect closure shape — "put a +1/+1 counter on each creature you control" (the plain, non-"other" variant — no self on the battlefield to exclude in the first place; a Sorcery)', () => {
@@ -150,6 +165,12 @@ describe('putCounter-broadcast-structural — action-probe classification + verb
     if (!result.matched) return;
     expect(result.facts[0]!.fact).toMatchObject({ event: 'putCounter', counterType: '+1/+1', controller: 'you', target: { types: { has: ['Creature'] } }, targeted: false });
     expect(result.facts[1]!.fact).toMatchObject({ to: 'Battlefield', controller: 'you', types: { has: ['Creature'] } });
+    // Narrowed 2026-09-16 (same real sink over-selection bug Aerith
+    // Gainsborough surfaced) — sink anchors to just "each creature you
+    // control" (chars [76,101)), not the whole [53,101) verb clause.
+    expect(result.facts[1]!.fact.annotations).toEqual([{ target: 'oracle', line: 0, start: 76, end: 101 }]);
+    const lines = rawStructural.oracleText.split('\n');
+    expect(lines[0]!.slice(76, 101)).toBe('each creature you control');
   });
 
   it('declines Aerith Rescue Mission — its own real closure calls `actions.chooseTarget` before `putCounter` (a chosen-target shape, out of the probe\'s own scope) — matches today\'s existing hand-authored data (this specific fact stays agent-derived, not this recognizer\'s concern)', () => {

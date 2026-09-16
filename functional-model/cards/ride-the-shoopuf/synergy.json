@@ -22,7 +22,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterTarget-effect-structural"
-      }
+      },
+      "triggeredBy": "onLandfall"
     }
   ],
   "sink": [
@@ -54,7 +55,7 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 47,
+          "start": 70,
           "end": 85
         }
       ],

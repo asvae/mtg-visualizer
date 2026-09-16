@@ -14,15 +14,16 @@
         "fn": "trigger",
         "card": "Loporrit Scout",
         "instanceId": 1,
-        "id": 1473,
+        "id": 2,
         "name": "onOtherCreatureEnters"
       },
       {
         "fn": "pump",
         "target": "Loporrit Scout",
-        "id": 1473,
+        "id": 2,
         "power": 1,
-        "toughness": 1
+        "toughness": 1,
+        "untilEndOfTurn": true
       }
     ]
   }

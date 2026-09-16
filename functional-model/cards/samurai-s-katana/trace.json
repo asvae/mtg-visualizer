@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Samurai's Katana",
         "instanceId": 1,
-        "id": 2048,
+        "id": 2,
         "name": "onEnter"
       },
       {
@@ -29,9 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Samurai's Katana",
-        "equipmentId": 2048,
+        "equipmentId": 2,
         "target": "Hero",
-        "id": 2049
+        "id": 3
       }
     ]
   },
@@ -52,7 +52,7 @@
         "fn": "activate",
         "card": "Samurai's Katana",
         "instanceId": 1,
-        "id": 2053,
+        "id": 7,
         "cost": "{5}"
       },
       {
@@ -63,9 +63,9 @@
       {
         "fn": "equip",
         "equipment": "Samurai's Katana",
-        "equipmentId": 2053,
+        "equipmentId": 7,
         "target": "Grizzly Bears",
-        "id": 2051
+        "id": 5
       }
     ]
   }

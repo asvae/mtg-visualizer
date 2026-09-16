@@ -30,7 +30,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "tap",
@@ -48,7 +49,41 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "sacrifice",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 10,
+          "end": 33
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeSelfCost-structural"
+      }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
+    }
+  ]
 }

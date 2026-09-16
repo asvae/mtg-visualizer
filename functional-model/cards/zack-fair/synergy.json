@@ -1,31 +1,6 @@
 {
   "source": [
     {
-      "event": "cast",
-      "from": "Hand",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ]
-    },
-    {
-      "event": "entersBattlefield",
-      "to": "Battlefield",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "typeLine",
-          "start": 10,
-          "end": 18
-        }
-      ]
-    },
-    {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
@@ -49,7 +24,11 @@
           "start": 5,
           "end": 24
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeSelfCost-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -71,7 +50,11 @@
           "start": 54,
           "end": 92
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordProgram-effect-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -92,7 +75,34 @@
           "start": 94,
           "end": 135
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterProgram-effect-structural"
+      }
+    },
+    {
+      "event": "equip",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 140,
+          "end": 207
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -107,7 +117,11 @@
           "start": 98,
           "end": 118
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterProgram-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -121,10 +135,41 @@
         {
           "target": "oracle",
           "line": 1,
+          "start": 194,
+          "end": 207
+        },
+        {
+          "target": "oracle",
+          "line": 1,
           "start": 26,
           "end": 53
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Equipment"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 147,
+          "end": 190
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
     }
   ]
 }

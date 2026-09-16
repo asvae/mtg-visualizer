@@ -20,6 +20,51 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Haste",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 32
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
+    },
+    {
+      "event": "costReduction",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "R"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 41
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "spellCostReductionGrants-structural"
+      }
     }
   ],
   "sink": [

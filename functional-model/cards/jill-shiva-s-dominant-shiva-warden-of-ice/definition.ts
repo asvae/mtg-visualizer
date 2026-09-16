@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { sequence } from '../../combinator';
 
 // A transforming DFC Legendary Creature // Saga — same shape as
 // dion-bahamut-s-dominant-bahamut-warden-of-light / jecht-reluctant-
@@ -39,12 +40,13 @@ export const jillShivasDominant: CardDefinition = {
   activationCost: '{3}{U}{U}, {T} (activate only as a sorcery)',
   effects: [
     {
-      kind: 'custom',
+      // MIGRATED (2026-09-16) off a `kind:'custom'` closure onto the real
+      // `combinator.ts` AST — the same 2-step `Sequence` shape
+      // dion-bahamut-s-dominant-bahamut-warden-of-light's own front-face
+      // transform ability (and this card's own chapter III below) both use.
+      kind: 'program',
       describe: "exile Jill, then return it to the battlefield transformed under its owner's control",
-      run: (ctx: EffectContext, actions: Actions) => {
-        actions.moveTo(ctx.self, 'Exile');
-        actions.moveTo(ctx.self, 'Battlefield');
-      },
+      program: sequence('Exile', 'Battlefield'),
     } satisfies Effect,
   ],
 
@@ -81,12 +83,12 @@ export const jillShivasDominant: CardDefinition = {
           // `tapAll` Effect kind).
           { kind: 'tapAll', predicate: 'lands', owner: 'opponents' } satisfies Effect,
           {
-            kind: 'custom',
+            // MIGRATED (2026-09-16) off a `kind:'custom'` closure onto the
+            // real `combinator.ts` AST — the same 2-step `Sequence` shape
+            // used by the front face's own transform ability above.
+            kind: 'program',
             describe: 'Cold Snap — exile Shiva, then return it to the battlefield (front face up)',
-            run: (ctx: EffectContext, actions: Actions) => {
-              actions.moveTo(ctx.self, 'Exile');
-              actions.moveTo(ctx.self, 'Battlefield');
-            },
+            program: sequence('Exile', 'Battlefield'),
           } satisfies Effect,
         ],
       },

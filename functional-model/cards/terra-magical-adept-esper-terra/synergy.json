@@ -51,6 +51,23 @@
         ]
       },
       "face": "front"
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 17
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

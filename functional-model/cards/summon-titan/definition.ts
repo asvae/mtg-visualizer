@@ -54,24 +54,36 @@ export const summonTitan: CardDefinition = {
       // own comment documents) — `chooseTarget`'s deterministic
       // first-candidate pick lands both on the SAME creature since nothing
       // mutates the pool in between. X read live off `getLandsInPlay()`.
-      // NOTE: neither `pumpTarget` nor `grantKeywordTarget` has a `notSelf`
-      // field (unlike `pumpAll`/`move`/`sacrifice`, which do) — the real
-      // "ANOTHER target creature" restriction isn't a hard filter here.
-      // Demonstrated correctly anyway because `setupPlayer` adds every
-      // scenario creature BEFORE `self` is pushed onto the battlefield
-      // (harness.ts), so `self` is never `pool[0]` as long as at least one
-      // other creature you control exists — real but ORDER-dependent, not
-      // mechanically enforced; with zero other creatures the model would
-      // incorrectly let this target `self`.
+      // `notSelf: true` (2026-09-16 fix, fin/26-50 pass) — BOTH `pumpTarget`
+      // and `grantKeywordTarget` DO have a real `notSelf` field (`card.ts`);
+      // this file's own former comment predated both fields' addition and
+      // was stale (same class of stale-comment bug fixed elsewhere this
+      // session) — the real "ANOTHER target creature" restriction is now a
+      // genuine, mechanically-enforced filter, not an accident of
+      // `setupPlayer`'s own scenario-ordering (harness.ts).
       name: 'chapterIII',
       effects: [
         {
           kind: 'pumpTarget',
           owner: 'you',
+          notSelf: true,
           power: (ctx: EffectContext) => ctx.you.getLandsInPlay().length,
           toughness: (ctx: EffectContext) => ctx.you.getLandsInPlay().length,
+          // Real fix (2026-09-15): "Until end of turn, ... gains trample and
+          // gets +X/+X" — this pump was silently PERMANENT-within-scenario
+          // before (same missing-field bug this pass fixed pool-wide).
+          untilEndOfTurn: true,
         } satisfies Effect,
-        { kind: 'grantKeywordTarget', keyword: 'Trample', validType: 'creature', owner: 'you' } satisfies Effect,
+        // recognizer-exception: grantKeywordTarget-effect-structural — the
+        // real printed text is "Until end of turn, another target creature
+        // you control gains trample AND GETS +X/+X" — "until end of turn"
+        // is a SENTENCE-INITIAL prefix here (not the trailing "... gains
+        // trample until end of turn" suffix shape this recognizer's own
+        // confirmed template covers), and the keyword comes BEFORE the pump
+        // clause, not after — a genuinely different real sentence order
+        // with no other confirmed pool precedent yet; a confirmed mismatch
+        // (real card-text variant), not a bug.
+        { kind: 'grantKeywordTarget', keyword: 'Trample', validType: 'creature', owner: 'you', notSelf: true, untilEndOfTurn: true } satisfies Effect,
       ],
     },
   ],

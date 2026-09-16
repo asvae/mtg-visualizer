@@ -6,11 +6,13 @@ export const coralSword: CardDefinition = {
   typeLine: 'Artifact — Equipment',
 
   keywords: ['Flash'],
-  // "Equipped creature gets +1/+0" — a continuous static ability, not a
-  // resolvable effect (no ptFormula shape fits an equipment's own grant to
-  // whatever it's attached to either) — real text, same convention every
-  // other always-on continuous ability in this batch uses.
+  // "Equipped creature gets +1/+0" — real, mechanical `continuousPTGrants`
+  // (2026-09-16, static-ability audit follow-up — same already-real
+  // query-time machinery dragoon-s-lance/paladin-s-arms/thief-s-knife/etc.
+  // already use for this exact shape; this card was simply never migrated).
   staticAbilities: ['Equipped creature gets +1/+0.'],
+
+  continuousPTGrants: [{ power: 1, toughness: 0, includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     {
@@ -25,6 +27,7 @@ export const coralSword: CardDefinition = {
       // `Defined$ Targeted` (the second effect targeting whatever the
       // first one attached to).
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',
@@ -34,7 +37,15 @@ export const coralSword: CardDefinition = {
             if (target) actions.equip(ctx.self, target);
           },
         } satisfies Effect,
-        { kind: 'grantKeywordTarget', keyword: 'FirstStrike', validType: 'creature' } satisfies Effect,
+        // recognizer-exception: grantKeywordTarget-effect-structural — the
+        // real printed text says "THAT creature gains first strike" (an
+        // anaphoric reference back to the SEPARATE `custom` attach effect's
+        // own chosen target above, never the literal words "target creature
+        // you control"); this effect's own `owner` field is deliberately
+        // left unset since the actual choosing already happened in that
+        // other effect (see this trigger's own module comment) — a
+        // confirmed mismatch (structural approximation), not a bug.
+        { kind: 'grantKeywordTarget', keyword: 'FirstStrike', validType: 'creature', untilEndOfTurn: true } satisfies Effect,
       ],
     },
   ],

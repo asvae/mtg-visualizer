@@ -18,7 +18,7 @@
         "fn": "trigger",
         "card": "Summon: G.F. Ifrit",
         "instanceId": 1,
-        "id": 2433,
+        "id": 4,
         "name": "chapterI"
       },
       {
@@ -55,7 +55,7 @@
         "fn": "trigger",
         "card": "Summon: G.F. Ifrit",
         "instanceId": 1,
-        "id": 2437,
+        "id": 8,
         "name": "chapterII"
       },
       {
@@ -88,7 +88,7 @@
         "fn": "trigger",
         "card": "Summon: G.F. Ifrit",
         "instanceId": 1,
-        "id": 2439,
+        "id": 10,
         "name": "chapterIII"
       }
     ]
@@ -108,7 +108,7 @@
         "fn": "trigger",
         "card": "Summon: G.F. Ifrit",
         "instanceId": 1,
-        "id": 2441,
+        "id": 12,
         "name": "chapterIV"
       }
     ]

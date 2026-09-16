@@ -3,6 +3,24 @@
     {
       "event": "damage",
       "controller": "you"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 28
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [
@@ -22,6 +40,22 @@
         "has": [
           "Creature"
         ]
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 26
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

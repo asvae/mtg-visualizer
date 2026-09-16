@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Champions of the Perfect",
         "instanceId": 1,
-        "id": 342,
+        "id": 2,
         "from": "hand",
         "cost": "{3}{G}"
       },
@@ -21,7 +21,7 @@
         "fn": "enters",
         "card": "Champions of the Perfect",
         "instanceId": 1,
-        "id": 342,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]
@@ -41,7 +41,7 @@
         "fn": "trigger",
         "card": "Champions of the Perfect",
         "instanceId": 1,
-        "id": 344,
+        "id": 4,
         "name": "onCastCreatureSpell"
       },
       {

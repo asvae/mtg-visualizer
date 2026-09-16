@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 329,
+        "id": 2,
         "name": "onDealsDamage"
       },
       {
@@ -53,7 +53,7 @@
         "fn": "trigger",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 331,
+        "id": 4,
         "name": "onDealsDamage"
       },
       {
@@ -69,19 +69,19 @@
       {
         "fn": "untap",
         "target": "Cecil, Dark Knight",
-        "id": 331
+        "id": 4
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
-        "id": 331,
+        "id": 4,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Cecil, Dark Knight",
-        "id": 331,
+        "id": 4,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -91,9 +91,9 @@
     "scenario": {
       "setup": "you: 1 creature(s)",
       "action": "\"onAttacks\" trigger fires, back face",
-      "result": "other attacking creatures gain indestructible until end of turn (not mechanically enforced)",
+      "result": "other attacking creatures gain indestructible until end of turn — real, mechanically-enforced grantKeywordAll('attacking-creatures') as of 2026-09-16, not yet re-demonstrated by this scenario (see this case's own comment)",
       "raw": {
-        "result": "other attacking creatures gain indestructible until end of turn (not mechanically enforced)",
+        "result": "other attacking creatures gain indestructible until end of turn — real, mechanically-enforced grantKeywordAll('attacking-creatures') as of 2026-09-16, not yet re-demonstrated by this scenario (see this case's own comment)",
         "face": "back",
         "trigger": "onAttacks",
         "you": {
@@ -106,8 +106,13 @@
         "fn": "trigger",
         "card": "Cecil, Redeemed Paladin",
         "instanceId": 1,
-        "id": 334,
+        "id": 7,
         "name": "onAttacks"
+      },
+      {
+        "fn": "read:getCreaturesInPlay",
+        "player": "you",
+        "count": 2
       }
     ]
   },
@@ -129,7 +134,7 @@
         "fn": "cast",
         "card": "Cecil, Redeemed Paladin",
         "instanceId": 1,
-        "id": 336,
+        "id": 9,
         "from": "hand",
         "cost": ""
       },
@@ -137,13 +142,13 @@
         "fn": "enters",
         "card": "Cecil, Redeemed Paladin",
         "instanceId": 1,
-        "id": 336,
+        "id": 9,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Cecil, Redeemed Paladin",
-        "sourceId": 336,
+        "sourceId": 9,
         "target": "opp0",
         "amount": 3
       },
@@ -170,7 +175,7 @@
         "fn": "cast",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 339,
+        "id": 12,
         "from": "hand",
         "cost": "{B}"
       },
@@ -178,7 +183,7 @@
         "fn": "enters",
         "card": "Cecil, Dark Knight",
         "instanceId": 1,
-        "id": 339,
+        "id": 12,
         "zone": "Battlefield"
       },
       {

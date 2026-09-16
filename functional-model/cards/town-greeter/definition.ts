@@ -10,6 +10,7 @@ export const townGreeter: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           // Mill 4, then a conditional pick-a-land-then-maybe-gain-life

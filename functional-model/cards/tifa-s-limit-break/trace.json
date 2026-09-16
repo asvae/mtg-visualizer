@@ -19,7 +19,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2858,
+        "id": 3,
         "from": "hand",
         "cost": "{G}"
       },
@@ -31,15 +31,16 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2857,
+        "id": 2,
         "power": 2,
-        "toughness": 2
+        "toughness": 2,
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2858,
+        "id": 3,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -66,7 +67,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2861,
+        "id": 6,
         "from": "hand",
         "cost": "{G}"
       },
@@ -88,7 +89,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2860,
+        "id": 5,
         "power": 3,
         "toughness": 3
       },
@@ -96,7 +97,7 @@
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2861,
+        "id": 6,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -123,7 +124,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2864,
+        "id": 9,
         "from": "hand",
         "cost": "{G}"
       },
@@ -145,7 +146,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2863,
+        "id": 8,
         "power": 4,
         "toughness": 4
       },
@@ -153,7 +154,7 @@
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2864,
+        "id": 9,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -176,7 +177,7 @@
         "fn": "cast",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2866,
+        "id": 11,
         "from": "hand",
         "cost": "{G}"
       },
@@ -189,7 +190,7 @@
         "fn": "move",
         "card": "Tifa's Limit Break",
         "instanceId": 1,
-        "id": 2866,
+        "id": 11,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

@@ -13,7 +13,7 @@
         "fn": "activate",
         "card": "Elvish Archdruid",
         "instanceId": 1,
-        "id": 782,
+        "id": 2,
         "cost": "{T}"
       },
       {
@@ -52,7 +52,7 @@
         "fn": "activate",
         "card": "Elvish Archdruid",
         "instanceId": 1,
-        "id": 784,
+        "id": 4,
         "cost": "{T}"
       },
       {
@@ -94,7 +94,7 @@
         "fn": "activate",
         "card": "Elvish Archdruid",
         "instanceId": 1,
-        "id": 788,
+        "id": 8,
         "cost": "{T}"
       },
       {

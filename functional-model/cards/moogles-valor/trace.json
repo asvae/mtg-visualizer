@@ -17,7 +17,7 @@
         "fn": "cast",
         "card": "Moogles' Valor",
         "instanceId": 1,
-        "id": 1710,
+        "id": 5,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -43,44 +43,50 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1707,
-        "keyword": "Indestructible"
+        "id": 2,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1708,
-        "keyword": "Indestructible"
+        "id": 3,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1709,
-        "keyword": "Indestructible"
+        "id": 4,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Moogle",
-        "id": 1711,
-        "keyword": "Indestructible"
+        "id": 6,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Moogle",
-        "id": 1712,
-        "keyword": "Indestructible"
+        "id": 7,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Moogle",
-        "id": 1713,
-        "keyword": "Indestructible"
+        "id": 8,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
         "card": "Moogles' Valor",
         "instanceId": 1,
-        "id": 1710,
+        "id": 5,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -105,7 +111,7 @@
         "fn": "cast",
         "card": "Moogles' Valor",
         "instanceId": 1,
-        "id": 1715,
+        "id": 10,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -132,7 +138,7 @@
         "fn": "move",
         "card": "Moogles' Valor",
         "instanceId": 1,
-        "id": 1715,
+        "id": 10,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

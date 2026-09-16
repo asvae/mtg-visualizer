@@ -20,7 +20,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "digReveal-effect-structural"
-      }
+      },
+      "triggeredBy": "onAttack"
     }
   ],
   "sink": [

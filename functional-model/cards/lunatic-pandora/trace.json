@@ -14,7 +14,7 @@
         "fn": "activate",
         "card": "Lunatic Pandora",
         "instanceId": 1,
-        "id": 1478,
+        "id": 2,
         "cost": "{2}, {T}",
         "ability": "surveil"
       },
@@ -48,7 +48,7 @@
         "fn": "activate",
         "card": "Lunatic Pandora",
         "instanceId": 1,
-        "id": 1483,
+        "id": 7,
         "cost": "{6}, {T}, Sacrifice Lunatic Pandora",
         "ability": "destroyNonland"
       },
@@ -84,7 +84,7 @@
       {
         "fn": "destroy",
         "target": "Mind Stone",
-        "id": 1480,
+        "id": 4,
         "controller": "you"
       }
     ]
@@ -104,7 +104,7 @@
         "fn": "cast",
         "card": "Lunatic Pandora",
         "instanceId": 1,
-        "id": 1485,
+        "id": 9,
         "from": "hand",
         "cost": "{1}"
       },
@@ -112,7 +112,7 @@
         "fn": "enters",
         "card": "Lunatic Pandora",
         "instanceId": 1,
-        "id": 1485,
+        "id": 9,
         "zone": "Battlefield"
       },
       {

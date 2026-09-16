@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Giott, King of the Dwarves",
         "instanceId": 1,
-        "id": 1084,
+        "id": 3,
         "name": "onDwarfOrEquipmentEnters"
       },
       {
@@ -49,7 +49,7 @@
         "fn": "cast",
         "card": "Giott, King of the Dwarves",
         "instanceId": 1,
-        "id": 1086,
+        "id": 5,
         "from": "hand",
         "cost": "{R}{W}"
       },
@@ -57,7 +57,7 @@
         "fn": "enters",
         "card": "Giott, King of the Dwarves",
         "instanceId": 1,
-        "id": 1086,
+        "id": 5,
         "zone": "Battlefield"
       },
       {

@@ -20,7 +20,7 @@
         "fn": "trigger",
         "card": "Serah Farron",
         "instanceId": 1,
-        "id": 2161,
+        "id": 4,
         "name": "onBeginCombat"
       },
       {
@@ -49,14 +49,14 @@
       {
         "fn": "moveTo",
         "target": "Serah Farron",
-        "id": 2161,
+        "id": 4,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Serah Farron",
-        "id": 2161,
+        "id": 4,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -83,7 +83,7 @@
         "fn": "trigger",
         "card": "Serah Farron",
         "instanceId": 1,
-        "id": 2164,
+        "id": 7,
         "name": "onBeginCombat"
       },
       {
@@ -120,7 +120,7 @@
         "fn": "cast",
         "card": "Crystallized Serah",
         "instanceId": 1,
-        "id": 2166,
+        "id": 9,
         "from": "hand",
         "cost": ""
       },
@@ -128,7 +128,7 @@
         "fn": "enters",
         "card": "Crystallized Serah",
         "instanceId": 1,
-        "id": 2166,
+        "id": 9,
         "zone": "Battlefield"
       }
     ]
@@ -148,7 +148,7 @@
         "fn": "cast",
         "card": "Serah Farron",
         "instanceId": 1,
-        "id": 2168,
+        "id": 11,
         "from": "hand",
         "cost": "{1}{G}{W}"
       },
@@ -156,7 +156,7 @@
         "fn": "enters",
         "card": "Serah Farron",
         "instanceId": 1,
-        "id": 2168,
+        "id": 11,
         "zone": "Battlefield"
       },
       {

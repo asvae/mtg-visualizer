@@ -44,6 +44,17 @@ describe('triggerDoubling-selfAndAttachedEquipment-structural', () => {
         provenance: { origin: 'parser', rule: 'triggerDoubling-selfAndAttachedEquipment-structural' },
       },
     ]);
+    // 2026-09-16 widening: both facts now share ONE annotation spanning the
+    // whole sentence (closes a real verify-text-coverage.mjs gap — "As long
+    // as Cloud is equipped, if" and "triggers, that ability triggers an
+    // additional time" were both uncovered before this).
+    const card = finCards.get('Cloud, Midgar Mercenary')!;
+    const ann = result.facts[0]!.fact.annotations![0]!;
+    expect(result.facts[1]!.fact.annotations![0]).toEqual(ann);
+    const line = card.front.oracleText.split('\n')[ann.line as number]!;
+    expect(line.slice(ann.start as number, ann.end as number)).toBe(
+      'As long as Cloud is equipped, if a triggered ability of Cloud or an Equipment attached to it triggers, that ability triggers an additional time',
+    );
   });
 
   it('declines The Masamune — scope:"equippedSelf", a genuinely different real sentence', () => {

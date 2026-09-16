@@ -18,7 +18,7 @@
         "fn": "trigger",
         "card": "Raubahn, Bull of Ala Mhigo",
         "instanceId": 1,
-        "id": 1887,
+        "id": 4,
         "name": "onAttack"
       },
       {
@@ -54,9 +54,9 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "equipmentId": 1886,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 1885
+        "id": 2
       }
     ]
   },
@@ -78,7 +78,7 @@
         "fn": "trigger",
         "card": "Raubahn, Bull of Ala Mhigo",
         "instanceId": 1,
-        "id": 1890,
+        "id": 7,
         "name": "onAttack"
       },
       {
@@ -117,7 +117,7 @@
         "fn": "cast",
         "card": "Raubahn, Bull of Ala Mhigo",
         "instanceId": 1,
-        "id": 1892,
+        "id": 9,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -125,7 +125,7 @@
         "fn": "enters",
         "card": "Raubahn, Bull of Ala Mhigo",
         "instanceId": 1,
-        "id": 1892,
+        "id": 9,
         "zone": "Battlefield"
       },
       {

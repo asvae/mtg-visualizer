@@ -17,7 +17,7 @@
         "fn": "activate",
         "card": "Phantom Train",
         "instanceId": 1,
-        "id": 1794,
+        "id": 4,
         "cost": "Sacrifice another artifact or creature"
       },
       {
@@ -46,7 +46,7 @@
       {
         "fn": "putCounter",
         "target": "Phantom Train",
-        "id": 1794,
+        "id": 4,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -54,7 +54,7 @@
       {
         "fn": "animate",
         "target": "Phantom Train",
-        "id": 1794,
+        "id": 4,
         "types": [
           "Artifact",
           "Creature",

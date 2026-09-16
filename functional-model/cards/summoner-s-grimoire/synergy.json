@@ -6,6 +6,25 @@
       "subject": {
         "token": "c_1_1_hero"
       }
+    },
+    {
+      "event": "grantType",
+      "type": "Shaman",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 18,
+          "end": 60
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousTypeGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [

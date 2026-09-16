@@ -3,7 +3,7 @@ import { onMounted, onBeforeUnmount, ref, watch, inject } from 'vue';
 import { createGraphRenderer, type RenderOptions, type GraphHandlers } from '../lib/graphRenderer';
 import type { AttrFilters } from '../lib/filters';
 import { StoreKey } from '../composables/useGraphStore';
-import type { GraphFile } from '../types';
+import type { CardData, GraphFile } from '../types';
 
 const props = defineProps<{ graph: GraphFile }>();
 const store = inject(StoreKey)!;
@@ -103,12 +103,21 @@ onMounted(() => {
     },
     onBackgroundClick() {
       store.cardSelection.clear();
-      // Clicking empty canvas is this graph's own "click outside" — closes
-      // the peek panel same as Escape/clicking outside it elsewhere on the
-      // page (CardPeekPanel.vue's own document-level listener deliberately
-      // ignores clicks inside #graph, precisely so a click on a NODE — which
-      // should switch the panel, not close it — never races this handler).
-      store.closeCardPanel();
+      // Deliberately does NOT close the peek panel — clicking outside it
+      // (canvas background included) is not a close gesture; only the
+      // panel's own Close button or Escape closes it.
+    },
+    // Deck-qty stepper (graphRenderer.ts's own `.card-qty-stepper`) — `card`
+    // is the node's own current CardData (its `qty` field self-corrects via
+    // the `props.graph` watcher's own `syncCardQty` call below, so this
+    // always reads a fresh-enough value in practice even across rapid
+    // clicks). Reuses the EXACT same mutation ListView.vue's own per-row
+    // stepper calls (`setDeckEntryQuantity`, clamped at 0, `card` passed as
+    // the preset so a brand-new Deck entry — going from 0 to 1 on a card
+    // that was never in the Deck at all — never needs a network fetch) —
+    // not a second Deck-mutation path.
+    onDeckQtyChange(card: CardData, delta: number) {
+      store.setDeckEntryQuantity(card.id, Math.max(0, (card.qty ?? 0) + delta), card);
     },
   };
 
@@ -162,6 +171,22 @@ onMounted(() => {
   watch(
     () => store.searchQuery.value,
     (q) => renderer!.applySearch(q)
+  );
+  // Deck-scoped sink-supply annotation (small text rows drawn under each
+  // Deck card's own node — graphRenderer.ts's own DeckSinkRow/
+  // setDeckSinkRows) — entirely independent of the produce/consume/
+  // atypical/grant/magnifier edge system: this never touches
+  // currentFilters()/currentRenderOptions() or triggers render()/reheats
+  // the simulation, it only ever replaces text under nodes already on
+  // screen. immediate: true re-applies whatever the store already fetched
+  // right away — needed both on first mount (a restored Deck's rows may
+  // already be in flight/resolved before this component even mounts) and
+  // whenever the `props.graph` watcher below recreates the renderer from
+  // scratch, which starts with an empty sinkRowsByCardId of its own.
+  watch(
+    () => store.deckSinkRows.value,
+    (rows) => renderer!.setDeckSinkRows(rows),
+    { immediate: true }
   );
   // immediate: true — the URL can already have `card` populated by the time this
   // component mounts (store.load() resolves it synchronously before Vue even
@@ -256,6 +281,15 @@ onMounted(() => {
             renderer.addCards(addedCards, newLinks);
           }
         }
+        // Deck-qty stepper/×N badge live sync (graphRenderer.ts's own
+        // `syncCardQty`) — runs on EVERY graph change, not just ones that
+        // added/removed a card id: the common case (a qty edit on a card
+        // already visible via base Scope, including clicking the stepper's
+        // own +/- button on that exact node) changes NEITHER set, so it
+        // would otherwise never reach the renderer at all. No-ops cheaply
+        // when nothing's actually different (a plain Colors/Rarity/Type-
+        // driven `graph` recompute never touches `qty`).
+        renderer.syncCardQty(newGraph.cards);
         knownGraph = newGraph;
         return;
       }
@@ -266,6 +300,7 @@ onMounted(() => {
       renderer.setGravityMode(store.gravityMode.value);
       renderer.applySearch(store.searchQuery.value);
       renderer.setCardSelection(new Set(store.cardSelection));
+      renderer.setDeckSinkRows(store.deckSinkRows.value);
       knownGraph = newGraph;
     }
   );
@@ -385,6 +420,24 @@ svg#graph {
 }
 
 .node-card:hover .scryfall-link {
+  opacity: 1;
+}
+
+/* Deck-qty stepper (graphRenderer.ts's own renderQtyUI) — a "− ×N +" row
+   flanking the existing ×N badge; this covers just the +/- buttons, same
+   hover-reveal convention as `.scryfall-link` just above (hovering anywhere
+   on the node reveals both). The qty NUMBER chip itself (`.card-qty-badge`/
+   `.card-qty-number`, siblings of these buttons under the same
+   `.card-deck-qty` wrapper) is deliberately NOT covered by this — always
+   visible per the task's own spec, see renderQtyUI's own comment. The whole
+   row (buttons included) only exists at all when `d.qty` is truthy, reusing
+   the badge's own pre-existing "nothing at 0" convention. */
+.card-qty-btn {
+  opacity: 0;
+  transition: opacity 100ms;
+}
+
+.node-card:hover .card-qty-btn {
   opacity: 1;
 }
 

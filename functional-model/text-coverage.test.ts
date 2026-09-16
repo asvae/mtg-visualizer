@@ -58,4 +58,46 @@ describe('text-coverage — computeTextCoverage', () => {
     expect(ratio).toBe(1);
     expect(gaps).toEqual([]);
   });
+
+  describe('nonFactAnnotations (2026-09-16, annotation-taxonomy plumbing)', () => {
+    // Ultima, Origin of Oblivion's own real, motivating gap: "For as long as
+    // that land has a blight counter on it, it loses all land types and
+    // abilities and has "{T}: Add {C}."" is real, mechanically-enforced
+    // (CounterConditionalGrant/hasCounterConditionalLandTypeLoss, card.ts/
+    // state.ts) but deliberately carries no Fact of its own — see
+    // ENGINE_GAPS.md's "Counter-conditional continuous effects" entry.
+    const oracleText =
+      'Whenever Ultima attacks, put a blight counter on target land. For as long as that land has a blight counter on it, it loses all land types and abilities and has "{T}: Add {C}."';
+    // Real annotation spans from cards/ultima-origin-of-oblivion/synergy.json
+    // itself ('attacks' sink 0-23, 'putCounter' source 25-60) — not invented
+    // for this test.
+    const facts = {
+      source: [{ event: 'putCounter', counterType: 'blight', annotations: [{ target: 'oracle', line: 0, start: 25, end: 60 }] }],
+      sink: [{ event: 'attacks', target: 'self', annotations: [{ target: 'oracle', line: 0, start: 0, end: 23 }] }],
+    };
+
+    it('reports the real gap when no nonFactAnnotations are supplied (baseline, matches the pre-fix live behavior)', () => {
+      const { gaps } = computeTextCoverage(facts, { front: oracleText });
+      expect(gaps).toHaveLength(1);
+      expect(gaps[0]!.text).toContain('For as long as that land has a blight counter on it');
+    });
+
+    it('closes the gap when a definition-path nonFactAnnotation covers the same span, with zero Fact involved', () => {
+      const nonFactAnnotations = [{ target: 'oracle', line: 0, start: 62, end: 176, kind: 'definition-path', note: 'CounterConditionalGrant/hasCounterConditionalLandTypeLoss' }];
+      const { gaps } = computeTextCoverage(facts, { front: oracleText }, nonFactAnnotations);
+      expect(gaps).toEqual([]);
+    });
+
+    it('a `face` mismatch (defaults to \'front\') still leaves the gap open — same scoping a real Fact.face already gets', () => {
+      const nonFactAnnotations = [{ target: 'oracle', line: 0, start: 62, end: 176, face: 'back', kind: 'definition-path', note: 'wrong face on purpose' }];
+      const { gaps } = computeTextCoverage(facts, { front: oracleText }, nonFactAnnotations);
+      expect(gaps).toHaveLength(1);
+    });
+
+    it('a `target:\'typeLine\'` nonFactAnnotation is a legitimate no-op here (this function never scans a type line at all)', () => {
+      const nonFactAnnotations = [{ target: 'typeLine', start: 0, end: 5, kind: 'lore', note: 'irrelevant to oracle-text coverage' }];
+      const { gaps } = computeTextCoverage(facts, { front: oracleText }, nonFactAnnotations);
+      expect(gaps).toHaveLength(1); // unchanged — the real oracle-text gap is still open
+    });
+  });
 });

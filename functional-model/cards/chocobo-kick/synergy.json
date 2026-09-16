@@ -29,8 +29,8 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 14,
-          "end": 32
+          "start": 7,
+          "end": 52
         }
       ],
       "provenance": {
@@ -65,6 +65,18 @@
         "has": [
           "Land"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 7,
+          "end": 52
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
       }
     }
   ]

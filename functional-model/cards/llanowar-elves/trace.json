@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Llanowar Elves",
         "instanceId": 1,
-        "id": 1460,
+        "id": 2,
         "from": "hand",
         "cost": "{G}"
       },
@@ -21,7 +21,7 @@
         "fn": "enters",
         "card": "Llanowar Elves",
         "instanceId": 1,
-        "id": 1460,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]

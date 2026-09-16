@@ -18,7 +18,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "token-creation-structural"
-      }
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "crew",
@@ -27,10 +28,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 8,
-          "end": 74
+          "start": 0,
+          "end": 6
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
     },
     {
       "event": "grantType",
@@ -41,10 +46,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 76,
+          "start": 89,
           "end": 135
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "animateSelfCreature-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -60,10 +69,30 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 8,
-          "end": 74
+          "start": 26,
+          "end": 47
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 24
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

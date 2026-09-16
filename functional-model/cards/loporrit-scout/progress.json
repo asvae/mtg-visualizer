@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (recognizer-lane escalation batch, engine agent): CLOSED — new `recognizers/entersTriggerTypeFilter-sink-structural.ts` (see rook-turret's own progress.json for the full writeup) reads this card's own `onOtherCreatureEnters` trigger name and retags the existing hand-authored sink (`{event:'entersBattlefield', controller:'you', types:{has:['Creature']}, excludeSelf:true}`) with real provenance — 0 new facts. `apply-recognizers.mjs loporrit-scout`: 1 retag. `verify-synergy.mjs` (scoped + full-pool): 0 hard failures. `review` stays \"ai\".",
   "textCoverageAudited": false,
   "knownGaps": []
 }

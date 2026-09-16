@@ -61,11 +61,38 @@ const route = useRoute();
 // even present to open" rather than a graph-view-specific check per se.
 const onGraphRoute = computed(() => route.path === '/app');
 
+// Doubles as both the original hard cap's replacement value AND the
+// infinite-scroll page size (see `visibleCount` below) — picked this over a
+// wholesale "just render everything, let the browser scroll" replacement
+// since `allRanked` can hold up to two MAX_CARDS-sized pools (500 each,
+// server/api/cards.ts's own cap) merged together for a broad query; keeping
+// a real DOM row count (rendered rows) capped and growing incrementally
+// avoids ever mounting ~1000 rows at once for a query that never gets
+// narrowed.
 const RESULT_LIMIT = 10;
 const DISCOVER_MIN_LEN = 2;
 const DISCOVER_DEBOUNCE_MS = 300;
+// Grow the visible slice this many px before the results container's own
+// physical bottom — small, just enough to start the next page loading
+// slightly before the user hits the literal end so it doesn't visibly stall.
+const SCROLL_LOAD_THRESHOLD_PX = 48;
+
+type SortMode = 'relevance' | 'newest';
+// 'relevance' (name-match quality, existing/default ranking, unchanged) vs
+// 'newest' (release-date descending) — a toggle, not a replacement, per the
+// task: the existing default stays default, this is an alternative a user
+// opts into. See `allRanked`'s own comment for the comparator and how a row
+// missing `releasedAt` (see CardData's own field comment — NOT all rows
+// reliably have it yet) degrades rather than sorting arbitrarily.
+const sortMode = ref<SortMode>('relevance');
 
 const containerEl = ref<HTMLElement | null>(null);
+// The scrollable results dropdown itself (a plain <div>, not a component) —
+// used both by onResultsScroll's own event target AND by the activeIndex
+// watcher below to keep the keyboard-focused row in view as ArrowUp/Down (or
+// a scroll-driven page grow) moves it somewhere the fixed max-h-96 viewport
+// doesn't already show.
+const resultsEl = ref<HTMLElement | null>(null);
 // UInput's own defineExpose only surfaces its inner `inputRef` (the real
 // <input> DOM node) — this ref captures THAT exposed object, not a DOM node
 // directly (see clearSearch's own use of it below).
@@ -79,6 +106,14 @@ const activeIndex = ref(0);
 // "armed" never silently survives onto a DIFFERENT row than the one it was
 // set on.
 const armed = ref(false);
+// Infinite-scroll page cursor — how many of `allRanked`'s full (unsliced)
+// results are currently rendered as real rows; `rows` below is just this
+// slice. Grows by RESULT_LIMIT at a time (see onResultsScroll and the
+// ArrowDown case in onKeydown, both of which bump it) — reset back down to
+// RESULT_LIMIT on a fresh query or a sort-mode change (see their own
+// watchers) so a stale deep scroll position never survives onto an
+// unrelated new result set.
+const visibleCount = ref(RESULT_LIMIT);
 
 const trimmedQuery = computed(() => store.searchQuery.value.trim());
 
@@ -147,6 +182,11 @@ watch(trimmedQuery, (term) => {
   activeIndex.value = 0;
   armed.value = false;
   dropdownOpen.value = !!term;
+  // Fresh query = fresh first page — same reasoning as activeIndex/armed
+  // resetting above, a stale large `visibleCount` from a PREVIOUS query
+  // shouldn't carry over and dump a huge slice of an unrelated new result
+  // set in all at once.
+  visibleCount.value = RESULT_LIMIT;
 
   if (debounceTimer) clearTimeout(debounceTimer);
   requestToken++; // invalidate any in-flight fetch for the previous term
@@ -186,7 +226,13 @@ interface Row {
   inScope: boolean;
   discoverable: boolean;
 }
-const rows = computed<Row[]>(() => {
+// FULL merged+ranked list (not sliced) — `rows` below is just this array's
+// own first `visibleCount` entries, so a row's position here is stable
+// across a scroll-driven page grow (unlike the old design, this never
+// re-slices from scratch on every keystroke of unrelated state — only
+// `trimmedQuery`/`sortMode`/discover-fetch-resolution actually change this
+// list's own membership or order).
+const allRanked = computed<Row[]>(() => {
   const q = trimmedQuery.value.toLowerCase();
   if (!q) return [];
   const inGraphIds = new Set((store.graph.value?.cards ?? []).map((c) => c.id));
@@ -196,22 +242,87 @@ const rows = computed<Row[]>(() => {
   for (const c of graphMatches.value) byId.set(c.id, c);
   for (const c of discoverResults.value) if (!byId.has(c.id)) byId.set(c.id, c);
 
-  return [...byId.values()]
-    .map((card) => {
-      const lower = card.name.toLowerCase();
-      const rank = lower === q ? 0 : lower.startsWith(q) ? 1 : 2;
-      return { card, rank };
-    })
-    .sort((a, b) => a.rank - b.rank || a.card.name.localeCompare(b.card.name))
-    .slice(0, RESULT_LIMIT)
-    .map(({ card }) => ({
-      card,
-      inScope: inGraphIds.has(card.id),
-      discoverable: discoverIds.has(card.id),
-    }));
+  const ranked = [...byId.values()].map((card) => {
+    const lower = card.name.toLowerCase();
+    const rank = lower === q ? 0 : lower.startsWith(q) ? 1 : 2;
+    return { card, rank };
+  });
+
+  // 'relevance' (default, unchanged from before this task): name-match
+  // quality only. 'newest': release-date descending — but `releasedAt` is
+  // NOT reliably present on every row today (see CardData's own field
+  // comment: an individually-added Scope/Deck card resolved via
+  // `/api/card/[set]/[number].ts`/`/api/cards/by-names.ts` currently has no
+  // release date at all, only the default-set bulk pool and discover-fetch
+  // rows do). Rather than silently treating a missing date as "oldest" (an
+  // arbitrary, wrong-looking position) or leaving it in name-match order
+  // mixed in among dated rows (equally arbitrary), undated rows are always
+  // pushed to the END of the newest-first list, past every dated row, and
+  // sort among THEMSELVES by the same relevance rule 'relevance' mode uses
+  // — so "newest" degrades to "as many real dates as we have, most useful
+  // first, then whatever's left in normal relevance order" instead of
+  // silently misordering.
+  if (sortMode.value === 'newest') {
+    ranked.sort((a, b) => {
+      const da = a.card.releasedAt;
+      const db = b.card.releasedAt;
+      if (da && db) return da === db ? a.rank - b.rank || a.card.name.localeCompare(b.card.name) : db.localeCompare(da);
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+      return a.rank - b.rank || a.card.name.localeCompare(b.card.name);
+    });
+  } else {
+    ranked.sort((a, b) => a.rank - b.rank || a.card.name.localeCompare(b.card.name));
+  }
+
+  return ranked.map(({ card }) => ({
+    card,
+    inScope: inGraphIds.has(card.id),
+    discoverable: discoverIds.has(card.id),
+  }));
 });
+// The actually-rendered slice — infinite scroll grows `visibleCount`
+// (onResultsScroll, and the ArrowDown case in onKeydown) rather than this
+// computed ever re-deriving a different subset on its own.
+const rows = computed<Row[]>(() => allRanked.value.slice(0, visibleCount.value));
 watch(rows, (r) => {
   if (activeIndex.value >= r.length) activeIndex.value = Math.max(0, r.length - 1);
+});
+// A sort-mode switch is a fresh ordering, not a fresh query — same
+// activeIndex/armed/visibleCount reset as a query change gets (see
+// `trimmedQuery`'s own watch above) so an armed button or a deep scroll
+// position from the OLD order doesn't silently carry over onto rows that
+// are now in different positions.
+watch(sortMode, () => {
+  activeIndex.value = 0;
+  armed.value = false;
+  visibleCount.value = RESULT_LIMIT;
+});
+
+// Loads one more page (RESULT_LIMIT rows) once the results container is
+// scrolled within SCROLL_LOAD_THRESHOLD_PX of its own bottom — the
+// infinite-scroll half of this task. A no-op once every `allRanked` row is
+// already visible.
+function onResultsScroll(e: Event) {
+  if (visibleCount.value >= allRanked.value.length) return;
+  const el = e.target as HTMLElement;
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_LOAD_THRESHOLD_PX) {
+    visibleCount.value = Math.min(visibleCount.value + RESULT_LIMIT, allRanked.value.length);
+  }
+}
+
+// Keeps the keyboard-focused row physically in view — ArrowUp/Down moving
+// activeIndex past whatever's currently scrolled into the fixed max-h-96
+// viewport (or a scroll-triggered page grow landing the new active row
+// further down than the container has scrolled yet) would otherwise leave
+// the wrong row highlighted off-screen with no visual feedback. `{ block:
+// 'nearest' }` only scrolls the minimum needed, so this never fights a
+// user's own manual scroll position when the active row is already visible.
+watch(activeIndex, () => {
+  nextTick(() => {
+    const row = resultsEl.value?.querySelector(`[data-row-index="${activeIndex.value}"]`);
+    row?.scrollIntoView({ block: 'nearest' });
+  });
 });
 
 function openRow(card: CardData) {
@@ -258,6 +369,14 @@ function onKeydown(e: KeyboardEvent) {
   switch (e.key) {
     case 'ArrowDown':
       e.preventDefault();
+      // Reaching the last currently-VISIBLE row (not the last row overall —
+      // rows.value is already just the visibleCount-sized slice) with more
+      // real results still waiting behind it loads the next page first, so
+      // keyboard-only navigation can reach everything scrolling can, not
+      // just whatever fit in the initial page.
+      if (activeIndex.value >= rows.value.length - 1 && visibleCount.value < allRanked.value.length) {
+        visibleCount.value = Math.min(visibleCount.value + RESULT_LIMIT, allRanked.value.length);
+      }
       activeIndex.value = Math.min(activeIndex.value + 1, rows.value.length - 1);
       armed.value = false;
       break;
@@ -360,11 +479,40 @@ function clearSearch() {
 
     <div
       v-if="dropdownOpen && trimmedQuery"
+      ref="resultsEl"
       class="absolute top-full left-0 z-50 mt-1 max-h-96 w-80 overflow-y-auto rounded-md border border-border-subtle bg-panel py-1 shadow-lg"
+      @scroll="onResultsScroll"
     >
+      <!-- Sort toggle — sticky so it stays reachable while scrolling a long
+           result list, same "doesn't wholesale replace the existing default"
+           relationship the ranking logic itself has: relevance stays default,
+           newest is an opt-in alternative. -->
+      <div class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border-subtle bg-panel px-2.5 py-1">
+        <span class="text-[10px] tracking-wide text-muted uppercase">Sort</span>
+        <div class="flex gap-1">
+          <button
+            type="button"
+            class="rounded-sm px-1.5 py-0.5 text-[10px]"
+            :class="sortMode === 'relevance' ? 'bg-surface text-text' : 'text-muted hover:text-text'"
+            @click="sortMode = 'relevance'"
+          >
+            Relevance
+          </button>
+          <button
+            type="button"
+            class="rounded-sm px-1.5 py-0.5 text-[10px]"
+            :class="sortMode === 'newest' ? 'bg-surface text-text' : 'text-muted hover:text-text'"
+            @click="sortMode = 'newest'"
+          >
+            Newest
+          </button>
+        </div>
+      </div>
+
       <div
         v-for="(row, i) in rows"
         :key="row.card.id"
+        :data-row-index="i"
         class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs"
         :class="i === activeIndex ? 'bg-surface text-text' : 'text-muted hover:bg-surface/60 hover:text-text'"
         @mouseenter="activeIndex = i; armed = false"
@@ -395,6 +543,9 @@ function clearSearch() {
       <div v-if="discoverLoading" class="px-2.5 py-1.5 text-[11px] text-muted italic">Searching Scryfall…</div>
       <div v-else-if="discoverError" class="px-2.5 py-1.5 text-[11px] text-error">{{ discoverError }}</div>
       <div v-else-if="!rows.length" class="px-2.5 py-1.5 text-[11px] text-muted italic">No matches.</div>
+      <div v-else-if="visibleCount < allRanked.length" class="px-2.5 py-1 text-center text-[10px] text-muted italic">
+        Scroll for {{ allRanked.length - visibleCount }} more…
+      </div>
     </div>
   </div>
 </template>

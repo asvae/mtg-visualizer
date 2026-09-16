@@ -360,3 +360,37 @@ export function advancePhase(state: GameState, turn: TurnState, players: RealPla
   runPhaseEntryAction(state, next, players);
   return next;
 }
+
+/**
+ * Real 721.1a "end the turn" mid-turn jump straight to Cleanup
+ * (`PhaseHandler.java`'s own `endTurnByEffect()`: `setPhase(PhaseType
+ * .CLEANUP); onPhaseBegin();` — a direct jump, deliberately NOT a walk
+ * through every intervening phase the way `advancePhase` itself always
+ * does; see `interfaces.ts`'s own `endTurn` doc comment for the full real
+ * 4-step citation this is step 4 of). Immediately runs Cleanup's own real
+ * automatic action (514.1 discard-to-maximum-hand-size, 514.2 damage/
+ * until-end-of-turn clearing, the other per-turn resets) via the SAME
+ * `runPhaseEntryAction` this file's own `advancePhase` already calls when
+ * Cleanup is naturally reached — a card invoking this can never drift from
+ * Cleanup's one real implementation. Real `extraPhases.clear()`
+ * (`PhaseHandler.java` line 1239, called from the SAME `endTurnByEffect`)
+ * is mirrored via clearing `queuedExtraPhases` (see
+ * `TurnState.queuedExtraPhases`'s own doc comment) — `phaseGroupEntryCount`
+ * is left as-is (Cleanup is never itself a `PhaseGroup` start, and the next
+ * real turn-wrap already resets it unconditionally, same as normal play).
+ * Combat-ending/attacker-blocker-clearing and the state-based-action check
+ * that also happen as part of the real effect (`EndTurnEffect.java` steps
+ * 2-3) are `engine.ts`'s own job — this file has no `attackers`/`blockers`/
+ * `checkStateBasedActions` concept at all (same division of responsibility
+ * `doAdvance`'s own First-Strike-step skip already uses between the two
+ * files). Not guarded against already being IN or past Cleanup this turn
+ * (no real FIN card's own scenario can reach that case — `Actions.endTurn`
+ * only ever fires once per resolution) — a caller invoking this a second
+ * time the same turn would simply re-run Cleanup's automatic action, a
+ * real, accepted, narrower-than-ideal edge case, not attempted here.
+ */
+export function jumpToCleanup(state: GameState, turn: TurnState, players: RealPlayer[]): TurnState {
+  const next: TurnState = { ...turn, phaseIndex: PHASES.indexOf('Cleanup'), queuedExtraPhases: [] };
+  runPhaseEntryAction(state, next, players);
+  return next;
+}

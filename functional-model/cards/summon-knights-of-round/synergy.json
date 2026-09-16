@@ -18,7 +18,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "token-creation-structural"
-      }
+      },
+      "triggeredBy": "chapterI"
     },
     {
       "event": "pump",
@@ -37,10 +38,15 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 19,
-          "end": 74
+          "start": 51,
+          "end": 56
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      },
+      "triggeredBy": "chapterV"
     },
     {
       "event": "putCounter",
@@ -60,9 +66,14 @@
           "target": "oracle",
           "line": 2,
           "start": 76,
-          "end": 121
+          "end": 108
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterAll-effect-structural"
+      },
+      "triggeredBy": "chapterV"
     },
     {
       "event": "sacrifice",
@@ -131,8 +142,18 @@
           "line": 2,
           "start": 19,
           "end": 74
+        },
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 109,
+          "end": 121
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      }
     }
   ]
 }

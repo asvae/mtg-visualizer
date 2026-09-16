@@ -224,6 +224,8 @@ export interface PlayerState {
   creatureSubtypes?: string[];
   /** Overrides every generated creature's base power (state.ts's own default is `basePower: 1`) — Battle Menu's own "power 4 or greater" filter needs a real candidate that clears the bar. */
   creaturePower?: number;
+  /** Seeds every generated creature (both the nontoken- and token-creature loops below) already tapped (`state.addCard`'s own `opts.tapped`, `RealCard.tapped`) — Summon: Primal Garuda's own real "target TAPPED creature an opponent controls" (Aerial Blast) needs a real legal target `dealDamageTarget`'s own `tapped` filter can actually land on; the generic filler creature's own default (`state.addCard`'s own `tapped: false`) previously left this real restriction with no legal candidate to demonstrate at all. Omit for the common untapped-filler case. */
+  creaturesTapped?: boolean;
   /** Artifact library cards specifically, INCLUDED in `libraryCount` (same "included, not additional" convention `nontokenCreaturesCount` already uses against `creaturesCount`) — Ashe's own `dig(validType:'artifact')` and Cloud, Midgar Mercenary's own artifact search need a real typed candidate to find. */
   libraryArtifactCount?: number;
   /** Land library cards specifically, INCLUDED in `libraryCount` (same convention as `libraryArtifactCount` above) — Silvan Rally's own "put up to two LAND cards from among them into hand" and Elven Passage's own basic-land search need a real land candidate to find. */
@@ -357,7 +359,8 @@ function describePlayerState(ps: PlayerState | undefined, whose: string): string
     const subtype = ps.creatureSubtypes?.length ? ` ${ps.creatureSubtypes.join(' ')}` : '';
     const power = ps.creaturePower !== undefined ? ` (power ${ps.creaturePower})` : '';
     const nontoken = ps.nontokenCreaturesCount ? `, ${ps.nontokenCreaturesCount} nontoken` : '';
-    parts.push(`${whose} ${ps.creaturesCount}${subtype} creature(s)${power}${nontoken}`);
+    const tapped = ps.creaturesTapped ? ', tapped' : '';
+    parts.push(`${whose} ${ps.creaturesCount}${subtype} creature(s)${power}${nontoken}${tapped}`);
   }
   const plainArtifacts = (ps.artifactsCount ?? 0) - (ps.equipmentCount ?? 0);
   if (plainArtifacts > 0) parts.push(`${whose} ${plainArtifacts} artifact(s)`);
@@ -512,6 +515,7 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
       subtypes: ps.creatureSubtypes,
       basePower: ps.creaturePower,
       baseToughness: ps.creaturePower,
+      tapped: ps.creaturesTapped,
     });
   }
   const tokenCreatures = Math.max(0, (ps.creaturesCount ?? 0) - nontoken);
@@ -523,6 +527,7 @@ export function setupPlayer(state: GameState, real: RealPlayer, ps: PlayerState 
       subtypes: ps.creatureSubtypes,
       basePower: ps.creaturePower,
       baseToughness: ps.creaturePower,
+      tapped: ps.creaturesTapped,
     });
   }
   // Real, specifically-named nontoken creatures (see `PlayerState.
@@ -885,7 +890,7 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
     // `pool[0]` default, which stays the fallback when unset or nothing
     // in `pool` matches.
     chooseTarget: (pool, predicate) => (predicate && pool.find(predicate)) || pool[0]!,
-    move: (player, from, to, qty, validType, subtype, maxCmc) => {
+    move: (player, from, to, qty, validType, subtype, maxCmc, name) => {
       const real = playerOf(player);
       const zoneArr = (zone: ZoneType) => (zone === 'Hand' ? real.hand : zone === 'Library' ? real.library : zone === 'Graveyard' ? real.graveyard : zone === 'Battlefield' ? real.battlefield : real.exile);
       // `from: ZoneType | ZoneType[]` (2026-09-15, Delivery Moogle's own
@@ -905,6 +910,12 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       // like `reach-the-horizon`'s own) with zero trace evidence for
       // verify-synergy.mjs to check against.
       const matches = (c: RealCard) => {
+        // `name` (2026-09-15, Magitek Infantry's own real name-tutor —
+        // `move.name:'self'`'s own doc comment, card.ts) — a real,
+        // case-sensitive exact match against the card's own printed name,
+        // same field every other real name-comparison in this engine reads
+        // (`Card.getName()`), not a raw property poke.
+        if (name && c.name !== name) return false;
         if (subtype) {
           // Real, narrower search (2026-09-15, `move.subtype`'s own doc
           // comment — `Cloud, Midgar Mercenary`'s own tutor-Equipment):
@@ -912,7 +923,12 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
           // branch's own `subtype` filter already does (`card.ts`'s own
           // `case 'move'`, `target:true` path), via the logged `Card`
           // interface so this still emits real `read:hasSubtype` evidence.
-          if (!loggingCard(state, c, log).hasSubtype(subtype)) return false;
+          // `string[]` (2026-09-16, Phoenix Down's own real "Skeleton,
+          // Spirit, or Zombie") — OR-matched, same `card.ts`'s own
+          // `matchesSubtype` semantics, just inlined here since this file
+          // doesn't import from `card.ts`.
+          const subtypes = Array.isArray(subtype) ? subtype : [subtype];
+          if (!subtypes.some((s) => loggingCard(state, c, log).hasSubtype(s))) return false;
         }
         // `maxCmc` (2026-09-15, Delivery Moogle's own real "mana value 2
         // or less") — same real `Card.getCMC()` read every other CMC
@@ -934,7 +950,7 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       };
       const chosen = fromArr.filter(matches).slice(0, qty);
       for (const c of chosen) state.move(c, to);
-      log.push({ fn: 'move', player: player.getName(), from, to, qty, validType, subtype, ...(maxCmc !== undefined ? { maxCmc } : {}) });
+      log.push({ fn: 'move', player: player.getName(), from, to, qty, validType, subtype, ...(maxCmc !== undefined ? { maxCmc } : {}), ...(name !== undefined ? { name } : {}) });
       return chosen.map((c) => loggingCard(state, c, log));
     },
     sacrifice: (player, qty, validType, notSelf, tokenFilter) => {
@@ -1148,7 +1164,9 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       const matches = (c: RealCard) => {
         if (!validType || validType === 'any') return true;
         const wrapped = loggingCard(state, c, log);
-        return validType === 'artifact' ? wrapped.isArtifact() : true;
+        if (validType === 'artifact') return wrapped.isArtifact();
+        if (validType === 'creature-or-artifact') return wrapped.isCreature() || wrapped.isArtifact();
+        return true;
       };
       const found = state.dig(playerOf(player), qty, take, matches);
       log.push({ fn: 'dig', player: player.getName(), qty, take, validType, found: found.length });
@@ -1204,6 +1222,19 @@ export function loggingActions(state: GameState, log: LogEntry[], selfId: number
       log.push({ fn: 'cast', card: card.name, id: real.id, from: 'library', cost: card.manaCost });
       if (to === 'Battlefield') log.push({ fn: 'enters', card: card.name, id: real.id, zone: 'Battlefield' });
       else log.push({ fn: 'move', card: card.name, id: real.id, from: 'stack', to });
+    },
+    // Real 721.1a "end the turn" (ENGINE_GAPS.md — Ultima, fin/38's own
+    // "End the turn.") — same "no real TurnState/Stack in scope on this
+    // plain path" fallback `queueExtraPhase` above already documents: this
+    // flat harness.ts scenario runner fires a named trigger/effect
+    // sequence against a manufactured board, with no real turn/stack
+    // structure to jump or exile at all, so there's nothing to mutate
+    // here — logged as a real, honest fact of what the card's own effect
+    // did. `engine-trace.ts`'s own `pilotActions` override is where this
+    // genuinely mutates a real `GameEngine` (stack-exile, combat-end,
+    // SBA-check, jump to Cleanup) — see its own doc comment.
+    endTurn: () => {
+      log.push({ fn: 'endTurn' });
     },
   };
 }
@@ -1312,7 +1343,7 @@ function lifecycleBefore(card: CardDefinition, scenario: Scenario, instanceId: n
   const cost = castFrom === 'hand' ? card.manaCost : (card.alternateCosts?.find((c) => c.from === castFrom)?.cost ?? card.manaCost);
   return [{ fn: 'cast', card: card.name, instanceId, id, from: castFrom, cost }];
 }
-function lifecycleAfter(card: CardDefinition, scenario: Scenario, instanceId: number, state: GameState, selfReal: RealCard): LogEntry[] {
+function lifecycleAfter(card: CardDefinition, scenario: Scenario, instanceId: number, state: GameState, selfReal: RealCard, ctx?: EffectContext): LogEntry[] {
   if (scenario.trigger || scenario.ability || (card.activationCost && !scenario.forceCast)) return [];
   if (!isInstantOrSorcery(card.typeLine)) {
     state.move(selfReal, 'Battlefield');
@@ -1320,7 +1351,16 @@ function lifecycleAfter(card: CardDefinition, scenario: Scenario, instanceId: nu
   }
   const castFrom = scenario.castFrom ?? 'hand';
   const altCost = card.alternateCosts?.find((c) => c.from === castFrom);
-  const to = altCost?.thenExile || /\bAdventure\b/.test(card.typeLine) ? 'Exile' : 'Graveyard';
+  // Real 721.1a "including this card" (`card.ts`'s own `EffectContext
+  // .selfToExile` doc comment) — set by `resolveCard` (just above, at this
+  // function's own call site) synchronously DURING resolution if `card`'s
+  // own effects include `kind:'endTurn'`, additive to the pre-existing
+  // `thenExile`/Adventure checks. No FIN card exercises this via the plain
+  // (non-engine-trace) path today (Ultima, the one real card with
+  // `kind:'endTurn'`, opts into `engine-trace.ts`'s own pilot instead — see
+  // its own `progress.json`), but leaving this unchecked here would be a
+  // silent trap for a future one that didn't.
+  const to = altCost?.thenExile || ctx?.selfToExile || /\bAdventure\b/.test(card.typeLine) ? 'Exile' : 'Graveyard';
   state.move(selfReal, to);
   const cardType = /\bSorcery\b/.test(card.typeLine) ? 'Sorcery' : 'Instant';
   return [{ fn: 'move', card: card.name, instanceId, id: selfReal.id, from: 'stack', to, cardType }];
@@ -1400,7 +1440,7 @@ export function runScenario(card: CardDefinition, scenario: Scenario): TraceResu
       resolveCard(effectiveCard, ctx, actions, undefined, scenario.ability);
     }
   }
-  log.push(...lifecycleAfter(effectiveCard, scenario, instanceId, state, selfReal));
+  log.push(...lifecycleAfter(effectiveCard, scenario, instanceId, state, selfReal, ctx));
   // Combat damage happens while a creature is ALREADY on the battlefield —
   // long after casting/entering, which is exactly what `lifecycleAfter`
   // above just resolved — so this synthetic probe (see `Scenario

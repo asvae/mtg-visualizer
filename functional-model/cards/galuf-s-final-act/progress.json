@@ -2,10 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (recognizer-lane pumpTarget-effect-structural propagation pass, DECLINED): real oracle text is \"Until end of turn, target creature gets +1/+0 and gains ...\" -- \"until end of turn\" is real here, but sits BEFORE \"target creature gets\", not trailing after the P/T numbers the way every other affected card in this pass has it. pumpTarget-effect-structural.ts's own regex only tolerates a TRAILING \"until end of turn\" (an optional non-greedy tail after the `gets \\u00b1P/\\u00b1T` capture); it has no support for a LEADING preamble. Setting `effect.untilEndOfTurn: true` on this card's own pumpTarget Effect without also widening the recognizer would make the regex require a trailing match that doesn't exist, causing the whole face to decline (0 matches) -- a real regression, not a safe field-only propagation. Declining the hand-patch-only route too: writing `untilEndOfTurn: true` directly onto the synergy.json Fact while leaving definition.ts's Effect object unset would create a real, confusing model/data mismatch with no recognizer behind it. Real, concrete follow-up (not attempted here): widen pumpTarget-effect-structural.ts's own pattern to also tolerate a leading \"Until end of turn, target creature gets ...\" order-variant, confirmed real via this card -- then this Effect's own untilEndOfTurn field and Fact can both be added together, safely.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "its granted-ability custom effect is a documented no-op, unmodeled"
+    "its granted-ability custom effect is a documented no-op, unmodeled",
+    "the pump effect really is until-end-of-turn (real text: \"Until end of turn, target creature gets +1/+0...\") but has no untilEndOfTurn field/Fact -- pumpTarget-effect-structural.ts's regex only supports a TRAILING \"until end of turn\", not this card's own LEADING order-variant; see notes"
   ]
 }

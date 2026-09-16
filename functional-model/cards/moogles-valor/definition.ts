@@ -29,6 +29,6 @@ export const mooglesValor: CardDefinition = {
     // real card's own "then" sequencing (same ordering the-crystal-s-
     // chosen's own "then put a +1/+1 counter on each creature you control"
     // comment documents).
-    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Indestructible' } satisfies Effect,
+    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Indestructible', untilEndOfTurn: true } satisfies Effect,
   ],
 };

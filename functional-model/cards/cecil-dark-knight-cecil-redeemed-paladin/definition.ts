@@ -64,19 +64,23 @@ export const cecilDarkKnight: CardDefinition = {
         effects: [
           {
             // "Other attacking creatures gain indestructible until end of
-            // turn" — a pure keyword grant with no other component at all;
-            // `pumpAll` (the real Forge `DB$ PumpAll | KW$ Indestructible`
-            // this maps to) has no keyword-grant field (only power/
-            // toughness deltas) — same recurring gap moogles-valor/
-            // restoration-magic/dion-bahamut/ardyn-the-usurper's own
-            // comments already document. `custom` with a no-op `run`
-            // (nothing here is executable at all — not even a partial
-            // mutation, unlike those other cards' own mixed effects) is
-            // the honest shape; `describe` is what actually carries the
-            // real text into `synergyTags()`.
-            kind: 'custom',
-            describe: 'Protect — other attacking creatures gain indestructible until end of turn (no keyword-grant Effect shape exists yet — not mechanically enforced)',
-            run: () => {},
+            // turn" — a pure keyword grant with no other component at all.
+            // MIGRATED (2026-09-16, engine-core): `grantKeywordAll` used to
+            // have no `'attacking-creatures'` predicate (only
+            // `'creatures-you-control'`/`'permanents-you-control'`) —
+            // genuinely distinct from the "no keyword-grant field at ALL"
+            // gap moogles-valor/restoration-magic/dion-bahamut/
+            // ardyn-the-usurper's own comments document (that gap is long
+            // closed; this was a narrower missing predicate VALUE). Now a
+            // real, mechanically-enforced declarative effect — `pumpAll`'s
+            // own identical `'attacking-creatures'` predicate (Auron's
+            // Inspiration) already established the real symmetric (both
+            // players) broadcast this reuses.
+            kind: 'grantKeywordAll',
+            predicate: 'attacking-creatures',
+            keyword: 'Indestructible',
+            notSelf: true,
+            untilEndOfTurn: true,
           } satisfies Effect,
         ],
       },

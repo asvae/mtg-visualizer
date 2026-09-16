@@ -16,10 +16,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 28,
-          "end": 38
+          "start": 0,
+          "end": 75
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -38,10 +42,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 43,
-          "end": 75
+          "start": 49,
+          "end": 57
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordTarget-effect-structural"
+      }
     },
     {
       "event": "untap",
@@ -61,7 +69,11 @@
           "start": 77,
           "end": 85
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "untapTarget-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -79,8 +91,18 @@
           "line": 0,
           "start": 0,
           "end": 27
+        },
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 75
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
     }
   ]
 }

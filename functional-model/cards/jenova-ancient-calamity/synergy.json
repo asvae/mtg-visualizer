@@ -47,6 +47,22 @@
           ]
         }
       }
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
+      }
     }
   ]
 }

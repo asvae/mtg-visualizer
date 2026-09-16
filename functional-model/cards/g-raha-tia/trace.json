@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 5 Plains(s)",
-      "action": "engine playthrough: cast -> other-creature combat death -> onOtherPermanentsDie",
-      "result": "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires, drawing a card.",
+      "action": "engine playthrough: cast -> other-creature combat death -> onOtherPermanentsDie -> a second same-turn death does NOT draw again (ActivationLimit 1)",
+      "result": "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger fires, drawing a card. A SECOND other creature you control (Dwarven Castle Guard) then also dies the same turn, but the trigger's own real ActivationLimit 1 means this second firing draws no second card.",
       "raw": {
-        "result": "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger then fires, drawing a card.",
+        "result": "G'raha Tia is cast and enters the battlefield; a separate creature you control (Town Greeter) attacks, is blocked by a 2/2 (Coeurl) and dies in lethal combat (704.5g) while G'raha survives untouched — G'raha's own The Allagan Eye trigger fires, drawing a card. A SECOND other creature you control (Dwarven Castle Guard) then also dies the same turn, but the trigger's own real ActivationLimit 1 means this second firing draws no second card.",
         "you": {
           "basicLands": [
             "Plains",
@@ -135,12 +135,12 @@
       {
         "fn": "tap",
         "target": "Town Greeter",
-        "id": 1007
+        "id": 25
       },
       {
         "fn": "attack",
         "card": "Town Greeter",
-        "id": 1007
+        "id": 25
       },
       {
         "fn": "phase",
@@ -151,9 +151,9 @@
       {
         "fn": "block",
         "blocker": "Coeurl",
-        "blockerId": 1008,
+        "blockerId": 26,
         "attacker": "Town Greeter",
-        "attackerId": 1007
+        "attackerId": 25
       },
       {
         "fn": "dealDamage",
@@ -182,6 +182,25 @@
         "fn": "drawCard",
         "player": "you",
         "card": "Forest"
+      },
+      {
+        "fn": "enters",
+        "card": "Dwarven Castle Guard",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 1,
+        "controller": "you"
+      },
+      {
+        "fn": "destroy",
+        "target": "Dwarven Castle Guard",
+        "controller": "you"
+      },
+      {
+        "fn": "trigger",
+        "card": "G'raha Tia",
+        "instanceId": 1,
+        "name": "onOtherPermanentsDie"
       }
     ],
     "actions": [
@@ -228,6 +247,14 @@
       {
         "label": "Fire onOtherPermanentsDie",
         "from": 27
+      },
+      {
+        "label": "A second real creature you control dies the same turn (off-card event)",
+        "from": 30
+      },
+      {
+        "label": "Fire onOtherPermanentsDie",
+        "from": 31
       }
     ]
   }

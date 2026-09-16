@@ -18,7 +18,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterI"
     },
     {
       "event": "putCounter",
@@ -35,6 +36,23 @@
         "origin": "parser",
         "rule": "saga-lore-and-sacrifice-structural"
       }
+    },
+    {
+      "event": "discard",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 16,
+          "end": 30
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discard-effect-structural"
+      },
+      "triggeredBy": "chapterI"
     }
   ],
   "sink": []

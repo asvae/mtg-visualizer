@@ -21,13 +21,18 @@ export const diamondWeapon: CardDefinition = {
   keywords: ['Reach', 'CombatDamagePrevention'],
 
   staticAbilities: [
-    // Real cost-reduction static — no cost-reduction machinery exists
-    // anywhere in this model, same treatment travel-the-overworld's own
-    // Affinity gets. (Still real, still open — ENGINE_GAPS.md gap #7's own
-    // still-open "generic cost reduction on a static ability" remainder;
-    // unrelated to and NOT closed by this pass, which only closes the
-    // combat-damage-prevention clause immediately below via `keywords`
-    // above.)
+    // Real cost-reduction static — genuinely NOT the same shape
+    // `costReduction.perControlled` now covers (2026-09-16 static-ability
+    // audit — bartz-and-boko's/cantankerous-keepers'/valkyrie-aerial-unit's
+    // own real "Affinity for <subtype/type> you control" is a
+    // BATTLEFIELD-counted, single-subtype-or-type discount;
+    // `engine.ts`'s own `effectiveCastCost` only ever counts
+    // `caster.battlefield`). This card counts GRAVEYARD cards, and against
+    // the broad, multi-type "permanent card" category (artifact, creature,
+    // enchantment, land, or planeswalker card — not one single
+    // subtype/type) — a genuinely different, still-open cost-reduction
+    // shape, real but inert (ENGINE_GAPS.md gap #7's own still-open
+    // remainder).
     'This spell costs {1} less to cast for each permanent card in your graveyard.',
   ],
 };

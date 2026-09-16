@@ -23,7 +23,7 @@
         "fn": "cast",
         "card": "Paladin's Arms",
         "instanceId": 1,
-        "id": 1789,
+        "id": 3,
         "from": "hand",
         "cost": "{2}{W}"
       },
@@ -31,14 +31,14 @@
         "fn": "enters",
         "card": "Paladin's Arms",
         "instanceId": 1,
-        "id": 1789,
+        "id": 3,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Paladin's Arms",
         "instanceId": 1,
-        "id": 1789,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -53,15 +53,15 @@
       {
         "fn": "equip",
         "equipment": "Paladin's Arms",
-        "equipmentId": 1789,
+        "equipmentId": 3,
         "target": "Hero",
-        "id": 1790
+        "id": 4
       },
       {
         "fn": "activate",
         "card": "Paladin's Arms",
         "instanceId": 1,
-        "id": 1789,
+        "id": 3,
         "cost": "{4}"
       },
       {
@@ -72,9 +72,9 @@
       {
         "fn": "equip",
         "equipment": "Paladin's Arms",
-        "equipmentId": 1789,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 1788
+        "id": 2
       }
     ]
   }

@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Seifer Almasy",
         "instanceId": 1,
-        "id": 2100,
+        "id": 3,
         "name": "onAttacksAlone"
       },
       {
@@ -40,8 +40,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2099,
-        "keyword": "DoubleStrike"
+        "id": 2,
+        "keyword": "DoubleStrike",
+        "untilEndOfTurn": true
       }
     ]
   },
@@ -60,7 +61,7 @@
         "fn": "trigger",
         "card": "Seifer Almasy",
         "instanceId": 1,
-        "id": 2102,
+        "id": 5,
         "name": "onDealsCombatDamageToPlayer"
       }
     ]
@@ -80,7 +81,7 @@
         "fn": "cast",
         "card": "Seifer Almasy",
         "instanceId": 1,
-        "id": 2104,
+        "id": 7,
         "from": "hand",
         "cost": "{3}{R}"
       },
@@ -88,7 +89,7 @@
         "fn": "enters",
         "card": "Seifer Almasy",
         "instanceId": 1,
-        "id": 2104,
+        "id": 7,
         "zone": "Battlefield"
       },
       {

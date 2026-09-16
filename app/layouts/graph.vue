@@ -24,6 +24,18 @@ const store = useGraphStore();
 provide(StoreKey, store);
 onMounted(() => store.load());
 
+// 2026-09-16: this corner block is positioned against THIS wrapper (the
+// same one `<slot/>` — index.vue's entire root, CardPeekPanel included —
+// renders into), not against index.vue's own inner content area. Now that
+// CardPeekPanel.vue is a real flex sibling taking real width on the right
+// (no longer an `absolute inset-y-0 right-0` overlay — see that component's
+// own header comment) rather than floating over the SAME physical corner
+// this block already occupied, a static `right-3` would sit the block
+// either underneath the open panel or crowded against its left edge. Shifts
+// left by the panel's own live width (plus its normal 12px/`right-3`
+// margin) whenever it's open, so the block stays clear of it instead.
+const panelRightOffset = computed(() => (store.panelCardKey.value ? store.panelWidth.value + 12 : 12));
+
 // Popup for store.dataWarning — fires once whenever a scryfall-query load
 // comes back truncated (matched more than the 500-card cap; see
 // server/api/cards.ts). Uses Nuxt UI's global toaster (<UApp> in app.vue).
@@ -48,7 +60,11 @@ watch(
            Reka UI's positioning logic ("parentNode is null"). AppHeader
            never had that problem for the same reason: it's also up here,
            never inside the page. -->
-      <div v-if="isGraphPage && store.graph.value" class="absolute right-3 bottom-3 z-10 flex items-center gap-2">
+      <div
+        v-if="isGraphPage && store.graph.value"
+        class="absolute bottom-3 z-10 flex items-center gap-2 transition-[right] duration-150"
+        :style="{ right: `${panelRightOffset}px` }"
+      >
         <USelect
           :model-value="store.gravityMode.value"
           @update:model-value="(v) => (store.gravityMode.value = v as GravityMode)"

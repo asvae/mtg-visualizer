@@ -5,11 +5,18 @@ export const theDarknessCrystal: CardDefinition = {
   manaCost: '{2}{B}{B}',
   typeLine: 'Legendary Artifact',
 
+  // "Black spells you cast cost {1} less to cast." — real `S:Mode$
+  // ReduceCost | ValidCard$ Card.Black | Type$ Spell | Activator$ You |
+  // Amount$ 1`, same real, mechanical `SpellCostReductionGrant` machinery
+  // The Water Crystal/The Wind Crystal's own analogous statics already use
+  // (`engine.ts`'s `canCastSpell`/`castSpell`, `state.ts`'s own
+  // `activeSpellCostDiscount`). An earlier version of this comment claimed
+  // "no cost-reduction machinery exists here" — stale, predating that real
+  // field's own addition; fixed for real below rather than left as inert
+  // freeform text.
+  spellCostReductionGrants: [{ amount: 1, colors: ['B'] }],
+
   staticAbilities: [
-    // Real S:Mode$ ReduceCost — no cost-reduction machinery exists here
-    // (same boundary the-water-crystal's own analogous static gets), real
-    // text only.
-    'Black spells you cast cost {1} less to cast.',
     // Real R:Event$ Moved ... ReplaceWith$ Exile — a genuine replacement
     // effect over "a nontoken creature an opponent controls would die" (any
     // cause, not something this card's own effects/triggers resolve). No

@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 7 Island(s)",
-      "action": "engine playthrough: 7 lands present -> cast -> condition/CDA reads (gap documented)",
-      "result": "Scorpion Sentinel enters with 7 lands already on the battlefield, meeting the printed \"seven or more lands\" threshold — but layer-7a effectivePT still reports Scorpion Sentinel's unmodified printed 1/4, since this engine has no threshold-gated CDA machinery to apply the printed +3/+0 (a documented gap, same class as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).",
+      "action": "engine playthrough: 7 lands present -> cast -> real threshold-CDA pump applies",
+      "result": "Scorpion Sentinel enters with 7 lands already on the battlefield, meeting the printed \"seven or more lands\" threshold — layer-7a effectivePT genuinely recalculates to 4/4 (printed 1/4 +3/+0), real threshold-CDA machinery now in place (closed 2026-09-15, same mechanism as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).",
       "raw": {
-        "result": "Scorpion Sentinel enters with 7 lands already on the battlefield, meeting the printed \"seven or more lands\" threshold — but layer-7a effectivePT still reports Scorpion Sentinel's unmodified printed 1/4, since this engine has no threshold-gated CDA machinery to apply the printed +3/+0 (a documented gap, same class as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).",
+        "result": "Scorpion Sentinel enters with 7 lands already on the battlefield, meeting the printed \"seven or more lands\" threshold — layer-7a effectivePT genuinely recalculates to 4/4 (printed 1/4 +3/+0), real threshold-CDA machinery now in place (closed 2026-09-15, same mechanism as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).",
         "you": {
           "basicLands": [
             "Island",
@@ -57,7 +57,7 @@
       {
         "fn": "read:getNetPower",
         "card": "Scorpion Sentinel",
-        "power": 1,
+        "power": 4,
         "toughness": 4
       }
     ],
@@ -79,7 +79,7 @@
         "from": 4
       },
       {
-        "label": "Layer-7a read — no threshold-CDA machinery, so the +3/+0 does not apply",
+        "label": "Layer-7a read — threshold-CDA machinery now applies the +3/+0",
         "from": 5
       }
     ]

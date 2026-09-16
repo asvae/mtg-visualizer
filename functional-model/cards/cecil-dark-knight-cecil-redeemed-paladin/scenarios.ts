@@ -15,7 +15,24 @@ export const scenarios: Scenario[] = [
     triggerInput: { damageAmount: 5 },
   },
   {
-    result: 'other attacking creatures gain indestructible until end of turn (not mechanically enforced)',
+    // RESOLVED (2026-09-16, engine-core): the effect itself is now REAL,
+    // mechanically-enforced `grantKeywordAll` (`predicate:
+    // 'attacking-creatures'`, definition.ts's own comment) — no longer the
+    // literal no-op `custom` this scenario's own result string used to
+    // describe. NOT re-demonstrated here, though: this old declarative
+    // `Scenario[]` harness style has no attacker-declaration support at all
+    // (`harness.ts`'s own doc comment, "No attack/block/damage-assignment
+    // ... modeled") — `you: {creaturesCount:1}` creates a creature but
+    // never marks it attacking, so under the real effect this scenario's
+    // own pool would (correctly) be empty. A genuine before/after
+    // `effectivePT`/keyword demonstration needs a real engine-piloted
+    // rewrite of this WHOLE file (`pilotDeclareAttackers`, mirroring
+    // `auron-s-inspiration`'s own identical `predicate:'attacking-
+    // creatures'` scenario) — a bigger lift than this fix's own scope
+    // (this file also carries the front face's life-threshold transform
+    // and the back face's Lifelink probe, both would need converting
+    // together) — flagged as a natural follow-up, not done here.
+    result: "other attacking creatures gain indestructible until end of turn — real, mechanically-enforced grantKeywordAll('attacking-creatures') as of 2026-09-16, not yet re-demonstrated by this scenario (see this case's own comment)",
     face: 'back',
     trigger: 'onAttacks',
     you: { creaturesCount: 1 },

@@ -6,12 +6,12 @@ export const hasteMagic: CardDefinition = {
   typeLine: 'Instant',
 
   effects: [
-    { kind: 'pumpTarget', power: 3, toughness: 1 } satisfies Effect,
+    { kind: 'pumpTarget', power: 3, toughness: 1, untilEndOfTurn: true } satisfies Effect,
     // Split from the pump above so `custom` stays narrow — `chooseTarget`'s
     // deterministic "always pick pool[0]" means both land on the SAME
     // creature (no board mutation happens in between), matching Forge's
     // real single targeted creature.
-    { kind: 'grantKeywordTarget', keyword: 'Haste', validType: 'creature' } satisfies Effect,
+    { kind: 'grantKeywordTarget', keyword: 'Haste', validType: 'creature', untilEndOfTurn: true } satisfies Effect,
     {
       // "Exile the top card of your library. You may play it until your
       // next end step." No declarative kind fits an UNCONDITIONAL single-

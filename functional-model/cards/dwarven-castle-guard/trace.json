@@ -97,12 +97,12 @@
       {
         "fn": "tap",
         "target": "Dwarven Castle Guard",
-        "id": 717
+        "id": 22
       },
       {
         "fn": "attack",
         "card": "Dwarven Castle Guard",
-        "id": 717
+        "id": 22
       },
       {
         "fn": "phase",
@@ -113,9 +113,9 @@
       {
         "fn": "block",
         "blocker": "Coeurl",
-        "blockerId": 716,
+        "blockerId": 21,
         "attacker": "Dwarven Castle Guard",
-        "attackerId": 717
+        "attackerId": 22
       },
       {
         "fn": "dealDamage",

@@ -16,7 +16,7 @@
         "fn": "activate",
         "card": "Ninja's Blades",
         "instanceId": 1,
-        "id": 1746,
+        "id": 4,
         "cost": "{2}"
       },
       {
@@ -27,9 +27,9 @@
       {
         "fn": "equip",
         "equipment": "Ninja's Blades",
-        "equipmentId": 1746,
+        "equipmentId": 4,
         "target": "Grizzly Bears",
-        "id": 1744
+        "id": 2
       }
     ]
   },
@@ -55,7 +55,7 @@
         "fn": "trigger",
         "card": "Ninja's Blades",
         "instanceId": 1,
-        "id": 1749,
+        "id": 7,
         "name": "onEquippedDealsDamage"
       },
       {

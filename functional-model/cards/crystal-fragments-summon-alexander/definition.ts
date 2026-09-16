@@ -38,7 +38,21 @@ export const crystalFragmentsSummonAlexander: CardDefinition = {
 
   continuousPTGrants: [{ power: 1, toughness: 1, includeSelf: false, equippedBySelf: true }],
 
-  activationCost: '{5}{W}{W}',
+  // "Activate only as a sorcery" (2026-09-16, made explicit) — this ability
+  // (the {5}{W}{W} transform, NOT the plain Equip {1} left as static text
+  // above) was already correctly restricted to sorcery-speed timing in
+  // practice, but only via `engine.ts`'s own `isEquipment(card)` 301.5c
+  // fallback (this permanent's typeLine IS "Artifact — Equipment") rather
+  // than the real printed restriction text itself — an accidental-right-
+  // answer-for-the-wrong-reason (a would-be off-turn activation attempt
+  // gets rejected with a misleading "equip abilities can only be activated
+  // as a sorcery" reason, when the real printed restriction is this
+  // ability's own, unrelated to Equip). Made explicit for correctness and
+  // for consistency with the two sibling cards sharing this exact
+  // front/back Saga shape (dion-bahamut-s-dominant-bahamut-warden-of-light,
+  // jill-shiva-s-dominant-shiva-warden-of-ice), both of which already carry
+  // this text.
+  activationCost: '{5}{W}{W} (activate only as a sorcery)',
   effects: [
     {
       // MIGRATED (2026-09-14) off a `kind:'custom'` closure onto the real

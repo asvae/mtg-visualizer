@@ -81,13 +81,14 @@ export const aerithRescueMission: CardDefinition = {
               // Now genuinely STRUCTURALLY readable (unlike the retired
               // opaque closure): `recognizers/selectUpTo-effect-structural.ts`
               // reads this exact `SelectUpTo{max, then:[each(bound,tap),
-              // applyToBound(0,putCounter)]}` shape directly and derives
-              // both the `putCounter`/stun SOURCE fact and the "wants
-              // creatures present to tap" SINK fact — no more tier-3
-              // `authoredFact`/`definition-annotations.json` entries needed
-              // for either (the recognizer computes its own annotations, the
-              // same "byproduct of matching" every other recognizer already
-              // gets).
+              // applyToBound(0,putCounter)]}` shape directly and derives a
+              // `tap` SOURCE fact (2026-09-16 widening — the `each(bound,
+              // tap())` step itself used to produce no fact at all), the
+              // `putCounter`/stun SOURCE fact, and the "wants creatures
+              // present to tap" SINK fact — no more tier-3 `authoredFact`/
+              // `definition-annotations.json` entries needed for any of the
+              // three (the recognizer computes its own annotations, the same
+              // "byproduct of matching" every other recognizer already gets).
               kind: 'program',
               describe: 'tap up to three target creatures, then put a stun counter on one of them',
               program: selectUpTo(anyPlayer.creaturesInPlay(), 3, 'tapped', [

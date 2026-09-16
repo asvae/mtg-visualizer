@@ -16,14 +16,15 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 25,
-          "end": 65
+          "start": 18,
+          "end": 85
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "move-effect-structural"
-      }
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "tap",
@@ -54,9 +55,13 @@
           "target": "oracle",
           "line": 1,
           "start": 16,
-          "end": 99
+          "end": 61
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -71,9 +76,13 @@
           "target": "oracle",
           "line": 1,
           "start": 16,
-          "end": 99
+          "end": 61
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -108,31 +117,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 20,
+          "start": 36,
           "end": 62
         }
-      ]
-    },
-    {
-      "event": "grantKeyword",
-      "keyword": "Unblockable",
-      "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        }
-      },
-      "targeted": true,
-      "face": "back",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 20,
-          "end": 62
-        }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordTarget-effect-structural"
+      }
     },
     {
       "event": "tap",
@@ -151,9 +143,14 @@
           "target": "oracle",
           "line": 2,
           "start": 18,
-          "end": 54
+          "end": 21
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapAll-effect-structural"
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "to": "Exile",
@@ -166,9 +163,14 @@
           "target": "oracle",
           "line": 2,
           "start": 56,
-          "end": 118
+          "end": 102
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "to": "Battlefield",
@@ -183,9 +185,14 @@
           "target": "oracle",
           "line": 2,
           "start": 56,
-          "end": 118
+          "end": 102
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sequenceExileReturn-effect-structural"
+      },
+      "triggeredBy": "chapterIII"
     }
   ],
   "sink": [
@@ -201,8 +208,8 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 25,
-          "end": 65
+          "start": 18,
+          "end": 85
         }
       ],
       "provenance": {
@@ -223,9 +230,13 @@
           "target": "oracle",
           "line": 1,
           "start": 20,
-          "end": 62
+          "end": 35
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordTarget-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -240,10 +251,14 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 18,
+          "start": 22,
           "end": 54
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapAll-effect-structural"
+      }
     },
     {
       "event": "entersBattlefield",

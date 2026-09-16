@@ -3,6 +3,34 @@
     {
       "zone": "Graveyard",
       "controller": "you"
+    },
+    {
+      "event": "sacrifice",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Creature",
+            "Artifact"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -15,7 +43,19 @@
           "Artifact"
         ]
       },
-      "excludeSelf": true
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     }
   ]
 }

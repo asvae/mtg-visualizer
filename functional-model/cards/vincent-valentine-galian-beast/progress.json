@@ -3,7 +3,7 @@
   "review": "ai",
   "verifySynergy": "notes",
   "lastVerified": "2026-09-04",
-  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Vincent Valentine\",\"zone\":\"Exile\"}) with no matching declared produce | trace has dealDamage ({\"fn\":\"dealDamage\",\"source\":\"Galian Beast\",\"target\":\"opp0\",\"amount\":3}) with no matching declared produce",
+  "notes": "2026-09-17: `dies-trigger-structural.ts`'s own companion SOURCE fact (`{event:'dies', from:'Battlefield', to:'Graveyard', subject:'self', target:'self', face:'back'}`) removed pool-wide as a real over-claim — this card's own FRONT face already carries a separate, hand-authored `{zone:'Graveyard', subject:'self', face:'front'}` fact; `face` is purely a rendering hint never consulted by the matcher (synergy.ts's own `resolveSubject` always reads the top-level `CardDefinition`'s own type line regardless of which face a fact's `face` tag names), so the front-face fact independently produces the IDENTICAL set of Graveyard-arrival cross-card matches — removing the recognizer's back-face fact loses zero real edges here, only a duplicate label line in find-synergies.mjs output. Still review:'ai', no reset needed. trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"Vincent Valentine\",\"zone\":\"Exile\"}) with no matching declared produce | trace has dealDamage ({\"fn\":\"dealDamage\",\"source\":\"Galian Beast\",\"target\":\"opp0\",\"amount\":3}) with no matching declared produce",
   "textCoverageAudited": false,
   "knownGaps": [
     "transform exile-then-return has no produce fact (2 notes)"

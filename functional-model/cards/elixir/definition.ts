@@ -26,9 +26,17 @@ export const elixir: CardDefinition = {
   manaCost: '{1}',
   typeLine: 'Artifact',
 
+  // recognizer-exception: entersBattlefield-self-trigger-structural — real
+  // CR 614.12 "This artifact enters tapped" replacement effect, modeled as
+  // an onEnter self-tap trigger (see treno-dark-city's own doc comment for
+  // the full convention, and elixir's own comment for the Artifact
+  // variant). No "When/Whenever <self> enters" clause exists in the real
+  // printed text at all, so this recognizer correctly declines rather than
+  // asserting a false sink fact.
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'tapTarget', validType: 'artifact', owner: 'you' } satisfies Effect],
     },
   ],

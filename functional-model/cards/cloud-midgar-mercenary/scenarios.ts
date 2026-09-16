@@ -11,11 +11,19 @@
 // it onto Cloud for real (Equip {7}, real `actions.equip`) -> real 508.1f
 // attack declaration -> Ultima Weapon's own real "Whenever equipped
 // creature attacks, destroy target creature an opponent controls" trigger
-// fires for real (`onEquippedAttacks`, manually fired via
-// `pilotFireTrigger` — no auto-dispatch exists for attack-triggered
-// abilities anywhere in this engine, a real, general, already-documented
-// gap distinct from Cloud's own doubling gap below — see
-// `pilotFireTrigger`'s own doc comment).
+// fires for real off THAT SAME `pilotDeclareAttackers` call now (updated
+// 2026-09-16, equip-trigger auto-dispatch pass: `ultima-weapon/
+// definition.ts`'s own trigger now carries `on: 'equippedAttacks'`,
+// `engine.ts`'s widened `fireOnAttackTriggers` auto-fires it for real the
+// moment Cloud — the creature Ultima Weapon is attached to, not Ultima
+// Weapon itself — is declared as an attacker; see card.ts's own
+// `Trigger.on` doc comment). Previously this required a manual
+// `pilotFireTrigger` call here (no auto-dispatch existed at all for an
+// EQUIPMENT's own attack trigger) — REMOVED now that it would double-fire
+// against the real auto-dispatch above (confirmed via a real before/after
+// trace: the manual call added two extra, fully redundant `{fn:'trigger'}`
+// entries that found 0 legal opponent creatures left and did nothing,
+// since the real auto-dispatch above had already destroyed both).
 //
 // Cloud's own "as long as this is equipped, if a triggered ability of this
 // or an Equipment attached to it triggers, that ability triggers an
@@ -38,7 +46,6 @@ import {
   pilotCast,
   pilotResolveTop,
   pilotActivate,
-  pilotFireTrigger,
   advanceToPlayersNextMain1,
   advanceToDeclareAttackersStep,
   pilotDeclareAttackers,
@@ -115,22 +122,18 @@ export function runEngineScenarios(): TraceResult[] {
 
   advanceToDeclareAttackersStep(pilot);
   // Real 508.1a/508.1f: Cloud, now +7/+7 from Ultima Weapon's static, attacks.
-  pilotDeclareAttackers(pilot, [cloudReal], 'Declare Cloud (equipped, +7/+7) as attacker');
-
+  // `declareAttackers` (inside `pilotDeclareAttackers`) now auto-fires
   // Ultima Weapon's own real "Whenever equipped creature attacks, destroy
-  // target creature an opponent controls" — no auto-dispatch exists for an
-  // attack-triggered ability anywhere in this engine (a real, general,
-  // already-accepted gap — see `pilotFireTrigger`'s own doc comment, and
-  // `cards/ultima-weapon/scenarios.ts`'s own flat harness scenario, which
-  // fires this identical trigger the same explicit way), so it's manually
-  // fired here exactly like every other real engine-piloted card that hits
-  // this same gap.
+  // target creature an opponent controls" trigger for real off this SAME
+  // call (`on: 'equippedAttacks'`, `engine.ts`'s widened
+  // `fireOnAttackTriggers`) — no manual `pilotFireTrigger` needed anymore.
   // Cloud is genuinely equipped (with Ultima Weapon itself) by this point,
-  // so `pilotFireTrigger`'s own internal `fireTrigger` call finds Cloud's
-  // real `triggerDoubling` grant and re-runs this SAME trigger a second
-  // time for real — logging a second `{fn:'trigger', ...}` bracket AND a
-  // second real `destroy` line against the other real opponent creature.
-  pilotFireTrigger(pilot, ultimaWeapon, ultimaCtx, ultimaActions, 'onEquippedAttacks', "Ultima Weapon's own attack trigger fires (equipped creature attacks) — doubled by Cloud's own equipped static");
+  // so the SAME real `fireTrigger` chokepoint that auto-dispatch calls
+  // finds Cloud's real `triggerDoubling` grant and re-runs this SAME
+  // trigger a second time for real — logging a second `{fn:'trigger', ...}`
+  // bracket AND a second real `destroy` line against the other real
+  // opponent creature, entirely from this one call.
+  pilotDeclareAttackers(pilot, [cloudReal], 'Declare Cloud (equipped, +7/+7) as attacker');
 
   const result =
     "Cloud enters; ETB (603.6b) searches your library for the Ultima Weapon, puts it into hand. Ultima Weapon is cast ({7}) and equipped onto Cloud (Equip {7}, +7/+7 static). Cloud attacks (508.1f); Ultima Weapon's own attack trigger fires — and, because Cloud is equipped, his own \"triggers an additional time\" static (ENGINE_GAPS.md gap #13) doubles it, so it fires TWICE, destroying both opponent creatures (Coeurl, then Hill Gigas).";

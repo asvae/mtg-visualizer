@@ -18,7 +18,7 @@
         "fn": "trigger",
         "card": "Rydia, Summoner of Mist",
         "instanceId": 1,
-        "id": 2028,
+        "id": 5,
         "name": "onLandfall"
       },
       {
@@ -55,7 +55,7 @@
         "fn": "trigger",
         "card": "Rydia, Summoner of Mist",
         "instanceId": 1,
-        "id": 2031,
+        "id": 8,
         "name": "onLandfall"
       },
       {
@@ -89,7 +89,7 @@
         "fn": "activate",
         "card": "Rydia, Summoner of Mist",
         "instanceId": 1,
-        "id": 2034,
+        "id": 11,
         "cost": "{X}, {T} (activate only as a sorcery)"
       },
       {
@@ -122,7 +122,7 @@
         "fn": "activate",
         "card": "Rydia, Summoner of Mist",
         "instanceId": 1,
-        "id": 2036,
+        "id": 13,
         "cost": "{X}, {T} (activate only as a sorcery)"
       },
       {

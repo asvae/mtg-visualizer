@@ -11,5 +11,16 @@
     "Unblockable's grant has no duration tracking (permanent within the scenario, not 'until end of turn'), same caveat every other grantKeyword* use already carries.",
     "'Tap all lands your opponents control' only demonstrates a single real tapped land in this scenario's own trace (the opponent seeded with one Forest) — mechanically identical whether one or many lands are tapped (the `tapAll` Effect kind iterates the real predicate-matched set), just not visually dramatic with a bigger board; not a modeling gap.",
     "verify-synergy.mjs's full-pool run surfaced one unrelated, pre-existing hard failure on magic-damper (a concurrent session's own in-flight card) — not caused by or fixed in this task, flagged for whichever session owns it."
+  ],
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 1,
+      "start": 62,
+      "end": 128,
+      "face": "front",
+      "kind": "definition-path",
+      "note": "2026-09-16 (verify-text-coverage.mjs widening pass, a fin/7-19 text-coverage task's own shared-fix side effect — this card wasn't itself in that task's scope, but shares the identical clause with crystal-fragments-summon-alexander/dion-bahamut-s-dominant, both of which were): 'transformed under its owner's control. Activate only as a sorcery.' maps to this card's own real CardDefinition.backFace (the transform target) plus this ability's own activationCost, which already carried the explicit '(activate only as a sorcery)' restriction text before this pass (no bug here, unlike Dion's own sibling case). Neither half has its own separate Fact — see crystal-fragments-summon-alexander's own progress.json / sequenceExileReturn-effect-structural.ts's doc comment for the full reasoning."
+    }
   ]
 }

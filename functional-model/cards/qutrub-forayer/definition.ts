@@ -10,6 +10,7 @@ export const qutrubForayer: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'modal',

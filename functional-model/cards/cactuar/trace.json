@@ -14,13 +14,13 @@
         "fn": "trigger",
         "card": "Cactuar",
         "instanceId": 1,
-        "id": 301,
+        "id": 2,
         "name": "onEndStep"
       },
       {
         "fn": "moveTo",
         "target": "Cactuar",
-        "id": 301,
+        "id": 2,
         "zone": "Hand",
         "controller": "you"
       }

@@ -169,9 +169,9 @@
       {
         "fn": "equip",
         "equipment": "The Masamune",
-        "equipmentId": 2715,
+        "equipmentId": 29,
         "target": "Al Bhed Salvagers",
-        "id": 2714
+        "id": 28
       },
       {
         "fn": "phase",
@@ -182,12 +182,12 @@
       {
         "fn": "tap",
         "target": "Al Bhed Salvagers",
-        "id": 2714
+        "id": 28
       },
       {
         "fn": "attack",
         "card": "Al Bhed Salvagers",
-        "id": 2714
+        "id": 28
       },
       {
         "fn": "phase",
@@ -198,9 +198,9 @@
       {
         "fn": "block",
         "blocker": "Hill Gigas",
-        "blockerId": 2705,
+        "blockerId": 19,
         "attacker": "Al Bhed Salvagers",
-        "attackerId": 2714
+        "attackerId": 28
       },
       {
         "fn": "dealDamage",

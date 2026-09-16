@@ -28,7 +28,25 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onDwarfOrEquipmentEnters"
+    },
+    {
+      "event": "discard",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 105,
+          "end": 119
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discard-effect-structural"
+      },
+      "triggeredBy": "onDwarfOrEquipmentEnters"
     }
   ],
   "sink": []

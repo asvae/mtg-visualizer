@@ -10,7 +10,11 @@
           "start": 0,
           "end": 29
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -51,7 +55,7 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 31,
+          "start": 54,
           "end": 79
         }
       ],

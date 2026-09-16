@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { you, selfCard, selectUpTo, applyToBound, grantKeyword, putCounter, selfCounters, equipTo } from '../../combinator';
 
 export const zackFair: CardDefinition = {
   name: 'Zack Fair',
@@ -72,49 +73,68 @@ export const zackFair: CardDefinition = {
   // cost is simply never payable through this engine's own activated-ability
   // pipeline today.
   activationCost: '{1}, Sacrifice Zack Fair',
+  // Migrated (2026-09-16, engine-lane primitive build) off the old
+  // `kind:'custom'` closure onto `kind:'program'`, now that BOTH real
+  // blockers this card's own progress.json documented are closed: (1)
+  // `program-ast-walker.ts` gained real occurrence support for a bound
+  // `putCounter`/`grantKeyword` `EachAction`, and (2) `combinator.ts`
+  // gained a new `Query.source:'equippedSelf'` (`ctx.self.getEquippedBy()`
+  // — the reverse of `'permanentsInPlay'`, no existing source could express
+  // "attached to THIS card" at all). One `selectUpTo` picks the SAME real
+  // target the old closure's own single `chooseTarget` call reused for all
+  // 3 consequences; a NESTED `selectUpTo` (same real double-`SelectUpTo`
+  // shape `gilgamesh-master-at-arms`'s own "attach one of them to a Samurai
+  // you control" already establishes) picks one Equipment off
+  // `selfCard.equippedSelf()` and attaches it to the SAME outer `target`
+  // binding. `grantKeyword('Indestructible', true)` now correctly sets
+  // `untilEndOfTurn: true` — the OLD closure's own bare `actions
+  // .grantKeyword(target, 'Indestructible')` call (no options) was a real,
+  // pre-existing accuracy gap this migration also fixes for free: the real
+  // printed text says "gains indestructible UNTIL END OF TURN" (a genuine,
+  // trackable 514.2 duration, unlike Venat/Hydaelyn's own untracked "until
+  // your next turn"). `putCounter('+1/+1', selfCounters('+1/+1'))` reads
+  // Zack Fair's own LIVE counter count as the transfer magnitude — same
+  // real CR 121.3 "however many Zack Fair had" reasoning the old closure's
+  // own comment already established (no dedicated counter-MOVE primitive
+  // exists, so this is a live read immediately followed by a real additive
+  // `putCounter`, the correct available mechanism, not an approximation of
+  // a nonexistent one) — `card.ts`'s own `applyEffect` never guards a
+  // `putCounter` `EachAction` against a resolved amount of 0 the way the
+  // old closure's own `if (amount > 0)` did, but this scenario's own real
+  // board state always has Zack Fair's ETB counter present by the time this
+  // ability fires, so that only ever differs on an untested, hypothetical
+  // 0-counter board state (a real, harmless no-op either way — CR 121.2,
+  // "putting 0 counters" is legal and does nothing). The target pool is a
+  // BARE `you.creaturesInPlay()` — no `.filter('excludeSelf')` — matching
+  // the real printed text exactly ("Target creature you control," no
+  // "another" qualifier at all, unlike Venat/Hydaelyn's own real "another
+  // target creature"): by the time this ability actually resolves, Zack
+  // Fair is legally already gone (sacrificed as part of the COST, paid
+  // before resolution — 601.2h/608.2h), so real Magic never needs an
+  // explicit "another" here. This engine's own documented self-sacrifice-
+  // as-cost gap (see `activationCost`'s own comment above) means `ctx.self`
+  // is NOT actually removed from the battlefield first, so `chooseTarget`
+  // could in principle land on Zack Fair itself if nothing else steered it
+  // — this card's own scenario's `ctx.preferTarget` already deterministically
+  // picks the OTHER real creature, same as the old `custom` closure's own
+  // (unexplained) `excludeSelf`-equivalent filter did; NOT adding a
+  // structural `excludeSelf` here is a deliberate choice to keep the
+  // resulting Fact honest to the real "no another" text rather than assert
+  // a qualifier this card doesn't print, at the cost of a purely
+  // hypothetical (never exercised) "Zack Fair alone" edge case picking
+  // itself — an accepted approximation in the same already-heavily-
+  // caveated territory this card's own self-sacrifice-cost gap already
+  // occupies.
   effects: [
     {
-      kind: 'custom',
+      kind: 'program',
       describe:
         "target creature you control gains indestructible until end of turn; put Zack Fair's counters on that creature; attach an Equipment that was attached to Zack Fair to that creature",
-      run: (ctx: EffectContext, actions: Actions) => {
-        const pool = ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId());
-        if (pool.length === 0) return;
-        const target = actions.chooseTarget(pool, ctx.preferTarget);
-        // "gains indestructible until end of turn" — real `grantKeyword`
-        // mutation (state.ts: it pushes onto the real card's own
-        // `keywords`, so a later `state.destroy` call genuinely sees it),
-        // same "permanent within a scenario, no phase/turn-boundary reset"
-        // duration caveat every other `grantKeyword` use already carries.
-        actions.grantKeyword(target, 'Indestructible');
-        // "Put Zack Fair's counters on that creature" — a real counter
-        // TRANSFER in spirit (CR 121.3: counters cease to exist once their
-        // object leaves the battlefield, so the printed text really means
-        // "however many Zack Fair had" at that moment) — no dedicated
-        // "move a counter between objects" primitive exists anywhere in
-        // this engine (`state.ts`'s own `putCounter` is purely additive),
-        // so this reads Zack Fair's own live count, then places that many
-        // on the target via the same real `putCounter` every other pool
-        // card uses — the correct real mechanism available, not an
-        // approximation of a nonexistent one.
-        const amount = ctx.self.getCounters('+1/+1');
-        if (amount > 0) actions.putCounter(target, '+1/+1', amount);
-        // "attach an Equipment that was attached to Zack Fair to that
-        // creature" — real, conditional re-attachment. `getEquippedBy`
-        // (interfaces.ts/state.ts) DOES expose the reverse "what's attached
-        // to THIS card" lookup this effect needs (`state.ts`'s own
-        // `attachedToId`-scan, added after this comment was first written —
-        // an earlier version of this file incorrectly claimed no such
-        // lookup existed at all); `actions.equip` re-attaches the first one
-        // found to the target, same real action every Equipment card's own
-        // activationCost already uses (this engine has no player-choice
-        // model beyond `chooseTarget`'s own deterministic pool[0]
-        // convention, so "an Equipment" picks the first real match). A
-        // no-op when nothing is attached, matching the real conditional
-        // clause exactly.
-        const equipped = ctx.self.getEquippedBy();
-        if (equipped.length > 0) actions.equip(equipped[0]!, target);
-      },
+      program: selectUpTo(you.creaturesInPlay(), 1, 'target', [
+        applyToBound('target', 0, grantKeyword('Indestructible', true)),
+        applyToBound('target', 0, putCounter('+1/+1', selfCounters('+1/+1'))),
+        selectUpTo(selfCard.equippedSelf(), 1, 'equipment', [applyToBound('equipment', 0, equipTo('target', 0))]),
+      ]),
     } satisfies Effect,
   ],
 };

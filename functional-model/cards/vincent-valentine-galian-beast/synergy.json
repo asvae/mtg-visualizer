@@ -28,28 +28,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
-    },
-    {
-      "event": "dies",
-      "from": "Battlefield",
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 0,
-          "end": 22
-        }
-      ],
-      "face": "back",
-      "provenance": {
-        "origin": "parser",
-        "rule": "dies-trigger-structural"
-      }
+      },
+      "triggeredBy": "onOpponentCreatureDies"
     }
   ],
   "sink": [

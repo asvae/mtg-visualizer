@@ -23,7 +23,7 @@
         "fn": "trigger",
         "card": "Kefka, Court Mage",
         "instanceId": 1,
-        "id": 1387,
+        "id": 7,
         "name": "onEnter"
       },
       {
@@ -78,7 +78,7 @@
         "fn": "trigger",
         "card": "Kefka, Court Mage",
         "instanceId": 1,
-        "id": 1394,
+        "id": 14,
         "name": "onAttacks"
       },
       {
@@ -128,7 +128,7 @@
         "fn": "activate",
         "card": "Kefka, Court Mage",
         "instanceId": 1,
-        "id": 1398,
+        "id": 18,
         "cost": "{8} (activate only as a sorcery)"
       },
       {
@@ -142,14 +142,14 @@
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
-        "id": 1398,
+        "id": 18,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
-        "id": 1398,
+        "id": 18,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -177,7 +177,7 @@
         "fn": "trigger",
         "card": "Kefka, Ruler of Ruin",
         "instanceId": 1,
-        "id": 1405,
+        "id": 25,
         "name": "onOpponentLosesLife"
       },
       {
@@ -222,20 +222,20 @@
         "fn": "activate",
         "card": "Kefka, Court Mage",
         "instanceId": 1,
-        "id": 1407,
+        "id": 27,
         "cost": "{8} (activate only as a sorcery)"
       },
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
-        "id": 1407,
+        "id": 27,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Kefka, Court Mage",
-        "id": 1407,
+        "id": 27,
         "zone": "Battlefield",
         "controller": "you"
       },

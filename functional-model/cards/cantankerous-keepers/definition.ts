@@ -6,15 +6,17 @@ export const cantankerousKeepers: CardDefinition = {
   typeLine: 'Creature — Elf Soldier',
   pt: [4, 3],
 
-  // Real "Affinity for Elves" (costs {1} less per Elf you control) has no
-  // cost-reduction engine anywhere in this model (casting cost is never
-  // tracked as a paid resource — same "no mana engine" gap
-  // elvish-archdruid's own mana ability hits) — documentary only.
+  // Real "Affinity for Elves" — now real, executable
+  // `costReduction.perControlled` (2026-09-16, static-ability audit
+  // follow-up), same mechanism travel-the-overworld's own Affinity for
+  // Towns already uses (ENGINE_GAPS.md gap #7).
   staticAbilities: ['Affinity for Elves (This spell costs {1} less to cast for each Elf you control.)'],
+  costReduction: { perControlled: { amountPerMatch: 1, subtype: 'Elf' } },
 
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         { kind: 'move', owner: 'you', from: 'Library', to: 'Graveyard', qty: 4, target: false } satisfies Effect,
         {

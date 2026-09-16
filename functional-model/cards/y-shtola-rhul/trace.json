@@ -15,7 +15,7 @@
         "fn": "trigger",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
-        "id": 3177,
+        "id": 2,
         "name": "onEndStep"
       },
       {
@@ -26,14 +26,14 @@
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "id": 3177,
+        "id": 2,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "id": 3177,
+        "id": 2,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -63,7 +63,7 @@
         "fn": "trigger",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
-        "id": 3180,
+        "id": 5,
         "name": "onEndStep"
       },
       {
@@ -74,14 +74,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 3179,
+        "id": 4,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 3179,
+        "id": 4,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -110,7 +110,7 @@
         "fn": "trigger",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
-        "id": 3183,
+        "id": 8,
         "name": "onEndStep"
       },
       {
@@ -121,7 +121,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 3182,
+        "id": 7,
         "zone": "Exile",
         "controller": "you"
       },
@@ -147,7 +147,7 @@
         "fn": "trigger",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
-        "id": 3185,
+        "id": 10,
         "name": "onEndStep"
       },
       {
@@ -158,14 +158,14 @@
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "id": 3185,
+        "id": 10,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Y'shtola Rhul",
-        "id": 3185,
+        "id": 10,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -186,7 +186,7 @@
         "fn": "cast",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
-        "id": 3187,
+        "id": 12,
         "from": "hand",
         "cost": "{4}{U}{U}"
       },
@@ -194,7 +194,7 @@
         "fn": "enters",
         "card": "Y'shtola Rhul",
         "instanceId": 1,
-        "id": 3187,
+        "id": 12,
         "zone": "Battlefield"
       },
       {

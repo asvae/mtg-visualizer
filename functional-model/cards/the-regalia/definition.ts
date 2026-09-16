@@ -18,6 +18,13 @@ export const theRegalia: CardDefinition = {
   pt: [4, 4],
   keywords: ['Haste'],
   crewCost: 1,
+  // Real Forge implicit crew-animate rule (bare `K:Crew:1`, no separate
+  // scripted SVar in the real card file, same as `the-lunar-whale`'s own
+  // identical bare-Crew case) — this effect was MISSING entirely before
+  // 2026-09-15 (fin/16-25 pass), a real correctness gap (this permanent
+  // never actually became a creature when crewed, silently no-oping): now
+  // present, same shape `cargo-ship`/`magitek-armor` already establish.
+  effects: [{ kind: 'animate', target: 'self', types: ['Artifact', 'Creature'] } satisfies Effect],
 
   triggers: [
     {

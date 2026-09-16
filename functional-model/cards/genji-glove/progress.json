@@ -2,10 +2,11 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (engine-lane primitive build, whole-pool sweep off white-mage-s-staff's own equip-trigger-grant closure): the self-untap half of this card's own granted \"Whenever equipped creature attacks, if it's the first combat phase of the turn, untap it\" is no longer entirely unwired at the DISPATCH level — added a new, closed `Trigger.on: 'equippedAttacks'` value (card.ts) + widened `engine.ts`'s `fireOnAttackTriggers` to auto-fire an Equipment's own trigger the moment the creature it's attached to (not the Equipment) is declared as an attacker (real Forge citation: `res/cardsfolder/g/genji_glove.txt`'s own `T:Mode$ Attacks | ValidCard$ Card.EquippedBy | ...`). `definition.ts`'s own `onEquippedAttacksFirstCombat` trigger now carries `on: 'equippedAttacks'` (was unset before — this trigger only ever fired via the old `harness.ts`-style scenario's own manual `trigger:` name). NOT migrated to a real engine-piloted trace in this same pass (this card was a bonus whole-pool find, not the pass's own named target — white-mage-s-staff/sage-s-nouliths got the full scenario migration; this one didn't), so the new `on` value has no real trace evidence yet — `scenarios.ts` still fires this trigger the old manual way, real behavior unchanged for now. `knownGaps` below updated: the self-untap clause's own real dispatch problem is closed; the 'additional combat phase' clause stays a genuinely separate, unbuilt gap (no turn/phase-structure mutation Effect exists anywhere in this model — same real gap balthier-and-fran's own identical clause already documents), and double strike's own grant was already real (`continuousKeywordGrants`) before this pass.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "double strike grant, self-untap, AND 'additional combat phase' are ALL entirely unmodeled (parked/no-vocabulary) — three real granted abilities with zero representation"
+    "'additional combat phase' is entirely unmodeled (no turn/phase-structure Effect shape exists anywhere in this engine) — same real, already-documented gap balthier-and-fran's own identical clause shares.",
+    "This card's own scenarios.ts is still the older harness.ts-style (manual `trigger:` name-fire) — not migrated to a real engine-piloted trace that would exercise the new `on: 'equippedAttacks'` auto-dispatch (white-mage-s-staff/sage-s-nouliths got that migration in the same pass; this card was a bonus find, deferred for scope)."
   ]
 }

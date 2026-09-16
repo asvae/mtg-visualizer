@@ -48,23 +48,23 @@ export const restorationMagic: CardDefinition = {
         {
           describe: 'Cure — {0} — Target permanent gains hexproof and indestructible until end of turn.',
           effects: [
-            { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'any' } satisfies Effect,
-            { kind: 'grantKeywordTarget', keyword: 'Indestructible', validType: 'any' } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'any', untilEndOfTurn: true } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Indestructible', validType: 'any', untilEndOfTurn: true } satisfies Effect,
           ],
         },
         {
           describe: 'Cura — {1} — Target permanent gains hexproof and indestructible until end of turn. You gain 3 life.',
           effects: [
-            { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'any' } satisfies Effect,
-            { kind: 'grantKeywordTarget', keyword: 'Indestructible', validType: 'any' } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'any', untilEndOfTurn: true } satisfies Effect,
+            { kind: 'grantKeywordTarget', keyword: 'Indestructible', validType: 'any', untilEndOfTurn: true } satisfies Effect,
             { kind: 'gainLife', amount: 3 } satisfies Effect,
           ],
         },
         {
           describe: 'Curaga — {3}{W} — Permanents you control gain hexproof and indestructible until end of turn. You gain 6 life.',
           effects: [
-            { kind: 'grantKeywordAll', predicate: 'permanents-you-control', keyword: 'Hexproof' } satisfies Effect,
-            { kind: 'grantKeywordAll', predicate: 'permanents-you-control', keyword: 'Indestructible' } satisfies Effect,
+            { kind: 'grantKeywordAll', predicate: 'permanents-you-control', keyword: 'Hexproof', untilEndOfTurn: true } satisfies Effect,
+            { kind: 'grantKeywordAll', predicate: 'permanents-you-control', keyword: 'Indestructible', untilEndOfTurn: true } satisfies Effect,
             { kind: 'gainLife', amount: 6 } satisfies Effect,
           ],
         },

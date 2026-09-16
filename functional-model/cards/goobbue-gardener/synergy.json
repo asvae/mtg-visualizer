@@ -11,7 +11,19 @@
       "controller": "you",
       "color": "G",
       "sourceText": "{T}: Add {G}.",
-      "highlight": "{G}"
+      "highlight": "{G}",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
   "sink": []

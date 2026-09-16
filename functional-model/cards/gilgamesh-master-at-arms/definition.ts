@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { applyToBound, equipTo, selectUpTo, you } from '../../combinator';
 
 // "Whenever Gilgamesh enters or attacks, look at the top six cards of your
 // library. You may put any number of Equipment cards from among them onto
@@ -19,22 +20,25 @@ function equipmentTutorEffects(): Effect[] {
     {
       // "you may attach one of them to a Samurai you control" — `equip`
       // has no declarative Effect kind anywhere in this model (ninja-s-
-      // blades' own comment), so `custom`, reading the real battlefield
-      // for an Equipment and a Samurai and attaching the first of each —
-      // real actions only, narrowly scoped.
-      kind: 'custom',
+      // blades' own comment). Migrated 2026-09-16 off a `kind:'custom'`
+      // closure onto the combinator DSL: nested `selectUpTo(..., 1, ...)`
+      // picks one Equipment (`cardType:'artifact'`, same Equipment-⊂-
+      // Artifact narrowing the `move` step above already makes) and one
+      // Samurai (`subtype:'Samurai'`) — same deterministic "first legal
+      // pick" convention `actions.chooseTarget` already uses pool-wide when
+      // there's no real player-choice model — then `applyToBound` attaches
+      // the bound Equipment onto the bound Samurai via `equipTo`. A no-op
+      // when either pool is empty (a `SelectUpTo` binds fewer than `max`
+      // items when its pool exhausts, and `ApplyToBound`/`equipTo` are both
+      // already-documented no-ops when their own bound index has nothing at
+      // it), matching the original closure's own early-return guard. Same
+      // real behavior, now recognizer-readable data instead of an opaque
+      // closure.
+      kind: 'program',
       describe: 'if one or more Equipment entered this way, you may attach one of them to a Samurai you control',
-      run: (ctx: EffectContext, actions: Actions) => {
-        // `isArtifact()`, not `hasSubtype('Equipment')` — same Equipment ⊂
-        // Artifact narrowing the `move` step above already made (a
-        // scenario's own `libraryArtifactCount` filler is a generic
-        // Artifact with no Equipment subtype seeded on it), kept
-        // consistent between both steps.
-        const equipment = ctx.you.getCardsIn('Battlefield').filter((c) => c.isArtifact());
-        const samurai = ctx.you.getCreaturesInPlay().filter((c) => c.hasSubtype('Samurai'));
-        if (equipment.length === 0 || samurai.length === 0) return;
-        actions.equip(equipment[0]!, samurai[0]!);
-      },
+      program: selectUpTo(you.permanentsInPlay().filter('cardType', 'artifact'), 1, 'equipment', [
+        selectUpTo(you.creaturesInPlay().filter('subtype', 'Samurai'), 1, 'samurai', [applyToBound('equipment', 0, equipTo('samurai', 0))]),
+      ]),
     } satisfies Effect,
   ];
 }
@@ -47,7 +51,7 @@ export const gilgameshMasterAtArms: CardDefinition = {
   pt: [6, 6],
 
   triggers: [
-    { name: 'onEnter', effects: equipmentTutorEffects() },
+    { name: 'onEnter', on: 'enter', effects: equipmentTutorEffects() },
     { name: 'onAttack', effects: equipmentTutorEffects() },
   ],
 };

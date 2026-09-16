@@ -16,6 +16,30 @@
       "event": "dies",
       "target": "self",
       "face": "front"
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Legendary"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 41
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsSubtype-structural"
+      }
     }
   ],
   "sink": [
@@ -29,6 +53,23 @@
         ]
       },
       "face": "back"
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 40
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
+      }
     }
   ]
 }

@@ -10,6 +10,12 @@ export const ninjasBlades: CardDefinition = {
     'Equipped creature gets +1/+1 and is a Ninja in addition to its other types.',
   ],
 
+  // Real, mechanical `continuousPTGrants`/`continuousTypeGrants`
+  // (2026-09-16, static-ability audit follow-up — same already-real
+  // query-time machinery thief-s-knife's own identical shape already uses).
+  continuousPTGrants: [{ power: 1, toughness: 1, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Ninja'], includeSelf: false, equippedBySelf: true }],
+
   // Equip {2} — an activated ability on the Equipment itself, same
   // activationCost/effects shape as Warren Elder's pump ability; the effect
   // is attaching, not a resolution payoff.

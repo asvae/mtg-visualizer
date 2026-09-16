@@ -14,13 +14,13 @@
         "fn": "trigger",
         "card": "The Prima Vista",
         "instanceId": 1,
-        "id": 2717,
+        "id": 2,
         "name": "onCastNoncreatureSpell4Mana"
       },
       {
         "fn": "animate",
         "target": "The Prima Vista",
-        "id": 2717,
+        "id": 2,
         "types": [
           "Artifact",
           "Creature"
@@ -45,13 +45,13 @@
         "fn": "activate",
         "card": "The Prima Vista",
         "instanceId": 1,
-        "id": 2720,
+        "id": 5,
         "cost": "Crew 2 (tap creatures with total power 2 or more)"
       },
       {
         "fn": "animate",
         "target": "The Prima Vista",
-        "id": 2720,
+        "id": 5,
         "types": [
           "Artifact",
           "Creature"
@@ -74,13 +74,13 @@
         "fn": "activate",
         "card": "The Prima Vista",
         "instanceId": 1,
-        "id": 2722,
+        "id": 7,
         "cost": "Crew 2 (tap creatures with total power 2 or more)"
       },
       {
         "fn": "animate",
         "target": "The Prima Vista",
-        "id": 2722,
+        "id": 7,
         "types": [
           "Artifact",
           "Creature"

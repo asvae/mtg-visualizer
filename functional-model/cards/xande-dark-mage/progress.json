@@ -6,6 +6,6 @@
   "notes": "",
   "textCoverageAudited": false,
   "knownGaps": [
-    "its graveyard-count P/T continuous ability (CDA) has zero trace evidence — real static ability, completely unenforced/unmodeled"
+    "CLOSED 2026-09-16 (static-ability audit): the graveyard-count P/T CDA is now real, executable `ptFormula.kind:'addPerGraveyardCount'` ({power:1, toughness:1}) — same ADD-scaling shape `addPerEquipmentControlled` already establishes, counting the controller's own graveyard (noncreature, nonland) instead of Equipment. Real engine-piloted `scenarios.ts` (replacing the old plain harness.ts declarative scenario) now demonstrates it end-to-end: 2 real noncreature/nonland graveyard cards -> effectivePT genuinely recalculates to 5/5 (printed 3/3 +1/+1 twice), with a real logged `getCardsIn('Graveyard')` read as trace evidence."
   ]
 }

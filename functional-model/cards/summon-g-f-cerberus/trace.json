@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Summon: G.F. Cerberus",
         "instanceId": 1,
-        "id": 2425,
+        "id": 2,
         "name": "chapterI"
       },
       {
@@ -39,7 +39,7 @@
         "fn": "trigger",
         "card": "Summon: G.F. Cerberus",
         "instanceId": 1,
-        "id": 2427,
+        "id": 4,
         "name": "chapterII"
       }
     ]
@@ -59,7 +59,7 @@
         "fn": "trigger",
         "card": "Summon: G.F. Cerberus",
         "instanceId": 1,
-        "id": 2429,
+        "id": 6,
         "name": "chapterIII"
       }
     ]

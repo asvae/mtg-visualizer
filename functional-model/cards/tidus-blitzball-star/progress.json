@@ -2,10 +2,10 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (recognizer-lane escalation batch, engine agent): CLOSED — new `recognizers/entersTriggerTypeFilter-sink-structural.ts` (see rook-turret's own progress.json for the full writeup) reads this card's own `onArtifactEnters` trigger name and adds the real want this card was missing entirely: `{event:'entersBattlefield', controller:'you', types:{has:['Artifact']}}`, real oracle-anchored provenance (this card's own text uses \"an artifact,\" matching its own `onArtifactEnters` name's lack of an \"Other\" marker — Tidus himself isn't an Artifact). `apply-recognizers.mjs tidus-blitzball-star`: +1 sink fact (genuinely new, no want existed before). `verify-synergy.mjs` (scoped + full-pool): 0 hard failures. `review` stays \"ai\".",
   "textCoverageAudited": false,
   "knownGaps": [
-    "onArtifactEnters trigger unmapped, no want declared"
+    "CLOSED 2026-09-16 — a real want is now declared (`entersTriggerTypeFilter-sink-structural.ts`) — see this file's own 2026-09-16 notes entry above."
   ]
 }

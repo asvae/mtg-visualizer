@@ -8,7 +8,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 32,
+          "start": 0,
           "end": 89
         }
       ],
@@ -50,7 +50,11 @@
           "start": 0,
           "end": 76
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveConditionalDestinationByCastFrom-effect-structural"
+      }
     },
     {
       "from": "Library",
@@ -65,10 +69,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 119,
+          "start": 96,
           "end": 161
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveConditionalDestinationByCastFrom-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -84,10 +92,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 0,
+          "start": 24,
           "end": 38
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "moveConditionalDestinationByCastFrom-effect-structural"
+      }
     }
   ]
 }

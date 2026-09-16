@@ -44,7 +44,7 @@
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 const RULE = 'gainLife-effect-structural' as const;
 
@@ -72,19 +72,23 @@ function buildPattern(amount: number): RegExp {
 }
 
 export function recognizeGainLifeEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const candidates = allEffects(input).filter(isGainLifeEffect);
+  const candidates = allEffects(input).map((o) => o.effect).filter(isGainLifeEffect);
   if (candidates.length === 0) {
     return { matched: false, reason: 'no kind:"gainLife" Effect on this face' };
   }
 
   const facts: RecognizedFact[] = [];
   let anyEligible = false;
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of candidates) {
     if (typeof effect.amount !== 'number') {
       continue; // Computed<number> closure — opaque, can't read without executing it; never a 'mismatch'
     }
     anyEligible = true;
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
 
     const pattern = buildPattern(effect.amount);
     const global = new RegExp(pattern.source, pattern.flags + 'g');
@@ -114,7 +118,7 @@ export function recognizeGainLifeEffectStructural(input: StructuralRecognizerInp
 
     facts.push({
       role: 'source',
-      fact: { event: 'lifegain', controller: 'you', annotations: [annotation] },
+      fact: { event: 'lifegain', controller: 'you', annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

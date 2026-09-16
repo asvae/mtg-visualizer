@@ -1,0 +1,76 @@
+{
+  "capturedAt": "2026-09-16T18:05:09.788Z",
+  "facts": {
+    "source": [
+      {
+        "to": "Battlefield",
+        "event": "entersBattlefield",
+        "controller": "you",
+        "subject": {
+          "token": "w_1_2_moogle_lifelink"
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 0,
+            "end": 71
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "token-creation-structural"
+        }
+      },
+      {
+        "event": "grantKeyword",
+        "keyword": "Indestructible",
+        "controller": "you",
+        "target": {
+          "types": {
+            "has": [
+              "Creature"
+            ]
+          }
+        },
+        "targeted": false,
+        "untilEndOfTurn": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 119,
+            "end": 133
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "grantKeywordAll-effect-structural"
+        }
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "controller": "you",
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 92,
+            "end": 151
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "grantKeywordAll-effect-structural"
+        }
+      }
+    ]
+  }
+}

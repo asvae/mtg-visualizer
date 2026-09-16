@@ -51,29 +51,6 @@
       ]
     },
     {
-      "event": "drawCard",
-      "controller": "you",
-      "target": {
-        "types": {
-          "hasAny": [
-            "Kraken",
-            "Leviathan",
-            "Merfolk",
-            "Octopus",
-            "Serpent"
-          ]
-        }
-      },
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 2,
-          "start": 10,
-          "end": 109
-        }
-      ]
-    },
-    {
       "event": "putCounter",
       "counterType": "LORE",
       "target": "self",

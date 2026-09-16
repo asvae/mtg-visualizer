@@ -1,15 +1,78 @@
 {
   "source": [
     {
-      "zone": "Battlefield",
+      "event": "lifeloss",
       "controller": "you",
-      "subject": {
-        "token": "c_1_1_hero"
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 21,
+          "end": 31
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
       }
     },
     {
-      "event": "lifeloss",
-      "controller": "you"
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_1_1_hero"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 40,
+          "end": 106
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "jobSelectCreateTokenAndEquip-effect-structural"
+      },
+      "triggeredBy": "onEnter"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 28
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
+    },
+    {
+      "event": "grantType",
+      "type": "Knight",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 33,
+          "end": 75
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousTypeGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [
@@ -20,6 +83,22 @@
         "has": [
           "Creature"
         ]
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 12,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

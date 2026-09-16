@@ -18,6 +18,7 @@ export const vanilleCheerfulLCie: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       // recognizer-exception: move-effect-structural — the second effect's
       // own `target:true` models a resolution-time SELECTION ("mill two
       // cards, then return A permanent card from your graveyard to your

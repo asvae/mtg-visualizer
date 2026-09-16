@@ -37,10 +37,21 @@
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { loadOracleTextByName, computeTextCoverage } from '../functional-model/scripts/text-coverage.mjs';
+import { classifyCardStatus } from '../functional-model/card-status.ts';
 
 const ROOT = new URL('../', import.meta.url);
 const cardsDir = new URL('cards/', new URL('functional-model/', ROOT));
+const dataDir = new URL('data/', ROOT);
 const outPath = join(process.cwd(), 'data/functional-model/fm-bundle.json');
+
+// Real Scryfall oracle text by card name, across every checked-in set — same
+// pool-wide scan `functional-model/scripts/compute-card-status.mjs` does for
+// its own batch run (see that script's own header); done ONCE here too,
+// since `cardStatus` below (2026-09-16) needs it for the same
+// `computeTextCoverage` check that script runs, and this bundle-build
+// script itself only ever runs at authoring/commit time, not per-request.
+const oracleByName = await loadOracleTextByName(dataDir);
 
 function isV2Shaped(synergy) {
   const all = [...(synergy?.source ?? []), ...(synergy?.sink ?? [])];
@@ -96,8 +107,51 @@ for (const slug of slugs) {
 
   const progress = await readJson(join(dir, 'progress.json'), null);
   const review = progress?.review === 'human' ? 'human' : 'ai';
+  // `uncertain`-bucket free-text caveat (2026-09-17, see card-status.ts's own
+  // header) — threaded into `classifyCardStatus` below AND carried on the
+  // bundle entry itself so the served `FunctionalModelData.reviewCaveat`
+  // (the "Confirm (Uncertain)" UI's own pre-fill value) is correct in
+  // production too, not just via the dev-live path.
+  const reviewCaveat = typeof progress?.reviewCaveat === 'string' && progress.reviewCaveat.trim() ? progress.reviewCaveat : undefined;
   const scenariosReview = progress?.scenariosReview === 'reviewed' ? 'reviewed' : 'draft';
   const interactionsReview = progress?.interactionsReview === 'reviewed' ? 'reviewed' : 'draft';
+  // 2026-09-16 annotation-taxonomy rework — see progress.json's own
+  // `annotatedNonFactSpans` (.claude/contracts/card-schema.md). Passthrough
+  // only; this script doesn't validate the shape.
+  const annotatedNonFactSpans = Array.isArray(progress?.annotatedNonFactSpans) ? progress.annotatedNonFactSpans : [];
+
+  // cards/<slug>/verified-snapshot.json's own `capturedAt` (see server/api/
+  // card/[set]/[number].ts's own `reviewSnapshotAt` doc comment) — `null`
+  // when the card has no verified-snapshot.json (never confirmed, or not
+  // yet backfilled).
+  const verifiedSnapshot = await readJson(join(dir, 'verified-snapshot.json'), null);
+  const reviewSnapshotAt = typeof verifiedSnapshot?.capturedAt === 'string' ? verifiedSnapshot.capturedAt : null;
+
+  // Per-card fact-authoring status (2026-09-16) — same
+  // classifyCardStatus/computeTextCoverage recipe compute-card-status.mjs
+  // runs pool-wide, computed here at bundle-build time instead (production
+  // reads this precomputed value; dev computes it live per request — see
+  // server/api/card/[set]/[number].ts). `definition` here is the SAME
+  // already-imported `card` object used for `poolFacts` below (real
+  // `effects`/`triggers`/`abilities` and all — `card-status.ts`'s own
+  // `collectEffects` needs the full object, not the stripped-down
+  // `poolFacts` subset this bundle otherwise ships).
+  const oracle = oracleByName.get(card.name);
+  let textCoverage;
+  if (rawSynergy && oracle) {
+    const oracleByFace = { front: oracle.front?.oracleText, back: oracle.back?.oracleText };
+    try {
+      textCoverage = computeTextCoverage(rawSynergy, oracleByFace, annotatedNonFactSpans);
+    } catch {
+      textCoverage = undefined;
+    }
+  }
+  // No real per-card "number" (collector number) available at this scope
+  // (this script iterates functional-model/cards/<slug>/ directories, not
+  // fin_scryfall.json's own card list, unlike compute-card-status.mjs) —
+  // left empty; no consumer renders `CardStatusEntry.number`/`.name`,
+  // only `.status`/`.reasons` (see CardDetailTabs.vue).
+  const cardStatus = classifyCardStatus({ number: '', name: card.name, definition: card, synergy: rawSynergy ?? undefined, textCoverage, review, reviewCaveat });
 
   // Source text for the Card Definition tab (FunctionalModelScript.vue) —
   // this card's own definition.ts ONLY. Used to also concatenate
@@ -136,9 +190,13 @@ for (const slug of slugs) {
     synergy,
     traces,
     review,
+    reviewCaveat,
     scenariosReview,
     interactionsReview,
+    reviewSnapshotAt,
     source,
+    annotatedNonFactSpans,
+    cardStatus,
   };
 }
 

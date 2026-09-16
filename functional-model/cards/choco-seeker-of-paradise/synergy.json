@@ -21,14 +21,15 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 53,
-          "end": 63
+          "start": 47,
+          "end": 81
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "pumpSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onLandfall"
     }
   ],
   "sink": [

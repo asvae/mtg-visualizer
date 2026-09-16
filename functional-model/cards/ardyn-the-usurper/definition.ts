@@ -36,6 +36,38 @@ export const ardynTheUsurper: CardDefinition = {
           // pattern this repo has no cleaner declarative alternative for).
           // Color isn't tracked on a token/RealCard anywhere in this model
           // (no color field exists) — "black" stays in `describe` only.
+          //
+          // NOTE (2026-09-16, engine-core, coordinator-routed fin/76-100
+          // re-triage — documented, not built): real Forge (`ardyn_the_
+          // usurper.txt`) implements this as a genuine `DB$ CopyPermanent |
+          // Defined$ Remembered | SetPower$5 | SetToughness$5 | SetColor$
+          // Black | SetCreatureTypes$Demon` — a real "copy the exiled
+          // card's OWN copiable values (601.2h: name, other types,
+          // abilities, etc.), then override P/T/color/creature-type" effect.
+          // This closure only ever copies the exiled card's NAME onto a
+          // fresh, blank token — none of its own keywords/abilities/other
+          // printed characteristics carry over (e.g. if the exiled creature
+          // had Flying or an ETB trigger, the token here would have
+          // neither). A real `state.copyPermanent(source, controller)`
+          // primitive already exists (state.ts) and DOES copy keywords/
+          // types/subtypes/base P&T from a real battlefield `RealCard` —
+          // but (1) it takes a `Card`, whose read-only interface has no
+          // `getKeywords()` (only `hasKeyword(single)`), so there's no way
+          // to enumerate a chosen card's own full keyword set from a
+          // `custom` effect to feed into `TokenInfo.keywords` even if this
+          // effect tried; and (2) Forge's own real "except" overrides
+          // (power/toughness/color/creature-type) have no post-copy mutator
+          // on the `Card` interface either. A real fix needs BOTH a general
+          // "copy with overrides" capability (no existing recognizer/
+          // vocabulary covers a copy-effect at ALL — `token-creation-
+          // structural.ts` only recognizes fixed `TOKENS`-registry creates,
+          // never a copy) and a `getKeywords()`-style read. Checked: this is
+          // the ONLY real card in the pool needing a copy-with-overrides
+          // token — not worth the structural addition for a singleton;
+          // documented as a real, deliberate narrowing (same category as
+          // "a basic land card" narrowed to "a land card" elsewhere in this
+          // pool), not silently absent. See ENGINE_GAPS.md's own dated entry
+          // for the full write-up.
           kind: 'custom',
           describe: "exile up to one target creature card from a graveyard; if exiled, create a token copy of it, except it's a 5/5 black Demon",
           run: (ctx: EffectContext, actions: Actions) => {

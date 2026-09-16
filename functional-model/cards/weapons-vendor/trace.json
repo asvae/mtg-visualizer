@@ -97,33 +97,38 @@
         "creatureCount": 2
       },
       {
-        "fn": "read:hasSubtype",
+        "fn": "read:isArtifact",
         "target": "Plains",
-        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:hasSubtype",
+        "fn": "read:isArtifact",
         "target": "Plains",
-        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:hasSubtype",
+        "fn": "read:isArtifact",
         "target": "Plains",
-        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:hasSubtype",
+        "fn": "read:isArtifact",
         "target": "Plains",
-        "subtype": "Equipment",
         "result": false
       },
       {
-        "fn": "read:hasSubtype",
+        "fn": "read:isArtifact",
         "target": "Weapons Vendor",
-        "subtype": "Equipment",
+        "result": false
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Dragoon's Lance",
+        "result": true
+      },
+      {
+        "fn": "read:isArtifact",
+        "target": "Coeurl",
         "result": false
       },
       {
@@ -133,12 +138,6 @@
         "result": true
       },
       {
-        "fn": "read:hasSubtype",
-        "target": "Coeurl",
-        "subtype": "Equipment",
-        "result": false
-      },
-      {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
         "count": 2
@@ -146,9 +145,9 @@
       {
         "fn": "equip",
         "equipment": "Dragoon's Lance",
-        "equipmentId": 3145,
+        "equipmentId": 8,
         "target": "Coeurl",
-        "id": 3146
+        "id": 9
       }
     ],
     "actions": [

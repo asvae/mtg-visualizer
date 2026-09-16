@@ -6,6 +6,6 @@
   "notes": "Non-Legendary creature, no death mechanism to trace — graveyard-self/dies baseline facts intentionally omitted (same reasoning as elvish-archdruid). 'Affinity for Elves' cost reduction has no engine support (no cost-tracking anywhere in this model) — left as staticAbilities text, no want fact declared for it (untraceable). Added functional-model/harness.ts's librarySubtypeCount/librarySubtype (new Scenario fields, same pattern as libraryArtifactCount/libraryLandCount) to test the mill-then-retrieve-Elves branch.",
   "textCoverageAudited": true,
   "knownGaps": [
-    "'Affinity for Elves' (cost reduction) has no engine support — this model never tracks casting cost as a paid resource."
+    "CLOSED 2026-09-16 (static-ability audit): 'Affinity for Elves' (cost reduction) is now real, executable `costReduction.perControlled` ({amountPerMatch:1, subtype:'Elf'}) — the same board-state-counted mechanism `travel-the-overworld`'s own Affinity for Towns already closed (ENGINE_GAPS.md gap #7). No longer a gap."
   ]
 }

@@ -565,8 +565,64 @@ export interface Fact extends Constraints {
    * ever needs cross-fact linking (a real payoff caring specifically
    * about a once-per-turn-capped trigger, not just its effect), that's a
    * deliberate future schema addition, not an accidental byproduct of
-   * setting this field twice. */
+   * setting this field twice.
+   *
+   * **`triggeredBy` below (2026-09-16) is exactly that deliberate future
+   * addition** — but it's still purely a NAMING link (which trigger),
+   * not a cap-sharing mechanism; `oncePerTurn` itself stays independently
+   * set per-fact as this paragraph already established, unchanged. */
   oncePerTurn?: boolean;
+  /**
+   * The name of the `Trigger` (`Trigger.name`, e.g. `'onEnter'`) whose own
+   * CONDITION causes this fact's own effect — real motivating case:
+   * Ultima, Origin of Oblivion's own "Whenever Ultima attacks..." trigger
+   * causing its own `putCounter` produce fact (2026-09-16, causal-links
+   * plumbing, coordinator-approved "do now" scope off that design
+   * assessment). Normally set on the resulting EFFECT-side fact, naming
+   * the trigger that fires it — setting it on the trigger-CONDITION fact
+   * itself is mostly a tautology (that fact IS the named trigger already,
+   * by construction), but not forbidden: `entersBattlefield-self-trigger-
+   * structural.ts` sets it on its own condition-side sink fact too, purely
+   * as a harmless grouping tag (so a future consumer can filter "every
+   * fact belonging to this card's own trigger X" on the same key
+   * regardless of which side of the relationship a given fact is on).
+   *
+   * **Purely informational — NOT consulted by `factsInteract`, and NOT
+   * added to `themeOf`** (same treatment `targeted`/`untilEndOfTurn`/
+   * `costReductionPerControlled`/`oncePerTurn` above already get). No sink
+   * in the pool wants "only a trigger-caused fact" as a theme today; this
+   * exists so a future consumer (a UI grouping a card's own facts by which
+   * printed ability produced them, or a future matcher wanting to chain
+   * "X satisfies this card's own trigger-condition sink, which fires THIS
+   * card's own linked source too") has a real, structural link to read
+   * instead of re-deriving it from prose.
+   *
+   * **Deliberately narrower than the full "effect enables effect" causal
+   * graph the same design assessment also considered** (a `Fact.id` +
+   * `causedBy: string[]` scheme linking arbitrary facts, including two
+   * SIBLING effects within the same trigger where one gates the other) —
+   * that fuller graph is explicitly NOT built here (deferred until the
+   * combinator program-AST-walker matures — see `recognizers/program-ast-
+   * walker.ts` — a much cheaper place to derive intra-program parent/child
+   * links than retrofitting arbitrary `custom`-closure control flow,
+   * which this model has no static way to read at all). `triggeredBy`
+   * only ever names a TRIGGER (always has a stable `Trigger.name` to
+   * reference), never another arbitrary fact.
+   *
+   * Populated by the 4 real trigger-condition recognizers that read
+   * `RecognizerInput.triggers` directly (`dies-trigger-structural.ts`,
+   * `lifegain-trigger-structural.ts`, `attacks-trigger-structural.ts`,
+   * `entersBattlefield-self-trigger-structural.ts` — NOT this field itself;
+   * see each one's own doc comment) is a SEPARATE, deferred step: this
+   * field/the `EffectSource` plumbing (`recognizers/structural-effects.ts`)
+   * exists now, but actually SETTING `triggeredBy` on the ~40 effect-side
+   * recognizers' own emitted facts requires a real per-recognizer judgment
+   * call (does this effect's own trigger genuinely match the SAME English
+   * clause a sibling trigger-condition recognizer already fact-ified?) —
+   * flagged as recognizer-lane follow-up work, not attempted pool-wide in
+   * this same pass.
+   */
+  triggeredBy?: string;
   /**
    * See `AnnotationRef` — a real pointer into this fact's own owning face's
    * real printed text (oracle text body or type line). Computed ONCE,
@@ -1510,6 +1566,15 @@ export function describeFact(fact: Fact): string {
   // actually safe to (genuinely camelCase, same as the others), simply not
   // checked before now.
   if (event === 'graveyardLeaves') return 'graveyard leaves';
+  // `beginCombat-trigger-structural.ts`'s own real "At the beginning of
+  // combat on your turn," precondition sink (2026-09-16, weapons-vendor/
+  // fin-40's own remaining coverage gap) — same real camelCase-display bug
+  // class as `triggeredAbility`/`costReduction`/`gainControl`/
+  // `graveyardLeaves` above (an un-branched camelCase event string would
+  // otherwise render as the raw "BeginCombat"). Bare "beginning of combat"
+  // always — `controller` stays real, intact data, same single-dimensional
+  // label convention every branch here already follows.
+  if (event === 'beginCombat') return 'beginning of combat';
   // Generic fallback for every event this function doesn't special-case
   // above (`lifeloss`, `landfall`, `scry`, `surveil`, `counter`, etc. —
   // `damage` got its own bare branch above; `castCreatureSpell`/
@@ -1755,12 +1820,125 @@ function selfInteractionKind(fact: Fact, card: PoolCard): SelfInteractionKind {
   return 'same-instance';
 }
 
+/** Zone/event shapes that represent "a permanent has died"/"arrived in a
+ * graveyard" — the two want-shapes a `dies`-CONSEQUENCE SOURCE fact used to
+ * satisfy directly (see `satisfiesDestroyImpliesDies`'s own doc comment
+ * below for why a `destroy`-event fact now satisfies both of these too,
+ * without ever needing to be re-authored as a separate `dies` fact):
+ * - a ZONE-shaped presence/arrival want naming the Graveyard specifically
+ *   (Ardyn the Usurper's own `{to:'Graveyard', types:{has:['Creature']}}`).
+ * - an EVENT-shaped `event:'dies'` want (`dies-trigger-structural.ts`'s own
+ *   sink shape — Al Bhed Salvagers, Jenova Ancient Calamity, G'raha Tia).
+ */
+function isGraveyardArrivalWant(fact: Fact): boolean {
+  if (isZoneFact(fact) && effectiveZone(fact) === 'Graveyard') return true;
+  if (isEventFact(fact) && fact.event === 'dies') return true;
+  return false;
+}
+
+/** What a `destroy`-event SOURCE fact's own `target` filter GUARANTEES
+ * about whatever it actually kills, for `satisfiesDestroyImpliesDies` below
+ * — conservative, `has` only: a `hasAny`/`not`-only (or absent) target
+ * guarantees no SPECIFIC type at all (only "some permanent"), so it can
+ * only ever satisfy an UNCONSTRAINED graveyard-arrival want, never a
+ * type-filtered one. */
+function destroyGuaranteedTypes(fact: Fact): string[] {
+  const t = fact.target;
+  if (!t || typeof t !== 'object') return [];
+  return t.types?.has ?? [];
+}
+
+/**
+ * 2026-09-16 widened match (`.claude/contracts/card-schema.md`,
+ * `SYNERGY_DESIGN.md`) — CR 700.4: a `destroy` effect that actually
+ * resolves against a real target necessarily moves that target from the
+ * battlefield to a graveyard (dying) as its own guaranteed follow-through.
+ * `destroy-effect-structural.ts`/`destroyProgram-effect-structural.ts` used
+ * to additionally emit a literal, separately-authored `event:'dies'`
+ * CONSEQUENCE fact (same target constraint, same annotation span as the
+ * `destroy` fact itself) purely so a "wants a creature to arrive in a
+ * graveyard" SINK could match it — pure authoring-time redundancy, not new
+ * information, since the `destroy` fact's own `target` already says
+ * everything the `dies` fact said. Both recognizers dropped that companion
+ * fact (see their own module doc comments) in favor of this MATCH-TIME
+ * equivalence instead: a `destroy`-event SOURCE fact now satisfies the
+ * exact same two want-shapes a `dies` fact would (`isGraveyardArrivalWant`
+ * above) directly, with no second fact ever needing to exist on disk.
+ *
+ * Deliberately narrower than full constraint-vs-constraint implication:
+ * only the want's own `types` constraint is checked (against the destroy's
+ * own guaranteed `target.types.has`, `destroyGuaranteedTypes` above) — a
+ * want with a `cmc`/`power`/`toughness`/`name`/`amount` constraint declines
+ * (returns false) rather than asserting a guarantee this fact can't actually
+ * back; no real pool sink needs more than a type-shaped graveyard-arrival
+ * want today (checked — Ardyn the Usurper, Al Bhed Salvagers, Jenova
+ * Ancient Calamity, G'raha Tia are the real cards this closes for, none of
+ * which constrain anything but `types`).
+ *
+ * Reads `p.target` (the destroy fact's own declared filter), never
+ * `p.subject` — unlike the ordinary zone-matching branch below (which
+ * resolves the PRODUCER's own static attrs via `resolveSubject` for a
+ * self-referencing produce), a targeted destroy has no fixed subject at all
+ * — the victim varies per resolution — so the only static signal available
+ * is the destroy fact's own declared `target` filter.
+ *
+ * **A want with `target: 'self'`** ("when THIS creature dies," e.g.
+ * Aerith Gainsborough's/Ancient Adamantoise's own `dies-trigger-
+ * structural.ts`-authored sinks) is a genuinely different, WEAKER claim
+ * than the guaranteed-type check above — not "does this destroy GUARANTEE
+ * killing something of this type" but "COULD the wanting card itself
+ * legally be this destroy's own victim" (the effect targets AT MOST one
+ * object, chosen at resolution — it may or may not end up being this
+ * specific card). This is exactly the same compatibility check
+ * `factsInteract`'s own general event-matching branch already makes for
+ * ANY other event kind's own `target` filter against a `target:'self'` want
+ * (`satisfiesConstraints(staticAttrsFor(wCard.card), pe.target)` below) —
+ * mirrored here rather than reinvented, and NEEDED to avoid a real
+ * regression: two real, on-disk (now-removed) `dies` companion facts
+ * (Lunatic Pandora, Sephiroth's Intervention) happened to predate the
+ * `from`/`to` fields this recognizer family now always sets, so they were
+ * — by accident of that staleness, not by design — EVENT-only shaped and
+ * therefore reachable by this exact self-target branch; removing them
+ * without this branch would silently drop that real compatibility signal.
+ * Declines (never vacuously matches) when the destroy has NO `target`
+ * filter at all (an unrestricted "destroy target permanent," e.g. Bahamut,
+ * Warden of Light's own back face) — unlike the general branch's own
+ * `pe.target === undefined` case (which falls back to checking `pe.subject
+ * === undefined`), a destroy fact NEVER sets `subject` at all, so that
+ * fallback would vacuously match EVERY self-dies want in the entire pool
+ * for an unrestricted destroy — a real, much broader invention no removed
+ * fact ever backed (an unrestricted destroy's own dies fact always carried
+ * real `from`/`to`, so it was never event-only reachable here either);
+ * declining keeps this addition scoped to exactly the two real regressions
+ * above, not a general new capability.
+ */
+function satisfiesDestroyImpliesDies(p: Fact, w: Fact, wCard: PoolCard): boolean {
+  if (isEventFact(w) && w.target === 'self') {
+    if (!p.target || typeof p.target !== 'object') return false;
+    return satisfiesConstraints(staticAttrsFor(wCard.card), p.target);
+  }
+  const wantConstraints: Constraints = isEventFact(w) && w.target && typeof w.target === 'object' ? w.target : constraintsOf(w);
+  if (wantConstraints.cmc || wantConstraints.power || wantConstraints.toughness || wantConstraints.name || wantConstraints.amount) return false;
+  if (!wantConstraints.types) return true;
+  return satisfiesType(destroyGuaranteedTypes(p), wantConstraints.types);
+}
+
 /** Does producer fact `p` (belonging to `pCard`) satisfy wanter fact `w` (belonging to `wCard`)? Symmetric to how it's invoked — `mine`/`mineRole` decide which side `p`/`w` actually is. Module-level (not nested in `findInteractionsForCard`) so `matchCountForFact` below can reuse the exact same real matching logic rather than a re-derived approximation. */
 function factsInteract(mine: Fact, mineCard: PoolCard, mineRole: 'source' | 'sink', theirs: Fact, theirCard: PoolCard, tokens: Record<string, TokenLike>): boolean {
   const p = mineRole === 'source' ? mine : theirs;
   const pCard = mineRole === 'source' ? mineCard : theirCard;
   const w = mineRole === 'source' ? theirs : mine;
   const wCard = mineRole === 'source' ? theirCard : mineCard;
+
+  // Widened match, checked BEFORE the ordinary shape-partition gate below
+  // (a `destroy`-event fact is event-only-shaped — no `to`/`from` — but
+  // must still be allowed to satisfy a ZONE-shaped graveyard want too) —
+  // see `satisfiesDestroyImpliesDies`'s own doc comment above.
+  if (isEventFact(p) && p.event === 'destroy' && isGraveyardArrivalWant(w)) {
+    if (!sidesCompatible(effectiveController(p), effectiveController(w))) return false;
+    return satisfiesDestroyImpliesDies(p, w, wCard);
+  }
+
   if (isZoneFact(p) !== isZoneFact(w)) return false;
   if (!sidesCompatible(effectiveController(p), effectiveController(w))) return false;
 
@@ -2155,8 +2333,25 @@ const LIFELINK_SYNTHETIC_FACT_ENABLED = false;
  * narrower here (`from: 'Hand'` specifically) than `isNormalPermanent`'s
  * own — a Flashback card's genuinely distinct `from: 'Graveyard'` recast
  * fact must NOT suppress this synthetic `from: 'Hand'` one. */
-export function findInteractionsForCard(cardName: string, pool: PoolCard[], tokens: Record<string, TokenLike> = {}): InteractionGroup[] {
-  const augmentedPool = pool.map((pc) => {
+/**
+ * The "structural default" synthetic-source-fact augmentation every real
+ * matcher entry point over a `PoolCard[]` must apply BEFORE calling
+ * `factsInteract` — hoisted out of `findInteractionsForCard` (2026-09-17)
+ * so a second, independent consumer (`computeDeckSinkSupply` below) sees
+ * the exact same producer facts rather than a re-derived approximation
+ * that could silently drift from this one. Same "hoist the shared logic
+ * to module scope for a new consumer" precedent `factsInteract` itself
+ * already set for `matchCountForFact` (see its own doc comment) — this is
+ * that same move applied to the POOL-PREPROCESSING half of the matcher,
+ * not just the pairwise predicate half.
+ *
+ * Pure — never mutates `pool`; returns a new array (new `PoolCard` objects
+ * only for entries whose `source` actually gained a fact, `===` for every
+ * unaffected entry, matching the original inline `.map()`'s own
+ * `source === pc.source ? pc : { ...pc, source }` behavior).
+ */
+export function augmentPoolCards(pool: PoolCard[]): PoolCard[] {
+  return pool.map((pc) => {
     let source = pc.source;
     if (LIFELINK_SYNTHETIC_FACT_ENABLED && !source.some((f) => f.event === 'lifegain') && hasPrintedLifelink(pc.card)) {
       source = [...source, syntheticLifelinkFact()];
@@ -2171,6 +2366,10 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
     }
     return source === pc.source ? pc : { ...pc, source };
   });
+}
+
+export function findInteractionsForCard(cardName: string, pool: PoolCard[], tokens: Record<string, TokenLike> = {}): InteractionGroup[] {
+  const augmentedPool = augmentPoolCards(pool);
   const self = augmentedPool.find((p) => p.name === cardName);
   if (!self) return [];
 
@@ -2206,4 +2405,121 @@ export function findInteractionsForCard(cardName: string, pool: PoolCard[], toke
     if (group) groups.push(group);
   }
   return groups;
+}
+
+/**
+ * A deck-scoped, quantity-weighted counterpart to `findInteractionsForCard`
+ * — 2026-09-17, PRD 01's per-card-quantity sandbox Deck. Deliberately
+ * NOT built on top of `findInteractionsForCard`'s own `InteractionGroup[]`
+ * output (that stays scoped to whole-POOL edge assembly, one row per
+ * MATCH not per DECK QUANTITY, and — per its own doc comment — is a
+ * separate concern this function must not depend on so it keeps working
+ * if that pipeline is ever deprecated); it DOES reuse the same lower-level
+ * primitives both are built on (`factsInteract`, `describeFact`,
+ * `augmentPoolCards`) rather than re-deriving an approximation of any of
+ * them, same discipline `findInteractionsForCard` itself already follows
+ * for `matchCountForFact`.
+ *
+ * **What it computes**: for `target`'s own SINK facts only (never its
+ * SOURCE facts — this is a one-directional "how well is this card's own
+ * wants supplied" view, not a symmetric produce/consume graph), one row
+ * per distinct sink LABEL (`describeFact(sink)` — see below), whose
+ * `count` is the sum of `deck[].qty` for every deck entry that has AT
+ * LEAST ONE real source fact `factsInteract`-matching AT LEAST ONE sink
+ * fact under that label (a producer with several qualifying facts, or
+ * several sink facts sharing one label, still only contributes its own
+ * qty ONCE — this counts DECK COPIES of a matching card, not matching
+ * FACT PAIRS).
+ *
+ * **Label = `describeFact(sink)`, not a new taxonomy.** Per
+ * SYNERGY_DESIGN.md's "single-dimensional label" convention (already the
+ * card page's own Facts-tab rule: a label is the bare category noun for
+ * the fact's own zone/event kind — "battlefield presence", "dying",
+ * "landfall" — WHO/WHAT-KIND detail is deliberately never folded in here,
+ * same as everywhere else `describeFact` is the label). This is also
+ * exactly the "group sink facts that mean the same thing" behavior the
+ * feature needs for free: two sink facts that render the same bare label
+ * (e.g. two differently-constrained "dying" wants) are already merged
+ * into one row, with no separate grouping key to invent or keep in sync.
+ * Rows are emitted in `target.sink`'s own declared order (first
+ * occurrence of each label), the same "facts stay text-ordered" rule the
+ * card page's own Facts tab follows — not resorted by count.
+ *
+ * **Self-interaction policy — SYNERGY_DESIGN.md "Self-interactions"**:
+ * "The pair (A, A) is computed like any other and kept in the output,
+ * never dropped." That policy is about the POOL-graph question of WHETHER
+ * a card's own copy can satisfy its own sink at all (yes) — it predates
+ * `Deck`/quantity as a concept entirely and says nothing about how a
+ * *quantity* should be weighted, so this function makes the narrowest
+ * possible extension consistent with it: if `target` itself appears in
+ * `deck` (by name), it IS a normal candidate producer, but exactly ONE
+ * unit of its own quantity is withheld — the physical copy this
+ * computation is being run FOR cannot count as one of its own external
+ * suppliers, but every OTHER real copy in the deck can and does (this is
+ * literally SYNERGY_DESIGN's own "second copy on the battlefield" case,
+ * made quantity-real: a deck with `qty=1` of `target` contributes 0 to its
+ * own sink — collapsing to the same result plain exclusion would give for
+ * the common single-copy case — while `qty=4` contributes up to 3, the
+ * real other physical copies that could accompany the first). Applied
+ * uniformly regardless of which `SelfInteractionKind` the match would tag
+ * pool-wide (`same-instance` inherently needs no second copy at all, but
+ * this function does not special-case it — see the note above about not
+ * re-deriving new matching semantics beyond what's asked for; a same-
+ * instance-only self-loop still only contributes via the `qty - 1` other
+ * copies rule, same as any other self-match).
+ *
+ * **Matching — reuses `factsInteract` verbatim**, called the same
+ * direction `findInteractionsForCard` calls it for a sink group
+ * (`mineRole: 'sink'`), so every existing matching nuance (shape
+ * partition, `target: 'self'` same-instance/broadcast rules, controller
+ * compatibility, the `destroy`-implies-`dies` widening, etc.) — and every
+ * existing KNOWN limitation of it (`Constraints.excludeSelf` is
+ * documented-but-not-yet-consulted by `factsInteract`; see its own doc
+ * comment) — carries over unchanged, not re-implemented or re-decided
+ * here.
+ *
+ * `tokens` resolves `{token}` subjects on a deck entry's own source facts,
+ * same optional parameter `findInteractionsForCard` already takes.
+ */
+export interface DeckEntry {
+  /** Same `PoolCard` shape `findInteractionsForCard`'s own `pool` parameter takes — reused, not a parallel type, so a caller building one deck-loading path gets both functions for free. */
+  card: PoolCard;
+  /** How many physical copies of `card` are in the deck right now (PRD 01's own per-card-quantity sandbox model). Must be a non-negative integer; a `qty <= 0` entry is simply never a source of any count (same as omitting it). */
+  qty: number;
+}
+
+export interface SinkSupplyRow {
+  /** `describeFact` of the sink fact (or first-occurrence-ordered group of sink facts sharing that same bare label) this row represents — see this function's own doc comment for why this label scheme, not a new one. */
+  label: string;
+  /** Deck-quantity-weighted count of matching sources for this sink label, summed across every deck entry that has at least one qualifying source fact (see this function's own doc comment for the self-supply `qty - 1` rule). */
+  count: number;
+}
+
+export function computeDeckSinkSupply(target: PoolCard, deck: DeckEntry[], tokens: Record<string, TokenLike> = {}): SinkSupplyRow[] {
+  if (!target.sink.length) return [];
+  const augmentedDeck = deck.map((entry) => ({ ...entry, card: augmentPoolCards([entry.card])[0]! }));
+
+  const labelOrder: string[] = [];
+  const sinksByLabel = new Map<string, Fact[]>();
+  for (const sink of target.sink) {
+    const label = describeFact(sink);
+    if (!sinksByLabel.has(label)) {
+      labelOrder.push(label);
+      sinksByLabel.set(label, []);
+    }
+    sinksByLabel.get(label)!.push(sink);
+  }
+
+  return labelOrder.map((label) => {
+    const sinks = sinksByLabel.get(label)!;
+    let count = 0;
+    for (const entry of augmentedDeck) {
+      const isSelf = entry.card.name === target.name;
+      const effectiveQty = isSelf ? entry.qty - 1 : entry.qty;
+      if (effectiveQty <= 0) continue;
+      const matches = sinks.some((sink) => entry.card.source.some((source) => factsInteract(sink, target, 'sink', source, entry.card, tokens)));
+      if (matches) count += effectiveQty;
+    }
+    return { label, count };
+  });
 }

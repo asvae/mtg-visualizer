@@ -14,28 +14,6 @@
       "zone": "Graveyard"
     },
     {
-      "event": "dies",
-      "target": {
-        "types": {
-          "not": [
-            "Land"
-          ]
-        }
-      },
-      "provenance": {
-        "origin": "parser",
-        "rule": "destroy-effect-structural"
-      },
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 37,
-          "end": 69
-        }
-      ]
-    },
-    {
       "event": "destroy",
       "target": {
         "types": {
@@ -80,6 +58,39 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "surveil",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 10,
+          "end": 19
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "surveil-effect-structural"
+      }
+    },
+    {
+      "event": "sacrifice",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 35
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeSelfCost-structural"
+      }
     }
   ],
   "sink": [
@@ -94,7 +105,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 37,
+          "start": 45,
           "end": 69
         }
       ],

@@ -24,6 +24,13 @@ export const quinaQuGourmet: CardDefinition = {
   // approximation (same class of loss `move`'s own subtype gap already
   // carries elsewhere). `notSelf: true` since the real cost can never
   // target Quina itself (it isn't a Frog).
+  //
+  // recognizer-exception: sacrifice-effect-structural — the real cost text
+  // ("Sacrifice a Frog") is a NAMED type, not the generic word "creature,"
+  // and doesn't use "another" either (already fully covered, correctly, by
+  // sacrificeCostNamedType-structural's own "Sacrifice a/an <Type>"
+  // template) — a known, already-documented approximation, not a
+  // recognizer bug.
   activationCost: '{2}, Sacrifice a Frog',
   effects: [
     { kind: 'sacrifice', owner: 'you', validType: 'creature', notSelf: true } satisfies Effect,

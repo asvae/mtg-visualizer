@@ -145,6 +145,10 @@
         "subtype": "Equipment"
       },
       {
+        "fn": "shuffleLibrary",
+        "player": "you"
+      },
+      {
         "fn": "cast",
         "card": "Ultima Weapon",
         "instanceId": 1,
@@ -355,12 +359,6 @@
         "controller": "opp0"
       },
       {
-        "fn": "trigger",
-        "card": "Ultima Weapon",
-        "instanceId": 1,
-        "name": "onEquippedAttacks"
-      },
-      {
         "fn": "read:getCardsIn",
         "player": "opp0",
         "zone": "Battlefield",
@@ -394,39 +392,35 @@
       },
       {
         "label": "Cast Ultima Weapon ({7})",
-        "from": 16
+        "from": 17
       },
       {
         "label": "Resolve",
-        "from": 24
-      },
-      {
-        "label": "Pass turn (you)",
         "from": 25
       },
       {
+        "label": "Pass turn (you)",
+        "from": 26
+      },
+      {
         "label": "Pass turn (opp0)",
-        "from": 36
+        "from": 37
       },
       {
         "label": "Equip {7}: attach Ultima Weapon to Cloud",
-        "from": 39
+        "from": 40
       },
       {
         "label": "Resolve",
-        "from": 47
+        "from": 48
       },
       {
         "label": "Advance to Declare Attackers",
-        "from": 49
-      },
-      {
-        "label": "Declare Cloud (equipped, +7/+7) as attacker",
         "from": 50
       },
       {
-        "label": "Ultima Weapon's own attack trigger fires (equipped creature attacks) — doubled by Cloud's own equipped static",
-        "from": 52
+        "label": "Declare Cloud (equipped, +7/+7) as attacker",
+        "from": 51
       }
     ]
   }

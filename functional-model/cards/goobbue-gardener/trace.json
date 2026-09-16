@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Goobbue Gardener",
         "instanceId": 1,
-        "id": 1127,
+        "id": 2,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -21,7 +21,7 @@
         "fn": "enters",
         "card": "Goobbue Gardener",
         "instanceId": 1,
-        "id": 1127,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]

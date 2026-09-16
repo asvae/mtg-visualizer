@@ -49,7 +49,18 @@ for (const slug of slugs) {
   if (!oracle) continue;
 
   const oracleByFace = { front: oracle.front?.oracleText, back: oracle.back?.oracleText };
-  const { ratio, gaps } = computeTextCoverage(facts, oracleByFace);
+  // `progress.json`'s own `annotatedNonFactSpans` (2026-09-16, annotation-
+  // taxonomy plumbing — same read `compute-card-status.mjs` now performs,
+  // see that script's own header) — kept consistent with the dashboard
+  // classifier's own verdict rather than leaving this sibling diagnostic
+  // reporting a stale gap the dashboard no longer does.
+  let progress;
+  try {
+    progress = JSON.parse(await readFile(new URL(`${slug}/progress.json`, cardsDir), 'utf8'));
+  } catch {
+    progress = undefined;
+  }
+  const { ratio, gaps } = computeTextCoverage(facts, oracleByFace, progress?.annotatedNonFactSpans ?? []);
   checked++;
   if (ratio < threshold && gaps.length > 0) {
     incomplete++;

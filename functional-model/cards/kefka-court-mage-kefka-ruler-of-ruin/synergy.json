@@ -12,11 +12,6 @@
       "face": "front"
     },
     {
-      "zone": "Graveyard",
-      "controller": "opp",
-      "face": "front"
-    },
-    {
       "event": "dies",
       "controller": "opp",
       "face": "front"
@@ -38,6 +33,23 @@
       "event": "lifeloss",
       "controller": "opp",
       "face": "back"
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 21
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

@@ -18,7 +18,7 @@
         "fn": "cast",
         "card": "Relm's Sketching",
         "instanceId": 1,
-        "id": 1912,
+        "id": 3,
         "from": "hand",
         "cost": "{2}{U}{U}"
       },
@@ -77,7 +77,7 @@
         "fn": "move",
         "card": "Relm's Sketching",
         "instanceId": 1,
-        "id": 1912,
+        "id": 3,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

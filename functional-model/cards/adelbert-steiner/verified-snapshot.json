@@ -1,0 +1,46 @@
+{
+  "capturedAt": "2026-09-16T18:17:14.803Z",
+  "facts": {
+    "source": [
+      {
+        "event": "pump",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 0,
+            "end": 27
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "ptFormula-scalingPump-structural"
+        }
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "controller": "you",
+        "types": {
+          "has": [
+            "Equipment"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 32,
+            "end": 58
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "ptFormula-scalingPump-structural"
+        }
+      }
+    ]
+  }
+}

@@ -38,17 +38,20 @@ export const summonFatChocobo: CardDefinition = {
       // Real `DB$ PumpAll | ValidCards$ Creature.YouCtrl | KW$ Trample` — a
       // pure keyword grant with no P/T component, so `grantKeywordAll` (not
       // `pumpAll`, which has no keyword field) is the correct declarative
-      // fit.
+      // fit. `untilEndOfTurn: true` (2026-09-15 real fix, same missing-field
+      // bug `circle-of-power`'s own identical gap was found and fixed
+      // alongside — the real text explicitly says "until end of turn," this
+      // effect was silently granting it PERMANENTLY-within-scenario before).
       name: 'chapterII',
-      effects: [{ kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample' } satisfies Effect],
+      effects: [{ kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample', untilEndOfTurn: true } satisfies Effect],
     },
     {
       name: 'chapterIII',
-      effects: [{ kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample' } satisfies Effect],
+      effects: [{ kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample', untilEndOfTurn: true } satisfies Effect],
     },
     {
       name: 'chapterIV',
-      effects: [{ kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample' } satisfies Effect],
+      effects: [{ kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample', untilEndOfTurn: true } satisfies Effect],
     },
   ],
 };

@@ -1,17 +1,22 @@
 // Verifies `token-creation-structural.ts` against the real pool: both
 // user-named priority cards (Aerith Rescue Mission's "Hero token ETB",
-// Battle Menu's "Knight token ETB"), a handful of the other 15 real matches
+// Battle Menu's "Knight token ETB"), a handful of the other real matches
 // this recognizer's own module doc comment names, a Saga's own repeated-
 // chapter case (Summon: Knights of Round — 4 structurally identical
-// effects, no exclusive line-claiming), and the two real, specifically-
-// named decline reasons (non-literal amount; inline TokenInfo literal with
-// no TOKENS registry id) — same fixture convention every other structural
-// recognizer test file already uses.
+// effects, no exclusive line-claiming), the "for each ... you control"
+// scaling-amount MATCH (Moogles' Valor, 2026-09-16 — previously a blanket
+// decline), and the real, specifically-named decline reasons (the 3 OTHER
+// non-literal-amount cards, each a genuinely different real shape; inline
+// TokenInfo literal with no TOKENS registry id) — same fixture convention
+// every other structural recognizer test file already uses.
 import { describe, expect, it } from 'vitest';
 import { aerithRescueMission } from '../cards/aerith-rescue-mission/definition';
 import { battleMenu } from '../cards/battle-menu/definition';
 import { circleOfPower } from '../cards/circle-of-power/definition';
 import { mooglesValor } from '../cards/moogles-valor/definition';
+import { rufusShinra } from '../cards/rufus-shinra/definition';
+import { theFinalDays } from '../cards/the-final-days/definition';
+import { theWanderingMinstrel } from '../cards/the-wandering-minstrel/definition';
 import { summonKnightsOfRound } from '../cards/summon-knights-of-round/definition';
 import { undercityDireRat } from '../cards/undercity-dire-rat/definition';
 import type { CardDefinition } from '../card';
@@ -74,9 +79,35 @@ describe('token-creation-structural — real, unavoidable CR 111.7 consequence o
     }
   });
 
-  it('declines Moogles\' Valor — a real board-state-dependent (Computed<number>) amount, no fixed-quantifier template to verify', () => {
-    const result = recognizeTokenCreationStructural(structuralInput("Moogles' Valor", mooglesValor));
-    expect(result).toEqual({ matched: false, reason: expect.stringContaining('non-literal or unconfirmed amount') });
+  it('accepts Moogles\' Valor — a real "for each creature you control, create ..." per-instance scaling amount (Computed<number>), exactly 1 SOURCE fact (no paired sink, same single-fact convention as every other match above)', () => {
+    const input = structuralInput("Moogles' Valor", mooglesValor);
+    const result = recognizeTokenCreationStructural(input);
+    expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
+    if (!result.matched) return;
+    expect(result.facts).toHaveLength(1);
+    expect(result.facts[0]).toMatchObject({
+      role: 'source',
+      fact: { event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: { token: 'w_1_2_moogle_lifelink' } },
+      provenance: { origin: 'parser', rule: 'token-creation-structural' },
+    });
+    const ann = result.facts[0]!.fact.annotations![0]!;
+    const line = input.oracleText.split('\n')[ann.line]!;
+    expect(line.slice(ann.start, ann.end)).toBe('For each creature you control, create a 1/2 white Moogle creature token');
+  });
+
+  it('declines Rufus Shinra — a NAMED-creature presence check ("if you don\'t control a creature named Darkstar"), not a "for each" scaling count at all (also independently declines earlier, via the inline-TokenInfo/no-TOKENS-registry check — its Darkstar token is a literal, not a registry reference — same as this recognizer\'s own pre-existing check order for every other inline-literal card)', () => {
+    const result = recognizeTokenCreationStructural(structuralInput('Rufus Shinra', rufusShinra));
+    expect(result).toEqual({ matched: false, reason: expect.stringContaining('no matching TOKENS registry entry') });
+  });
+
+  it('declines The Final Days — a two-branch cast-from-graveyard CONDITIONAL count ("create two ... If this spell was cast from a graveyard, instead create X ... where X is the number of creature cards in your graveyard"), not a "for each" scaling count (this one IS a TOKENS-registry token, so it reaches the real amount-anchor check and declines there)', () => {
+    const result = recognizeTokenCreationStructural(structuralInput('The Final Days', theFinalDays));
+    expect(result).toEqual({ matched: false, reason: expect.stringContaining('no real quantifier template to verify') });
+  });
+
+  it('declines The Wandering Minstrel — a controlled-permanent-count THRESHOLD gate ("if you control five or more Towns, create..."), not a "for each" scaling count (also independently declines earlier, via the inline-TokenInfo/no-TOKENS-registry check — its Elemental token is a literal, not a registry reference)', () => {
+    const result = recognizeTokenCreationStructural(structuralInput('The Wandering Minstrel', theWanderingMinstrel));
+    expect(result).toEqual({ matched: false, reason: expect.stringContaining('no matching TOKENS registry entry') });
   });
 
   it('declines Circle of Power — an inline TokenInfo literal (0/1 black Wizard) with no TOKENS registry id; color is not tracked structurally so no canonical id is derivable', () => {

@@ -33,7 +33,8 @@
           "start": 56,
           "end": 87
         }
-      ]
+      ],
+      "triggeredBy": "onAttacks"
     }
   ],
   "sink": [

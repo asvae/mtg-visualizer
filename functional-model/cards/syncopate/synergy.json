@@ -11,7 +11,11 @@
           "start": 0,
           "end": 148
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "counter-effect-structural"
+      }
     }
   ],
   "sink": []

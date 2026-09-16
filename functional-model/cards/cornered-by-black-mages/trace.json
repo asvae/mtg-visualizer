@@ -19,7 +19,7 @@
         "fn": "cast",
         "card": "Cornered by Black Mages",
         "instanceId": 1,
-        "id": 478,
+        "id": 4,
         "from": "hand",
         "cost": "{1}{B}{B}"
       },
@@ -49,7 +49,7 @@
         "fn": "move",
         "card": "Cornered by Black Mages",
         "instanceId": 1,
-        "id": 478,
+        "id": 4,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -74,7 +74,7 @@
         "fn": "cast",
         "card": "Cornered by Black Mages",
         "instanceId": 1,
-        "id": 482,
+        "id": 8,
         "from": "hand",
         "cost": "{1}{B}{B}"
       },
@@ -99,7 +99,7 @@
         "fn": "move",
         "card": "Cornered by Black Mages",
         "instanceId": 1,
-        "id": 482,
+        "id": 8,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

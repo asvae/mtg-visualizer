@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Summon: Fat Chocobo",
         "instanceId": 1,
-        "id": 2400,
+        "id": 2,
         "name": "chapterI"
       },
       {
@@ -46,7 +46,7 @@
         "fn": "trigger",
         "card": "Summon: Fat Chocobo",
         "instanceId": 1,
-        "id": 2404,
+        "id": 6,
         "name": "chapterII"
       },
       {
@@ -57,14 +57,16 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2403,
-        "keyword": "Trample"
+        "id": 5,
+        "keyword": "Trample",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Summon: Fat Chocobo",
-        "id": 2404,
-        "keyword": "Trample"
+        "id": 6,
+        "keyword": "Trample",
+        "untilEndOfTurn": true
       }
     ]
   }

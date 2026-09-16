@@ -19,32 +19,45 @@ function structuralInput(scryfallName: string, def: CardDefinition): StructuralR
 }
 
 describe('moveSearchLibraryOrGraveyard-effect-structural — "search your library and/or graveyard for a[n] <type> card with mana value N or less"', () => {
-  it('accepts Delivery Moogle — matches its own pre-existing hand-authored facts byte-for-byte (4 facts: 2 source, 2 sink)', () => {
+  it('accepts Delivery Moogle — 4 facts (2 source, 2 sink); 2026-09-16 SOURCE/SINK split fix: sources keep the WHOLE clause (widened 2026-09-16, see module doc comment), sinks narrow to just the object phrase "an artifact card with mana value 2 or less"', () => {
     const result = recognizeMoveSearchLibraryOrGraveyardEffectStructural(structuralInput('Delivery Moogle', deliveryMoogle));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
+    const annotation = { target: 'oracle', line: 1, start: 27, end: 148 };
+    const sinkAnnotation = { target: 'oracle', line: 1, start: 68, end: 110 };
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { from: 'Library', to: 'Hand', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [{ target: 'oracle', line: 1, start: 34, end: 46 }] },
+        // `triggeredBy: 'onEnter'` (2026-09-16, "widen populate" pass) —
+        // Delivery Moogle's own real ETB trigger.
+        fact: { from: 'Library', to: 'Hand', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [annotation], triggeredBy: 'onEnter' },
         provenance: { origin: 'parser', rule: 'moveSearchLibraryOrGraveyard-effect-structural' },
       },
       {
         role: 'source',
-        fact: { from: 'Graveyard', to: 'Hand', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [{ target: 'oracle', line: 1, start: 54, end: 63 }] },
+        fact: { from: 'Graveyard', to: 'Hand', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [annotation], triggeredBy: 'onEnter' },
         provenance: { origin: 'parser', rule: 'moveSearchLibraryOrGraveyard-effect-structural' },
       },
       {
         role: 'sink',
-        fact: { to: 'Library', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [{ target: 'oracle', line: 1, start: 34, end: 46 }] },
+        fact: { to: 'Library', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [sinkAnnotation] },
         provenance: { origin: 'parser', rule: 'moveSearchLibraryOrGraveyard-effect-structural' },
       },
       {
         role: 'sink',
-        fact: { to: 'Graveyard', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [{ target: 'oracle', line: 1, start: 54, end: 63 }] },
+        fact: { to: 'Graveyard', controller: 'you', types: { has: ['Artifact'] }, cmc: { max: 2 }, annotations: [sinkAnnotation] },
         provenance: { origin: 'parser', rule: 'moveSearchLibraryOrGraveyard-effect-structural' },
       },
     ]);
+    // The clause is anchored through "...put it into your hand" — the
+    // trailing "If you search your library this way, shuffle." sentence is
+    // deliberately NOT part of it (see progress.json's own annotatedNonFactSpans).
+    const card = finCards.get('Delivery Moogle')!;
+    const line = card.front.oracleText.split('\n')[1]!;
+    expect(line.slice(27, 148)).toBe(
+      'search your library and/or graveyard for an artifact card with mana value 2 or less, reveal it, and put it into your hand',
+    );
+    expect(line.slice(68, 110)).toBe('an artifact card with mana value 2 or less');
   });
 
   it('declines a real card with no Library-and-Graveyard search move effect at all (Ahriman)', () => {

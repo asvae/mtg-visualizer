@@ -16,10 +16,15 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 27,
+          "start": 33,
           "end": 78
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "addMana",
@@ -33,10 +38,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 9,
+          "start": 5,
           "end": 12
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
   "sink": [
@@ -52,10 +61,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 27,
+          "start": 33,
           "end": 78
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "event": "entersBattlefield",

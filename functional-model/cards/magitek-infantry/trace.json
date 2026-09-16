@@ -19,28 +19,32 @@
         "fn": "activate",
         "card": "Magitek Infantry",
         "instanceId": 1,
-        "id": 1510,
+        "id": 6,
         "cost": "{2}{W}"
       },
       {
-        "fn": "read:getCardsIn",
+        "fn": "move",
         "player": "you",
-        "zone": "Library",
-        "count": 3,
-        "creatureCount": 0
-      },
-      {
-        "fn": "moveTo",
-        "target": "Magitek Infantry",
-        "id": 1507,
-        "zone": "Battlefield",
-        "controller": "you"
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 1,
+        "name": "Magitek Infantry"
       },
       {
         "fn": "tap",
         "target": "Magitek Infantry",
-        "id": 1507,
+        "id": 3,
         "controller": "you"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Magitek Infantry",
+        "power": 2,
+        "toughness": 1
       }
     ]
   }

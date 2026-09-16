@@ -83,9 +83,9 @@
       {
         "fn": "equip",
         "equipment": "Thief's Knife",
-        "equipmentId": 2807,
+        "equipmentId": 32,
         "target": "Hero",
-        "id": 2808
+        "id": 33
       },
       {
         "fn": "read:getNetPower",
@@ -133,9 +133,9 @@
       {
         "fn": "equip",
         "equipment": "Thief's Knife",
-        "equipmentId": 2807,
+        "equipmentId": 32,
         "target": "Qiqirn Merchant",
-        "id": 2806
+        "id": 31
       },
       {
         "fn": "read:getNetPower",

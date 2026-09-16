@@ -63,6 +63,7 @@ import {
   resolveFirstStrikeCombatDamage,
   resolveCombatDamage,
   queueExtraPhase as engineQueueExtraPhase,
+  endTurn as engineEndTurn,
   type GameEngine,
   type CombatDamageResult,
 } from './engine';
@@ -258,6 +259,42 @@ export function pilotActions(pilot: EnginePilot, selfId: number): Actions {
     queueExtraPhase: (phaseType) => {
       engineQueueExtraPhase(pilot.engine, phaseType);
       pilot.log.push({ fn: 'queueExtraPhase', phaseType });
+    },
+    /**
+     * Real 721.1a "end the turn" (Ultima, fin/38's own "End the turn.") —
+     * unlike `loggingActions.endTurn`'s own log-only fallback (no real
+     * `GameEngine` in scope on that plain path), a real pilot script
+     * genuinely has one: this override calls `engine.ts`'s own real
+     * `endTurn` (stack-exile, end combat, check SBAs, jump straight to
+     * Cleanup), then reconstructs the SAME real, causally-ordered log
+     * entries a normal Cleanup crossing gets (`logAutomaticPhaseEntry`,
+     * shared with `advanceOneStep`/`advanceToPlayersNextMain1` above, so a
+     * real discard/UEOT-keyword-removal/pump-removal this jump triggers is
+     * genuinely visible in the trace, not just asserted) — `snapshotBeforeAdvance`
+     * must run BEFORE `engineEndTurn` mutates anything, same ordering every
+     * other caller of it already uses. One real `move ... to:'Exile'` entry
+     * per card `engine.ts`'s own `endTurn` actually found still on the
+     * stack (see that function's own doc comment for why this is legally
+     * always empty for Ultima specifically, but real/general for any future
+     * instant-speed "end the turn" card). `ctx.self`'s own post-resolution
+     * move to Exile (the "including this card" half) is logged separately,
+     * by whichever caller resolves the top of the stack (`pilotResolveTop`'s
+     * own `move ... to: 'Exile'` branch, once `card.ts`'s `EffectContext
+     * .selfToExile` is set — see that field's own doc comment) — NOT here,
+     * since this action fires mid-resolution, before that post-resolution
+     * zone-move ever happens.
+     */
+    endTurn: () => {
+      const before = snapshotBeforeAdvance(pilot);
+      const result = engineEndTurn(pilot.engine);
+      for (const c of result.exiledCards) pilot.log.push({ fn: 'move', card: c.name, id: c.id, from: 'stack', to: 'Exile' });
+      pilot.log.push({ fn: 'endTurn' });
+      logAutomaticPhaseEntry(pilot, before, pilot.log.length);
+      // Same real `phase` bracket entry every other real phase transition in
+      // this file logs (`advanceOneStep`/`advanceToPlayersNextMain1`) — a
+      // replay reader needs this to know the game genuinely jumped straight
+      // to Cleanup, not just that a discard happened to occur.
+      pilot.log.push({ fn: 'phase', phase: currentPhase(pilot.engine.turn), turn: pilot.engine.turn.turnNumber, player: activePlayer(pilot.engine.turn, pilot.engine.players).name });
     },
   };
 }
@@ -520,6 +557,20 @@ export function advanceToDeclareAttackersStep(pilot: EnginePilot, label?: string
  * bracket ahead of every attacker's own effects instead of interleaving them
  * per-attacker; real, narrower-than-ideal, not attempted since no pool
  * scenario needs it yet.
+ *
+ * **Widened (2026-09-16, equip-trigger auto-dispatch pass) to ALSO peek and
+ * log an `on: 'equippedAttacks'` trigger bracket** — same real reason as the
+ * `on: 'attacks'` peek above: `engine.ts`'s widened `fireOnAttackTriggers`
+ * now ALSO auto-fires an Equipment's own trigger the moment the creature
+ * it's attached to attacks (see card.ts's own `Trigger.on` doc comment),
+ * but that real auto-fire never pushes its own `{fn:'trigger'}` bracket
+ * either — same gap this file's own pre-existing `on: 'attacks'` peek
+ * already closed for a self-attack trigger. For each attacker, scans
+ * `pilot.state.cards` (not just that attacker's own controller's
+ * battlefield — mirrors `engine.ts`'s own identical widened scan) for any
+ * OTHER real card with a live `attachedToId === a.id` and a registered
+ * `on: 'equippedAttacks'` trigger, logging ITS OWN bracket (`card`: the
+ * Equipment's name, not the attacker's).
  */
 export function pilotDeclareAttackers(pilot: EnginePilot, attackers: RealCard[], label?: string): void {
   pilot.beginStep(label ?? `Declare ${attackers.map((c) => c.name).join(', ')} as attacker${attackers.length > 1 ? 's' : ''}`);
@@ -539,6 +590,12 @@ export function pilotDeclareAttackers(pilot: EnginePilot, attackers: RealCard[],
     const registered = pilot.engine.resolvedPermanents.get(a.id);
     const attackTrigger = registered?.card.triggers?.find((t) => t.on === 'attacks');
     if (attackTrigger) entries.push({ fn: 'trigger', card: a.name, instanceId: SELF_INSTANCE_ID, name: attackTrigger.name });
+    for (const real of pilot.state.cards.values()) {
+      if (real.attachedToId !== a.id) continue;
+      const equipRegistered = pilot.engine.resolvedPermanents.get(real.id);
+      const equipTrigger = equipRegistered?.card.triggers?.find((t) => t.on === 'equippedAttacks');
+      if (equipTrigger) entries.push({ fn: 'trigger', card: real.name, instanceId: SELF_INSTANCE_ID, name: equipTrigger.name });
+    }
   }
   const result = declareAttackers(pilot.engine, attackers);
   if (!result.ok) throw new Error(`pilotDeclareAttackers: illegal — ${result.reason}`);
@@ -774,11 +831,19 @@ export function pilotResolveTop(pilot: EnginePilot, label?: string): void {
     }
     resolveTop(pilot.engine);
   } else {
+    resolveTop(pilot.engine);
     // Real 702.32/702.67: a Flashback/Jump-start-cast spell (`peeked.thenExile`
     // — set by `pilotCast`'s own `alt` param via `castSpell`, see `engine.ts`'s
-    // `resolveTop`) resolves to Exile instead of the Graveyard.
-    const to = peeked.thenExile ? 'Exile' : 'Graveyard';
-    resolveTop(pilot.engine);
+    // `resolveTop`) resolves to Exile instead of the Graveyard. Real 721.1a's
+    // own "including this card" ruling (`peeked.ctx.selfToExile` — `card.ts`'s
+    // own `EffectContext.selfToExile` doc comment) is the SAME real check,
+    // additive to `thenExile` — deliberately read AFTER `resolveTop` above,
+    // not before: `selfToExile` is only ever set DURING that call (inside
+    // `card.ts`'s own `applyEffect` case `'endTurn'`, synchronously, on this
+    // SAME `ctx` object reference — `peeked.ctx` and the resolving
+    // `StackObject.ctx` are the identical object, never a copy), so reading
+    // it any earlier would always see `undefined`.
+    const to = peeked.thenExile || peeked.ctx.selfToExile ? 'Exile' : 'Graveyard';
     pilot.log.push({ fn: 'move', card: peeked.card.name, instanceId: SELF_INSTANCE_ID, from: 'stack', to });
   }
 }

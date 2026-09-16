@@ -17,7 +17,7 @@
         "fn": "cast",
         "card": "You're Not Alone",
         "instanceId": 1,
-        "id": 3193,
+        "id": 5,
         "from": "hand",
         "cost": "{W}"
       },
@@ -32,22 +32,18 @@
         "count": 3
       },
       {
-        "fn": "read:getCreaturesInPlay",
-        "player": "you",
-        "count": 3
-      },
-      {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 3190,
+        "id": 2,
         "power": 4,
-        "toughness": 4
+        "toughness": 4,
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
         "card": "You're Not Alone",
         "instanceId": 1,
-        "id": 3193,
+        "id": 5,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

@@ -51,15 +51,32 @@ export const serahFarron: CardDefinition = {
     manaCost: '',
     typeLine: 'Legendary Artifact',
 
-    // Same cost-reduction static as the front face, plus a real permanent
-    // anthem — "Legendary creatures you control get +2/+2" is a CONTINUOUS
-    // static buff to OTHER permanents (no duration, not a resolvable
-    // "until end of turn" spell effect), which is exactly what
-    // `staticAbilities` (not `pumpAll`, that models a one-time RESOLVING
-    // pump) is for.
+    // Same cost-reduction static as the front face (still real, structured
+    // text — cost-reduction/replacement-effect machinery is a separate,
+    // still-open gap). "Legendary creatures you control get +2/+2" is now
+    // real, executable `continuousPTGrants` with a `subtype:'Legendary'`
+    // broadcast (2026-09-16, static-ability audit) — same shared mechanism
+    // elvish-archdruid's own "Other Elf creatures" anthem uses, `subtype`
+    // here matching this codebase's own established "Legendary" pseudo-
+    // subtype convention (`hasSubtype('Legendary')`, same as this card's
+    // own front-face `onBeginCombat` trigger already checks). Crystallized
+    // Serah is ITSELF a Legendary permanent (though not a Creature, so
+    // real Forge never grants it its own bonus either) — `includeSelf:
+    // false` is correct, and `state.ts`'s own `qualifiesForContinuousGrant`
+    // was fixed this same pass to explicitly exclude the granting
+    // permanent from its own subtype-broadcast branch (previously an
+    // unexercised self-collision risk no other real subtype grant in this
+    // pool happened to hit — see that function's own updated comment).
+    // Doesn't ALSO require the recipient to be a Creature specifically
+    // (only `subtype.includes('Legendary')`) — a real, narrow, accepted
+    // simplification: no OTHER real non-Creature Legendary permanent
+    // exists anywhere in this pool to expose the gap, same "no real
+    // conflicting card exists yet" acceptance Ardyn's own Demon-subtype
+    // grant already relies on.
     staticAbilities: [
       'The first legendary creature spell you cast each turn costs {2} less to cast.',
       'Legendary creatures you control get +2/+2.',
     ],
+    continuousPTGrants: [{ power: 2, toughness: 2, includeSelf: false, subtype: 'Legendary' }],
   },
 };

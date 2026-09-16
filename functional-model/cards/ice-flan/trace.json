@@ -110,6 +110,50 @@
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
+      },
+      {
+        "fn": "trigger",
+        "card": "Ice Flan",
+        "instanceId": 1,
+        "name": "onEnter"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "tap",
+        "target": "Grizzly Bears",
+        "id": 9,
+        "controller": "opp0"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "opp0",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isCreature",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
+        "fn": "putCounter",
+        "target": "Grizzly Bears",
+        "id": 9,
+        "counterType": "stun",
+        "amount": 1,
+        "controller": "opp0"
       }
     ],
     "actions": [
@@ -127,7 +171,7 @@
       },
       {
         "label": "Fire onEnter",
-        "from": 8
+        "from": 15
       }
     ]
   },

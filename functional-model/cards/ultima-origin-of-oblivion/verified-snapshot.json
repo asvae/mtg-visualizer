@@ -1,0 +1,128 @@
+{
+  "capturedAt": "2026-09-16T21:26:22.802Z",
+  "facts": {
+    "source": [
+      {
+        "event": "putCounter",
+        "counterType": "blight",
+        "target": {
+          "types": {
+            "has": [
+              "Land"
+            ]
+          }
+        },
+        "targeted": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 25,
+            "end": 60
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "putCounterTarget-effect-structural"
+        },
+        "triggeredBy": "onAttack"
+      },
+      {
+        "event": "addMana",
+        "colors": {
+          "has": [
+            "C"
+          ]
+        },
+        "controller": "you",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 33,
+            "end": 54
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "addMana-effect-structural"
+        },
+        "triggeredBy": "onTapLandForC"
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "types": {
+          "has": [
+            "Land"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 49,
+            "end": 60
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "putCounterTarget-effect-structural"
+        }
+      },
+      {
+        "event": "addMana",
+        "colors": {
+          "has": [
+            "C"
+          ]
+        },
+        "controller": "you",
+        "types": {
+          "has": [
+            "Land"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 0,
+            "end": 31
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "addMana-effect-structural"
+        }
+      },
+      {
+        "event": "attacks",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 0,
+            "end": 23
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "attacks-trigger-structural"
+        }
+      }
+    ]
+  },
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 1,
+      "start": 62,
+      "end": 176,
+      "kind": "definition-path",
+      "note": "\"For as long as that land has a blight counter on it, it loses all land types and abilities and has '{T}: Add {C}.'\" — real, mechanically-enforced machinery with no Fact of its own. Maps to card.ts's CounterConditionalGrant / state.ts's hasCounterConditionalLandTypeLoss+hasCounterConditionalAbilityLoss (consumed by effectiveSubtypes/effectiveKeywords/engine.ts's canActivateAbility) and mana.ts's own duck-typed check for the granted {T}: Add {C}. See ENGINE_GAPS.md's \"Counter-conditional continuous effects\" entry and this file's own knownGaps entry below for the full writeup."
+    }
+  ]
+}

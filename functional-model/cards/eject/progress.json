@@ -3,7 +3,18 @@
   "review": "ai",
   "verifySynergy": "pass",
   "lastVerified": "2026-09-12",
-  "notes": "Migrated to unified Fact model (2026-09-12): self-cast(Hand)/self-graveyard baseline (no self-enters, Instant), real targeted bounce {to:'Hand',from:'Battlefield',target:{types:{not:['Land']}},targeted:true} reusing the 'bounce' ZONE_MOVEMENT_NAMES entry, real drawCard, and a matching sink {to:'Battlefield',types:{not:['Land']}} for the bounce target. 'This spell can't be countered' intentionally has no Fact — bare CantHappen-style replacement rule, no observable event/zone-change and nothing in the pool sinks on 'can't be countered' (same precedent as fate-of-the-sun-cryst's cost-reduction static text). annotations-authoring.json added, real offsets baked via compute-annotations.mjs (verified against data/fin/fin_scryfall.json #52 oracle text).",
-  "textCoverageAudited": false,
-  "knownGaps": []
+  "notes": "Migrated to unified Fact model (2026-09-12): self-cast(Hand)/self-graveyard baseline (no self-enters, Instant), real targeted bounce {to:'Hand',from:'Battlefield',target:{types:{not:['Land']}},targeted:true} reusing the 'bounce' ZONE_MOVEMENT_NAMES entry, real drawCard, and a matching sink {to:'Battlefield',types:{not:['Land']}} for the bounce target. 'This spell can't be countered' intentionally has no Fact — bare CantHappen-style replacement rule, no observable event/zone-change and nothing in the pool sinks on 'can't be countered' (same precedent as fate-of-the-sun-cryst's cost-reduction static text). annotations-authoring.json added, real offsets baked via compute-annotations.mjs (verified against data/fin/fin_scryfall.json #52 oracle text).\n\n2026-09-16 (text-coverage batch): closed the remaining real gap (68% covered) — \"This spell can't be countered.\" Whole-pool check (grepped every real oracle_text in data/fin/fin_scryfall.json) confirmed exactly 2 real cards use this clause verbatim: this card and Absolute Virtue (fin/1) — both already carry the identical pre-existing definition.ts comment explaining why it's a real, accepted, unmodeled replacement rule (no counterspell/Counter-event machinery exists anywhere in stack.ts/engine.ts to intercept — card.ts's own kind:'counter' Effect is log-only, nothing for a 'can't be countered' check to hook into). Added a real annotatedNonFactSpans entry (kind:'rules') here. Absolute Virtue shares the identical clause/reasoning but was NOT touched — out of this batch's assigned scope, and its own synergy.json is still v1-schema (zone-shaped facts, no annotations array at all) with a separate, larger, unrelated remaining gap (\"You have protection from each of your opponents.\") that would need a fuller migration pass, not a one-line annotation add; flagged here for whoever picks that card up next.",
+  "textCoverageAudited": true,
+  "knownGaps": [],
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 0,
+      "start": 0,
+      "end": 30,
+      "face": "front",
+      "kind": "rules",
+      "note": "\"This spell can't be countered.\" — real Forge R:Event$ Counter | ValidCard$ Card.Self | ValidSA$ Spell | Layer$ CantHappen replacement rule. No counterspell/Counter-event machinery exists anywhere in this engine (stack.ts/engine.ts) to intercept — card.ts's own kind:'counter' Effect is log-only (no stack/object model to remove a target from), so there is nothing for a 'can't be countered' check to hook into. Same real, accepted gap Absolute Virtue's own identical clause carries."
+    }
+  ]
 }

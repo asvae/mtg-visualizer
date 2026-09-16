@@ -1,5 +1,72 @@
 {
-  "source": [],
+  "source": [
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 41,
+          "end": 97
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      },
+      "triggeredBy": "onBeginCombat"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 19,
+          "end": 47
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "DoubleStrike",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 19,
+          "end": 69
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsEquipped-structural"
+      }
+    }
+  ],
   "sink": [
     {
       "zone": "Battlefield",
@@ -9,7 +76,19 @@
           "Creature"
         ]
       },
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 41,
+          "end": 68
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpTarget-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -31,6 +110,23 @@
       "provenance": {
         "origin": "parser",
         "rule": "equipmentWantsCreature-sink-structural"
+      }
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 40
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
       }
     }
   ]

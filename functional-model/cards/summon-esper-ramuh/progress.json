@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (collateral, fin/20-47 text-coverage pass on summon-choco-mog/fin/35 and summon-knights-of-round/fin/36): `pumpAllCreaturesYouControl-effect-structural.ts`'s own SINK fact was widened pool-wide to the WHOLE matched clause instead of the bare \"+1/+0\"-only span — this card's own \"II, III — Wizards you control get\" prefix (real, previously uncovered) closed as a result. Coverage 78% -> 100%, 0 gaps. `review` was already 'ai'.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

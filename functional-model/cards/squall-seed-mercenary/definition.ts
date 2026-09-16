@@ -15,8 +15,12 @@ export const squallSeedMercenary: CardDefinition = {
       // documents: "Alone$ True" (which creature, and that it was the only
       // attacker) isn't tracked anywhere in this model — approximated as
       // the first creature you control.
+      // recognizer-exception: grantKeywordTarget-effect-structural — same
+      // real anaphoric "IT gains double strike" mismatch seifer-almasy's
+      // own identical Rough Divide trigger already documents; a confirmed
+      // mismatch, not a bug.
       name: 'onAttacksAlone',
-      effects: [{ kind: 'grantKeywordTarget', keyword: 'DoubleStrike', owner: 'you' } satisfies Effect],
+      effects: [{ kind: 'grantKeywordTarget', keyword: 'DoubleStrike', owner: 'you', untilEndOfTurn: true } satisfies Effect],
     },
     {
       // "Whenever Squall deals combat damage to a player, return target

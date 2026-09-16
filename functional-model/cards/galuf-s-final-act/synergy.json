@@ -19,7 +19,7 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 35,
+          "start": 19,
           "end": 45
         }
       ],
@@ -43,7 +43,7 @@
           "target": "oracle",
           "line": 0,
           "start": 19,
-          "end": 45
+          "end": 34
         }
       ],
       "provenance": {

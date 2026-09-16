@@ -7,6 +7,24 @@
     {
       "event": "dies",
       "controller": "opp"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 28
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [

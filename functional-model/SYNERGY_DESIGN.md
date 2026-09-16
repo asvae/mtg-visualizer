@@ -2939,3 +2939,156 @@ matching, per this doc's own note above) no longer reads or writes
 key stripped from every fact, pool-wide (a one-off script, not hand-edited
 per file — verified via a pool-wide grep for zero remaining `"value"` keys
 under any fact object afterward).
+
+### `dealDamage-effect-structural.ts`/`dealDamageTarget-effect-structural.ts` widened to cover the effect's own subject clause (2026-09-16)
+
+`verify-text-coverage.mjs` flagged the SUBJECT phrase ("This creature"/the
+card's own printed name) as sitting just outside these two recognizers' own
+annotations, immediately before "deals" — real for Summon: Bahamut
+(`dealDamage-effect-structural`, chapter IV, "IV — Mega Flare — **This
+creature** deals damage...") and Summon: Esper Ramuh (`dealDamageTarget-
+effect-structural`, chapter I, "I — Judgment Bolt — **This creature** deals
+damage..."). Both recognizers now build a `selfSubjectAlternation(name)`
+helper — same "this `<permanent type>`"/"this permanent"/own printed name
+(or short pre-comma form) shape `dies-trigger-structural.ts` already
+established, deliberately excluding bare "it" for the same reason that
+file's own doc comment gives — and try it as an OPTIONAL, non-capturing
+prefix immediately before "deals" (only whitespace between, so a chapter's
+own numeral/ability-name label, e.g. "IV — Mega Flare — ", is never reached
+for — no recognizer in this pool covers that label anywhere, so this
+change doesn't invent a new convention to do so either). When the subject
+form isn't recognized (Vivi Ornitier's/The Emperor of Palamecia's own back
+face's bare "it", Blazing Bomb's own bare "It") the match still starts
+right at "deals," unchanged from before — confirmed via explicit
+regression-guard assertions in both recognizers' own `.test.ts` files, not
+just the widened cases.
+
+**`Summon: Primal Garuda`'s own matching gap is NOT a recognizer-anchoring
+issue** — its "Aerial Blast" clause is a `kind:'custom'` `Effect` (no
+`dealDamageTarget`'s own `tapped`-filter field exists, see that card's own
+`definition.ts` comment), so neither recognizer above ever runs against it;
+its own `damage`/sink facts are still hand-authored via `cards/summon-
+primal-garuda/annotations-authoring.json` + `compute-annotations.mjs`, not
+`apply-recognizers.mjs`. Widened that authoring entry's own `highlight` the
+same way, then discovered `compute-annotations.mjs` can no longer safely
+regenerate this card's `synergy.json` at all: `annotations-authoring.json`
+represents its facts in the file's OWN original hand-authored order/count,
+but `apply-recognizers.mjs` has since re-ordered/merged/appended facts on
+top of them (a real, separate parser-derived fact set now sits alongside
+the authored ones) — `compute-annotations.mjs`'s strict positional zip
+between the authoring file and `synergy.json`'s current `source`/`sink`
+arrays silently mis-assigns spans once the two have drifted this way
+(confirmed: running it against this card produced garbage `typeLine`-
+anchored annotations for facts that have real `oracle`-anchored ones). This
+is a genuine, pre-existing tooling gap — not caused by this pass, not fixed
+here either (out of scope) — hand-patched this ONE card's `synergy.json`
+annotation directly instead of re-running the broken tool; flagged for
+whoever next touches `compute-annotations.mjs` or the ~85 other cards still
+carrying an `annotations-authoring.json` of their own, any of which could
+have silently drifted the same way once `apply-recognizers.mjs` touched
+them.
+
+Neither Summon: Esper Ramuh (chapter II/III's own "Wizards you control get
++1/+0" `pumpAll` clause, still unrecognized) nor Summon: Primal Garuda
+(5 of 8 facts still hand-authored, not recognizer-derived, per that card's
+own `progress.json`) flip to a green `fin_card_status.json` classification
+from this change alone — both are gated by real, separate, pre-existing
+provenance/coverage gaps unrelated to the subject-clause fix (their own
+"This creature"/damage-clause span IS now fully covered either way).
+Summon: Bahamut flips to green (0 uncovered spans, 90% covered, all 9
+facts recognizer-derived).
+
+### `destroy` implies `dies` at match time — a narrow, scoped instance of the "full matcher unification" open work above, closed (2026-09-16)
+
+Real user-reported redundancy: `destroy-effect-structural.ts`/
+`destroyProgram-effect-structural.ts` each emitted TWO source facts per
+recognized destroy effect — the `event:'destroy'` ACT tag, and a
+byte-for-byte-annotation-identical `event:'dies', from:'Battlefield',
+to:'Graveyard'` CONSEQUENCE fact right next to it (confirmed on
+`battle-menu`/fin-9: "Destroy target creature with power 4 or greater").
+Per this file's own "ACT vs CONSEQUENCE" standing rule table (above,
+"Fact unification" section), that pairing was always the CORRECT model for
+what the two facts individually CLAIM (destroy is conditional/preventable
+— indestructible/regeneration — so the ACT fact correctly stays bare; the
+guaranteed CONSEQUENCE is a separate, always-real fact). The bug wasn't in
+that reasoning — it's that the CONSEQUENCE fact added zero NEW matchable
+information over the ACT fact's own `target` filter, since both shared the
+identical annotation span and target constraint. Authoring it twice was
+pure duplication of DATA, not a duplication of CLAIM.
+
+**Fix: move the equivalence to the MATCHER, not the data.** Both
+recognizers now emit ONLY the `destroy` fact (their own module doc
+comments have the full writeup); `synergy.ts`'s `factsInteract` gained a
+new branch, checked BEFORE the ordinary `isZoneFact(p) !== isZoneFact(w)`
+shape-partition gate (this file's own "Fact unification" section, above):
+when the producer is `{event:'destroy', target, ...}`, it's tested against
+BOTH shape-families of "wants a graveyard arrival" want directly —
+`isGraveyardArrivalWant(w)` returns true for a zone-shaped `to:'Graveyard'`
+want OR an event-shaped `event:'dies'` want, exactly the two shapes a
+`dies` fact could ever satisfy pre-merge/post-merge respectively. This is
+narrower than the "let one fact satisfy BOTH shape-families' wants at
+once" open item the "Fact unification" section above still tracks as
+unsolved in general (this fix is scoped to exactly one producer event
+kind, `destroy`, not a general re-architecture of `factsInteract`'s own
+shape gate) — but it's the same underlying idea, applied where a real card
+needed it.
+
+**The matching logic itself, `satisfiesDestroyImpliesDies`**:
+- Against a `to:'Graveyard'`-shaped or `target`-object `event:'dies'`-shaped
+  want with a `types` constraint: checks the destroy's own GUARANTEED types
+  (`target.types.has` only — `hasAny`/`not`/absent guarantees nothing
+  type-specific) against the want's `types` constraint via the same
+  `satisfiesType` helper `Constraints.types` already uses everywhere else.
+  Declines outright for a want with any `cmc`/`power`/`toughness`/`name`/
+  `amount` constraint — no real pool sink needs more than `types` on a
+  graveyard-arrival want today (checked).
+- Against a `target:'self'`-shaped `event:'dies'` want ("when THIS creature
+  dies"): a genuinely WEAKER claim than the guaranteed-type check above —
+  not "does this destroy guarantee killing something of this type" but
+  "could the wanting card ITSELF legally be this destroy's own victim."
+  Mirrors the general event-matching branch's own existing `we.target ===
+  'self'` handling for any OTHER event kind (`satisfiesConstraints(
+  staticAttrsFor(wCard.card), pe.target)`) rather than reinventing a
+  parallel mechanism — this is exactly the "satisfy the SAME sinks through
+  the SAME matching path" requirement this task was built to honor.
+  Declines when the destroy has no `target` filter at all (an unrestricted
+  "destroy target permanent" does NOT vacuously match every self-dies want
+  in the pool — that would be a broad new invention no removed fact ever
+  backed, since an unrestricted destroy's own OLD `dies` fact always
+  carried real `from`/`to` and was therefore never event-only-shaped/
+  reachable by this branch in the first place).
+
+**Two real regressions this needed to guard against, found by an actual
+before/after `find-synergies.mjs` diff, not assumed**: Lunatic Pandora's
+and Sephiroth's Intervention's own on-disk `dies` companion facts predated
+the `from`/`to` fields this recognizer family now always sets (a real,
+separate staleness bug — never regenerated after that field became
+unconditional) — being accidentally EVENT-only shaped, they were
+reachable by the general matcher's own `we.target === 'self'` branch
+against 5 real self-dies wants (Aerith Gainsborough, Ancient Adamantoise,
+Dwarven Castle Guard, Garland Knight of Cornelia, Undercity Dire Rat) in a
+way a CORRECTLY-shaped (zone+event) `dies` fact never could have (the
+shape-partition gate blocks a zone+event fact from ever satisfying a pure
+event-only want — this file's own "Fact unification" section already
+documents this as the accepted, standing regression for EVERY zone+event
+merged fact, not something new here). Removing the stale fact without
+covering this case would have silently dropped those 5 real matches —
+caught by the required pair-level diff (`(producer, wanter)` card pairs,
+not raw line counts, since most of the line-level diff is expected label
+deduplication for a pair that already matches some other way), not by
+inspection.
+
+**Full-pool verification (`find-synergies.mjs`, before whole task vs.
+after)**: pair-level diff shows **zero real `(producer, wanter)` card-pairs
+lost any edge** — every match the old `dies` fact used to provide survives,
+either via the widened `destroy` match or because the pair already had a
+different edge and the removed report line was a pure duplicate label for
+the same real relationship. Net new real matches this widening closes for
+the first time (previously unreachable even with BOTH the `destroy` and
+`dies` facts on disk, since the `dies` fact's own zone-branch match needs a
+`subject` field the destroy-effect recognizer never set): Ardyn the
+Usurper, Al Bhed Salvagers, Jenova Ancient Calamity, G'raha Tia. `npx tsc
+--noEmit`/`npx vitest run functional-model` clean (no new errors/failures);
+`scripts/verify-synergy.mjs` full pool: 320 checked, 0 hard failures,
+unchanged; `data/fin/fin_card_status.json` regenerated, 0 cards changed
+status/reasons.

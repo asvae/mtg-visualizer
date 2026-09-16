@@ -27,9 +27,13 @@
           "target": "oracle",
           "line": 1,
           "start": 10,
-          "end": 79
+          "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "selectUpToGainControl-effect-structural"
+      }
     },
     {
       "event": "drawCard",
@@ -38,10 +42,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 93,
+          "start": 97,
           "end": 108
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -55,7 +63,11 @@
           "start": 43,
           "end": 79
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "selectUpToGainControl-effect-structural"
+      }
     }
   ]
 }

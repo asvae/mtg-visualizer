@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import { you, selectUpTo, applyToBound, putCounter, grantKeyword, branch, hasSubtype, drawCard } from '../../combinator';
 
 // A transforming DFC — same `backFace` shape jecht-reluctant-guardian-braska-s-
 // final-aeon/dion-bahamut-s-dominant-bahamut-warden-of-light/crystal-fragments-
@@ -33,32 +34,43 @@ export const venatHeartOfHydaelyn: CardDefinition = {
   ],
 
   // "Hero's Sundering — {7}, {T}: Exile target nonland permanent. Transform
-  // Venat. Activate only as a sorcery." `move`'s own targeted branch has no
-  // "nonland" validType and no shape for "then this permanent itself also
-  // transforms" — `custom`, combining a real exile of the chosen
-  // battlefield-wide nonland permanent with the exile/re-enter transform
-  // stand-in described above, models both halves with only existing
-  // primitives. Excludes `ctx.self` from the exile-target pool: the real
-  // printed text has no "another" restriction (Venat COULD legally target
-  // itself), but `chooseTarget` always takes the FIRST pool candidate
-  // absent a real choice, and self is already on the battlefield for this
-  // activated-ability scenario — without the exclusion it would always
-  // self-target ahead of any real opponent permanent, an uninteresting
-  // degenerate case this scenario isn't meant to exercise. `ctx.preferTarget`
-  // threaded through `chooseTarget` (2026-09-12, same technique weapons-
-  // vendor's/summon-primal-garuda's own `custom` effects already use) so a
-  // piloting scenario can deterministically choose a specific real
-  // opponent permanent instead of relying on pool order.
+  // Venat. Activate only as a sorcery." PARTIALLY MIGRATED (2026-09-16,
+  // fin/26-50 follow-up) — the "exile target nonland permanent" half is now
+  // a real declarative `move` effect: `move`'s own targeted branch already
+  // has both a real `nonLand` filter (Jill, Shiva's Dominant's own
+  // precedent) and an unrestricted (no `owner`) candidate pool (Coeurl/
+  // Dion's own precedent). An earlier version of this card excluded
+  // `ctx.self` from the exile-target pool via a hand-rolled filter — the
+  // real printed text has no "another" restriction at all (Venat COULD
+  // legally target itself), so that exclusion was never a real textual
+  // claim, only a scenario-engineering workaround for `chooseTarget`'s own
+  // "always the first pool candidate absent a real choice" default; this
+  // card's own scenario already supplies a real `preferTarget` for this
+  // exact activation (see scenarios.ts), so dropping the workaround changes
+  // nothing observable and is MORE faithful to the real, unrestricted
+  // printed text, not less.
+  //
+  // "Transform Venat" itself STAYS `custom` (`sequence('Exile',
+  // 'Battlefield')`, `combinator.ts`'s own real node for this same exile/
+  // re-enter transform stand-in, was tried here and reverted — that node
+  // specifically models Crystal Fragments'/Dion's own LITERAL printed text,
+  // "Exile this [X], then return it to the battlefield transformed" —
+  // checked directly against both of their own real Scryfall oracle text,
+  // confirmed verbatim. Venat's own real printed text says only "Transform
+  // Venat," never that exile/return phrasing at all — using `sequence()`
+  // here would be a real, false textual claim this card's own printed text
+  // doesn't make, even though the ENGINE-LEVEL trick (exile then re-add) is
+  // the same stand-in either way; `sequenceExileReturn-effect-structural`
+  // correctly declined this exact mismatch when tried, which is why this
+  // half stays `custom` rather than being forced into that recognizer's
+  // scope).
   activationCost: '{7}, {T}',
   effects: [
+    { kind: 'move', from: 'Battlefield', to: 'Exile', qty: 1, validType: 'any', nonLand: true, target: true } satisfies Effect,
     {
       kind: 'custom',
-      describe: "Hero's Sundering — exile target nonland permanent, then transform Venat (activate only as a sorcery)",
+      describe: 'transform Venat (activate only as a sorcery)',
       run: (ctx: EffectContext, actions: Actions) => {
-        const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))].filter(
-          (c) => !c.isLand() && c.getId() !== ctx.self.getId()
-        );
-        if (pool.length > 0) actions.moveTo(actions.chooseTarget(pool, ctx.preferTarget), 'Exile');
         actions.moveTo(ctx.self, 'Exile');
         actions.moveTo(ctx.self, 'Battlefield');
       },
@@ -78,44 +90,40 @@ export const venatHeartOfHydaelyn: CardDefinition = {
         // "Blessing of Light — At the beginning of combat on your turn,
         // put a +1/+1 counter on another target creature you control.
         // Until your next turn, it gains indestructible. If that creature
-        // is legendary, draw a card." `putCounterTarget`'s own pool has no
-        // "you control"/"another" filter and no way to read back WHICH
-        // target was chosen for the conditional draw that follows —
-        // `custom`, choosing from the real filtered pool once and reusing
-        // that same reference for both the counter and the conditional
-        // draw, models the real shape. `ctx.preferTarget` threaded through
-        // `chooseTarget` (2026-09-12, same technique the front face's own
-        // Hero's Sundering above now uses) so a piloting scenario can
-        // deterministically choose a specific real creature instead of
-        // relying on pool order. `actions.grantKeyword(target,
-        // 'Indestructible')` (2026-09-12) makes the keyword grant real and
-        // mechanical — `card.ts`'s own `grantKeywordTarget` Effect kind
-        // genuinely exists for exactly this ("target creature gains X"),
-        // but this card needs the SAME chosen target as the counter and the
-        // conditional draw share, which only a `custom` effect's own single
-        // `chooseTarget` call can guarantee — so this calls `actions
-        // .grantKeyword` directly rather than a separate declarative
-        // effect. "Until your next turn" (a duration distinct from "until
-        // end of turn") is still NOT tracked — same accepted `state
-        // .grantKeyword`/`layers.ts` duration-agnostic simplification every
-        // other keyword grant in this pool already accepts; the grant is
-        // mechanically real (a later `hasKeyword`/`effectiveKeywords`
-        // check on the target genuinely sees it) but persists for the rest
-        // of a scenario rather than expiring on cue.
+        // is legendary, draw a card." Migrated (2026-09-16, engine-lane
+        // primitive build) off a `kind:'custom'` closure onto `kind:
+        // 'program'`, now that `program-ast-walker.ts` has real occurrence
+        // support for a bound `putCounter`/`grantKeyword` `EachAction` PLUS
+        // combinator.ts's own `DrawCard` node exists for the bare "draw a
+        // card" consequence a `Branch` can gate — see both files' own
+        // 2026-09-16 doc comments (this was the confirmed, documented
+        // blocker, not a hypothetical one). `selectUpTo(...filter
+        // ('excludeSelf'), 1, 'target', ...)` picks the SAME real target
+        // once, reused by both `applyToBound` calls AND the `hasSubtype`
+        // branch condition, exactly like the old `custom` closure's own
+        // single `chooseTarget` call did (`excludeSelf` covers "another,"
+        // `hasSubtype(..., 'Legendary')` covers the conditional draw's own
+        // real gate). "Until your next turn" (a duration distinct from
+        // "until end of turn") is still NOT tracked — same accepted
+        // `state.grantKeyword`/`layers.ts` duration-agnostic simplification
+        // every other keyword grant in this pool already accepts (the
+        // `grantKeyword` builder's own `untilEndOfTurn` param is
+        // deliberately omitted here, same as the old closure's own bare
+        // `actions.grantKeyword(target, 'Indestructible')` call) — the
+        // grant is mechanically real (a later `hasKeyword`/
+        // `effectiveKeywords` check on the target genuinely sees it) but
+        // persists for the rest of a scenario rather than expiring on cue.
         name: 'onBeginCombat',
         effects: [
           {
-            kind: 'custom',
+            kind: 'program',
             describe:
               "Blessing of Light — put a +1/+1 counter on another target creature you control; until your next turn it gains indestructible; if that creature is legendary, draw a card",
-            run: (ctx: EffectContext, actions: Actions) => {
-              const pool = ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId());
-              if (pool.length === 0) return;
-              const target = actions.chooseTarget(pool, ctx.preferTarget);
-              actions.putCounter(target, '+1/+1', 1);
-              actions.grantKeyword(target, 'Indestructible');
-              if (target.hasSubtype('Legendary')) ctx.you.drawCard();
-            },
+            program: selectUpTo(you.creaturesInPlay().filter('excludeSelf'), 1, 'target', [
+              applyToBound('target', 0, putCounter('+1/+1', 1)),
+              applyToBound('target', 0, grantKeyword('Indestructible')),
+              branch(hasSubtype('target', 0, 'Legendary'), [drawCard()]),
+            ]),
           } satisfies Effect,
         ],
       },

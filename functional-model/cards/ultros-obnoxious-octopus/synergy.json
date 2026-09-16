@@ -16,13 +16,14 @@
           "target": "oracle",
           "line": 0,
           "start": 83,
-          "end": 123
+          "end": 86
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "tapTarget-effect-structural"
-      }
+      },
+      "triggeredBy": "onNoncreatureSpellCastGE4Mana"
     },
     {
       "event": "putCounter",
@@ -43,7 +44,12 @@
           "start": 128,
           "end": 152
         }
-      ]
+      ],
+      "triggeredBy": "onNoncreatureSpellCastGE4Mana",
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -60,7 +66,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onNoncreatureSpellCastGE8Mana"
     }
   ],
   "sink": [
@@ -76,13 +83,19 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 83,
+          "start": 128,
+          "end": 152
+        },
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 87,
           "end": 123
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "tapTarget-effect-structural"
+        "rule": "putCounterTarget-effect-structural"
       }
     }
   ]

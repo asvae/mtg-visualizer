@@ -80,6 +80,21 @@ export interface CardData {
   // Back face's own printed keywords — undefined for anything with no
   // second face at all (a transform DFC only). See `keywords` above.
   backKeywords?: string[];
+  // Scryfall's own `released_at` (ISO date, "YYYY-MM-DD") for the SPECIFIC
+  // printing this CardData came from — used by SearchBox.vue's "Newest
+  // first" sort (PRD 03 follow-up). Reliably present for the default FIN
+  // bulk pool (buildGraph.ts reads the raw static `fin_scryfall.json`
+  // directly, no server reshaping in between) and for a live `?sf=` query's
+  // bulk pool + SearchBox's own discover-fetch rows (both go through
+  // `scryfallCardToCardData` too, off `server/api/cards.ts`'s response) —
+  // undefined for a card resolved via `/api/card/[set]/[number].ts` or
+  // `/api/cards/by-names.ts` (an individual Scope/Deck add), whose
+  // `card`-lane response shapes don't currently pass this field through at
+  // all (confirmed by reading those routes directly, not assumed) — a real,
+  // known asymmetry, not a bug in this field's own definition. See
+  // SearchBox.vue's own sort-comparator comment for how it degrades for a
+  // row missing this.
+  releasedAt?: string;
 }
 
 export interface ThemeData {

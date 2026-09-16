@@ -32,14 +32,16 @@
         "target": "Grizzly Bears",
         "id": 2,
         "power": 3,
-        "toughness": 3
+        "toughness": 3,
+        "untilEndOfTurn": true
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
         "id": 3,
         "power": 3,
-        "toughness": 3
+        "toughness": 3,
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",

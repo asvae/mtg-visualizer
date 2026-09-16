@@ -23,7 +23,16 @@ export const omegaHeartlessEvolution: CardDefinition = {
       // per-opponent loop) collapses to this model's usual single
       // `tapTarget` pick across the combined opponent pool, same as every
       // other targeted effect here.
+      //
+      // recognizer-exception: tapTarget-effect-structural — this card's
+      // own real text is "target NONLAND PERMANENT," never "target artifact
+      // or creature" (`tapTarget-effect-structural`'s own 2026-09-16
+      // widening added a confirmed template for the LATTER, narrower
+      // phrase, ice-flan's own real text, not this card's broader one) — a
+      // known, already-documented approximation (see the comment above),
+      // not a recognizer bug.
       name: 'onEnter',
+      on: 'enter',
       effects: [
         { kind: 'tapTarget', validType: 'creature-or-artifact', owner: 'opponents' } satisfies Effect,
         {

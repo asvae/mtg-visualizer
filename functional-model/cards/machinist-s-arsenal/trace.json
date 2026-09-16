@@ -23,7 +23,7 @@
         "fn": "cast",
         "card": "Machinist's Arsenal",
         "instanceId": 1,
-        "id": 1489,
+        "id": 3,
         "from": "hand",
         "cost": "{4}{W}"
       },
@@ -31,14 +31,14 @@
         "fn": "enters",
         "card": "Machinist's Arsenal",
         "instanceId": 1,
-        "id": 1489,
+        "id": 3,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Machinist's Arsenal",
         "instanceId": 1,
-        "id": 1489,
+        "id": 3,
         "name": "onEnter"
       },
       {
@@ -53,15 +53,15 @@
       {
         "fn": "equip",
         "equipment": "Machinist's Arsenal",
-        "equipmentId": 1489,
+        "equipmentId": 3,
         "target": "Hero",
-        "id": 1490
+        "id": 4
       },
       {
         "fn": "activate",
         "card": "Machinist's Arsenal",
         "instanceId": 1,
-        "id": 1489,
+        "id": 3,
         "cost": "{4}"
       },
       {
@@ -72,9 +72,9 @@
       {
         "fn": "equip",
         "equipment": "Machinist's Arsenal",
-        "equipmentId": 1489,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 1488
+        "id": 2
       }
     ]
   }

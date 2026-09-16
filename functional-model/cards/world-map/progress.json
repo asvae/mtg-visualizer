@@ -2,10 +2,10 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": " 2026-09-16 (recognizer-lane 'sacrifice as cost' triage): new sacrificeSelfCost-structural.ts (real whole-pool check found 6 real matches, not just the 3 this task was originally scoped around -- see that recognizer's own module doc comment) provenances this card's own 'Sacrifice <own name>/this <type>' cost-sacrifice fact. Ran apply-recognizers.mjs --slug=<this> -- as an honest side effect of the additive/idempotent design (this card hadn't been fully reprocessed since several newer recognizers were registered), picked up unrelated, real, incidental fixes too: none beyond this card's own sacrifice fact (2 abilities sharing the identical real clause, each claims its own occurrence).",
   "textCoverageAudited": false,
   "knownGaps": [
-    "both search abilities now have real read:isLand evidence (post harness fix) but wants:[] — addable Library/Land want not yet added"
+    "both search abilities now have real read:isLand evidence (post harness fix) but wants:[] \u2014 addable Library/Land want not yet added"
   ]
 }

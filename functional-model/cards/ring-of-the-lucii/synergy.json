@@ -7,7 +7,19 @@
     },
     {
       "event": "lifeloss",
-      "controller": "you"
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 20
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      }
     },
     {
       "zone": "Graveyard",
@@ -29,6 +41,27 @@
       "provenance": {
         "origin": "parser",
         "rule": "tapSelfCost-structural"
+      }
+    },
+    {
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "C"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 5,
+          "end": 15
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
       }
     }
   ],

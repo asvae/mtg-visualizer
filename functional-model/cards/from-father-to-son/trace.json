@@ -41,25 +41,32 @@
         "for": "From Father to Son"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 4,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Vehicle",
         "result": false
       },
       {
-        "fn": "read:isArtifact",
+        "fn": "read:hasSubtype",
         "target": "Forest",
+        "subtype": "Vehicle",
         "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Magitek Armor",
+        "subtype": "Vehicle",
+        "result": true
       },
       {
         "fn": "read:isArtifact",
         "target": "Magitek Armor",
+        "result": true
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Cargo Ship",
+        "subtype": "Vehicle",
         "result": true
       },
       {
@@ -68,11 +75,17 @@
         "result": true
       },
       {
-        "fn": "moveTo",
-        "target": "Magitek Armor",
-        "id": 14,
-        "zone": "Hand",
-        "controller": "you"
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Hand",
+        "qty": 1,
+        "validType": "artifact",
+        "subtype": "Vehicle"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
       },
       {
         "fn": "move",
@@ -124,21 +137,10 @@
         "for": "From Father to Son"
       },
       {
-        "fn": "read:getCardsIn",
-        "player": "you",
-        "zone": "Library",
-        "count": 3,
-        "creatureCount": 0
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "Forest",
-        "result": false
-      },
-      {
-        "fn": "read:isArtifact",
-        "target": "Forest",
-        "result": false
+        "fn": "read:hasSubtype",
+        "target": "Cargo Ship",
+        "subtype": "Vehicle",
+        "result": true
       },
       {
         "fn": "read:isArtifact",
@@ -146,11 +148,29 @@
         "result": true
       },
       {
-        "fn": "moveTo",
-        "target": "Cargo Ship",
-        "id": 15,
-        "zone": "Battlefield",
-        "controller": "you"
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Vehicle",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Forest",
+        "subtype": "Vehicle",
+        "result": false
+      },
+      {
+        "fn": "move",
+        "player": "you",
+        "from": "Library",
+        "to": "Battlefield",
+        "qty": 1,
+        "validType": "artifact",
+        "subtype": "Vehicle"
+      },
+      {
+        "fn": "shuffleLibrary",
+        "player": "you"
       },
       {
         "fn": "move",
@@ -175,11 +195,11 @@
       },
       {
         "label": "Cast From Father to Son via Flashback ({4}{W}{W}{W})",
-        "from": 10
+        "from": 12
       },
       {
         "label": "Resolve",
-        "from": 18
+        "from": 20
       }
     ]
   }

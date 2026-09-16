@@ -15,7 +15,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onCastNoncreatureSpell4Mana"
     },
     {
       "event": "grantKeyword",
@@ -29,7 +30,12 @@
           "start": 124,
           "end": 153
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordSelf-effect-structural"
+      },
+      "triggeredBy": "onCastNoncreatureSpell4Mana"
     }
   ],
   "sink": [
@@ -53,7 +59,11 @@
           "start": 0,
           "end": 81
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "castTypeSpell-trigger-structural"
+      }
     }
   ]
 }

@@ -16,7 +16,7 @@
         "fn": "activate",
         "card": "The Fire Crystal",
         "instanceId": 1,
-        "id": 2670,
+        "id": 3,
         "cost": "{4}{R}{R}, {T}"
       },
       {
@@ -62,7 +62,7 @@
         "fn": "activate",
         "card": "The Fire Crystal",
         "instanceId": 1,
-        "id": 2673,
+        "id": 6,
         "cost": "{4}{R}{R}, {T}"
       },
       {

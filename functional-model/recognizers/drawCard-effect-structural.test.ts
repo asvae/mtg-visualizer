@@ -61,7 +61,7 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 2, start: 6, end: 20 }] },
+        fact: { event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 2, start: 6, end: 20 }], triggeredBy: 'chapterIII' },
         provenance: { origin: 'parser', rule: 'drawCard-effect-structural' },
       },
     ]);
@@ -108,7 +108,7 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     const result = recognizeDrawCardEffectStructural(structuralInput('Coliseum Behemoth', coliseumBehemoth));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toEqual({ event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 3, start: 2, end: 13 }] });
+    expect(result.facts[0]!.fact).toEqual({ event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 3, start: 2, end: 13 }], triggeredBy: 'onEnter' });
   });
 
   it('accepts Thief\'s Knife — a comma boundary INSIDE a quoted granted-ability string ("...draw a card," and is a Rogue...")', () => {
@@ -121,7 +121,20 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts).toHaveLength(2);
-    expect(result.facts[0]).toEqual(result.facts[1]);
+    // `Fact.triggeredBy` (2026-09-16, "widen populate" pass) — a real
+    // multi-trigger-same-line case (same "repeats, not a typo" pattern as
+    // `dealDamage-effect-structural.test.ts`'s own Phoenix, Warden of Fire
+    // case): onEnter/onAttacks are two SEPARATE real triggers sharing
+    // byte-identical printed text, so the two facts now genuinely diverge
+    // only in `triggeredBy` — compared field-by-field instead of via a
+    // whole-object `toEqual` between the two.
+    const { fact: eFact0, ...eRest0 } = result.facts[0]!;
+    const { fact: eFact1, ...eRest1 } = result.facts[1]!;
+    expect(eRest0).toEqual(eRest1);
+    const { triggeredBy: eTb0, ...eFactRest0 } = eFact0;
+    const { triggeredBy: eTb1, ...eFactRest1 } = eFact1;
+    expect(eFactRest0).toEqual(eFactRest1);
+    expect([eTb0, eTb1].sort()).toEqual(['onAttacks', 'onEnter']);
   });
 
   it('accepts Matoya, Archon Elder — two triggers (onScry/onSurveil) sharing ONE real clause; this recognizer no longer dedups that itself (moved to apply-recognizers.mjs\'s own runner-level pass), so both are returned, literally identical', () => {
@@ -129,7 +142,15 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts).toHaveLength(2);
-    expect(result.facts[0]).toEqual(result.facts[1]);
+    // `Fact.triggeredBy` — same real multi-trigger-same-line case, see the
+    // Emet-Selch test above.
+    const { fact: mFact0, ...mRest0 } = result.facts[0]!;
+    const { fact: mFact1, ...mRest1 } = result.facts[1]!;
+    expect(mRest0).toEqual(mRest1);
+    const { triggeredBy: mTb0, ...mFactRest0 } = mFact0;
+    const { triggeredBy: mTb1, ...mFactRest1 } = mFact1;
+    expect(mFactRest0).toEqual(mFactRest1);
+    expect([mTb0, mTb1].sort()).toEqual(['onScry', 'onSurveil']);
   });
 
   it('accepts Braska\'s Final Aeon (Jecht\'s back face) — chapterI/chapterII sharing ONE real clause ("Each opponent discards a card and you draw a card"); this recognizer no longer dedups that itself (moved to apply-recognizers.mjs\'s own runner-level pass), so both are returned, literally identical', () => {
@@ -138,7 +159,15 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts).toHaveLength(2);
-    expect(result.facts[0]).toEqual(result.facts[1]);
+    // `Fact.triggeredBy` — same real multi-trigger-same-line case, see the
+    // Emet-Selch test above.
+    const { fact: jFact0, ...jRest0 } = result.facts[0]!;
+    const { fact: jFact1, ...jRest1 } = result.facts[1]!;
+    expect(jRest0).toEqual(jRest1);
+    const { triggeredBy: jTb0, ...jFactRest0 } = jFact0;
+    const { triggeredBy: jTb1, ...jFactRest1 } = jFact1;
+    expect(jFactRest0).toEqual(jFactRest1);
+    expect([jTb0, jTb1].sort()).toEqual(['chapterI', 'chapterII']);
   });
 
   it('accepts Qiqirn Merchant — TWO genuinely different real draw abilities (cantrip\'s bare draw, bigDraw\'s literal 3) on the SAME face, this recognizer never merges these itself (different annotations) — apply-recognizers.mjs\'s own runner-level pass is what now merges them, not this recognizer', () => {
@@ -166,9 +195,17 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.facts[0]!.fact).toMatchObject({ event: 'drawCard', controller: 'you' });
   });
 
-  it('declines Rook Turret — real "you MAY draw a card" (the draw itself is optional; `drawCard` Effect has no `optional` field to represent that, unlike `destroy`)', () => {
+  it('accepts Rook Turret — real "you may draw a card", now consumed via `effect.optional` (2026-09-16)', () => {
     const result = recognizeDrawCardEffectStructural(structuralInput('Rook Turret', rookTurret));
-    expect(result.matched).toBe(false);
+    expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
+    if (!result.matched) return;
+    expect(result.facts).toEqual([
+      {
+        role: 'source',
+        fact: { event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 1, start: 46, end: 65 }], triggeredBy: 'onArtifactEnters' },
+        provenance: { origin: 'parser', rule: 'drawCard-effect-structural' },
+      },
+    ]);
   });
 
   it('declines Joshua, Phoenix\'s Dominant (front face) — a literal amount:2 that\'s an engine-side APPROXIMATION of a real variable draw ("draw THAT MANY cards", not "draw two cards")', () => {
@@ -187,9 +224,20 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result.matched).toBe(false);
   });
 
-  it('declines Combat Tutorial — a literal amount:2, but real oracle reads "TARGET PLAYER DRAWS two cards" (third person, never literally "Draw two cards")', () => {
+  it('accepts Combat Tutorial — a literal amount:2, real oracle reads "TARGET PLAYER DRAWS two cards" (third person) — matched via the alternate targeted-player template, `controller` omitted (honest to the real unrestricted target) instead of `controller: \'you\'`', () => {
     const result = recognizeDrawCardEffectStructural(structuralInput('Combat Tutorial', combatTutorial));
-    expect(result.matched).toBe(false);
+    expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
+    if (!result.matched) return;
+    expect(result.facts).toEqual([
+      {
+        role: 'source',
+        fact: { event: 'drawCard', targeted: true, annotations: [{ target: 'oracle', line: 0, start: 0, end: 29 }] },
+        provenance: { origin: 'parser', rule: 'drawCard-effect-structural' },
+      },
+    ]);
+    const input = structuralInput('Combat Tutorial', combatTutorial);
+    const lines = input.oracleText.split('\n');
+    expect(lines[0]!.slice(0, 29)).toBe('Target player draws two cards');
   });
 
   it('declines Deadly Embrace — a real `Computed<number>` amount (a live graveyard-creature count)', () => {
@@ -209,9 +257,20 @@ describe('Recognizer D — drawCard effect, read structurally off Effect[] (not 
     expect(result).toEqual({ matched: false, reason: expect.stringContaining('no kind:"drawCard"') });
   });
 
-  it('declines Stiltzkin, Moogle Merchant — a real card with a hand-authored event:"drawCard" fact but NO structural kind:"drawCard" Effect at all', () => {
+  it('accepts Stiltzkin, Moogle Merchant — migrated (2026-09-16, off a raw `custom` closure onto `kind:\'program\'`) to a real, plain `kind:\'drawCard\'` sibling effect for its own "if they do, you draw a card" (previously declined here since no structural drawCard Effect existed at all)', () => {
     const result = recognizeDrawCardEffectStructural(structuralInput('Stiltzkin, Moogle Merchant', stiltzkinMoogleMerchant));
-    expect(result).toEqual({ matched: false, reason: expect.stringContaining('no kind:"drawCard"') });
+    expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
+    if (!result.matched) return;
+    expect(result.facts).toEqual([
+      {
+        role: 'source',
+        fact: { event: 'drawCard', controller: 'you', annotations: [{ target: 'oracle', line: 1, start: 97, end: 108 }] },
+        provenance: { origin: 'parser', rule: 'drawCard-effect-structural' },
+      },
+    ]);
+    const input = structuralInput('Stiltzkin, Moogle Merchant', stiltzkinMoogleMerchant);
+    const lines = input.oracleText.split('\n');
+    expect(lines[1]!.slice(97, 108)).toBe('draw a card');
   });
 
   it('declines a card with no drawCard effect at all on this face', () => {

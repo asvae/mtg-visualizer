@@ -7,15 +7,29 @@ import { COLOR_MAP, COLORLESS, COLOR_LABEL } from '../lib/constants';
 import { describeFact } from '../../functional-model/synergy';
 import type { Fact } from '../../functional-model/synergy';
 import type { AnnotatedCard } from '../types';
+import { NON_FACT_SPAN_KIND_LABEL } from '../lib/factOrder';
+import type { AnnotatedNonFactSpan, NonFactSpanRow } from '../lib/factOrder';
 
-// `highlightKey` — set by the parent card page while a Functional model
+// `highlightKeys` — set by the parent card page while a Functional model
 // table row is hovered, to `factKey()` of that row's own fact (see the card
 // page's own `factKey` — same formula as this component's own `factKey`
 // below, kept in sync by convention rather than a shared import since the
 // table works off raw `Fact` objects and this component builds its own
 // per-line segments off the same raw `Fact` objects now too — see
 // `.claude/contracts/card-schema.md`'s "Fact-to-oracle-text pointers"
-// section). `null`/unset = nothing hovered, no segment highlighted.
+// section). `null`/unset/empty = nothing hovered, no segment highlighted.
+// An ARRAY (not a single key, 2026-09-16 follow-up) — two real Facts can
+// share the exact identical annotation span (e.g. fin/4 Aerith
+// Gainsborough's own `[sink]` "Dying" and `[source]` "Dies" facts, both
+// anchored to the same `dies-trigger-structural` line/char range; six more
+// real pool cards share this shape — dwarven-castle-guard, undercity-dire-
+// rat, ancient-adamantoise, garland-knight-of-cornelia-chaos-the-endless,
+// magic-pot, vincent-valentine-galian-beast), and hovering either the
+// shared text span or either one of the two rows must highlight BOTH rows/
+// the one shared span together, not just whichever fact happened to sort
+// first. A single-fact span still just carries a one-element array — this
+// is a pure widening, not a behavior change for the (overwhelmingly common)
+// one-fact-per-span case.
 //
 // `selfFacts`/`headerHighlightIndex` carry the card page's own self-
 // referencing-fact annotation onto THIS component's own per-face name
@@ -24,26 +38,42 @@ import type { AnnotatedCard } from '../types';
 // is the reciprocal half: which face name (if any) to flash while the user
 // hovers a header-linked fact row's own icon in the Facts tab.
 //
-// `facts` — every currently-visible fact (source + sink, the same list the
-// Facts tab's own rows are built from) — this component now builds its OWN
-// per-line highlighted segments at render time from each fact's own baked
-// `Fact.annotations` (`AnnotationRef[]`, line-relative offsets into its
-// owning face's `oracleText`), instead of receiving a pre-built segment
-// tree from the server (the old `annotateOracleText`/`AnnotatedSegment`
-// design, now deprecated engine-side — see `functional-model/synergy.ts`).
+// `facts` — every CURRENTLY VISIBLE fact (source + sink — already filtered
+// by the caller's own Facts-tab provenance toggles as of the 2026-09-16
+// follow-up; see CardDetailTabs.vue's own `visibleSynergyFacts` — this
+// component has no opinion on which facts are "visible," it just renders
+// whatever it's given) — this component builds its OWN per-line highlighted
+// segments at render time from each fact's own baked `Fact.annotations`
+// (`AnnotationRef[]`, line-relative offsets into its owning face's
+// `oracleText`), instead of receiving a pre-built segment tree from the
+// server (the old `annotateOracleText`/`AnnotatedSegment` design, now
+// deprecated engine-side — see `functional-model/synergy.ts`).
+//
+// `nonFactSpans` (2026-09-16, `progress.json`'s own `annotatedNonFactSpans`
+// — see `.claude/contracts/card-schema.md`) — same "already filtered by the
+// caller" contract as `facts`, gated by the Facts tab's own separate
+// "non-fact spans" toggle. These are NOT Facts (no `role`, never fed to
+// synergy matching) but get the exact same inline underline/hover/highlight
+// treatment as a real fact's own annotated span — `app/lib/factOrder.ts`'s
+// `NonFactSpanRow` (a stable `key` plus the raw span) is reused here so the
+// SAME key a Facts-tab row hover sets (`hoveredFactKeys`, CardDetailTabs.vue)
+// resolves back to the right segment.
 const props = defineProps<{
   card: AnnotatedCard;
   facts?: Fact[];
-  highlightKey?: string | null;
+  nonFactSpans?: NonFactSpanRow[];
+  highlightKeys?: string[] | null;
   selfFacts?: Map<number, Fact[]>;
   headerHighlightIndex?: number | null;
 }>();
 // Lets the parent (the card page) mirror this panel's own hover into the
 // Facts table row / Interactions row sharing the same fact — the three-way
-// sync `highlightKey` above drives is bidirectional: this component receives
+// sync `highlightKeys` above drives is bidirectional: this component receives
 // a highlight from elsewhere via the prop, and reports its own hover back up
-// via this emit so the other two panels can highlight in turn.
-const emit = defineEmits<{ hover: [key: string | null] }>();
+// via this emit so the other two panels can highlight in turn. The emitted
+// array names EVERY fact/span key behind the hovered segment (2026-09-16 —
+// see `highlightKeys`' own doc comment above), not just one.
+const emit = defineEmits<{ hover: [keys: string[] | null] }>();
 
 // One run of a face's own oracle-text LINE — either plain prose, or a
 // phrase with one or more real facts behind it (rare: two facts sharing the
@@ -55,6 +85,11 @@ const emit = defineEmits<{ hover: [key: string | null] }>();
 interface Segment {
   text: string;
   facts?: Fact[];
+  // Non-Fact spans covering this exact run (2026-09-16) — a segment can
+  // carry BOTH `facts` and `spans` in principle (buildSegments' own
+  // interval-partition logic doesn't assume exclusivity), though no real
+  // pool card currently overlaps the two on the same exact text.
+  spans?: NonFactSpanRow[];
 }
 
 // Mirrors engine's own `factIdentity()` (functional-model/synergy.ts) —
@@ -68,17 +103,42 @@ interface Segment {
 function factKey(f: Fact): string {
   return `${f.role}::${describeFact(f)}::${JSON.stringify(f.annotations?.[0])}`;
 }
+// Whether a segment carries ANY link at all — a real Fact or a non-Fact
+// span (2026-09-16) — gating the underline/hover markup in the template
+// below. Named rather than an inline `seg.facts?.length` check so the
+// template can't silently forget the `spans` half again (the exact bug
+// this comment is fixing: the template's own `v-if` used to check only
+// `seg.facts?.length`, so a segment covered by ONLY a non-Fact span never
+// rendered as clickable/highlightable at all, even though `buildSegments`
+// itself already attached the right `spans` array to it).
+function hasSegmentLink(seg: Segment): boolean {
+  return !!(seg.facts?.length || seg.spans?.length);
+}
+// A row's own `highlightKeys` (CardDetailTabs.vue's `hoveredFactKeys`) can
+// now name either a real Fact (`factKey()` format) or a non-Fact span row
+// (`NonFactSpanRow.key`, 2026-09-16), and can carry MORE THAN ONE key at
+// once (2026-09-16 follow-up — a shared-span row hover broadcasts every
+// fact/span key behind that same row) — a segment highlights the moment ANY
+// of its own facts/spans match ANY of the hovered keys.
 function isRowHighlighted(seg: Segment): boolean {
-  return !!props.highlightKey && !!seg.facts?.some((f) => factKey(f) === props.highlightKey);
+  if (!props.highlightKeys?.length) return false;
+  const keys = props.highlightKeys;
+  if (seg.facts?.some((f) => keys.includes(factKey(f)))) return true;
+  return !!seg.spans?.some((s) => keys.includes(s.key));
 }
 
 // Blue underline when the phrase is a source, green when it's a sink —
 // a segment carrying both (rare: two facts sharing one anchor phrase) reads
-// as source, since that's the rarer/stronger claim to flag. Low opacity —
-// this is a hint that the phrase is clickable, not a highlight to compete
-// with the text itself.
+// as source, since that's the rarer/stronger claim to flag. A segment with
+// NO real Fact at all (only a non-Fact span, 2026-09-16) gets its own
+// neutral slate underline — deliberately NOT blue/emerald, which both
+// carry a real source/sink meaning a non-Fact span doesn't have. Low
+// opacity either way — this is a hint that the phrase is clickable, not a
+// highlight to compete with the text itself.
 function segColor(seg: Segment): string {
-  return seg.facts?.some((f) => f.role === 'source') ? 'decoration-blue-400/65' : 'decoration-emerald-500/65';
+  if (seg.facts?.some((f) => f.role === 'source')) return 'decoration-blue-400/65';
+  if (seg.facts?.length) return 'decoration-emerald-500/65';
+  return 'decoration-slate-400/65';
 }
 
 // Which face (0 front/only, 1 back) a fact belongs to — same convention the
@@ -90,11 +150,18 @@ function factFaceIndexFor(fact: Fact, faceCount: number): number {
   if (faceCount <= 1) return 0;
   return fact.face === 'back' ? 1 : 0;
 }
+// Same convention, for a non-Fact span's own `face` field instead of a
+// `Fact`'s (2026-09-16).
+function spanFaceIndexFor(span: AnnotatedNonFactSpan, faceCount: number): number {
+  if (faceCount <= 1) return 0;
+  return span.face === 'back' ? 1 : 0;
+}
 
 interface Range {
   start: number;
   end: number;
-  facts: Fact[];
+  facts?: Fact[];
+  spans?: NonFactSpanRow[];
 }
 
 /**
@@ -130,33 +197,41 @@ function buildSegments(text: string, ranges: Range[]): Segment[] {
     .filter((p) => p >= 0 && p <= text.length)
     .sort((a, b) => a - b);
 
-  const sameFacts = (a?: Fact[], b?: Fact[]): boolean =>
-    (!a && !b) || (!!a && !!b && a.length === b.length && a.every((f, i) => f === b[i]));
+  // Generic reference-array equality — used for both `facts` and `spans`
+  // (2026-09-16); a segment only re-joins its predecessor when BOTH arrays
+  // match, not just one.
+  function sameRefs<T>(a: T[] | undefined, b: T[] | undefined): boolean {
+    return (!a && !b) || (!!a && !!b && a.length === b.length && a.every((x, i) => x === b[i]));
+  }
 
   const segments: Segment[] = [];
   for (let i = 0; i < boundaries.length - 1; i++) {
     const start = boundaries[i]!;
     const end = boundaries[i + 1]!;
     if (start === end) continue;
-    const covering = ranges.filter((r) => r.start <= start && r.end >= end).flatMap((r) => r.facts);
-    const facts = covering.length > 0 ? covering : undefined;
+    const covering = ranges.filter((r) => r.start <= start && r.end >= end);
+    const factsCovering = covering.flatMap((r) => r.facts ?? []);
+    const spansCovering = covering.flatMap((r) => r.spans ?? []);
+    const facts = factsCovering.length > 0 ? factsCovering : undefined;
+    const spans = spansCovering.length > 0 ? spansCovering : undefined;
     const last = segments[segments.length - 1];
-    if (last && sameFacts(last.facts, facts)) {
+    if (last && sameRefs(last.facts, facts) && sameRefs(last.spans, spans)) {
       last.text += text.slice(start, end);
       continue;
     }
-    segments.push(facts ? { text: text.slice(start, end), facts } : { text: text.slice(start, end) });
+    segments.push({ text: text.slice(start, end), ...(facts ? { facts } : {}), ...(spans ? { spans } : {}) });
   }
   return segments;
 }
 
 /**
  * Splits one LINE of a face's own real oracle text into plain-text runs and
- * fact-linked runs, from just the facts that belong to this face and
- * declare a real `target: 'oracle'` `Fact.annotations` entry targeting this
- * exact line.
+ * fact-linked/span-linked runs, from just the facts that belong to this
+ * face and declare a real `target: 'oracle'` `Fact.annotations` entry
+ * targeting this exact line, PLUS (2026-09-16) any non-Fact span row whose
+ * own `target: 'oracle'` span names this same line.
  */
-function buildLineSegments(lineText: string, lineIndex: number, facts: Fact[]): Segment[] {
+function buildLineSegments(lineText: string, lineIndex: number, facts: Fact[], spans: NonFactSpanRow[]): Segment[] {
   const ranges: Range[] = [];
   for (const f of facts) {
     for (const ann of f.annotations ?? []) {
@@ -164,21 +239,27 @@ function buildLineSegments(lineText: string, lineIndex: number, facts: Fact[]): 
       ranges.push({ start: ann.start, end: ann.end, facts: [f] });
     }
   }
+  for (const row of spans) {
+    if (row.span.target !== 'oracle' || (row.span.line ?? -1) !== lineIndex) continue;
+    ranges.push({ start: row.span.start, end: row.span.end, spans: [row] });
+  }
   return buildSegments(lineText, ranges);
 }
 
 /**
  * Splits a face's own real printed type line into plain-text runs and
- * fact-linked runs, from just the facts that belong to this face and
- * declare a real `target: 'typeLine'` `Fact.annotations` entry — e.g. fin/1
- * Summon: Bahamut's own `self-cast`/`self-enters` baseline facts, whose real
- * textual basis is the printed type line ("Creature"/"Enchantment
- * Creature"), not any oracle-text body span. A `typeLine` annotation has no
- * `line` field (a type line has no paragraph structure) — `start`/`end` are
- * offsets directly into the whole `typeLine` string, per
- * `.claude/contracts/card-schema.md`'s `AnnotationRef` doc.
+ * fact-linked/span-linked runs, from just the facts that belong to this
+ * face and declare a real `target: 'typeLine'` `Fact.annotations` entry —
+ * e.g. fin/1 Summon: Bahamut's own `self-cast`/`self-enters` baseline
+ * facts, whose real textual basis is the printed type line ("Creature"/
+ * "Enchantment Creature"), not any oracle-text body span — PLUS
+ * (2026-09-16) any non-Fact span row whose own `target: 'typeLine'` span
+ * belongs to this face. A `typeLine` annotation/span has no `line` field (a
+ * type line has no paragraph structure) — `start`/`end` are offsets
+ * directly into the whole `typeLine` string, per `.claude/contracts/
+ * card-schema.md`'s `AnnotationRef` doc.
  */
-function buildTypeLineSegments(typeLine: string, facts: Fact[]): Segment[] {
+function buildTypeLineSegments(typeLine: string, facts: Fact[], spans: NonFactSpanRow[]): Segment[] {
   const ranges: Range[] = [];
   for (const f of facts) {
     for (const ann of f.annotations ?? []) {
@@ -186,34 +267,43 @@ function buildTypeLineSegments(typeLine: string, facts: Fact[]): Segment[] {
       ranges.push({ start: ann.start, end: ann.end, facts: [f] });
     }
   }
+  for (const row of spans) {
+    if (row.span.target !== 'typeLine') continue;
+    ranges.push({ start: row.span.start, end: row.span.end, spans: [row] });
+  }
   return buildSegments(typeLine, ranges);
 }
 
 // One entry per face, one entry per line within that face — the client-side
 // replacement for the server's old `AnnotatedFace.oracleLines`. Recomputed
-// whenever the card or the visible fact list changes (e.g. an Interactions
-// filter narrowing which facts are "visible" — though today's only caller
-// always passes the full source+sink list).
+// whenever the card, the visible fact list, or the visible non-Fact-span
+// list changes (both `facts`/`nonFactSpans` are already filtered by the
+// caller's own Facts-tab toggles as of 2026-09-16 — see this component's
+// own `nonFactSpans` doc comment above).
 const faceLines = computed<Segment[][][]>(() => {
   const faceCount = props.card.faces.length;
   const allFacts = props.facts ?? [];
+  const allSpans = props.nonFactSpans ?? [];
   return props.card.faces.map((face, fi) => {
     const factsForFace = allFacts.filter((f) => factFaceIndexFor(f, faceCount) === fi);
-    return face.oracleText.split('\n').map((lineText, li) => buildLineSegments(lineText, li, factsForFace));
+    const spansForFace = allSpans.filter((row) => spanFaceIndexFor(row.span, faceCount) === fi);
+    return face.oracleText.split('\n').map((lineText, li) => buildLineSegments(lineText, li, factsForFace, spansForFace));
   });
 });
 
 // One entry per face — its own type line's segments, same shape/treatment as
 // an oracle-text line (see `buildTypeLineSegments`). Most cards have zero
-// `target: 'typeLine'` facts today (only summon-bahamut is backfilled so
-// far), so this resolves to a single untouched plain-text segment for them —
-// renders identically to the old bare `{{ face.typeLine }}` span.
+// `target: 'typeLine'` facts/spans today (only summon-bahamut is backfilled
+// so far), so this resolves to a single untouched plain-text segment for
+// them — renders identically to the old bare `{{ face.typeLine }}` span.
 const faceTypeLine = computed<Segment[][]>(() => {
   const faceCount = props.card.faces.length;
   const allFacts = props.facts ?? [];
+  const allSpans = props.nonFactSpans ?? [];
   return props.card.faces.map((face, fi) => {
     const factsForFace = allFacts.filter((f) => factFaceIndexFor(f, faceCount) === fi);
-    return buildTypeLineSegments(face.typeLine, factsForFace);
+    const spansForFace = allSpans.filter((row) => spanFaceIndexFor(row.span, faceCount) === fi);
+    return buildTypeLineSegments(face.typeLine, factsForFace, spansForFace);
   });
 });
 
@@ -235,11 +325,15 @@ let positionRequestId = 0;
 
 async function show(seg: Segment, e: MouseEvent) {
   hovered.value = seg;
-  // Only the first fact behind this phrase drives the cross-panel highlight
-  // — a segment with more than one fact is rare (see the tooltip's own
-  // multi-fact rendering below), and the table/interactions side has no
-  // notion of "this row is one of several" to match against anyway.
-  emit('hover', seg.facts?.[0] ? factKey(seg.facts[0]) : null);
+  // Broadcasts EVERY fact/span key behind this phrase (2026-09-16 follow-up
+  // — a segment can carry more than one Fact when two facts share the exact
+  // identical annotation span, e.g. fin/4 Aerith Gainsborough's own "Dying"/
+  // "Dies" pair; see the tooltip's own multi-entry rendering below, and
+  // `highlightKeys`' own doc comment above for the full real-card list).
+  // Facts first, then any non-Fact spans on the same run — never mixed
+  // priority, just every key that's actually here.
+  const keys = [...(seg.facts?.map((f) => factKey(f)) ?? []), ...(seg.spans?.map((s) => s.key) ?? [])];
+  emit('hover', keys.length ? keys : null);
   const anchor = e.currentTarget as HTMLElement;
   const requestId = ++positionRequestId;
   await nextTick();
@@ -346,7 +440,7 @@ defineExpose({
       <span>
         <template v-for="(seg, ti) in faceTypeLine[fi]" :key="ti">
           <span
-            v-if="seg.facts?.length"
+            v-if="hasSegmentLink(seg)"
             class="cursor-help rounded underline decoration-dashed decoration-1 underline-offset-4 transition-colors"
             :class="[segColor(seg), isRowHighlighted(seg) ? 'bg-surface/60' : '']"
             @mouseenter="show(seg, $event)"
@@ -365,7 +459,7 @@ defineExpose({
     >
       <template v-for="(seg, i) in line" :key="i">
         <span
-          v-if="seg.facts?.length"
+          v-if="hasSegmentLink(seg)"
           class="cursor-help rounded underline decoration-dashed decoration-1 underline-offset-4 transition-colors"
           :class="[segColor(seg), isRowHighlighted(seg) ? 'bg-surface/60' : '']"
           @mouseenter="show(seg, $event)"
@@ -393,7 +487,7 @@ defineExpose({
       :style="{ left: `${tipX}px`, top: `${tipY}px`, boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }"
     >
       <div v-if="hovered" class="flex flex-col gap-1.5">
-        <div v-for="(f, fi) in hovered.facts" :key="fi" class="flex items-center gap-2 text-xs">
+        <div v-for="(f, fi) in hovered.facts" :key="`f${fi}`" class="flex items-center gap-2 text-xs">
           <Icon
             :name="f.role === 'source' ? 'lucide:log-out' : 'lucide:log-in'"
             :class="f.role === 'source' ? 'text-blue-400' : 'text-emerald-500'"
@@ -401,6 +495,17 @@ defineExpose({
             :title="f.role === 'source' ? 'Source — this card provides this' : 'Sink — this card wants this'"
           />
           <span class="text-text first-letter:uppercase">{{ describeFact(f) }}</span>
+        </div>
+        <!-- Non-Fact span entries (2026-09-16) — same row shape, a distinct
+             (non-role) icon + the same short kind label the Facts tab's own
+             row shows, never `describeFact`/the span's own `note` text. -->
+        <div v-for="(row, si) in hovered.spans" :key="`s${si}`" class="flex items-center gap-2 text-xs">
+          <Icon
+            name="lucide:file-text"
+            class="h-3.5 w-3.5 shrink-0 text-slate-400"
+            title="Not a Fact — a real oracle-text span with no synergy Fact of its own"
+          />
+          <span class="text-text">{{ NON_FACT_SPAN_KIND_LABEL[row.span.kind] }}</span>
         </div>
       </div>
     </div>

@@ -93,7 +93,7 @@
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 import { probeComputedNumber } from './runtime-dependency-probe';
 
 const RULE = 'dealDamage-effect-structural' as const;
@@ -109,13 +109,66 @@ function isDealDamageEffect(e: Effect): e is DealDamageEffect {
   return e.kind === 'dealDamage';
 }
 
+const PERMANENT_TYPE_WORDS = ['Creature', 'Artifact', 'Enchantment', 'Planeswalker', 'Battle'];
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Same self-referential-subject alternation `dies-trigger-structural.ts`'s
+ * own copy already establishes ("this <permanent type>"/"this permanent"/
+ * the card's own printed name, or its short pre-comma form) — deliberately
+ * excludes bare "it" for the identical reason that file's own doc comment
+ * gives (too ambiguous a pronoun to anchor on safely).
+ *
+ * **Widening added 2026-09-16** (`verify-text-coverage.mjs` flagged the
+ * subject clause itself — e.g. Summon: Bahamut's own "This creature" —
+ * as sitting just OUTSIDE this recognizer's own annotation, immediately
+ * before "deals"): the subject is who's doing the damage, squarely part of
+ * what the `damage` Fact claims, not flavor — see the module doc comment's
+ * own real, whole-pool subject check. Real, confirmed forms actually
+ * printed for this recognizer's own 7 `kind:'dealDamage'` cases: Black
+ * Waltz No. 3's own full printed name ("Black Waltz No. 3 deals..."),
+ * Joshua's back face's own short pre-comma form ("Phoenix deals...", full
+ * printed name is "Phoenix, Warden of Fire"), Sabotender's/Summon:
+ * Bahamut's own "this creature"/"This creature" (case differs only by
+ * sentence position, both real). Vivi Ornitier and The Emperor of
+ * Palamecia's back face both use bare "it" instead — genuinely NOT covered
+ * by this alternation, same as every other copy of this helper in the
+ * pool; their own annotations correctly keep starting at "deals" rather
+ * than reaching for a pronoun no other recognizer treats as a safe anchor
+ * either (and neither is flagged by `verify-text-coverage.mjs` at all,
+ * confirming this is a real, not just theoretical, non-issue for them). */
+function selfSubjectAlternation(name: string): string {
+  const typeAlt = PERMANENT_TYPE_WORDS.map((w) => `this ${w.toLowerCase()}`).join('|');
+  const shortName = name.split(',')[0]!.trim();
+  const nameAlt = shortName !== name ? `${escapeRegExp(name)}|${escapeRegExp(shortName)}` : escapeRegExp(name);
+  return `(?:${typeAlt}|this permanent|${nameAlt})`;
+}
+
 /** Same clause-shape for every real card checked (see module doc comment)
  * — deliberately NOT anchored on the amount's own text (see above), and
  * deliberately NOT requiring a trailing clause boundary after "opponent"
  * (the phrase's own trailing `\b` already stops it from matching into the
  * middle of a longer word; anything printed after that boundary is out of
- * scope for what this Fact claims either way). */
-const CLAUSE_PATTERN = /\bdeals\b[^\n]*?\bdamage\b[^\n]*?\bto each opponent\b/i;
+ * scope for what this Fact claims either way).
+ *
+ * The leading subject group is OPTIONAL and non-capturing — when a
+ * recognized subject form (see `selfSubjectAlternation`) sits immediately
+ * (only whitespace between) before "deals", the match — and so the
+ * annotation — starts there instead of at "deals" itself; when it doesn't
+ * (a bare "it", or no subject text adjacent at all), the match still
+ * starts at "deals" exactly as before this widening. A chapter-numeral/
+ * ability-name label before the subject (Summon: Bahamut's own "IV — Mega
+ * Flare — ") is deliberately NOT reached for — `destroy-effect-structural`'s
+ * own chapters I/II on this same card, and `drawCard-effect-structural`'s
+ * own chapter III, already leave that same label uncovered; no recognizer
+ * in this pool covers it, so this one doesn't invent a new convention to
+ * do so either. */
+function clausePattern(name: string): RegExp {
+  const subject = selfSubjectAlternation(name);
+  return new RegExp(`(?:\\b${subject}\\s+)?\\bdeals\\b[^\\n]*?\\bdamage\\b[^\\n]*?\\bto each opponent\\b`, 'i');
+}
 
 /** Small, closed bucket->sink map — same real, checked shape
  * `scripts/prototype-3tier-reconstruct-fin1-10.mjs`'s own throwaway
@@ -140,14 +193,20 @@ const BUCKET_TO_SINK: Record<string, { to: 'Battlefield'; controller: 'you'; typ
  * partially claiming only the resolvable ones.
  */
 export function recognizeDealDamageEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const effects = allEffects(input).filter(isDealDamageEffect);
+  const effects = allEffects(input).map((o) => o.effect).filter(isDealDamageEffect);
   if (effects.length === 0) {
     return { matched: false, reason: 'no kind:"dealDamage" Effect on this face' };
   }
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // which `Trigger.name` (if any) this face's own container walk found this
+  // effect inside; `undefined` for a top-level/ability effect (see
+  // `structural-effects.ts`'s own `triggeredByOf` doc comment).
+  const effectSource = effectSourceMap(input);
 
   const facts: RecognizedFact[] = [];
 
   for (const effect of effects) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     if (effect.target !== 'opponents') {
       return {
         matched: false,
@@ -155,20 +214,21 @@ export function recognizeDealDamageEffectStructural(input: StructuralRecognizerI
       };
     }
 
-    const global = new RegExp(CLAUSE_PATTERN.source, CLAUSE_PATTERN.flags + 'g');
+    const pattern = clausePattern(input.name);
+    const global = new RegExp(pattern.source, pattern.flags + 'g');
     const matches = [...input.oracleText.matchAll(global)];
     if (matches.length === 0) {
       return {
         matched: false,
         kind: 'mismatch',
-        reason: `expected clause /${CLAUSE_PATTERN.source}/ not found (verbatim) in oracle text "${input.oracleText}"`,
+        reason: `expected clause /${pattern.source}/ not found (verbatim) in oracle text "${input.oracleText}"`,
       };
     }
     if (matches.length > 1) {
       return {
         matched: false,
         kind: 'mismatch',
-        reason: `expected clause /${CLAUSE_PATTERN.source}/ matched ${matches.length} times — ambiguous, declining rather than guessing which`,
+        reason: `expected clause /${pattern.source}/ matched ${matches.length} times — ambiguous, declining rather than guessing which`,
       };
     }
 
@@ -182,7 +242,7 @@ export function recognizeDealDamageEffectStructural(input: StructuralRecognizerI
 
     facts.push({
       role: 'source',
-      fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, annotations: [annotation] },
+      fact: { event: 'damage', controller: 'you', recipient: 'opp', targeted: false, annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
 

@@ -38,8 +38,13 @@ export function runEngineScenarios(): TraceResult[] {
   // header on a single-player board's real CR 103.8a first-draw exposure)
   // so neither real Vehicle is the one silently drawn away before this
   // card's own search ever runs.
-  pilot.state.addCard(pilot.you, 'Library', { name: REAL_VEHICLE_NAME_1, types: ['Artifact'] });
-  pilot.state.addCard(pilot.you, 'Library', { name: REAL_VEHICLE_NAME_2, types: ['Artifact'] });
+  // `subtypes: ['Vehicle']` (2026-09-15) — real, matching each card's own
+  // printed "Artifact — Vehicle" type line, now that the effect itself
+  // filters on `subtype:'Vehicle'` (definition.ts's own doc comment) —
+  // without this, the real search would find nothing (a stricter, more
+  // honest failure mode than before, not a cosmetic omission).
+  pilot.state.addCard(pilot.you, 'Library', { name: REAL_VEHICLE_NAME_1, types: ['Artifact'], subtypes: ['Vehicle'] });
+  pilot.state.addCard(pilot.you, 'Library', { name: REAL_VEHICLE_NAME_2, types: ['Artifact'], subtypes: ['Vehicle'] });
 
   const cardReal = pilot.state.addCard(pilot.you, 'Hand', { name: fromFatherToSon.name, types: [] });
   const actions = pilotActions(pilot, cardReal.id);

@@ -16,10 +16,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 36,
+          "start": 18,
           "end": 82
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -40,7 +44,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "token-creation-structural"
-      }
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "to": "Exile",
@@ -126,27 +131,6 @@
       }
     },
     {
-      "event": "grantKeyword",
-      "keyword": "Flying",
-      "controller": "you",
-      "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        }
-      },
-      "face": "back",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 81,
-          "end": 126
-        }
-      ]
-    },
-    {
       "event": "destroy",
       "targeted": true,
       "face": "back",
@@ -161,26 +145,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "destroy-effect-structural"
-      }
-    },
-    {
-      "event": "dies",
-      "from": "Battlefield",
-      "to": "Graveyard",
-      "targeted": true,
-      "face": "back",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 2,
-          "start": 18,
-          "end": 42
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "destroy-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "to": "Exile",
@@ -199,7 +165,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "sequenceExileReturn-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "to": "Battlefield",
@@ -220,7 +187,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "sequenceExileReturn-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "event": "putCounter",
@@ -238,6 +206,35 @@
         "origin": "parser",
         "rule": "saga-lore-and-sacrifice-structural"
       }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Flying",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 102,
+          "end": 108
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      },
+      "triggeredBy": "chapterII"
     }
   ],
   "sink": [
@@ -254,13 +251,13 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 25,
-          "end": 79
+          "start": 81,
+          "end": 126
         }
       ],
       "provenance": {
         "origin": "parser",
-        "rule": "putCounter-broadcast-structural"
+        "rule": "grantKeywordAll-effect-structural"
       }
     },
     {
@@ -270,10 +267,14 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 18,
+          "start": 26,
           "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroy-effect-structural"
+      }
     },
     {
       "event": "entersBattlefield",
@@ -290,6 +291,29 @@
       "provenance": {
         "origin": "parser",
         "rule": "entersBattlefield-self-trigger-structural"
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 81,
+          "end": 96
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
       }
     }
   ]

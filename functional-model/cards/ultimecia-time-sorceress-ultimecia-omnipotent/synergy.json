@@ -21,6 +21,24 @@
       "event": "dies",
       "target": "self",
       "face": "front"
+    },
+    {
+      "event": "surveil",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 38,
+          "end": 47
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "surveil-effect-structural"
+      },
+      "triggeredBy": "onEnterOrAttacks"
     }
   ],
   "sink": []

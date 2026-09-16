@@ -22,7 +22,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "tapTarget-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterI"
     },
     {
       "event": "tap",
@@ -63,28 +64,12 @@
           "start": 68,
           "end": 92
         }
-      ]
-    },
-    {
-      "event": "putCounter",
-      "counterType": "stun",
-      "controller": "opp",
-      "target": {
-        "types": {
-          "has": [
-            "Creature"
-          ]
-        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
       },
-      "targeted": true,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 68,
-          "end": 92
-        }
-      ]
+      "triggeredBy": "chapterI"
     },
     {
       "event": "drawCard",

@@ -50,6 +50,7 @@
 // round-trips through an instrumented function call.
 import type { Card, Player, ZoneType } from '../interfaces';
 import type { Actions, EffectContext } from '../card';
+import { TOKENS } from '../tokens';
 
 type Trace = string[];
 
@@ -186,15 +187,32 @@ function mkFakePlayer(id: number, name: string, cardsThunk: () => Card[]): Playe
 }
 
 /** Every fake `Actions` method the real `Actions` interface requires. Only
- * `putCounter`/`chooseTarget`/`tap` have any real (still fully inert —
- * see module header) behavior; every other member is a bare, harmless
- * no-op — this module doesn't classify any effect that would need them,
- * but `Actions` itself has no optional members, so a real object literal
- * satisfying the whole interface is required either way. */
+ * `putCounter`/`chooseTarget`/`tap`/`createToken` have any real (still fully
+ * inert — see module header) behavior; every other member is a bare,
+ * harmless no-op — this module doesn't classify any effect that would need
+ * them, but `Actions` itself has no optional members, so a real object
+ * literal satisfying the whole interface is required either way.
+ *
+ * **`createToken` (2026-09-15, `probeJobSelectCreateTokenAndEquip`'s own
+ * addition)** — the real `Actions.createToken` (`interfaces.ts`) returns
+ * `Card[]`; the OLD bare `noop` (`() => undefined`) would make any real
+ * closure's own `const [created] = actions.createToken(...)` destructuring
+ * throw (`undefined` isn't iterable) the instant such a closure was probed.
+ * Returns `qty` brand-new fake token `Card`s (fresh incrementing ids, so two
+ * separate `createToken` calls in one probe run are never confused with each
+ * other) — still fully inert (no real `GameState`/`RealCard` mutation
+ * anywhere, same "instrumented but harmless" contract every other mock here
+ * already keeps), just enough real behavior for a closure that destructures
+ * or re-passes the result (to `actions.equip`, e.g.) to keep working. */
 function mkFakeActions(): Actions {
   const noop = () => undefined as never;
+  let nextFakeTokenId = 9000;
   return {
-    createToken: noop,
+    createToken: (_controller: Player, _token: unknown, qty = 1) => {
+      const made: Card[] = [];
+      for (let i = 0; i < qty; i++) made.push(mkFakeCard(nextFakeTokenId++, { name: 'Fake Token' }));
+      return made;
+    },
     pump: noop,
     moveTo: noop,
     chooseTarget: (pool: Card[]) => pool[0]!,
@@ -382,6 +400,108 @@ export function probeBroadcastPutCounter(fn: (ctx: EffectContext, actions: Actio
       targeted: false,
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Classification — the real "Job select" template (2026-09-15, fin/16-25
+// pass): an unconditional `actions.createToken(ctx.you, TOKENS.<key>, 1)`
+// immediately followed by `actions.equip(ctx.self, <that same created
+// card>)`, no player choice anywhere. Real, whole-pool motivating case: 15
+// real Equipment cards (`dragoon-s-lance`/`machinist-s-arsenal`/
+// `black-mage-s-rod`/`astrologian-s-planisphere`/`sage-s-nouliths`/
+// `thief-s-knife`/`white-mage-s-staff`/`paladin-s-arms`/`dark-knight-s-
+// greatsword`/`monk-s-fist`/`red-mage-s-rapier`/`samurai-s-katana`/
+// `summoner-s-grimoire`/`warrior-s-sword`/`coral-sword`, `magitek-scythe`
+// too — every one has a BYTE-IDENTICAL `kind:'custom'` onEnter closure body)
+// all model Forge's own real `K:Job select` keyword the same way: create a
+// 1/1 colorless Hero token, then attach this Equipment to it. Scoped
+// narrowly to exactly that shape — a genuinely different real closure
+// (`coral-sword`'s/`magitek-scythe`'s own "attach to a TARGET creature you
+// control, that creature gains a keyword" ETB, e.g.) correctly declines via
+// the `chooseTarget`-absence/`createToken`-absence checks below, same
+// conservative-by-construction discipline `probeBroadcastPutCounter` above
+// already establishes for a different closure shape.
+// ---------------------------------------------------------------------------
+
+export interface JobSelectCreateTokenAndEquipFact {
+  event: 'entersBattlefield';
+  to: 'Battlefield';
+  controller: 'you';
+  subject: { token: string };
+}
+
+export type JobSelectProbeResult =
+  | { classified: true; fact: JobSelectCreateTokenAndEquipFact; trace: Trace }
+  | { classified: false; reason: string; trace: Trace };
+
+/** Reverse lookup against `tokens.ts`'s own shared `TOKENS` registry BY
+ * REFERENCE (every real registry-backed card literally writes `token:
+ * TOKENS.<key>`, the same object) — same convention `token-creation-
+ * structural.ts`'s own private `registryIdFor` already establishes for a
+ * different (purely structural, no execution) recognizer; duplicated here
+ * (not imported) since that one is a genuinely private, unexported helper in
+ * its own file and this module's own real dependency is on `TOKENS`
+ * directly, not on that file's internals. */
+function registryIdFor(token: unknown): string | undefined {
+  return Object.entries(TOKENS).find(([, v]) => v === token)?.[0];
+}
+
+/**
+ * Runs `fn` (a `kind:'custom'` effect's own `run(ctx, actions)` body) once
+ * against the fake board above, and classifies ONLY the narrow
+ * "unconditionally create one token, then attach self to it" shape
+ * described in this section's own header comment.
+ */
+export function probeJobSelectCreateTokenAndEquip(fn: (ctx: EffectContext, actions: Actions) => void): JobSelectProbeResult {
+  const trace: Trace = [];
+  const actionLog: ActionLogEntry[] = [];
+  const pathOf = new WeakMap<object, string>();
+  const { ctx, actions } = buildFakeActionContext(trace, actionLog, pathOf, {});
+
+  try {
+    fn(ctx, actions);
+  } catch (e) {
+    return { classified: false, reason: `crash: ${String((e as Error)?.message ?? e)}`, trace };
+  }
+
+  if (actionLog.some((c) => c.method === 'chooseTarget')) {
+    return { classified: false, reason: 'actions.chooseTarget was called — a chosen-target shape, not an unconditional self-attach; out of this module\'s own scope', trace };
+  }
+
+  const createTokenCalls = actionLog.filter((c) => c.method === 'createToken');
+  if (createTokenCalls.length !== 1) {
+    return { classified: false, reason: `expected exactly 1 actions.createToken call, saw ${createTokenCalls.length}`, trace };
+  }
+  const [controllerArg, tokenArg, qtyArg] = createTokenCalls[0]!.args as [Player | undefined, unknown, number | undefined];
+  if (!controllerArg || typeof controllerArg.getId !== 'function' || controllerArg.getId() !== 900) {
+    return { classified: false, reason: 'actions.createToken was not called with ctx.you (this fixture\'s own "you" player, id 900)', trace };
+  }
+  if (qtyArg !== undefined && qtyArg !== 1) {
+    return { classified: false, reason: `actions.createToken's own qty argument was ${qtyArg}, not 1 (or omitted) — no confirmed real template for a >1-token Job select`, trace };
+  }
+  const tokenId = registryIdFor(tokenArg);
+  if (!tokenId) {
+    return { classified: false, reason: 'actions.createToken\'s own token argument has no matching TOKENS registry entry', trace };
+  }
+
+  const equipCalls = actionLog.filter((c) => c.method === 'equip');
+  if (equipCalls.length !== 1) {
+    return { classified: false, reason: `expected exactly 1 actions.equip call, saw ${equipCalls.length}`, trace };
+  }
+  const [selfArg, createdArg] = equipCalls[0]!.args as [Card | undefined, Card | undefined];
+  if (!selfArg || typeof selfArg.getId !== 'function' || selfArg.getId() !== 1) {
+    return { classified: false, reason: 'actions.equip\'s own first argument was not ctx.self (this fixture\'s own "self" card, id 1)', trace };
+  }
+  if (!createdArg || typeof createdArg.getId !== 'function') {
+    return { classified: false, reason: 'actions.equip\'s own second argument is not a recognizable Card (no getId())', trace };
+  }
+  const createdId = createdArg.getId();
+  const isTheCreatedToken = createdId >= 9000; // this module's own fake token id range, see `mkFakeActions`'s own `createToken` mock
+  if (!isTheCreatedToken) {
+    return { classified: false, reason: 'actions.equip attached self to something OTHER than the just-created token — not a self-attach-to-new-token shape', trace };
+  }
+
+  return { classified: true, trace, fact: { event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: { token: tokenId } } };
 }
 
 // ---------------------------------------------------------------------------

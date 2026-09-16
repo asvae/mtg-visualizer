@@ -564,6 +564,98 @@ resume alone (session transcripts are swept after ~30 days).
   - Didn't touch `by-names.ts`, `set-order`, or any other cards.db consumer —
     scoped to this one route's name-search leg per the task.
 
+- 2026-09-16, SearchBox.vue (PRD 03 follow-up, no PRD doc update — an ask
+  outside the PRD's own written scope): added a "Newest first" sort toggle
+  (alongside the existing default relevance/name-match ranking, not
+  replacing it) and infinite scroll past the old hard `RESULT_LIMIT` cutoff.
+  Touched `app/components/SearchBox.vue`, `app/types.ts` (new
+  `CardData.releasedAt?: string`), `app/lib/buildGraph.ts` (`ScryfallCard`
+  gained `released_at?: string`, mapped through in
+  `scryfallCardToCardData`).
+  - **Cap strategy picked**: `RESULT_LIMIT` (still 10) becomes the initial
+    PAGE size, not a hard cutoff — a new `visibleCount` ref grows by
+    `RESULT_LIMIT` each time (scroll-near-bottom on the results `<div>`, OR
+    ArrowDown hitting the last currently-visible row while more remain, so
+    keyboard-only nav can reach exactly as far as scrolling can). Picked
+    over "render everything, let the browser scroll" because `allRanked`
+    (the full merged+ranked list, unsliced — `rows` is just its
+    `visibleCount`-sized prefix) can hold up to two 500-card pools merged
+    together for a broad query; never mounts more real DOM rows than the
+    user has actually scrolled/arrowed to.
+  - **Sort logic**: `sortMode` ref (`'relevance'` default | `'newest'`), a
+    plain two-button toggle (sticky header row inside the results dropdown,
+    not a separate control outside it — stays reachable while scrolling a
+    long list). `allRanked`'s own comparator: 'relevance' unchanged from
+    before (name-match rank, then alphabetical); 'newest' sorts by
+    `releasedAt` descending, tie-broken by the same relevance rule, with a
+    real (not hypothetical) fallback rule for a row with NO `releasedAt` at
+    all — see the parity finding below — such a row sorts to the END of the
+    newest-first list (never mixed in arbitrarily, never treated as
+    "oldest"), ordered among itself by plain relevance.
+  - **Real cross-lane data-parity gap found and confirmed live, not just
+    reasoned about — flagging for `card` agent, did NOT touch their files**:
+    `CardData.releasedAt` is reliable ONLY for the default FIN bulk pool
+    (buildGraph.ts reads `data/fin/fin_scryfall.json` — real raw Scryfall
+    data, `released_at` present — directly, no server reshaping in
+    between; confirmed via a `tsx` one-liner:
+    `scryfallCardToCardData(rawFinCard).releasedAt` → `"2025-06-13"`).
+    EVERY other path is missing it because it's stripped by `card`-owned
+    code before the client ever sees it:
+    - `server/api/_cardShaping.ts`'s `minimalCard()` doesn't pass
+      `released_at` through at all (confirmed by reading it directly — not
+      in its returned object's field list).
+    - `server/api/cards.ts` (SearchBox's own discover-fetch AND a live
+      `?sf=` query's bulk pool) — confirmed live via a raw `curl` POST
+      (`name:"Sol Ring"`): response card object has no `released_at` key.
+    - `server/api/card/[set]/[number].ts` / `server/api/cards/by-names.ts`
+      (an individually-added Scope/Deck card) — grepped directly, neither
+      route's response shape includes it either.
+    Practical effect, confirmed live via Playwright against the running dev
+    server, not assumed: a broad query ("a", 250 total matches) showed
+    IDENTICAL first-row order under "Newest" and "Relevance" — because
+    every FIN-scope row shares the exact same release date (one set, tied,
+    falls back to relevance ordering among itself) and EVERY discover row
+    (the majority of a broad query's matches) has no date at all, so it's
+    pushed as a block to the end in unchanged relevance order. A
+    pure-discover query ("sol ring", no local-scope match at all) showed
+    byte-identical relevance/newest ordering, confirming the "no date →
+    falls back to relevance" degradation path is real, not just written in
+    a comment. **This means the shipped "Newest first" feature only
+    genuinely reorders across cards from DIFFERENT sets when a card in the
+    mix happens to be part of the local FIN bulk pool vs. not — it does NOT
+    yet let a user sort live-discovered results (the exact case the task's
+    own motivating example — "the one card buried in a broad query" — most
+    needs) by release date at all.** Full fix needs `card` agent to thread
+    `released_at` through `_cardShaping.ts`'s `ScryfallCard`/`minimalCard()`
+    and into the three routes above's response shapes — flagged, not
+    guessed at or worked around, per lane rules (`api-contract.md` assigns
+    those routes' payload shape to `card`, not `ui`).
+  - Keyboard nav re-verified end-to-end unaffected (real Playwright,
+    `locator`/`input.press`, not `page.evaluate`): ArrowDown past the
+    initial 10-row page grows `visibleCount` to 20 with no crash/jump;
+    active-row highlight stays exactly one element; ArrowRight-arm +
+    Enter-toggle-add/remove + a second Enter to revert still works
+    unchanged; Escape still closes. Switching sort mode resets
+    `activeIndex`/`armed`/`visibleCount` back to the fresh-query defaults
+    (same reasoning `trimmedQuery`'s own watch already had) so an armed
+    button or a deep scroll position from the OLD order can't silently
+    survive onto rows now in different positions.
+  - Added one small UX addition not explicitly asked for but low-risk/
+    directly serves the same "buried result" problem: a `watch(activeIndex,
+    ...)` calls `scrollIntoView({ block: 'nearest' })` on the newly-active
+    row (via a `data-row-index` attribute + a new `resultsEl` template ref)
+    — there was NO auto-scroll-into-view before this task at all (grepped,
+    confirmed absent), which used to be a non-issue only because
+    `RESULT_LIMIT=10` mostly fit inside the fixed `max-h-96` dropdown
+    without scrolling; once a page can grow past that via ArrowDown, without
+    this the highlighted row could silently scroll out of view.
+  - `npm run typecheck` clean (same 2 pre-existing unrelated errors as
+    always — `functional-model/mana.ts`, `server/api/tokens/by-key.ts`);
+    `npx vitest run` — 801 passed, same 5 pre-existing `tagging/sets/*`-data-
+    missing failures as before (confirmed unrelated). All
+    `.scratch-verify-*.mjs` throwaway scripts deleted before finishing,
+    confirmed via `git status`.
+
 ## Open questions
 
 (none currently open on the synergy-edges toggle — see the SUPERSEDES entry
@@ -2295,3 +2387,509 @@ worth remembering the pitfalls before re-deriving them:
     "Show type-derived facts" control at all. `npx vitest run
     functional-model/recognizers` — 129 passed (unaffected, no recognizer
     logic touched).
+
+- 2026-09-16, new `/app/status` fact-authoring-status dashboard (per-card
+  heatmap over `engine`'s `data/fin/fin_card_status.json`, one square per
+  card): `app/pages/app/status/index.vue` (new), plus small touch-ups to
+  `app/components/AppHeader.vue` (new nav icon button, same
+  `NuxtLink`+`UButton` pattern the existing `/app/keywords` link uses),
+  `app/components/CardPeekPanel.vue`/`app/composables/useGraphStore.ts`
+  (comment updates only — both used to say the peek panel is "only ever
+  mounted from app/pages/app/index.vue"; now also mounted from this new
+  page, so the comments now list both mount points instead of leaving a
+  stale single-mount-point claim).
+  - **Data sourcing**: a plain static `import cardStatusFin from
+    '../../../../data/fin/fin_card_status.json'` — confirmed this exact
+    "direct JSON import from repo-root `data/`, no server API route" pattern
+    already exists twice (`ManaSymbol.vue`/`graphRenderer.ts`'s own
+    `data/mana_symbols/manifest.json` import) before picking it, matching
+    the contract file's own explicit recommendation for this artifact
+    ("read this file directly ... rather than re-deriving the classification
+    client-side"). Wrapped in a `STATUS_FILES: Partial<Record<string,
+    CardStatusFile>>` keyed by set code (today just `fin`) — a second set
+    later is "add one more static import to this map," not a redesign; did
+    NOT reach for `import.meta.glob` for exactly one real file.
+  - **Sort order — real bug in the task's own stated assumption, caught
+    before shipping**: the task described FIN as "1→306" collector numbers,
+    but the real generated file has numbers up to 563 (bonus/showcase-sheet
+    variants) with large gaps, plus one genuinely lettered entry (`99b`,
+    confirmed live — "Ragnarok, Divine Deliverance," a `gray`-bucket card
+    with reason "no functional-model card directory found for this card").
+    Sorting on a fixed 1-306 grid would've either dropped the >306 cards or
+    produced a huge mostly-empty range. Used a parsed-leading-integer sort
+    key (`sortKey()`, falls back to `Number.POSITIVE_INFINITY` + full string
+    for a non-numeric string, string-tiebreaks a shared leading integer)
+    instead — reads as ascending "by collector number" via sort order in a
+    flex-wrap grid, not positional grid slots.
+  - **Tooltip**: did NOT reuse `TooltipView.vue`/`store.hovered` — that
+    type (`HoveredCard`) is a full `CardData` + produce/consume
+    `GraphReason[]` link list, a shape this page's plain
+    `{number,name,status,reasons}` entries don't have and forcing a fake
+    `CardData` just to reuse the component/type would've been worse than a
+    small local one. Instead reused the same underlying RECIPE a second
+    precedent already established for exactly this "component-specific
+    content, not the graph's card hover" situation:
+    `FunctionalModelText.vue`'s own element-anchored (not cursor-tracking)
+    `computePosition`/`offset`/`shift`/`flip`/`size` tooltip (that file's own
+    comment notes `UTooltip` was tried first and didn't reliably resize —
+    didn't re-try it here either, went straight to the floating-ui recipe).
+    Each square is a plain `<button>` with `@mouseenter`/`@focus` calling
+    `show(entry, target)` and `@mouseleave`/`@blur` calling `hide()` — focus
+    handlers included (not just hover) so the grid is keyboard-navigable
+    too, not just mouse-hoverable.
+  - **Legend**: rendered as a small always-visible row above the grid (5
+    swatch+label+one-line-description entries, `STATUS_ORDER`-ordered), not
+    tooltip-only — per the task's explicit "visible on the page" ask. Colors
+    are plain hardcoded hex (`STATUS_META`, green/yellow/orange/red/gray —
+    tailwind 500-shade equivalents), not reused from `constants.ts`'s own
+    `RARITY_COLOR`/produce-consume palette — none of those are a 5-color
+    green→red status scale, and none of the existing hues are close enough
+    to reuse without inventing a mapping that doesn't already exist
+    anywhere.
+  - **Click → peek panel**: `store.openCardPanel('fin', entry.number)`,
+    same call graph nodes/search results already use. `<CardPeekPanel />`
+    mounted directly on this page (not just relying on the layout) — the
+    'graph' layout itself never mounted it, only `app/pages/app/index.vue`
+    did, so a second page needing it has to mount its own instance; copied
+    that page's exact outer-wrapper shape (`relative flex min-h-0 flex-1`
+    outer div with NO padding/overflow, so the peek panel's own `absolute
+    inset-y-0 right-0` positions against the true viewport-height edge, not
+    a padded/scrolling inner box) rather than putting the panel inside the
+    scrollable, padded content div.
+  - Verified live end-to-end via Playwright against the already-running dev
+    server (not started by me, left running/untouched): 306 squares render;
+    hovering 5 squares of each distinct background color shows the correct
+    name/number/reasons text every time (spot-checked one from each real
+    bucket, including the `99b` gray edge case); clicking a square opens the
+    real peek panel (title starts as the raw `fin/1` key, resolves to the
+    real card name — "Summon: Bahamut" / "Ragnarok, Divine Deliverance" for
+    the `99b` case — once its `/api/card/fin/<n>` fetch lands, same
+    behavior the panel already has everywhere else); 0 console/page errors
+    throughout. `npm run typecheck` clean (same 2 pre-existing unrelated
+    errors as always — `functional-model/mana.ts`,
+    `server/api/tokens/by-key.ts`). All `.scratch-verify-*.mjs` throwaway
+    scripts deleted before finishing, confirmed via `git status`.
+  - Not done, out of scope for this pass: no filter/search over the grid
+    itself (e.g. "show only red squares") — the task's own ask was a
+    heatmap-at-a-glance, not a filtered audit view; flag if that turns out
+    to be wanted once the dashboard sees real use.
+  - **Same-day follow-up**: reworked the plain flex-wrap grid into a fixed
+    layout per explicit user ask — exactly 50 squares/row (`ROW_SIZE`),
+    split into 5 visually-gapped clusters of 10 (`CLUSTER_SIZE`, wider
+    `gap-2.5` between clusters vs. `gap-[3px]` within one), a text label to
+    the left of each row. **Row label picked position-in-sorted-list**
+    ("1-50", "51-100", ..., last row "301-306", not padded to a full 50) —
+    NOT literal collector-number ranges, since (per the sort-order finding
+    above) a literal-number label would misrepresent this corpus; called
+    this out directly in the task per its own request to state which was
+    chosen, and added a line to the page's own on-page description text
+    too, not just a code comment, so a viewer isn't left guessing what the
+    row numbers mean.
+  - The fixed 50-wide grid no longer fits the page's existing `max-w-5xl`
+    text column (50 squares + cluster gaps + row label ≈ 1230px > 1024px) —
+    moved the grid OUT of that column into its own sibling block
+    (`overflow-x-auto` wrapping a `w-max` row list, `mx-auto`-centered when
+    it fits, horizontally scrollable when it doesn't) rather than widening
+    the whole page's text column to match a width chosen by the grid's own
+    fixed square count — the header/legend prose staying at a readable
+    width was worth the grid being its own independently-sized block.
+  - Re-verified live (Playwright, same running dev server): 7 rows for 306
+    cards, labels exactly `1-50` through `251-300` then `301-306`; first row
+    has 50 squares across 5 real `gap-[3px]` cluster groups; last row has 6
+    (not padded); hover tooltip and click-to-peek-panel both still work
+    unchanged. `npm run typecheck` clean (same 2 pre-existing errors only).
+
+- 2026-09-16, third same-day follow-up — **CardPeekPanel.vue reworked from
+  an `absolute inset-y-0 right-0` overlay into a real flex layout sibling**,
+  per explicit user architecture ask (it was covering, not just visually
+  overlapping, the graph page's own right-edge controls/graph area, and
+  part of the status grid). Touched `app/components/CardPeekPanel.vue`,
+  `app/pages/app/index.vue`, `app/pages/app/status/index.vue`,
+  `app/layouts/graph.vue`.
+  - **CardPeekPanel.vue**: root `<aside>` went from `absolute inset-y-0
+    right-0 z-20 ... shadow-2xl` to `relative z-10 flex min-h-0 shrink-0
+    flex-col ...` (no more viewport-relative positioning at all — `relative`
+    now exists only so the drag handle, itself `absolute left-0`, has a
+    local anchor; `shrink-0` + the existing inline `:style="{width:
+    store.panelWidth}"` is what keeps it at its set width inside a flex
+    row instead of getting compressed). Dropped `shadow-2xl` (a floating-
+    over-content cue that no longer applies once it's a flush docked
+    sibling, same undecorated look `FilterPanel.vue` already has on the
+    opposite side). Drag-to-resize and the document-level click-outside-to-
+    close logic were BOTH reconsidered per the task's own ask and kept
+    unchanged — both are still sensible for a real docked side panel, not
+    overlay-specific behaviors.
+  - **Transition changed from `translateX(100%)` slide to an animated
+    `width`** (`peek-slide` renamed `peek-width`) — the old transform
+    slid an overlay in OVER content; this panel now needs to animate its
+    own layout box so neighbors visibly squeeze in sync via ordinary
+    flexbox reflow. `enter-from`/`leave-to` sets `width: 0 !important` (the
+    `!important` is required to out-rank the element's own inline
+    `:style="{width:...}"` for exactly that one frame — same "class beats
+    inline only while it's the `-from`/`-to` class" trick, removed once
+    Vue swaps to `-active`, letting the browser tween from that last-
+    applied 0 toward the now-unopposed inline width). `overflow: hidden`
+    during the transition prevents visible content reflow spillover at
+    the narrower in-between widths.
+  - **Confirmed (via direct code reading, not just live testing) that no
+    "camera jump" mechanism exists to guard against in the first place**:
+    grepped the whole `app/` tree for `ResizeObserver`/`addEventListener(
+    'resize'` — zero matches anywhere. `graphRenderer.ts`'s own `width`/
+    `height` locals (used to seed the initial zoom transform AND the
+    gravity-force center targets) are computed exactly ONCE, at
+    `createGraphRenderer()` call time, from `svgEl.clientWidth`/
+    `clientHeight`, and never re-read after that — the `#graph` SVG itself
+    has no `viewBox` either, so it draws in raw, un-rescaled pixel
+    coordinates. Net effect: shrinking the SVG's real CSS width via the
+    flex squeeze just reveals/clips less of the SAME fixed coordinate
+    space — there was never a live resize-reaction to accidentally
+    trigger, so "no jump on resize" needed no new guard code, only NOT
+    introducing one.
+  - **index.vue restructured**: split the old single `relative flex
+    min-h-0 flex-1` wrapper (FilterPanel + GraphCanvas/ListView +
+    CardPeekPanel, all as direct siblings) into two nested flex rows — an
+    outer `flex min-h-0 min-w-0 flex-1` containing [content-wrapper,
+    CardPeekPanel], and the content-wrapper itself keeping the original
+    `relative flex min-h-0 min-w-0 flex-1` (FilterPanel + GraphCanvas/
+    ListView + the bottom-center Graph/List toggle, unchanged relative to
+    each other). The bottom-center toggle now positions against the
+    content-wrapper specifically (not the outer row) — it stays centered
+    over the graph/list view itself once the panel takes real width,
+    instead of drifting off-center toward it.
+  - **layouts/graph.vue's floating gravity-mode+PhysicsControls corner**
+    (bottom-right, positioned against the SAME outer wrapper `<slot/>`
+    renders into — which now ALSO contains CardPeekPanel as a real-width
+    sibling) needed its own fix: added a `panelRightOffset` computed
+    (`store.panelCardKey.value ? store.panelWidth.value + 12 : 12`),
+    replacing the static `right-3` Tailwind class with a bound `:style="{
+    right: panelRightOffset+'px' }"` plus a matching `transition-[right]
+    duration-150` so it slides left in sync with the panel's own open
+    animation instead of jump-cutting once the panel is fully open. Kept
+    this block living in layouts/graph.vue (NOT moved into index.vue) —
+    it's there specifically because index.vue itself unmounts across a
+    real page navigation (e.g. to the full card detail page), which used
+    to crash the Popover mid-interaction; moving it now would reintroduce
+    that exact bug, this task didn't touch that constraint.
+  - **Real, non-obvious bug found and fixed while verifying, NOT just
+    reasoned about**: a classic flexbox "item won't shrink below its own
+    content's min-content width" pitfall, hit on `/app/status` but NOT
+    `/app`. A flex item's default `min-width` is `auto` (= its content's
+    min-content width) unless overridden; the status page's 50-wide grid
+    is wide/plain-`<div>` content (not a replaced element like an SVG),
+    so BOTH the grid's own scrollable wrapper div AND the page's own root
+    wrapper (itself a flex item of layouts/graph.vue's outer row) refused
+    to shrink past ~1279px/~1639px respectively even with the peek panel
+    open — confirmed live via Playwright (`getBoundingClientRect`) that
+    the panel was landing PARTIALLY OFF-VIEWPORT (`x:1279` in a 1400px
+    viewport, `bodyScrollWidth:1639`) rather than being squeezed next to a
+    correctly-narrowed grid. Fixed by adding `min-w-0` at BOTH flex-item
+    levels the wide content passes through (`app/pages/app/status/
+    index.vue`'s own root AND its grid-content wrapper) — confirmed after
+    the fix the arithmetic becomes exact (1400 viewport → 1040 grid + 360
+    panel, `bodyScrollWidth` back to 1400, zero horizontal page overflow).
+    Also added the same `min-w-0` DEFENSIVELY to index.vue's two wrapper
+    divs even though live testing confirmed the graph page was NOT
+    actually affected (GraphCanvas's own SVG, being a replaced element,
+    doesn't contribute a large min-content width the way a plain wide div
+    does) — didn't want the graph page's correctness to rest on an
+    SVG-specific sizing quirk that a future change to what's inside that
+    wrapper could quietly break.
+  - **Testing-harness false alarm, worth recording so it doesn't get
+    mis-filed as a real bug on a future pass**: an early verification
+    pass using `locator.click({force:true})` on the panel's own Close
+    button intermittently reported the panel NOT closing. Root-caused to
+    the test harness itself, not the implementation — `force:true`
+    dispatches at a possibly-stale coordinate, and separately, one script
+    pressed `Escape` to dismiss an unrelated gravity-mode dropdown, which
+    ALSO closes the peek panel (`CardPeekPanel.vue`'s own global `Escape`-
+    closes-panel keydown handler, pre-existing, correctly still firing) —
+    so the SUBSEQUENT explicit close-button click just found no button
+    left to click. Re-verified with genuine (non-force, non-Escape)
+    Playwright interactions throughout and the close path works
+    correctly every time; recording this so a future live-verification
+    pass doesn't waste time re-chasing the same non-bug.
+  - **Full live re-verification, both pages, real (non-force except the
+    literal graph-node click, which a live physics sim can never report as
+    "stable") Playwright interactions**: `/app` — SVG width 1420→1060 on
+    open (exact 360px = panel width, confirmed twice), gravity-mode select
+    genuinely clickable or dropdown-openable with the panel open, close
+    button restores SVG to exactly 1420, zero console/page errors
+    throughout. `/app/status` — grid wrapper 1400→1040 on open (exact),
+    panel at `x:1040..1400` (flush against viewport edge, not overflowing
+    it), tooltip and click-to-switch-card both still work with the panel
+    already open, vertical scroll-to-bottom on the now-narrower grid still
+    works, close restores grid to 1400, zero console/page errors. `npm run
+    typecheck` clean (same 2 pre-existing unrelated errors only). All
+    `.scratch-*.mjs` throwaway verification scripts deleted before
+    finishing, confirmed via `git status`.
+
+- 2026-09-16, `/app/status` grid squares: added a PERSISTENT "this square's
+  card is the one open in CardPeekPanel" visual, distinct from the square's
+  existing transient `hover:scale-125`/`focus-visible:ring-2 ring-produce`.
+  `isSelected(entry)` compares `store.panelCardKey.value` (the SAME
+  `${set}/${collectorNumber}` key `CardPeekPanel.vue`'s own `panelKey`
+  computed reads — not a separate locally-tracked "last clicked" ref, so it
+  self-corrects if the panel closes some other way, e.g. its own close
+  button or Escape) against `${SET}/${entry.number}`.
+  - **Visual chosen by checking this app's own existing convention first**
+    (per the task's own instruction) rather than inventing a new one: the
+    graph view itself (`GraphCanvas.vue`'s `.search-match` class,
+    `graphRenderer.ts`) already marks "this is the highlighted node" with a
+    persistent white double `drop-shadow` glow (search-match highlighting,
+    not hover). Reused the exact same treatment here as a new
+    `.status-square-selected` scoped class (kept as its own class, not a
+    literal shared one, in case the two ever need independent tuning) —
+    `filter` is a CSS property neither `hover:scale-125` (transform) nor
+    `focus-visible:ring-2` (box-shadow) touches, so it composes cleanly
+    with both without a specificity fight, stays visible unchanged through
+    a hover/focus on the selected square, and disappears the instant
+    `isSelected` goes false.
+  - Considered a Tailwind `ring`-based treatment instead (this app's OTHER
+    persistent-selection convention — the keywords sidebar's `bg-surface`
+    row highlight is a background swap, not applicable here since a
+    square's background IS its status color) but rejected an outward ring
+    specifically because these squares sit only 2px apart within a cluster
+    (`gap-[2px]`) — an outward box-shadow ring would visually bleed onto
+    the neighboring square at that spacing; the graph's own glow convention
+    reads fine as a soft external highlight instead of a hard edge.
+  - Verified live via Playwright against the already-running dev server
+    (localhost:3000, `/app/status`, real `locator.click()`): clicking a
+    square adds `.status-square-selected` (confirmed via
+    `getComputedStyle(...).filter`) to exactly that one square and moves
+    the `?card=` query param; moving the mouse away leaves it in place
+    (persistent, not hover-only); clicking a different square moves the
+    glow there and clears it off the first (still exactly 1 selected
+    square total); closing the panel (its own close button) clears it to 0
+    selected squares. `npm run typecheck` clean (same 2 pre-existing
+    unrelated errors only — `functional-model/mana.ts`,
+    `server/api/tokens/by-key.ts`). Throwaway verification script deleted
+    before finishing.
+
+- 2026-09-17, Deck-scoped sink-supply node annotation (new small text rows
+  drawn under each Deck card's own graph node, e.g. "landfall: 4") —
+  consumed `POST /api/deck-sink-supply` (card/engine-owned, finished before
+  this task; see api-contract.md's own dated section) as-is, didn't touch
+  `functional-model/synergy.ts` or the route itself.
+  - Deliberately independent of the produce/consume/atypical/grant/
+    magnifier edge system, per explicit instruction — no `Role`,
+    `GraphReason`, `CardLink`, `AttrFilters`, or `RenderOptions`
+    involvement anywhere in this feature. New standalone type
+    `DeckSinkRow` (`{label, count}`) exported from `graphRenderer.ts`,
+    imported by `useGraphStore.ts` — kept the coupling local to these two
+    `ui`-owned files rather than adding it to `app/types.ts`.
+  - State/fetch lives in `useGraphStore.ts`, not `GraphCanvas.vue`: a
+    `deckSinkRows` shallowRef (`Map<cardId, DeckSinkRow[]>`), refetched via
+    `refreshDeckSinkSupply()` on every `deck` computed change (add/remove/
+    qty edit/rename/import — matches the task's own "refetch the whole
+    thing, deck is small" call), debounced 400ms via the same manual
+    `setTimeout` idiom `SearchBox.vue`'s discover-fetch debounce already
+    uses, with a monotonic request-id guard against a slow response landing
+    after a faster, newer one. Remaps the endpoint's own `{set,number}`
+    keying to card id client-side (`${set}/${number}` -> `entry.card.id`,
+    built fresh from `deck.value.entries` each response) since `CardData.id`
+    is Scryfall's own UUID, not set/number — the endpoint can't key by it
+    directly. Fails soft on a network error or non-OK response (leaves the
+    last-known rows in place, never throws/breaks the graph).
+  - Rendering lives in `graphRenderer.ts`: `sinkRowsByCardId` (a plain Map,
+    same "persists for this renderer instance's whole life" pattern as
+    `keywordHubsById`) plus a new exported `renderer.setDeckSinkRows(rows)`
+    method — wholesale-replaces the map and immediately rebuilds every
+    currently-on-screen node's own `.card-sink-rows` group from the CURRENT
+    `cardG` selection. Deliberately NOT tied to `render()`'s own cadence
+    (which fires on every Colors/Rarity/Type/keyword/synergy-edge toggle) —
+    only called (a) once per debounced fetch resolution via
+    `GraphCanvas.vue`'s own `watch(() => store.deckSinkRows.value, ...)`,
+    and (b) once per node at ITS OWN enter time (inside the `cardG` join's
+    enter branch, right after `renderCardArt(g)`) so a card that becomes
+    newly visible (a widened filter, or a brand-new Deck add going through
+    `addCards()`) picks up whatever's already known immediately rather than
+    waiting for the next unrelated fetch. `GraphCanvas.vue`'s own
+    already-existing "full renderer recreate" fallback branch (rare,
+    defensive-only per that file's own comment) also re-applies
+    `setDeckSinkRows(store.deckSinkRows.value)` after recreating, same as it
+    already does for filters/forces/search/selection.
+  - Text styling: reused the relation-hub prototype's own small-text
+    convention (3.2-4.6*NODE_SCALE, `TITLE_FONT_FAMILY`, `text-anchor:
+    middle`/`dominant-baseline: middle`) rather than inventing a new scale —
+    `SINK_ROW_FONT_SIZE = 3.4*NODE_SCALE`, one row per `SINK_ROW_LINE_HEIGHT
+    = 4.6*NODE_SCALE`, stacked below the node's own bottom edge
+    (`TOTAL_HEIGHT/2 + SINK_ROW_TOP_MARGIN`), centered on x=0 (the node's own
+    local horizontal center, same coordinate space `renderCardArt`'s
+    elements use — the group's outer `<g>` already gets translated to the
+    node's real x/y by the tick handler, so these move with the node for
+    free, no separate position tracking needed).
+  - 0-count treatment: rendered, not hidden (real signal per the task) —
+    just dimmer: `fill-opacity 0.5` + muted grey (`#9a9aa4`) vs. a nonzero
+    row's `0.9` + near-white (`#e8e8e8`), same "still visible, reads
+    quieter" idea the keyword-hub's own low-opacity treatment uses elsewhere
+    in this file.
+  - Cap: `SINK_ROW_MAX_ROWS = 6`, then a single italic "+N more" line —
+    picked as a safety valve, not a real-world expectation (most FIN cards
+    the task pointed at have 1-4 sink facts per `functional-model/
+    card-status.ts`'s own text-coverage work); never actually triggered in
+    live verification.
+  - Perf sanity check: a 100-distinct-card decklist paste (real
+    `importDeckFromText` through the actual Import-deck UI, not synthetic
+    DOM) produced 67 `.card-sink-rows` groups / 98 extra `<text>` elements
+    on top of the existing 306-card FIN graph — negligible next to what
+    `renderCardArt` already draws per node. FPS sampling (rAF-delta, 3s
+    window) came back ~3.5 with the 100-card deck loaded vs. ~3.8 on a
+    fresh page with NO deck at all — both low in absolute terms, but
+    confirmed via a baseline-only run that this is this sandboxed headless-
+    Chromium environment's own ceiling (no GPU acceleration), not a
+    regression this feature introduced; the two numbers are within noise of
+    each other.
+  - Real, pre-existing (not introduced here) limitation surfaced while
+    verifying, flagging in case it resurfaces elsewhere: a Deck qty change
+    on a card that was ALREADY visible via Scope before ever joining the
+    Deck (e.g. Ambrosia Whiteheart, always part of the base FIN pool) never
+    updates that card's own cached `CardNode.qty` — `GraphCanvas.vue`'s
+    `props.graph` watcher only calls `addCards()`/`removeCards()` for ids
+    whose PRESENCE changed, so an id already known to the renderer is left
+    completely untouched even though its `qty` field in the fresh `graph`
+    computed changed (confirmed live: the x-N qty badge never appeared for
+    such a card despite a real Deck entry existing for it). This feature
+    sidesteps it entirely by design — `sinkRowsByCardId` is looked up by
+    `d.id` alone, populated straight from the store's own always-current
+    `deck.value.entries`, never from the renderer's own (potentially stale)
+    cached `CardNode.qty` — confirmed live the rows update correctly even
+    while the qty badge next to them stays wrong. Didn't fix the badge
+    staleness itself (pre-existing, out of this task's scope) — worth a
+    dedicated follow-up if the qty badge's own correctness matters
+    independently.
+  - Verified end-to-end live via Playwright against the running dev server
+    (real `locator.click()`/`.fill()` through the actual Import-deck UI, not
+    `page.evaluate`): pasting Ambrosia Whiteheart (fin/6) + 3 real partner
+    cards (Reach the Horizon, Summon: Fenrir, Gladiolus Amicitia — chosen by
+    grepping FIN oracle text for genuine land-fetch effects, not
+    fabricated) produced rows byte-identical to a direct `curl` of
+    `/api/deck-sink-supply` with the same deck body (`battlefield presence:
+    3`, `landfall: 0`, `enters the battlefield: 0`); a card never added to
+    the Deck (Summon: Bahamut) showed zero `.card-sink-rows`; clearing the
+    Deck removed all rows immediately (card itself stayed on screen, still
+    part of base Scope); re-adding Ambrosia alone with no partner cards this
+    time correctly dropped `battlefield presence` from 3 back to 0 — full
+    live-update-on-Deck-edit loop confirmed, not just initial paint. Zero
+    console errors throughout. `npm run typecheck` clean (no new errors in
+    `graphRenderer.ts`/`useGraphStore.ts`/`GraphCanvas.vue`; the handful of
+    failures elsewhere — `functional-model/card-status.ts`,
+    `functional-model/card.ts`, `functional-model/mana.ts`,
+    `server/api/tokens/by-key.ts` — are other agents' concurrent
+    in-progress work this session, confirmed unrelated by file path). All
+    `.scratch-verify-*.mjs`/`.scratch-100deck.txt` throwaway scripts deleted
+    before finishing.
+
+- 2026-09-17 (same session as the sink-supply rows above), deck-qty stepper
+  on graph nodes ("- x4 +" flanking the existing x-N badge) — went through a
+  mid-task pivot, noted here so the FIRST design attempt below isn't
+  mistaken for what actually shipped.
+  - FIRST attempt (built, then explicitly superseded by a coordinator
+    correction before finishing — not shipped): a separate vertical
+    +/qty/- stack immediately to the LEFT of the node (mirroring the
+    keyword-icon strip's own "outside the art rect, opposite side"
+    placement), entirely independent of the existing x-N badge in the
+    bottom-right corner. Scrapped per an explicit correction: "there's
+    already an x-N badge, just add - and + on either side of THAT instead
+    of a new separate element."
+  - SHIPPED design: `renderQtyUI` (graphRenderer.ts, defined inside
+    `createGraphRenderer` for closure access to `handlers`, not a
+    module-level function like `renderCardArt`/`renderSinkRows`) now draws
+    a single horizontal row "− ×N +" anchored at the ORIGINAL x-N badge's
+    own screen position (bottom-right corner of the art) — the row's RIGHT
+    edge is pinned to exactly where the old badge's right edge used to sit,
+    growing LEFTWARD (minus button, then the number chip, then plus
+    button, matching ListView.vue's own left-to-right minus/qty/plus
+    order). The whole row (buttons AND number) only exists at all
+    `if (d.qty)` — ported the pre-existing badge's own "nothing at 0"
+    convention VERBATIM per explicit instruction, not decided fresh; a
+    card with 0 Deck copies shows nothing here even on hover (this control
+    adjusts an EXISTING Deck entry, it's not an "add a card to the Deck for
+    the first time" affordance — that stays ListView.vue/search/deck-import's
+    job). `.card-qty-btn` (both buttons) reuses the exact same hover-reveal
+    CSS convention `.scryfall-link` already established
+    (`.node-card:hover .card-qty-btn { opacity: 1 }`, added to
+    GraphCanvas.vue's <style>) — hovering ANYWHERE on the node reveals them,
+    not just that corner. The ×N chip itself has no opacity rule — always
+    visible whenever `d.qty` is truthy, unchanged from the original badge.
+  - `GraphHandlers` gained `onDeckQtyChange(card, delta)` (delta is always
+    +1/-1, never an absolute target) — GraphCanvas.vue's own implementation
+    is `store.setDeckEntryQuantity(card.id, Math.max(0, (card.qty ?? 0) +
+    delta), card)`, the EXACT same mutation ListView.vue's own per-row
+    stepper already calls (confirmed by reading that file first) — not a
+    second Deck-mutation path.
+  - **Real bug found and fixed, load-bearing for BOTH the vertical attempt
+    and the shipped version**: d3-drag's own `.filter()` (the same one that
+    already excludes `.scryfall-link` from starting a drag) did NOT
+    originally exclude these new buttons — a mousedown on '+'/'-' bubbles up
+    to `.node-card`'s own drag listener and gets treated as "start dragging
+    the whole card" instead of a click, so the click handler's own
+    `stopPropagation()` (which only runs on the LATER 'click' event) never
+    prevented this — confirmed live (qty genuinely never changed on click
+    until fixed). Fixed by adding `!(event.target as
+    Element)?.closest?.('.card-qty-btn')` to the SAME filter predicate,
+    mirroring `.scryfall-link`'s own existing exclusion exactly.
+  - **Live-sync problem this feature shares with the sink-rows work, fixed
+    the same way**: the pre-existing x-N badge had a real, previously-flagged
+    staleness bug (see the sink-supply entry above) — a Deck qty change on a
+    card already known to the renderer (the common case: most nodes came
+    from base Scope before ever touching the Deck) never updated the
+    cached `CardNode.qty` at all, since `GraphCanvas.vue`'s `addCards()`/
+    `removeCards()` diffing only reacts to a card's PRESENCE changing. This
+    was tolerable as a "known limitation, not this task's job" for a
+    passive badge, but is a hard requirement now that the SAME field drives
+    an interactive control the user just clicked (clicking '+' on a card
+    already on screen is EXACTLY the case that used to go stale). Fixed
+    with a new exported `renderer.syncCardQty(cards)` (graphRenderer.ts):
+    diffs each id's cached `qty` against the fresh value, updates
+    `cardNodeById` in place, and calls `renderQtyUI` ONLY for the ids that
+    actually changed (cheap even at ~300 cards, since only Deck-touched ids
+    ever differ). Called from GraphCanvas.vue's own `props.graph` watcher,
+    unconditionally, right alongside the existing addCards/removeCards
+    diffing — this ALSO fixes the pre-existing x-N badge staleness as a
+    side effect (same code path now drives both), not a separate change.
+  - Verification was the hard part of this task, worth recording the
+    method for future graph-interaction tests: this graph's own dense,
+    never-fully-settling force layout means TWO OR MORE different cards'
+    own (deliberately padded, `HIT_PADDING`) hit-areas routinely cover the
+    exact same screen pixel — confirmed directly (3 distinct cards' hit
+    areas all covered the same point near a test target), and DOM PAINT
+    ORDER (not visual "on-top-ness" a screenshot would suggest) decides
+    which one actually receives a click/hover there. A naive
+    "compute this card's own center, then click/hover there" Playwright
+    script is NOT reliable in this graph for that reason (repeatedly
+    resolved to a completely different card, several times, even after
+    freezing every node's fx/fy to rule out simulation drift as the
+    cause) — real users don't hit this the same way (continuous visual
+    tracking + correction a one-shot scripted coordinate calc doesn't get).
+    Fix that actually worked: temporarily `display:none` every OTHER
+    `g.node-card`/`g.node-keyword`/`g.node-relation-hub` (test-side only,
+    not a code change) so hit-testing can only ever resolve to the one node
+    under test, THEN zoom in on it (real wheel gesture) for a comfortable
+    target size. `pointer-events:none` on the ancestor `<g>` alone did NOT
+    work first — `.card-hit-area`'s own explicit `pointer-events:all`
+    (renderCardArt) overrides an ancestor's inherited `none`; had to
+    reach for `display:none` instead, worth remembering for next time.
+  - Full verified sequence (real Playwright mouse hover/click, real
+    coordinates, not `dispatchEvent`/`page.evaluate(() => el.click())`),
+    once isolation was in place: buttons at opacity 0 before any hover;
+    hovering the isolated node reveals them (opacity 1); 3 real clicks on
+    '+' took a real qty from 1 -> 2 -> 3 -> 4, "×N" chip text updating live
+    each time; the SAME node's own sink-supply rows (from the earlier task)
+    updated too in the same pass (`battlefield presence` moved from 3 to 4
+    as qty rose — a real, correct cross-feature interaction, not a
+    coincidence: `computeDeckSinkSupply`'s own self-supply weighting is
+    qty-sensitive) confirming the two features coexist and both react
+    correctly to the same underlying mutation without one clobbering the
+    other; 4 real clicks on '-' took it back down 4 -> 2 -> 0; at qty 0 the
+    ENTIRE "− ×N +" row disappeared, and hovering that now-0 card again
+    revealed nothing at all (no partial "+"-only reveal) — matches the
+    "reuse the badge's exact existing 0 convention" instruction literally.
+    A different, never-touched non-Deck card showed no row and no sink-rows
+    throughout. Zero console errors. `npm run typecheck` clean in all three
+    touched files (`graphRenderer.ts`/`useGraphStore.ts`/`GraphCanvas.vue`)
+    — a few pre-existing failures elsewhere
+    (`app/components/CardDetailTabs.vue`, `functional-model/card-status.ts`,
+    `card.ts`, `mana.ts`, `server/api/tokens/by-key.ts`) are other agents'
+    concurrent in-progress work this session, confirmed unrelated by path.
+    All `.scratch-*.mjs`/`.png` throwaway verification files deleted before
+    finishing.

@@ -25,6 +25,7 @@ export const ignisScientia: CardDefinition = {
       // loss class those cards already flag, and hits the same no-land-
       // typed-library-filler gap they note too).
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Battlefield', qty: 1, validType: 'land' } satisfies Effect],
     },
   ],

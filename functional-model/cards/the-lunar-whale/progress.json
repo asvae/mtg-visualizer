@@ -10,7 +10,28 @@
     "CLOSED (2026-09-12, later same day): \"As long as The Lunar Whale attacked this turn, you may play the top card of your library.\" now has real trace evidence — see ENGINE_GAPS.md gap #16. Real 'attacked this turn' flag + real playFromLibraryTop Effect kind now exist.",
     "animate/LayerSet tracks no duration (layers.ts's documented scope, pre-existing, not new to this pass) — a crewed Lunar Whale becomes a creature PERMANENTLY in this model rather than 'until end of turn'.",
     "CLOSED (2026-09-12, later same day): engine-trace.ts's pilotActivate now takes a real crewedBy param and can legally crew a crewCost card.",
-    "engine.ts's canActivateAbility/activateAbility gate ANY named-ability activation through the crewCost branch whenever card.crewCost is set (ENGINE_GAPS.md's Crew N entry) — doesn't affect this card (only one ability), documented for completeness."
+    "engine.ts's canActivateAbility/activateAbility gate ANY named-ability activation through the crewCost branch whenever card.crewCost is set (ENGINE_GAPS.md's Crew N entry) — doesn't affect this card (only one ability), documented for completeness.",
+    "The 'As long as The Lunar Whale attacked this turn,' condition clause has no structured representation anywhere — the CardDefinition's own `triggers:[{name:'playFromLibraryTop',...}]` entry has no `on`/condition field at all (it's a manually-pilotFireTrigger-invoked bundle, not a real auto-firing Trigger), so this gating condition lives only in comments/pilot-script discipline, never a typed field a future definition-path span could point at. `playFromLibraryTop-effect-structural.ts`'s own fixed literal-clause template deliberately only anchors the guaranteed 'you may play the top card of your library' clause, never this condition prefix, for the same reason."
+  ],
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 1,
+      "start": 0,
+      "end": 54,
+      "face": "front",
+      "kind": "rules",
+      "note": "\"You may look at the top card of your library any time.\" — pure information-only static permission (see this card's own knownGaps entry and definition.ts comment): nothing changes, nothing moves, no occurrence any sink could consume."
+    },
+    {
+      "target": "oracle",
+      "line": 2,
+      "start": 0,
+      "end": 46,
+      "face": "front",
+      "kind": "rules",
+      "note": "\"As long as The Lunar Whale attacked this turn,\" — a real, engine-enforced gating condition (RealCard.attackedThisTurn, engine.ts's declareAttackers/state.clearAttackedThisTurn), but not represented by any typed field on this card's own `triggers` entry (a manually-invoked named-effect bundle, not an auto-firing CR 603 Trigger with a condition field) — see this card's own knownGaps entry for the full reasoning. The effect clause itself ('you may play the top card of your library') IS backed by a real Fact (playFromLibraryTop-effect-structural.ts); only this condition prefix is fact-less."
+    }
   ],
   "oracleTextSnapshot": "Flying\nYou may look at the top card of your library any time.\nAs long as The Lunar Whale attacked this turn, you may play the top card of your library.\nCrew 1",
   "reviewedAt": "2026-09-12"

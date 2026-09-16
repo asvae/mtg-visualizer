@@ -8,26 +8,6 @@
       }
     },
     {
-      "event": "dies",
-      "from": "Battlefield",
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 0,
-          "start": 11,
-          "end": 34
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "dies-trigger-structural"
-      }
-    },
-    {
       "event": "entersBattlefield",
       "to": "Battlefield",
       "controller": "you",
@@ -45,7 +25,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "token-creation-structural"
-      }
+      },
+      "triggeredBy": "onDies"
     }
   ],
   "sink": [

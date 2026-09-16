@@ -1,5 +1,6 @@
 import type { CardDefinition, Effect } from '../../card';
 import { TOKENS } from '../../tokens.ts';
+import { selectUpTo, applyToBound, gainControl, untap, grantKeyword, opponents } from '../../combinator';
 
 export const zidaneTantalusThief: CardDefinition = {
   name: 'Zidane, Tantalus Thief',
@@ -12,26 +13,29 @@ export const zidaneTantalusThief: CardDefinition = {
     {
       // "When Zidane enters, gain control of target creature an opponent
       // controls until end of turn. Untap that creature. It gains lifelink
-      // and haste until end of turn." No declarative Effect kind wraps
-      // `gainControl` (real `Actions.gainControl` exists and IS wired —
-      // just no `Effect` variant dispatches to it yet), so this is
-      // `custom`, calling the real actions directly. "Until end of turn"
-      // is the same permanent-within-scenario simplification `grantKeyword`
-      // and `gainControl` themselves already document.
+      // and haste until end of turn." Migrated (2026-09-16, coordinator-
+      // routed pilot-triage escalation) off a raw `custom` closure onto
+      // `kind:'program'`'s own `SelectUpTo`/`ApplyToBound` combinator —
+      // `EachAction`'s `'gainControl'`/`'untap'`/`'grantKeyword'` variants
+      // (built specifically for this real card, see that union's own doc
+      // comment) chain all four actions onto the SAME picked target.
+      // "Until end of turn" stays the same permanent-within-scenario
+      // simplification `grantKeyword`'s/`gainControl`'s own doc comments
+      // already document — neither `grantKeyword` call here sets
+      // `untilEndOfTurn`, matching this card's own pre-migration behavior
+      // exactly (not a behavior change, just a representation change).
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
-          kind: 'custom',
+          kind: 'program',
           describe: 'gain control of target creature an opponent controls until end of turn; untap it; it gains lifelink and haste until end of turn',
-          run: (ctx, actions) => {
-            const pool = ctx.opponents.flatMap((o) => o.getCreaturesInPlay());
-            if (pool.length === 0) return;
-            const target = actions.chooseTarget(pool);
-            actions.gainControl(ctx.you, target);
-            actions.untap(target);
-            actions.grantKeyword(target, 'Lifelink');
-            actions.grantKeyword(target, 'Haste');
-          },
+          program: selectUpTo(opponents.creaturesInPlay(), 1, 'target', [
+            applyToBound('target', 0, gainControl('you')),
+            applyToBound('target', 0, untap()),
+            applyToBound('target', 0, grantKeyword('Lifelink')),
+            applyToBound('target', 0, grantKeyword('Haste')),
+          ]),
         } satisfies Effect,
       ],
     },

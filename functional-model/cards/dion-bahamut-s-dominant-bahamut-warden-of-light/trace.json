@@ -143,7 +143,7 @@
       {
         "fn": "tap",
         "target": "Dion, Bahamut's Dominant",
-        "id": 660,
+        "id": 36,
         "controller": "you"
       },
       {
@@ -179,14 +179,14 @@
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 660,
+        "id": 36,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 660,
+        "id": 36,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -215,7 +215,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
-        "id": 661,
+        "id": 37,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -228,14 +228,14 @@
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 661,
+        "id": 37,
         "keyword": "Flying",
         "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 661,
+        "id": 37,
         "keyword": "Flying",
         "removed": true
       },
@@ -305,7 +305,7 @@
       {
         "fn": "putCounter",
         "target": "Knight",
-        "id": 661,
+        "id": 37,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -318,7 +318,7 @@
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 661,
+        "id": 37,
         "keyword": "Flying",
         "untilEndOfTurn": true
       },
@@ -331,7 +331,7 @@
       {
         "fn": "grantKeyword",
         "target": "Knight",
-        "id": 661,
+        "id": 37,
         "keyword": "Flying",
         "removed": true
       },
@@ -386,20 +386,20 @@
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 659,
+        "id": 35,
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 660,
+        "id": 36,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Dion, Bahamut's Dominant",
-        "id": 660,
+        "id": 36,
         "zone": "Battlefield",
         "controller": "you"
       },

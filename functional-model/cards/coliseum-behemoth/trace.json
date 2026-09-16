@@ -20,7 +20,7 @@
         "fn": "trigger",
         "card": "Coliseum Behemoth",
         "instanceId": 1,
-        "id": 456,
+        "id": 4,
         "name": "onEnter"
       },
       {
@@ -55,7 +55,7 @@
       {
         "fn": "destroy",
         "target": "Mind Stone",
-        "id": 455,
+        "id": 3,
         "controller": "opp0"
       }
     ]
@@ -81,7 +81,7 @@
         "fn": "trigger",
         "card": "Coliseum Behemoth",
         "instanceId": 1,
-        "id": 460,
+        "id": 8,
         "name": "onEnter"
       },
       {
@@ -139,7 +139,7 @@
         "fn": "trigger",
         "card": "Coliseum Behemoth",
         "instanceId": 1,
-        "id": 463,
+        "id": 11,
         "name": "onEnter"
       },
       {

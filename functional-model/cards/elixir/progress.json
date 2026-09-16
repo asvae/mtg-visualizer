@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "notes",
-  "lastVerified": "2026-09-04",
-  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"you-gy-creature-0\",\"zone\":\"Library\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"you-gy-creature-1\",\"zone\":\"Library\"}) with no matching declared produce",
+  "lastVerified": "2026-09-16",
+  "notes": "trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"you-gy-creature-0\",\"zone\":\"Library\"}) with no matching declared produce | trace has moveTo ({\"fn\":\"moveTo\",\"target\":\"you-gy-creature-1\",\"zone\":\"Library\"}) with no matching declared produce 2026-09-16 (recognizer-lane triage, item 5): new exileSelfCost-structural.ts (real whole-pool check: 3 real cards -- ether/elixir/phoenix-down, all 'Exile this artifact') provenances/adds this card's own self-exile-as-cost fact for real.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

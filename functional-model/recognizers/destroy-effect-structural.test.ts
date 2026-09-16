@@ -43,41 +43,35 @@ function structuralInput(scryfallName: string, def: CardDefinition, face: 'front
 }
 
 describe('Recognizer C — destroy effect, read structurally off Effect[] (not oracle text)', () => {
-  it('accepts Summon: Bahamut — chapterI + chapterII both point at the SAME real clause; this recognizer no longer dedups that itself (moved to apply-recognizers.mjs\'s own runner-level pass — see that script\'s own `mergeRecognizedFactsByIdentity`), so both are returned, literally identical — EACH now also paired with its own companion `dies` consequence fact (2026-09-13 follow-up)', () => {
+  it('accepts Summon: Bahamut — chapterI + chapterII both point at the SAME real clause; this recognizer no longer dedups that itself (moved to apply-recognizers.mjs\'s own runner-level pass — see that script\'s own `mergeRecognizedFactsByIdentity`), so both are returned, literally identical. No companion `dies` fact anymore (removed 2026-09-16 — see module doc comment): a `destroy` fact now satisfies a graveyard-arrival want directly, at match time (`synergy.ts`)', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Summon: Bahamut', summonBahamut));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts).toHaveLength(6);
-    const expectedDestroyFact = {
+    expect(result.facts).toHaveLength(4);
+    // `Fact.triggeredBy` (2026-09-16, "widen populate" pass) — ANOTHER real
+    // multi-trigger-same-line case (same real "repeats, not a typo" pattern
+    // as `dealDamage-effect-structural.test.ts`'s own Phoenix, Warden of Fire
+    // chapterI/chapterII case, see that file): chapterI and chapterII are
+    // two separate real `Trigger`s sharing byte-identical printed text, so
+    // their own facts now genuinely diverge only in `triggeredBy`.
+    const expectedDestroyFact = (triggeredBy: string) => ({
       role: 'source',
-      fact: { event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true, annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }] },
+      fact: { event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true, annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }], triggeredBy },
       provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
-    };
-    const expectedDiesFact = {
-      role: 'source',
-      fact: {
-        event: 'dies',
-        from: 'Battlefield',
-        to: 'Graveyard',
-        target: { types: { not: ['Land'] } },
-        targeted: true,
-        annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }],
-      },
-      provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
-    };
-    const expectedSinkFact = {
+    });
+    // 2026-09-16 SOURCE/SINK split fix: sink narrows to the object phrase
+    // "up to one target nonland permanent" [16,50), not the whole
+    // "Destroy up to one target nonland permanent" clause [8,50) the
+    // source fact keeps. No `triggeredBy` on a sink fact at all
+    // (2026-09-16, sink/triggeredBy architecture correction — a sink is a
+    // structural want, never a caused effect) — both chapters' own sink
+    // facts are byte-identical, unlike their source counterparts.
+    const expectedSinkFact = () => ({
       role: 'sink',
-      fact: { to: 'Battlefield', types: { not: ['Land'] }, annotations: [{ target: 'oracle', line: 1, start: 8, end: 50 }] },
+      fact: { to: 'Battlefield', types: { not: ['Land'] }, annotations: [{ target: 'oracle', line: 1, start: 16, end: 50 }] },
       provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
-    };
-    expect(result.facts).toEqual([
-      expectedDestroyFact,
-      expectedDiesFact,
-      expectedSinkFact,
-      expectedDestroyFact,
-      expectedDiesFact,
-      expectedSinkFact,
-    ]);
+    });
+    expect(result.facts).toEqual([expectedDestroyFact('chapterI'), expectedSinkFact(), expectedDestroyFact('chapterII'), expectedSinkFact()]);
     // Real byproduct check, same discipline Recognizers A/B's own tests use:
     // the claimed span really does read the real destroy clause verbatim.
     const input = structuralInput('Summon: Bahamut', summonBahamut);
@@ -85,7 +79,7 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
     expect(lines[1]!.slice(8, 50)).toBe('Destroy up to one target nonland permanent');
   });
 
-  it('accepts Fate of the Sun-Cryst — plain nonland-permanent destroy, no Saga/modal wrapping, plus its companion `dies` fact', () => {
+  it('accepts Fate of the Sun-Cryst — plain nonland-permanent destroy, no Saga/modal wrapping', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Fate of the Sun-Cryst', fateOfTheSunCryst));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
@@ -96,26 +90,17 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
       {
-        role: 'source',
-        fact: {
-          event: 'dies',
-          from: 'Battlefield',
-          to: 'Graveyard',
-          target: { types: { not: ['Land'] } },
-          targeted: true,
-          annotations: [{ target: 'oracle', line: 1, start: 0, end: 32 }],
-        },
-        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
-      },
-      {
         role: 'sink',
-        fact: { to: 'Battlefield', types: { not: ['Land'] }, annotations: [{ target: 'oracle', line: 1, start: 0, end: 32 }] },
+        // 2026-09-16 SOURCE/SINK split fix: sink narrows to "target nonland
+        // permanent" [8,32), not the whole "Destroy target nonland
+        // permanent" clause [0,32) the source fact keeps.
+        fact: { to: 'Battlefield', types: { not: ['Land'] }, annotations: [{ target: 'oracle', line: 1, start: 8, end: 32 }] },
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
     ]);
   });
 
-  it('accepts Battle Menu — inside a `modal` mode, with a real minPower threshold ("with power 4 or greater"), plus its companion `dies` fact carrying the SAME minPower constraint', () => {
+  it('accepts Battle Menu — inside a `modal` mode, with a real minPower threshold ("with power 4 or greater")', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Battle Menu', battleMenu));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
@@ -126,64 +111,76 @@ describe('Recognizer C — destroy effect, read structurally off Effect[] (not o
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
       {
-        role: 'source',
-        fact: {
-          event: 'dies',
-          from: 'Battlefield',
-          to: 'Graveyard',
-          target: { types: { has: ['Creature'] }, power: { min: 4 } },
-          targeted: true,
-          annotations: [{ target: 'oracle', line: 3, start: 10, end: 57 }],
-        },
-        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
-      },
-      {
         role: 'sink',
+        // 2026-09-16 SOURCE/SINK split fix: sink narrows to "target
+        // creature with power 4 or greater" [18,57), not the whole
+        // "Destroy target creature with power 4 or greater" clause
+        // [10,57) the source fact keeps.
         fact: {
           to: 'Battlefield',
           types: { has: ['Creature'] },
           power: { min: 4 },
-          annotations: [{ target: 'oracle', line: 3, start: 10, end: 57 }],
+          annotations: [{ target: 'oracle', line: 3, start: 18, end: 57 }],
         },
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
     ]);
   });
 
-  it('accepts Lunatic Pandora — an activated (`abilities[]`) sacrifice-cost destroy, not a cast/trigger effect', () => {
+  it('accepts Lunatic Pandora — an activated (`abilities[]`) sacrifice-cost destroy, not a cast/trigger effect; 2026-09-16 SOURCE/SINK split fix: sink narrows to "target nonland permanent," not the whole "Destroy target nonland permanent" clause', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Lunatic Pandora', lunaticPandora));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true });
-    expect(result.facts[1]!.fact).toMatchObject({ event: 'dies', from: 'Battlefield', to: 'Graveyard', target: { types: { not: ['Land'] } }, targeted: true });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { not: ['Land'] } }, targeted: true, annotations: [{ target: 'oracle', line: 1, start: 37, end: 69 }] });
+    // Oracle text (line 1): "{6}, {T}, Sacrifice Lunatic Pandora: Destroy
+    // target nonland permanent." — [45,69)="target nonland permanent"
+    // (sink) — verified by direct string-slice.
+    expect(result.facts[1]!.fact).toMatchObject({ to: 'Battlefield', types: { not: ['Land'] }, annotations: [{ target: 'oracle', line: 1, start: 45, end: 69 }] });
   });
 
-  it('accepts Sephiroth\'s Intervention — plain "Destroy target creature." with no threshold/quantifier', () => {
+  it('accepts Sephiroth\'s Intervention — plain "Destroy target creature." with no threshold/quantifier; 2026-09-16 SOURCE/SINK split fix: sink narrows to "target creature," not the whole "Destroy target creature" clause', () => {
     const result = recognizeDestroyEffectStructural(structuralInput("Sephiroth's Intervention", sephirothsIntervention));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { has: ['Creature'] } }, targeted: true });
-    expect(result.facts[1]!.fact).toMatchObject({ event: 'dies', from: 'Battlefield', to: 'Graveyard', target: { types: { has: ['Creature'] } }, targeted: true });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { has: ['Creature'] } }, targeted: true, annotations: [{ target: 'oracle', line: 0, start: 0, end: 23 }] });
+    // Oracle text (line 0): "Destroy target creature. You gain 2 life." —
+    // [8,23)="target creature" (sink) — verified by direct string-slice.
+    expect(result.facts[1]!.fact).toMatchObject({ to: 'Battlefield', types: { has: ['Creature'] }, annotations: [{ target: 'oracle', line: 0, start: 8, end: 23 }] });
   });
 
-  it('accepts Sidequest: Hunt the Mark — a genuinely MISSING fact today (its real synergy.json has no event:"destroy" at all), optional qty:1 creature destroy inside a named trigger', () => {
+  it('accepts Sidequest: Hunt the Mark — a genuinely MISSING fact today (its real synergy.json has no event:"destroy" at all), optional qty:1 creature destroy inside a named trigger; 2026-09-16 SOURCE/SINK split fix: sink narrows to "up to one target creature," not the whole "destroy up to one target creature" clause', () => {
     const result = recognizeDestroyEffectStructural(structuralInput('Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark', sidequestHuntTheMark, 'front'));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { has: ['Creature'] } }, targeted: true });
-    expect(result.facts[1]!.fact).toMatchObject({ event: 'dies', from: 'Battlefield', to: 'Graveyard', target: { types: { has: ['Creature'] } }, targeted: true });
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'destroy', target: { types: { has: ['Creature'] } }, targeted: true, annotations: [{ target: 'oracle', line: 0, start: 30, end: 63 }] });
+    // Oracle text (line 0): "When this enchantment enters, destroy up to
+    // one target creature." — [38,63)="up to one target creature" (sink)
+    // — verified by direct string-slice.
+    expect(result.facts[1]!.fact).toMatchObject({ to: 'Battlefield', types: { has: ['Creature'] }, annotations: [{ target: 'oracle', line: 0, start: 38, end: 63 }] });
   });
 
-  it('accepts Bahamut, Warden of Light (Dion\'s back face) — unrestricted "Destroy target permanent," no type filter at all (matches real hand-authored data, which omits `target` entirely here), plus its companion `dies` fact (also confirmed hand-authored already)', () => {
+  it('accepts Bahamut, Warden of Light (Dion\'s back face) — unrestricted "Destroy target permanent," no type filter at all (matches real hand-authored data, which omits `target` entirely here), plus a bare, type-less sink (2026-09-15 correction — see module doc comment: real hand-authored data DOES carry this bare sink, previously never retagged)', () => {
     const backDef = dionBahamutsDominant.backFace!;
     const result = recognizeDestroyEffectStructural(structuralInput("Dion, Bahamut's Dominant // Bahamut, Warden of Light", backDef, 'back'));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
     expect(result.facts).toEqual([
-      { role: 'source', fact: { event: 'destroy', targeted: true, annotations: [{ target: 'oracle', line: 2, start: 18, end: 42 }] }, provenance: { origin: 'parser', rule: 'destroy-effect-structural' } },
       {
         role: 'source',
-        fact: { event: 'dies', from: 'Battlefield', to: 'Graveyard', targeted: true, annotations: [{ target: 'oracle', line: 2, start: 18, end: 42 }] },
+        // `triggeredBy: 'chapterIII'` (2026-09-16, "widen populate" pass) —
+        // this face's own Bahamut, Warden of Light destroy effect sits inside
+        // its real Saga chapter III trigger.
+        fact: { event: 'destroy', targeted: true, annotations: [{ target: 'oracle', line: 2, start: 18, end: 42 }], triggeredBy: 'chapterIII' },
+        provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
+      },
+      {
+        role: 'sink',
+        // 2026-09-16 SOURCE/SINK split fix: sink narrows to "target
+        // permanent" [26,42), not the whole "Destroy target permanent"
+        // clause [18,42) the source fact keeps. No `triggeredBy` on a
+        // sink fact at all (2026-09-16, sink/triggeredBy architecture
+        // correction).
+        fact: { to: 'Battlefield', annotations: [{ target: 'oracle', line: 2, start: 26, end: 42 }] },
         provenance: { origin: 'parser', rule: 'destroy-effect-structural' },
       },
     ]);

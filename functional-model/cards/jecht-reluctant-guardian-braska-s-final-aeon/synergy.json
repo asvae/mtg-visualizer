@@ -25,7 +25,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterI"
     },
     {
       "event": "putCounter",

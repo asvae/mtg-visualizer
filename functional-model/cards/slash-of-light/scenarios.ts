@@ -11,11 +11,22 @@
 // {1}{W} 2/1 — this exact card's own real printing, reused here purely as
 // board-state filler the same way it's reused as a blocker elsewhere in
 // this pool) and one real Equipment (White Mage's Staff, {1}{W} Artifact —
-// Equipment) — magnitude 2 creatures + 1 Equipment = 3. The target is a
-// real opponent's creature (Ahriman, {2}{B} 2/2) — a genuine CR 601.2c
-// targeted choice among candidates, not the only legal one (your own two
-// creatures are also legal `dealDamageTarget` candidates), so `preferTarget`
-// pins it the same way summon-bahamut's own scenario already does.
+// Equipment) — magnitude 2 creatures + 1 Equipment = 3. An opponent's
+// creature (Ahriman, {2}{B} 2/2) is present too, to show the pool really is
+// cross-player (real `ValidTgts$ Creature` carries no owner restriction).
+//
+// RESOLVED (2026-09-16, engine-core): `combinator.ts`'s own `SelectUpTo`
+// case used to call `actions.chooseTarget(remaining)` with NO predicate
+// argument at all, unlike `card.ts`'s own `resolveTargets` (every plain
+// declarative `dealDamageTarget`/`pumpTarget`/etc. effect), which threads
+// `ctx.preferTarget` through on every call — a real testability/
+// determinism regression this card's own migration surfaced (this
+// scenario's `preferTarget` below was silently ignored, landing the target
+// on Coeurl, your own creature, instead of the intended Ahriman). Fixed by
+// a new private `selectPool` helper in `combinator.ts` mirroring
+// `resolveTargets` exactly (`ctx.declaredTargets` first, then
+// `actions.chooseTarget(remaining, ctx.preferTarget)`) — `preferTarget`
+// below is honored again, and the target is genuinely Ahriman once more.
 
 import { slashOfLight } from './definition';
 import { basicLandsFor } from '../../mana';
@@ -50,6 +61,6 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   const result =
-    "Slash of Light is cast for {1}{W} targeting the opponent's Ahriman — its damage (equal to the 2 creatures plus 1 Equipment you control, a total of 3) is dealt to the targeted creature, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).";
+    "Slash of Light is cast for {1}{W} targeting Ahriman, the opponent's creature (a genuine CR 601.2c choice among legal candidates, honored via `preferTarget` — see this file's own header comment) — its damage (equal to the 2 creatures plus 1 Equipment you control, a total of 3) is dealt to Ahriman, then the spell itself goes to its owner's graveyard after resolving (CR 608.2m).";
   return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: cast -> resolve (damage = creatures you control + Equipment you control) -> target creature', result)];
 }

@@ -18,7 +18,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "token-creation-structural"
-      }
+      },
+      "triggeredBy": "onEnter"
     }
   ],
   "sink": [

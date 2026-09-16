@@ -20,7 +20,7 @@
         "fn": "trigger",
         "card": "Dark Confidant",
         "instanceId": 1,
-        "id": 531,
+        "id": 7,
         "name": "onUpkeep"
       },
       {
@@ -33,7 +33,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 526,
+        "id": 2,
         "zone": "Hand",
         "controller": "you"
       },
@@ -65,7 +65,7 @@
         "fn": "trigger",
         "card": "Dark Confidant",
         "instanceId": 1,
-        "id": 538,
+        "id": 14,
         "name": "onUpkeep"
       },
       {
@@ -78,7 +78,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 533,
+        "id": 9,
         "zone": "Hand",
         "controller": "you"
       },

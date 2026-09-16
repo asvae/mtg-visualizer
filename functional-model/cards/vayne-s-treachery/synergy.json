@@ -12,6 +12,33 @@
     {
       "event": "dies",
       "controller": "you"
+    },
+    {
+      "event": "sacrifice",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Creature",
+            "Artifact"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 7,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -31,6 +58,28 @@
         "has": [
           "Creature"
         ]
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Creature",
+          "Artifact"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 17,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
       }
     }
   ]

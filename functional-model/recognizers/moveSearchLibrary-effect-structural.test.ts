@@ -27,21 +27,33 @@ describe('moveSearchLibrary-effect-structural — untargeted "search your librar
     const result = recognizeMoveSearchLibraryEffectStructural(structuralInput('Cloud, Midgar Mercenary', cloudMidgarMercenary));
     expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
     if (!result.matched) return;
-    const annotation = { target: 'oracle' as const, line: 0, start: 19, end: 60 };
+    // 2026-09-16 widening: annotation now spans through "...reveal it, put
+    // it into your hand, then shuffle" (closes a real verify-text-coverage.mjs
+    // gap — this card's own printed sentence, unlike its 5 reminder-text
+    // siblings, isn't automatically treated as covered).
+    const annotation = { target: 'oracle' as const, line: 0, start: 19, end: 108 };
+    // 2026-09-16 SOURCE/SINK split fix: sink narrows to just "an Equipment
+    // card" [43,60) (the object phrase — what the sink claims must be
+    // present in the library), not the whole "search your library for an
+    // Equipment card, reveal it, put it into your hand, then shuffle"
+    // clause SOURCE keeps.
+    const sinkAnnotation = { target: 'oracle' as const, line: 0, start: 43, end: 60 };
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { from: 'Library', to: 'Hand', controller: 'you', types: { has: ['Equipment'] }, annotations: [annotation] },
+        fact: { from: 'Library', to: 'Hand', controller: 'you', types: { has: ['Equipment'] }, annotations: [annotation], triggeredBy: 'onEnter' },
         provenance: { origin: 'parser', rule: 'moveSearchLibrary-effect-structural' },
       },
       {
         role: 'sink',
-        fact: { to: 'Library', controller: 'you', types: { has: ['Equipment'] }, annotations: [annotation] },
+        fact: { to: 'Library', controller: 'you', types: { has: ['Equipment'] }, annotations: [sinkAnnotation] },
         provenance: { origin: 'parser', rule: 'moveSearchLibrary-effect-structural' },
       },
     ]);
     const input = structuralInput('Cloud, Midgar Mercenary', cloudMidgarMercenary);
-    expect(input.oracleText.split('\n')[0]!.slice(19, 60)).toBe('search your library for an Equipment card');
+    expect(input.oracleText.split('\n')[0]!.slice(19, 108)).toBe(
+      'search your library for an Equipment card, reveal it, put it into your hand, then shuffle',
+    );
   });
 
   it('declines Sazh Katzroy — real text is "a Bird or basic land card," a compound OR-restriction this recognizer\'s own single-word template has no confirmed shape for (validType:\'any\', no subtype)', () => {

@@ -17,6 +17,34 @@
         ]
       },
       "face": "back"
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature",
+            "Bird"
+          ]
+        }
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 69,
+          "end": 74
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      },
+      "triggeredBy": "onLandfall"
     }
   ],
   "sink": [
@@ -46,7 +74,36 @@
           "Bird"
         ]
       },
-      "face": "back"
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 47,
+          "end": 92
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 28
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

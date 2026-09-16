@@ -28,19 +28,16 @@ export const summonChocoMog: CardDefinition = {
 };
 
 function stampede(): Effect {
-  // Real "Other creatures you control get +1/+0" — `notSelf: true` is the
-  // real Forge `Creature.YouCtrl+Other` exclusion (same `pumpAll` field
-  // Summon: Knights of Round/Esper Origins // Summon: Esper Maduin already
-  // use for their own "Other creatures..." chapters). NOT surfaced as a
-  // separate matcher-level constraint on this card's own `synergy.json`
-  // pump fact — checked real precedent first (Ambrosia Whiteheart's own
-  // "return ANOTHER permanent you control" bounce fact, `move`'s own
-  // `notSelf: true`, carries no self-exclusion marker on its Fact either):
-  // this model's `Constraints` vocabulary has no "excluding self" concept
-  // at all, and a broadcast-pump SINK only cares about the real category
-  // (creatures you control get pumped), not whether literally every one or
-  // all-but-one member of that bucket receives it — `notSelf` is real,
-  // engine-execution-level detail (card.ts's own `Effect`), not synergy-
-  // matching-relevant data.
-  return { kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, notSelf: true };
+  // Real "Other creatures you control get +1/+0 until end of turn" —
+  // `notSelf: true` is the real Forge `Creature.YouCtrl+Other` exclusion
+  // (same `pumpAll` field Summon: Knights of Round/Esper Origins // Summon:
+  // Esper Maduin already use for their own "Other creatures..." chapters).
+  // `untilEndOfTurn: true` (2026-09-15 fix, fin/26-50 pass) — real CR 514.2
+  // Cleanup removal, this effect was missing it despite the real oracle
+  // text saying "until end of turn" (same systemic omission bug class fixed
+  // pool-wide earlier this session). `Constraints.excludeSelf` (synergy.ts)
+  // IS a real matcher-level concept now (added since this comment was
+  // originally written) — `pumpAllCreaturesYouControl-effect-structural`'s
+  // own recognizer surfaces `notSelf` as exactly that on the derived Fact.
+  return { kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, notSelf: true, untilEndOfTurn: true };
 }

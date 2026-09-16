@@ -32,7 +32,11 @@
           "start": 0,
           "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "spellCostReductionGrants-structural"
+      }
     },
     {
       "event": "mill",
@@ -46,7 +50,11 @@
           "start": 16,
           "end": 83
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "mill-effect-structural"
+      }
     },
     {
       "event": "millIncrease",
@@ -58,7 +66,11 @@
           "start": 0,
           "end": 89
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "millModifierGrants-structural"
+      }
     }
   ],
   "sink": [
@@ -72,7 +84,11 @@
           "start": 51,
           "end": 83
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "mill-effect-structural"
+      }
     }
   ]
 }

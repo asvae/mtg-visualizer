@@ -18,7 +18,11 @@
           "start": 15,
           "end": 27
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageEachMagnitude-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -37,7 +41,11 @@
           "start": 37,
           "end": 72
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageEachMagnitude-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -54,7 +62,11 @@
           "start": 78,
           "end": 113
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageEachMagnitude-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -70,7 +82,11 @@
           "start": 117,
           "end": 132
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageEachMagnitude-effect-structural"
+      }
     }
   ]
 }

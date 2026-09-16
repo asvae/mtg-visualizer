@@ -34,7 +34,11 @@
           "start": 0,
           "end": 74
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "counter-effect-structural"
+      }
     }
   ],
   "sink": [

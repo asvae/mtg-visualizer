@@ -12,6 +12,7 @@ export const sidequestRaiseAChocobo: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         // Real TokenScript$ g_2_2_bird_landfall — same inline token
         // call-the-mountain-chocobo/gysahl-greens already use (not in the
@@ -64,8 +65,13 @@ export const sidequestRaiseAChocobo: CardDefinition = {
         ],
       },
       {
+        // Real "Landfall — Whenever a land you control enters, Birds you
+        // control get +1/+0 until end of turn." — `untilEndOfTurn: true`
+        // (2026-09-15 fix, fin/26-50 pass) was missing despite the real
+        // oracle text, same systemic omission bug class fixed pool-wide
+        // earlier this session.
         name: 'onLandfall',
-        effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Bird' } satisfies Effect],
+        effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Bird', untilEndOfTurn: true } satisfies Effect],
       },
     ],
   },

@@ -16,7 +16,7 @@
         "fn": "activate",
         "card": "The Earth Crystal",
         "instanceId": 1,
-        "id": 2635,
+        "id": 4,
         "cost": "{4}{G}{G}, {T}"
       },
       {
@@ -44,7 +44,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2633,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -52,7 +52,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2634,
+        "id": 3,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -76,7 +76,7 @@
         "fn": "activate",
         "card": "The Earth Crystal",
         "instanceId": 1,
-        "id": 2638,
+        "id": 7,
         "cost": "{4}{G}{G}, {T}"
       },
       {
@@ -99,7 +99,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2637,
+        "id": 6,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -121,7 +121,7 @@
         "fn": "activate",
         "card": "The Earth Crystal",
         "instanceId": 1,
-        "id": 2640,
+        "id": 9,
         "cost": "{4}{G}{G}, {T}"
       },
       {

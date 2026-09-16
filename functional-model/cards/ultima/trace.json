@@ -2,10 +2,10 @@
   {
     "scenario": {
       "setup": "you: 5 Plains(s)",
-      "action": "engine playthrough: cast -> resolve (Destroy all artifacts and creatures)",
-      "result": "Destroys all four artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a symmetric, untargeted wipe (no controller restriction in the printed text). Both Plains survive untouched. \"End the turn\" is printed text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.",
+      "action": "engine playthrough: cast -> resolve (Destroy all artifacts and creatures, then End the turn)",
+      "result": "Destroys all four artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a symmetric, untargeted wipe (no controller restriction in the printed text). Both Plains survive untouched. \"End the turn\" then fires for real: Ultima itself is exiled (not put into the graveyard, per the real Gatherer ruling), the game jumps straight to Cleanup, and your own hand (9 real cards after casting Ultima) is discarded down to the real maximum hand size of 7.",
       "raw": {
-        "result": "Destroys all four artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a symmetric, untargeted wipe (no controller restriction in the printed text). Both Plains survive untouched. \"End the turn\" is printed text only — no turn-ending machinery in this model, so it isn't (and can't be) exercised here.",
+        "result": "Destroys all four artifacts/creatures on both battlefields — your own Dragoon's Lance and Dwarven Castle Guard, AND the opponent's own Phoenix Down and Coeurl — a symmetric, untargeted wipe (no controller restriction in the printed text). Both Plains survive untouched. \"End the turn\" then fires for real: Ultima itself is exiled (not put into the graveyard, per the real Gatherer ruling), the game jumps straight to Cleanup, and your own hand (9 real cards after casting Ultima) is discarded down to the real maximum hand size of 7.",
         "you": {
           "basicLands": [
             "Plains",
@@ -198,33 +198,51 @@
       {
         "fn": "destroy",
         "target": "Dragoon's Lance",
-        "id": 2948,
+        "id": 8,
         "controller": "you"
       },
       {
         "fn": "destroy",
         "target": "Dwarven Castle Guard",
-        "id": 2949,
+        "id": 9,
         "controller": "you"
       },
       {
         "fn": "destroy",
         "target": "Phoenix Down",
-        "id": 2950,
+        "id": 10,
         "controller": "opp0"
       },
       {
         "fn": "destroy",
         "target": "Coeurl",
-        "id": 2951,
+        "id": 11,
         "controller": "opp0"
+      },
+      {
+        "fn": "endTurn"
+      },
+      {
+        "fn": "discard",
+        "player": "you",
+        "qty": 2,
+        "cards": [
+          "Forest",
+          "Forest"
+        ]
+      },
+      {
+        "fn": "phase",
+        "phase": "Cleanup",
+        "turn": 1,
+        "player": "you"
       },
       {
         "fn": "move",
         "card": "Ultima",
         "instanceId": 1,
         "from": "stack",
-        "to": "Graveyard"
+        "to": "Exile"
       }
     ],
     "actions": [

@@ -49,7 +49,9 @@ describe('putCounterSelf-effect-structural — real matched clauses', () => {
     expect(result.facts).toEqual([
       {
         role: 'source',
-        fact: { event: 'putCounter', counterType: '+1/+1', target: 'self', annotations: [{ target: 'oracle', line: expect.any(Number), start: expect.any(Number), end: expect.any(Number) }] },
+        // `Fact.triggeredBy` (2026-09-16, "widen populate" pass) — Aerith's
+        // own real "Whenever you gain life..." trigger.
+        fact: { event: 'putCounter', counterType: '+1/+1', target: 'self', annotations: [{ target: 'oracle', line: expect.any(Number), start: expect.any(Number), end: expect.any(Number) }], triggeredBy: 'onLifeGained' },
         provenance: { origin: 'parser', rule: 'putCounterSelf-effect-structural' },
       },
     ]);

@@ -122,12 +122,12 @@
       {
         "fn": "tap",
         "target": "Ultima, Origin of Oblivion",
-        "id": 2973
+        "id": 19
       },
       {
         "fn": "attack",
         "card": "Ultima, Origin of Oblivion",
-        "id": 2973
+        "id": 19
       },
       {
         "fn": "trigger",
@@ -187,7 +187,7 @@
       {
         "fn": "putCounter",
         "target": "Forest",
-        "id": 2967,
+        "id": 13,
         "counterType": "blight",
         "amount": 1,
         "controller": "opp0"
@@ -195,7 +195,7 @@
       {
         "fn": "installCounterConditionalGrant",
         "target": "Forest",
-        "id": 2967,
+        "id": 13,
         "counterType": "blight",
         "removeLandTypes": true,
         "removeAllAbilities": true,
@@ -208,13 +208,13 @@
       {
         "fn": "read:effectiveSubtypes",
         "target": "Forest",
-        "id": 2967,
+        "id": 13,
         "subtypes": []
       },
       {
         "fn": "read:sourceColors",
         "target": "Forest",
-        "id": 2967,
+        "id": 13,
         "colors": [
           "C"
         ]
@@ -222,7 +222,7 @@
       {
         "fn": "tapForMana",
         "target": "Forest",
-        "id": 2967,
+        "id": 13,
         "for": "the blighted land's own granted {T}: Add {C}"
       }
     ],

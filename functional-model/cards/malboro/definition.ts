@@ -19,6 +19,7 @@ export const malboro: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         { kind: 'discard', owner: 'opponents', qty: 1 } satisfies Effect,
         { kind: 'loseLife', owner: 'opponents', amount: 2 } satisfies Effect,

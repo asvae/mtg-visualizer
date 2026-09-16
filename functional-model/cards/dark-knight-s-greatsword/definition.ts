@@ -6,7 +6,15 @@ export const darkKnightsGreatsword: CardDefinition = {
   manaCost: '{2}{B}',
   typeLine: 'Artifact — Equipment',
 
+  // "Equipped creature gets +3/+0 and is a Knight in addition to its other
+  // types" — real, mechanical `continuousPTGrants`/`continuousTypeGrants`
+  // (2026-09-16, static-ability audit follow-up — same already-real
+  // query-time machinery dragoon-s-lance/paladin-s-arms/thief-s-knife/etc.
+  // already use for this exact shape; this card was simply never migrated).
   staticAbilities: ['Equipped creature gets +3/+0 and is a Knight in addition to its other types.'],
+
+  continuousPTGrants: [{ power: 3, toughness: 0, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Knight'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — same real ETB mechanic (create a Hero token, attach this
   // to it) as dragoon-s-lance/paladin-s-arms/machinist-s-arsenal/black-
@@ -14,6 +22,7 @@ export const darkKnightsGreatsword: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

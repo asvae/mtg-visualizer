@@ -7,6 +7,12 @@ export const shamblingCieTh: CardDefinition = {
 
   pt: [3, 3],
 
+  // recognizer-exception: entersBattlefield-self-trigger-structural — real
+  // CR 614.12 "This creature enters tapped" replacement effect, modeled as
+  // an onEnter self-tap trigger (same convention treno-dark-city's own
+  // comment establishes for the Land variant). No "When/Whenever <self>
+  // enters" clause exists in the real printed text at all, so this
+  // recognizer correctly declines rather than asserting a false sink fact.
   triggers: [
     {
       // "This creature enters tapped" (a real replacement effect, R:Event$
@@ -18,6 +24,7 @@ export const shamblingCieTh: CardDefinition = {
       // sets up no other creatures for "you" (chooseTarget always takes the
       // first pool candidate — no real player-choice engine here).
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'tapTarget', validType: 'creature', owner: 'you' } satisfies Effect],
     },
     {

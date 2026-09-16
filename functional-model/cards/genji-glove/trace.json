@@ -16,7 +16,7 @@
         "fn": "activate",
         "card": "Genji Glove",
         "instanceId": 1,
-        "id": 1068,
+        "id": 3,
         "cost": "{3}"
       },
       {
@@ -27,9 +27,9 @@
       {
         "fn": "equip",
         "equipment": "Genji Glove",
-        "equipmentId": 1068,
+        "equipmentId": 3,
         "target": "Grizzly Bears",
-        "id": 1067
+        "id": 2
       }
     ]
   },
@@ -48,7 +48,7 @@
         "fn": "trigger",
         "card": "Genji Glove",
         "instanceId": 1,
-        "id": 1070,
+        "id": 5,
         "name": "onEquippedAttacksFirstCombat"
       },
       {

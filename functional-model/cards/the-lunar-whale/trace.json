@@ -29,13 +29,13 @@
       {
         "fn": "tap",
         "target": "Item Shopkeep",
-        "id": 2684,
+        "id": 8,
         "controller": "you"
       },
       {
         "fn": "animate",
         "target": "The Lunar Whale",
-        "id": 2683,
+        "id": 7,
         "types": [
           "Artifact",
           "Creature"
@@ -50,12 +50,12 @@
       {
         "fn": "tap",
         "target": "The Lunar Whale",
-        "id": 2683
+        "id": 7
       },
       {
         "fn": "attack",
         "card": "The Lunar Whale",
-        "id": 2683
+        "id": 7
       },
       {
         "fn": "phase",
@@ -97,7 +97,7 @@
       {
         "fn": "play",
         "card": "Forest",
-        "id": 2685,
+        "id": 9,
         "from": "Library"
       },
       {
@@ -127,7 +127,7 @@
       {
         "fn": "play",
         "card": "Barret Wallace",
-        "id": 2686,
+        "id": 10,
         "from": "Library"
       },
       {

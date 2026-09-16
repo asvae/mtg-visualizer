@@ -14,6 +14,30 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
+      },
+      "triggeredBy": "onEnter"
+    },
+    {
+      "event": "equip",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 100,
+          "end": 166
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
       }
     }
   ],
@@ -30,10 +54,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 41,
-          "end": 68
+          "start": 107,
+          "end": 135
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -50,7 +78,11 @@
           "start": 139,
           "end": 166
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
     },
     {
       "event": "entersBattlefield",
@@ -66,6 +98,22 @@
       "provenance": {
         "origin": "parser",
         "rule": "entersBattlefield-self-trigger-structural"
+      }
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
       }
     }
   ]

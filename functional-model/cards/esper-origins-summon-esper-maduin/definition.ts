@@ -79,8 +79,8 @@ export const esperOriginsSummonEsperMaduin: CardDefinition = {
       {
         name: 'chapterIII',
         effects: [
-          { kind: 'pumpAll', predicate: 'creatures-you-control', power: 2, toughness: 2, notSelf: true } satisfies Effect,
-          { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample', notSelf: true } satisfies Effect,
+          { kind: 'pumpAll', predicate: 'creatures-you-control', power: 2, toughness: 2, notSelf: true, untilEndOfTurn: true } satisfies Effect,
+          { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Trample', notSelf: true, untilEndOfTurn: true } satisfies Effect,
         ],
       },
     ],

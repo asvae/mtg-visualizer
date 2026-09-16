@@ -16,7 +16,7 @@
         "fn": "cast",
         "card": "Galuf's Final Act",
         "instanceId": 1,
-        "id": 1048,
+        "id": 3,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -28,7 +28,7 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1047,
+        "id": 2,
         "power": 1,
         "toughness": 0
       },
@@ -36,7 +36,7 @@
         "fn": "move",
         "card": "Galuf's Final Act",
         "instanceId": 1,
-        "id": 1048,
+        "id": 3,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

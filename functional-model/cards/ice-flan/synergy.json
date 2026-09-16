@@ -17,9 +17,14 @@
           "target": "oracle",
           "line": 0,
           "start": 27,
-          "end": 79
+          "end": 30
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "tapTarget-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "putCounter",
@@ -41,7 +46,12 @@
           "start": 81,
           "end": 105
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "to": "Hand",
@@ -57,7 +67,7 @@
           "target": "oracle",
           "line": 1,
           "start": 43,
-          "end": 81
+          "end": 129
         }
       ],
       "provenance": {
@@ -80,10 +90,20 @@
         {
           "target": "oracle",
           "line": 0,
+          "start": 81,
+          "end": 105
+        },
+        {
+          "target": "oracle",
+          "line": 0,
           "start": 31,
           "end": 79
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterTarget-effect-structural"
+      }
     },
     {
       "event": "discard",
@@ -113,13 +133,29 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 43,
+          "start": 67,
           "end": 81
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "moveSearchLibrary-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

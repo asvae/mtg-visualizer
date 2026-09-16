@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
-        "id": 2643,
+        "id": 2,
         "name": "onNoncreatureSpellCast"
       }
     ]
@@ -43,13 +43,13 @@
         "fn": "trigger",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
-        "id": 2645,
+        "id": 4,
         "name": "onNoncreatureSpellCast"
       },
       {
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
-        "id": 2645,
+        "id": 4,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -63,14 +63,14 @@
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
-        "id": 2645,
+        "id": 4,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "The Emperor of Palamecia",
-        "id": 2645,
+        "id": 4,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -94,13 +94,13 @@
         "fn": "trigger",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
-        "id": 2647,
+        "id": 6,
         "name": "onNoncreatureSpellCast"
       },
       {
         "fn": "putCounter",
         "target": "The Emperor of Palamecia",
-        "id": 2647,
+        "id": 6,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -132,7 +132,7 @@
         "fn": "trigger",
         "card": "The Lord Master of Hell",
         "instanceId": 1,
-        "id": 2650,
+        "id": 9,
         "name": "onAttacks"
       },
       {
@@ -145,7 +145,7 @@
       {
         "fn": "dealDamage",
         "source": "The Lord Master of Hell",
-        "sourceId": 2650,
+        "sourceId": 9,
         "target": "opp0",
         "amount": 0
       }
@@ -166,7 +166,7 @@
         "fn": "cast",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
-        "id": 2652,
+        "id": 11,
         "from": "hand",
         "cost": "{U}{R}"
       },
@@ -174,7 +174,7 @@
         "fn": "enters",
         "card": "The Emperor of Palamecia",
         "instanceId": 1,
-        "id": 2652,
+        "id": 11,
         "zone": "Battlefield"
       },
       {

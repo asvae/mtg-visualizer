@@ -20,7 +20,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onCastNoncreatureSpell"
     },
     {
       "event": "damage",
@@ -36,7 +37,8 @@
           "start": 83,
           "end": 114
         }
-      ]
+      ],
+      "triggeredBy": "onCastNoncreatureSpell"
     },
     {
       "zone": "Graveyard",
@@ -48,5 +50,29 @@
       "target": "self"
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "cast",
+      "controller": "you",
+      "target": {
+        "types": {
+          "not": [
+            "Creature"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 37
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "castTypeSpell-trigger-structural"
+      }
+    }
+  ]
 }

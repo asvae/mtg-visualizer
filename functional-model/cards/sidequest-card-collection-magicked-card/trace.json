@@ -147,13 +147,13 @@
       {
         "fn": "tap",
         "target": "Ahriman",
-        "id": 2208,
+        "id": 19,
         "controller": "you"
       },
       {
         "fn": "animate",
         "target": "Sidequest: Card Collection",
-        "id": 2201,
+        "id": 12,
         "types": [
           "Artifact",
           "Creature"

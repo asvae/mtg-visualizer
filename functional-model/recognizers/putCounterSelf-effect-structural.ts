@@ -90,7 +90,7 @@
 import type { CardDefinition, Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 const RULE = 'putCounterSelf-effect-structural' as const;
 
@@ -180,7 +180,7 @@ function isEligible(effect: PutCounterSelfEffect): { ok: true } | { ok: false; r
 }
 
 export function recognizePutCounterSelfEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const candidates = allEffects(input).filter(isPutCounterSelfEffect);
+  const candidates = allEffects(input).map((o) => o.effect).filter(isPutCounterSelfEffect);
   if (candidates.length === 0) {
     return { matched: false, reason: 'no kind:"putCounter" (self-target) Effect on this face' };
   }
@@ -188,11 +188,15 @@ export function recognizePutCounterSelfEffectStructural(input: StructuralRecogni
   const subjectAlt = selfSubjectAlternation(input.name);
   const facts: RecognizedFact[] = [];
   let anyEligible = false;
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of candidates) {
     const eligibility = isEligible(effect);
     if (!eligibility.ok) continue; // structurally out of scope — see module doc comment; never a 'mismatch'
     anyEligible = true;
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
 
     const pattern = buildPattern(effect.counterType, subjectAlt);
     const global = new RegExp(pattern.source, pattern.flags + 'g');
@@ -222,7 +226,7 @@ export function recognizePutCounterSelfEffectStructural(input: StructuralRecogni
 
     facts.push({
       role: 'source',
-      fact: { event: 'putCounter', counterType: effect.counterType, target: 'self', annotations: [annotation] },
+      fact: { event: 'putCounter', counterType: effect.counterType, target: 'self', annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

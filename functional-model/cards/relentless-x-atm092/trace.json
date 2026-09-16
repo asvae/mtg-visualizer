@@ -14,14 +14,14 @@
         "fn": "activate",
         "card": "Relentless X-ATM092",
         "instanceId": 1,
-        "id": 1909,
+        "id": 2,
         "cost": "{8} (activated only while this card is in your graveyard)",
         "ability": "returnFromGraveyard"
       },
       {
         "fn": "putCounter",
         "target": "Relentless X-ATM092",
-        "id": 1909,
+        "id": 2,
         "counterType": "finality",
         "amount": 1,
         "controller": "you"
@@ -29,7 +29,7 @@
       {
         "fn": "tap",
         "target": "Relentless X-ATM092",
-        "id": 1909,
+        "id": 2,
         "controller": "you"
       }
     ]

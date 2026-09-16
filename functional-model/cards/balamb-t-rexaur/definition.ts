@@ -12,6 +12,7 @@ export const balambTRexaur: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'gainLife', amount: 3 } satisfies Effect],
     },
   ],

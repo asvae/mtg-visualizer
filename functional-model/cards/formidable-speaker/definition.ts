@@ -9,6 +9,7 @@ export const formidableSpeaker: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         // "You may discard a card. If you do, search your library for a
         // creature card..." — modeled as always discarding (if a card is

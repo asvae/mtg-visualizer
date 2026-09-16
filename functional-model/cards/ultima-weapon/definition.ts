@@ -11,11 +11,23 @@ export const ultimaWeapon: CardDefinition = {
   manaCost: '{7}',
   typeLine: 'Legendary Artifact — Equipment',
 
+  // Real, mechanical `continuousPTGrants` (2026-09-16, static-ability audit
+  // follow-up — same already-real query-time machinery buster-sword's own
+  // identical shape already uses).
   staticAbilities: ['Equipped creature gets +7/+7.'],
+
+  continuousPTGrants: [{ power: 7, toughness: 7, includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     {
       name: 'onEquippedAttacks',
+      // Real, executable auto-fire via `on: 'equippedAttacks'` (closed
+      // 2026-09-16, card.ts's own `Trigger.on` doc comment) — previously
+      // this trigger fired only via a manual `sequence`/`trigger` name in
+      // the old `harness.ts`-style `scenarios.ts` (not migrated to a real
+      // engine-piloted trace in this same pass — see that file's own note
+      // on why this card's own real trace evidence is deferred).
+      on: 'equippedAttacks',
       effects: [{ kind: 'destroy', validType: 'creature', owner: 'opponents', qty: 1 } satisfies Effect],
     },
   ],

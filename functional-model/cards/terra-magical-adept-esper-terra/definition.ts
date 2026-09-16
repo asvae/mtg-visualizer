@@ -47,6 +47,7 @@ export const terraMagicalAdept: CardDefinition = {
       // comment documents, so only the no-enchantment-milled branch is
       // scenario-testable.
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

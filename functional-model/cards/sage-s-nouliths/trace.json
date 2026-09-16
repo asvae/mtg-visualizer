@@ -1,45 +1,59 @@
 [
   {
     "scenario": {
-      "setup": "you: 1 creature(s)",
-      "action": "cast from hand",
-      "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {3} activation re-attaches it to the other creature already on the battlefield, whose attack then untaps a target attacking creature",
+      "setup": "you: 5 Island(s)",
+      "action": "engine playthrough: cast -> onEnter (Job select) -> Equip {3} re-attach -> real attack declaration -> onEquippedAttacks auto-fires (untap)",
+      "result": "Sage's Nouliths is cast and enters, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, a real Equip {3} activation re-attaches it to Grizzly Bears instead, that creature attacks for real, and the granted \"untap target attacking creature\" ability auto-fires for real off the declared attack itself, untapping it (the only real attacking creature on the battlefield).",
       "raw": {
-        "result": "cast from hand and enters the battlefield, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, then an Equip {3} activation re-attaches it to the other creature already on the battlefield, whose attack then untaps a target attacking creature",
-        "forceCast": true,
+        "result": "Sage's Nouliths is cast and enters, Job select creates a 1/1 colorless Hero creature token and attaches itself to it, a real Equip {3} activation re-attaches it to Grizzly Bears instead, that creature attacks for real, and the granted \"untap target attacking creature\" ability auto-fires for real off the declared attack itself, untapping it (the only real attacking creature on the battlefield).",
         "you": {
-          "creaturesCount": 1
-        },
-        "sequence": [
-          "onEnter",
-          {
-            "activate": true
-          },
-          "onEquippedAttacks"
-        ]
+          "basicLands": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "libraryCount": 8
+        }
       }
     },
     "log": [
       {
+        "fn": "enters",
+        "card": "Grizzly Bears",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
         "fn": "cast",
         "card": "Sage's Nouliths",
         "instanceId": 1,
-        "id": 2043,
         "from": "hand",
         "cost": "{1}{U}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sage's Nouliths"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sage's Nouliths"
       },
       {
         "fn": "enters",
         "card": "Sage's Nouliths",
         "instanceId": 1,
-        "id": 2043,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Sage's Nouliths",
         "instanceId": 1,
-        "id": 2043,
         "name": "onEnter"
       },
       {
@@ -54,16 +68,30 @@
       {
         "fn": "equip",
         "equipment": "Sage's Nouliths",
-        "equipmentId": 2043,
+        "equipmentId": 15,
         "target": "Hero",
-        "id": 2044
+        "id": 17
       },
       {
         "fn": "activate",
         "card": "Sage's Nouliths",
         "instanceId": 1,
-        "id": 2043,
         "cost": "{3}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sage's Nouliths"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sage's Nouliths"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Sage's Nouliths"
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -73,26 +101,77 @@
       {
         "fn": "equip",
         "equipment": "Sage's Nouliths",
-        "equipmentId": 2043,
+        "equipmentId": 15,
         "target": "Grizzly Bears",
-        "id": 2042
+        "id": 16
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Grizzly Bears",
+        "id": 16
+      },
+      {
+        "fn": "attack",
+        "card": "Grizzly Bears",
+        "id": 16
       },
       {
         "fn": "trigger",
         "card": "Sage's Nouliths",
         "instanceId": 1,
-        "id": 2043,
         "name": "onEquippedAttacks"
       },
       {
-        "fn": "read:getCreaturesInPlay",
+        "fn": "read:getCardsIn",
         "player": "you",
-        "count": 2
+        "zone": "Battlefield",
+        "count": 8,
+        "creatureCount": 2
       },
       {
         "fn": "untap",
         "target": "Grizzly Bears",
-        "id": 2042
+        "id": 16
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Grizzly Bears already on the battlefield",
+        "from": 0
+      },
+      {
+        "label": "Cast Sage's Nouliths ({1}{U})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 4
+      },
+      {
+        "label": "Activate Hagneia — Equip {3}: re-attach to Grizzly Bears",
+        "from": 8
+      },
+      {
+        "label": "Resolve",
+        "from": 12
+      },
+      {
+        "label": "Advance to Declare Attackers",
+        "from": 14
+      },
+      {
+        "label": "Declare Grizzly Bears as attacker",
+        "from": 15
       }
     ]
   }

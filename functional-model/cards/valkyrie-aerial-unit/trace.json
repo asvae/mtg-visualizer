@@ -16,7 +16,7 @@
         "fn": "cast",
         "card": "Valkyrie Aerial Unit",
         "instanceId": 1,
-        "id": 3048,
+        "id": 2,
         "from": "hand",
         "cost": "{5}{U}{U}"
       },
@@ -24,14 +24,14 @@
         "fn": "enters",
         "card": "Valkyrie Aerial Unit",
         "instanceId": 1,
-        "id": 3048,
+        "id": 2,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Valkyrie Aerial Unit",
         "instanceId": 1,
-        "id": 3048,
+        "id": 2,
         "name": "onEnter"
       },
       {

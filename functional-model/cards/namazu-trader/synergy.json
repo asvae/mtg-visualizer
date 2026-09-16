@@ -2,7 +2,20 @@
   "source": [
     {
       "event": "lifeloss",
-      "controller": "you"
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 27,
+          "end": 42
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "zone": "Battlefield",
@@ -33,7 +46,54 @@
       "provenance": {
         "origin": "parser",
         "rule": "token-creation-structural"
-      }
+      },
+      "triggeredBy": "onEnter"
+    },
+    {
+      "event": "surveil",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 91,
+          "end": 100
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "surveil-effect-structural"
+      },
+      "triggeredBy": "onAttack"
+    },
+    {
+      "event": "sacrifice",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Creature",
+            "Artifact"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 90
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      },
+      "triggeredBy": "onAttack"
     }
   ],
   "sink": [
@@ -45,6 +105,18 @@
           "Creature",
           "Artifact"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 90
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
       }
     },
     {
@@ -61,6 +133,45 @@
       "provenance": {
         "origin": "parser",
         "rule": "attacks-trigger-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Creature",
+          "Artifact"
+        ]
+      },
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 50,
+          "end": 78
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
       }
     }
   ]

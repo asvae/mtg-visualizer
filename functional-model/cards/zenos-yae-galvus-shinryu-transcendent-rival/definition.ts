@@ -11,6 +11,7 @@ export const zenosYaeGalvus: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           // "My First Friend — choose a creature an opponent controls.

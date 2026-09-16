@@ -2,10 +2,21 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
-  "textCoverageAudited": false,
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (collateral, fin/20-47 text-coverage pass on cargo-ship/fin/47): this card's own \"Spend this mana only to cast an Equipment spell or activate an equip ability\" restriction was real, typed (`ManaAbility.restriction`), and deliberately unenforced (per this card's own knownGaps below) but had no annotation/`annotatedNonFactSpans` entry at all — a real, previously-uncovered `verify-text-coverage.mjs` gap (32% covered), found while checking cargo-ship's own identical restriction clause pool-wide. Added a real `annotatedNonFactSpans` entry (`kind:'rules'`). `verify-text-coverage.mjs --threshold=1.0`: 100% covered, 0 gaps. `review` was already 'ai'.\n\nCLOSED 2026-09-16 (static-ability audit, Jump half only): 'Jump' (During your turn, has flying) is now real, executable `continuousKeywordGrants` ({keywords:['Flying'], includeSelf:true, onlyDuringYourTurn:true}) — a genuinely third real shape (self-only, conditional, no broadcast), closed via `continuousKeywordGrantsSubtype-structural.ts`'s own widening. This also exposed and fixed a real ENGINE BUG in `state.ts`'s `qualifiesForContinuousGrant` (a bare no-subtype broadcast used to be permanently inert regardless of card). The mana ability's own `restriction` remains real, typed, but deliberately unenforced (no spendable mana-pool mechanism exists) — that half is still correctly open.",
+  "textCoverageAudited": true,
   "knownGaps": [
-    "Jump keyword and its mana ability are both real, documented gaps in definition.ts's own comment — not modeled at all"
+    "The mana ability's own `restriction` remains real, typed, but deliberately unenforced (no spendable mana-pool mechanism exists) — that half is still correctly open. See cargo-ship's own knownGaps entry for the full reasoning (shared, pool-wide gap)."
+  ],
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 1,
+      "start": 14,
+      "end": 91,
+      "face": "front",
+      "kind": "rules",
+      "note": "Real, accepted, currently-unmodeled rules text — the mana ability's own \"Spend this mana only to cast an Equipment spell or activate an equip ability\" restriction. No Fact backs this: this engine tracks no spendable mana pool at all, so nothing could constrain what a produced mana unit is later spent on. Same real gap as cargo-ship/the-emperor-of-palamecia's own identical restriction, see cargo-ship's own knownGaps entry for the full reasoning."
+    }
   ]
 }

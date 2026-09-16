@@ -15,11 +15,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
-    },
-    {
-      "event": "damage",
-      "controller": "you"
+      },
+      "triggeredBy": "onExpensiveNoncreatureSpellCast"
     },
     {
       "event": "tap",
@@ -37,6 +34,47 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "damage",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 43,
+          "end": 55
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
+      }
+    },
+    {
+      "event": "sacrifice",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 15,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeSelfCost-structural"
+      }
     }
   ],
   "sink": [
@@ -46,6 +84,18 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 43,
+          "end": 93
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
       }
     }
   ]

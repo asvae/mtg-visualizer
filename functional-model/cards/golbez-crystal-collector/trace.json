@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Golbez, Crystal Collector",
         "instanceId": 1,
-        "id": 1098,
+        "id": 2,
         "name": "onArtifactEnters"
       },
       {
@@ -43,7 +43,7 @@
         "fn": "trigger",
         "card": "Golbez, Crystal Collector",
         "instanceId": 1,
-        "id": 1103,
+        "id": 7,
         "name": "onEndStep"
       },
       {
@@ -89,7 +89,7 @@
         "fn": "trigger",
         "card": "Golbez, Crystal Collector",
         "instanceId": 1,
-        "id": 1110,
+        "id": 14,
         "name": "onEndStep"
       },
       {
@@ -144,7 +144,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1109,
+        "id": 13,
         "zone": "Hand",
         "controller": "you"
       }
@@ -172,7 +172,7 @@
         "fn": "trigger",
         "card": "Golbez, Crystal Collector",
         "instanceId": 1,
-        "id": 1122,
+        "id": 26,
         "name": "onEndStep"
       },
       {
@@ -247,7 +247,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 1120,
+        "id": 24,
         "zone": "Hand",
         "controller": "you"
       },
@@ -273,7 +273,7 @@
         "fn": "cast",
         "card": "Golbez, Crystal Collector",
         "instanceId": 1,
-        "id": 1124,
+        "id": 28,
         "from": "hand",
         "cost": "{U}{B}"
       },
@@ -281,7 +281,7 @@
         "fn": "enters",
         "card": "Golbez, Crystal Collector",
         "instanceId": 1,
-        "id": 1124,
+        "id": 28,
         "zone": "Battlefield"
       },
       {

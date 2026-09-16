@@ -14,8 +14,47 @@
       "provenance": {
         "origin": "parser",
         "rule": "gainLife-effect-structural"
+      },
+      "triggeredBy": "onEnter"
+    },
+    {
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "C"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
       }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 21
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
+    }
+  ]
 }

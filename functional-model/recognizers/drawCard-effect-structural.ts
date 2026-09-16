@@ -88,23 +88,38 @@
 //   - `combat-tutorial`: `{amount: 2}`, but the real oracle reads "TARGET
 //     PLAYER DRAWS two cards" (third person, targeting ANY player — this
 //     card's own effect always draws for `ctx.you` regardless, per
-//     `definition.ts`'s own comment on the real engine gap this
-//     represents) — the built imperative clause "Draw two cards" never
-//     appears (the real text says "draws," not "draw"), so this declines
-//     for free, without this recognizer needing to know anything about
-//     targeting at all.
-// - **"May draw" — an effect this recognizer can't tell apart from an
-//   unconditional draw, since `card.ts`'s own `drawCard` Effect kind has NO
-//   `optional` field at all (unlike `destroy`'s own `optional?: boolean`)**:
-//   `rook-turret`'s real "you MAY draw a card. If you do, discard a card."
-//   — the draw itself is the player's own choice, not guaranteed, which
-//   this engine's `drawCard` Effect has no way to represent — asserting an
-//   unconditional `event:'drawCard'` fact here would overclaim. Declined
-//   via a negative lookbehind on the literal word "may" immediately
-//   preceding the match (checked the whole real pool for this exact "may
-//   draw" shape — `rook-turret` is the only real hit). Classified
-//   `kind:'scope'` (not `'mismatch'`), per the reasoning above — an
-//   intentional, designed-in guard, not a structural/text divergence.
+//     `card.ts`'s own `drawCard.owner` doc comment on the real
+//     engine gap this represents). The imperative clause "Draw two
+//     cards" never appears here (the real text says "draws," not
+//     "draw") — 2026-09-16: no longer a bare decline. This recognizer
+//     now ALSO tries a second, third-person "Target player draws
+//     <phrase>" template (`expectedTargetedPlayerClausePattern`, below)
+//     once the imperative one fails to match; Combat Tutorial is that
+//     template's sole real motivator and now matches through it, with
+//     `controller` omitted (honest to the real unrestricted target,
+//     wider than this engine's `ctx.you`-only implementation) instead of
+//     the imperative template's own `controller: 'you'`.
+// - **"May draw" — CLOSED 2026-09-16 (recognizer-lane escalation)**:
+//   `card.ts`'s own `drawCard` Effect kind gained a real `optional?: boolean`
+//   field the same day specifically so this shape could be told apart from
+//   an unconditional draw (mirroring `destroy`'s/`move`'s/`sacrifice`'s own
+//   pre-existing `optional` fields) — this recognizer now reads it.
+//   `rook-turret`'s real "you MAY draw a card. If you do, discard a card." is
+//   the sole real pool card setting `optional: true` (checked). When set, the
+//   imperative "Draw <phrase>" template's own negative lookbehind (still
+//   there, unchanged, for the non-optional case) correctly never matches the
+//   "may draw" text, and a THIRD, narrower template —
+//   `expectedOptionalClausePattern`, "you may draw <phrase>" — is tried
+//   instead, emitting the SAME plain `{event:'drawCard', controller:'you'}`
+//   fact shape the imperative template emits (this Fact vocabulary has no
+//   "optional" field of its own to carry the distinction — the documentary-
+//   only convention `optional` already follows for `destroy`/`move`/
+//   `sacrifice` applies here too: no player-decision engine exists anywhere
+//   in this codebase, so a legal draw always happens once the trigger
+//   fires). A card whose text says "may draw" WITHOUT `optional: true` set
+//   (a real, if currently hypothetical, data-consistency bug) still falls
+//   through to the same `kind:'scope'` decline as before — see below —
+//   rather than silently matching through the new template.
 //
 // **Real accepted boundary characters, wider than the destroy recognizer's
 // own strict period/newline/end-of-string set** — checked against every
@@ -128,7 +143,7 @@
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 export type { StructuralRecognizerInput };
 
@@ -183,6 +198,53 @@ function expectedClausePattern(effect: DrawCardEffect): RegExp | undefined {
 }
 
 /**
+ * The alternate, third-person "Target player draws <phrase>" clause shape
+ * (real Forge `DrawEffect.java`'s own `getStackDescription()`: `Lang.
+ * joinVerb(tgtPlayers, " draw")` — pluralizes to "draws" for a singular
+ * target, same real grammar this template matches) — as opposed to
+ * `expectedClausePattern`'s own imperative "Draw <phrase>" (addressed at
+ * whichever player resolves the ability, i.e. `ctx.you` under this card's
+ * own runtime approximation). **Sole real pool motivator: Combat Tutorial
+ * (fin/48)**, "Target player draws two cards." — `ValidTgts$ Player`, no
+ * `.YouCtrl`/`.Opponent` restriction, a real CHOSEN target among every
+ * player in the game. `card.ts`'s own `drawCard.owner` field can't express
+ * that (see its own doc comment: `EffectOwner`'s 3 values are all fixed
+ * GROUPS, never "one chosen player, any side") — this recognizer doesn't
+ * try to key off `owner` at all for this template; it matches purely
+ * against the ORACLE TEXT itself and emits a fact honest to what the card
+ * really says (`targeted: true`, no `controller` — see below), independent
+ * of how the engine actually resolves the draw. Checked the whole real
+ * pool for a "target opponent draws"/"each player draws" variant of this
+ * same third-person shape: none exist today (Combat Tutorial is the only
+ * real `ValidTgts$ Player`-style targeted draw in this pool), so only the
+ * bare "target player" wording is matched — widen this the day a second
+ * real card needs a different targeted-player phrasing.
+ */
+function expectedTargetedPlayerClausePattern(effect: DrawCardEffect): RegExp | undefined {
+  const phrase = drawPhrase(effect);
+  if (!phrase) return undefined;
+  return new RegExp(`\\bTarget player draws ${phrase}(?=[.,\\n]|$|\\s+and\\b)`, 'i');
+}
+
+/**
+ * The optional-draw clause shape (2026-09-16, `effect.optional`'s own
+ * consuming template) — "you may draw <phrase>", as opposed to
+ * `expectedClausePattern`'s own unconditional imperative (whose negative
+ * lookbehind deliberately EXCLUDES this exact text). **Sole real pool
+ * motivator: Rook Turret (fin/79)**, "Whenever another artifact you control
+ * enters, you may draw a card. If you do, discard a card." — checked the
+ * whole real pool for this exact "may draw" shape: `rook-turret` is the only
+ * real hit, so only this one literal "you may draw" wording is confirmed;
+ * widen the day a second real card needs a different optional-draw phrasing
+ * (e.g. a targeted or third-person variant). Only ever tried when
+ * `effect.optional` is `true` — see this file's own module doc comment. */
+function expectedOptionalClausePattern(effect: DrawCardEffect): RegExp | undefined {
+  const phrase = drawPhrase(effect);
+  if (!phrase) return undefined;
+  return new RegExp(`\\byou may draw ${phrase}\\b`, 'i');
+}
+
+/**
  * Reads one face's own structured `Effect[]` directly (never this face's own
  * oracle text, except to ANCHOR the derived fact's annotation — see module
  * doc comment) and derives the `event: 'drawCard'` Fact(s) implied by every
@@ -223,14 +285,18 @@ function expectedClausePattern(effect: DrawCardEffect): RegExp | undefined {
  * separate abilities happen to produce it).
  */
 export function recognizeDrawCardEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const drawCardEffects = allEffects(input).filter(isDrawCardEffect);
+  const drawCardEffects = allEffects(input).map((o) => o.effect).filter(isDrawCardEffect);
   if (drawCardEffects.length === 0) {
     return { matched: false, reason: 'no kind:"drawCard" Effect on this face' };
   }
 
   const facts: RecognizedFact[] = [];
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of drawCardEffects) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     const pattern = expectedClausePattern(effect);
     if (!pattern) {
       return {
@@ -241,47 +307,64 @@ export function recognizeDrawCardEffectStructural(input: StructuralRecognizerInp
 
     const global = new RegExp(pattern.source, pattern.flags + 'g');
     const matches = [...input.oracleText.matchAll(global)];
-    if (matches.length === 0) {
+    // Third-person "Target player draws <phrase>" — tried whenever the
+    // imperative template above doesn't match, not gated on `effect.owner`
+    // (see `expectedTargetedPlayerClausePattern`'s own doc comment for why).
+    const targetedPattern = expectedTargetedPlayerClausePattern(effect);
+    const targetedGlobal = targetedPattern ? new RegExp(targetedPattern.source, targetedPattern.flags + 'g') : undefined;
+    const targetedMatches = matches.length === 0 && targetedGlobal ? [...input.oracleText.matchAll(targetedGlobal)] : [];
+    // "you may draw <phrase>" — tried only when `effect.optional` is `true`
+    // (2026-09-16, see `expectedOptionalClausePattern`'s own doc comment).
+    const optionalPattern = effect.optional && matches.length === 0 && targetedMatches.length === 0 ? expectedOptionalClausePattern(effect) : undefined;
+    const optionalGlobal = optionalPattern ? new RegExp(optionalPattern.source, optionalPattern.flags + 'g') : undefined;
+    const optionalMatches = optionalGlobal ? [...input.oracleText.matchAll(optionalGlobal)] : [];
+
+    if (matches.length === 0 && targetedMatches.length === 0 && optionalMatches.length === 0) {
       // Two genuinely different reasons this can be 0, distinguished before
       // declaring a `kind` (see `types.ts`'s own doc comment):
       //   - The literal phrase's only real occurrence is guarded off by the
-      //     negative lookbehind above because it's an intentional, DESIGNED-IN
-      //     exclusion (rook-turret's own "you MAY draw a card" — `kind:
-      //     'drawCard'` has no `optional` field at all, unlike `kind:
-      //     'destroy'`, so this recognizer can never represent an optional
-      //     draw and correctly never tries) — this is `kind:'scope'`, not a
-      //     structural/text divergence: the recognizer isn't wrong about what
-      //     the card says, it's declining a shape it was never designed to
-      //     assert in the first place.
+      //     negative lookbehind above, AND `effect.optional` isn't set —
+      //     this is `kind:'scope'`, not a structural/text divergence: the
+      //     recognizer isn't wrong about what the card says, it's declining
+      //     a shape it was never told (via `effect.optional`) to assert in
+      //     the first place. (When `effect.optional` IS set, this whole
+      //     branch is unreachable for a genuine "you may draw" clause — the
+      //     `optionalMatches` check above already caught it — so reaching
+      //     here with `effect.optional` true means the card's own text
+      //     genuinely doesn't say "you may draw <phrase>" at all, a real
+      //     `kind:'mismatch'` instead, handled by the fallthrough below.)
       //   - Anything else: the built clause genuinely never appears — a real
       //     `kind:'mismatch'` (the recognizer's own model of "what this
       //     should read like" diverged from the real printed text — see
-      //     module doc comment's `joshua-phoenix...`/`kefka-court-mage...`/
-      //     `combat-tutorial` examples).
+      //     module doc comment's `joshua-phoenix...`/`kefka-court-mage...`
+      //     examples — `combat-tutorial` itself is no longer one of these,
+      //     since the targeted template above now matches it).
       const phrase = drawPhrase(effect)!; // already confirmed defined — `pattern` above only builds once `drawPhrase` succeeds
       const mayVariant = new RegExp(`\\bmay\\s+draw\\s+${phrase}\\b`, 'i');
-      if (mayVariant.test(input.oracleText)) {
+      if (!effect.optional && mayVariant.test(input.oracleText)) {
         return {
           matched: false,
           kind: 'scope',
-          reason: `expected clause /${pattern.source}/ not found because the only real occurrence of "draw ${phrase}" in this oracle text is an optional "may draw ${phrase}" — kind:'drawCard' has no 'optional' field (unlike kind:'destroy'), so this negative-lookbehind exclusion is an intentional, designed-in guard, not a structural/text divergence`,
+          reason: `expected clause /${pattern.source}/ not found because the only real occurrence of "draw ${phrase}" in this oracle text is an optional "may draw ${phrase}" but effect.optional is not set — kind:'drawCard' has a real 'optional' field now (2026-09-16), so this card's own data should set it rather than leaving this recognizer to guess`,
         };
       }
       return {
         matched: false,
         kind: 'mismatch',
-        reason: `expected clause /${pattern.source}/ not found (verbatim, with a real clause boundary right after, and not preceded by "may") in oracle text "${input.oracleText}"`,
+        reason: `expected clause /${pattern.source}/ not found (verbatim, with a real clause boundary right after, and not preceded by "may"), the targeted-player alternate /${targetedPattern?.source}/ not found, and the optional-draw alternate /${optionalPattern?.source}/ not found either, in oracle text "${input.oracleText}"`,
       };
     }
-    if (matches.length > 1) {
+    if (matches.length > 1 || targetedMatches.length > 1 || optionalMatches.length > 1) {
       return {
         matched: false,
         kind: 'mismatch',
-        reason: `expected clause /${pattern.source}/ matched ${matches.length} times — ambiguous, declining rather than guessing which`,
+        reason: `expected clause matched ${matches.length + targetedMatches.length + optionalMatches.length} times across all templates — ambiguous, declining rather than guessing which`,
       };
     }
 
-    const m = matches[0]!;
+    const usingTargetedTemplate = matches.length === 0 && targetedMatches.length > 0;
+    const usingOptionalTemplate = matches.length === 0 && targetedMatches.length === 0 && optionalMatches.length > 0;
+    const m = (usingOptionalTemplate ? optionalMatches : usingTargetedTemplate ? targetedMatches : matches)[0]!;
     const start = m.index!;
     const end = start + m[0]!.length;
     const annotation = toLineOffset(input.oracleText, start, end);
@@ -289,15 +372,41 @@ export function recognizeDrawCardEffectStructural(input: StructuralRecognizerInp
       return { matched: false, reason: `matched span [${start},${end}) did not resolve to a single real oracle-text line` };
     }
 
-    const fact: RecognizedFact = {
-      role: 'source',
-      fact: {
-        event: 'drawCard',
-        controller: 'you',
-        annotations: [annotation],
-      },
-      provenance: { origin: 'parser', rule: RULE },
-    };
+    // The imperative "Draw <phrase>" template AND the optional "you may draw
+    // <phrase>" template are both addressed at whichever player resolves
+    // the ability — this engine's own runtime always resolves that to
+    // `ctx.you` (`effect.owner ?? 'you'`, see card.ts), so `controller:
+    // 'you'` is a true structural claim for either shape (the Fact
+    // vocabulary carries no separate "optional" marker — see module doc
+    // comment). The targeted "Target player draws <phrase>" template is a
+    // real, unrestricted CHOSEN target (`ValidTgts$ Player`, no `.YouCtrl`
+    // restriction) — asserting `controller: 'you'` there would overclaim
+    // (same "honest fact, documented engine gap" treatment
+    // `combat-tutorial`'s own definition.ts comment already establishes),
+    // so this omits `controller` entirely and marks `targeted: true`
+    // instead (purely informational, synergy.ts's own doc comment — not
+    // consulted by the matcher).
+    const fact: RecognizedFact = usingTargetedTemplate
+      ? {
+          role: 'source',
+          fact: {
+            event: 'drawCard',
+            targeted: true,
+            annotations: [annotation],
+            ...(triggeredBy ? { triggeredBy } : {}),
+          },
+          provenance: { origin: 'parser', rule: RULE },
+        }
+      : {
+          role: 'source',
+          fact: {
+            event: 'drawCard',
+            controller: 'you',
+            annotations: [annotation],
+            ...(triggeredBy ? { triggeredBy } : {}),
+          },
+          provenance: { origin: 'parser', rule: RULE },
+        };
 
     facts.push(fact);
   }

@@ -16,11 +16,18 @@ export const magitekScythe: CardDefinition = {
   manaCost: '{4}',
   typeLine: 'Artifact — Equipment',
 
+  // "Equipped creature gets +2/+1" — real, mechanical `continuousPTGrants`
+  // (2026-09-16, static-ability audit follow-up — same already-real
+  // query-time machinery dragoon-s-lance/paladin-s-arms/etc. already use
+  // for this exact shape).
   staticAbilities: ['Equipped creature gets +2/+1.'],
+
+  continuousPTGrants: [{ power: 2, toughness: 1, includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',
@@ -30,7 +37,12 @@ export const magitekScythe: CardDefinition = {
             if (target) actions.equip(ctx.self, target);
           },
         } satisfies Effect,
-        { kind: 'grantKeywordTarget', keyword: 'FirstStrike', validType: 'creature' } satisfies Effect,
+        // recognizer-exception: grantKeywordTarget-effect-structural — same
+        // real anaphoric "THAT creature gains first strike" mismatch
+        // coral-sword's own identical attach-then-grant shape already
+        // documents (this trigger's own module comment above already names
+        // the real printed text) — not a bug.
+        { kind: 'grantKeywordTarget', keyword: 'FirstStrike', validType: 'creature', untilEndOfTurn: true } satisfies Effect,
         {
           kind: 'custom',
           describe: 'that creature must be blocked this turn if able (no combat/blocking-restriction machinery exists in this model)',

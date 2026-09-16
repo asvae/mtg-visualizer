@@ -21,6 +21,7 @@ export const ultimeciaTemporalThreat: CardDefinition = {
       // sephiroth-planet-s-heir's own opponents' -2/-2 custom effect uses
       // for the identical gap.
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

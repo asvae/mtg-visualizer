@@ -6,10 +6,6 @@
       "subject": "self"
     },
     {
-      "event": "damage",
-      "controller": "you"
-    },
-    {
       "zone": "Exile"
     },
     {
@@ -35,6 +31,30 @@
         "origin": "parser",
         "rule": "move-effect-structural"
       }
+    },
+    {
+      "event": "damage",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 2,
+          "end": 23
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -44,6 +64,18 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 2,
+          "end": 42
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
       }
     },
     {
@@ -52,6 +84,18 @@
         "has": [
           "Artifact"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 8,
+          "end": 23
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
       }
     }
   ]

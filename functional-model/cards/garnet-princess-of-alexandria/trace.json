@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Garnet, Princess of Alexandria",
         "instanceId": 1,
-        "id": 1059,
+        "id": 2,
         "name": "onAttacks"
       },
       {
@@ -49,7 +49,7 @@
         "fn": "cast",
         "card": "Garnet, Princess of Alexandria",
         "instanceId": 1,
-        "id": 1061,
+        "id": 4,
         "from": "hand",
         "cost": "{G}{W}"
       },
@@ -57,13 +57,13 @@
         "fn": "enters",
         "card": "Garnet, Princess of Alexandria",
         "instanceId": 1,
-        "id": 1061,
+        "id": 4,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Garnet, Princess of Alexandria",
-        "sourceId": 1061,
+        "sourceId": 4,
         "target": "opp0",
         "amount": 3
       },
@@ -90,7 +90,7 @@
         "fn": "cast",
         "card": "Garnet, Princess of Alexandria",
         "instanceId": 1,
-        "id": 1064,
+        "id": 7,
         "from": "hand",
         "cost": "{G}{W}"
       },
@@ -98,7 +98,7 @@
         "fn": "enters",
         "card": "Garnet, Princess of Alexandria",
         "instanceId": 1,
-        "id": 1064,
+        "id": 7,
         "zone": "Battlefield"
       },
       {

@@ -18,7 +18,7 @@
         "fn": "activate",
         "card": "Coeurl",
         "instanceId": 1,
-        "id": 452,
+        "id": 4,
         "cost": "{1}{W}, {T}"
       },
       {
@@ -58,7 +58,7 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 452,
+        "id": 4,
         "controller": "you"
       }
     ]

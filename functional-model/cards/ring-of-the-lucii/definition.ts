@@ -17,6 +17,13 @@ import type { CardDefinition, Effect } from '../../card';
 // clause already establishes. `ValidTgts$ Permanent.nonLand` carries no
 // controller restriction, so `owner` stays omitted (the default combined
 // pool).
+//
+// recognizer-exception: tapTarget-effect-structural — this card's own real
+// text is "target NONLAND PERMANENT," never "target artifact or creature"
+// (`tapTarget-effect-structural`'s own 2026-09-16 widening added a
+// confirmed template for the LATTER, narrower phrase, ice-flan's own real
+// text, not this card's broader one) — a known, already-documented
+// approximation (see the comment above), not a recognizer bug.
 export const ringOfTheLucii: CardDefinition = {
   name: 'Ring of the Lucii',
   manaCost: '{4}',

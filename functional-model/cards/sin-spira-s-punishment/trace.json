@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Sin, Spira's Punishment",
         "instanceId": 1,
-        "id": 2258,
+        "id": 3,
         "name": "onEnterOrAttacks"
       },
       {
@@ -35,7 +35,7 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 2257,
+        "id": 2,
         "zone": "Exile",
         "controller": "you"
       },
@@ -47,7 +47,7 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2259,
+        "id": 4,
         "controller": "you"
       },
       {
@@ -75,7 +75,7 @@
         "fn": "trigger",
         "card": "Sin, Spira's Punishment",
         "instanceId": 1,
-        "id": 2261,
+        "id": 6,
         "name": "onEnterOrAttacks"
       },
       {

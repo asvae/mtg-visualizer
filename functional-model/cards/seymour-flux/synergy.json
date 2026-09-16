@@ -2,7 +2,20 @@
   "source": [
     {
       "event": "lifeloss",
-      "controller": "you"
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 41,
+          "end": 51
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      },
+      "triggeredBy": "onUpkeep"
     },
     {
       "event": "putCounter",
@@ -19,7 +32,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onUpkeep"
     },
     {
       "event": "drawCard",
@@ -35,7 +49,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onUpkeep"
     }
   ],
   "sink": []

@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Item Shopkeep",
         "instanceId": 1,
-        "id": 1251,
+        "id": 2,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -21,7 +21,7 @@
         "fn": "enters",
         "card": "Item Shopkeep",
         "instanceId": 1,
-        "id": 1251,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]

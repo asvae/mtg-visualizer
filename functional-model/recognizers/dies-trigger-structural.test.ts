@@ -4,6 +4,11 @@
 // `name:'onDies'`-shaped triggers this recognizer's own module doc comment
 // says were checked, including the one real, deliberate decline
 // (`al-bhed-salvagers`).
+//
+// SINK-only since 2026-09-17 — `expectedFacts` below asserts a single-entry
+// array (the trigger's own firing precondition only); see the recognizer's
+// own module doc comment for why the companion SOURCE fact this used to
+// also emit was removed.
 import { describe, expect, it } from 'vitest';
 import { loadFinCards } from './load-fin-cards.mjs';
 import { recognizeDiesTriggerStructural } from './dies-trigger-structural';
@@ -25,19 +30,6 @@ function expectedFacts(annotations: { target: 'oracle'; line: number; start: num
     {
       role: 'sink',
       fact: { event: 'dies', target: 'self', annotations },
-      provenance: { origin: 'parser', rule: 'dies-trigger-structural' },
-    },
-    {
-      role: 'source',
-      fact: {
-        event: 'dies',
-        from: 'Battlefield',
-        to: 'Graveyard',
-        controller: 'you',
-        subject: 'self',
-        target: 'self',
-        annotations,
-      },
       provenance: { origin: 'parser', rule: 'dies-trigger-structural' },
     },
   ];

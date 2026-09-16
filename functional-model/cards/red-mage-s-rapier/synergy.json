@@ -6,6 +6,46 @@
       "subject": {
         "token": "c_1_1_hero"
       }
+    },
+    {
+      "event": "entersBattlefield",
+      "to": "Battlefield",
+      "controller": "you",
+      "subject": {
+        "token": "c_1_1_hero"
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 40,
+          "end": 106
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "jobSelectCreateTokenAndEquip-effect-structural"
+      },
+      "triggeredBy": "onEnter"
+    },
+    {
+      "event": "grantType",
+      "type": "Wizard",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 110,
+          "end": 152
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousTypeGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [
@@ -28,6 +68,22 @@
       "provenance": {
         "origin": "parser",
         "rule": "equipmentWantsCreature-sink-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 12,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

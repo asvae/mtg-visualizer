@@ -11,10 +11,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 31,
-          "end": 85
+          "start": 0,
+          "end": 71
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "token-creation-structural"
+      }
     },
     {
       "event": "grantKeyword",
@@ -33,10 +37,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 92,
-          "end": 151
+          "start": 119,
+          "end": 133
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -52,10 +60,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 0,
-          "end": 29
+          "start": 92,
+          "end": 113
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
     }
   ]
 }

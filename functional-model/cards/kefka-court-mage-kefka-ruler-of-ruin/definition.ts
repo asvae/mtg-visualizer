@@ -31,6 +31,7 @@ export const kefkaCourtMage: CardDefinition = {
       // approximation, not a recognizer bug), see the comment above. Applies
       // to both this trigger and `onAttacks` below (same shared effects).
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'discard', owner: 'each', qty: 1 } satisfies Effect, { kind: 'drawCard', amount: 2 } satisfies Effect],
     },
     {

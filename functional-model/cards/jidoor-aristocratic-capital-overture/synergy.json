@@ -12,7 +12,19 @@
       "color": "U",
       "sourceText": "{T}: Add {U}.",
       "highlight": "{U}",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
   "sink": [

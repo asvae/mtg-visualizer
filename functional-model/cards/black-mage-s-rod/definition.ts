@@ -34,6 +34,7 @@ export const blackMagesRod: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

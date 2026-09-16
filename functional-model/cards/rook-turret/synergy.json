@@ -10,7 +10,12 @@
           "start": 46,
           "end": 65
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCard-effect-structural"
+      },
+      "triggeredBy": "onArtifactEnters"
     },
     {
       "event": "discard",
@@ -22,7 +27,12 @@
           "start": 78,
           "end": 92
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discard-effect-structural"
+      },
+      "triggeredBy": "onArtifactEnters"
     }
   ],
   "sink": [
@@ -38,10 +48,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 9,
+          "start": 0,
           "end": 44
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersTriggerTypeFilter-sink-structural"
+      }
     }
   ]
 }

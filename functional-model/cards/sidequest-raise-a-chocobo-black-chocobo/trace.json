@@ -126,7 +126,8 @@
         "target": "Grizzly Bears",
         "id": 10,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:hasSubtype",
@@ -139,7 +140,8 @@
         "target": "Grizzly Bears",
         "id": 11,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:hasSubtype",
@@ -152,7 +154,8 @@
         "target": "Black Chocobo",
         "id": 12,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       }
     ]
   },
@@ -206,7 +209,8 @@
         "target": "Black Chocobo",
         "id": 16,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       }
     ]
   }

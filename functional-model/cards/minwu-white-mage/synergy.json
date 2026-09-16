@@ -7,6 +7,7 @@
       "target": {
         "types": {
           "has": [
+            "Creature",
             "Cleric"
           ]
         }
@@ -17,9 +18,14 @@
           "target": "oracle",
           "line": 1,
           "start": 24,
-          "end": 70
+          "end": 46
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterAll-effect-structural"
+      },
+      "triggeredBy": "onLifeGained"
     }
   ],
   "sink": [
@@ -44,6 +50,7 @@
       "controller": "you",
       "types": {
         "has": [
+          "Creature",
           "Cleric"
         ]
       },
@@ -54,7 +61,11 @@
           "start": 47,
           "end": 70
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterAll-effect-structural"
+      }
     }
   ]
 }

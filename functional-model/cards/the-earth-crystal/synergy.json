@@ -33,6 +33,27 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "costReduction",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "G"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 43
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "spellCostReductionGrants-structural"
+      }
     }
   ],
   "sink": [

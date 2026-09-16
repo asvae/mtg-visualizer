@@ -15,12 +15,13 @@
         }
       },
       "targeted": true,
+      "untilEndOfTurn": true,
       "annotations": [
         {
           "target": "oracle",
           "line": 0,
-          "start": 16,
-          "end": 29
+          "start": 0,
+          "end": 47
         }
       ],
       "provenance": {
@@ -42,7 +43,7 @@
           "target": "oracle",
           "line": 0,
           "start": 0,
-          "end": 47
+          "end": 15
         }
       ],
       "provenance": {

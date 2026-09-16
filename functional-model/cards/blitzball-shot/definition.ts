@@ -10,7 +10,7 @@ export const blitzballShot: CardDefinition = {
   // composition doesn't change between the two calls), same convention
   // coral-sword's own split pump/keyword-grant pair already establishes.
   effects: [
-    { kind: 'pumpTarget', power: 3, toughness: 3 } satisfies Effect,
-    { kind: 'grantKeywordTarget', keyword: 'Trample', validType: 'creature' } satisfies Effect,
+    { kind: 'pumpTarget', power: 3, toughness: 3, untilEndOfTurn: true } satisfies Effect,
+    { kind: 'grantKeywordTarget', keyword: 'Trample', validType: 'creature', untilEndOfTurn: true } satisfies Effect,
   ],
 };

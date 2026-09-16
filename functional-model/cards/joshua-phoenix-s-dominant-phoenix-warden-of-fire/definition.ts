@@ -28,7 +28,12 @@ export const joshuaPhoenixsDominant: CardDefinition = {
       // discard count), never the fixed "draw two cards" this recognizer
       // looks for; a confirmed mismatch (this fixed-count approximation, not
       // a recognizer bug), see the comment above.
+      // recognizer-exception: discard-effect-structural — same
+      // fixed-count approximation, the other half: the real oracle text
+      // reads "discard UP TO two cards," never the bare "discard two
+      // cards" this recognizer looks for.
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'discard', owner: 'you', qty: 2 } satisfies Effect, { kind: 'drawCard', amount: 2 } satisfies Effect],
     },
   ],

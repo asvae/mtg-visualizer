@@ -69,6 +69,63 @@ real oracle text nonetheless with zero fact/annotation pointing at them).
 Reset to `textCoverageAudited: false` with a real `knownGaps` entry
 recording this finding — see that card's own `progress.json`.
 
+### `annotatedNonFactSpans` (annotation taxonomy, 2026-09-16)
+
+A new, OPTIONAL `progress.json` field — real oracle-text spans that ARE
+accounted for but deliberately carry no `Fact`/`AnnotationRef` at all
+(`Fact.annotations`'s own hard invariant is "must back a real Fact," which
+these spans by definition don't satisfy). Shape:
+
+```ts
+annotatedNonFactSpans?: Array<{
+  target: 'oracle' | 'typeLine'; // only 'oracle' does anything today — see below
+  line?: number; // required when target:'oracle' (oracle text is multi-line); irrelevant for typeLine
+  start: number;
+  end: number;
+  face?: 'front' | 'back'; // defaults to 'front', same convention Fact.face already uses
+  kind: 'definition-path' | 'rules' | 'lore';
+  note: string; // free text — what this span maps to / why it's fact-less
+}>
+```
+
+- **`definition-path`** — maps to something real in `CardDefinition` (an
+  `Effect`/`Trigger`/field), whether or not it produces a discrete `Fact`.
+  The motivating case: `ultima-origin-of-oblivion`'s own blight-counter
+  consequence clause — real, mechanically-enforced
+  (`CounterConditionalGrant`/`hasCounterConditionalLandTypeLoss` etc.,
+  `functional-model/ENGINE_GAPS.md`'s own "Counter-conditional continuous
+  effects" entry) but deliberately fact-less.
+- **`rules`** — real, accepted, currently-unmodeled rules text (an actual
+  gap something a future recognizer/engine pass could still close) —
+  distinct from `definition-path` (nothing backs it yet).
+- **`lore`** — flavor/non-mechanical text that will never need modeling.
+  Expected to be rare-to-empty for this pool in practice — real Magic
+  flavor text lives in Scryfall's separate `flavor_text` field, not
+  `oracle_text`, so genuine non-mechanical prose essentially never appears
+  in the text this whole coverage mechanism scans.
+
+All three `kind` values are computationally IDENTICAL as far as
+`computeTextCoverage` is concerned — a span in any of the three buckets
+simply stops counting as a coverage `gap`. The 3-way split is for human/
+reviewer legibility (why is this fact-less), not something the pass/fail
+math distinguishes; don't expect `card-status.ts`'s classifier (or
+anything else) to treat one `kind` differently from another.
+
+`functional-model/scripts/text-coverage.mjs`'s `computeTextCoverage` takes
+this array as an optional third argument, marking each span covered via
+the exact same per-line loop a real `Fact.annotations` entry already gets
+— `ratio`/`gaps` treat a `nonFactAnnotations` entry and a real Fact's own
+annotation identically. `functional-model/scripts/compute-card-status.mjs`
+and `verify-text-coverage.mjs` both now read a card's own `progress.json`
+(read-only — neither script writes to it) and thread this field through;
+`card-status.ts`'s own `classifyCardStatus` needed NO changes at all (it
+only ever reads `textCoverage.gaps.length`).
+
+**Populate opportunistically, not via a pool-wide retroactive audit** —
+same incremental, as-you-touch-a-card discipline `knownGaps` itself
+already follows. `ultima-origin-of-oblivion` is the first real entry
+(confirmed flips `green` in a regenerated `data/fin/fin_card_status.json`).
+
 ## Served shape (card agent owns, `server/api/_cardShaping.ts`)
 
 - `ScryfallCard` / `CardFace` / `ImageUris` interfaces in
@@ -507,6 +564,143 @@ hand-authored facts (unmarked, as always) and parser-derived facts —
     one, `card` may want `factSourceText` to represent all of them (e.g.
     joined text, or the row's own key not silently ignoring later entries).
 
+## `destroy` implies `dies` at MATCH time — no more companion `dies` fact (2026-09-16)
+
+Real user-reported authoring-time redundancy, fixed: `destroy-effect-
+structural.ts`/`destroyProgram-effect-structural.ts` used to emit TWO
+source facts for one destroy effect — `{event:'destroy', target, targeted:
+true}` (the ACT) AND `{event:'dies', from:'Battlefield', to:'Graveyard',
+target, targeted:true}` (the CONSEQUENCE), both anchored to the IDENTICAL
+annotation span (confirmed on `battle-menu`/fin-9). CR 700.4: a destroy
+that actually resolves against a real target necessarily kills it, so the
+second fact said nothing the first didn't already imply — pure
+duplication, not new information. **Both recognizers now emit ONLY the
+`destroy` fact; the paired `dies` fact is gone, on-disk AND from the
+recognizer's own output.** 9 real affected cards had their stale on-disk
+`dies` companion fact removed by hand (scoped `apply-recognizers.mjs` is
+additive-only, so it can't retract a fact its own recognizer used to emit):
+`battle-menu`, `dion-bahamut-s-dominant-bahamut-warden-of-light`,
+`fate-of-the-sun-cryst`, `summon-bahamut`, `ultima`, `coliseum-behemoth`,
+`lunatic-pandora`, `sephiroth-s-intervention`,
+`sidequest-hunt-the-mark-yiazmat-ultimate-mark`.
+
+**The matching capability is NOT lost — it moved to `synergy.ts`'s
+`factsInteract` instead of living as a second authored fact.** A
+`destroy`-event SOURCE fact now directly satisfies:
+- a ZONE-shaped presence/arrival want naming the Graveyard specifically
+  (`to:'Graveyard'`, e.g. Ardyn the Usurper's own `types:{has:['Creature']}`
+  want), checked against the destroy's own guaranteed `target.types.has`
+  (conservative — a `hasAny`/`not`-only or absent target guarantees no
+  SPECIFIC type, so it only satisfies an UNCONSTRAINED graveyard want).
+- an EVENT-shaped `event:'dies'` want with its own `target` type filter
+  (Al Bhed Salvagers/Jenova Ancient Calamity/G'raha Tia's own real shapes),
+  same guaranteed-type check.
+- an EVENT-shaped `event:'dies', target:'self'` want ("when THIS creature
+  dies") — a WEAKER, "could this destroy legally target the wanting card"
+  compatibility check (`satisfiesConstraints` against the wanting card's
+  own static attrs), not a guarantee — mirrors the same check
+  `factsInteract`'s general event-matching branch already makes for any
+  OTHER event kind's own `target` filter against a `target:'self'` want.
+  Declines (never vacuously matches) when the destroy has NO `target`
+  filter at all — an unrestricted "destroy target permanent" does not
+  imply every self-dies want in the pool.
+- Declines (returns false) for any want carrying a `cmc`/`power`/
+  `toughness`/`name`/`amount` constraint — no real pool sink needs more
+  than `types` on a graveyard-arrival want today; grow only if one does.
+
+Verified via a real, full-pool `find-synergies.mjs` before/after diff
+(`(producer, wanter)` card-pair level, not just line-count): **zero real
+card-pairs lost any edge** — every match the old `dies` fact used to
+provide is still produced (either via the widened `destroy` match, or
+because the pair already had another edge and the removed line was a pure
+duplicate label). The diff also shows real, intended NEW matches this
+widening closes for the first time: Ardyn the Usurper, Al Bhed Salvagers,
+Jenova Ancient Calamity, and G'raha Tia now correctly receive edges from
+every real destroy-effect card whose own `target` filter admits their
+type, which the old shape-partitioned matcher (zone-shaped facts never
+matched event-shaped wants, `SYNERGY_DESIGN.md`'s own "Fact unification"
+section) never allowed even when both the `destroy` AND `dies` facts
+existed side by side.
+
+**`card` agent**: no served-shape change — `destroy`-shaped facts already
+render/serve exactly as before (`describeFact`'s own `destroy` label is
+unchanged). The only visible difference is that a destroy-effect card's
+own Facts tab now shows ONE row for its destroy effect instead of two
+near-identical rows (`destroy` + `dies`) pointing at the same oracle-text
+span — a strict readability improvement, not a data-shape change to
+handle. `data/fin/fin_card_status.json` regenerated after this change:
+`0` cards changed status/reasons (the removed fact's own annotation span
+was already covered by the surviving `destroy` fact, so text-coverage
+percentages are unaffected).
+
+## `Fact.triggeredBy` (causal link, 2026-09-16)
+
+New, optional `Fact.triggeredBy?: string` (`functional-model/synergy.ts`) —
+names the `Trigger.name` that produced this effect fact, when the effect
+came from a trigger at all. Purely informational, same bucket as
+`targeted`/`untilEndOfTurn`/`costReductionPerControlled` (not consulted by
+`factsInteract`, not added to `themeOf`).
+
+- Only set when the producing effect's own `structural-effects.ts`
+  `EffectOccurrence.from.kind === 'trigger'` — an activated-ability-sourced
+  or top-level (bare `effects: []`, no `triggers` wrapper) effect never
+  gets a value, by design; most facts today still have none at all.
+- A card can carry multiple independent trigger groups (2+ distinct
+  `triggeredBy` values) — each is its own separate cause→effects cluster,
+  never cross-linked.
+- Not (yet) a full causal graph: this only links an effect fact back to
+  the trigger that fired it, never effect-enables-effect chains. That
+  bigger `causedBy` graph is a deliberately separate, still-deferred
+  follow-up (waiting on the `program-ast-walker.ts` maturing further).
+- `card` consumes it in the Facts tab: hovering a fact with a real
+  `triggeredBy` value highlights every other visible fact sharing that
+  same value (a second, distinct shade from the hovered row itself) —
+  see `app/components/CardDetailTabs.vue`'s `factsByTrigger`/
+  `triggerSiblingKeys`.
+- Population is still partial as of this writing — only
+  `entersBattlefield-self-trigger-structural.ts` sets it so far, and
+  backfilling it onto already-recognized facts is a separate, in-progress
+  effort (`apply-recognizers.mjs` won't rewrite an existing fact's other
+  fields on a coreKey match by default). **Superseded same day, later —
+  see below**: a "widen populate" pass (same 2026-09-16) subsequently
+  added `triggeredBy` population to ~20 more recognizer files (`dealDamage-
+  effect-structural.ts` and every other file whose own module comment cites
+  "causal-links 'widen populate' pass"), plus a dedicated
+  `apply-recognizers.mjs` backfill branch that syncs `triggeredBy` onto an
+  already-on-disk fact on a `coreKey` match even when every other field
+  already agreed (the one deliberate exception to that script's own
+  "additive only" rule, since this field is purely informational and
+  always re-derivable) — population is much broader than "only one
+  recognizer" now, though still not exhaustive across the whole catalog.
+- **SOURCE-only — architecture correction, 2026-09-16, later still (real
+  user-reported issue, `cloudbound-moogle`'s own `moveSearchLibrary`
+  sink fact the motivating case)**: `triggeredBy` must NEVER be set on a
+  `role:'sink'` fact, full stop, no exceptions. A SINK fact represents a
+  structural precondition/"want" (e.g. "this tutor only works if the
+  library actually has a matching card in it") — a derivative fact about
+  what a source's own target constraint requires to exist, never itself a
+  caused EFFECT. Only a SOURCE fact (the actual effect that fired) is
+  something a trigger can be said to have CAUSED. The "widen populate"
+  pass above had briefly set `triggeredBy` on sink facts too (including a
+  now-retired "harmless grouping tag" rationale on the SINK that IS a
+  trigger-condition fact itself, e.g. `entersBattlefield-self-trigger-
+  structural.ts`, and a now-retired "only set a group sink's own
+  `triggeredBy` when every effect in the group agrees" mechanism on
+  `grantKeywordAll-effect-structural.ts`/`pumpAllCreaturesYouControl-
+  effect-structural.ts`) — all removed; every recognizer that ever emitted
+  a sink-side `triggeredBy` had its emission (and, where the ONLY reason
+  for the surrounding plumbing was feeding a sink, the plumbing itself)
+  deleted. 84 real on-disk cards (102 sink facts total) had a stale
+  on-disk `triggeredBy` from before this correction, migrated via a
+  one-off pass (`apply-recognizers.mjs`'s own retag path is additive-only
+  and won't clear an existing field, so this needed a separate script, not
+  a pool-wide recognizer re-run) — `progress.json` `review:'human'` was
+  reset to `'ai'` on the 3 affected cards that still had it
+  (`check-verified-regressions.mjs` catches this automatically; confirmed
+  live). SOURCE facts are completely unaffected by this correction — every
+  SOURCE-side `triggeredBy` populated by the widen-populate pass above is
+  untouched.
+
 ## `Fact.value` removed from the schema entirely (2026-09-14)
 
 Not a further step in the "deprecated pool-wide" status this field already
@@ -836,6 +1030,110 @@ from everything (edges, facts, etc). No -1, no nothing."
   rendered — UI presentation concerns (grouping, labels, collapse/expand)
   belong to `card`.
 
+## Per-card dashboard status (`data/fin/fin_card_status.json`) — 2026-09-16
+
+A NEW, separate, pool-wide generated artifact — not part of a single
+card's own `functional-model/cards/<slug>/` output above, but built from
+the exact same per-card sources (`definition.ts`, `synergy.json`, real
+Scryfall oracle text, plus `progress.json`'s own `review`/`reviewCaveat`
+fields, see below). `{ generatedAt, set, cards: [{ number, name, status:
+'verified'|'uncertain'|'re-review'|'green'|'yellow'|'orange'|'red'|'gray',
+reasons: string[] }] }`
+— one entry per in-scope FIN card, for a future set-scoped dashboard page
+(not yet built — `ui`/`card`'s own follow-up). Regenerate via `npm run
+card-status`; treat the file as "as of `generatedAt`," not a
+guaranteed-current baseline. See `scripts/AI_FACT_ELIMINATION_PROCESS.md`'s
+own "Per-card dashboard status" section for the full bucket-definition
+writeup and `functional-model/card-status.ts`'s own header for the
+classifier itself. Whoever builds the dashboard page should read this file
+directly (or wrap it in a thin `server/api/` route if live-without-a-rebuild
+freshness turns out to matter more than the current "regenerate on demand"
+model) rather than re-deriving the classification client-side.
+
+**`verified` (2026-09-16)** — a NARROWING of `green`, not a 7th/parallel
+bucket: a card that would otherwise be `green` (every fact recognizer-
+derived, 0 real text-coverage gaps) AND whose own `progress.json` has
+`review: 'human'` gets `verified` instead — a human has actually reviewed
+this card's already-complete facts, a step beyond mere automated
+completeness. `yellow`/`orange`/`red`/`gray` are never upgraded this way
+even if `review` happens to be `'human'` on such a card (e.g. a stale
+review predating a since-changed fact — see this project's own
+review-status-reset convention, which resets `review` back to `'ai'` on
+any authored-content change, so a genuine `'human'` value here always
+describes the CURRENT content). UI color: bright/lime `#84cc16` ("Verified"),
+distinct from plain green's `#22c55e`.
+
+**`uncertain` (2026-09-17)** — ALSO a narrowing of `green`, not a separate
+top-level bucket, and checked BEFORE the `verified` upgrade above (so it
+wins even over an already-`human`-reviewed card): a card that would
+otherwise be `green` (or `verified`) AND whose own `progress.json` carries
+a non-empty, free-text `reviewCaveat` field gets `uncertain` instead. A
+`reviewCaveat` is a human (or an agent acting on a human's explicit
+direction) recording one SPECIFIC, real conceptual gap that can't
+currently be modeled as a `Fact` at all — deliberately NOT a text-coverage
+gap (those are already `yellow`/`orange`, and the oracle text here can
+already be 100% annotation-covered) but a missing piece of Fact
+*vocabulary* itself. Motivating card: Cloud, Midgar Mercenary (fin/10) —
+its trigger-doubling static is fully covered by 2 real, recognizer-derived
+sink facts for the doubling's own PRECONDITION, but there is no generic
+"this card has/grants a triggered ability" Fact category to model the
+doubling EFFECT itself as a produce/consume graph relation; its
+`progress.json`'s own `reviewCaveat` documents exactly this. A caveat is a
+STRONGER, more specific signal than plain `review: 'human'` (it names the
+exact remaining gap rather than just confirming cleanliness), which is why
+it wins over `verified` when both are present on the same card.
+Deliberately does NOT apply to `yellow`/`orange`/`red`/`gray` — same
+"only narrows an otherwise-green outcome" discipline `verified` already
+established: a caveat's claim ("as good as it gets right now, modulo this
+one known gap") is only meaningful once the card has reached full
+mechanical completeness on the ordinary track; on a yellow/orange/red/gray
+card there's still a real, ordinary, actionable ALREADY-named gap
+(uncovered span / unprovenanced fact / unsupported construct / no
+authoring at all), and consulting the caveat there would mask or
+misrepresent that. A `reviewCaveat` present on such a card is simply
+ignored by the classifier (never changes the bucket either direction) —
+the field itself may still be present in `progress.json` as a human's own
+note-to-self, it just has no classification effect until the card earns
+its way to green/verified first. Not a UI-editable field (same as
+`knownGaps`/`annotatedNonFactSpans` — hand/agent-authored directly into
+`progress.json`, no input control anywhere). UI color: blue `#3b82f6`
+("Uncertain"), distinct from all other bucket colors.
+
+**`re-review` (2026-09-17)** — ALSO a narrowing of `green`, not a separate
+top-level bucket, but checked BEFORE both `uncertain` and `verified` above
+(so it wins over both on the same card — see the priority rationale below):
+a card that would otherwise be `green` AND whose own `progress.json` has
+`review: 'regression'` gets `re-review` instead. `review: 'regression'` is
+written by exactly ONE code path in the whole pool — the "Verified-snapshot
+regression guard" section below's own `check-verified-regressions.mjs`
+auto-reset: this card WAS `review: 'human'`-confirmed at some point (a real
+`verified-snapshot.json` exists) but its content has since drifted from
+that confirmed baseline. This is the whole point of the 3-value `review`
+field (`'ai' | 'human' | 'regression'`, see that section below): a card
+that regresses from a genuine human confirmation must never collapse to
+the same bucket/value as a card nobody has ever reviewed — both used to
+read as plain `'ai'`/`green` with no way to tell them apart, which is
+exactly the gap this bucket closes. Deliberately distinct from a manual
+"Unconfirm" (which always writes plain `'ai'` regardless of prior value,
+untouched by this change — a deliberate human un-confirm is a different
+signal than an automatic drift-detection); a fresh human confirm on a
+`re-review`/`regression` card transitions it straight back to
+`verified`/`'human'`, same as confirming a plain `green`/`'ai'` card.
+**Priority vs `uncertain`**: `re-review` wins when a card could arguably
+satisfy both (once `'human'`-reviewed with a caveat noted, then drifted) —
+a caveat's "you already know about this one static gap, nothing else is
+wrong" claim is no longer trustworthy once the content has demonstrably
+changed since a human last looked at ANY of it; the broader "go look
+again" signal subsumes the narrower, now-potentially-stale one. Deliberately
+does NOT apply to `yellow`/`orange`/`red`/`gray` — same "only narrows an
+otherwise-green outcome" discipline `verified`/`uncertain` already
+established: a card that's regressed all the way to a real, ordinary
+coverage gap is already correctly flagged by that gap itself, and layering
+`re-review` on top would be noise, not signal. UI color: light/sky blue
+`#7dd3fc` ("Re-review"), deliberately a much lighter shade than
+`uncertain`'s own more saturated `#3b82f6` so the two read as visually
+distinct at a glance, not a shade variation of the same signal.
+
 **Engine has no connection to card/UI, full stop.** Logging or similar
 instrumentation baked into engine code is fine; engine code being
 imported and executed by a UI component, or engine changing anything
@@ -847,3 +1145,310 @@ from this rule and should eventually move to card-owned code (engine
 would keep owning the raw `Fact`/`Constraints` vocabulary those functions
 read, just not the templating itself). Not urgent, but don't add more
 engine-owned functions to that import going forward.
+
+## Verified-snapshot regression guard (`card`-owned, 2026-09-16)
+
+A hard, PHYSICAL (deep-equality, never AI/semantic-judgment) diff guard
+against a human-reviewed card's facts silently drifting away from what
+was actually confirmed — the moment a human flips a card's FACTS review
+`'ai'` -> `'human'` is "this is perfect, protect it," and this mechanism
+makes that permanent rather than advisory.
+
+- **Capture, `server/api/card/review-status.ts`** — on a REAL `field ===
+  'review'` transition (the CURRENT on-disk value is read first; a no-op
+  re-POST of an already-`'human'` value does NOT re-snapshot, matching
+  this route's other existing "only on real change" checks), that card's
+  CURRENT `synergy.json` is read and written, synchronously, as part of
+  the same request, to a NEW checked-in file:
+  `functional-model/cards/<slug>/verified-snapshot.json`:
+  ```ts
+  {
+    capturedAt: string; // ISO timestamp
+    facts: { source: Fact[]; sink: Fact[] }; // synergy.json's own real top-level shape — NOT a flat "facts" array
+    annotatedNonFactSpans?: AnnotatedNonFactSpan[]; // from progress.json, only when present there
+  }
+  ```
+  Re-reviewing after a real fix (`'ai'` -> `'human'` again, on the SAME
+  card, later) re-baselines this snapshot too — same "always re-snapshot
+  on confirm, not just the first time" behavior the pre-existing
+  `oracleTextSnapshot` field already has. A malformed/missing
+  `synergy.json` at capture time skips the snapshot rather than failing
+  the whole review-status write (this card just isn't covered by the
+  guard until it's valid and re-reviewed).
+- **Check, `functional-model/scripts/check-verified-regressions.mjs`** —
+  plain `node` (no TS import, no vite-node/tsx needed), no slug filter,
+  always whole-pool. Globs every real `verified-snapshot.json`, loads that
+  card's CURRENT `synergy.json`/`progress.json`, and deep-compares:
+  `source`/`sink` arrays are compared **index-aligned and
+  order-sensitive** (a reorder is a real regression per this project's
+  "Facts stay text-ordered" convention, never silently absorbed as a
+  no-op); `annotatedNonFactSpans` the same way. A mismatch prints a
+  readable per-card report (which index added/removed/changed, old vs new
+  JSON for a changed entry). Exit code 1 if anything mismatched anywhere
+  in the pool, 0 if every snapshot still matches.
+- **Auto-reset, physical enforcement of the pre-existing "review resets on
+  change" rule** — if a mismatched card's `progress.json` `review` is
+  STILL `'human'`, the check script both flags it more severely in its
+  output AND writes `review: 'regression'` back to that card's
+  `progress.json` itself, right there, no human judgment call needed (see
+  this section's own "Retroactive `'regression'` correction" bullet below
+  for why it's this THIRD value now, not plain `'ai'`). A mismatch on a
+  card already `'ai'` (reset by something else, or never was `'human'`) is
+  a plain, non-severe mismatch report, no double-reset.
+- **Wired into `apply-recognizers.mjs`** as an automatic last step of
+  every run, full pool regardless of what slugs that run itself was
+  scoped to (this diffing is nearly free next to real engine execution) —
+  also runnable standalone, documented in
+  `functional-model/CARD_RESULTS_QUICKSTART.md`.
+- **Pure diff primitives** (`deepEqual`/`diffFactList`/`diffSnapshot`,
+  exported from the same `.mjs` file) are unit-tested directly —
+  `functional-model/check-verified-regressions.test.ts` — same "the
+  checker itself has real teeth" precedent `annotation-coverage.test.ts`
+  already established.
+- **Not a `synergy.json`/`progress.json` schema change** — `verified-
+  snapshot.json` is a wholly new, separate on-disk file; no existing
+  consumer of either of those two files needs to change.
+- Backfilled 2026-09-16 for the 5 real pool cards that were already
+  `review: 'human'` before this mechanism existed (confirmed before
+  authoring: their CURRENT on-disk `synergy.json` is the reviewed
+  baseline) — `aerith-rescue-mission`, `dwarven-castle-guard`,
+  `moogles-valor`, `the-crystal-s-chosen`, `summon-bahamut`.
+- **Retroactive `'regression'` correction, 2026-09-17** (`re-review`-bucket
+  rollout): before this task, the auto-reset above wrote plain `'ai'`
+  (its OLD behavior) — `aerith-rescue-mission` and `moogles-valor` had
+  already been silently reset that way on a real, confirmed mismatch
+  against their own `verified-snapshot.json`, indistinguishable at the
+  time from a card nobody ever reviewed. Corrected in place to
+  `'regression'` (their `progress.json`'s own `notes` document the
+  correction) since both genuinely match that definition — a real prior
+  human confirm plus a real detected drift since, only ever left at
+  `'ai'` as a stale artifact of the OLD behavior. Two other named
+  candidates were checked and NOT touched: `summon-bahamut`/`ultima-
+  origin-of-oblivion` were still `review: 'human'` with NO current
+  mismatch (never actually drifted, correctly untouched), and `ashe-
+  princess-of-dalmasca` had, by the time of this check, already been
+  independently re-confirmed to a fresh, non-drifted `review: 'human'`
+  by concurrent work elsewhere in the pool (also correctly left alone).
+  `dwarven-castle-guard` needed no manual correction — a concurrent
+  recognizer-pool change during this same task ran the (already-updated)
+  auto-reset script live and it wrote `'regression'` on its own, the
+  intended real-world behavior of the fix, not a special case.
+
+## `dies-trigger-structural.ts` is now SINK-only — its companion SOURCE fact removed as a real over-claim (2026-09-17)
+
+Real, twice-repeated user correction, motivating card `aerith-gainsborough`
+(fin/4): `dies-trigger-structural.ts` used to emit TWO facts per
+self-referential "When/Whenever `<self>` dies" trigger — the trigger's own
+firing PRECONDITION (a SINK, `{event:'dies', target:'self'}`, kept,
+unchanged) and a SOURCE fact asserting the SAME dying from the CONSEQUENCE
+side (`{event:'dies', from:'Battlefield', to:'Graveyard', controller:'you',
+subject:'self', target:'self'}`, **removed**).
+
+**Why the SOURCE half was a real over-claim, not a legitimate consequence
+fact** — this is genuinely different from `destroy-effect-structural.ts`'s
+own real `dies`-implying match (the section immediately above this one, 2026
+-09-16): a `destroy` effect is an ACT this card's own resolution performs,
+and CR 700.4/704.5g make its target's death a CERTAIN follow-through the
+instant that destroy actually resolves against something — a genuine
+consequence, always eligible once the act happens. A self-referential
+"When/Whenever `<self>` dies" trigger's own SINK, by contrast, is not an act
+this card performs at all — it is a PRECONDITION the card merely reacts to
+if some wholly separate cause (combat, an opponent's removal, an unrelated
+state-based action) happens to kill it. Nothing about a card carrying this
+trigger makes that card any more or less likely to actually die than a
+plain vanilla creature with no dies-trigger whatsoever, so the removed
+SOURCE fact was granting a real, matchable "this card produces a Graveyard
+arrival" claim (and the cross-card synergy edges that claim produced) as an
+ARBITRARY byproduct of an unrelated ability's own text existing on the
+card — a plain vanilla creature with the identical real chance of dying
+got no such fact at all, purely because it happened not to also carry a
+self-dies trigger.
+
+**Real, disclosed edge losses — checked via a full-pool `find-synergies
+.mjs` before/after diff, not assumed**: of the 7 real pool cards that had
+this SOURCE fact (`aerith-gainsborough`, `dwarven-castle-guard`,
+`undercity-dire-rat`, `magic-pot`, `ancient-adamantoise`,
+`vincent-valentine-galian-beast`'s own back face,
+`garland-knight-of-cornelia-chaos-the-endless`'s own back face):
+- **4 lose ZERO real cross-card edges** (`magic-pot`, `ancient-adamantoise`,
+  `vincent-valentine-galian-beast`, `garland-knight-of-cornelia-chaos-the-
+  endless`) — each ALREADY carries its own separate, hand-authored
+  `{zone:'Graveyard', subject:'self'}` fact (on the front face, for the two
+  transforming cards — `face` is purely a rendering hint `synergy.ts`'s
+  matcher never consults, so a front-face fact's `subject:'self'` resolves
+  the exact same top-level `CardDefinition` type line the back-face
+  recognizer fact would have) — confirmed identical wanter sets for both
+  facts before removal, so only a duplicate label line (`dies` vs.
+  `graveyard presence`) disappears per pair, never a real edge.
+- **3 lose real edges** (`aerith-gainsborough`, `dwarven-castle-guard`,
+  `undercity-dire-rat` — none had any other Graveyard-arrival source fact)
+  — each loses the identical 21-real-card set: Ardyn the Usurper,
+  Cantankerous Keepers, Cloud of Darkness, Deadly Embrace, Eden Seat of the
+  Sanctum, Elixir, Emet-Selch Unsundered, Evil Reawakened, Exdeath Void
+  Warlock (x2 — two separate real sink facts on that card independently
+  matched), Fight On!, Golbez Crystal Collector, Gran Pulse Ochu, Ignis
+  Scientia, Joshua Phoenix's Dominant, Magic Pot, Qutrub Forayer, Rydia's
+  Return, Sin Spira's Punishment, The Final Days, Thranduil Sindarin Liege,
+  Vanille Cheerful l'Cie.
+- Zero new matches gained anywhere in the pool (a pure removal, no matcher
+  widening accompanied it this time — see "Not built this pass" below).
+
+**Not built this pass, flagged as a real, separate, much bigger scope
+question**: a MORE GENERAL "any creature could die" synthetic match-time
+fact (mirroring `synergy.ts`'s own `isNormalPermanent`/`syntheticCastFact`/
+`syntheticEntersBattlefieldFact`/`isNormalInstantOrSorcery`/
+`syntheticInstantSorceryGraveyardFact` family) would recover the 3 real
+losses above (and extend the same claim to every OTHER creature in the pool
+that has no dies-trigger at all, correctly closing the asymmetry this
+whole section describes). Deliberately NOT built here: every existing
+member of that synthetic-fact family represents an UNCONDITIONAL,
+100%-certain-given-only-the-type-line default (a normal permanent's cast
+always happens from hand; a normal Instant/Sorcery always resolves to its
+owner's graveyard) — "a creature dies" is not that kind of fact at all, it
+is conditional on gameplay that may never happen, for EVERY creature
+equally. Building it would be a genuinely new "possible, not certain"
+fact-vocabulary category, and — because it would apply pool-wide to every
+creature, not just 7 cards — a much bigger graph-density change than this
+task's own scope (every creature in the pool would newly connect to every
+Graveyard-payoff card). Recommended as a real, worthwhile follow-up
+decision, not built unilaterally.
+
+**Verification**: `npx tsc --noEmit` clean (0 errors). `npx vitest run
+functional-model` 1017/1022 (5 skipped, unrelated) —
+`dies-trigger-structural.test.ts` rewritten to a single-entry
+`expectedFacts` (SINK only). `scripts/verify-synergy.mjs` — 7 affected
+slugs + full pool (320 checked): 0 hard failures either way. 6 of the 7
+affected cards' `progress.json` were already `review:'ai'` (a documenting
+note added to each, no reset needed); `dwarven-castle-guard` was
+`review:'human'` — `check-verified-regressions.mjs` (plain `node`, NOT
+`vite-node` — the latter silently produced no output/exit 0 for this
+particular script in this session, a real tooling quirk worth remembering)
+correctly auto-reset it to `review:'regression'` (see this file's own
+stale-doc correction on that mechanism, immediately above). `data/fin/
+fin_card_status.json` regenerated (`npm run card-status`) — `dwarven-
+castle-guard`'s own entry now reads `status:'re-review'` with an accurate
+reason string.
+
+**`card` agent**: no served-shape change — `dies`-shaped facts already
+render/serve exactly as before (`describeFact`'s own `dies` label is
+unchanged, still produced by the surviving SINK fact and, for the 4
+no-real-loss cards, the surviving separate `zone:'Graveyard'` fact). The
+only visible difference on a card page is that the 3 real-loss cards' own
+Facts tab no longer shows a SOURCE row claiming "dies" as something the
+card itself produces (it never should have) — a strict accuracy
+improvement, and the 21 real cross-card synergy edges those 3 cards used
+to show on the graph are genuinely gone, not a rendering artifact to chase
+down as a bug.
+
+## "Confirm (Uncertain)" real UI action for `reviewCaveat` — full snapshot/regression-guard parity (2026-09-17)
+
+Prior to this, `progress.json.reviewCaveat` (the `uncertain`-bucket field
+documented above) was ONLY hand/agent-authored directly into `progress.json`
+— no UI control existed to set it, and it never participated in the
+verified-snapshot regression guard the way a plain `review:'human'` confirm
+does. This closes that gap: **uncertain is handled identically to a plain
+verified confirm for every purpose that matters — same `review:'human'`
+write, same snapshot capture/re-baseline, same regression-guard
+participation** — the caveat is purely an additional annotation on an
+otherwise ordinary review pass, never a separate/weaker kind of confirm.
+
+- **`POST /api/card/review-status` request body widened**: `{ name: string,
+  field: 'review' | 'scenariosReview' | 'interactionsReview', reviewed:
+  boolean, set?: string, number?: string, reviewCaveat?: string }` — the new
+  `reviewCaveat` key is only ever meaningful for `field:'review'` +
+  `reviewed:true`; ignored entirely for the other two axes and for
+  `reviewed:false` (Unconfirm leaves an existing `reviewCaveat` on disk
+  untouched, same "un-reviewing doesn't erase evidence of prior review"
+  reasoning `oracleTextSnapshot` already follows).
+  - Non-empty (trimmed) `reviewCaveat` → written to
+    `progress.json.reviewCaveat`, `review` still set to `'human'` (an
+    "Uncertain confirm" IS a real review pass, not a weaker one).
+  - Omitted/empty on a **plain** confirm (the pre-existing button, body
+    simply has no `reviewCaveat` key) → if the card previously had one, it
+    is **cleared**. Decided this is correct after checking both real
+    consumers directly: `functional-model/card-status.ts`'s
+    `classifyCardStatus` and `functional-model/scripts/
+    check-verified-regressions.mjs` both only ever READ `reviewCaveat`
+    (never write it, never diff it as part of the verified-snapshot
+    regression check) — clearing it here has no knock-on effect on either,
+    confirmed by direct source inspection before deciding, not assumed.
+- **Response body widened to match**: `{ [field]: <new value>, reviewCaveat?:
+  string | null }` — the `reviewCaveat` key is only present when
+  `field:'review'` (`null` when absent, matching this route's other
+  "explicit null over undefined" convention), so the caller can reconcile
+  local state (e.g. pre-fill a later "Confirm (Uncertain)" prompt) without a
+  second round trip.
+- **Verified-snapshot capture condition WIDENED, `server/api/card/
+  review-status.ts`** — ground-truth-checked directly against the real code
+  (not assumed from an earlier description): the capture used to fire ONLY
+  on a genuine `previousFieldValue !== 'human'` transition (a real ai/
+  regression → human confirm), never on re-confirming a card already at
+  `'human'`. Now ALSO fires whenever `reviewCaveat` itself changes
+  (`caveatChanged` — added, edited, or cleared) even when `review` was
+  already `'human'` going in: an "Uncertain confirm" click on an
+  already-verified card, or a plain confirm that clears a stale caveat off
+  an already-uncertain one, is exactly the moment a human is deliberately
+  re-affirming (or downgrading the confidence of) this exact review right
+  now — the same underlying event a fresh ai→human transition already
+  re-baselines for, just without the `review` value itself moving. A true
+  no-op re-POST (same `reviewed:true`, same caveat text, `review` already
+  `'human'`) still correctly skips the snapshot, unchanged.
+- **`FunctionalModelData.reviewCaveat: string | null`** (`server/api/card/
+  [set]/[number].ts`) — newly served, both the dev (live `progress.json`
+  read) and production (`fmBundle.ts`/`build-fm-bundle.mjs`) branches. Lets
+  the card page pre-fill its "Confirm (Uncertain)" prompt with whatever's
+  already on file.
+- **Real, pre-existing gap found and fixed alongside this, `scripts/
+  build-fm-bundle.mjs`**: the production bundle builder's own
+  `classifyCardStatus` call never threaded `reviewCaveat` through at all
+  (only `review`) — meaning a card could NEVER classify as `uncertain` via
+  the production bundle path, only via the dev-live or pool-batch
+  (`compute-card-status.mjs`/`card-status-batch.mjs`) paths, which both
+  already did this correctly. Fixed (`reviewCaveat` now read off
+  `progress.json` and passed into `classifyCardStatus`, plus carried on the
+  bundle entry itself as `FmBundleEntry.reviewCaveat?: string`) — this was a
+  real latent bug predating this task, not something this task's own new
+  UI path introduced. **Not yet regenerated**: `data/functional-model/
+  fm-bundle.json` itself still reflects the old (buggy) computation as of
+  this writing — regenerating now would also bake in unrelated, currently
+  in-flight uncommitted card edits from concurrent sessions, so left for the
+  next normal "regenerate, commit" pass rather than done here.
+- **UI, `CardDetailTabs.vue`**: a third button, "Confirm (Uncertain)", next
+  to the existing Confirm/Unconfirm toggle in the Facts row — always a
+  forced confirm (never a toggle, even on an already-`human` card),
+  `window.prompt()`-based caveat entry (pre-filled with the card's current
+  caveat if any; cancelling does nothing; a real but empty-after-trim
+  submission is treated as a plain confirm, per explicit design decision —
+  an "uncertain confirm with no reason" isn't a real state). Deliberately
+  its own small button rather than a widened `ReviewStatusBadge` variant
+  (that component's `ReviewStatus` vocabulary is shared with the unrelated
+  keywords page) — the actual 3-way visual readout instead reuses the
+  EXISTING fact-authoring-status square next to the Facts tab label
+  (`cardStatus`/`CARD_STATUS_META`, already distinguishes `uncertain` from
+  `verified` from every other bucket), now made same-tab-reactive to this
+  action (and the plain Confirm/Unconfirm one) via a new local
+  `cardStatusOverride`, mirroring `app/pages/app/status/index.vue`'s own
+  pre-existing green↔verified optimistic-overlay pattern — extended here to
+  the full green/verified/uncertain triad and widened on that status-grid
+  page too (`useReviewStatusBus.ts`'s `ReviewStatusChange` gained an optional
+  `reviewCaveat` field so a "Confirm (Uncertain)" click on the card page
+  correctly narrows to `uncertain` there too, not just to `verified`).
+- **Live-verified against the real dev server** (see `card` agent's own
+  notes.md for the full transcript): `POST /api/card/review-status` with a
+  real caveat on `cloud-midgar-mercenary` (fin/10, already-real
+  `uncertain`-bucket card, `review` was `'ai'` going in) → `review:'human'`,
+  `reviewCaveat` written, `verified-snapshot.json` created,
+  `/api/card/fin/10`'s live `cardStatus.status` reads `uncertain`. A second
+  POST with a DIFFERENT caveat text (card already `'human'`) → snapshot
+  `capturedAt` re-baselined (proves the widened condition). A third,
+  identical POST → `capturedAt` unchanged (proves the no-op-skip still
+  works). A plain confirm (no `reviewCaveat` key) → caveat cleared,
+  `cardStatus.status` → `verified`, snapshot re-baselined again (caveat
+  changed from set → cleared). Re-adding a caveat → back to `uncertain`.
+  Regression guard: hand-perturbed `synergy.json`'s one fact, ran
+  `check-verified-regressions.mjs` → flagged the mismatch and auto-reset
+  `review:'human'` → `review:'regression'` exactly as it does for a plain
+  verified card, live `cardStatus.status` → `re-review`. All scratch edits
+  (`synergy.json` perturbation, `progress.json`, `verified-snapshot.json`)
+  reverted immediately after, confirmed byte-identical to the pre-test
+  on-disk state.

@@ -22,7 +22,7 @@
         "fn": "cast",
         "card": "Unexpected Request",
         "instanceId": 1,
-        "id": 3029,
+        "id": 5,
         "from": "hand",
         "cost": "{2}{R}"
       },
@@ -40,17 +40,17 @@
         "fn": "gainControl",
         "controller": "you",
         "target": "Grizzly Bears",
-        "id": 3028
+        "id": 4
       },
       {
         "fn": "untap",
         "target": "Grizzly Bears",
-        "id": 3028
+        "id": 4
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 3028,
+        "id": 4,
         "keyword": "Haste"
       },
       {
@@ -69,15 +69,15 @@
       {
         "fn": "equip",
         "equipment": "you-equipment-0",
-        "equipmentId": 3026,
+        "equipmentId": 2,
         "target": "Grizzly Bears",
-        "id": 3028
+        "id": 4
       },
       {
         "fn": "move",
         "card": "Unexpected Request",
         "instanceId": 1,
-        "id": 3029,
+        "id": 5,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"
@@ -104,7 +104,7 @@
         "fn": "cast",
         "card": "Unexpected Request",
         "instanceId": 1,
-        "id": 3033,
+        "id": 9,
         "from": "hand",
         "cost": "{2}{R}"
       },
@@ -122,17 +122,17 @@
         "fn": "gainControl",
         "controller": "you",
         "target": "Grizzly Bears",
-        "id": 3032
+        "id": 8
       },
       {
         "fn": "untap",
         "target": "Grizzly Bears",
-        "id": 3032
+        "id": 8
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 3032,
+        "id": 8,
         "keyword": "Haste"
       },
       {
@@ -146,7 +146,7 @@
         "fn": "move",
         "card": "Unexpected Request",
         "instanceId": 1,
-        "id": 3033,
+        "id": 9,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

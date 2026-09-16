@@ -10,7 +10,12 @@
           "start": 32,
           "end": 41
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "surveil-effect-structural"
+      },
+      "triggeredBy": "onAttack"
     }
   ],
   "sink": [

@@ -165,7 +165,7 @@
       {
         "fn": "moveTo",
         "target": "Ahriman",
-        "id": 2490,
+        "id": 35,
         "zone": "Hand",
         "controller": "you"
       },
@@ -214,7 +214,7 @@
       {
         "fn": "moveTo",
         "target": "Coeurl",
-        "id": 2491,
+        "id": 36,
         "zone": "Hand",
         "controller": "opp0"
       },

@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 export const whiteAuracite: CardDefinition = {
   name: 'White Auracite',
@@ -16,27 +16,23 @@ export const whiteAuracite: CardDefinition = {
       name: 'onEnter',
       on: 'enter',
       effects: [
-        {
-          // Real Oblivion Ring shape: "exile target nonland permanent an
-          // opponent controls until this artifact leaves the battlefield."
-          // `move`'s own targeted branch has no "nonland" validType (only
-          // 'creature'|'artifact'|'any'), so `custom`, filtering the real
-          // opponent battlefield pool by `!isLand()`, is the honest shape.
-          // The "until this leaves the battlefield" return condition has no
-          // tracked linkage anywhere in this model (no card built so far
-          // returns an exiled permanent on its own leaving play — checked
-          // the rest of the pool while migrating this card's own facts:
-          // champions-of-the-perfect/y-shtola-rhul/zenos-yae-galvus-shinryu-
-          // transcendent-rival have the identical real mechanic and are
-          // equally unmodeled, so this is a genuine pool-wide engine gap,
-          // not a one-card oversight) — real text only, not modeled.
-          kind: 'custom',
-          describe: 'exile target nonland permanent an opponent controls until this artifact leaves the battlefield',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const pool = ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield')).filter((c) => !c.isLand());
-            if (pool.length > 0) actions.moveTo(actions.chooseTarget(pool, ctx.preferTarget), 'Exile');
-          },
-        } satisfies Effect,
+        // Real Oblivion Ring shape: "exile target nonland permanent an
+        // opponent controls until this artifact leaves the battlefield."
+        // `move`'s own targeted branch DOES have a real `nonLand` field
+        // (added for Jill, Shiva's Dominant/Eject's own identical real
+        // vocabulary — this file's own former comment predated that
+        // addition and was stale) — migrated off `custom` to this
+        // declarative shape 2026-09-16 (fin/26-50 pass), same real
+        // `owner:'opponents'` restriction `move-effect-structural.ts` was
+        // extended in the same pass to cover. The "until this leaves the
+        // battlefield" return condition still has no tracked linkage
+        // anywhere in this model (no card built so far returns an exiled
+        // permanent on its own leaving play — checked the rest of the pool:
+        // champions-of-the-perfect/y-shtola-rhul/zenos-yae-galvus-shinryu-
+        // transcendent-rival have the identical real mechanic and are
+        // equally unmodeled, so this is a genuine pool-wide engine gap, not
+        // a one-card oversight) — real text only, not modeled.
+        { kind: 'move', owner: 'opponents', from: 'Battlefield', to: 'Exile', qty: 1, validType: 'any', nonLand: true, target: true } satisfies Effect,
       ],
     },
   ],

@@ -9,7 +9,11 @@ export const rydiaSReturn: CardDefinition = {
     {
       kind: 'modal',
       modes: [
-        { describe: 'Creatures you control get +3/+3 until end of turn.', effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 3, toughness: 3 } satisfies Effect] },
+        // `untilEndOfTurn: true` (2026-09-15 fix, fin/26-50 pass) was missing
+        // on this effect despite the real oracle text/this mode's own
+        // `describe` string both saying "until end of turn" — same systemic
+        // omission bug class fixed pool-wide earlier this session.
+        { describe: 'Creatures you control get +3/+3 until end of turn.', effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 3, toughness: 3, untilEndOfTurn: true } satisfies Effect] },
         {
           // Real `ValidTgts$ Permanent.YouOwn` — `move`'s own declarative
           // `validType` has no combined "permanent" filter (only

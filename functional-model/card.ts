@@ -147,6 +147,7 @@ import type {
   delayUntil as realDelayUntil,
   queueExtraPhase as realQueueExtraPhase,
   play as realPlay,
+  endTurn as realEndTurn,
 } from './interfaces';
 
 /**
@@ -186,6 +187,7 @@ export interface Actions {
   delayUntil: typeof realDelayUntil;
   queueExtraPhase: typeof realQueueExtraPhase;
   play: typeof realPlay;
+  endTurn: typeof realEndTurn;
 }
 
 /** Everything an effect needs to read at resolution time — the one argument every effect/Computed function receives. */
@@ -364,6 +366,23 @@ export interface EffectContext {
    * demonstrates or depends on the stricter whole-spell reading.
    */
   declaredTargets?: Card[];
+  /**
+   * Real 721.1a "end the turn" ruling (Gatherer, Time Stop: "This includes
+   * Time Stop, though it will continue to resolve") — the resolving
+   * spell/ability itself goes to Exile instead of its normal post-
+   * resolution zone (a Graveyard, for an instant/sorcery). Set by
+   * `applyEffect`'s own `case 'endTurn'` (below) the moment that effect
+   * runs, mid-resolution — `engine.ts`'s own `resolveTop` wrapper reads
+   * this back off the SAME `EffectContext` instance once `resolveCard`
+   * returns (the object identity is preserved end-to-end: `stack.ts`'s
+   * `StackObject.ctx` IS this exact object), the same way it already reads
+   * `StackObject.thenExile` for a Flashback/Jump-start spell's own
+   * alternate post-resolution zone. Unset (the default) for every other
+   * effect — completely inert outside a real engine-piloted playthrough
+   * (`harness.ts`'s flat scenarios have no post-resolution zone-move logic
+   * to consult it at all).
+   */
+  selfToExile?: boolean;
 }
 
 /**
@@ -398,7 +417,54 @@ export type Effect =
       color: string;
       amount: Computed<number>;
     }
-  | { kind: 'drawCard'; amount?: Computed<number> }
+  | {
+      kind: 'drawCard';
+      amount?: Computed<number>;
+      /**
+       * "You MAY draw a card" (Rook Turret's own real "Loot" idiom, `AB$
+       * Discard | ... | Cost$ Draw<1/You>`) — same documentary-only
+       * distinction `destroy`'s/`move`'s/`sacrifice`'s own `optional`
+       * fields already carry (2026-09-16, coordinator-routed pilot-triage
+       * escalation: `drawCard-effect-structural.ts`'s own recognizer
+       * previously had no way to tell an optional draw apart from an
+       * unconditional one and declined rook-turret's own fact on purpose
+       * — see that recognizer's own doc comment). No player-decision
+       * engine exists here (same reasoning `EffectContext.declineOptional`'s
+       * own doc comment gives for `destroy`), so a legal draw still
+       * happens unless `ctx.declineOptional` is explicitly set.
+       */
+      optional?: boolean;
+      /**
+       * Who draws — same `EffectOwner` vocabulary `loseLife`/`discard`
+       * already carry (below), OPTIONAL here (unlike their own required
+       * `owner`) since every real pool card but one just wants the
+       * implicit `'you'` default this field preserves when omitted.
+       * Real Forge (`forge-game/.../ability/effects/DrawEffect.java`
+       * `resolve()`) draws for `getTargetPlayersWithDuplicates(...)` — the
+       * exact same generic Player-list mechanism `LoseLifeEffect`/
+       * `DiscardEffect` already resolve against, which is what licenses
+       * reusing `EffectOwner` here rather than inventing a second
+       * player-group vocabulary. Combat Tutorial (fin/48) is the one real
+       * pool motivator: "Target player draws two cards" (`ValidTgts$
+       * Player`, no `.YouCtrl`/`.Opponent` restriction at all) — a real,
+       * single CHOSEN target among every player in the game, which this
+       * field still can't express even when set: `EffectOwner`'s 3 values
+       * are all fixed GROUPS (you / every opponent / everyone), none of
+       * them is "one player, chosen by the caster, could be any side" —
+       * the same "no chooseTarget-equivalent for picking a player" gap
+       * `stiltzkin-moogle-merchant`'s own definition.ts comment already
+       * names. Combat Tutorial's own effect stays at the `'you'` default
+       * (unset) for that reason — this field doesn't yet close that real
+       * gap, it only gives `drawCard` the same GROUP-target capability
+       * (a real, useful "each player draws" broadcast, e.g.) `loseLife`/
+       * `discard` already have. The Fact-level honesty for Combat
+       * Tutorial's own real "any player" text comes from
+       * `drawCard-effect-structural.ts`'s own separate targeted-clause
+       * template (oracle-text-driven, not keyed off this field) — see
+       * that recognizer's own doc comment.
+       */
+      owner?: EffectOwner;
+    }
   | {
       /** Forge's own `PumpAll` (Warren Elder's own "creatures you control get +1/+1 until end of turn") — every creature matching `predicate` gets the same delta, as opposed to `custom`'s one-target `pump`. `'attacking-creatures'` (2026-09-15, ENGINE_GAPS.md — Auron's Inspiration/fin-8's own real "Attacking creatures get +2/+0," a genuinely SYMMETRIC broadcast, unlike `'creatures-you-control'` — see `Card.isAttacking()`'s own doc comment for the real 508.1 status this reads) broadcasts across `ctx.you` AND `ctx.opponents` both, the one real exception to every other `pumpAll` predicate's own `ctx.you`-only scope. */
       kind: 'pumpAll';
@@ -484,7 +550,19 @@ export type Effect =
        * types, so nothing downstream needs its own array-vs-scalar check.
        */
       from: ZoneType | ZoneType[];
-      to: ZoneType;
+      /**
+       * `Computed<ZoneType>` (2026-09-15, From Father to Son's own real
+       * "put it into your hand. If this spell was cast from a graveyard,
+       * put that card onto the battlefield instead" — a genuine CR 601.2c
+       * destination that depends on `ctx.castFrom`, the same real per-cast
+       * fact `pumpTarget`'s/`drawCard`'s own `Computed<number>` fields
+       * already resolve against). Every OTHER real `move` effect in this
+       * pool still sets a single literal `ZoneType` (checked directly —
+       * this is the only real card needing a conditional destination);
+       * `case 'move'` below resolves it once via `resolve(effect.to, ctx)`,
+       * same as every other `Computed` field.
+       */
+      to: Computed<ZoneType>;
       qty: Computed<number>;
       validType?: 'creature' | 'artifact' | 'land' | 'any';
       /**
@@ -500,6 +578,33 @@ export type Effect =
        * uses for the FACT side of this same claim).
        */
       maxCmc?: number;
+      /**
+       * A NAME filter narrower than any TYPE-based field above can express
+       * (Magitek Infantry's own real "Search your library for a card named
+       * Magitek Infantry" — real Forge `ChangeType$ Card.namedMagitek
+       * Infantry`, `res/cardsfolder/m/magitek_infantry.txt`) — closed
+       * 2026-09-15 (fin/16-25 pass). `'self'` is the only real value this
+       * pool ever needs (a card tutoring for another copy of ITSELF by
+       * name, resolved to `ctx.self.getName()` at effect-resolution time) —
+       * kept as this narrow literal rather than a free `string` field: no
+       * real card in this pool searches for a DIFFERENT card's name, and an
+       * arbitrary string would need its own separate confirmed-template
+       * story for `moveSearchLibrary-effect-structural.ts`/`moveSearchLibrary
+       * OrGraveyard-effect-structural.ts` to ever assert a fact for it (see
+       * `synergy.ts`'s own `Fact.name: {eq: string}` — the FACT side already
+       * supports an arbitrary name; this EFFECT-side field intentionally
+       * stays narrower until a second real card needs more).
+       */
+      name?: 'self';
+      /**
+       * Real Forge `Tapped$ True` on the SAME `ChangeZone` ability (Magitek
+       * Infantry's own "...put it onto the battlefield TAPPED" — genuinely
+       * distinct from `Card.tapped`'s own default-untapped entry, CR
+       * 110.6). Only meaningful for a `to:'Battlefield'` move — applied via
+       * `actions.tap` on each card this effect actually moved, right after
+       * the move itself (see `case 'move'`'s own untargeted branch below).
+       */
+      tapped?: boolean;
       target?: boolean;
       /** "return ANOTHER permanent you control" (Ambrosia Whiteheart) — excludes `ctx.self` from the candidate pool, same reasoning as `sacrifice`'s own `notSelf`. */
       notSelf?: boolean;
@@ -524,8 +629,18 @@ export type Effect =
        * batch `move` has no real FIN card needing this yet, so it's not
        * read there" — no longer true, see `card.ts`'s own `case 'move'`
        * untargeted branch below.
+       *
+       * `string[]` (2026-09-16, coordinator-routed escalation) — an
+       * OR-matched subtype SET, not a single value: Phoenix Down's own
+       * real targeted mode 2, "exile target Skeleton, Spirit, or Zombie"
+       * (Forge's own real `ValidTgts$
+       * Creature.Skeleton,Creature.Spirit,Creature.Zombie` comma-list) —
+       * `hasSubtype` only ever checks ONE subtype, so a single-string field
+       * couldn't express "any one of these three." Every existing real
+       * caller still passes a bare `string` (a completely valid `string |
+       * string[]` value) — unchanged behavior for all of them.
        */
-      subtype?: string;
+      subtype?: string | string[];
       /**
        * Real CR 601.2/701.19: searching a hidden zone (the library) always
        * ends with "then shuffle your library" — genuinely distinct from
@@ -605,6 +720,22 @@ export type Effect =
       amount: Computed<number>;
       /** Restricts the candidate pool to one side (Ultros' own "target creature an opponent controls") — omit for the prior default, every creature on the battlefield regardless of controller. Same fix `pumpTarget`/`tapTarget`/`putCounterTarget`/`destroy` below all needed: without an owner restriction, `chooseTarget`'s always-take-the-first-candidate rule can land on the source's OWN controller's side (even itself) for a card whose REAL text actually is restricted — Ice Flan's own real "target artifact or creature an opponent controls" is the confirmed case. (Coeurl/Dion, Bahamut's Dominant's own chapter III were checked against this same failure mode and found to be real, printed UNRESTRICTED targeting — `ValidTgts$ Creature.nonEnchantment` / `ValidTgts$ Permanent`, no controller clause at all — so self-targeting there is a legal, if unlucky, `chooseTarget`-determinism outcome, not a bug; they don't set this field.) */
       owner?: EffectOwner;
+      /**
+       * Real Forge `ValidTgts$ Creature.tapped` (a real, common card-script
+       * predicate — same real `Card.isTapped()` (`interfaces.ts:106-107`,
+       * `Card.java` ~line 4641) `state.ts`'s own `Card.isTapped()` mirror
+       * already reads) — restricts the candidate pool to only TAPPED
+       * creatures (Summon: Primal Garuda's own Aerial Blast, fin/37: "deals
+       * 4 damage to target TAPPED creature an opponent controls" —
+       * previously undeclarable, forcing this Effect kind to be skipped
+       * entirely in favor of a bespoke `kind:'custom'` closure for that one
+       * real clause). Omit for the prior default, no tapped-status
+       * restriction at all. Unlike `Constraints.tapped` (`synergy.ts`,
+       * purely documentary, never consulted by the fact matcher), this
+       * field IS a real, state-mutating pool filter — `resolveTargets`
+       * genuinely can't land on an untapped creature once set.
+       */
+      tapped?: boolean;
     }
   | {
       /** `DB$ DealDamage | ValidTgts$ Any` — real Forge "any target" (a player OR a creature/planeswalker, Choco-Comet-style burn), as opposed to `dealDamage`'s player-group-only target and `dealDamageTarget`'s creature-only target. Pool is every player plus every creature on the battlefield. */
@@ -660,9 +791,22 @@ export type Effect =
        * pool vocabulary elsewhere (`subtype` filtering only makes sense for
        * a creature-typed pool) — `subtype` is a no-op under
        * `'permanents-you-control'` and should not be set alongside it.
+       *
+       * `'attacking-creatures'` (2026-09-16, Cecil, Redeemed Paladin's own
+       * real "Other attacking creatures gain indestructible until end of
+       * turn") — same real SYMMETRIC broadcast (`ctx.you` AND
+       * `ctx.opponents` both) `pumpAll`'s own identical predicate value
+       * already established for Auron's Inspiration; genuinely distinct
+       * from the "no keyword-grant field at all" gap moogles-valor/
+       * restoration-magic/dion-bahamut/ardyn-the-usurper's own comments
+       * document (that gap is closed — `grantKeywordAll` itself already
+       * exists — this is a separate, narrower missing PREDICATE value).
+       * `notSelf` (Cecil's own "OTHER attacking creatures") is the same
+       * pre-existing field every other predicate already supports here,
+       * not new.
        */
       kind: 'grantKeywordAll';
-      predicate: 'creatures-you-control' | 'permanents-you-control';
+      predicate: 'creatures-you-control' | 'permanents-you-control' | 'attacking-creatures';
       keyword: Keyword;
       notSelf?: boolean;
       subtype?: string;
@@ -691,19 +835,38 @@ export type Effect =
       owner: EffectOwner;
     }
   | {
-      /** `UntapEffect` (forge-game/.../ability/effects/) — Forge's own real counterpart to `tapTarget` above (Magic Damper's own "untap target creature"), same shape, `untap` instead of `tap`. */
+      /** `UntapEffect` (forge-game/.../ability/effects/) — Forge's own real counterpart to `tapTarget` above (Magic Damper's own "untap target creature"), same shape, `untap` instead of `tap`. `'attacking'` (2026-09-16, Sage's Nouliths' own granted "untap target attacking creature") — see `BattlefieldValidType`'s own doc comment. */
       kind: 'untapTarget';
-      validType: 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any';
+      validType: 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any' | 'attacking';
       owner?: EffectOwner;
       /** "untap ANOTHER target permanent" (Formidable Speaker) — excludes `ctx.self` from the pool, same reasoning as `pumpTarget`/`sacrifice`/`move`'s own `notSelf`. */
       notSelf?: boolean;
     }
   | {
-      /** `DigEffect` — look at the top `qty` library cards, take up to `take` matching `validType` to hand, rest to bottom (Ashe's own attack trigger). */
+      /**
+       * `DigEffect` — look at the top `qty` library cards, take up to `take`
+       * matching `validType` to hand, rest to bottom (Ashe's own attack
+       * trigger).
+       *
+       * `'creature-or-artifact'` (2026-09-16, engine-lane primitive
+       * escalation, sidequest-catch-a-fish-cooking-campsite/fin-31) — real
+       * Forge `RevealValid$ Artifact,Creature` (`PeekAndRevealEffect.java`
+       * lines 24-25/57-59, `res/cardsfolder/s/
+       * sidequest_catch_a_fish_cooking_campsite.txt`'s own `SVar:TrigPeek:
+       * DB$ PeekAndReveal | ... | RevealValid$ Artifact,Creature`), a genuine
+       * creature-OR-artifact union `digReveal-effect-structural.ts` itself
+       * already documents as NOT expressible by the pre-existing
+       * `'artifact' | 'any'` union (that recognizer's own module comment
+       * explicitly declines `validType:'any'` as a dishonest approximation
+       * of this exact shape — see its own doc comment). Same union spelling
+       * `sacrifice`/`destroy`/`tapTarget`/`putCounterTarget`'s own
+       * `validType`/`BattlefieldValidType` unions already use for the
+       * identical real disjunction, not new vocabulary.
+       */
       kind: 'dig';
       qty: Computed<number>;
       take: Computed<number>;
-      validType?: 'artifact' | 'any';
+      validType?: 'artifact' | 'any' | 'creature-or-artifact';
       optional?: boolean;
     }
   | {
@@ -871,6 +1034,24 @@ export type Effect =
        * left stale.
        */
       authoredFact?: AuthoredFact | AuthoredFact[];
+    }
+  | {
+      /**
+       * Real 721.1a "end the turn" (`ApiType.EndTurn`, forge-game/.../
+       * ability/effects/EndTurnEffect.java — see `interfaces.ts`'s own
+       * `endTurn` doc comment for the full real citation/4-step trail).
+       * Ultima (fin/38)'s own "End the turn." is the real FIN card this was
+       * built for (2026-09-16) — previously an honest, documented
+       * `kind:'custom'` no-op (no turn-ending machinery existed at all);
+       * now a genuine primitive: `turn.ts`'s own `jumpToCleanup` +
+       * `engine.ts`'s own `endTurn` wrapper (stack-exile, end combat, check
+       * SBAs, jump straight to Cleanup and run its real automatic action).
+       * Bare — no fields of its own; `applyEffect`'s own case below also
+       * sets `ctx.selfToExile` (see that field's own doc comment) since the
+       * "including this card" ruling is intrinsic to the ability itself,
+       * not something a card author chooses per use.
+       */
+      kind: 'endTurn';
     };
 
 /** An alternate way to cast this card — Flashback, Jump-start, Escape, casting from exile, etc. Real rule text, not a derived fact, so it's declared per-card rather than computed. */
@@ -959,7 +1140,7 @@ export interface CostReduction {
    * no target condition at all).
    */
   condition?: 'tappedCreatureTarget';
-  /** Board-state-COUNTED discount — see this interface's own doc comment above. Mutually exclusive with `amount`/`condition`; a card in this pool needs only one shape at a time. */
+  /** Board-state-COUNTED discount — see this interface's own doc comment above. Mutually exclusive with `amount`/`condition`; a card in this pool needs only one shape at a time. `subtype` matches EITHER a creature subtype ("Affinity for Birds"/"Affinity for Elves") OR a card type ("Affinity for Artifacts") — real Forge's own `Affinity` keyword (`Affinity.java`) resolves both through the same generic valid-checking mechanism; `engine.ts`'s own `effectiveCastCost` checks `c.subtypes`/`c.types` both, 2026-09-16 widening. */
   perControlled?: { amountPerMatch: number; subtype: string };
 }
 
@@ -1394,8 +1575,70 @@ export interface Trigger {
    *    ENGINE_GAPS.md's own writeup for the full list this unblocks as
    *    follow-ups. Ashe, Princess of Dalmasca's own "Whenever Ashe attacks,
    *    ..." is the first real FIN card retrofitted onto this (2026-09-14).
+   *  - `'equippedAttacks'` (closed 2026-09-16, ENGINE_GAPS.md — the
+   *    "EQUIPMENT's own 'whenever equipped creature attacks'" follow-up
+   *    `'attacks'`'s own doc comment above already named as unattempted) —
+   *    real Forge `TriggerType.Attacks` again, but checked against
+   *    `ValidCard$ Card.EquippedBy` instead of `Card.Self` (Genji Glove's
+   *    own real script, `res/cardsfolder/g/genji_glove.txt`: `T:Mode$
+   *    Attacks | ValidCard$ Card.EquippedBy | ...`; Ultima Weapon's own
+   *    identical shape, `res/cardsfolder/u/ultima_weapon.txt`) — this
+   *    permanent's OWN trigger fires when the CREATURE IT'S EQUIPPED TO
+   *    attacks, not when this permanent itself does (an Equipment never
+   *    attacks). White Mage's Staff/Summoner's Grimoire's own real scripts
+   *    (`res/cardsfolder/w/white_mages_staff.txt`/`res/cardsfolder/s/
+   *    summoners_grimoire.txt`) reach the identical real behavior a
+   *    DIFFERENT real Forge way — a genuine `S:...AddTrigger$...` static
+   *    ability that grants a whole `Mode$ Attacks | ValidCard$ Card.Self`
+   *    trigger onto the equipped creature (Forge's real "add a triggered
+   *    ability to another permanent" mechanism, CR 613.1 "functions as
+   *    though printed") — but this engine models both real Forge shapes
+   *    with the SAME single mechanism: the trigger stays declared on the
+   *    EQUIPMENT's own `CardDefinition` (never literally copied onto the
+   *    equipped creature), fired with the EQUIPMENT's own registered
+   *    `ctx`/`actions` (`ctx.self` stays the Equipment, exactly like
+   *    `'attacks'`'s pre-existing `onEquippedAttacks(FirstCombat)` trigger
+   *    bodies on Genji Glove/Ultima Weapon already assume) — an effect that
+   *    genuinely needs "the equipped creature itself" (not just "you", the
+   *    controller) resolves it live via `ctx.self.getAttachedTo()`, the
+   *    SAME resolution Genji Glove's own untap effect already uses. This
+   *    also means a `triggerDoublingGrant` with `scope:
+   *    'selfAndAttachedEquipment'` (Cloud, Midgar Mercenary's own real
+   *    "...an Equipment attached to it triggers, that ability triggers an
+   *    additional time") correctly doubles an `'equippedAttacks'` firing
+   *    for free — `state.ts`'s own `shouldDoubleTrigger` already keys off
+   *    `ctx.self` (the Equipment, the real firing source) via the SAME
+   *    `firing.attachedToId === source.id` check that scope already reads,
+   *    with NO widening needed there. Mirrored here as `engine.ts`'s
+   *    widened `fireOnAttackTriggers`, which now ALSO scans (for every
+   *    declared attacker) every OTHER real card whose live `attachedToId`
+   *    points at that attacker, for a registered `resolvedPermanents` entry
+   *    with an `'equippedAttacks'` trigger. Genji Glove/Ultima Weapon's own
+   *    pre-existing `onEquippedAttacks(FirstCombat)` triggers (declared
+   *    long before this `on` value existed, previously never auto-fired at
+   *    all — only ever exercised by a scenario naming them directly) are
+   *    retrofitted onto it in the same pass as White Mage's Staff (the
+   *    first real FIN card whose OWN granted-trigger gap this closes) —
+   *    see each card's own `definition.ts`/`progress.json` for the full
+   *    writeup. Summoner's Grimoire's identical real `AddTrigger$` shape is
+   *    NOT retrofitted in this same pass — its own granted EFFECT ("put a
+   *    creature card from your hand onto the battlefield...") needs a
+   *    wholly separate, unbuilt Effect primitive regardless of this trigger
+   *    plumbing, so converting just the trigger half with no real
+   *    behavioral effect to attach would be a 100%-no-op migration for zero
+   *    closure benefit — see that card's own `progress.json`. Astrologian's
+   *    Planisphere/Black Mage's Rod's own granted triggers stay unclosed
+   *    too — their real Forge `Mode$ SpellCast`/`Mode$ Drawn` occasions are
+   *    a GENUINELY DIFFERENT, much larger, still wholly-unbuilt trigger
+   *    family (no `'castNoncreatureSpell'`/`'drawNthCardThisTurn'` `on`
+   *    value exists anywhere in this union, for ANY card, granted or
+   *    native — 17+ real FIN cards share this same unclosed native trigger
+   *    family, several needing real mana-spent-magnitude tracking this
+   *    engine doesn't have either, see ENGINE_GAPS.md) — genuinely out of
+   *    this narrow pass's scope, not the "grant a trigger to another
+   *    permanent" problem this `on` value itself already fully solves.
    */
-  on?: 'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks';
+  on?: 'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks' | 'equippedAttacks';
   /**
    * Only consulted when `on === 'tapLandForMana'` — mirrors Forge's own
    * real `Produced$` gate on `T:Mode$ TapsForMana` (`TriggerTapsForMana
@@ -1747,7 +1990,90 @@ export interface CardDefinition {
          */
         annotation?: FactAnnotationAuthoring;
       }
-    | { kind: 'setToCreaturesControlled'; annotation?: FactAnnotationAuthoring };
+    | { kind: 'setToCreaturesControlled'; annotation?: FactAnnotationAuthoring }
+    | {
+        /**
+         * A real, self-only, THRESHOLD-gated layer-7a CDA (closed
+         * 2026-09-15, fin/16-25 pass, ENGINE_GAPS.md's own "Gaelicat's/
+         * Magitek Infantry's own threshold-CDA gaps" note) — real Forge
+         * `S:Mode$ Continuous | Affected$ Card.Self | AddPower$ N |
+         * IsPresent$ <Type>[.Other]+YouCtrl | PresentCompare$ GE<min>`
+         * (`gaelicat.txt`: `IsPresent$ Artifact.YouCtrl | PresentCompare$
+         * GE2 | AddPower$ 2` — "As long as you control two or more
+         * artifacts, this creature gets +2/+0"; `magitek_infantry.txt`:
+         * `IsPresent$ Artifact.Other+YouCtrl | AddPower$ 1` — implicit
+         * `PresentCompare$ GE1` — "This creature gets +1/+0 as long as you
+         * control another artifact"). Genuinely different from
+         * `addPerEquipmentControlled` above (a fixed on/off bonus once a
+         * COUNT THRESHOLD is met, not a per-unit-scaled amount) and from
+         * `continuousPTGrants` below (that field's own recipient is a
+         * BROADCAST target — equipped creature/subtype/etc — this one only
+         * ever affects the card printing the ability itself, real Forge's
+         * own `Affected$ Card.Self`). `state.ts`'s `effectivePT` is the
+         * real read path; `excludeSelf` mirrors `magitek_infantry.txt`'s own
+         * `.Other+` qualifier (Magitek Infantry is itself an Artifact and
+         * must not count toward its own threshold; Gaelicat is not an
+         * Artifact at all, so `excludeSelf` is moot for it either way, kept
+         * `false` for honesty about what the real script says).
+         */
+        kind: 'thresholdBonus';
+        power: number;
+        toughness: number;
+        condition: { type: string; min: number; excludeSelf?: boolean };
+        annotation?: FactAnnotationAuthoring;
+      }
+    | {
+        /**
+         * A real, self-only, GRAVEYARD-counted ADD-scaling layer-7a CDA
+         * (closed 2026-09-16, static-ability audit) — real Forge
+         * `Count$Valid Card.YouOwn+nonCreature+nonLand/GraveyardOnly`
+         * (Xande, Dark Mage's own real "gets +1/+1 for each noncreature,
+         * nonland card in your graveyard"). Same ADD-scaling shape as
+         * `addPerEquipmentControlled` above, counting the controller's own
+         * GRAVEYARD (filtered to noncreature, nonland) instead of their
+         * battlefield Equipment count — `state.ts`'s `effectivePT` is the
+         * real read path. The noncreature/nonland filter is fixed (no real
+         * pool card needs a different graveyard filter for this ADD shape
+         * yet); a future card needing a different filter needs its own
+         * variant, not a silent stretch of this one.
+         */
+        kind: 'addPerGraveyardCount';
+        power: number;
+        toughness: number;
+        annotation?: FactAnnotationAuthoring;
+      }
+    | {
+        /**
+         * A real, self-only, GRAVEYARD-counted SET layer-7a CDA (POWER
+         * only, same "toughness stays whatever `pt` already says" scoping
+         * `setToCreaturesControlled` establishes) — closed 2026-09-16,
+         * static-ability audit. Real Forge `SetPower$ X | SVar:X:
+         * Count$Valid Card.YouOwn+IsPermanentCard/GraveyardOnly` (Neo
+         * Exdeath, Dimension's End's own real "Neo Exdeath's power is
+         * equal to the number of permanent cards in your graveyard") —
+         * "permanent card" means Creature/Artifact/Enchantment/Land (same
+         * real filter this same card's own front face `onEndStep` transform
+         * condition already uses, kept identical for consistency — neither
+         * checks Planeswalker; a real, shared, narrow scope, not a new gap
+         * introduced by this variant).
+         */
+        kind: 'setToGraveyardPermanentCount';
+        annotation?: FactAnnotationAuthoring;
+      }
+    | {
+        /**
+         * A real, self-only, BATTLEFIELD-LAND-counted ADD-scaling layer-7a
+         * CDA (closed 2026-09-16, static-ability audit) — real Forge
+         * `Count$Valid Land.YouCtrl` (Zell Dincht's own real "gets +1/+0
+         * for each land you control"). Same ADD-scaling shape as
+         * `addPerEquipmentControlled` above, counting the controller's own
+         * battlefield LANDS instead of Equipment.
+         */
+        kind: 'addPerLandControlled';
+        power: number;
+        toughness: number;
+        annotation?: FactAnnotationAuthoring;
+      };
   /**
    * A real, QUERY-TIME continuous keyword grant (613, ENGINE_GAPS.md gap
    * #14, closed 2026-09-12) — "Dion and other Knights you control have
@@ -1801,8 +2127,37 @@ export interface CardDefinition {
    * `staticAbilities` text" scope, and Gaelicat's/Magitek Infantry's own
    * threshold-CDA gaps) — NOT modeled by this field, kept as
    * `staticAbilities` text on that one card only.
+   *
+   * **CLOSED 2026-09-15 (fin/16-25 pass)** — the paragraph above described
+   * a real gap that's now fixed: a grant entry may ALSO carry
+   * `scalePerType` instead of a fixed `power`/`toughness`, the real
+   * `SVar:X:Count$Valid <Type>.YouCtrl/Times.N` shape Machinist's Arsenal's
+   * own "+2/+2 for each artifact you control" needs (same `Count$Valid...
+   * YouCtrl` scaling mechanism `ptFormula.kind:'addPerEquipmentControlled'`
+   * already uses for a SELF-only CDA — this is that identical real Forge
+   * mechanism, just applied to a BROADCAST grant's own recipient instead of
+   * the granting permanent itself). `state.ts`'s `effectivePT` reads
+   * `scalePerType` the same live, query-time way it already reads a fixed
+   * `power`/`toughness` pair — recalculated fresh every read, counting the
+   * GRANTING permanent's own controller's battlefield (real Forge
+   * `YouCtrl` — "you" is whoever controls the ability, i.e. the Equipment,
+   * not necessarily the equipped creature's controller, though in every
+   * real pool case today they're the same player).
+   *
+   * **`scalePerSelfCounter`, closed 2026-09-16 (static-ability audit)** —
+   * the same real ADD-scaling mechanism as `scalePerType` just above, but
+   * counting a COUNTER on the GRANTING permanent itself instead of a
+   * creature type its controller controls (real Forge
+   * `SVar:X:Count$CardCounters.<TYPE>` on an `AddPower$ X | AddToughness$
+   * X` static, rather than `Count$Valid <Type>.YouCtrl`) — Excalibur II's
+   * own real "Equipped creature gets +1/+1 for each charge counter on
+   * Excalibur II." Still layer 7c, still summed alongside a fixed
+   * `power`/`toughness` or `scalePerType` entry on a DIFFERENT grant on the
+   * same card; `state.ts`'s `effectivePT` reads `source.counters` directly
+   * (no board-wide sweep needed, unlike `scalePerType`).
    */
-  readonly continuousPTGrants?: (ContinuousGrantTargeting & { power: number; toughness: number })[];
+  readonly continuousPTGrants?: (ContinuousGrantTargeting &
+    ({ power: number; toughness: number } | { scalePerType: { type: string; power: number; toughness: number } } | { scalePerSelfCounter: { counterType: string; power: number; toughness: number } }))[];
   /**
    * Real, QUERY-TIME continuous TYPE grant (613.3, layer 4) — the creature-
    * SUBTYPE sibling of `continuousKeywordGrants`/`continuousPTGrants`
@@ -2043,14 +2398,42 @@ function playersFor(owner: EffectOwner, ctx: EffectContext): Player[] {
 }
 
 /** Shared vocabulary `move`'s targeted branch, `putCounterTarget`, `tapTarget`, and `untapTarget` all filter their candidate pool by — 'land' and 'creature-or-artifact' (Forge's own `Sac<1/Creature.Other;Artifact.Other/...>`-style disjunctive shape, already precedented on `sacrifice`) added alongside the original three. */
-type BattlefieldValidType = 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any';
+/**
+ * `'attacking'` (2026-09-16, coordinator-routed pilot-triage escalation —
+ * Sage's Nouliths' own granted "untap target ATTACKING creature," the one
+ * real card whose `validType` needed a combat-status filter no existing
+ * variant covered) reads `Card.isAttacking()` (interfaces.ts/state.ts,
+ * real CR 506.4/508.1 status, already wired off `state.attackers` — see
+ * that method's own doc comment) rather than any printed type/subtype.
+ * Only `untapTarget`'s own field exposes this literal today (see that
+ * `Effect` variant's own `validType` union below) — `tapTarget`/
+ * `putCounterTarget` share this SAME implementation type but neither has a
+ * real card needing an attacking-filtered tap/counter yet, so their own
+ * inline `validType` unions weren't widened; extend those the day a real
+ * card needs it, not speculatively.
+ */
+type BattlefieldValidType = 'creature' | 'artifact' | 'land' | 'creature-or-artifact' | 'any' | 'attacking';
 
 function matchesValidType(card: Card, validType: BattlefieldValidType | undefined): boolean {
   if (!validType || validType === 'any') return true;
   if (validType === 'creature') return card.isCreature();
   if (validType === 'artifact') return card.isArtifact();
   if (validType === 'land') return card.isLand();
+  if (validType === 'attacking') return card.isAttacking();
   return card.isCreature() || card.isArtifact();
+}
+
+/** `move.subtype`'s own OR-match helper (2026-09-16, Phoenix Down's own
+ * real "target Skeleton, Spirit, or Zombie") — a single string is checked
+ * exactly as before; an array is OR-matched (any ONE hit is enough), since
+ * `Card.hasSubtype` itself only ever checks one subtype at a time. Shared
+ * by `case 'move'`'s own targeted branch AND `harness.ts`'s `move` action
+ * implementation (the untargeted/batch-search path) — same field, same
+ * semantics either way. */
+function matchesSubtype(card: Card, subtype: string | string[] | undefined): boolean {
+  if (!subtype) return true;
+  const subtypes = Array.isArray(subtype) ? subtype : [subtype];
+  return subtypes.some((s) => card.hasSubtype(s));
 }
 
 /** `players`' combined Battlefield pool, filtered by `matchesValidType` — the shared candidate-pool builder `putCounterTarget`/`tapTarget`/`untapTarget` all use (see `matchesValidType`'s own doc comment). */
@@ -2113,8 +2496,16 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       ctx.you.addMana(effect.color, resolve(effect.amount, ctx));
       return;
     case 'drawCard': {
+      // Same `declineOptional` gate as `destroy`'s own (see that case's
+      // doc comment) — only meaningful when `optional` is actually set.
+      if (effect.optional && ctx.declineOptional) return;
       const amount = resolve(effect.amount ?? 1, ctx);
-      for (let i = 0; i < amount; i++) ctx.you.drawCard();
+      // `playersFor` (same helper `loseLife`/`discard` use below) — an
+      // omitted `owner` keeps the original `ctx.you`-only behavior every
+      // existing `drawCard` effect already relies on.
+      for (const player of playersFor(effect.owner ?? 'you', ctx)) {
+        for (let i = 0; i < amount; i++) player.drawCard();
+      }
       return;
     }
     case 'pumpAll': {
@@ -2156,6 +2547,7 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
     }
     case 'move': {
       const qty = resolve(effect.qty, ctx);
+      const to = resolve(effect.to, ctx);
       const players = playersFor(effect.owner ?? 'each', ctx);
       // Normalize once here — every branch below (and every recognizer)
       // deals with a single, real scalar `ZoneType` array, never has to
@@ -2185,12 +2577,22 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         const pool = players
           .flatMap((player) => fromZones.flatMap((zone) => player.getCardsIn(zone)))
           .filter((c) => matchesValidType(c, effect.validType))
-          .filter((c) => !effect.subtype || c.hasSubtype(effect.subtype))
+          .filter((c) => matchesSubtype(c, effect.subtype))
           .filter((c) => !effect.notSelf || c.getId() !== ctx.self.getId())
           .filter((c) => !effect.nonLand || !c.isLand())
           .filter((c) => effect.maxCmc === undefined || c.getCMC() <= effect.maxCmc);
         const targets = resolveTargets(pool, qty, ctx, actions);
-        for (const target of targets) actions.moveTo(target, effect.to);
+        for (const target of targets) {
+          actions.moveTo(target, to);
+          // `effect.tapped` (2026-09-16, Phoenix Down's own real "return
+          // target creature card ... to the battlefield TAPPED") — this
+          // field already existed (Magitek Infantry's own untargeted
+          // name-tutor, 2026-09-15) but was only ever applied on the
+          // UNTARGETED branch below; a targeted move had no way to enter
+          // tapped at all. Only meaningful for a `to:'Battlefield'` move,
+          // same real scope `tapped`'s own doc comment already documents.
+          if (effect.tapped) actions.tap(target);
+        }
       } else {
         // Untargeted batch search stays per-player — `actions.move` is
         // scoped to one Player at a time (Suplex/Triple Triad's own
@@ -2212,7 +2614,18 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
         // `effect.maxCmc` (2026-09-15) — same real "mana value N or less"
         // filter as the targeted branch above, now threaded through to
         // `actions.move` for the untargeted (batch search) shape.
-        for (const player of players) actions.move(player, effect.from, effect.to, qty, effect.validType, effect.subtype, effect.maxCmc);
+        //
+        // `effect.name`/`effect.tapped` (2026-09-15, Magitek Infantry's own
+        // real name-tutor) — `name:'self'` resolves to `ctx.self.getName()`
+        // right here (never passed as the literal string `'self'` itself
+        // down to `actions.move`, which knows nothing about "self"); the
+        // real cards this effect moved are then tapped, one `actions.tap`
+        // call per result, only when `effect.tapped` is set (see that
+        // field's own doc comment).
+        for (const player of players) {
+          const moved = actions.move(player, effect.from, to, qty, effect.validType, effect.subtype, effect.maxCmc, effect.name === 'self' ? ctx.self.getName() : undefined);
+          if (effect.tapped) for (const c of moved) actions.tap(c);
+        }
       }
       // Real 601.2/701.19 "then shuffle" — see `shuffleAfter`'s own doc
       // comment above for why this is a search-specific requirement, not
@@ -2274,7 +2687,9 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       return;
     }
     case 'dealDamageTarget': {
-      const pool = playersFor(effect.owner ?? 'each', ctx).flatMap((p) => p.getCreaturesInPlay());
+      const pool = playersFor(effect.owner ?? 'each', ctx)
+        .flatMap((p) => p.getCreaturesInPlay())
+        .filter((c) => !effect.tapped || c.isTapped());
       const target = resolveTargets(pool, 1, ctx, actions)[0];
       if (target) actions.dealDamage(ctx.self, target, resolve(effect.amount, ctx));
       return;
@@ -2343,7 +2758,16 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       return;
     }
     case 'grantKeywordAll': {
-      const pool = effect.predicate === 'permanents-you-control' ? ctx.you.getCardsIn('Battlefield') : ctx.you.getCreaturesInPlay();
+      // Same `pumpAll`-established symmetric-broadcast exception as that
+      // effect's own doc comment above — `'attacking-creatures'` reads
+      // BOTH players' battlefields, every other predicate stays
+      // `ctx.you`-only.
+      const pool =
+        effect.predicate === 'attacking-creatures'
+          ? [ctx.you, ...ctx.opponents].flatMap((p) => p.getCreaturesInPlay()).filter((c) => c.isAttacking())
+          : effect.predicate === 'permanents-you-control'
+            ? ctx.you.getCardsIn('Battlefield')
+            : ctx.you.getCreaturesInPlay();
       for (const card of pool) {
         if (effect.notSelf && card.getId() === ctx.self.getId()) continue;
         if (effect.subtype && !card.hasSubtype(effect.subtype)) continue;
@@ -2390,6 +2814,15 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       return;
     case 'program':
       runProgram(effect.program, ctx, actions);
+      return;
+    case 'endTurn':
+      // Real 721.1a "including this card" — see `EffectContext.selfToExile`'s
+      // own doc comment for why this is set HERE (mid-resolution, on the
+      // shared `ctx` object) rather than threaded through `Actions.endTurn`
+      // itself (which mirrors Forge's real zero-arg API surface, no
+      // `EffectContext` concept at all — see `interfaces.ts`).
+      ctx.selfToExile = true;
+      actions.endTurn();
       return;
     default: {
       const _exhaustive: never = effect;
@@ -2443,7 +2876,13 @@ export function synergyTags(card: CardDefinition): string[] {
         // `${effect.from}` alone would silently stringify a real 2-zone
         // array via `Array.prototype.toString` (comma-joined, no real
         // delimiter) instead of a clearer, deliberate `/`-joined tag.
-        tags.push(`move:${Array.isArray(effect.from) ? effect.from.join('/') : effect.from}->${effect.to}`);
+        // `typeof effect.to === 'function'` check (2026-09-15, `to`'s own
+        // widening to `Computed<ZoneType>`, From Father to Son) — a
+        // closure has no meaningful string form; tagged `'varies'` rather
+        // than stringifying the function source.
+        tags.push(
+          `move:${Array.isArray(effect.from) ? effect.from.join('/') : effect.from}->${typeof effect.to === 'function' ? 'varies' : effect.to}`,
+        );
         break;
       case 'putCounter':
         tags.push(`counters:${effect.counterType}`);
@@ -2541,6 +2980,10 @@ export function synergyTags(card: CardDefinition): string[] {
   for (const keyword of card.keywords ?? []) tags.push(`keyword:${keyword}`);
   if (card.ptFormula?.kind === 'addPerEquipmentControlled') tags.push('static:Gets +X/+X for each Equipment you control.');
   if (card.ptFormula?.kind === 'setToCreaturesControlled') tags.push('static:Power is equal to the number of creatures you control.');
+  if (card.ptFormula?.kind === 'thresholdBonus') tags.push('static:Gets a bonus as long as a board-state threshold is met.');
+  if (card.ptFormula?.kind === 'addPerGraveyardCount') tags.push('static:Gets +X/+X for each card in your graveyard.');
+  if (card.ptFormula?.kind === 'setToGraveyardPermanentCount') tags.push('static:Power is equal to the number of permanent cards in your graveyard.');
+  if (card.ptFormula?.kind === 'addPerLandControlled') tags.push('static:Gets +X/+X for each land you control.');
   if (card.alternateCosts?.some((c) => c.from === 'graveyard')) tags.push('graveyard-recursion');
   if (card.backFace) tags.push(...synergyTags(card.backFace).map((t) => `backface:${t}`));
   return tags;

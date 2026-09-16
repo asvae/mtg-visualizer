@@ -14,6 +14,25 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
+      },
+      "triggeredBy": "onEquippedDealsDamage"
+    },
+    {
+      "event": "pump",
+      "target": {
+        "equippedBySelf": true
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 28
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousPTGrantsEquipped-structural"
       }
     }
   ],

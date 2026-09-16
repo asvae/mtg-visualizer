@@ -27,7 +27,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onLandfall"
     },
     {
       "event": "tap",
@@ -45,6 +46,23 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "discard",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 55,
+          "end": 69
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discard-effect-structural"
+      },
+      "triggeredBy": "onLandfall"
     }
   ],
   "sink": [

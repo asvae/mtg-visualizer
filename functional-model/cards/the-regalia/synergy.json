@@ -9,7 +9,63 @@
       "zone": "Graveyard",
       "controller": "you",
       "subject": "self"
+    },
+    {
+      "event": "crew",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
+    },
+    {
+      "event": "grantType",
+      "type": "Creature",
+      "target": "self",
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "animateSelfCreature-effect-structural"
+      }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
+    }
+  ]
 }

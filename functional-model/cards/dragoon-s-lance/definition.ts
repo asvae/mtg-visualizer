@@ -38,9 +38,23 @@ export const dragoonsLance: CardDefinition = {
   // Equip ability below — the two are independent abilities, so both fit
   // without the one-activated-ability-slot conflict crystal-fragments-
   // summon-alexander's own comment documents.
+  //
+  // `on: 'enter'` (2026-09-16, definition-lane sweep off sage-s-nouliths'
+  // own identical fix, itself found 2026-09-16 converting THAT card's
+  // scenario to a real engine-piloted trace) — WITHOUT this, `engine.ts`'s
+  // own real auto-fire (`card.triggers?.find((t) => t.on === 'enter')`)
+  // never fires this trigger at all; only the OLD declarative `harness.ts`
+  // scenario style's own name-fired `sequence` masked that (it fires a
+  // named trigger directly, ignoring `on` entirely — see this card's own
+  // `scenarios.ts`, still that older shape: `sequence: ['onEnter', ...]`,
+  // so this fix is currently unobservable via trace here too, same
+  // structural wall sage-s-nouliths' own comment documents — not fixed by
+  // rewriting this scenario, since no engine-piloted trace exists for this
+  // card yet).
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

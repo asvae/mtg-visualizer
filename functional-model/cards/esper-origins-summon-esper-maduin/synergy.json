@@ -18,12 +18,6 @@
       }
     },
     {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "face": "front"
-    },
-    {
       "zone": "Exile",
       "controller": "you",
       "subject": "self",
@@ -40,12 +34,6 @@
         "origin": "parser",
         "rule": "flashback-alternateCost-structural"
       }
-    },
-    {
-      "event": "grantKeyword",
-      "keyword": "Trample",
-      "controller": "you",
-      "face": "back"
     },
     {
       "event": "putCounter",
@@ -108,7 +96,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 26,
+          "start": 0,
           "end": 83
         }
       ],
@@ -116,6 +104,80 @@
       "provenance": {
         "origin": "parser",
         "rule": "flashback-alternateCost-structural"
+      }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Trample",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 53,
+          "end": 60
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      },
+      "triggeredBy": "chapterIII"
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 38,
+          "end": 43
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      },
+      "triggeredBy": "chapterIII"
+    },
+    {
+      "event": "surveil",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 9
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "surveil-effect-structural"
       }
     }
   ],
@@ -128,7 +190,48 @@
           "Creature"
         ]
       },
-      "face": "back"
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 6,
+          "end": 78
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
+    },
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 6,
+          "end": 33
+        },
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 6,
+          "end": 78
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
     }
   ]
 }

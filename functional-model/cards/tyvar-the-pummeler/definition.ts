@@ -15,18 +15,25 @@ export const tyvarThePummeler: CardDefinition = {
       // creature-tap-as-cost tracking exists (this model's costs are
       // documentary text, same as every other activationCost), the real
       // consequence (Tyvar becoming indestructible) is what's modeled.
+      // Real Forge (tmp/mtg-forge/.../t/tyvar_the_pummeler.txt) — "...gains
+      // indestructible UNTIL END OF TURN. Tap it." — `untilEndOfTurn: true`
+      // (2026-09-15 fix, fin/26-50 pass) was missing, same systemic omission
+      // bug class fixed pool-wide earlier this session.
       cost: 'Tap another untapped creature you control',
-      effects: [{ kind: 'grantKeywordSelf', keyword: 'Indestructible' } satisfies Effect],
+      effects: [{ kind: 'grantKeywordSelf', keyword: 'Indestructible', untilEndOfTurn: true } satisfies Effect],
     },
     {
       name: 'pump',
       cost: '{3}{G}{G}',
       effects: [
+        // Real "...get +X/+X UNTIL END OF TURN, where X is the greatest
+        // power among creatures you control." — same fix as above.
         {
           kind: 'pumpAll',
           predicate: 'creatures-you-control',
           power: (ctx) => Math.max(0, ...ctx.you.getCreaturesInPlay().map((c) => c.getNetPower())),
           toughness: (ctx) => Math.max(0, ...ctx.you.getCreaturesInPlay().map((c) => c.getNetPower())),
+          untilEndOfTurn: true,
         } satisfies Effect,
       ],
     },

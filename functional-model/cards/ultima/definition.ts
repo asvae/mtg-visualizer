@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { anyPlayer, destroyEach } from '../../combinator';
 
 export const ultima: CardDefinition = {
   name: 'Ultima',
@@ -13,31 +14,36 @@ export const ultima: CardDefinition = {
       // `DestroyEffect`: a player-CHOSEN pool of `qty` picks). `destroy`'s
       // own `validType` also only offers 'permanent'|'creature' — neither
       // covers "artifacts AND creatures, but not lands/enchantments."
-      // `custom`, looping the real `destroy` action over the real
-      // battlefield-wide pool filtered by `isArtifact()`/`isCreature()`, is
-      // the honest shape — every primitive here (`getCardsIn`, the two
-      // predicates, `actions.destroy`) already exists; this just isn't a
-      // "chosen N targets" loop the declarative `destroy` kind models.
-      kind: 'custom',
+      // Migrated 2026-09-16 off a `kind:'custom'` closure onto the real
+      // combinator DSL (2026-09-16 `cardType` Filter predicate + `destroy`
+      // EachAction, built for exactly this card) — a battlefield-wide pool
+      // (both players, `anyPlayer.permanentsInPlay()`, unfiltered by type —
+      // broader than `creaturesInPlay()`), narrowed by `filter('cardType',
+      // ['artifact', 'creature'])` (an OR-match of the two real printed
+      // types), then `destroyEach()` on every match. Same real behavior,
+      // now recognizer-readable data instead of an opaque closure.
+      kind: 'program',
       describe: 'destroy all artifacts and creatures',
-      run: (ctx: EffectContext, actions: Actions) => {
-        const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))].filter(
-          (c) => c.isArtifact() || c.isCreature()
-        );
-        for (const card of pool) actions.destroy(card);
-      },
+      program: anyPlayer.permanentsInPlay().filter('cardType', ['artifact', 'creature']).each(destroyEach()),
     } satisfies Effect,
     {
-      // "End the turn." — a real turn-ending game action (exile the stack,
-      // discard down to maximum hand size, damage/until-end-of-turn effects
-      // end) — no turn-ending machinery anywhere in this model (turn.ts
-      // tracks phases/steps, not a way to jump straight to cleanup) — real
-      // text only, same honest no-op treatment crystal-fragments-summon-
-      // alexander's own damage-prevention chapters get for a mechanic this
-      // model has no machinery for at all.
-      kind: 'custom',
-      describe: 'end the turn (exile the stack, discard down to maximum hand size, "until end of turn" effects end) — no turn-ending machinery in this model',
-      run: () => {},
+      // "End the turn." — real 721.1a machinery, built for real 2026-09-16
+      // (previously an honest, documented `kind:'custom'` no-op — no
+      // turn-ending primitive existed anywhere in this model at all). Now a
+      // genuine `kind:'endTurn'` effect: exiles everything still on the
+      // stack (legally always empty for THIS card by the time it resolves —
+      // a plain Sorcery can only ever be CAST with an already-empty stack,
+      // 307.1a/117.1a, so nothing can be pending underneath it — see
+      // `cards/ultima/progress.json` for the full reasoning), exiles Ultima
+      // ITSELF instead of letting it go to the graveyard (real Gatherer
+      // ruling on Time Stop, the same real ability: "This includes Time
+      // Stop, though it will continue to resolve" — `card.ts`'s own
+      // `EffectContext.selfToExile`), ends combat, checks state-based
+      // actions, then jumps straight to Cleanup (discard down to maximum
+      // hand size, damage/until-end-of-turn effects end) — see
+      // `interfaces.ts`'s own `endTurn` doc comment for the full real
+      // `EndTurnEffect.java` citation.
+      kind: 'endTurn',
     } satisfies Effect,
   ],
 };

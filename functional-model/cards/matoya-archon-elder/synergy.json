@@ -14,19 +14,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
-    },
-    {
-      "event": "drawCard",
-      "controller": "you",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 0,
-          "start": 44,
-          "end": 74
-        }
-      ]
+      },
+      "triggeredBy": "onScry"
     }
   ],
   "sink": [
@@ -40,7 +29,11 @@
           "start": 13,
           "end": 17
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "scryOrSurveilTrigger-structural"
+      }
     },
     {
       "event": "surveil",
@@ -52,7 +45,11 @@
           "start": 21,
           "end": 28
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "scryOrSurveilTrigger-structural"
+      }
     }
   ]
 }

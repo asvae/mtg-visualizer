@@ -1,14 +1,9 @@
 import type { CardDefinition } from '../../card';
 
 // Real script (xande_dark_mage.txt): "gets +1/+1 for each noncreature,
-// nonland card in your graveyard" — a real layer-7a CDA, but a THIRD shape
-// neither of `ptFormula`'s two built variants covers (not per-Equipment-
-// controlled, not set-to-creature-count) — card.ts's own `ptFormula` doc
-// comment states the boundary explicitly: "Anything else (a conditional
-// CDA, a formula over a different subtype/count) stays staticAbilities
-// text until a real card needs it." Kept as real text only, same treatment
-// that doc comment already prescribes rather than inventing a new
-// `ptFormula` variant in a shared file this batch has no write access to.
+// nonland card in your graveyard" — now real, executable
+// `ptFormula.kind:'addPerGraveyardCount'` (2026-09-16, static-ability audit
+// follow-up — see `card.ts`'s own doc comment for the real Forge citation).
 export const xandeDarkMage: CardDefinition = {
   name: 'Xande, Dark Mage',
   manaCost: '{2}{U}{B}',
@@ -18,4 +13,5 @@ export const xandeDarkMage: CardDefinition = {
   keywords: ['Menace'],
 
   staticAbilities: ['Xande, Dark Mage gets +1/+1 for each noncreature, nonland card in your graveyard.'],
+  ptFormula: { kind: 'addPerGraveyardCount', power: 1, toughness: 1 },
 };

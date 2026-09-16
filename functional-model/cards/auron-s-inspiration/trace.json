@@ -2,20 +2,53 @@
   {
     "scenario": {
       "setup": "you: 3 Plains(s)",
-      "action": "engine playthrough: cast from hand -> resolve -> graveyard",
-      "result": "Auron's Inspiration is cast from hand and resolves ({2}{W} paid), then goes to the graveyard; its own +2/+0-to-attackers effect is an intentional no-op in this model (no attacking-creature state tracked).",
+      "action": "engine playthrough: real attacker declared -> cast from hand during combat -> resolve (pumps only the attacker) -> graveyard",
+      "result": "Auron's Inspiration is cast from hand at instant speed during combat and resolves ({2}{W} paid) — real layer-7a effectivePT genuinely recalculates Coeurl (the only real declared attacker) from 2/2 to 4/2 (+2/+0 until end of turn), while Grizzly Bears (a real creature you control that did NOT attack) stays unchanged at 2/2 — the real \"attacking creatures,\" not \"creatures you control,\" scope. Auron's Inspiration then goes to the graveyard (no alternate cost paid, so no thenExile).",
       "raw": {
-        "result": "Auron's Inspiration is cast from hand and resolves ({2}{W} paid), then goes to the graveyard; its own +2/+0-to-attackers effect is an intentional no-op in this model (no attacking-creature state tracked).",
+        "result": "Auron's Inspiration is cast from hand at instant speed during combat and resolves ({2}{W} paid) — real layer-7a effectivePT genuinely recalculates Coeurl (the only real declared attacker) from 2/2 to 4/2 (+2/+0 until end of turn), while Grizzly Bears (a real creature you control that did NOT attack) stays unchanged at 2/2 — the real \"attacking creatures,\" not \"creatures you control,\" scope. Auron's Inspiration then goes to the graveyard (no alternate cost paid, so no thenExile).",
         "you": {
           "basicLands": [
             "Plains",
             "Plains",
             "Plains"
-          ]
+          ],
+          "libraryCount": 8
         }
       }
     },
     "log": [
+      {
+        "fn": "enters",
+        "card": "Coeurl",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
+        "fn": "enters",
+        "card": "Grizzly Bears",
+        "zone": "Battlefield",
+        "power": 2,
+        "toughness": 2,
+        "controller": "you"
+      },
+      {
+        "fn": "phase",
+        "phase": "CombatDeclareAttackers",
+        "turn": 1,
+        "player": "you"
+      },
+      {
+        "fn": "tap",
+        "target": "Coeurl",
+        "id": 14
+      },
+      {
+        "fn": "attack",
+        "card": "Coeurl",
+        "id": 14
+      },
       {
         "fn": "cast",
         "card": "Auron's Inspiration",
@@ -41,7 +74,15 @@
       {
         "fn": "read:getCreaturesInPlay",
         "player": "you",
-        "count": 0
+        "count": 2
+      },
+      {
+        "fn": "pump",
+        "target": "Coeurl",
+        "id": 14,
+        "power": 2,
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
@@ -57,12 +98,24 @@
         "from": 0
       },
       {
-        "label": "Cast Auron's Inspiration ({2}{W})",
+        "label": "Coeurl and Grizzly Bears already on the battlefield",
         "from": 0
       },
       {
+        "label": "Advance to Declare Attackers",
+        "from": 2
+      },
+      {
+        "label": "Declare Coeurl as attacker",
+        "from": 3
+      },
+      {
+        "label": "Cast Auron's Inspiration ({2}{W})",
+        "from": 5
+      },
+      {
         "label": "Resolve",
-        "from": 4
+        "from": 9
       }
     ]
   },
@@ -70,9 +123,9 @@
     "scenario": {
       "setup": "you: 4 Plains(s)",
       "action": "engine playthrough: Flashback cast from graveyard -> resolve -> exile",
-      "result": "Auron's Inspiration is cast from the graveyard via Flashback ({2}{W}{W} paid instead of {2}{W}) and resolves, then is exiled instead of returning to the graveyard (its own \"Then exile it\" clause); its own +2/+0-to-attackers effect is again an intentional no-op in this model.",
+      "result": "Auron's Inspiration is cast from the graveyard via Flashback ({2}{W}{W} paid instead of {2}{W}) and resolves, then is exiled instead of returning to the graveyard (its own \"Then exile it\" clause); no creature is attacking in this combat, so its real \"attacking creatures get +2/+0\" broadcast has nothing to affect this time (the pump-scope playthrough above already demonstrates the real mechanism live).",
       "raw": {
-        "result": "Auron's Inspiration is cast from the graveyard via Flashback ({2}{W}{W} paid instead of {2}{W}) and resolves, then is exiled instead of returning to the graveyard (its own \"Then exile it\" clause); its own +2/+0-to-attackers effect is again an intentional no-op in this model.",
+        "result": "Auron's Inspiration is cast from the graveyard via Flashback ({2}{W}{W} paid instead of {2}{W}) and resolves, then is exiled instead of returning to the graveyard (its own \"Then exile it\" clause); no creature is attacking in this combat, so its real \"attacking creatures get +2/+0\" broadcast has nothing to affect this time (the pump-scope playthrough above already demonstrates the real mechanism live).",
         "you": {
           "basicLands": [
             "Plains",

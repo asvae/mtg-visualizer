@@ -16,7 +16,7 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
-        "id": 2770,
+        "id": 4,
         "cost": "{4}{W}{W}, {T}"
       },
       {
@@ -27,14 +27,16 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2768,
-        "keyword": "Flying"
+        "id": 2,
+        "keyword": "Flying",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2769,
-        "keyword": "Flying"
+        "id": 3,
+        "keyword": "Flying",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -44,14 +46,16 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2768,
-        "keyword": "Lifelink"
+        "id": 2,
+        "keyword": "Lifelink",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2769,
-        "keyword": "Lifelink"
+        "id": 3,
+        "keyword": "Lifelink",
+        "untilEndOfTurn": true
       }
     ]
   },
@@ -72,7 +76,7 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
-        "id": 2772,
+        "id": 6,
         "cost": "{4}{W}{W}, {T}"
       },
       {
@@ -108,7 +112,7 @@
         "fn": "activate",
         "card": "The Wind Crystal",
         "instanceId": 1,
-        "id": 2774,
+        "id": 8,
         "cost": "{4}{W}{W}, {T}"
       },
       {

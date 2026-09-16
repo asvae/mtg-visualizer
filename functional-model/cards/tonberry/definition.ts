@@ -10,9 +10,13 @@ export const tonberry: CardDefinition = {
   // "Chef's Knife — During your turn, this creature has first strike and
   // deathtouch." A CONDITIONAL grant ("during your turn"), same reasoning
   // kain-traitorous-dragoon's own "Jump" (During your turn, has flying)
-  // keeps as freeform staticAbilities text rather than the unconditional
-  // `keywords` array.
+  // keeps text-only rather than the unconditional `keywords` array — now
+  // real, executable `continuousKeywordGrants` alongside it (2026-09-16,
+  // static-ability audit follow-up — same self-only, no-`subtype` shape
+  // freya-crescent's/kain-traitorous-dragoon's own identical grants use,
+  // here a real 2-keyword list).
   staticAbilities: ["Chef's Knife — During your turn, this creature has first strike and deathtouch."],
+  continuousKeywordGrants: [{ keywords: ['FirstStrike', 'Deathtouch'], includeSelf: true, onlyDuringYourTurn: true }],
 
   triggers: [
     {
@@ -26,7 +30,14 @@ export const tonberry: CardDefinition = {
       // ETB-modifier idiom, "enters tapped with a stun counter on it"), same
       // real divergence zack-fair's/relentless-x-atm092's own markers
       // document. See that recognizer's own module doc comment.
+      //
+      // recognizer-exception: entersBattlefield-self-trigger-structural —
+      // same real CR 614.12 "enters tapped" idiom as above: no "When/
+      // Whenever this creature enters" clause exists in the real printed
+      // text at all, so this recognizer correctly declines rather than
+      // asserting a false sink fact.
       name: 'onEnter',
+      on: 'enter',
       effects: [
         { kind: 'tapTarget', validType: 'creature', owner: 'you' } satisfies Effect,
         { kind: 'putCounter', target: 'self', counterType: 'stun', amount: 1 } satisfies Effect,

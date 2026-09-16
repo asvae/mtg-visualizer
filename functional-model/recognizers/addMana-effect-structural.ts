@@ -55,7 +55,7 @@
 import type { CardDefinition, Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, collectEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, collectEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 const RULE = 'addMana-effect-structural' as const;
 
@@ -135,15 +135,19 @@ function matchesOutsideQuotes(oracleText: string, pattern: RegExp): RegExpMatchA
 }
 
 export function recognizeAddManaEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const effects = allEffects(input).filter(isAddManaEffect);
+  const effects = allEffects(input).map((o) => o.effect).filter(isAddManaEffect);
   if (effects.length === 0) {
     return { matched: false, reason: 'no kind:"addMana" Effect on this face' };
   }
 
   const facts: RecognizedFact[] = [];
   const annotationByEffect = new Map<AddManaEffect, ReturnType<typeof toLineOffset>>();
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of effects) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     const pattern = buildPattern(effect.color);
     const matches = matchesOutsideQuotes(input.oracleText, pattern);
     if (matches.length === 0) {
@@ -172,7 +176,7 @@ export function recognizeAddManaEffectStructural(input: StructuralRecognizerInpu
 
     facts.push({
       role: 'source',
-      fact: { event: 'addMana', colors: { has: [effect.color] }, controller: 'you', annotations: [annotation] },
+      fact: { event: 'addMana', colors: { has: [effect.color] }, controller: 'you', annotations: [annotation], ...(triggeredBy ? { triggeredBy } : {}) },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

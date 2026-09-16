@@ -21,6 +21,35 @@
       "zone": "Battlefield",
       "controller": "you",
       "subject": "self"
+    },
+    {
+      "event": "sacrifice",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Creature",
+            "Artifact"
+          ]
+        },
+        "excludeSelf": true
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 106,
+          "end": 164
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      },
+      "triggeredBy": "onDealsDamage"
     }
   ],
   "sink": [
@@ -33,7 +62,19 @@
           "Artifact"
         ]
       },
-      "excludeSelf": true
+      "excludeSelf": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 124,
+          "end": 152
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     }
   ]
 }

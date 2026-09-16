@@ -399,6 +399,20 @@ function producedEvents(entry, cardName) {
     // scenario.
     case 'attack':
       return entry.card === cardName ? [{ event: 'attacks', side: 'you' }] : [];
+    // `beginCombat-trigger-structural.ts`'s own real "At the beginning of
+    // combat on your turn," precondition sink (2026-09-16, weapons-vendor's
+    // own remaining coverage gap) — genuinely new event vocabulary: nothing
+    // in the pool declared a `beginCombat` fact before this. Real trace
+    // evidence already existed and needed no new engine/scenario work —
+    // `advance`/`advanceOneStep` (`engine-trace.ts`) already logs a real
+    // `{fn:'phase', phase:'CombatBegin', player}` line every time turn
+    // passage reaches the Combat-Begin phase (`turn.ts`'s own `PHASES`),
+    // independent of whether any card's own trigger fires there at all.
+    // Player-scoped (not self-referencing the way `attack` above is) since
+    // the real fact is `controller:'you'` — "wants YOUR OWN combat phase to
+    // begin," not "wants ITSELF to attack."
+    case 'phase':
+      return entry.phase === 'CombatBegin' ? [{ event: 'beginCombat', side: entry.player === 'you' ? 'you' : 'opp' }] : [];
     // Promoted off `PARKED_ACTION_FNS` (2026-09-11, Coeurl/fin-12's own real
     // "{1}{W}, {T}: Tap target nonenchantment creature." — the first card in
     // the pool whose own EFFECT, not just its activation cost, is a tap).
@@ -655,6 +669,13 @@ const TRIGGER_EVENT_MAP = {
   // subtype-filtered (the filter lives on the fact's own `types`, not the
   // trigger name).
   onOtherElfEnters: 'entersBattlefield',
+  // Weapons Vendor's own real "At the beginning of combat on your turn,"
+  // trigger (2026-09-16, `beginCombat-trigger-structural.ts`'s own new
+  // sink) — this card's own scenario fires it for real via
+  // `pilotFireTrigger` (`engine-trace.ts`), which already logs a real
+  // `{fn:'trigger', name:'onBeginCombat'}` bracket, so this map entry alone
+  // is enough real evidence — no new trace machinery needed.
+  onBeginCombat: 'beginCombat',
   // Champions of the Perfect's own real "Whenever you cast a creature
   // spell, draw a card" — same naming convention onCastNoncreatureSpell
   // (shantotto-tactician-magician) already establishes for a cast trigger.
@@ -719,6 +740,16 @@ const TRIGGER_EVENT_MAP = {
   // exists in this card's own harness-style scenario — same documented
   // limitation as every other manually-fired trigger name in this map).
   onCastNoncreatureSpell4Mana: 'cast',
+  // Shantotto, Tactician Magician / Tellah, Great Sage / Vivi Ornitier's own
+  // real bare "Whenever you cast a noncreature spell, ..." (no mana-spent
+  // qualifier at all — checked directly against all 3 cards' own real
+  // Scryfall oracle text, genuinely bare, not a truncated form of the
+  // `4Mana` sibling above) — same generic `'cast'` event as its `4Mana`
+  // sibling, newly recognized by `castTypeSpell-trigger-structural`
+  // (2026-09-16, fin/26-50 re-triage follow-up); all 3 cards' own
+  // `scenarios.ts` already fires `trigger: 'onCastNoncreatureSpell'`
+  // directly, so this is real evidence, not a guess.
+  onCastNoncreatureSpell: 'cast',
   // Rook Turret's own real "Whenever another artifact you control enters,
   // you may draw a card. If you do, discard a card." (fin/69, 2026-09-12) —
   // same shape/precedent as `onOtherElfEnters`/`onOtherCreatureEnters`
@@ -1167,34 +1198,28 @@ function isCostOnlyArtifactSacrificeFact(p, card) {
 }
 
 /**
- * Auron's Inspiration's own real "Attacking creatures get +2/+0 until end
- * of turn" — `target: {types:{has:['Creature']}, attacking:true}` (the
- * `attacking` half added 2026-09-11, later same day, per the user's own
- * live spot-check: the fact must actually SAY "attacking creatures," not
- * stay silent about scope — see `synergy.ts`'s own `Constraints.attacking`
- * doc comment). A genuine, DEEP, already-documented engine gap (see this
- * card's own `definition.ts` comment in full): no live attacker-state
- * reaches `card.ts`'s engine-agnostic `Effect`/`EffectContext` surface at
- * all (no `Card.isAttacking()`, no `pumpAll` predicate broadcasting across
- * BOTH players), so the effect is an honest, intentional no-op — there is
- * no scenario addition that could produce real `pump` trace evidence for
- * this specific fact without first building that missing cross-cutting
- * engine surface (a real, separate, larger task, not a one-card fix). This
- * is UNCHANGED by the `attacking` addition — `Constraints.attacking` isn't
- * consulted by `satisfiesConstraints` either (same real limitation, see
- * its own doc comment), so there was never a live-state path this
- * exemption could instead lean on. User's own explicit call (2026-09-11):
- * the FACT should exist regardless — a real, scoped `pump` signal is fine
- * even without engine execution backing it, same tolerance the annotation-
- * required rule already extends to a fact with real textual backing but
- * imperfect trace coverage. Deliberately scoped to THIS one card/fact (not
- * a blanket "any unimplemented pump is fine" exemption) — a future `pump`
- * fact still needs real trace evidence unless it hits this exact
- * documented wall.
+ * RETIRED (2026-09-16) — `isAuronsInspirationBroadcastPumpFact` used to
+ * exempt Auron's Inspiration's own real "Attacking creatures get +2/+0
+ * until end of turn" `pump` fact from trace-evidence checking here: no live
+ * attacker-state reached `card.ts`'s engine-agnostic `Effect`/
+ * `EffectContext` surface at all (no `Card.isAttacking()`, no `pumpAll`
+ * predicate broadcasting across BOTH players), so the effect was an
+ * honest, intentional no-op with no possible trace evidence. That cross-
+ * cutting engine surface is real now (ENGINE_GAPS.md closure, 2026-09-15:
+ * `Card.isAttacking()`/`GameState.attackers`, `pumpAll`'s own
+ * `predicate:'attacking-creatures'`, and a new structural recognizer,
+ * `recognizers/pumpAllAttacking-effect-structural.ts`), and this card's own
+ * `scenarios.ts` was migrated to a real engine-piloted trace
+ * (`pilotDeclareAttackers` + a real `effectivePT` before/after check) that
+ * genuinely logs a `{fn:'pump', target:'Coeurl', power:2, toughness:0,
+ * untilEndOfTurn:true}` line — real, ordinary `producedEvents`'s own
+ * `case 'pump'` evidence, no exemption needed anymore (same "no longer
+ * needed, not fixed AROUND" retirement this file's own Crystal Fragments
+ * NOTE above already established for the identical gap class on a
+ * different fact). Removed for real, not just left as dead code, since a
+ * future regression on this fact would otherwise be silently swallowed by
+ * a stale exemption instead of surfacing as a real failure.
  */
-function isAuronsInspirationBroadcastPumpFact(p, card) {
-  return p.event === 'pump' && card.name === "Auron's Inspiration";
-}
 
 /**
  * Matoya, Archon Elder's own real "Whenever you scry or surveil, draw a
@@ -1266,125 +1291,27 @@ function isMatoyaScryBroadcastWant(w, card) {
  * `isCrystalFragmentsEquippedPumpFact` above already establish — scoped to
  * THIS one card/fact, not a blanket "any unimplemented pump is fine" pass.
  */
-function isGaelicatArtifactThresholdPumpFact(p, card) {
-  return p.event === 'pump' && card.name === 'Gaelicat';
-}
-
-/**
- * Magitek Infantry's own real "This creature gets +1/+0 as long as you
- * control another artifact" — the exact same real engine gap class as
- * Gaelicat's own identical-SHAPED (if differently-worded) threshold CDA
- * right above: a genuine layer-7a CDA, but a THRESHOLD-gated one (on/off at
- * a count boundary — "another artifact" = 1-or-more OTHER artifacts, same
- * on/off-not-scaling shape Gaelicat's own "two or more" is), not either of
- * the two real `ptFormula` shapes this engine actually implements. `card
- * .ts`'s own `CardDefinition.ptFormula` doc comment says the same thing
- * Gaelicat's own `definition.ts` comment already documents for this exact
- * card too (kept as `staticAbilities` text, not a new `ptFormula` variant).
- * No `effectivePT`-driven `read:getNetPower` line (or any other trace
- * evidence) is achievable for this fact without first building genuine
- * threshold-CDA machinery — a real, separate, larger engine task, not a
- * one-card fix. Same "real fact, real documented engine gap, tolerated via
- * a narrowly-scoped named exemption" treatment `isGaelicatArtifactThresholdPumpFact`
- * above establishes — scoped to THIS one card/fact, not a blanket "any
- * unimplemented pump is fine" pass.
- */
-function isMagitekInfantryArtifactThresholdPumpFact(p, card) {
-  return p.event === 'pump' && card.name === 'Magitek Infantry';
-}
-
-/**
- * The WANT-side sibling of `isMagitekInfantryArtifactThresholdPumpFact`
- * above — Magitek Infantry's own real condition ("as long as you control
- * ANOTHER artifact") is also authored as a genuine `Constraints`-based
- * zone-shaped SINK (`{to:'Battlefield', controller:'you', types:{has:
- * ['Artifact']}, amount:{min:1}}`), per SYNERGY_DESIGN.md's own "a card's
- * static condition is itself a real want other cards' own artifact-producing
- * effects can satisfy" framing — not merely a bare unbacked `pump` source
- * fact. Same real engine gap as the produce side: no threshold-CDA machinery
- * anywhere in this engine ever performs a live `read:getCardsIn`/
- * `read:getCreaturesInPlay`-style Battlefield-artifact-count check for this
- * text (confirmed — the static ability is pure descriptive text, `card.ts`'s
- * `staticAbilities` field, never a resolvable `Effect`), so no scenario
- * addition could ever produce the `hasAggregateRead`/`hasTypedRead` evidence
- * the zone-shaped want check otherwise requires. `amount` itself is never
- * matched by `factsInteract`/`satisfiesConstraints` (synergy.ts's own
- * `constraintsOf`/`hasAnyConstraint` — real, checked-purely-descriptive
- * field, same as everywhere else in the pool), so "another" (vs. a plain
- * "an") artifact needs no separate self-exclusion mechanism here either —
- * a second real copy of Magitek Infantry entering the battlefield (from
- * this card's own tutor, or literally anywhere else in the pool) genuinely
- * DOES satisfy "another artifact," and correctly shows up as a real
- * `selfInteractionKind: 'second-copy'` self-match (synergy.ts), not a false
- * positive needing exclusion — checked against `factsInteract`'s own zone
- * branch before writing this exemption. Scoped to THIS one card, not a
- * blanket "any threshold-condition want is unverifiable" pass.
- */
-/**
- * Scorpion Sentinel's own real "As long as you control seven or more
- * lands, this creature gets +3/+0" (fin/72) — the exact same real engine
- * gap class as Gaelicat's/Magitek Infantry's own threshold CDAs right
- * above: a genuine layer-7a CDA, but a THRESHOLD-gated one (on/off at a
- * count boundary — "seven or more lands"), not either of the two real
- * `ptFormula` shapes this engine actually implements (`card.ts`'s own
- * `CardDefinition.ptFormula` doc comment). `definition.ts` itself already
- * documented this exact call BEFORE the unified Fact model even existed —
- * scorpion-sentinel and gigantoad are the two ORIGINAL real precedent
- * cards `isGaelicatArtifactThresholdPumpFact`'s own doc comment cites,
- * migrated to the Fact model here for the first time. No `effectivePT`-
- * driven `read:getNetPower` line (or any other trace evidence) is
- * achievable for this fact without first building genuine threshold-CDA
- * machinery — a real, separate, larger engine task, not a one-card fix.
- * Same "real fact, real documented engine gap, tolerated via a narrowly-
- * scoped named exemption" treatment as its own land-count siblings.
- */
-function isScorpionSentinelLandThresholdPumpFact(p, card) {
-  return p.event === 'pump' && card.name === 'Scorpion Sentinel';
-}
-
-/**
- * The WANT-side sibling of `isScorpionSentinelLandThresholdPumpFact` above
- * — Scorpion Sentinel's own real condition ("as long as you control seven
- * or more lands") is also authored as a genuine `Constraints`-based
- * zone-shaped SINK (`{to:'Battlefield', controller:'you', types:{has:
- * ['Land']}, amount:{min:7}}`), same "a card's static condition is itself
- * a real want other cards' own land-producing effects can satisfy"
- * framing `isMagitekInfantryArtifactThresholdWant` above establishes for
- * its own artifact-count condition. Same real engine gap: no threshold-CDA
- * machinery anywhere in this engine ever performs a live land-count read
- * for this text (pure descriptive `staticAbilities` text, never a
- * resolvable `Effect`), so no scenario addition could ever produce the
- * evidence the zone-shaped want check otherwise requires. Scoped to THIS
- * one card, not a blanket "any threshold-condition want is unverifiable"
- * pass.
- */
-function isScorpionSentinelLandThresholdWant(w, card) {
-  return (
-    card.name === 'Scorpion Sentinel' &&
-    effectiveZone(w) === 'Battlefield' &&
-    (!w.controller || w.controller === 'you') &&
-    w.types &&
-    Array.isArray(w.types.has) &&
-    w.types.has.length === 1 &&
-    w.types.has[0] === 'Land' &&
-    !w.types.hasAny &&
-    !w.types.not
-  );
-}
-
-function isMagitekInfantryArtifactThresholdWant(w, card) {
-  return (
-    card.name === 'Magitek Infantry' &&
-    effectiveZone(w) === 'Battlefield' &&
-    (!w.controller || w.controller === 'you') &&
-    w.types &&
-    Array.isArray(w.types.has) &&
-    w.types.has.length === 1 &&
-    w.types.has[0] === 'Artifact' &&
-    !w.types.hasAny &&
-    !w.types.not
-  );
-}
+// `isGaelicatArtifactThresholdPumpFact`/`isMagitekInfantryArtifactThresholdPumpFact`/
+// `isMagitekInfantryArtifactThresholdWant` REMOVED 2026-09-15 (fin/16-25
+// pass) — the real engine gap these three exemptions documented (no
+// threshold-CDA machinery at all) is now CLOSED: `card.ts`'s new
+// `ptFormula.kind:'thresholdBonus'` (real Forge `IsPresent$/
+// PresentCompare$ GE<min>` citations on that field's own doc comment) plus
+// `state.ts`'s `effectivePT` handling it means both cards' own `pump`
+// source facts now get real, genuine `read:getNetPower` trace evidence
+// (the pre-existing generic `harness.ts` gate that pushes this line for
+// ANY card with a `ptFormula`, once on the battlefield — no scenario
+// changes needed, it already fires off each card's own existing board
+// state) via the pre-existing generic `case 'read:getNetPower'` branch
+// above — same mechanism Adelbert Steiner's own scaling CDA already relied
+// on, now genuinely extended to a threshold-gated CDA too.
+//
+// `isScorpionSentinelLandThresholdPumpFact`/`isScorpionSentinelLandThresholdWant`
+// REMOVED the same pass, same reason, generalized to the LAND-count shape
+// (Scorpion Sentinel AND Gigantoad both migrated to `ptFormula` — Gigantoad
+// had NO facts at all before this, its own `scenarios.ts` rewritten to a
+// real `engine-trace.ts` pilot the same way Scorpion Sentinel's already
+// was, so both now have real trace evidence, not just Scorpion Sentinel).
 
 /**
  * NOTE (ENGINE_GAPS.md gap #8, closed 2026-09-12): Summon: Alexander's own
@@ -1478,7 +1405,8 @@ function isEquippedKeywordGrantFact(p, card) {
  * that line — explicitly EXCLUDED from this shape check by name so its own
  * `pump` fact is evaluated for real evidence below instead of exempted
  * away (see the NOTE where `isCrystalFragmentsEquippedPumpFact` used to be,
- * just above `isGaelicatArtifactThresholdPumpFact`).
+ * just above where the now-removed `isGaelicatArtifactThresholdPumpFact`
+ * used to sit — both since closed for real, see that NOTE).
  *
  * **Thief's Knife ALSO excluded (2026-09-12, later same day)** — the SAME
  * reason as Crystal Fragments: its own `scenarios.ts` was migrated to a
@@ -2004,10 +1932,6 @@ async function verifyCard(slug) {
       if (isCoinFlipFact(p, card)) continue; // the flip itself, guaranteed by the ability's own printed text — see hasCoinFlipAbility/isCoinFlipFact
       if (isCoinFlipTokenSubjectFact(p, card)) continue; // a coin-flip-produced token's own ETB — see isCoinFlipTokenSubjectFact
       if (isCostOnlyArtifactSacrificeFact(p, card)) continue; // the sacrifice ACT itself, cost-only, tautologically real — see isCostOnlyArtifactSacrificeFact
-      if (isAuronsInspirationBroadcastPumpFact(p, card)) continue; // real fact, real documented engine gap blocks any possible trace evidence — see isAuronsInspirationBroadcastPumpFact
-      if (isGaelicatArtifactThresholdPumpFact(p, card)) continue; // real fact, real documented engine gap (no threshold-CDA machinery) — see isGaelicatArtifactThresholdPumpFact
-      if (isMagitekInfantryArtifactThresholdPumpFact(p, card)) continue; // real fact, same threshold-CDA engine gap as Gaelicat — see isMagitekInfantryArtifactThresholdPumpFact
-      if (isScorpionSentinelLandThresholdPumpFact(p, card)) continue; // real fact, same threshold-CDA engine gap as Gaelicat/Magitek Infantry — see isScorpionSentinelLandThresholdPumpFact
       if (isSelfTapActivationCostFact(p)) continue; // the {T} cost payment itself, never logged — see isSelfTapActivationCostFact
       if (isSelfExileActivationCostFact(p)) continue; // the exile-this-artifact cost payment itself, never logged — see isSelfExileActivationCostFact
       if (isSelfSacrificeActivationCostFact(p)) continue; // a NAMED self-sacrifice cost payment itself, never payable through canActivateAbility — see isSelfSacrificeActivationCostFact
@@ -2098,8 +2022,6 @@ async function verifyCard(slug) {
       const zone = effectiveZone(w);
       if (isLandTapSelfWant(w) && hasStaticLandTapSelfTrigger(card)) continue; // see isLandTapSelfWant/hasStaticLandTapSelfTrigger
       if (isCostOnlyArtifactSacrificeWant(w, card)) continue; // see hasCostOnlyArtifactSacrifice/isCostOnlyArtifactSacrificeWant
-      if (isMagitekInfantryArtifactThresholdWant(w, card)) continue; // real fact, real documented engine gap (no threshold-CDA machinery) — see isMagitekInfantryArtifactThresholdWant
-      if (isScorpionSentinelLandThresholdWant(w, card)) continue; // real fact, real documented engine gap (no threshold-CDA machinery) — see isScorpionSentinelLandThresholdWant
       if (isCrewCostCreatureWant(w, card)) continue; // see isCrewCostCreatureWant
       const hasAggregateRead = allEntries.some((e) => aggregateReadZone(e) === zone);
       const hasTypedRead = allEntries.some((e) => LOW_LEVEL_READ_FNS.has(e.fn));

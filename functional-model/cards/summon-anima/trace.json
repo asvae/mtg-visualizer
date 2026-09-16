@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Summon: Anima",
         "instanceId": 1,
-        "id": 2323,
+        "id": 2,
         "name": "chapterI"
       },
       {
@@ -43,7 +43,7 @@
         "fn": "trigger",
         "card": "Summon: Anima",
         "instanceId": 1,
-        "id": 2325,
+        "id": 4,
         "name": "chapterII"
       },
       {
@@ -72,7 +72,7 @@
         "fn": "trigger",
         "card": "Summon: Anima",
         "instanceId": 1,
-        "id": 2327,
+        "id": 6,
         "name": "chapterIII"
       },
       {
@@ -106,7 +106,7 @@
         "fn": "trigger",
         "card": "Summon: Anima",
         "instanceId": 1,
-        "id": 2331,
+        "id": 10,
         "name": "chapterIV"
       },
       {

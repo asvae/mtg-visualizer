@@ -9,6 +9,7 @@ export const namazuTrader: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         { kind: 'loseLife', owner: 'you', amount: 1 } satisfies Effect,
         { kind: 'createToken', token: TOKENS.c_a_treasure_sac, amount: 1 } satisfies Effect,

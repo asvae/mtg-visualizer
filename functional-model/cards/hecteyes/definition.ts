@@ -5,5 +5,5 @@ export const hecteyes: CardDefinition = {
   manaCost: '{1}{B}',
   typeLine: 'Creature — Ooze Horror',
 
-  triggers: [{ name: 'onEnter', effects: [{ kind: 'discard', owner: 'opponents', qty: 1 } satisfies Effect] }],
+  triggers: [{ name: 'onEnter', on: 'enter', effects: [{ kind: 'discard', owner: 'opponents', qty: 1 } satisfies Effect] }],
 };

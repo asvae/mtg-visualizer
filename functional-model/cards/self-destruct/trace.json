@@ -23,7 +23,7 @@
         "fn": "cast",
         "card": "Self-Destruct",
         "instanceId": 1,
-        "id": 2110,
+        "id": 5,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -50,24 +50,24 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 2107,
+        "sourceId": 2,
         "target": "Grizzly Bears",
-        "id": 2109,
+        "id": 4,
         "amount": 4
       },
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 2107,
+        "sourceId": 2,
         "target": "Grizzly Bears",
-        "id": 2107,
+        "id": 2,
         "amount": 4
       },
       {
         "fn": "move",
         "card": "Self-Destruct",
         "instanceId": 1,
-        "id": 2110,
+        "id": 5,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -93,7 +93,7 @@
         "fn": "cast",
         "card": "Self-Destruct",
         "instanceId": 1,
-        "id": 2113,
+        "id": 8,
         "from": "hand",
         "cost": "{1}{R}"
       },
@@ -115,16 +115,16 @@
       {
         "fn": "dealDamage",
         "source": "Grizzly Bears",
-        "sourceId": 2112,
+        "sourceId": 7,
         "target": "Grizzly Bears",
-        "id": 2112,
+        "id": 7,
         "amount": 3
       },
       {
         "fn": "move",
         "card": "Self-Destruct",
         "instanceId": 1,
-        "id": 2113,
+        "id": 8,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

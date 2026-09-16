@@ -3,7 +3,7 @@
   "review": "ai",
   "verifySynergy": "pass",
   "lastVerified": "2026-09-04",
-  "notes": "",
+  "notes": "2026-09-16 (blast radius, weapons-vendor/fin-40's own beginCombat-trigger-structural.ts pass): new recognizer-derived {event:'beginCombat', controller:'you'} sink fact added for real (this card's own \"At the beginning of combat on your turn,\" clause, previously fact-less/uncovered) via a scoped apply-recognizers.mjs run — not otherwise touched this pass. verify-synergy.mjs clean (0 hard failures).\n\n",
   "textCoverageAudited": false,
   "knownGaps": []
 }

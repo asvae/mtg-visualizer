@@ -44,14 +44,18 @@ export const theWindCrystal: CardDefinition = {
   // own life-gain path) really reflects both grants. Two separate calls,
   // one per keyword — no Effect kind grants more than one keyword at once
   // (same "one call per keyword" convention Restoration Magic's own Cure/
-  // Cura/Curaga modes already establish). DURATION isn't tracked by the
-  // engine itself (the grant is permanent within a scenario, same caveat
-  // every other `grantKeyword*` use already documents) — the real "until
-  // end of turn" duration is asserted at the `Fact` level only
-  // (`untilEndOfTurn: true`, synergy.json), not enforced here.
+  // Cura/Curaga modes already establish). **Real bug fixed 2026-09-15**:
+  // both effects below were missing `untilEndOfTurn: true` entirely (this
+  // comment used to say duration "isn't tracked... not enforced here," but
+  // that was itself the bug, not a design choice — `state.ts`'s own real
+  // 514.2 Cleanup removal (`clearUntilEndOfTurnKeywordGrants`) genuinely
+  // does clear an `untilEndOfTurn: true` grant; an omitted flag silently
+  // meant PERMANENT-within-scenario instead of the real card's actual
+  // "until end of turn" duration). Now real and enforced, same as every
+  // other `grantKeyword*` effect in this pool.
   activationCost: '{4}{W}{W}, {T}',
   effects: [
-    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Flying' } satisfies Effect,
-    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Lifelink' } satisfies Effect,
+    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Flying', untilEndOfTurn: true } satisfies Effect,
+    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Lifelink', untilEndOfTurn: true } satisfies Effect,
   ],
 };

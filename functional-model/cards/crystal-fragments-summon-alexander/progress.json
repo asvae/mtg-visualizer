@@ -16,5 +16,16 @@
     "front": "Equipped creature gets +1/+1.\n{5}{W}{W}: Exile this Equipment, then return it to the battlefield transformed under its owner's control. Activate only as a sorcery.\nEquip {1}",
     "back": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI, II — Prevent all damage that would be dealt to creatures you control this turn.\nIII — Tap all creatures your opponents control.\nFlying"
   },
-  "reviewedAt": "2026-09-11"
+  "reviewedAt": "2026-09-11",
+  "annotatedNonFactSpans": [
+    {
+      "target": "oracle",
+      "line": 1,
+      "start": 67,
+      "end": 133,
+      "face": "front",
+      "kind": "definition-path",
+      "note": "2026-09-16 (verify-text-coverage.mjs widening pass): 'transformed under its owner's control. Activate only as a sorcery.' — deliberately NOT part of sequenceExileReturn-effect-structural's own annotation (that recognizer's own doc comment: 'the built pattern never anchors whatever real, per-card suffix follows... carries no separate fact this recognizer's own claim needs'). The 'transformed under its owner's control' half maps to this card's own real CardDefinition.backFace (the CR 712/714.2b transform target the exile-then-return sequence actually reaches); the 'Activate only as a sorcery' half maps to this same activated ability's own activationCost, which now carries the literal '(activate only as a sorcery)' restriction text explicitly (this pass) for accuracy — the timing itself was ALREADY correctly enforced before this change, but only as a side effect of engine.ts's isEquipment(card) 301.5c fallback (this permanent's typeLine is Artifact — Equipment), not the real printed restriction on THIS specific ability. Neither half has its own separate Fact — nothing in this pool's vocabulary claims 'enters transformed' or an ability's own timing restriction as a discrete Fact."
+    }
+  ]
 }

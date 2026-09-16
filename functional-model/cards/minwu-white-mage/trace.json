@@ -25,7 +25,7 @@
         "fn": "cast",
         "card": "Minwu, White Mage",
         "instanceId": 1,
-        "id": 1698,
+        "id": 4,
         "from": "hand",
         "cost": "{3}{W}{W}"
       },
@@ -33,13 +33,13 @@
         "fn": "enters",
         "card": "Minwu, White Mage",
         "instanceId": 1,
-        "id": 1698,
+        "id": 4,
         "zone": "Battlefield"
       },
       {
         "fn": "dealDamage",
         "source": "Minwu, White Mage",
-        "sourceId": 1698,
+        "sourceId": 4,
         "target": "opp0",
         "amount": 3
       },
@@ -53,7 +53,7 @@
         "fn": "trigger",
         "card": "Minwu, White Mage",
         "instanceId": 1,
-        "id": 1698,
+        "id": 4,
         "name": "onLifeGained"
       },
       {
@@ -70,7 +70,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1696,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -84,7 +84,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 1697,
+        "id": 3,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -98,7 +98,7 @@
       {
         "fn": "putCounter",
         "target": "Minwu, White Mage",
-        "id": 1698,
+        "id": 4,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

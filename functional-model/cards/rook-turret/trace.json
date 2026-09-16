@@ -19,7 +19,7 @@
         "fn": "cast",
         "card": "Rook Turret",
         "instanceId": 1,
-        "id": 1998,
+        "id": 4,
         "from": "hand",
         "cost": "{3}{U}"
       },
@@ -27,14 +27,14 @@
         "fn": "enters",
         "card": "Rook Turret",
         "instanceId": 1,
-        "id": 1998,
+        "id": 4,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Rook Turret",
         "instanceId": 1,
-        "id": 1998,
+        "id": 4,
         "name": "onArtifactEnters"
       },
       {

@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Tifa Lockhart",
         "instanceId": 1,
-        "id": 2852,
+        "id": 2,
         "name": "onLandfall"
       },
       {
@@ -25,7 +25,7 @@
       {
         "fn": "pump",
         "target": "Tifa Lockhart",
-        "id": 2852,
+        "id": 2,
         "power": 1,
         "toughness": 0
       }
@@ -46,7 +46,7 @@
         "fn": "cast",
         "card": "Tifa Lockhart",
         "instanceId": 1,
-        "id": 2854,
+        "id": 4,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -54,7 +54,7 @@
         "fn": "enters",
         "card": "Tifa Lockhart",
         "instanceId": 1,
-        "id": 2854,
+        "id": 4,
         "zone": "Battlefield"
       },
       {

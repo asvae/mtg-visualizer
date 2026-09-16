@@ -10,14 +10,25 @@
         }
       },
       "targeted": true,
+      "untilEndOfTurn": true,
       "annotations": [
         {
           "target": "oracle",
           "line": 0,
           "start": 16,
           "end": 26
+        },
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 89,
+          "end": 99
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpProgram-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -35,7 +46,11 @@
           "start": 0,
           "end": 44
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpProgram-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -52,10 +67,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 49,
-          "end": 84
+          "start": 46,
+          "end": 125
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpProgram-effect-structural"
+      }
     }
   ]
 }

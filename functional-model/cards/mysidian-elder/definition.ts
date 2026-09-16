@@ -10,6 +10,7 @@ export const mysidianElder: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'createToken',

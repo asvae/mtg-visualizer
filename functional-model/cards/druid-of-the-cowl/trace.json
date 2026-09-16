@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Druid of the Cowl",
         "instanceId": 1,
-        "id": 695,
+        "id": 2,
         "from": "hand",
         "cost": "{1}{G}"
       },
@@ -21,7 +21,7 @@
         "fn": "enters",
         "card": "Druid of the Cowl",
         "instanceId": 1,
-        "id": 695,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]

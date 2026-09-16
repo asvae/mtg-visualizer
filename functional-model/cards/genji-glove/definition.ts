@@ -25,11 +25,23 @@ export const genjiGlove: CardDefinition = {
   manaCost: '{5}',
   typeLine: 'Artifact — Equipment',
 
+  // Real, mechanical `continuousKeywordGrants` (2026-09-16, static-ability
+  // audit follow-up — same already-real query-time machinery
+  // dragoon-s-lance's own Flying grant already uses).
   staticAbilities: ['Equipped creature has double strike.'],
+
+  continuousKeywordGrants: [{ keywords: ['DoubleStrike'], includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     {
       name: 'onEquippedAttacksFirstCombat',
+      // Real, executable auto-fire via `on: 'equippedAttacks'` (closed
+      // 2026-09-16, card.ts's own `Trigger.on` doc comment) — previously
+      // this trigger fired only via a manual `sequence`/`trigger` name in
+      // the old `harness.ts`-style `scenarios.ts` (not migrated to a real
+      // engine-piloted trace in this same pass — see that file's own note
+      // on why this card's own real trace evidence is deferred).
+      on: 'equippedAttacks',
       effects: [
         {
           kind: 'custom',

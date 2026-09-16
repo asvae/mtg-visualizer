@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { dragoonsLance } from '../cards/dragoon-s-lance/definition';
 import { crystalFragmentsSummonAlexander } from '../cards/crystal-fragments-summon-alexander/definition';
 import { machinistsArsenal } from '../cards/machinist-s-arsenal/definition';
+import { excaliburIi } from '../cards/excalibur-ii/definition';
 import type { CardDefinition } from '../card';
 import { loadFinCards } from './load-fin-cards.mjs';
 import {
@@ -50,8 +51,24 @@ describe("continuousPTGrantsEquipped-structural — an Equipment's own real, fix
     ]);
   });
 
-  it("declines Machinist's Arsenal — no continuousPTGrants field at all (real per-artifact dynamic pump, not a literal number)", () => {
+  it("accepts Machinist's Arsenal (scalePerType — \"gets +2/+2 for each artifact you control\", closed 2026-09-15)", () => {
     const result = recognizeContinuousPTGrantsEquippedStructural(structuralInput("Machinist's Arsenal", machinistsArsenal));
-    expect(result).toEqual({ matched: false, reason: expect.stringContaining('no continuousPTGrants entry') });
+    expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
+    if (!result.matched) return;
+    expect(result.facts).toEqual([
+      {
+        role: 'source',
+        fact: { event: 'pump', target: { equippedBySelf: true }, annotations: [{ target: 'oracle', line: 1, start: 0, end: 58 }] },
+        provenance: { origin: 'parser', rule: 'continuousPTGrantsEquipped-structural' },
+      },
+    ]);
+  });
+
+  it('accepts Excalibur II (scalePerSelfCounter — "gets +1/+1 for each charge counter on Excalibur II", closed 2026-09-16)', () => {
+    const result = recognizeContinuousPTGrantsEquippedStructural(structuralInput('Excalibur II', excaliburIi));
+    expect(result.matched, `got: ${!result.matched && result.reason}`).toBe(true);
+    if (!result.matched) return;
+    expect(result.facts).toHaveLength(1);
+    expect(result.facts[0]!.fact).toMatchObject({ event: 'pump', target: { equippedBySelf: true } });
   });
 });

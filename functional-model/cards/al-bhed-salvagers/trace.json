@@ -109,12 +109,12 @@
       {
         "fn": "tap",
         "target": "Al Bhed Salvagers",
-        "id": 117
+        "id": 23
       },
       {
         "fn": "attack",
         "card": "Al Bhed Salvagers",
-        "id": 117
+        "id": 23
       },
       {
         "fn": "phase",
@@ -125,9 +125,9 @@
       {
         "fn": "block",
         "blocker": "Hill Gigas",
-        "blockerId": 108,
+        "blockerId": 14,
         "attacker": "Al Bhed Salvagers",
-        "attackerId": 117
+        "attackerId": 23
       },
       {
         "fn": "dealDamage",

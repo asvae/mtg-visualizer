@@ -13,24 +13,24 @@ import type { Scenario } from '../../harness';
 // each), then `sacrificeSelfAfter` fires the real 714.4 "Sacrifice after
 // III" rule.
 //
-// `opponents: [{ creaturesCount: 1 }]` gives Aerial Blast a real legal
-// target (this card's own `custom` effect doesn't engine-enforce the real
-// "tapped" restriction — see definition.ts's own comment on why: the fact
-// model's own `Constraints.tapped` is documentary-only, same as Fate of
-// the Sun-Cryst's identical-shaped condition, so there's no real matching
-// benefit to wiring it, only the cost of a scenario with no legal target
-// at all under the harness's own generic (untapped) filler). `you:
-// {creaturesCount: 2}` seeds one OTHER real creature besides Garuda itself
-// so Slipstream's own "another target creature you control" `notSelf`
-// exclusion is genuinely exercised (self never gets pumped/granted
-// flying) rather than vacuously true with nothing else around to target.
+// `opponents: [{ creaturesCount: 1, creaturesTapped: true }]` gives Aerial
+// Blast a real legal target — `dealDamageTarget`'s own `tapped` filter
+// (card.ts, 2026-09-16) now genuinely enforces the real "tapped"
+// restriction, so the filler creature must actually START tapped
+// (`harness.ts`'s own `PlayerState.creaturesTapped`, added the same day)
+// rather than the old untapped-by-default generic filler this scenario
+// used before the migration off `kind:'custom'`. `you: {creaturesCount:
+// 2}` seeds one OTHER real creature besides Garuda itself so Slipstream's
+// own "another target creature you control" `notSelf` exclusion is
+// genuinely exercised (self never gets pumped/granted flying) rather than
+// vacuously true with nothing else around to target.
 export const scenarios: Scenario[] = [
   {
     result:
-      "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 damage to the opponent's creature; chapters II/III fire the same way on later draw steps, each giving the other creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
+      "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 damage to the opponent's tapped creature; chapters II/III fire the same way on later draw steps, each giving the other creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
     sequence: ['chapterI', 'chapterII', 'chapterIII'],
     sacrificeSelfAfter: true,
     you: { creaturesCount: 2 },
-    opponents: [{ creaturesCount: 1 }],
+    opponents: [{ creaturesCount: 1, creaturesTapped: true }],
   },
 ];

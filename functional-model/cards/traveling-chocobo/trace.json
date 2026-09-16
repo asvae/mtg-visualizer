@@ -97,7 +97,7 @@
       {
         "fn": "moveTo",
         "target": "Plains",
-        "id": 2897,
+        "id": 2,
         "zone": "Hand",
         "controller": "you"
       },
@@ -111,7 +111,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2898,
+        "id": 3,
         "zone": "Hand",
         "controller": "you"
       },
@@ -170,9 +170,10 @@
       {
         "fn": "pump",
         "target": "Ambrosia Whiteheart",
-        "id": 2920,
+        "id": 25,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "trigger",
@@ -183,9 +184,10 @@
       {
         "fn": "pump",
         "target": "Ambrosia Whiteheart",
-        "id": 2920,
+        "id": 25,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       }
     ],
     "actions": [

@@ -24,5 +24,5 @@ export const breedingPool: CardDefinition = {
   // fields elsewhere document): modeled as ALWAYS paying the 2 life, never
   // entering tapped — the untapped/paid-life branch, not the tapped/free
   // branch.
-  triggers: [{ name: 'onEnter', effects: [{ kind: 'loseLife', owner: 'you', amount: 2 } satisfies Effect] }],
+  triggers: [{ name: 'onEnter', on: 'enter', effects: [{ kind: 'loseLife', owner: 'you', amount: 2 } satisfies Effect] }],
 };

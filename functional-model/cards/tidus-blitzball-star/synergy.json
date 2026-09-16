@@ -20,7 +20,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onArtifactEnters"
     },
     {
       "zone": "Graveyard",
@@ -46,13 +47,14 @@
           "target": "oracle",
           "line": 1,
           "start": 24,
-          "end": 64
+          "end": 27
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "tapTarget-effect-structural"
-      }
+      },
+      "triggeredBy": "onAttacks"
     }
   ],
   "sink": [
@@ -68,7 +70,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 24,
+          "start": 28,
           "end": 64
         }
       ],
@@ -91,6 +93,27 @@
       "provenance": {
         "origin": "parser",
         "rule": "attacks-trigger-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Artifact"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 39
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersTriggerTypeFilter-sink-structural"
       }
     }
   ]

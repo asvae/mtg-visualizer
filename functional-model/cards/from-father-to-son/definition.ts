@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect, EffectContext } from '../../card';
 import { flashback } from '../../flashback';
 
 export const fromFatherToSon: CardDefinition = {
@@ -10,30 +10,37 @@ export const fromFatherToSon: CardDefinition = {
 
   effects: [
     {
-      // Destination depends on `castFrom` (Hand -> Hand, graveyard/
-      // Flashback -> Battlefield directly) — the declarative `move` kind
-      // has one fixed `to`, no branch on how the card itself was cast, so
-      // this genuinely needs `custom`'s access to `ctx.castFrom` (the same
-      // real, scenario-supplied fact `lifecycleAfter` in harness.ts already
-      // reads to decide graveyard-vs-exile for the spell itself).
+      // MIGRATED (2026-09-15, fin/16-25 pass) off a `kind:'custom'` closure
+      // onto the real declarative `move` Effect — `to` is now genuinely
+      // `Computed<ZoneType>` (`card.ts`, this same pass), so "put it into
+      // your hand, or onto the battlefield instead if this spell was cast
+      // from a graveyard" no longer needs `custom`'s own opaque escape
+      // hatch: `ctx.castFrom` (the same real, scenario-supplied fact
+      // `lifecycleAfter` in harness.ts already reads to decide
+      // graveyard-vs-exile for the spell itself) is read directly by this
+      // effect's own `to` closure.
       //
-      // "Vehicle card" — no Vehicle-subtype tracking exists on a generic
-      // library card (state.ts's RealCard has a bare `subtypes` string
-      // array with no scenario-facing way to populate it for a Library
-      // card), so narrowed to `isArtifact()` as the closest honest match —
-      // same "Equipment ⊂ Artifact" narrowing cloud-midgar-mercenary's own
-      // comment already documents for its own search effect (a Vehicle is
-      // always an Artifact too). "Then shuffle" has no observable
-      // consequence anything downstream reads, so it's not modeled.
-      kind: 'custom',
-      describe:
-        'search your library for a Vehicle card and put it into your hand, or onto the battlefield instead if this spell was cast from a graveyard; then shuffle',
-      run: (ctx: EffectContext, actions: Actions) => {
-        const pool = ctx.you.getCardsIn('Library').filter((c) => c.isArtifact());
-        if (pool.length === 0) return;
-        const target = actions.chooseTarget(pool);
-        actions.moveTo(target, ctx.castFrom === 'graveyard' ? 'Battlefield' : 'Hand');
-      },
+      // "Vehicle card" — CORRECTED 2026-09-15 (fin/16-25 pass, same day):
+      // the doc comment this replaced claimed "no scenario-facing way to
+      // populate [subtypes] for a Library card" — checked directly and
+      // found WRONG: `state.ts`'s `GameState.addCard(owner, zone, opts)`
+      // takes `Partial<Omit<RealCard,...>>` regardless of which `zone` it's
+      // placed in, `opts.subtypes` included — a Library card can carry a
+      // real `subtypes: ['Vehicle']` exactly the same way a Battlefield one
+      // does. `subtype:'Vehicle'` (same field `cloud-midgar-mercenary`'s own
+      // Equipment-tutor already uses for the untargeted `move` branch) is
+      // the real, precise restriction — `validType:'artifact'` alone stays
+      // too (Vehicle ⊂ Artifact, and `subtype`'s own real Forge behavior,
+      // `card.ts`'s doc comment, narrows WITHIN whatever `validType` already
+      // allows, never replaces it).
+      kind: 'move',
+      owner: 'you',
+      from: 'Library',
+      to: (ctx: EffectContext) => (ctx.castFrom === 'graveyard' ? 'Battlefield' : 'Hand'),
+      qty: 1,
+      validType: 'artifact',
+      subtype: 'Vehicle',
+      shuffleAfter: true,
     } satisfies Effect,
   ],
 };

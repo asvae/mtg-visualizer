@@ -51,6 +51,13 @@ export interface ScryfallCard {
   all_parts?: { id: string; component: string }[];
   set?: string;
   collector_number?: string;
+  // ISO date ("YYYY-MM-DD") of this specific printing — present on the raw
+  // static per-set JSON (fetched directly, no server reshaping) and on
+  // server/api/cards.ts's own response (its `minimalCard()` currently drops
+  // it before this ever hits the client for THAT route — see CardData's own
+  // `releasedAt` comment); declared here regardless so a future passthrough
+  // fix on that route needs no change on this side.
+  released_at?: string;
 }
 
 export type TokensById = Record<string, { name: string; image: string | null }>;
@@ -256,6 +263,7 @@ export function scryfallCardToCardData(c: ScryfallCard, tokensById: TokensById =
     keywords: [...new Set([...cardKeywords(c).filter((k) => BADGE_KEYWORDS.has(k)), ...keywordMentions(c, BADGE_KEYWORDS)])],
     set: c.set || '',
     collectorNumber: c.collector_number || '',
+    releasedAt: c.released_at,
   };
 }
 

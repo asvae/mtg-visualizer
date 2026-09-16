@@ -21,32 +21,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "destroy-effect-structural"
-      }
-    },
-    {
-      "event": "dies",
-      "from": "Battlefield",
-      "to": "Graveyard",
-      "target": {
-        "types": {
-          "not": [
-            "Land"
-          ]
-        }
       },
-      "targeted": true,
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 1,
-          "start": 8,
-          "end": 50
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "destroy-effect-structural"
-      }
+      "triggeredBy": "chapterI"
     },
     {
       "event": "drawCard",
@@ -62,7 +38,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "event": "damage",
@@ -73,14 +50,15 @@
         {
           "target": "oracle",
           "line": 3,
-          "start": 32,
+          "start": 18,
           "end": 123
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "dealDamage-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterIV"
     },
     {
       "event": "putCounter",
@@ -141,7 +119,7 @@
         {
           "target": "oracle",
           "line": 3,
-          "start": 32,
+          "start": 18,
           "end": 123
         }
       ],
@@ -156,7 +134,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 8,
+          "start": 16,
           "end": 50
         }
       ],

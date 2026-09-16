@@ -6,6 +6,6 @@
   "notes": "Same shape/gap as cavern-of-souls — both mana abilities and the ETB creature-type choice are documentary text only.",
   "textCoverageAudited": true,
   "knownGaps": [
-    "ETB creature-type choice and both mana abilities have no engine support — no mana-pool concept and no per-permanent chosen-type state anywhere in this model."
+    "Partially stale as written (corrected 2026-09-16, static-ability audit): the FIRST mana ability ('{T}: Add {C}.') is now a real, ordinary, genuinely payable `manaAbilities` entry — same fix cavern-of-souls' own identical shape got. The SECOND mana ability's own real `restriction` stays deliberately unenforced (same reasoning). The ETB creature-type CHOICE itself still has no engine support — no per-permanent 'chosen type' state anywhere in this model — that half remains fully open."
   ]
 }

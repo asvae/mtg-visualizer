@@ -19,7 +19,7 @@
         "fn": "cast",
         "card": "Light of Judgment",
         "instanceId": 1,
-        "id": 1428,
+        "id": 4,
         "from": "hand",
         "cost": "{4}{R}"
       },
@@ -36,16 +36,16 @@
       {
         "fn": "dealDamage",
         "source": "Light of Judgment",
-        "sourceId": 1428,
+        "sourceId": 4,
         "target": "Grizzly Bears",
-        "id": 1427,
+        "id": 3,
         "amount": 6
       },
       {
         "fn": "move",
         "card": "Light of Judgment",
         "instanceId": 1,
-        "id": 1428,
+        "id": 4,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -70,7 +70,7 @@
         "fn": "cast",
         "card": "Light of Judgment",
         "instanceId": 1,
-        "id": 1431,
+        "id": 7,
         "from": "hand",
         "cost": "{4}{R}"
       },
@@ -82,16 +82,16 @@
       {
         "fn": "dealDamage",
         "source": "Light of Judgment",
-        "sourceId": 1431,
+        "sourceId": 7,
         "target": "Grizzly Bears",
-        "id": 1430,
+        "id": 6,
         "amount": 6
       },
       {
         "fn": "move",
         "card": "Light of Judgment",
         "instanceId": 1,
-        "id": 1431,
+        "id": 7,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

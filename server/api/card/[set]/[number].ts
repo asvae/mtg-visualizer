@@ -31,6 +31,7 @@ import type { CardDefinition } from '../../../../functional-model/card';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import { fmBundle } from '../../../utils/fmBundle';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
+import type { CardStatusEntry } from '../../../../functional-model/card-status';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
@@ -101,6 +102,29 @@ function loadJsonFresh<T>(relativePath: string, bundled: T): T {
 // other served shapes.
 export type ContinuousKeywordGrant = NonNullable<CardDefinition['continuousKeywordGrants']>[number];
 
+// One entry of `progress.json`'s own OPTIONAL `annotatedNonFactSpans` array
+// (2026-09-16 annotation-taxonomy rework — see
+// `.claude/contracts/card-schema.md`'s own dated section for the full
+// writeup). Real oracle-text/type-line spans that ARE accounted for but
+// deliberately carry no `Fact`/`AnnotationRef` at all — `kind:'definition-
+// path'` maps to something real in `CardDefinition` with no discrete Fact,
+// `'rules'` is real unmodeled rules text (an actual gap), `'lore'` is
+// flavor/reminder-style text. Shape mirrors `AnnotationRef`
+// (`functional-model/synergy.ts`) plus `kind`/`note` — defined here rather
+// than imported since `progress.json` itself has no shared TS type anywhere
+// (engine's own build/verify scripts read it as plain untyped JSON). Not
+// consulted by any matching logic, purely a Facts-tab presentational
+// passthrough — engine never authors this type, only the raw JSON field.
+export interface AnnotatedNonFactSpan {
+  target: 'oracle' | 'typeLine';
+  line?: number;
+  start: number;
+  end: number;
+  face?: 'front' | 'back';
+  kind: 'definition-path' | 'rules' | 'lore';
+  note: string;
+}
+
 interface FunctionalModelData {
   source: string;
   synergy: { source: Fact[]; sink: Fact[] } | null;
@@ -127,6 +151,18 @@ interface FunctionalModelData {
   // card page treats null the same as 'ai' (show the draft badge) since an
   // untracked card is certainly not confirmed human-reviewed.
   review: 'ai' | 'human' | null;
+  // cards/<slug>/progress.json's own `reviewCaveat` field (2026-09-17,
+  // `uncertain` bucket — see `functional-model/card-status.ts`'s own header
+  // for the full rationale) — a free-text note a human wrote when this
+  // card's facts are otherwise fully complete but one SPECIFIC, real
+  // conceptual gap remains that can't currently be modeled as a `Fact` at
+  // all. `null` when absent/malformed progress.json/non-string value — same
+  // "untracked = nothing to show" convention `review` above already uses.
+  // Written by `server/api/card/review-status.ts`'s own `field:'review'`
+  // handler (the "Confirm (Uncertain)" UI action, `CardDetailTabs.vue`) —
+  // served here so that same UI can pre-fill its caveat-entry prompt with
+  // whatever's already on file, rather than always starting blank.
+  reviewCaveat: string | null;
   // cards/<slug>/progress.json's own `scenariosReview` field — a SEPARATE
   // axis from `review` above (that one's about the synergy.json FACTS;
   // this one's about whether a human has actually looked over the
@@ -144,6 +180,20 @@ interface FunctionalModelData {
   // at the top level of this route's own response) instead of its
   // Scenarios tab.
   interactionsReview: 'draft' | 'reviewed';
+  // cards/<slug>/verified-snapshot.json's own `capturedAt` (ISO timestamp,
+  // see server/api/card/review-status.ts's own "Verified-snapshot
+  // regression guard" comment + .claude/contracts/card-schema.md) — when a
+  // human last confirmed the FACTS review (`review` above) AND the
+  // snapshot that transition froze is still on disk. `null` when there's no
+  // verified-snapshot.json at all (never confirmed, or confirmed before
+  // this guard existed and not yet backfilled) — NOT re-derived from
+  // `review` itself: a card whose facts have since drifted gets its
+  // `review` auto-reset to 'ai' by check-verified-regressions.mjs, but this
+  // stays populated from the snapshot's own timestamp regardless, so the UI
+  // can still show "this WAS confirmed, on this date" even after that
+  // regression flip. See CardDetailTabs.vue for how the two are displayed
+  // together.
+  reviewSnapshotAt: string | null;
   // Real, query-time continuous keyword grant(s) off this card's own
   // CardDefinition (613, ENGINE_GAPS.md gap #14, closed 2026-09-12 — see
   // `functional-model/card.ts`'s own `continuousKeywordGrants` doc comment
@@ -160,6 +210,28 @@ interface FunctionalModelData {
   // trace.json log entry for a continuous (non-event-triggered) grant to
   // read instead, see that component's own doc comment.
   continuousKeywordGrants: { front?: ContinuousKeywordGrant[]; back?: ContinuousKeywordGrant[] } | null;
+  // cards/<slug>/progress.json's own `annotatedNonFactSpans` (see
+  // AnnotatedNonFactSpan above) — always an array, `[]` when the field is
+  // absent/malformed (the common case; only ultima-origin-of-oblivion has a
+  // real entry as of this writing). Passed through verbatim, never merged
+  // into `annotatedCard`/`synergy` — the Facts tab renders these as
+  // separate, non-Fact rows behind its own show/hide toggle.
+  annotatedNonFactSpans: AnnotatedNonFactSpan[];
+  // Per-card fact-authoring status (`functional-model/card-status.ts`'s own
+  // 8-bucket red/orange/green/yellow/gray/verified/uncertain/re-review
+  // classifier) — same
+  // classifier `functional-model/scripts/compute-card-status.mjs` runs
+  // pool-wide into the checked-in `data/fin/fin_card_status.json` batch
+  // snapshot the `/app/status` grid page still reads, but computed LIVE,
+  // per request, for just this one card (2026-09-16 — a confirmed real bug:
+  // that batch file only refreshes on a manual `npm run card-status`, so a
+  // just-confirmed review didn't show as "Verified" on this card's own page
+  // until that script was rerun). `null` when it couldn't be computed at all
+  // (no functional-model card directory/definition for this card — the
+  // common case for most of the corpus). See `loadFunctionalModel`'s two
+  // branches below for how dev (live) vs production (bundle-time-precomputed,
+  // via `scripts/build-fm-bundle.mjs`) each populate this.
+  cardStatus: CardStatusEntry | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -232,6 +304,36 @@ async function computeTracesLive(slug: string): Promise<TraceResult[]> {
   return JSON.parse(stdout);
 }
 
+// Live, per-request `cardStatus` (2026-09-16 — see `FunctionalModelData.
+// cardStatus`'s own doc comment for the motivating bug). Same "spawn
+// vite-node" reasoning as `computeTracesLive` immediately above, for a
+// DIFFERENT concrete failure mode found while building this: a first attempt
+// had this route statically `import`ing `computeTextCoverage` straight from
+// `functional-model/scripts/text-coverage.mjs` (a plain, pure, fs-free
+// function) and calling `classifyCardStatus` in-process — that resolved fine
+// under `npx tsc --noEmit` but broke at actual request time in Nitro's dev
+// server: `Cannot find module '/functional-model/scripts/text-coverage.mjs'
+// imported from .../.nuxt/dev/index.mjs` (a `.mjs` sibling of an already-
+// dynamically-imported `.ts` file apparently isn't traced/rewritten the same
+// way Nitro's bundler handles this route's other `.ts` imports). Spawning
+// `functional-model/scripts/compute-one-card-status.mjs` under vite-node —
+// the exact same recipe `compute-card-status.mjs` runs pool-wide, for one
+// slug — sidesteps that the same way `run-one-card.mjs` already does for
+// traces. `null` on any failure (no definition.ts for this slug, a
+// synergy-less card, etc. — see that script's own header).
+async function computeCardStatusLive(slug: string, number: string): Promise<CardStatusEntry | null> {
+  try {
+    const { stdout } = await execFileAsync(join(process.cwd(), 'node_modules/.bin/vite-node'), [
+      join(process.cwd(), 'functional-model/scripts/compute-one-card-status.mjs'),
+      slug,
+      number,
+    ]);
+    return JSON.parse(stdout);
+  } catch {
+    return null;
+  }
+}
+
 // One face's raw Scryfall-derived fields, extracted by the route's own card-
 // data flow (below) with no string formatting — `oracleText` rides straight
 // onto the matching `AnnotatedFace` field untouched (real `\n`s, not
@@ -279,21 +381,36 @@ function buildAnnotatedCard(faces: FaceInput[], synergy: { source: Fact[]; sink:
 // '../../tokens'` import throws "Directory import ... not supported" under
 // plain Node ESM resolution (unlike vite-node) — caught below, degrades to
 // `null` same as a card with no grant at all, not a route-wide failure.
-async function loadContinuousKeywordGrantsDev(slug: string): Promise<{ front?: ContinuousKeywordGrant[]; back?: ContinuousKeywordGrant[] } | null> {
+// Split out (2026-09-16) so the live `cardStatus` computation below can
+// reuse the SAME dynamic import instead of a second one for the same
+// slug/request — `classifyCardStatus` needs the real, full `CardDefinition`
+// object (to walk its `effects`/`triggers`/`abilities` for the `red`-bucket
+// unsupported-construct check, `card-status.ts`'s own `collectEffects`),
+// not just the `continuousKeywordGrants` slice this function used to return
+// on its own.
+async function loadCardDefinitionDev(slug: string): Promise<CardDefinition | undefined> {
   try {
     const definitionUrl = pathToFileURL(join(process.cwd(), `functional-model/cards/${slug}/definition.ts`)).href;
     const cardModule = (await import(definitionUrl)) as Record<string, unknown>;
-    const card = Object.values(cardModule)[0] as CardDefinition | undefined;
-    const front = card?.continuousKeywordGrants;
-    const back = card?.backFace?.continuousKeywordGrants;
-    return front || back ? { front, back } : null;
+    return Object.values(cardModule)[0] as CardDefinition | undefined;
   } catch {
-    return null;
+    return undefined;
   }
+}
+function continuousKeywordGrantsFromDefinition(card: CardDefinition | undefined): { front?: ContinuousKeywordGrant[]; back?: ContinuousKeywordGrant[] } | null {
+  const front = card?.continuousKeywordGrants;
+  const back = card?.backFace?.continuousKeywordGrants;
+  return front || back ? { front, back } : null;
 }
 
 const functionalModelCache = new Map<string, { signature: string; facesKey: string; data: FunctionalModelData | null }>();
-async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
+// `collectorNumber` is only ever used to populate `cardStatus.number` below
+// (never consulted for slug/cache-key resolution, which stays name-based as
+// before) — CardDetailTabs.vue's own badge only ever reads `.status`/
+// `.reasons` off that entry, but `classifyCardStatus`'s own required input
+// shape wants a real number, so this thread's the request's real one through
+// rather than faking it.
+async function loadFunctionalModel(name: string, collectorNumber: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
   const slug = slugify(name);
 
   // Production: read server/utils/fmBundle.ts's statically-imported,
@@ -313,9 +430,26 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
       traces: entry.traces,
       annotatedCard: buildAnnotatedCard(faces, entry.synergy),
       review: entry.review,
+      // `undefined` on a bundle built before this field existed degrades to
+      // `null`, same tolerance every other optional bundle field here
+      // already has (see `entry.reviewSnapshotAt`/`entry.annotatedNonFactSpans`
+      // immediately below).
+      reviewCaveat: entry.reviewCaveat ?? null,
       scenariosReview: entry.scenariosReview,
       interactionsReview: entry.interactionsReview,
+      reviewSnapshotAt: entry.reviewSnapshotAt ?? null,
       continuousKeywordGrants: front || back ? { front, back } : null,
+      annotatedNonFactSpans: entry.annotatedNonFactSpans ?? [],
+      // Precomputed at `npm run sync:fm-bundle` build time (scripts/
+      // build-fm-bundle.mjs, same classifyCardStatus/computeTextCoverage
+      // recipe as the dev branch below and compute-card-status.mjs) —
+      // production can't dynamic-import definition.ts or scan data/ for
+      // oracle text at request time (see this file's own header on why),
+      // so it reads the bundle's already-computed value instead of
+      // recomputing live. `undefined` on a bundle built before this field
+      // existed (not yet re-synced) degrades to `null`, same tolerance
+      // every other optional bundle field here already has.
+      cardStatus: entry.cardStatus ?? null,
     };
   }
 
@@ -340,19 +474,42 @@ async function loadFunctionalModel(name: string, faces: FaceInput[]): Promise<Fu
     const traces = await computeTracesLive(slug);
     const synergy = loadCardSynergy(slug);
     const annotatedCard = buildAnnotatedCard(faces, synergy);
-    const continuousKeywordGrants = await loadContinuousKeywordGrantsDev(slug);
+    const definition = await loadCardDefinitionDev(slug);
+    const continuousKeywordGrants = continuousKeywordGrantsFromDefinition(definition);
     let review: 'ai' | 'human' | null = null;
+    let reviewCaveat: string | null = null;
     let scenariosReview: 'draft' | 'reviewed' = 'draft';
     let interactionsReview: 'draft' | 'reviewed' = 'draft';
+    let annotatedNonFactSpans: AnnotatedNonFactSpan[] = [];
     try {
       const progress = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/progress.json`), 'utf8'));
       review = progress.review === 'human' ? 'human' : 'ai';
+      reviewCaveat = typeof progress.reviewCaveat === 'string' && progress.reviewCaveat.trim() ? progress.reviewCaveat : null;
       scenariosReview = progress.scenariosReview === 'reviewed' ? 'reviewed' : 'draft';
       interactionsReview = progress.interactionsReview === 'reviewed' ? 'reviewed' : 'draft';
+      annotatedNonFactSpans = Array.isArray(progress.annotatedNonFactSpans) ? progress.annotatedNonFactSpans : [];
     } catch {
       // progress.json is optional — a card can exist without one
     }
-    data = { source, synergy, traces, annotatedCard, review, scenariosReview, interactionsReview, continuousKeywordGrants };
+    // Live, per-request `cardStatus` (2026-09-16 — see this file's own
+    // `FunctionalModelData.cardStatus` doc comment for the motivating bug:
+    // the checked-in `data/fin/fin_card_status.json` batch snapshot only
+    // refreshes on a manual `npm run card-status`, so a just-confirmed
+    // review didn't show as "Verified" here until that script was rerun).
+    // Spawned via vite-node, not computed in-process — see
+    // `computeCardStatusLive`'s own doc comment for why (a real, confirmed
+    // Nitro dev-bundler failure with the in-process approach, not just
+    // following `computeTracesLive`'s precedent on principle).
+    const cardStatus = await computeCardStatusLive(slug, collectorNumber);
+    let reviewSnapshotAt: string | null = null;
+    try {
+      const verifiedSnapshot = JSON.parse(readFileSync(join(process.cwd(), `functional-model/cards/${slug}/verified-snapshot.json`), 'utf8'));
+      reviewSnapshotAt = typeof verifiedSnapshot.capturedAt === 'string' ? verifiedSnapshot.capturedAt : null;
+    } catch {
+      // verified-snapshot.json is optional — a card can exist without one
+      // (never confirmed, or not yet backfilled)
+    }
+    data = { source, synergy, traces, annotatedCard, review, reviewCaveat, scenariosReview, interactionsReview, reviewSnapshotAt, continuousKeywordGrants, annotatedNonFactSpans, cardStatus };
   } catch {
     data = null;
   }
@@ -747,7 +904,7 @@ export default defineEventHandler(async (event) => {
     card: cardData,
     edges,
     themes,
-    functionalModel: await loadFunctionalModel(card.name, faces),
+    functionalModel: await loadFunctionalModel(card.name, card.collector_number || number, faces),
     interactions: await loadInteractionGroups(card.name, filterNames),
   };
 });

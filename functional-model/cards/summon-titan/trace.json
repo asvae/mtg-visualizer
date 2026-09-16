@@ -139,7 +139,8 @@
         "target": "Grizzly Bears",
         "id": 17,
         "power": 2,
-        "toughness": 2
+        "toughness": 2,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -172,7 +173,8 @@
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
         "id": 17,
-        "keyword": "Trample"
+        "keyword": "Trample",
+        "untilEndOfTurn": true
       }
     ]
   }

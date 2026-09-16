@@ -31,7 +31,16 @@ export const circleOfPower: CardDefinition = {
     // subtypes from `TokenInfo.types` (today's fix; a token whose `types`
     // includes `'Wizard'` really does `hasSubtype('Wizard')`), confirmed via
     // this card's own scenarios below.
-    { kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Wizard' } satisfies Effect,
-    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Lifelink', subtype: 'Wizard' } satisfies Effect,
+    // Real fix (2026-09-15, `grantKeywordAll-effect-structural` recognizer
+    // build): the real oracle text ("...gain lifelink UNTIL END OF TURN")
+    // was never reflected in `untilEndOfTurn` on either effect below — a
+    // genuine modeling bug (both grants were silently PERMANENT-within-
+    // scenario, `card.ts`'s own `untilEndOfTurn` doc comment's stated
+    // default, never cleared at Cleanup), not a stylistic choice. Fixed for
+    // real, not just noted — same "attacking-creature state"/"until end of
+    // turn" class of bug `dion-bahamut-s-dominant-...`'s own chapter I/II
+    // fix already closed earlier this pass.
+    { kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Wizard', untilEndOfTurn: true } satisfies Effect,
+    { kind: 'grantKeywordAll', predicate: 'creatures-you-control', keyword: 'Lifelink', subtype: 'Wizard', untilEndOfTurn: true } satisfies Effect,
   ],
 };

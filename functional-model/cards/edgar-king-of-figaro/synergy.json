@@ -10,7 +10,11 @@
           "start": 19,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCardProgram-effect-structural"
+      }
     },
     {
       "event": "winCoinFlip",
@@ -19,10 +23,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 101,
+          "start": 0,
           "end": 120
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "winCoinFlip-structural"
+      }
     }
   ],
   "sink": [
@@ -41,7 +49,11 @@
           "start": 40,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "drawCardProgram-effect-structural"
+      }
     },
     {
       "event": "entersBattlefield",

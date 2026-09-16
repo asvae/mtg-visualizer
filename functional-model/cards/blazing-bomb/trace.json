@@ -14,13 +14,13 @@
         "fn": "trigger",
         "card": "Blazing Bomb",
         "instanceId": 1,
-        "id": 279,
+        "id": 2,
         "name": "onExpensiveNoncreatureSpellCast"
       },
       {
         "fn": "putCounter",
         "target": "Blazing Bomb",
-        "id": 279,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -44,7 +44,7 @@
         "fn": "activate",
         "card": "Blazing Bomb",
         "instanceId": 1,
-        "id": 282,
+        "id": 5,
         "cost": "{T}, Sacrifice Blazing Bomb (activate only as a sorcery)"
       },
       {
@@ -60,9 +60,9 @@
       {
         "fn": "dealDamage",
         "source": "Blazing Bomb",
-        "sourceId": 282,
+        "sourceId": 5,
         "target": "Grizzly Bears",
-        "id": 281,
+        "id": 4,
         "amount": 1
       }
     ]

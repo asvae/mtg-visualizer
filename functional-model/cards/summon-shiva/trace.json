@@ -110,7 +110,7 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 2540,
+        "id": 33,
         "controller": "opp0"
       },
       {
@@ -133,7 +133,7 @@
       {
         "fn": "putCounter",
         "target": "Coeurl",
-        "id": 2540,
+        "id": 33,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -212,7 +212,7 @@
       {
         "fn": "tap",
         "target": "Hill Gigas",
-        "id": 2541,
+        "id": 34,
         "controller": "opp0"
       },
       {
@@ -235,7 +235,7 @@
       {
         "fn": "putCounter",
         "target": "Hill Gigas",
-        "id": 2541,
+        "id": 34,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -276,12 +276,12 @@
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 2540
+        "id": 33
       },
       {
         "fn": "attack",
         "card": "Coeurl",
-        "id": 2540
+        "id": 33
       },
       {
         "fn": "phase",

@@ -13,6 +13,23 @@
     {
       "event": "dies",
       "target": "self"
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Flying",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 7,
+          "end": 50
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
     }
   ],
   "sink": []

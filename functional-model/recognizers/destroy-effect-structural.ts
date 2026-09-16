@@ -74,35 +74,65 @@
 //   as broader than the real card, this recognizer declines the whole
 //   card and leaves it for normal agent authorship.
 //
-// **Companion `dies` consequence fact (2026-09-13 follow-up)** — whenever
-// this recognizer confidently recognizes a `destroy` effect, it ALSO emits
-// the paired CR 700.4 `dies` CONSEQUENCE fact (same target constraint, same
-// annotation span, `from:'Battlefield'`/`to:'Graveyard'`/`targeted:true`) —
-// see `recognize`'s own doc comment, right below the loop that builds it,
-// for the full reasoning and the real pool cards (`battle-menu`,
-// `fate-of-the-sun-cryst`, `dion-bahamut-s-dominant-bahamut-warden-of-
-// light`'s own back face) that already carry this exact pairing
-// hand-authored, confirming it's a general pattern rather than a one-off
-// for Summon: Bahamut.
+// **No more companion `dies` consequence fact (removed 2026-09-16, real
+// user-reported authoring-time redundancy)** — this recognizer used to ALSO
+// emit a paired CR 700.4 `dies` CONSEQUENCE fact (same target constraint,
+// same annotation span, `from:'Battlefield'`/`to:'Graveyard'`/
+// `targeted:true`) alongside the `destroy` ACT fact above, on the reasoning
+// that a real destroy is always followed by dying. That reasoning is true
+// but the SEPARATE fact was pure duplication, not new information — the
+// `destroy` fact's own `target` filter already says everything the `dies`
+// fact said, and both facts were anchored to the IDENTICAL annotation span
+// (confirmed live on `battle-menu`/fin-9: "Destroy target creature with
+// power 4 or greater" produced a byte-for-byte-annotation-identical
+// `destroy` AND `dies` fact pair). Removed in favor of a MATCH-TIME
+// equivalence instead: `synergy.ts`'s `factsInteract` now treats a
+// `destroy`-event SOURCE fact as satisfying any "wants a creature to arrive
+// in a graveyard" want (a zone-shaped `to:'Graveyard'` sink, or an
+// event-shaped `event:'dies'` sink) directly — see that file's own
+// `satisfiesDestroyImpliesDies`/`isGraveyardArrivalWant` doc comments for
+// the exact matching rule, and `.claude/contracts/card-schema.md`/
+// `SYNERGY_DESIGN.md` for the contract-level writeup. Verified via a real
+// full-pool `find-synergies.mjs` before/after diff at removal time: zero
+// real (producer, wanter) card-pairs lost any edge — every match the old
+// `dies` fact used to provide is still produced, just through the
+// `destroy` fact's own widened match instead of a second, separately
+// authored fact.
 //
 // **Companion SINK fact (2026-09-14, fin/9 gap closure — Battle Menu's own
 // "wants a target creature with power 4 or greater present" precondition)**
-// — only emitted when this effect's own `target` constraint (above) narrows
-// to a real type filter (never for an unrestricted "Destroy target
-// permanent," which asserts no type want at all — matches
-// `dion-bahamut-s-dominant-bahamut-warden-of-light`'s own real hand-authored
-// data, which has never carried a sink for its unrestricted destroy either).
-// Same "one real clause names both what happens and what it wants present"
-// convention `putCounterTarget-effect-structural.ts`'s own paired sink
-// already establishes for a different Effect kind; reuses the SAME
-// annotation span as the paired source/`dies` facts (the destroy clause IS
-// the only real anchor for what it wants present, same as `dies`'s own
-// consequence has no separate textual anchor of its own).
+// — emitted UNCONDITIONALLY whenever this recognizer confidently recognizes
+// a `destroy` effect, narrowed to a real type filter when `target` (above)
+// has one, or bare (`{to:'Battlefield'}`, no `types` at all) for an
+// unrestricted "Destroy target permanent" — **corrected 2026-09-15**: this
+// comment used to claim the unrestricted case never gets a sink at all,
+// citing `dion-bahamut-s-dominant-bahamut-warden-of-light`'s own back face
+// as the confirming precedent; that precedent was actually STALE (that
+// card's own real hand-authored data DOES carry a bare sink for this exact
+// clause, just never retagged since this recognizer never emitted a match
+// for it to retag against) — see the real fix in `recognize`'s own body,
+// right after this comment used to be wrong about. Same "one real clause
+// names both what happens and what it wants present" convention
+// `putCounterTarget-effect-structural.ts`'s own paired sink already
+// establishes for a different Effect kind.
+//
+// **2026-09-16 SOURCE/SINK span-narrowing fix** (systemic-annotation-bug
+// audit): the sink used to reuse the SAME whole-clause span as the paired
+// SOURCE/`dies` facts ("Destroy target creature," verb included) — this
+// comment used to justify that by analogy to `putCounterTarget-effect-
+// structural.ts`'s own paired sink, but that file's own sink got narrowed
+// to just the object phrase the same day (see its own module doc
+// comment), and this recognizer just hadn't caught up.
+// `expectedClausePattern` now wraps the object phrase ("[up to one]
+// target <type>[ with power N or greater]") in its own capturing group;
+// the SOURCE and `dies` facts keep the WHOLE clause (unchanged —
+// "Destroy" is squarely part of what those 2 facts claim), only the SINK
+// narrows to the object-phrase group.
 import type { Effect } from '../card';
 import type { Constraints } from '../synergy';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 const RULE = 'destroy-effect-structural' as const;
 
@@ -162,7 +192,7 @@ function expectedClausePattern(effect: DestroyEffect): RegExp | undefined {
   // string) — the boundary check is what makes qutrub-forayer's own real
   // "...creature THAT WAS DEALT DAMAGE THIS TURN." correctly fail to match
   // (see module doc comment).
-  return new RegExp(`\\bDestroy ${escapeRegExp(phrase)}(?=[.\\n]|$)`, 'i');
+  return new RegExp(`\\bDestroy (${escapeRegExp(phrase)})(?=[.\\n]|$)`, 'i');
 }
 
 function buildTargetConstraint(effect: DestroyEffect): Constraints | undefined {
@@ -209,14 +239,18 @@ function buildTargetConstraint(effect: DestroyEffect): Constraints | undefined {
  * span; that bespoke copy is gone).
  */
 export function recognizeDestroyEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const destroyEffects = allEffects(input).filter(isDestroyEffect);
+  const destroyEffects = allEffects(input).map((o) => o.effect).filter(isDestroyEffect);
   if (destroyEffects.length === 0) {
     return { matched: false, reason: 'no kind:"destroy" Effect on this face' };
   }
 
   const facts: RecognizedFact[] = [];
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
 
   for (const effect of destroyEffects) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     const pattern = expectedClausePattern(effect);
     if (!pattern) {
       return {
@@ -225,8 +259,8 @@ export function recognizeDestroyEffectStructural(input: StructuralRecognizerInpu
       };
     }
 
-    const global = new RegExp(pattern.source, pattern.flags + 'g');
-    const matches = [...input.oracleText.matchAll(global)];
+    const global = new RegExp(pattern.source, pattern.flags + 'gd');
+    const matches = [...input.oracleText.matchAll(global)] as Array<RegExpMatchArray & { indices: Array<[number, number] | undefined> }>;
     if (matches.length === 0) {
       // A pattern WAS built from this face's own structured data but never
       // appears verbatim in its real oracle text — `kind:'mismatch'` (see
@@ -252,8 +286,10 @@ export function recognizeDestroyEffectStructural(input: StructuralRecognizerInpu
     const start = m.index!;
     const end = start + m[0]!.length;
     const annotation = toLineOffset(input.oracleText, start, end);
-    if (!annotation) {
-      return { matched: false, reason: `matched span [${start},${end}) did not resolve to a single real oracle-text line` };
+    const [objectStart, objectEnd] = m.indices[1]!;
+    const objectAnnotation = toLineOffset(input.oracleText, objectStart, objectEnd);
+    if (!annotation || !objectAnnotation) {
+      return { matched: false, reason: `matched span [${start},${end}) (or its own inner object-phrase span) did not resolve to a single real oracle-text line` };
     }
 
     const target = buildTargetConstraint(effect);
@@ -264,58 +300,35 @@ export function recognizeDestroyEffectStructural(input: StructuralRecognizerInpu
         ...(target ? { target } : {}),
         targeted: true,
         annotations: [annotation],
+        ...(triggeredBy ? { triggeredBy } : {}),
       },
       provenance: { origin: 'parser', rule: RULE },
     };
 
     facts.push(fact);
 
-    // Companion `dies` CONSEQUENCE fact (2026-09-13 follow-up, closing
-    // Summon: Bahamut/fin-1's own last-but-one agent-derived fact) — CR
-    // 700.4: destroying something IS moving it from the battlefield to a
-    // graveyard, so whenever this recognizer confidently recognizes a real
-    // `destroy` effect, the SAME real dying is ALSO a guaranteed, checkable
-    // consequence — same "ACT vs CONSEQUENCE" standing rule
-    // `SYNERGY_DESIGN.md` already codifies for `saga-lore-and-sacrifice-
-    // structural.ts`'s own sacrifice->dies pair (a sacrifice ACT has no
-    // rules-based prevention mechanism either, but the destroy ACT itself
-    // genuinely can be prevented — indestructible/regeneration — which is
-    // exactly why `destroy-effect-structural`'s OWN fact above stays a bare
-    // ACT tag with no zone fields; the paired `dies` fact below is the
-    // separate, always-real CONSEQUENCE, unconditionally eligible the
-    // moment a destroy effect is recognized at all, per that same rule).
-    //
-    // **Real pool check confirming this is a general pattern, not a
-    // Bahamut-specific hack**: `battle-menu` and `fate-of-the-sun-cryst`
-    // both ALREADY carry this exact pairing hand-authored (same target
-    // constraint, `from:'Battlefield'`/`to:'Graveyard'`/`targeted:true`,
-    // same annotation span as their own `destroy` fact) — this recognizer's
-    // own output is verified byte-for-byte against both in
-    // `destroy-effect-structural.test.ts`. `dion-bahamut-s-dominant-
-    // bahamut-warden-of-light`'s own back face (an unrestricted "Destroy
-    // target permanent," no `target` constraint at all) carries the
-    // identical pairing too. Same span as the paired `destroy` fact — CR
-    // 700.4's own consequence has no separate textual anchor of its own; the
-    // ACT clause IS the only real anchor either fact has.
-    facts.push({
-      role: 'source',
-      fact: {
-        event: 'dies',
-        from: 'Battlefield',
-        to: 'Graveyard',
-        ...(target ? { target } : {}),
-        targeted: true,
-        annotations: [annotation],
-      },
-      provenance: { origin: 'parser', rule: RULE },
-    });
+    // No companion `dies` CONSEQUENCE fact here anymore — see module doc
+    // comment ("No more companion `dies` consequence fact"). The `destroy`
+    // fact above now satisfies a graveyard-arrival want directly, at MATCH
+    // time (`synergy.ts`'s `satisfiesDestroyImpliesDies`).
 
-    if (target) {
-      const sinkFact: Record<string, unknown> = { to: 'Battlefield', annotations: [annotation] };
-      if (target.types) sinkFact.types = target.types;
-      if (target.power) sinkFact.power = target.power;
-      facts.push({ role: 'sink', fact: sinkFact as RecognizedFact['fact'], provenance: { origin: 'parser', rule: RULE } });
-    }
+    // **2026-09-15 correction (fin/16-25 pass)**: the module doc comment
+    // above used to say an unrestricted "Destroy target permanent" never
+    // gets a sink at all, citing `dion-bahamut-s-dominant-...`'s own back
+    // face as the confirming precedent — that precedent turned out to be
+    // STALE, not confirming: this card's own real, pre-existing
+    // hand-authored data actually DOES carry a bare `{to:'Battlefield'}`
+    // sink (no `types` at all) for this exact unrestricted destroy, left
+    // unprovenanced/untouched because this recognizer never produced
+    // anything to retag it against. A bare bare-permanent "wants a permanent
+    // present" want is a real, if maximally broad, precondition — CR 601.2c,
+    // a destroy spell can't resolve without a legal target — so it's emitted
+    // unconditionally now (with no `types` key at all when `target` itself
+    // is undefined), same as every type-filtered case above.
+    const sinkFact: Record<string, unknown> = { to: 'Battlefield', annotations: [objectAnnotation] };
+    if (target?.types) sinkFact.types = target.types;
+    if (target?.power) sinkFact.power = target.power;
+    facts.push({ role: 'sink', fact: sinkFact as RecognizedFact['fact'], provenance: { origin: 'parser', rule: RULE } });
   }
 
   return { matched: true, facts };

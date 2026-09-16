@@ -1,11 +1,11 @@
 [
   {
     "scenario": {
-      "setup": "you: 2 creature(s); opp0: 1 creature(s)",
+      "setup": "you: 2 creature(s); opp0: 1 creature(s), tapped",
       "action": "cast from hand",
-      "result": "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 damage to the opponent's creature; chapters II/III fire the same way on later draw steps, each giving the other creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
+      "result": "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 damage to the opponent's tapped creature; chapters II/III fire the same way on later draw steps, each giving the other creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
       "raw": {
-        "result": "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 damage to the opponent's creature; chapters II/III fire the same way on later draw steps, each giving the other creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
+        "result": "Garuda enters (714.2b/c fires chapter I immediately) and Aerial Blast deals 4 damage to the opponent's tapped creature; chapters II/III fire the same way on later draw steps, each giving the other creature you control +1/+0 and flying until end of turn; once chapter III resolves, 714.4 sacrifices it.",
         "sequence": [
           "chapterI",
           "chapterII",
@@ -17,7 +17,8 @@
         },
         "opponents": [
           {
-            "creaturesCount": 1
+            "creaturesCount": 1,
+            "creaturesTapped": true
           }
         ]
       }
@@ -27,7 +28,7 @@
         "fn": "cast",
         "card": "Summon: Primal Garuda",
         "instanceId": 1,
-        "id": 2498,
+        "id": 6,
         "from": "hand",
         "cost": "{3}{W}"
       },
@@ -35,14 +36,14 @@
         "fn": "enters",
         "card": "Summon: Primal Garuda",
         "instanceId": 1,
-        "id": 2498,
+        "id": 6,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Summon: Primal Garuda",
         "instanceId": 1,
-        "id": 2498,
+        "id": 6,
         "name": "chapterI"
       },
       {
@@ -51,18 +52,23 @@
         "count": 1
       },
       {
+        "fn": "read:isTapped",
+        "target": "Grizzly Bears",
+        "result": true
+      },
+      {
         "fn": "dealDamage",
         "source": "Summon: Primal Garuda",
-        "sourceId": 2498,
+        "sourceId": 6,
         "target": "Grizzly Bears",
-        "id": 2497,
+        "id": 5,
         "amount": 4
       },
       {
         "fn": "trigger",
         "card": "Summon: Primal Garuda",
         "instanceId": 1,
-        "id": 2498,
+        "id": 6,
         "name": "chapterII"
       },
       {
@@ -73,9 +79,10 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2494,
+        "id": 2,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -102,14 +109,15 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2494,
-        "keyword": "Flying"
+        "id": 2,
+        "keyword": "Flying",
+        "untilEndOfTurn": true
       },
       {
         "fn": "trigger",
         "card": "Summon: Primal Garuda",
         "instanceId": 1,
-        "id": 2498,
+        "id": 6,
         "name": "chapterIII"
       },
       {
@@ -120,9 +128,10 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 2494,
+        "id": 2,
         "power": 1,
-        "toughness": 0
+        "toughness": 0,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -149,8 +158,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 2494,
-        "keyword": "Flying"
+        "id": 2,
+        "keyword": "Flying",
+        "untilEndOfTurn": true
       },
       {
         "fn": "sacrifice",

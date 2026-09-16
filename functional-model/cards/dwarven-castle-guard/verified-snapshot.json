@@ -1,0 +1,66 @@
+{
+  "capturedAt": "2026-09-16T18:05:09.788Z",
+  "facts": {
+    "source": [
+      {
+        "event": "dies",
+        "from": "Battlefield",
+        "to": "Graveyard",
+        "controller": "you",
+        "subject": "self",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 0,
+            "end": 23
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "dies-trigger-structural"
+        }
+      },
+      {
+        "to": "Battlefield",
+        "event": "entersBattlefield",
+        "controller": "you",
+        "subject": {
+          "token": "c_1_1_hero"
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 25,
+            "end": 67
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "token-creation-structural"
+        },
+        "triggeredBy": "onDies"
+      }
+    ],
+    "sink": [
+      {
+        "event": "dies",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 0,
+            "end": 23
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "dies-trigger-structural"
+        }
+      }
+    ]
+  }
+}

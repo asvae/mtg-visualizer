@@ -14,7 +14,7 @@
         "fn": "trigger",
         "card": "Bard's Bow",
         "instanceId": 1,
-        "id": 207,
+        "id": 2,
         "name": "onEnter"
       },
       {
@@ -29,9 +29,9 @@
       {
         "fn": "equip",
         "equipment": "Bard's Bow",
-        "equipmentId": 207,
+        "equipmentId": 2,
         "target": "Hero",
-        "id": 208
+        "id": 3
       }
     ]
   },
@@ -52,7 +52,7 @@
         "fn": "activate",
         "card": "Bard's Bow",
         "instanceId": 1,
-        "id": 211,
+        "id": 6,
         "cost": "Equip {6}"
       },
       {
@@ -63,9 +63,9 @@
       {
         "fn": "equip",
         "equipment": "Bard's Bow",
-        "equipmentId": 211,
+        "equipmentId": 6,
         "target": "Grizzly Bears",
-        "id": 210
+        "id": 5
       }
     ]
   }

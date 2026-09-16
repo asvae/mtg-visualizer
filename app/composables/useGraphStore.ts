@@ -6,7 +6,7 @@ import {
   availableTypes as computeAvailableTypes,
   availableKeywords as computeAvailableKeywords,
 } from '../lib/filters';
-import { DEFAULT_FORCES, type ForceConfig, type GravityMode } from '../lib/graphRenderer';
+import { DEFAULT_FORCES, type DeckSinkRow, type ForceConfig, type GravityMode } from '../lib/graphRenderer';
 import { buildGraph, resolveCardLinks, scryfallCardToCardData, type NameLink, type ScryfallCard, type TokensById } from '../lib/buildGraph';
 import { fetchCardBySetNumber } from '../lib/cardCache';
 import { parseDecklist, type ParsedDeckCard } from '../lib/deckImport';
@@ -249,6 +249,14 @@ const SHOW_TYPE_DERIVED_FACTS_STORAGE_KEY = 'mtg-visualizer-show-type-derived-fa
 // Default ON (true), unlike the two above: these were unconditionally shown
 // before this toggle existed, so a fresh/never-saved viewer sees no change.
 const SHOW_AI_FACTS_STORAGE_KEY = 'mtg-visualizer-show-ai-facts';
+// Same reasoning again, a fourth Facts-tab checkbox (2026-09-16) — "show
+// annotated non-Fact spans" (`progress.json`'s own `annotatedNonFactSpans`,
+// see `.claude/contracts/card-schema.md`'s dated section). These aren't
+// Facts at all (no `role`, never fed to `factsInteract`), so this toggle is
+// independent of the three above — default OFF, same as `showParserFacts`/
+// `showTypeDerivedFacts` (real, but not something a normal viewer needs to
+// see by default; this pool has exactly one real entry as of this writing).
+const SHOW_ANNOTATED_NON_FACT_SPANS_STORAGE_KEY = 'mtg-visualizer-show-annotated-non-fact-spans';
 // PRD 04 "List view" — same "standing UI habit, not a per-set preference"
 // reasoning as the two keys just above: which renderer (graph nodes vs. a
 // sortable table) you last looked at isn't a statement about a particular
@@ -551,6 +559,69 @@ export function useGraphStore() {
   const deck = computed<Deck>(() => ({ name: deckName.value, entries: [...deckEntries.values()] }));
   watch(deck, (d) => savePersistedDeck(d));
 
+  // Deck-scoped sink-supply annotation (POST /api/deck-sink-supply — see
+  // api-contract.md's 2026-09-17 section, card-owned route/computation,
+  // consumed as-is here) — feeds graphRenderer.ts's own small "under the
+  // node" text-row annotation via GraphCanvas.vue's own
+  // `renderer.setDeckSinkRows()` call, entirely independent of the
+  // produce/consume/atypical/grant/magnifier edge system (never touches
+  // AttrFilters/RenderOptions/graph.links). Keyed by card id — the endpoint
+  // itself keys by set/number, remapped here using each Deck entry's own
+  // `card.set`/`card.collectorNumber` (two Deck entries can't share a
+  // set/number without also sharing a card id, so this remap is
+  // unambiguous). Refetches the WHOLE deck on any Deck change (add/remove/
+  // qty edit/rename/import) rather than diffing incrementally — the task's
+  // own call: a Deck this size (~40-100 cards) makes a full refetch cheap,
+  // and every count in the response is deck-composition-dependent anyway
+  // (a qty change on ANY card can move ANY other card's own counts), so an
+  // incremental diff would still need to re-derive most of the response.
+  // Debounced (same manual setTimeout idiom SearchBox.vue's own discover-
+  // fetch debounce uses) so a fast multi-click qty stepper or a decklist
+  // paste doesn't fire one request per intermediate state; a monotonically
+  // increasing request id discards a slow, now-superseded response.
+  const deckSinkRows = shallowRef<Map<string, DeckSinkRow[]>>(new Map());
+  let deckSinkDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let deckSinkRequestId = 0;
+  const DECK_SINK_DEBOUNCE_MS = 400;
+  async function refreshDeckSinkSupply() {
+    const requestId = ++deckSinkRequestId;
+    const entries = deck.value.entries;
+    if (!entries.length) {
+      deckSinkRows.value = new Map();
+      return;
+    }
+    try {
+      const res = await fetch('/api/deck-sink-supply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deck: entries.map((e) => ({ set: e.card.set, number: e.card.collectorNumber, qty: e.quantity })),
+        }),
+      });
+      if (requestId !== deckSinkRequestId) return; // superseded by a later Deck edit's own fetch
+      if (!res.ok) return; // fails soft — rows just stay at their last-known value, never breaks the graph itself
+      const body: { results: { set: string; number: string; rows: DeckSinkRow[] }[] } = await res.json();
+      const cardIdByKey = new Map(entries.map((e) => [`${e.card.set}/${e.card.collectorNumber}`, e.card.id]));
+      const rows = new Map<string, DeckSinkRow[]>();
+      for (const r of body.results) {
+        const cardId = cardIdByKey.get(`${r.set}/${r.number}`);
+        if (cardId) rows.set(cardId, r.rows);
+      }
+      if (requestId !== deckSinkRequestId) return;
+      deckSinkRows.value = rows;
+    } catch {
+      // network hiccup — leave the last-known rows in place, same "degrade
+      // quietly" posture every other best-effort fetch in this file takes
+    }
+  }
+  function scheduleDeckSinkSupplyRefresh() {
+    if (deckSinkDebounceTimer) clearTimeout(deckSinkDebounceTimer);
+    deckSinkDebounceTimer = setTimeout(refreshDeckSinkSupply, DECK_SINK_DEBOUNCE_MS);
+  }
+  // immediate: true so a Deck restored from localStorage on a fresh page
+  // load gets its rows scheduled right away, not just on the next edit.
+  watch(deck, scheduleDeckSinkSupplyRefresh, { immediate: true });
+
   // Adds ONE card to the Deck via the same single targeted request/cache
   // addCardToScope above uses — a genuinely new card (not currently in the
   // Deck) starts at `quantity`; an already-present one just adds to its
@@ -747,9 +818,10 @@ export function useGraphStore() {
   // Deliberately does NOT gate itself to the graph page here — the actual
   // "never shows on a direct full-page visit" guarantee comes from
   // `CardPeekPanel.vue` only ever being MOUNTED from `app/pages/app/index.vue`
-  // (never from the card detail page's own route), not from this state
-  // itself refusing to hold a value elsewhere. A `?card=` param that somehow
-  // survived onto some other route is simply inert there — nothing reads it.
+  // and `app/pages/app/status/index.vue` (never from the card detail page's
+  // own route), not from this state itself refusing to hold a value
+  // elsewhere. A `?card=` param that somehow survived onto some other route
+  // is simply inert there — nothing reads it.
   const route = useRoute();
   const router = useRouter();
   const panelCardKey = computed<string | null>(() => {
@@ -945,6 +1017,25 @@ export function useGraphStore() {
   watch(showAiFacts, (shown) => {
     try {
       localStorage.setItem(SHOW_AI_FACTS_STORAGE_KEY, shown ? 'true' : 'false');
+    } catch {
+      // storage full/blocked — toggle just won't persist
+    }
+  });
+
+  // Facts tab's fourth sibling "show annotated non-Fact spans" checkbox —
+  // same survive-navigation-and-persist treatment, own storage key,
+  // independent state, default OFF (see
+  // SHOW_ANNOTATED_NON_FACT_SPANS_STORAGE_KEY's own comment above).
+  let savedShowAnnotatedNonFactSpans = false;
+  try {
+    savedShowAnnotatedNonFactSpans = localStorage.getItem(SHOW_ANNOTATED_NON_FACT_SPANS_STORAGE_KEY) === 'true';
+  } catch {
+    // storage blocked — just start hidden
+  }
+  const showAnnotatedNonFactSpans = ref(savedShowAnnotatedNonFactSpans);
+  watch(showAnnotatedNonFactSpans, (shown) => {
+    try {
+      localStorage.setItem(SHOW_ANNOTATED_NON_FACT_SPANS_STORAGE_KEY, shown ? 'true' : 'false');
     } catch {
       // storage full/blocked — toggle just won't persist
     }
@@ -1222,6 +1313,10 @@ export function useGraphStore() {
     renameDeck,
     clearDeck,
     importDeckFromText,
+    // Deck-scoped sink-supply annotation (POST /api/deck-sink-supply) —
+    // GraphCanvas.vue's own consumer; see this file's own declaration
+    // comment above `deckSinkRows` for the full design.
+    deckSinkRows,
     selectedColors,
     selectedRarities,
     selectedTypes,
@@ -1263,6 +1358,7 @@ export function useGraphStore() {
     showParserFacts,
     showTypeDerivedFacts,
     showAiFacts,
+    showAnnotatedNonFactSpans,
     // PRD 04 "List view" — Graph/List renderer toggle (AppHeader.vue).
     viewMode,
     // CardPeekPanel.vue's own drag-to-resize width.

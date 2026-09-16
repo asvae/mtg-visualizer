@@ -54,6 +54,7 @@ export const astrologiansPlanisphere: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

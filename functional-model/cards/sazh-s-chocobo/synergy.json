@@ -15,7 +15,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onLandfall"
     }
   ],
   "sink": [

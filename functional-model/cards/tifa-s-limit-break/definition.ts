@@ -20,7 +20,14 @@ export const tifasLimitBreak: CardDefinition = {
       modes: [
         {
           describe: 'Somersault (+{0} cost) — target creature gets +2/+2 until end of turn',
-          effects: [{ kind: 'pumpTarget', power: 2, toughness: 2 } satisfies Effect],
+          // `untilEndOfTurn: true` added 2026-09-16 (recognizer-lane
+          // pumpTarget-effect-structural propagation pass) — a real,
+          // previously-missing field: real printed text is "...gets +2/+2
+          // UNTIL END OF TURN," and `state.pump`'s own `opts.untilEndOfTurn`
+          // is mechanically real (514.2 Cleanup expiry), not just
+          // documentary — this pump was wrongly persisting permanently
+          // within a scenario before this fix.
+          effects: [{ kind: 'pumpTarget', power: 2, toughness: 2, untilEndOfTurn: true } satisfies Effect],
         },
         {
           describe: "Meteor Strikes (+{2} cost) — double target creature's power and toughness until end of turn",

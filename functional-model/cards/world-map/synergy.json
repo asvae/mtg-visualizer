@@ -26,6 +26,29 @@
         "origin": "parser",
         "rule": "tapSelfCost-structural"
       }
+    },
+    {
+      "event": "sacrifice",
+      "subject": "self",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 10,
+          "end": 33
+        },
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 10,
+          "end": 33
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeSelfCost-structural"
+      }
     }
   ],
   "sink": []

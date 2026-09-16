@@ -1,11 +1,6 @@
 {
   "source": [
     {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self"
-    },
-    {
       "zone": "Battlefield",
       "controller": "you",
       "types": {

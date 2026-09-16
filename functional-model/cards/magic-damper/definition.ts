@@ -15,8 +15,8 @@ export const magicDamper: CardDefinition = {
   typeLine: 'Instant',
 
   effects: [
-    { kind: 'pumpTarget', power: 1, toughness: 1, owner: 'you' } satisfies Effect,
-    { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'creature', owner: 'you' } satisfies Effect,
+    { kind: 'pumpTarget', power: 1, toughness: 1, owner: 'you', untilEndOfTurn: true } satisfies Effect,
+    { kind: 'grantKeywordTarget', keyword: 'Hexproof', validType: 'creature', owner: 'you', untilEndOfTurn: true } satisfies Effect,
     { kind: 'untapTarget', validType: 'creature', owner: 'you' } satisfies Effect,
   ],
 };

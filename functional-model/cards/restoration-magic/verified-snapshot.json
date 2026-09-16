@@ -1,0 +1,134 @@
+{
+  "capturedAt": "2026-09-16T22:05:44.108Z",
+  "facts": {
+    "source": [
+      {
+        "event": "grantKeyword",
+        "keyword": "Hexproof",
+        "target": {},
+        "targeted": true,
+        "untilEndOfTurn": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 38,
+            "end": 46
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "grantKeywordTarget-effect-structural"
+        }
+      },
+      {
+        "event": "grantKeyword",
+        "keyword": "Hexproof",
+        "controller": "you",
+        "target": {},
+        "untilEndOfTurn": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 3,
+            "start": 48,
+            "end": 56
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "grantKeywordAll-effect-structural"
+        }
+      },
+      {
+        "event": "grantKeyword",
+        "keyword": "Indestructible",
+        "target": {},
+        "targeted": true,
+        "untilEndOfTurn": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 51,
+            "end": 65
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "grantKeywordTarget-effect-structural"
+        }
+      },
+      {
+        "event": "grantKeyword",
+        "keyword": "Indestructible",
+        "controller": "you",
+        "target": {},
+        "untilEndOfTurn": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 3,
+            "start": 61,
+            "end": 75
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "grantKeywordAll-effect-structural"
+        }
+      },
+      {
+        "event": "lifegain",
+        "controller": "you",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 85,
+            "end": 100
+          },
+          {
+            "target": "oracle",
+            "line": 3,
+            "start": 95,
+            "end": 110
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "gainLife-effect-structural"
+        }
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 3,
+            "start": 20,
+            "end": 42
+          },
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 15,
+            "end": 83
+          },
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 15,
+            "end": 83
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "grantKeywordAll-effect-structural"
+        }
+      }
+    ]
+  }
+}

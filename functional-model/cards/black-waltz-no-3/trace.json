@@ -18,20 +18,20 @@
         "fn": "trigger",
         "card": "Black Waltz No. 3",
         "instanceId": 1,
-        "id": 274,
+        "id": 4,
         "name": "onNoncreatureSpellCast"
       },
       {
         "fn": "dealDamage",
         "source": "Black Waltz No. 3",
-        "sourceId": 274,
+        "sourceId": 4,
         "target": "opp0",
         "amount": 2
       },
       {
         "fn": "dealDamage",
         "source": "Black Waltz No. 3",
-        "sourceId": 274,
+        "sourceId": 4,
         "target": "opp1",
         "amount": 2
       }
@@ -52,7 +52,7 @@
         "fn": "cast",
         "card": "Black Waltz No. 3",
         "instanceId": 1,
-        "id": 276,
+        "id": 6,
         "from": "hand",
         "cost": "{2}{B}{R}"
       },
@@ -60,7 +60,7 @@
         "fn": "enters",
         "card": "Black Waltz No. 3",
         "instanceId": 1,
-        "id": 276,
+        "id": 6,
         "zone": "Battlefield"
       },
       {

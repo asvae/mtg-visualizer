@@ -22,7 +22,7 @@
         "fn": "activate",
         "card": "Ring of the Lucii",
         "instanceId": 1,
-        "id": 1982,
+        "id": 5,
         "cost": "{2}, {T}, Pay 1 life",
         "ability": "tapNonland"
       },
@@ -78,7 +78,7 @@
       {
         "fn": "tap",
         "target": "Mind Stone",
-        "id": 1979,
+        "id": 2,
         "controller": "you"
       }
     ]
@@ -98,7 +98,7 @@
         "fn": "cast",
         "card": "Ring of the Lucii",
         "instanceId": 1,
-        "id": 1984,
+        "id": 7,
         "from": "hand",
         "cost": "{4}"
       },
@@ -106,7 +106,7 @@
         "fn": "enters",
         "card": "Ring of the Lucii",
         "instanceId": 1,
-        "id": 1984,
+        "id": 7,
         "zone": "Battlefield"
       },
       {

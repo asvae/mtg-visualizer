@@ -6,6 +6,6 @@
   "notes": "Both mana abilities and the ETB creature-type choice are documentary text — no mana-pool concept, and no per-permanent 'chosen type' state anywhere in this model.",
   "textCoverageAudited": true,
   "knownGaps": [
-    "ETB creature-type choice and both mana abilities have no engine support — no mana-pool concept and no per-permanent chosen-type state anywhere in this model."
+    "Partially stale as written (corrected 2026-09-16, static-ability audit): the FIRST mana ability ('{T}: Add {C}.') is now a real, ordinary, genuinely payable `manaAbilities` entry — no longer ungrounded. The SECOND mana ability is real, typed `manaAbilities` data too, but its own real `restriction` stays deliberately unenforced (no spendable mana-pool mechanism exists to check what tapped mana later gets spent on). The ETB creature-type CHOICE itself still has no engine support at all — no per-permanent 'chosen type' state anywhere in this model — that half remains fully open."
   ]
 }

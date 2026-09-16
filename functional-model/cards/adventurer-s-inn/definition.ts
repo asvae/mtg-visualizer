@@ -16,6 +16,7 @@ export const adventurersInn: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'gainLife', amount: 2 } satisfies Effect],
     },
   ],

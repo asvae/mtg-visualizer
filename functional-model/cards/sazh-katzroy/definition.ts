@@ -10,6 +10,7 @@ export const sazhKatzroy: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         // "search your library for a Bird or basic land card, reveal it,
         // put it into your hand" — `move`'s own declarative `validType`

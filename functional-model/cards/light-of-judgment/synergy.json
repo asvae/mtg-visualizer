@@ -14,6 +14,18 @@
             "Creature"
           ]
         }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 32
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
       }
     }
   ],

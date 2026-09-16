@@ -7,11 +7,9 @@ export const gigantoad: CardDefinition = {
 
   pt: [4, 4],
 
-  // "As long as you control seven or more lands, this creature gets
-  // +2/+2" — a conditional continuous P/T buff keyed off LAND COUNT, not
-  // Equipment-count or creature-count (the only two live `ptFormula` shapes
-  // built so far — see card.ts's own doc comment). Kept as real text, same
-  // treatment scorpion-sentinel's own identical land-count buff already
-  // gets rather than forcing a third `ptFormula` variant for one card.
-  staticAbilities: ['As long as you control seven or more lands, this creature gets +2/+2.'],
+  // Real Forge threshold-CDA ("As long as you control seven or more
+  // lands, this creature gets +2/+2") — same real `card.ts`
+  // `ptFormula.kind:'thresholdBonus'` mechanism scorpion-sentinel's own
+  // identical land-count buff now uses (closed 2026-09-15, fin/16-25 pass).
+  ptFormula: { kind: 'thresholdBonus', power: 2, toughness: 2, condition: { type: 'Land', min: 7 } },
 };

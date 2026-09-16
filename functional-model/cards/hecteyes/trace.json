@@ -19,7 +19,7 @@
         "fn": "trigger",
         "card": "Hecteyes",
         "instanceId": 1,
-        "id": 1152,
+        "id": 6,
         "name": "onEnter"
       },
       {
@@ -55,7 +55,7 @@
         "fn": "trigger",
         "card": "Hecteyes",
         "instanceId": 1,
-        "id": 1164,
+        "id": 18,
         "name": "onEnter"
       },
       {

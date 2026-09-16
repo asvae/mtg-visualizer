@@ -13,13 +13,13 @@
         "fn": "activate",
         "card": "Demon Wall",
         "instanceId": 1,
-        "id": 590,
+        "id": 2,
         "cost": "{5}{B}"
       },
       {
         "fn": "putCounter",
         "target": "Demon Wall",
-        "id": 590,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 2,
         "controller": "you"

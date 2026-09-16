@@ -36,12 +36,20 @@ describe('digReveal-effect-structural', () => {
           controller: 'you',
           types: { has: ['Artifact'] },
           annotations: [{ target: 'oracle', line: 0, start: expect.any(Number), end: expect.any(Number) }],
+          // `Fact.triggeredBy` (2026-09-16, "widen populate" pass) — Ashe's
+          // own real "Whenever Ashe attacks..." trigger.
+          triggeredBy: 'onAttack',
         },
         provenance: { origin: 'parser', rule: 'digReveal-effect-structural' },
       },
       {
         role: 'sink',
-        fact: { to: 'Library', controller: 'you', types: { has: ['Artifact'] }, annotations: [{ target: 'oracle', line: 0, start: expect.any(Number), end: expect.any(Number) }] },
+        fact: {
+          to: 'Library',
+          controller: 'you',
+          types: { has: ['Artifact'] },
+          annotations: [{ target: 'oracle', line: 0, start: expect.any(Number), end: expect.any(Number) }],
+        },
         provenance: { origin: 'parser', rule: 'digReveal-effect-structural' },
       },
     ]);

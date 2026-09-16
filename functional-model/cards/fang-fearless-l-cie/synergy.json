@@ -16,7 +16,20 @@
     },
     {
       "event": "lifeloss",
-      "controller": "you"
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 69,
+          "end": 84
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      },
+      "triggeredBy": "onGraveyardCardsLeave"
     },
     {
       "event": "drawCard",
@@ -32,7 +45,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onGraveyardCardsLeave"
     }
   ],
   "sink": [

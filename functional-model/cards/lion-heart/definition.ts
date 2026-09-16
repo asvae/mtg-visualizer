@@ -1,11 +1,10 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
 
 // Real script (lion_heart.txt): Artifact Equipment, Equip {2}. "Equipped
-// creature gets +2/+1" — a continuous static bonus, same staticAbilities-
-// text-only treatment every other Equipment's own fixed P/T bonus gets
-// (buster-sword/coral-sword/dragoon-s-lance, e.g.) — no `ptFormula` shape
-// covers a bonus granted to whatever's equipped (only a CDA on `self`'s
-// own P/T).
+// creature gets +2/+1" — real, mechanical `continuousPTGrants` (2026-09-16,
+// static-ability audit follow-up — same already-real query-time machinery
+// dragoon-s-lance/paladin-s-arms/thief-s-knife/etc. already use for this
+// exact shape).
 export const lionHeart: CardDefinition = {
   name: 'Lion Heart',
   manaCost: '{4}',
@@ -13,9 +12,12 @@ export const lionHeart: CardDefinition = {
 
   staticAbilities: ['Equipped creature gets +2/+1.'],
 
+  continuousPTGrants: [{ power: 2, toughness: 1, includeSelf: false, equippedBySelf: true }],
+
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'dealDamageAnyTarget', amount: 2 } satisfies Effect],
     },
   ],

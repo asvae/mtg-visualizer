@@ -18,8 +18,82 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
+      },
+      "triggeredBy": "onAttacks"
+    },
+    {
+      "event": "crew",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
       }
+    },
+    {
+      "event": "grantType",
+      "type": "Creature",
+      "target": "self",
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 89,
+          "end": 135
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "animateSelfCreature-effect-structural"
+      }
+    },
+    {
+      "event": "discard",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 49,
+          "end": 63
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discard-effect-structural"
+      },
+      "triggeredBy": "onAttacks"
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Creature"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 26,
+          "end": 47
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
+    }
+  ]
 }

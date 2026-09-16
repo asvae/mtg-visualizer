@@ -3,7 +3,7 @@
   "review": "ai",
   "verifySynergy": "pass",
   "lastVerified": "2026-09-04",
-  "notes": "",
+  "notes": "2026-09-17: `dies-trigger-structural.ts`'s own companion SOURCE fact (`{event:'dies', from:'Battlefield', to:'Graveyard', subject:'self', target:'self'}`) removed pool-wide as a real over-claim — this card had no other Graveyard-arrival source fact, so this is a real, disclosed loss of 21 real cross-card synergy edges (every Graveyard-presence-wanting card this used to feed). Still review:'ai', no reset needed.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

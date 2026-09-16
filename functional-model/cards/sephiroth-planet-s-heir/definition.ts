@@ -21,6 +21,7 @@ export const sephirothPlanetsHeir: CardDefinition = {
       // ultimecia-temporal-threat's own "tap all opponents' creatures"
       // custom effect uses for the identical gap.
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

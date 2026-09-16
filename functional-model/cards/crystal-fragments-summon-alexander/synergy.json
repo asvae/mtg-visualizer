@@ -81,7 +81,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "preventDamageAll-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterI"
     },
     {
       "event": "tap",
@@ -100,13 +101,14 @@
           "target": "oracle",
           "line": 2,
           "start": 6,
-          "end": 46
+          "end": 9
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "tapAllQuery-effect-structural"
-      }
+      },
+      "triggeredBy": "chapterIII"
     },
     {
       "event": "sacrifice",
@@ -198,7 +200,7 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 6,
+          "start": 10,
           "end": 46
         }
       ],

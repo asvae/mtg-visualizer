@@ -7,11 +7,15 @@ export const bardsBow: CardDefinition = {
   typeLine: 'Artifact — Equipment',
 
   // "Equipped creature gets +2/+2, has reach, and is a Bard in addition to
-  // its other types" — a continuous grant to whatever this is attached to,
-  // not a CDA on this card itself (no `ptFormula` shape fits an equipment's
-  // own grant to its target) — real text, same convention dragoon-s-lance's
-  // own Equipment grant already uses.
+  // its other types" — real, mechanical `continuousPTGrants`/
+  // `continuousTypeGrants`/`continuousKeywordGrants` (2026-09-16,
+  // static-ability audit follow-up — same already-real query-time
+  // machinery dragoon-s-lance's own Equipment grant already uses).
   staticAbilities: ['Equipped creature gets +2/+2, has reach, and is a Bard in addition to its other types.'],
+
+  continuousPTGrants: [{ power: 2, toughness: 2, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Bard'], includeSelf: false, equippedBySelf: true }],
+  continuousKeywordGrants: [{ keywords: ['Reach'], includeSelf: false, equippedBySelf: true }],
 
   // Job select — "When this Equipment enters, create a 1/1 colorless Hero
   // creature token, then attach this to it." Same real ETB trigger shape
@@ -19,6 +23,7 @@ export const bardsBow: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

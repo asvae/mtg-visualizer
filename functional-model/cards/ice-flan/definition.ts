@@ -27,6 +27,7 @@ export const iceFlan: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         // "tap target artifact or creature an opponent controls" — real,
         // pre-existing bug fixed 2026-09-15 (`recognizers/tapTarget-

@@ -20,6 +20,7 @@ export const gladiolusAmicitia: CardDefinition = {
       // cards' own comments document) — this code is honest even though no
       // scenario below can make it actually find a match.
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'move', owner: 'you', from: 'Library', to: 'Battlefield', qty: 1, validType: 'land' } satisfies Effect],
     },
     {
@@ -27,16 +28,14 @@ export const gladiolusAmicitia: CardDefinition = {
       // gains trample until end of turn." Two separate targeted effects
       // (`pumpTarget` has no P/T-plus-keyword combined shape) resolving
       // against the SAME deterministic candidate pool land on the same
-      // creature in practice. Neither `pumpTarget` nor `grantKeywordTarget`
-      // carries a `notSelf` field (unlike `pumpAll`/`putCounterAll`), so
-      // "another" relies on `self` always being the LAST creature pushed
-      // onto the battlefield array in a trigger scenario (harness.ts's own
-      // `setupPlayer` runs before `self` is added) — a real, general
-      // limitation of this model, not something this card works around.
+      // creature in practice. Both `pumpTarget` and `grantKeywordTarget`
+      // DO carry a real `notSelf` field (card.ts) — an earlier version of
+      // this comment wrongly claimed neither did, predating both fields'
+      // actual addition; fixed for real below rather than left stale.
       name: 'onLandfall',
       effects: [
-        { kind: 'pumpTarget', power: 2, toughness: 2, owner: 'you' } satisfies Effect,
-        { kind: 'grantKeywordTarget', keyword: 'Trample', owner: 'you' } satisfies Effect,
+        { kind: 'pumpTarget', power: 2, toughness: 2, owner: 'you', notSelf: true, untilEndOfTurn: true } satisfies Effect,
+        { kind: 'grantKeywordTarget', keyword: 'Trample', owner: 'you', notSelf: true, untilEndOfTurn: true } satisfies Effect,
       ],
     },
   ],

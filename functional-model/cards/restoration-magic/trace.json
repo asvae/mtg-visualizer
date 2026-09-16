@@ -17,7 +17,7 @@
         "fn": "cast",
         "card": "Restoration Magic",
         "instanceId": 1,
-        "id": 1947,
+        "id": 3,
         "from": "hand",
         "cost": "{W}"
       },
@@ -31,8 +31,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1946,
-        "keyword": "Hexproof"
+        "id": 2,
+        "keyword": "Hexproof",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -44,14 +45,15 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1946,
-        "keyword": "Indestructible"
+        "id": 2,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "move",
         "card": "Restoration Magic",
         "instanceId": 1,
-        "id": 1947,
+        "id": 3,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -76,7 +78,7 @@
         "fn": "cast",
         "card": "Restoration Magic",
         "instanceId": 1,
-        "id": 1950,
+        "id": 6,
         "from": "hand",
         "cost": "{W}"
       },
@@ -90,8 +92,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1949,
-        "keyword": "Hexproof"
+        "id": 5,
+        "keyword": "Hexproof",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -103,8 +106,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1949,
-        "keyword": "Indestructible"
+        "id": 5,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "gainLife",
@@ -115,7 +119,7 @@
         "fn": "move",
         "card": "Restoration Magic",
         "instanceId": 1,
-        "id": 1950,
+        "id": 6,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -141,7 +145,7 @@
         "fn": "cast",
         "card": "Restoration Magic",
         "instanceId": 1,
-        "id": 1955,
+        "id": 11,
         "from": "hand",
         "cost": "{W}"
       },
@@ -155,20 +159,23 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1952,
-        "keyword": "Hexproof"
+        "id": 8,
+        "keyword": "Hexproof",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1953,
-        "keyword": "Hexproof"
+        "id": 9,
+        "keyword": "Hexproof",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Mind Stone",
-        "id": 1954,
-        "keyword": "Hexproof"
+        "id": 10,
+        "keyword": "Hexproof",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -180,20 +187,23 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1952,
-        "keyword": "Indestructible"
+        "id": 8,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1953,
-        "keyword": "Indestructible"
+        "id": 9,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Mind Stone",
-        "id": 1954,
-        "keyword": "Indestructible"
+        "id": 10,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "gainLife",
@@ -204,7 +214,7 @@
         "fn": "move",
         "card": "Restoration Magic",
         "instanceId": 1,
-        "id": 1955,
+        "id": 11,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

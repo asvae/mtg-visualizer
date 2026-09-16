@@ -7,10 +7,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 58,
+          "start": 44,
           "end": 68
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
     }
   ],
   "sink": [
@@ -29,10 +33,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 0,
+          "start": 11,
           "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
     }
   ]
 }

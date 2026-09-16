@@ -1,10 +1,16 @@
 import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
 
-// Real script (buster_sword.txt): "Equipped creature gets +3/+2" — a
-// static delta, same staticAbilities-text-only treatment every other
-// Equipment's own fixed P/T bonus gets here (dark-knight-s-greatsword/
-// samurai-s-katana/thief-s-knife, e.g.) — `ptFormula` only covers a CDA on
-// `self`'s own P/T, never a bonus granted to whatever's equipped.
+// Real script (buster_sword.txt): "Equipped creature gets +3/+2" — real,
+// mechanical `continuousPTGrants` (2026-09-16, static-ability audit
+// follow-up: this and a dozen sibling Equipment cards were left on inert
+// `staticAbilities`-only text despite the SAME real, already-built,
+// query-time `continuousPTGrants`/`continuousTypeGrants`/
+// `continuousKeywordGrants` machinery dragoon-s-lance/paladin-s-arms/
+// thief-s-knife/white-mage-s-staff/sage-s-nouliths/black-mage-s-rod/
+// crystal-fragments-summon-alexander already use for this EXACT same
+// shape — this card's own comment used to say "same staticAbilities-
+// text-only treatment" as those cards, unaware several of them had
+// already been migrated; fixed for real now).
 //
 // The granted "whenever equipped creature deals combat damage to a
 // player, draw a card, then you may cast a spell from your hand with mana
@@ -26,6 +32,8 @@ export const busterSword: CardDefinition = {
   typeLine: 'Artifact — Equipment',
 
   staticAbilities: ['Equipped creature gets +3/+2.'],
+
+  continuousPTGrants: [{ power: 3, toughness: 2, includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     {

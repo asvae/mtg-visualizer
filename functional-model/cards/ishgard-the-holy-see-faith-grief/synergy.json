@@ -7,7 +7,19 @@
       "color": "W",
       "sourceText": "{T}: Add {W}.",
       "highlight": "{W}",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
   "sink": [

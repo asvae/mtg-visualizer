@@ -20,7 +20,19 @@
       "controller": "you",
       "color": "C",
       "sourceText": "{T}: Add {C}.",
-      "highlight": "Add {C}"
+      "highlight": "Add {C}",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     },
     {
       "id": "coin-flip",

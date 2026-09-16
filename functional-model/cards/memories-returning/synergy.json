@@ -11,7 +11,11 @@
           "start": 0,
           "end": 19
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "flashback-alternateCost-structural"
+      }
     },
     {
       "to": "Exile",
@@ -24,7 +28,11 @@
           "start": 0,
           "end": 19
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "flashback-alternateCost-structural"
+      }
     },
     {
       "from": "Library",

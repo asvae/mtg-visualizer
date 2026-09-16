@@ -13,11 +13,18 @@ export const monksFist: CardDefinition = {
   manaCost: '{2}',
   typeLine: 'Artifact — Equipment',
 
+  // Real, mechanical `continuousPTGrants`/`continuousTypeGrants`
+  // (2026-09-16, static-ability audit follow-up — same already-real
+  // query-time machinery thief-s-knife's own identical shape already uses).
   staticAbilities: ['Equipped creature gets +1/+0 and is a Monk in addition to its other types.'],
+
+  continuousPTGrants: [{ power: 1, toughness: 0, includeSelf: false, equippedBySelf: true }],
+  continuousTypeGrants: [{ types: ['Monk'], includeSelf: false, equippedBySelf: true }],
 
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'custom',

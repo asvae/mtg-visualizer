@@ -10,6 +10,23 @@
       "subject": {
         "token": "c_a_treasure_sac"
       }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Flying",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 7,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsSubtype-structural"
+      }
     }
   ],
   "sink": []

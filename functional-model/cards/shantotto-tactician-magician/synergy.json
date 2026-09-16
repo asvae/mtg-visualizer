@@ -15,5 +15,29 @@
       "target": "self"
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "cast",
+      "controller": "you",
+      "target": {
+        "types": {
+          "not": [
+            "Creature"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 37
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "castTypeSpell-trigger-structural"
+      }
+    }
+  ]
 }

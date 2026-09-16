@@ -3,6 +3,30 @@
     {
       "zone": "Battlefield",
       "controller": "you"
+    },
+    {
+      "event": "equip",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature",
+            "Samurai"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 289,
+          "end": 340
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -13,6 +37,18 @@
         "has": [
           "Artifact"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 304,
+          "end": 315
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
       }
     },
     {
@@ -23,6 +59,34 @@
           "Creature",
           "Samurai"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 319,
+          "end": 340
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

@@ -14,11 +14,6 @@
       "subject": {
         "token": "b_0_1_wizard_snipe"
       }
-    },
-    {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self"
     }
   ],
   "sink": []

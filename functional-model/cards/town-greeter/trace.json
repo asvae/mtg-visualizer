@@ -17,7 +17,7 @@
         "fn": "trigger",
         "card": "Town Greeter",
         "instanceId": 1,
-        "id": 2880,
+        "id": 6,
         "name": "onEnter"
       },
       {
@@ -35,7 +35,7 @@
       {
         "fn": "moveTo",
         "target": "Forest",
-        "id": 2876,
+        "id": 2,
         "zone": "Hand",
         "controller": "you"
       },

@@ -13,6 +13,29 @@
     {
       "event": "dies",
       "target": "self"
+    },
+    {
+      "event": "equip",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 41,
+          "end": 122
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -23,6 +46,18 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 95,
+          "end": 122
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
       }
     },
     {
@@ -32,6 +67,34 @@
         "has": [
           "Equipment"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 56,
+          "end": 91
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "equipProgram-effect-structural"
+      }
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
       }
     }
   ]

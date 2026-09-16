@@ -28,7 +28,11 @@
           "start": 5,
           "end": 24
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "exileSelfCost-structural"
+      }
     },
     {
       "event": "addMana",

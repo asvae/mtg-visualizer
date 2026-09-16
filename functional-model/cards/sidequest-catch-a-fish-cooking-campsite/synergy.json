@@ -55,7 +55,11 @@
           "start": 5,
           "end": 12
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     },
     {
       "event": "tap",
@@ -91,9 +95,13 @@
           "target": "oracle",
           "line": 1,
           "start": 10,
-          "end": 31
+          "end": 19
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeCostNamedType-structural"
+      }
     },
     {
       "event": "putCounter",
@@ -112,9 +120,13 @@
           "target": "oracle",
           "line": 1,
           "start": 33,
-          "end": 81
+          "end": 55
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterAll-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -150,10 +162,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 10,
+          "start": 20,
           "end": 31
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeCostNamedType-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -171,7 +187,11 @@
           "start": 56,
           "end": 81
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "putCounterAll-effect-structural"
+      }
     }
   ]
 }

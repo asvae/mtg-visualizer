@@ -16,7 +16,7 @@
         "fn": "cast",
         "card": "Sahagin",
         "instanceId": 1,
-        "id": 2046,
+        "id": 2,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -24,20 +24,20 @@
         "fn": "enters",
         "card": "Sahagin",
         "instanceId": 1,
-        "id": 2046,
+        "id": 2,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Sahagin",
         "instanceId": 1,
-        "id": 2046,
+        "id": 2,
         "name": "onCastNoncreatureSpell4Mana"
       },
       {
         "fn": "putCounter",
         "target": "Sahagin",
-        "id": 2046,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -45,7 +45,7 @@
       {
         "fn": "grantKeyword",
         "target": "Sahagin",
-        "id": 2046,
+        "id": 2,
         "keyword": "Unblockable",
         "untilEndOfTurn": true
       }

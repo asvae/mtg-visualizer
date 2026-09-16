@@ -13,13 +13,13 @@
         "fn": "playLand",
         "card": "Breeding Pool",
         "instanceId": 1,
-        "id": 291
+        "id": 2
       },
       {
         "fn": "enters",
         "card": "Breeding Pool",
         "instanceId": 1,
-        "id": 291,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]
@@ -39,7 +39,7 @@
         "fn": "trigger",
         "card": "Breeding Pool",
         "instanceId": 1,
-        "id": 293,
+        "id": 4,
         "name": "onEnter"
       },
       {

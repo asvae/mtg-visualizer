@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { anyPlayer, applyToBound, destroyEach, selectUpTo } from '../../combinator';
 
 export const coliseumBehemoth: CardDefinition = {
   name: 'Coliseum Behemoth',
@@ -11,6 +12,7 @@ export const coliseumBehemoth: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'modal',
@@ -22,17 +24,20 @@ export const coliseumBehemoth: CardDefinition = {
                   // `destroy`'s own `validType` union (`'permanent' |
                   // 'creature' | 'land'`) has no "artifact or enchantment"
                   // option — 'permanent' would incorrectly widen the legal
-                  // target pool to creatures/lands too. `custom`, filtering
-                  // the real battlefield pool by `isArtifact() ||
-                  // isEnchantment()` then calling the real `actions.destroy`,
-                  // is the honest shape for just this one mode.
-                  kind: 'custom',
+                  // target pool to creatures/lands too. Migrated 2026-09-16
+                  // off a `kind:'custom'` closure onto the combinator DSL's
+                  // `cardType` Filter predicate (2026-09-16, built for
+                  // Ultima/fin-38's own "artifacts and creatures" — an
+                  // OR-matched array of `CardTypeWord`s covers "artifact or
+                  // enchantment" identically) + `destroy` EachAction, picking
+                  // ONE target via `selectUpTo(..., 1, ...)` (same real
+                  // `actions.chooseTarget` pool-exhaustion loop the original
+                  // closure used) then `applyToBound` to destroy just that
+                  // bound item. Same real behavior, now recognizer-readable
+                  // data instead of an opaque closure.
+                  kind: 'program',
                   describe: 'destroy target artifact or enchantment',
-                  run: (ctx: EffectContext, actions: Actions) => {
-                    const pool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))].filter((c) => c.isArtifact() || c.isEnchantment());
-                    if (pool.length === 0) return;
-                    actions.destroy(actions.chooseTarget(pool));
-                  },
+                  program: selectUpTo(anyPlayer.permanentsInPlay().filter('cardType', ['artifact', 'enchantment']), 1, 'target', [applyToBound('target', 0, destroyEach())]),
                 } satisfies Effect,
               ],
             },

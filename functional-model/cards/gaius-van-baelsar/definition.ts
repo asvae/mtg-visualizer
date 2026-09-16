@@ -8,6 +8,7 @@ export const gaiusVanBaelsar: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           kind: 'modal',

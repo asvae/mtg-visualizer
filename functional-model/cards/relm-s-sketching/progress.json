@@ -2,8 +2,8 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-12",
-  "notes": "Migrated to unified v2 Fact model (annotations required, cast/graveyard baseline + real targeted copy-token creation).",
+  "lastVerified": "2026-09-16",
+  "notes": "Migrated to unified v2 Fact model (annotations required, cast/graveyard baseline + real targeted copy-token creation).\n\n2026-09-16 (AI-fact-elimination re-triage, card-results lane): re-checked all 3 facts against the current recognizer catalog. `apply-recognizers.mjs relm-s-sketching` produced 0 new facts (confirmed, no rerun staleness). All 3 remain unprovenanced for a genuine, singular reason: the card's whole effect (\"create a token that's a copy of target artifact, creature, or land\") is a `kind:'custom'` closure because no declarative Effect kind exists for \"create a token whose characteristics are read off a runtime-chosen target\" (`createToken`'s own `TokenInfo` is fixed, static data) — opaque to every structural recognizer by construction (`token-creation-structural.ts` only ever sees `kind:'createToken'` Effects with a fixed `TOKENS` registry token). Escalated to engine-core/recognizer lanes as a real, no-longer-singleton gap: `the-fire-crystal` (plain copy of target creature) and `ardyn-the-usurper` (copy-with-overrides, already tracked as ENGINE_GAPS.md gap #25, which says \"Ardyn is the ONLY real card needing this\" — now stale, at least 2 more real cards share the underlying \"no copy-a-permanent-into-a-token\" gap). Not closable by this lane (no recognizer/combinator write access) — see this session's handback report for the full citation.",
   "textCoverageAudited": false,
   "knownGaps": []
 }

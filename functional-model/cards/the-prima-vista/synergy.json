@@ -9,24 +9,20 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 83,
+          "start": 99,
           "end": 145
-        }
-      ]
-    },
-    {
-      "event": "grantType",
-      "type": "Creature",
-      "target": "self",
-      "untilEndOfTurn": true,
-      "annotations": [
+        },
         {
           "target": "oracle",
           "line": 2,
-          "start": 76,
+          "start": 89,
           "end": 135
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "animateSelfCreature-effect-structural"
+      }
     },
     {
       "event": "crew",
@@ -35,10 +31,14 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 8,
-          "end": 74
+          "start": 0,
+          "end": 6
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
     }
   ],
   "sink": [
@@ -62,7 +62,11 @@
           "start": 0,
           "end": 81
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "castTypeSpell-trigger-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -76,10 +80,14 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 8,
-          "end": 74
+          "start": 26,
+          "end": 47
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "crewCost-structural"
+      }
     }
   ]
 }

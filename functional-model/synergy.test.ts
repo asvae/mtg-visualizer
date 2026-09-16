@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  computeDeckSinkSupply,
   computeFactAnnotations,
   describeFact,
   findInteractionsForCard,
@@ -7,12 +9,23 @@ import {
   isZoneFact,
   themeOf,
   type AnnotationRef,
+  type DeckEntry,
   type EventFact,
   type Fact,
   type PoolCard,
   type ZoneFact,
 } from './synergy';
 import type { CardDefinition } from './card';
+// Real FIN cards for `computeDeckSinkSupply`'s own worked-example test below
+// — per this project's "real not mocked" scenario/board-content convention
+// (no invented filler cards even for a synthetic deck), the deck itself is
+// built from genuine `cards/<slug>/definition.ts` + `synergy.json` pairs,
+// not fixture stand-ins.
+import { ambrosiaWhiteheart } from './cards/ambrosia-whiteheart/definition';
+import { elrondMoonReader } from './cards/elrond-moon-reader/definition';
+import { alBhedSalvagers } from './cards/al-bhed-salvagers/definition';
+import { gladiolusAmicitia } from './cards/gladiolus-amicitia/definition';
+import { vectorImperialCapital } from './cards/vector-imperial-capital/definition';
 
 // Real matching proof for `EventFact.colors` (the `has`/`hasAny`/`not`
 // color-SET shape added 2026-09-09 alongside `vector-imperial-capital`'s own
@@ -234,6 +247,71 @@ describe('factsInteract — SOURCE zone-change facts match a SINK presence want 
     const groups = findInteractionsForCard('Dies A Lot 2', [dier, wantsBattlefield]);
     const zoneGroup = groups.find((g) => g.direction === 'source');
     expect(zoneGroup).toBeUndefined();
+  });
+});
+
+describe('factsInteract — a `destroy`-event SOURCE fact implies its own target dies, without a separate `dies` fact (2026-09-16, removes destroy-effect-structural.ts/destroyProgram-effect-structural.ts\'s former companion `dies` fact — see synergy.ts\'s own `satisfiesDestroyImpliesDies`/`isGraveyardArrivalWant` doc comments)', () => {
+  function destroyer(target: Fact['target']): PoolCard {
+    return poolCard(land('Destroyer'), [{ event: 'destroy', target, targeted: true, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>], []);
+  }
+
+  it('matches an UNCONSTRAINED zone-shaped Graveyard-presence want (Cantankerous Keepers\' own real shape)', () => {
+    const wantsGraveyard = poolCard(land('Wants Graveyard'), [], [{ zone: 'Graveyard', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const groups = findInteractionsForCard('Destroyer', [destroyer({ types: { has: ['Creature'] } }), wantsGraveyard]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches.map((m) => m.card)).toContain('Wants Graveyard');
+  });
+
+  it('matches a TYPE-CONSTRAINED zone-shaped Graveyard-presence want when the destroy\'s own `target.types.has` guarantees that type (Ardyn the Usurper\'s own real shape)', () => {
+    const wantsCreatureGraveyard = poolCard(land('Ardyn-like'), [], [{ zone: 'Graveyard', controller: 'you', types: { has: ['Creature'] }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const groups = findInteractionsForCard('Destroyer', [destroyer({ types: { has: ['Creature'] }, power: { min: 4 } }), wantsCreatureGraveyard]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches.map((m) => m.card)).toContain('Ardyn-like');
+  });
+
+  it('does NOT match a type-constrained want the destroy\'s own `target` does not guarantee (destroys Creatures, want requires Mutant — Jenova, Ancient Calamity\'s own real shape)', () => {
+    const wantsMutantGraveyard = poolCard(land('Jenova-like'), [], [{ event: 'dies', controller: 'you', target: { types: { has: ['Mutant'] } }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('Destroyer', [destroyer({ types: { has: ['Creature'] } }), wantsMutantGraveyard]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches ?? []).not.toContainEqual(expect.objectContaining({ card: 'Jenova-like' }));
+  });
+
+  it('matches an EVENT-shaped `event:"dies"` want with its own `target` type filter (Al Bhed Salvagers\' own real shape — hasAny)', () => {
+    const wantsAnyDies = poolCard(
+      land('Al-Bhed-like'),
+      [],
+      [{ event: 'dies', controller: 'you', target: { types: { hasAny: ['Creature', 'Artifact'] } }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+    );
+    const groups = findInteractionsForCard('Destroyer', [destroyer({ types: { has: ['Creature'] } }), wantsAnyDies]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches.map((m) => m.card)).toContain('Al-Bhed-like');
+  });
+
+  it('matches a `target: "self"` want when the wanting card\'s own type satisfies the destroy\'s own `target` filter (real regression guard — Lunatic Pandora/Sephiroth\'s Intervention\'s own on-disk `dies` facts used to provide this via a stale, from/to-missing shape before removal)', () => {
+    const selfDier: CardDefinition = { name: 'Self Dier', manaCost: '', typeLine: 'Creature — Test' };
+    const selfDierCard = poolCard(selfDier, [], [{ event: 'dies', target: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('Destroyer', [destroyer({ types: { not: ['Land'] } }), selfDierCard]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches.map((m) => m.card)).toContain('Self Dier');
+  });
+
+  it('does NOT match a `target: "self"` want when the wanting card\'s own type is EXCLUDED by the destroy\'s own `target` filter', () => {
+    const selfDierLand: CardDefinition = { name: 'Self Dier Land', manaCost: '', typeLine: 'Land' };
+    const selfDierCard = poolCard(selfDierLand, [], [{ event: 'dies', target: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('Destroyer', [destroyer({ types: { not: ['Land'] } }), selfDierCard]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches ?? []).not.toContainEqual(expect.objectContaining({ card: 'Self Dier Land' }));
+  });
+
+  it('does NOT vacuously match a `target: "self"` want when the destroy has NO `target` filter at all (Bahamut, Warden of Light\'s own real unrestricted "Destroy target permanent" — declining here keeps this widening scoped to real regressions, not a broad new invention)', () => {
+    const selfDier: CardDefinition = { name: 'Any Self Dier', manaCost: '', typeLine: 'Creature — Test' };
+    const selfDierCard = poolCard(selfDier, [], [{ event: 'dies', target: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const groups = findInteractionsForCard('Destroyer', [destroyer(undefined), selfDierCard]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches ?? []).not.toContainEqual(expect.objectContaining({ card: 'Any Self Dier' }));
+  });
+
+  it('declines a graveyard-arrival want carrying a `power`/`cmc`/`toughness`/`name` constraint — conservative, no real pool sink needs more than `types` today', () => {
+    const wantsBigCreatureGraveyard = poolCard(
+      land('Wants Big Creature'),
+      [],
+      [{ zone: 'Graveyard', controller: 'you', types: { has: ['Creature'] }, power: { min: 5 }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>],
+    );
+    const groups = findInteractionsForCard('Destroyer', [destroyer({ types: { has: ['Creature'] }, power: { min: 4 } }), wantsBigCreatureGraveyard]);
+    expect(groups.find((g) => g.direction === 'source' && g.description === 'destroy')?.matches ?? []).not.toContainEqual(expect.objectContaining({ card: 'Wants Big Creature' }));
   });
 });
 
@@ -733,5 +811,195 @@ describe('computeFactAnnotations — legitimate "nothing to anchor to" cases sta
       expect(String((err as Error).message)).toContain('Draw a card.');
       expect(String((err as Error).message)).toContain('line 1');
     }
+  });
+});
+
+// `computeDeckSinkSupply` — the new, deck-scoped, quantity-weighted
+// sink-supply computation (see its own doc comment in synergy.ts for the
+// full design rationale: label = `describeFact`, self-supply withholds
+// exactly one unit of `target`'s own deck quantity, matching is
+// `factsInteract` verbatim, never built on `findInteractionsForCard`'s own
+// pool-wide edge-assembly output).
+describe('computeDeckSinkSupply', () => {
+  function creature(name: string, typeLine = 'Creature — Test Testperson'): CardDefinition {
+    return { name, manaCost: '', typeLine };
+  }
+
+  function entry(card: PoolCard, qty: number): DeckEntry {
+    return { card, qty };
+  }
+
+  it('groups sink facts that share the same bare `describeFact` label into one row, summing every distinct matching producer once', () => {
+    const target = poolCard(creature('Reaper'), [], [
+      { event: 'dies', target: { types: { has: ['Creature'] } }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'dies', target: { types: { has: ['Artifact'] } }, annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+    ]);
+    // Matches ONLY the Creature-dies sink (s1).
+    const creatureDier = poolCard(
+      creature('Fragile Creature'),
+      [{ event: 'dies', subject: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [],
+    );
+    // Matches ONLY the Artifact-dies sink (s2).
+    const artifactDier = poolCard(
+      creature('Fragile Artifact', 'Artifact — Test'),
+      [{ event: 'dies', subject: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [],
+    );
+    // An Artifact Creature matches BOTH grouped sink facts — must still only
+    // contribute its own qty ONCE to the merged "dying" row, not twice.
+    const both = poolCard(
+      creature('Fragile Artifact Creature', 'Artifact Creature — Test'),
+      [{ event: 'dies', subject: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [],
+    );
+
+    const rows = computeDeckSinkSupply(target, [entry(creatureDier, 2), entry(artifactDier, 3), entry(both, 5)]);
+    expect(rows).toEqual([{ label: 'dying', count: 10 }]); // 2 + 3 + 5, one row not two
+  });
+
+  it('sums deck quantities across every distinct matching card, weighted by qty (not distinct-card count)', () => {
+    const target = poolCard(land('Payoff'), [], [{ to: 'Battlefield', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+    const a = poolCard(creature('Alpha'), [], []); // implicit self-enters via `augmentPoolCards`
+    const b = poolCard(creature('Beta'), [], []);
+    const rows = computeDeckSinkSupply(target, [entry(a, 4), entry(b, 1)]);
+    expect(rows).toEqual([{ label: 'battlefield presence', count: 5 }]);
+  });
+
+  it('a deck entry with no matching source fact contributes 0, and a non-positive qty is skipped entirely', () => {
+    const target = poolCard(land('Payoff 2'), [], [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>]);
+    const bystander = poolCard(creature('Bystander'), [], []);
+    const zeroQty = poolCard(
+      land('Zero Qty Lifegainer'),
+      [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [],
+    );
+    const rows = computeDeckSinkSupply(target, [entry(bystander, 3), entry(zeroQty, 0)]);
+    expect(rows).toEqual([{ label: 'life gain', count: 0 }]);
+  });
+
+  it('every distinct sink fact/group gets its own row, even one with zero real deck matches', () => {
+    const target = poolCard(land('Multi-Sink Payoff'), [], [
+      { event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+      { event: 'landfall', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>,
+    ]);
+    const lifegainer = poolCard(land('Real Lifegainer'), [{ event: 'lifegain', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>], []);
+    const rows = computeDeckSinkSupply(target, [entry(lifegainer, 2)]);
+    expect(rows).toEqual([
+      { label: 'life gain', count: 2 },
+      { label: 'landfall', count: 0 },
+    ]);
+  });
+
+  it("self-supply withholds exactly one unit of `target`'s own deck quantity — SYNERGY_DESIGN.md's \"Self-interactions ... computed as the pair (A,A) like any other ... never dropped\" extended to a quantity: a single copy (qty=1) cannot supply itself (0), but real OTHER physical copies (qty-1) can and do", () => {
+    // A normal (non-Legendary) permanent — isNormalPermanent's synthetic
+    // self-entersBattlefield fact (`augmentPoolCards`) is what actually
+    // supplies its own unconstrained "battlefield presence" sink here.
+    const selfSupplier = poolCard(creature('Tribal Lord'), [], [{ to: 'Battlefield', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<ZoneFact, 'role'>]);
+
+    expect(computeDeckSinkSupply(selfSupplier, [entry(selfSupplier, 1)])).toEqual([{ label: 'battlefield presence', count: 0 }]);
+    expect(computeDeckSinkSupply(selfSupplier, [entry(selfSupplier, 4)])).toEqual([{ label: 'battlefield presence', count: 3 }]);
+  });
+
+  it('a `target: "self"` sink (same-instance want) is satisfied only by another REAL copy of the same card declaring the matching EVENT-shaped produce, not by a different card\'s own (zone-shaped) synthetic self-entersBattlefield fact', () => {
+    // Deliberately an explicit, EVENT-shaped (no `to`/`from`) self-produce —
+    // `augmentPoolCards`' own synthetic entersBattlefield fact is ZONE-shaped
+    // (`to: 'Battlefield'`) and, per `factsInteract`'s shape-partition gate
+    // (SYNERGY_DESIGN.md: "A merged fact ... is classified into the
+    // zone-shaped family ONLY"), can NEVER satisfy an event-shaped
+    // `target: 'self'` want even for the exact same card — confirmed by
+    // hand-running this exact scenario against the real matcher before
+    // writing this test, not assumed.
+    const legend = poolCard(
+      creature('Legendary Payoff', 'Legendary Creature — Test'),
+      [{ event: 'entersBattlefield', target: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+      [{ event: 'entersBattlefield', target: 'self', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>],
+    );
+    const otherCreature = poolCard(creature('Unrelated Creature'), [], []);
+    // A second copy of `legend` itself in the deck DOES satisfy it (same
+    // real card entering again is exactly the same-instance want) — qty=3
+    // withholds 1 for the copy under evaluation, leaving 2 real others.
+    // `otherCreature`'s own (zone-shaped, implicit) entering fact never
+    // matches this event-shaped want regardless of self/other, reinforcing
+    // that this row's whole count comes from `legend`'s own real copies.
+    const rows = computeDeckSinkSupply(legend, [entry(legend, 3), entry(otherCreature, 4)]);
+    expect(rows).toEqual([{ label: 'enters the battlefield', count: 2 }]);
+  });
+
+  it('reads only SINK facts — a card with only SOURCE facts and no sinks returns no rows', () => {
+    const noSinks = poolCard(creature('No Sinks'), [{ event: 'drawCard', controller: 'you', annotations: FIXTURE_ANNOTATIONS } satisfies Omit<EventFact, 'role'>], []);
+    expect(computeDeckSinkSupply(noSinks, [entry(noSinks, 4)])).toEqual([]);
+  });
+});
+
+// Real-card worked example (2026-09-17) — Ambrosia Whiteheart (fin/6) against
+// a small synthetic Deck of otherwise-real FIN cards (this project's own
+// "real not mocked" board-content rule extended to a deck list: quantities
+// are invented, the cards themselves are not). Loads the SAME on-disk
+// `definition.ts` + `synergy.json` pair the live card page/API route reads
+// (`server/utils/functionalModelPool.ts`'s own `loadCardSynergy`), not a
+// hand-copied approximation, so this test would actually catch a real drift
+// between this fact set and the matcher.
+function loadRealPoolCard(def: CardDefinition, slug: string): PoolCard {
+  const raw = JSON.parse(readFileSync(new URL(`cards/${slug}/synergy.json`, import.meta.url), 'utf8')) as { source?: Omit<Fact, 'role'>[]; sink?: Omit<Fact, 'role'>[] };
+  return {
+    name: def.name,
+    card: def,
+    source: (raw.source ?? []).map((f) => ({ ...f, role: 'source' }) as Fact),
+    sink: (raw.sink ?? []).map((f) => ({ ...f, role: 'sink' }) as Fact),
+  };
+}
+
+describe('computeDeckSinkSupply — real-card worked example (Ambrosia Whiteheart, fin/6)', () => {
+  it('computes real, hand-verified counts against a small synthetic deck of real FIN cards', () => {
+    const ambrosia = loadRealPoolCard(ambrosiaWhiteheart, 'ambrosia-whiteheart');
+    const elrond = loadRealPoolCard(elrondMoonReader, 'elrond-moon-reader');
+    const alBhed = loadRealPoolCard(alBhedSalvagers, 'al-bhed-salvagers');
+    const gladiolus = loadRealPoolCard(gladiolusAmicitia, 'gladiolus-amicitia');
+    const vector = loadRealPoolCard(vectorImperialCapital, 'vector-imperial-capital');
+
+    // Sanity check the real fixtures still have the exact shape this
+    // worked example's hand computation relies on — fails loudly (not
+    // silently under-counts) if a future pool-wide migration changes any
+    // of these cards' own real facts out from under this test.
+    expect(ambrosia.sink.map(describeFact)).toEqual(['battlefield presence', 'landfall', 'enters the battlefield']);
+
+    const deck: DeckEntry[] = [
+      { card: ambrosia, qty: 2 }, // Legendary — self-supply withholds 1
+      { card: elrond, qty: 1 },
+      { card: alBhed, qty: 4 },
+      { card: gladiolus, qty: 4 },
+      { card: vector, qty: 3 },
+    ];
+
+    const rows = computeDeckSinkSupply(ambrosia, deck);
+    expect(rows).toEqual([
+      // Ambrosia (2-1=1, own implicit self-enters) + Elrond (1, real
+      // exile/return "return-battlefield" zone fact) + Al Bhed Salvagers (4,
+      // implicit self-enters) + Gladiolus Amicitia (4, real own
+      // `zone:'Battlefield'` self fact) + Vector, Imperial Capital (3, real
+      // own `zone:'Battlefield'` "battlefield-presence" self fact).
+      { label: 'battlefield presence', count: 1 + 1 + 4 + 4 + 3 },
+      // No real FIN card in the pool declares a SOURCE `event:'landfall'`
+      // fact (landfall is authored pool-wide as a SINK want only, checked
+      // 2026-09-17) — a real, honest 0, not a bug in this computation.
+      { label: 'landfall', count: 0 },
+      // Only Elrond (1) — his real broadcast `{event:'entersBattlefield',
+      // controller:'you'}` fact has no `target`/`subject` at all, the one
+      // genuinely vacuous, unscoped producer in this deck, so it satisfies
+      // ANY `target:'self'` want pool-wide. Ambrosia's OWN implicit
+      // self-enters does NOT count toward her own same-instance want here,
+      // even though she's a real self-copy: `augmentPoolCards`' synthetic
+      // fact is ZONE-shaped (`to:'Battlefield'`), and `factsInteract`'s
+      // shape-partition gate never lets a zone-shaped produce satisfy an
+      // event-shaped `target:'self'` want, for ANY card including itself
+      // (SYNERGY_DESIGN.md's zone/event unification note) — a real,
+      // pre-existing matcher limitation this computation correctly inherits
+      // rather than papering over. Al Bhed Salvagers/Gladiolus/Vector each
+      // only have a `subject:'self'`-scoped (or fully implicit) entering
+      // fact, which the 2026-09-15 `factsInteract` fix correctly excludes
+      // from a DIFFERENT card's own same-instance want regardless of shape.
+      { label: 'enters the battlefield', count: 1 },
+    ]);
   });
 });

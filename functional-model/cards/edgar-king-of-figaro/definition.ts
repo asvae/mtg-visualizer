@@ -1,4 +1,5 @@
 import type { CardDefinition, Effect } from '../../card';
+import { drawCard, you } from '../../combinator';
 
 export const edgarKingOfFigaro: CardDefinition = {
   name: 'Edgar, King of Figaro',
@@ -31,11 +32,24 @@ export const edgarKingOfFigaro: CardDefinition = {
       on: 'enter',
       effects: [
         {
-          kind: 'drawCard',
           // Real `NumCards$ Count$Valid Artifact.YouCtrl` — a live count
-          // read at resolution, the `Computed<number>` escape hatch's own
-          // canonical use (a real cross-state read, not a fixed value).
-          amount: (ctx) => ctx.you.getCardsIn('Battlefield').filter((c) => c.isArtifact()).length,
+          // read at resolution. Migrated 2026-09-16 (AI-fact-elimination
+          // pass) off a `kind:'drawCard'` `Computed<number>` closure (opaque
+          // to every recognizer by construction) onto the combinator DSL:
+          // `you.permanentsInPlay().filter('cardType','artifact').count()`
+          // is the exact same live board-state read
+          // (`ctx.you.getCardsIn('Battlefield').filter(c => c.isArtifact())
+          // .length`), now real structured data instead of a closure. Same
+          // behavior confirmed unchanged via `run-scenarios.mjs` (still
+          // draws 2 cards for 2 real artifacts on the battlefield).
+          // Does NOT yet flip this fact's provenance on its own —
+          // `drawCardProgram-effect-structural.ts` only has a confirmed
+          // template for `amount === 1` behind a subtype guard (Venat's own
+          // shape) today, not an `Aggregate`-based count; still a real
+          // recognizer-lane escalation (see this card's own progress.json).
+          kind: 'program',
+          describe: 'draw a card for each artifact you control',
+          program: drawCard(you.permanentsInPlay().filter('cardType', 'artifact').count()),
         } satisfies Effect,
       ],
     },

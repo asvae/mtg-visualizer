@@ -1,19 +1,15 @@
 // Real engine-piloted trace (see engine-trace.ts's own header). Scorpion
 // Sentinel has no triggers/resolvable effects of its own to pilot — its only
 // real text beyond the printed body is a conditional layer-7a CDA ("As long
-// as you control seven or more lands, this creature gets +3/+0"). This is a
-// THRESHOLD-gated shape this engine has no `ptFormula` variant for (see
-// definition.ts's own comment, and `card.ts`'s `CardDefinition.ptFormula`
-// doc comment) — same real, documented gap as Gaelicat's own "two or more
-// artifacts" and Magitek Infantry's own "another artifact" buffs (see
-// isScorpionSentinelLandThresholdPumpFact, scripts/verify-synergy.mjs). This
-// trace deliberately demonstrates BOTH halves honestly: (1) the condition
-// itself (7 real land permanents you control) is real, observable board
-// state, via a genuine logged `getLandsInPlay()` aggregate read; (2)
-// `effectivePT` — the same real, live layer-7a read Adelbert Steiner's own
-// scenario uses — stays at Scorpion Sentinel's unmodified printed 1/4 even
-// with the threshold met, which is the honest, documented engine gap, not a
-// fabricated bonus.
+// as you control seven or more lands, this creature gets +3/+0"), now real
+// via `card.ts`'s `ptFormula.kind:'thresholdBonus'` (closed 2026-09-15,
+// fin/16-25 pass — see that field's own doc comment for the real Forge
+// citation). This trace demonstrates BOTH halves for real: (1) the
+// condition (7 real land permanents you control) via a genuine logged
+// `getLandsInPlay()` aggregate read; (2) `effectivePT` — the same real,
+// live layer-7a read Adelbert Steiner's own scenario uses — now genuinely
+// recalculates to Scorpion Sentinel's printed 4/4 (1/4 base +3/+0) once the
+// threshold is met, a real engine-computed value, not text-only anymore.
 
 import { scorpionSentinel } from './definition';
 import { effectivePT } from '../../state';
@@ -41,6 +37,13 @@ export function runEngineScenarios(): TraceResult[] {
     subtypes: ['Robot', 'Scorpion'],
     basePower: scorpionSentinel.pt?.[0],
     baseToughness: scorpionSentinel.pt?.[1],
+    // `pilot.state.addCard` is a raw manual `RealCard` build (unlike
+    // `harness.ts`'s own generic `runScenario`, which copies
+    // `effectiveCard.ptFormula` automatically) — `ptFormula` must be
+    // threaded through explicitly or the real layer-7a CDA never applies
+    // (a real bug caught 2026-09-15, same class as gaelicat's own scenario
+    // hitting it first).
+    ptFormula: scorpionSentinel.ptFormula,
   });
   const actions = pilotActions(pilot, scorpionSentinelReal.id);
   const ctx = pilot.ctxFor(scorpionSentinelReal);
@@ -50,14 +53,13 @@ export function runEngineScenarios(): TraceResult[] {
   pilotResolveTop(pilot);
 
   // Real layer-7a read — same live `effectivePT` Adelbert Steiner's own
-  // scenario uses. Honestly reports Scorpion Sentinel's UNMODIFIED printed
-  // 1/4: this engine has no threshold-gated `ptFormula` variant, so the
-  // printed "+3/+0" never actually applies here — a real, documented gap,
-  // not fabricated evidence of a bonus that doesn't happen.
-  pilot.beginStep('Layer-7a read — no threshold-CDA machinery, so the +3/+0 does not apply');
+  // scenario uses. Now genuinely recalculates to 4/4 (printed 1/4 +3/+0)
+  // once the threshold is met — a real, live engine computation, not
+  // text-only.
+  pilot.beginStep('Layer-7a read — threshold-CDA machinery now applies the +3/+0');
   const [power, toughness] = effectivePT(pilot.state, scorpionSentinelReal);
   pilot.log.push({ fn: 'read:getNetPower', card: scorpionSentinel.name, power, toughness });
 
-  const result = `Scorpion Sentinel enters with ${landsCount} lands already on the battlefield, meeting the printed "seven or more lands" threshold — but layer-7a effectivePT still reports Scorpion Sentinel's unmodified printed ${power}/${toughness}, since this engine has no threshold-gated CDA machinery to apply the printed +3/+0 (a documented gap, same class as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).`;
-  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: 7 lands present -> cast -> condition/CDA reads (gap documented)', result)];
+  const result = `Scorpion Sentinel enters with ${landsCount} lands already on the battlefield, meeting the printed "seven or more lands" threshold — layer-7a effectivePT genuinely recalculates to ${power}/${toughness} (printed 1/4 +3/+0), real threshold-CDA machinery now in place (closed 2026-09-15, same mechanism as gaelicat/magitek-infantry's own identically-shaped artifact-count buffs).`;
+  return [finishEnginePilotTrace(pilot, setup, 'engine playthrough: 7 lands present -> cast -> real threshold-CDA pump applies', result)];
 }

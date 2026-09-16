@@ -28,7 +28,11 @@
           "start": 13,
           "end": 32
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "exileSelfCost-structural"
+      }
     },
     {
       "event": "entersBattlefield",
@@ -52,12 +56,17 @@
           "target": "oracle",
           "line": 1,
           "start": 2,
-          "end": 102
+          "end": 101
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
-      "event": "exile",
+      "from": "Battlefield",
+      "to": "Exile",
       "target": {
         "types": {
           "hasAny": [
@@ -72,10 +81,43 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 2,
-          "end": 43
+          "start": 8,
+          "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
+    },
+    {
+      "from": "Graveyard",
+      "to": "Battlefield",
+      "event": "entersBattlefield",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "cmc": {
+          "max": 4
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 2,
+          "end": 101
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -94,10 +136,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 16,
-          "end": 75
+          "start": 2,
+          "end": 101
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     },
     {
       "to": "Battlefield",
@@ -112,10 +158,14 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 15,
+          "start": 8,
           "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "move-effect-structural"
+      }
     }
   ]
 }

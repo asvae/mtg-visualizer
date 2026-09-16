@@ -22,7 +22,7 @@
         "fn": "cast",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3016,
+        "id": 4,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -30,14 +30,14 @@
         "fn": "enters",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3016,
+        "id": 4,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3016,
+        "id": 4,
         "name": "onNoncreatureSpellCastGE4Mana"
       },
       {
@@ -55,7 +55,7 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 3015,
+        "id": 3,
         "controller": "opp0"
       },
       {
@@ -73,7 +73,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 3015,
+        "id": 3,
         "counterType": "stun",
         "amount": 1,
         "controller": "opp0"
@@ -82,13 +82,13 @@
         "fn": "trigger",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3016,
+        "id": 4,
         "name": "onNoncreatureSpellCastGE8Mana"
       },
       {
         "fn": "putCounter",
         "target": "Ultros, Obnoxious Octopus",
-        "id": 3016,
+        "id": 4,
         "counterType": "+1/+1",
         "amount": 8,
         "controller": "you"
@@ -112,7 +112,7 @@
         "fn": "cast",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3018,
+        "id": 6,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -120,14 +120,14 @@
         "fn": "enters",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3018,
+        "id": 6,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3018,
+        "id": 6,
         "name": "onNoncreatureSpellCastGE4Mana"
       }
     ]
@@ -147,7 +147,7 @@
         "fn": "cast",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3020,
+        "id": 8,
         "from": "hand",
         "cost": "{1}{U}"
       },
@@ -155,7 +155,7 @@
         "fn": "enters",
         "card": "Ultros, Obnoxious Octopus",
         "instanceId": 1,
-        "id": 3020,
+        "id": 8,
         "zone": "Battlefield"
       },
       {

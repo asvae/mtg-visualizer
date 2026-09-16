@@ -10,6 +10,7 @@ export const shinraReinforcements: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         // Mill 3 — a real, unchosen batch move off the TOP of the library
         // (see state.ts's own `move` action: it slices from the front of

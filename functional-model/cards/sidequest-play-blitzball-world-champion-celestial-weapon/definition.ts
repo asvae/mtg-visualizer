@@ -13,7 +13,13 @@ export const sidequestPlayBlitzball: CardDefinition = {
   triggers: [
     {
       name: 'onBeginCombat',
-      effects: [{ kind: 'pumpTarget', power: 2, toughness: 0, owner: 'you' } satisfies Effect],
+      // `untilEndOfTurn: true` added 2026-09-16 (recognizer-lane
+      // pumpTarget-effect-structural propagation pass) — real printed text
+      // is "...gets +2/+0 UNTIL END OF TURN," a real previously-missing
+      // field (`state.pump`'s own `opts.untilEndOfTurn` is mechanically
+      // real 514.2 Cleanup expiry, not documentary — this pump was wrongly
+      // persisting permanently within a scenario before this fix).
+      effects: [{ kind: 'pumpTarget', power: 2, toughness: 0, owner: 'you', untilEndOfTurn: true } satisfies Effect],
     },
     {
       // Real condition (`CheckSVar$ X | SVarCompare$ GE6`, X = max combat
@@ -49,12 +55,15 @@ export const sidequestPlayBlitzball: CardDefinition = {
     typeLine: 'Legendary Artifact — Equipment',
 
     // Real `S:Mode$ Continuous | Affected$ Creature.EquippedBy | AddPower$ 2
-    // | AddKeyword$ Double Strike` — grants a stat/keyword bonus to
-    // WHATEVER this is attached to, not to itself — no `ptFormula`/
-    // `keywords` shape here covers "the equipped creature gets X" (both
-    // only ever apply to `self`), so this stays freeform static text, same
-    // as white-mage-s-staff's own equivalent equipment bonus.
+    // | AddKeyword$ Double Strike` — real, mechanical `continuousPTGrants`/
+    // `continuousKeywordGrants` with `equippedBySelf: true` (same
+    // already-real query-time machinery white-mage-s-staff's own equipment
+    // bonus already uses; text kept alongside as documentation, same
+    // pool-wide convention every other migrated Equipment keeps).
     staticAbilities: ['Double Overdrive — Equipped creature gets +2/+0 and has double strike.'],
+
+    continuousPTGrants: [{ power: 2, toughness: 0, includeSelf: false, equippedBySelf: true }],
+    continuousKeywordGrants: [{ keywords: ['DoubleStrike'], includeSelf: false, equippedBySelf: true }],
 
     // Equip {3} — same declarative-gap shape (no `equip` Effect kind
     // exists) white-mage-s-staff/warrior-s-sword's own Equip ability uses:

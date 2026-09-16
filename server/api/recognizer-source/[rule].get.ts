@@ -131,6 +131,71 @@ export const RECOGNIZER_IDS: RecognizerId[] = [
   'equipmentWantsCreature-sink-structural',
   'preventDamageAll-effect-structural',
   'moveSearchLibraryOrGraveyard-effect-structural',
+  // fin/16-25 AI-fact-elimination pass, same day as its own wiring —
+  // mirrors `functional-model/recognizers/types.ts`'s own `RecognizerId`
+  // union addition.
+  'continuousTypeGrantsEquipped-structural',
+  'continuousKeywordGrantsEquipped-structural',
+  'continuousKeywordGrantsSubtype-structural',
+  'grantKeywordAll-effect-structural',
+  'jobSelectCreateTokenAndEquip-effect-structural',
+  'costReductionTappedTarget-structural',
+  'moveConditionalDestinationByCastFrom-effect-structural',
+  'diesOtherPermanentsOncePerTurn-trigger-structural',
+  'moveSearchLibraryNamedSelf-effect-structural',
+  'crewCost-structural',
+  'animateSelfCreature-effect-structural',
+  'manaAbilitiesSimple-structural',
+  'pumpAllCreaturesYouControl-effect-structural',
+  'sacrificeCostNamedType-structural',
+  'sacrificeSelfCost-structural',
+  'exileSelfCost-structural',
+  'putCounterAll-effect-structural',
+  'surveil-effect-structural',
+  'grantKeywordTarget-effect-structural',
+  'ptFormulaSetToCreaturesControlled-structural',
+  'dealDamageTarget-effect-structural',
+  'spellCostReductionGrants-structural',
+  'lifegainDoubleKeyword-structural',
+  // 2026-09-16 (card-results/fin-51-75 triage backlog), same pass as their
+  // own wiring — mirrors `functional-model/recognizers/types.ts`'s own
+  // `RecognizerId` union addition the same day.
+  'sacrifice-effect-structural',
+  'discard-effect-structural',
+  'untapTarget-effect-structural',
+  'grantKeywordSelf-effect-structural',
+  'playFromLibraryTop-effect-structural',
+  'tapAll-effect-structural',
+  // 2026-09-16 (fin/26-50 re-triage follow-up), same pass as its own
+  // wiring — mirrors `functional-model/recognizers/types.ts`'s own
+  // `RecognizerId` union addition the same day.
+  'castTypeSpell-trigger-structural',
+  'selectUpToGainControl-effect-structural',
+  // 2026-09-16 (program-AST generalization pass), same pass as its own
+  // wiring — mirrors `functional-model/recognizers/types.ts`'s own
+  // `RecognizerId` union addition the same day.
+  'destroyProgram-effect-structural',
+  'equipProgram-effect-structural',
+  // 2026-09-16 (recognizer-lane 'pump'/'dealDamage' occurrence-support
+  // follow-up), same pass as their own wiring — mirrors `functional-model/
+  // recognizers/types.ts`'s own `RecognizerId` union addition the same day.
+  'pumpProgram-effect-structural',
+  'dealDamageEachMagnitude-effect-structural',
+  // 2026-09-16 (engine-lane primitive build, Venat/Hydaelyn's own Blessing
+  // of Light), same pass as their own wiring — mirrors `functional-model/
+  // recognizers/types.ts`'s own `RecognizerId` union addition the same day.
+  'putCounterProgram-effect-structural',
+  'grantKeywordProgram-effect-structural',
+  'drawCardProgram-effect-structural',
+  // 2026-09-16 (card-results/fin-76-100 re-triage backlog + engine-core's
+  // Cecil migration follow-up), same pass as their own wiring — mirrors
+  // `functional-model/recognizers/types.ts`'s own `RecognizerId` union
+  // addition the same day.
+  'loseLife-effect-structural',
+  'counter-effect-structural',
+  'mill-effect-structural',
+  'millModifierGrants-structural',
+  'grantKeywordAllAttacking-effect-structural',
 ];
 
 export default defineEventHandler((event) => {

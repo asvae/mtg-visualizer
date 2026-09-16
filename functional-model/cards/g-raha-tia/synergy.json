@@ -14,7 +14,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
-      }
+      },
+      "triggeredBy": "onOtherPermanentsDie"
     }
   ],
   "sink": [
@@ -35,10 +36,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 27,
-          "end": 87
+          "start": 18,
+          "end": 144
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "diesOtherPermanentsOncePerTurn-trigger-structural"
+      }
     }
   ]
 }

@@ -29,10 +29,14 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 19,
+          "start": 0,
           "end": 67
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousKeywordGrantsEquipped-structural"
+      }
     },
     {
       "event": "sacrifice",
@@ -45,7 +49,12 @@
           "start": 41,
           "end": 60
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      },
+      "triggeredBy": "onEnchantedDealtDamage"
     },
     {
       "event": "dies",

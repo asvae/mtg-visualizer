@@ -18,7 +18,7 @@
         "fn": "trigger",
         "card": "Emet-Selch, Unsundered",
         "instanceId": 1,
-        "id": 792,
+        "id": 4,
         "name": "onEnter"
       },
       {
@@ -55,7 +55,7 @@
         "fn": "trigger",
         "card": "Emet-Selch, Unsundered",
         "instanceId": 1,
-        "id": 796,
+        "id": 8,
         "name": "onAttacks"
       },
       {
@@ -91,7 +91,7 @@
         "fn": "trigger",
         "card": "Emet-Selch, Unsundered",
         "instanceId": 1,
-        "id": 812,
+        "id": 24,
         "name": "onUpkeep"
       },
       {
@@ -104,14 +104,14 @@
       {
         "fn": "moveTo",
         "target": "Emet-Selch, Unsundered",
-        "id": 812,
+        "id": 24,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Emet-Selch, Unsundered",
-        "id": 812,
+        "id": 24,
         "zone": "Battlefield",
         "controller": "you"
       }
@@ -135,7 +135,7 @@
         "fn": "trigger",
         "card": "Emet-Selch, Unsundered",
         "instanceId": 1,
-        "id": 819,
+        "id": 31,
         "name": "onUpkeep"
       },
       {
@@ -162,7 +162,7 @@
         "fn": "cast",
         "card": "Emet-Selch, Unsundered",
         "instanceId": 1,
-        "id": 821,
+        "id": 33,
         "from": "hand",
         "cost": "{1}{U}{B}"
       },
@@ -170,7 +170,7 @@
         "fn": "enters",
         "card": "Emet-Selch, Unsundered",
         "instanceId": 1,
-        "id": 821,
+        "id": 33,
         "zone": "Battlefield"
       },
       {

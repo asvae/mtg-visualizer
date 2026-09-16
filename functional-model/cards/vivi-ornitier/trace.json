@@ -17,13 +17,13 @@
         "fn": "trigger",
         "card": "Vivi Ornitier",
         "instanceId": 1,
-        "id": 3123,
+        "id": 3,
         "name": "onCastNoncreatureSpell"
       },
       {
         "fn": "putCounter",
         "target": "Vivi Ornitier",
-        "id": 3123,
+        "id": 3,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -31,7 +31,7 @@
       {
         "fn": "dealDamage",
         "source": "Vivi Ornitier",
-        "sourceId": 3123,
+        "sourceId": 3,
         "target": "opp0",
         "amount": 1
       }
@@ -52,7 +52,7 @@
         "fn": "cast",
         "card": "Vivi Ornitier",
         "instanceId": 1,
-        "id": 3125,
+        "id": 5,
         "from": "hand",
         "cost": "{1}{U}{R}"
       },
@@ -60,7 +60,7 @@
         "fn": "enters",
         "card": "Vivi Ornitier",
         "instanceId": 1,
-        "id": 3125,
+        "id": 5,
         "zone": "Battlefield"
       },
       {

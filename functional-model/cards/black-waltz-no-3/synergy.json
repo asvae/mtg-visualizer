@@ -11,10 +11,11 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 57,
+          "start": 39,
           "end": 88
         }
-      ]
+      ],
+      "triggeredBy": "onNoncreatureSpellCast"
     },
     {
       "zone": "Battlefield",

@@ -13,6 +13,7 @@ export const instantRamen: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [{ kind: 'drawCard' } satisfies Effect],
     },
   ],

@@ -22,7 +22,7 @@
         "fn": "cast",
         "card": "Magic Damper",
         "instanceId": 1,
-        "id": 1495,
+        "id": 5,
         "from": "hand",
         "cost": "{U}"
       },
@@ -34,9 +34,10 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 1492,
+        "id": 2,
         "power": 1,
-        "toughness": 1
+        "toughness": 1,
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -53,8 +54,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 1492,
-        "keyword": "Hexproof"
+        "id": 2,
+        "keyword": "Hexproof",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -71,13 +73,13 @@
       {
         "fn": "untap",
         "target": "Grizzly Bears",
-        "id": 1492
+        "id": 2
       },
       {
         "fn": "move",
         "card": "Magic Damper",
         "instanceId": 1,
-        "id": 1495,
+        "id": 5,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

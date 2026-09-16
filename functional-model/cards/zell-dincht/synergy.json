@@ -3,7 +3,45 @@
     {
       "zone": "Hand",
       "controller": "you"
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 22
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "to": "Battlefield",
+      "controller": "you",
+      "types": {
+        "has": [
+          "Land"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 27,
+          "end": 48
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormula-scalingPump-structural"
+      }
+    }
+  ]
 }

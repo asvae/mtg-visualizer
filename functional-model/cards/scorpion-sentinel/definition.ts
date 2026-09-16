@@ -7,12 +7,11 @@ export const scorpionSentinel: CardDefinition = {
 
   pt: [1, 4],
 
-  // "As long as you control seven or more lands, this creature gets
-  // +3/+0" — a conditional continuous P/T buff keyed off LAND COUNT, not
-  // Equipment-count or creature-count (the only two live `ptFormula`
-  // shapes built so far — see card.ts's own doc comment). Kept as real
-  // text, same treatment every other conditional static buff here gets
-  // (Kain's own "Jump" flying grant, e.g.) rather than forcing a third
-  // ptFormula variant for one card.
-  staticAbilities: ['As long as you control seven or more lands, this creature gets +3/+0.'],
+  // Real Forge threshold-CDA ("As long as you control seven or more
+  // lands, this creature gets +3/+0") — same real `card.ts`
+  // `ptFormula.kind:'thresholdBonus'` mechanism closed 2026-09-15 (fin/16-25
+  // pass) for Gaelicat/Magitek Infantry's own artifact-count threshold,
+  // generalized here to the LAND-count shape (see that field's own doc
+  // comment).
+  ptFormula: { kind: 'thresholdBonus', power: 3, toughness: 0, condition: { type: 'Land', min: 7 } },
 };

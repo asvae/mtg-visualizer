@@ -17,7 +17,7 @@
         "fn": "cast",
         "card": "Combat Tutorial",
         "instanceId": 1,
-        "id": 466,
+        "id": 3,
         "from": "hand",
         "cost": "{2}{U}"
       },
@@ -44,7 +44,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 465,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -53,7 +53,7 @@
         "fn": "move",
         "card": "Combat Tutorial",
         "instanceId": 1,
-        "id": 466,
+        "id": 3,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Sorcery"

@@ -23,7 +23,7 @@
 import type { Effect } from '../card';
 import type { RecognizedFact, RecognizerResult } from './types';
 import { toLineOffset } from './types';
-import { allEffects, type StructuralRecognizerInput } from './structural-effects';
+import { allEffects, effectSourceMap, triggeredByOf, type StructuralRecognizerInput } from './structural-effects';
 
 export type { StructuralRecognizerInput };
 
@@ -36,13 +36,17 @@ function isDamagePreventionAll(e: Effect): e is GrantKeywordAllEffect {
 }
 
 export function recognizePreventDamageAllEffectStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const matches_ = allEffects(input).filter(isDamagePreventionAll);
+  const matches_ = allEffects(input).map((o) => o.effect).filter(isDamagePreventionAll);
   if (matches_.length === 0) {
     return { matched: false, reason: "no kind:'grantKeywordAll' Effect with keyword:'DamagePrevention', predicate:'creatures-you-control' — the one real confirmed template this recognizer covers" };
   }
 
   const facts: RecognizedFact[] = [];
+  // `Fact.triggeredBy` (2026-09-16, causal-links "widen populate" pass) —
+  // see `dealDamage-effect-structural.ts`'s own identical comment.
+  const effectSource = effectSourceMap(input);
   for (const effect of matches_) {
+    const triggeredBy = triggeredByOf(effectSource.get(effect));
     const suffix = effect.untilEndOfTurn ? ' this turn' : '';
     const pattern = new RegExp(`\\bPrevent all damage that would be dealt to creatures you control${suffix}\\b`, 'i');
     const globalPattern = new RegExp(pattern.source, pattern.flags + 'g');
@@ -67,6 +71,7 @@ export function recognizePreventDamageAllEffectStructural(input: StructuralRecog
         target: { types: { has: ['Creature'] } },
         untilEndOfTurn: effect.untilEndOfTurn,
         annotations: [annotation],
+        ...(triggeredBy ? { triggeredBy } : {}),
       },
       provenance: { origin: 'parser', rule: RULE },
     });

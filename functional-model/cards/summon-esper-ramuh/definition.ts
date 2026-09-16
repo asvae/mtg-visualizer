@@ -21,13 +21,17 @@ export const summonEsperRamuh: CardDefinition = {
         } satisfies Effect,
       ],
     },
+    // Real "II, III — Wizards you control get +1/+0 until end of turn." —
+    // `untilEndOfTurn: true` (2026-09-15 fix, fin/26-50 pass) was missing on
+    // both chapters despite the real oracle text, same systemic omission bug
+    // class fixed pool-wide earlier this session.
     {
       name: 'chapterII',
-      effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Wizard' } satisfies Effect],
+      effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Wizard', untilEndOfTurn: true } satisfies Effect],
     },
     {
       name: 'chapterIII',
-      effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Wizard' } satisfies Effect],
+      effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 1, toughness: 0, subtype: 'Wizard', untilEndOfTurn: true } satisfies Effect],
     },
   ],
 };

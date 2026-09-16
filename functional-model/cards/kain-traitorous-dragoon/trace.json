@@ -21,14 +21,14 @@
         "fn": "trigger",
         "card": "Kain, Traitorous Dragoon",
         "instanceId": 1,
-        "id": 1370,
+        "id": 3,
         "name": "onDealsDamage"
       },
       {
         "fn": "gainControl",
         "controller": "opp0",
         "target": "Kain, Traitorous Dragoon",
-        "id": 1370
+        "id": 3
       },
       {
         "fn": "drawCard",
@@ -74,14 +74,14 @@
         "fn": "trigger",
         "card": "Kain, Traitorous Dragoon",
         "instanceId": 1,
-        "id": 1375,
+        "id": 8,
         "name": "onDealsDamage"
       },
       {
         "fn": "gainControl",
         "controller": "opp0",
         "target": "Kain, Traitorous Dragoon",
-        "id": 1375
+        "id": 8
       },
       {
         "fn": "drawCard",

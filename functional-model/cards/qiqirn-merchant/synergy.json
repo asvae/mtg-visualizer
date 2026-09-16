@@ -52,10 +52,14 @@
         {
           "target": "oracle",
           "line": 0,
-          "start": 23,
+          "start": 28,
           "end": 42
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "discard-effect-structural"
+      }
     },
     {
       "event": "sacrifice",
@@ -72,7 +76,11 @@
           "start": 10,
           "end": 33
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrificeSelfCost-structural"
+      }
     }
   ],
   "sink": []

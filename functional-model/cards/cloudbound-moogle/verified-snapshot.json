@@ -1,0 +1,129 @@
+{
+  "capturedAt": "2026-09-16T21:54:35.097Z",
+  "facts": {
+    "source": [
+      {
+        "event": "putCounter",
+        "counterType": "+1/+1",
+        "target": {
+          "types": {
+            "has": [
+              "Creature"
+            ]
+          }
+        },
+        "targeted": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 27,
+            "end": 65
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "putCounterTarget-effect-structural"
+        },
+        "triggeredBy": "onEnter"
+      },
+      {
+        "to": "Hand",
+        "from": "Library",
+        "controller": "you",
+        "types": {
+          "has": [
+            "Plains"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 43,
+            "end": 128
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "moveSearchLibrary-effect-structural"
+        }
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 50,
+            "end": 65
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "putCounterTarget-effect-structural"
+        }
+      },
+      {
+        "event": "discard",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 24,
+            "end": 41
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "discardSelfCost-structural"
+        }
+      },
+      {
+        "to": "Library",
+        "controller": "you",
+        "types": {
+          "has": [
+            "Plains"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 67,
+            "end": 80
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "moveSearchLibrary-effect-structural"
+        }
+      },
+      {
+        "event": "entersBattlefield",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 0,
+            "end": 25
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "entersBattlefield-self-trigger-structural"
+        }
+      }
+    ]
+  }
+}

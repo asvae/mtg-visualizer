@@ -148,7 +148,7 @@
       {
         "fn": "tap",
         "target": "Venat, Heart of Hydaelyn",
-        "id": 3096,
+        "id": 35,
         "controller": "you"
       },
       {
@@ -273,21 +273,21 @@
       {
         "fn": "moveTo",
         "target": "Coeurl",
-        "id": 3095,
+        "id": 34,
         "zone": "Exile",
         "controller": "opp0"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "id": 3096,
+        "id": 35,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Venat, Heart of Hydaelyn",
-        "id": 3096,
+        "id": 35,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -316,7 +316,7 @@
       {
         "fn": "putCounter",
         "target": "Freya Crescent",
-        "id": 3097,
+        "id": 36,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -324,7 +324,7 @@
       {
         "fn": "grantKeyword",
         "target": "Freya Crescent",
-        "id": 3097,
+        "id": 36,
         "keyword": "Indestructible"
       },
       {

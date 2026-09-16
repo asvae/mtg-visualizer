@@ -19,7 +19,7 @@
         "fn": "cast",
         "card": "Sephiroth's Intervention",
         "instanceId": 1,
-        "id": 2154,
+        "id": 4,
         "from": "hand",
         "cost": "{3}{B}"
       },
@@ -45,7 +45,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 2153,
+        "id": 3,
         "zone": "Graveyard",
         "controller": "opp0"
       },
@@ -58,7 +58,7 @@
         "fn": "move",
         "card": "Sephiroth's Intervention",
         "instanceId": 1,
-        "id": 2154,
+        "id": 4,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -85,7 +85,7 @@
         "fn": "cast",
         "card": "Sephiroth's Intervention",
         "instanceId": 1,
-        "id": 2157,
+        "id": 7,
         "from": "hand",
         "cost": "{3}{B}"
       },
@@ -112,7 +112,7 @@
         "fn": "move",
         "card": "Sephiroth's Intervention",
         "instanceId": 1,
-        "id": 2157,
+        "id": 7,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

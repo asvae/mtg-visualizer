@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 // Real 714.3a/b Saga chapters modeled as named `triggers`, same
 // simplification jecht-reluctant-guardian-braska-s-final-aeon/summon-bahamut/
@@ -22,30 +22,23 @@ export const summonPrimalGaruda: CardDefinition = {
       effects: [
         {
           // "Aerial Blast — This creature deals 4 damage to target tapped
-          // creature an opponent controls." `dealDamageTarget`'s own
-          // `owner` field would handle "an opponent controls" for real
-          // (Ultros' own "target creature an opponent controls"
-          // precedent), but it has no `tapped`-filtering field, so this
-          // stays `custom` narrowing to `ctx.opponents`' own creatures for
-          // that half. The "tapped" half is deliberately left unfiltered
-          // here — `Card.isTapped()` DOES genuinely exist (interfaces.ts's
-          // own real mirror of `RealCard.tapped`, state.ts; an earlier
-          // version of this file's own comment wrongly claimed it didn't),
-          // but this model's own `Constraints.tapped` (synergy.ts) is
-          // ITSELF purely documentary — not consulted by the fact matcher —
-          // same real, honest, engine-unenforced treatment Fate of the
-          // Sun-Cryst's own "costs {2} less if it targets a tapped
-          // creature" condition already gets, so there is no real
-          // fact-level reason to wire it here either; doing so would only
-          // cost this card's own scenario its one legal (untapped, generic
-          // filler) target with nothing gained.
-          kind: 'custom',
-          describe: 'Aerial Blast — this creature deals 4 damage to target tapped creature an opponent controls',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const pool = ctx.opponents.flatMap((p) => p.getCreaturesInPlay());
-            if (pool.length === 0) return;
-            actions.dealDamage(ctx.self, actions.chooseTarget(pool, ctx.preferTarget), 4);
-          },
+          // creature an opponent controls." Migrated (2026-09-16) off the
+          // old `kind:'custom'` closure now that `dealDamageTarget` has a
+          // real `tapped` filter (`card.ts`, real `Card.isTapped()`/
+          // `RealCard.tapped` — see that field's own doc comment): `owner:
+          // 'opponents'` covers "an opponent controls" (same Ultros
+          // precedent), `tapped: true` covers the real TAPPED restriction
+          // — both are now genuine, state-mutating pool filters, not
+          // documentary-only (unlike `Constraints.tapped` (synergy.ts),
+          // which stays purely informational on the FACT side; this is the
+          // EFFECT side, a real runtime restriction on `resolveTargets`'s
+          // own candidate pool). `scenarios.ts`'s own opponent filler now
+          // seeds a real pre-tapped creature (`creaturesTapped: true`,
+          // harness.ts) so this still has a legal target to land on.
+          kind: 'dealDamageTarget',
+          amount: 4,
+          owner: 'opponents',
+          tapped: true,
         } satisfies Effect,
       ],
     },
@@ -75,7 +68,7 @@ function slipstream(): Effect[] {
   // both effects on the SAME creature whenever (as in this card's own
   // scenario) there's exactly one legal "another" candidate.
   return [
-    { kind: 'pumpTarget', power: 1, toughness: 0, owner: 'you', notSelf: true } satisfies Effect,
-    { kind: 'grantKeywordTarget', keyword: 'Flying', owner: 'you', notSelf: true } satisfies Effect,
+    { kind: 'pumpTarget', power: 1, toughness: 0, owner: 'you', notSelf: true, untilEndOfTurn: true } satisfies Effect,
+    { kind: 'grantKeywordTarget', keyword: 'Flying', owner: 'you', notSelf: true, untilEndOfTurn: true } satisfies Effect,
   ];
 }

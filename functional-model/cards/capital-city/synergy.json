@@ -20,6 +20,27 @@
         "origin": "parser",
         "rule": "drawCard-effect-structural"
       }
+    },
+    {
+      "event": "addMana",
+      "controller": "you",
+      "colors": {
+        "has": [
+          "C"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
   "sink": [

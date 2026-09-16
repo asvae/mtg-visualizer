@@ -14,13 +14,13 @@
         "fn": "trigger",
         "card": "Tidus, Blitzball Star",
         "instanceId": 1,
-        "id": 2840,
+        "id": 2,
         "name": "onArtifactEnters"
       },
       {
         "fn": "putCounter",
         "target": "Tidus, Blitzball Star",
-        "id": 2840,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -47,7 +47,7 @@
         "fn": "trigger",
         "card": "Tidus, Blitzball Star",
         "instanceId": 1,
-        "id": 2844,
+        "id": 6,
         "name": "onAttacks"
       },
       {
@@ -65,7 +65,7 @@
       {
         "fn": "tap",
         "target": "Grizzly Bears",
-        "id": 2843,
+        "id": 5,
         "controller": "opp0"
       }
     ]
@@ -90,7 +90,7 @@
         "fn": "trigger",
         "card": "Tidus, Blitzball Star",
         "instanceId": 1,
-        "id": 2847,
+        "id": 9,
         "name": "onAttacks"
       },
       {
@@ -117,7 +117,7 @@
         "fn": "cast",
         "card": "Tidus, Blitzball Star",
         "instanceId": 1,
-        "id": 2849,
+        "id": 11,
         "from": "hand",
         "cost": "{1}{W}{U}"
       },
@@ -125,7 +125,7 @@
         "fn": "enters",
         "card": "Tidus, Blitzball Star",
         "instanceId": 1,
-        "id": 2849,
+        "id": 11,
         "zone": "Battlefield"
       },
       {

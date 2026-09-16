@@ -34,7 +34,19 @@
         ]
       },
       "sourceText": "{T}: Add {B} or {R}.",
-      "highlight": "{B} or {R}"
+      "highlight": "{B} or {R}",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 19
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     }
   ],
   "sink": []

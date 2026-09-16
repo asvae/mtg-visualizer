@@ -2,10 +2,10 @@
   "enrichment": "ai",
   "review": "ai",
   "verifySynergy": "pass",
-  "lastVerified": "2026-09-04",
-  "notes": "",
+  "lastVerified": "2026-09-16",
+  "notes": "2026-09-16 (blast radius, weapons-vendor/fin-40's own beginCombat-trigger-structural.ts pass): new recognizer-derived {event:'beginCombat', controller:'you'} sink fact added for real (this card's own \"At the beginning of combat on your turn,\" clause, previously fact-less/uncovered) via a scoped apply-recognizers.mjs run — not otherwise touched this pass. verify-synergy.mjs clean (0 hard failures).\n\n 2026-09-16 (recognizer-lane pumpTarget-effect-structural propagation pass): found this card's own pumpTarget Effect was missing `untilEndOfTurn: true` entirely (not just on the emitted Fact) -- real oracle text confirms the pump clause really does end \"until end of turn\" and was wrongly persisting the pump permanently within a scenario (state.pump's own opts.untilEndOfTurn drives real, mechanical 514.2 Cleanup expiry, not just documentary text). Fixed definition.ts to add the field; hand-patched the corresponding synergy.json source Fact too (apply-recognizers.mjs's own additive-only retag path only updates annotations/provenance on a coreKey match, never other fields, so a fresh run alone didn't add it); regenerated trace.json (npx tsx functional-model/scripts/run-scenarios.mjs --slug=<this>) -- new trace confirms the pump fn now logs untilEndOfTurn:true.",
   "textCoverageAudited": false,
   "knownGaps": [
-    "transform, self-transform note; pump/equip on both faces are parked, no facts"
+    "CLOSED 2026-09-16 (static-ability audit, back face's own pump/keyword grant): 'Equipped creature gets +2/+0 and has double strike' is now real, executable `continuousPTGrants`/`continuousKeywordGrants` on the back face (same already-real query-time machinery white-mage-s-staff's own equipment bonus uses) — this comment used to claim no field covered it; that was stale/wrong. The transform itself and its own turn-damage condition remain correctly unmodeled (no turn/phase-structure mutation exists in this engine)."
   ]
 }

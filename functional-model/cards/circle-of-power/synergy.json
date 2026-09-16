@@ -2,7 +2,19 @@
   "source": [
     {
       "event": "lifeloss",
-      "controller": "you"
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 23,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "loseLife-effect-structural"
+      }
     },
     {
       "zone": "Battlefield",
@@ -10,16 +22,6 @@
       "subject": {
         "token": "b_0_1_wizard_snipe"
       }
-    },
-    {
-      "event": "grantKeyword",
-      "keyword": "Lifelink",
-      "controller": "you"
-    },
-    {
-      "zone": "Graveyard",
-      "controller": "you",
-      "subject": "self"
     },
     {
       "event": "drawCard",
@@ -36,6 +38,59 @@
         "origin": "parser",
         "rule": "drawCard-effect-structural"
       }
+    },
+    {
+      "event": "grantKeyword",
+      "keyword": "Lifelink",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature",
+            "Wizard"
+          ]
+        }
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 39,
+          "end": 47
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
+      }
+    },
+    {
+      "event": "pump",
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature",
+            "Wizard"
+          ]
+        }
+      },
+      "targeted": false,
+      "untilEndOfTurn": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 29
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "pumpAllCreaturesYouControl-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -47,6 +102,24 @@
           "Creature",
           "Wizard"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 19
+        },
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 65
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "grantKeywordAll-effect-structural"
       }
     }
   ]

@@ -17,7 +17,19 @@
       "color": "B",
       "sourceText": "{T}: Add {B}.",
       "highlight": "{B}",
-      "face": "front"
+      "face": "front",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 5,
+          "end": 12
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "manaAbilitiesSimple-structural"
+      }
     },
     {
       "event": "drawCard",
@@ -35,6 +47,34 @@
         "origin": "parser",
         "rule": "drawCard-effect-structural"
       }
+    },
+    {
+      "event": "sacrifice",
+      "from": "Battlefield",
+      "to": "Graveyard",
+      "controller": "you",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Creature",
+            "Artifact"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 53
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -47,7 +87,19 @@
           "Artifact"
         ]
       },
-      "face": "back"
+      "face": "back",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 18,
+          "end": 41
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "sacrifice-effect-structural"
+      }
     }
   ]
 }

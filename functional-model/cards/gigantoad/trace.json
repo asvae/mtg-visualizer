@@ -1,28 +1,96 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is printed text, not mechanically enforced — see definition.ts comment)",
+      "setup": "you: 7 Forest(s)",
+      "action": "engine playthrough: 7 lands present -> cast -> real threshold-CDA pump applies",
+      "result": "Gigantoad enters with 7 lands already on the battlefield, meeting the printed \"seven or more lands\" threshold — layer-7a effectivePT genuinely recalculates to 6/6 (printed 4/4 +2/+2), real threshold-CDA machinery in place (same mechanism as scorpion-sentinel's own identically-shaped land-count buff).",
       "raw": {
-        "result": "enters the battlefield, a vanilla 4/4 body (the land-count buff is printed text, not mechanically enforced — see definition.ts comment)"
+        "result": "Gigantoad enters with 7 lands already on the battlefield, meeting the printed \"seven or more lands\" threshold — layer-7a effectivePT genuinely recalculates to 6/6 (printed 4/4 +2/+2), real threshold-CDA machinery in place (same mechanism as scorpion-sentinel's own identically-shaped land-count buff).",
+        "you": {
+          "basicLands": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
       {
+        "fn": "read:getLandsInPlay",
+        "player": "you",
+        "count": 7
+      },
+      {
         "fn": "cast",
         "card": "Gigantoad",
         "instanceId": 1,
-        "id": 1072,
         "from": "hand",
         "cost": "{3}{G}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Gigantoad"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Gigantoad"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Gigantoad"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Forest",
+        "for": "Gigantoad"
       },
       {
         "fn": "enters",
         "card": "Gigantoad",
         "instanceId": 1,
-        "id": 1072,
         "zone": "Battlefield"
+      },
+      {
+        "fn": "read:getNetPower",
+        "card": "Gigantoad",
+        "power": 6,
+        "toughness": 6
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Condition check — 7 lands already on the battlefield (meets the printed threshold)",
+        "from": 0
+      },
+      {
+        "label": "Cast Gigantoad ({3}{G})",
+        "from": 1
+      },
+      {
+        "label": "Resolve",
+        "from": 6
+      },
+      {
+        "label": "Layer-7a read — threshold-CDA machinery applies the +2/+2",
+        "from": 7
       }
     ]
   }

@@ -1,0 +1,87 @@
+{
+  "capturedAt": "2026-09-16T21:31:19.514Z",
+  "facts": {
+    "source": [
+      {
+        "event": "pump",
+        "target": {
+          "types": {
+            "has": [
+              "Creature"
+            ]
+          },
+          "attacking": true
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 0,
+            "end": 47
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "pumpAllAttacking-effect-structural"
+        }
+      },
+      {
+        "event": "cast",
+        "from": "Graveyard",
+        "target": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 0,
+            "end": 86
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "flashback-alternateCost-structural"
+        }
+      },
+      {
+        "to": "Exile",
+        "controller": "you",
+        "subject": "self",
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 88,
+            "end": 101
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "flashback-alternateCost-structural"
+        }
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "attacking": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 0,
+            "start": 0,
+            "end": 19
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "pumpAllAttacking-effect-structural"
+        }
+      }
+    ]
+  }
+}

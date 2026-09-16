@@ -8,7 +8,7 @@
           "target": "oracle",
           "line": 1,
           "start": 0,
-          "end": 58
+          "end": 27
         }
       ],
       "provenance": {
@@ -30,7 +30,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 0,
+          "start": 32,
           "end": 58
         }
       ],

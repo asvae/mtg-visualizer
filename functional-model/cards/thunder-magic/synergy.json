@@ -7,7 +7,39 @@
     },
     {
       "event": "damage",
-      "controller": "you"
+      "controller": "you",
+      "target": {
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 18,
+          "end": 46
+        },
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 19,
+          "end": 47
+        },
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 22,
+          "end": 50
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
+      }
     }
   ],
   "sink": [
@@ -17,6 +49,30 @@
         "has": [
           "Creature"
         ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 18,
+          "end": 65
+        },
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 19,
+          "end": 66
+        },
+        {
+          "target": "oracle",
+          "line": 3,
+          "start": 22,
+          "end": 69
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "dealDamageTarget-effect-structural"
       }
     }
   ]

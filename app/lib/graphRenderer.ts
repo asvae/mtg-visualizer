@@ -66,6 +66,18 @@ interface KeywordLinkDatum {
   cardId: string;
 }
 
+// One row of the deck-scoped sink-supply annotation (POST
+// /api/deck-sink-supply — see api-contract.md's dated 2026-09-17 section).
+// Deliberately NOT part of GraphReason/CardLink/Role at all — this is a
+// parallel, standalone per-card annotation, independent of the produce/
+// consume/atypical/grant/magnifier edge system above, per explicit task
+// instruction. The fetch itself lives in useGraphStore.ts (Deck-scoped data,
+// store's own lane); this file only ever renders whatever Map it's handed.
+export interface DeckSinkRow {
+  label: string;
+  count: number;
+}
+
 // PROTOTYPE (see this session's design discussion, not yet a shipped
 // feature) — a "relation hub," the keyword-hub mechanism generalized to
 // ordinary produce/consume/atypical/grant/magnifier synergy edges instead of
@@ -250,6 +262,13 @@ export interface GraphHandlers {
   onHoverEnd(): void;
   onCardClick(card: CardData, event: MouseEvent): void;
   onBackgroundClick(): void;
+  // Deck-qty stepper (renderQtyUI) — `delta` is +1/-1 (the stepper's own
+  // +/- buttons), never an absolute target; the actual Deck mutation
+  // (clamping at 0, creating a new entry vs. bumping an existing one) is
+  // GraphCanvas.vue's job via useGraphStore.ts's `setDeckEntryQuantity` —
+  // same mutation ListView.vue's own per-row qty stepper already calls, not
+  // a second path.
+  onDeckQtyChange(card: CardData, delta: number): void;
 }
 
 function cardFill(c: CardData): string {
@@ -301,6 +320,19 @@ const TITLE_PADDING = 3 * NODE_SCALE;
 const KEYWORD_ICON_SIZE = 7 * NODE_SCALE;
 const KEYWORD_ICON_GAP = 1.5 * NODE_SCALE;
 const KEYWORD_ICON_MARGIN = 3 * NODE_SCALE;
+// Deck-scoped sink-supply rows (renderSinkRows/setDeckSinkRows below) — a
+// small text stack drawn BELOW the node, one line per sink fact
+// (POST /api/deck-sink-supply, see api-contract.md). Sized similarly to the
+// PROTOTYPE relation-hub's own small annotation text (3.2-4.6*NODE_SCALE) —
+// legible at this graph's normal zoom without competing with the card's own
+// title text above it. Capped at SINK_ROW_MAX_ROWS with a "+N more" line
+// rather than growing unbounded — most FIN cards carry only 1-4 sink facts
+// (see functional-model/card-status.ts's own text-coverage work), so this
+// cap is a safety valve, not something real cards are expected to hit often.
+const SINK_ROW_FONT_SIZE = 3.4 * NODE_SCALE;
+const SINK_ROW_LINE_HEIGHT = 4.6 * NODE_SCALE;
+const SINK_ROW_TOP_MARGIN = 3 * NODE_SCALE;
+const SINK_ROW_MAX_ROWS = 6;
 // Tried EB Garamond (the app's own "MTG-like" font, see FunctionalModelText.vue)
 // here — reverted: its serifs make it barely legible at the small sizes
 // these titles actually render at, worse than a plain sans-serif.
@@ -729,33 +761,72 @@ function renderCardArt(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
           .attr('transform', `translate(${scryfallCx},${scryfallCy}) scale(${scryfallIconScale}) translate(-12,-12)`);
       });
 
-    // Deck-import qty badge — shown whenever this card is in the active deck
-    // (qty is undefined outside deck mode, so nothing shows there).
-    if (d.qty) {
-      const badgeText = `×${d.qty}`;
-      const bw = (8 + badgeText.length * 5.5) * NODE_SCALE;
-      const bh = 12 * NODE_SCALE;
-      const bx = x + RECT_WIDTH - bw + 3 * NODE_SCALE;
-      const by = artY + RECT_HEIGHT - bh + 3 * NODE_SCALE;
-      const badge = g.append('g').attr('class', 'card-qty-badge');
-      badge
-        .append('rect')
-        .attr('x', bx)
-        .attr('y', by)
-        .attr('width', bw)
-        .attr('height', bh)
-        .attr('rx', 3 * NODE_SCALE)
-        .attr('fill', '#000')
-        .attr('fill-opacity', 0.78);
-      badge
+    // Deck-import qty badge (bottom-right corner of the art) — moved out of
+    // this one-time enter-only function into `renderQtyUI` below (see its
+    // own header comment) so it can be rebuilt live whenever Deck qty
+    // changes for a card already known to this renderer instance, alongside
+    // the new deck-qty stepper. Called from the same enter branch this used
+    // to live in inline (see createGraphRenderer's own cardG join) — no
+    // behavior change for a node's FIRST paint, just a relocation.
+  });
+}
+
+// Deck-scoped sink-supply annotation — see DeckSinkRow's own comment. Drawn
+// as a small vertical text stack directly BELOW the whole node (title + art),
+// centered on it (x=0, same local coordinate space renderCardArt's own
+// elements use). Callable independently of renderCardArt/the node's own
+// enter lifecycle (unlike everything renderCardArt itself draws, which is
+// only ever built once per node) since this data arrives asynchronously,
+// often well after the node itself already exists — see
+// createGraphRenderer's own `setDeckSinkRows`. Always wipes and rebuilds
+// its own `.card-sink-rows` group from scratch per call (cheap: only
+// touches Deck-scoped cards, a small subset of the whole graph, and only
+// runs once per deck edit's debounced fetch, not on every render() tick) —
+// same "rebuild small dynamic markup outright" idiom the relation-hub
+// prototype's own per-render rebuild uses, not a diffed update.
+// A row with count 0 (a real, meaningful "nothing in your deck feeds this"
+// signal per the task) renders dimmer/muted rather than being hidden —
+// keeps it visible without reading as loudly as a real nonzero match at a
+// glance across a full deck's worth of nodes.
+function renderSinkRows(sel: d3.Selection<SVGGElement, CardNode, any, any>, rowsByCardId: ReadonlyMap<string, DeckSinkRow[]>) {
+  sel.each(function (d) {
+    const g = d3.select(this);
+    g.selectAll('.card-sink-rows').remove();
+    const rows = rowsByCardId.get(d.id);
+    if (!rows || !rows.length) return;
+
+    const startY = TOTAL_HEIGHT / 2 + SINK_ROW_TOP_MARGIN;
+    const shown = rows.slice(0, SINK_ROW_MAX_ROWS);
+    const overflow = rows.length - shown.length;
+    const wrap = g.append('g').attr('class', 'card-sink-rows').style('pointer-events', 'none');
+
+    shown.forEach((row, i) => {
+      const muted = row.count === 0;
+      wrap
         .append('text')
-        .attr('x', bx + bw / 2)
-        .attr('y', by + bh / 2 + 3 * NODE_SCALE)
+        .attr('x', 0)
+        .attr('y', startY + i * SINK_ROW_LINE_HEIGHT + SINK_ROW_LINE_HEIGHT / 2)
         .attr('text-anchor', 'middle')
-        .attr('font-size', 9 * NODE_SCALE)
-        .attr('font-weight', 700)
-        .attr('fill', '#fff')
-        .text(badgeText);
+        .attr('dominant-baseline', 'middle')
+        .attr('font-family', TITLE_FONT_FAMILY)
+        .attr('font-size', SINK_ROW_FONT_SIZE)
+        .attr('fill', muted ? '#9a9aa4' : '#e8e8e8')
+        .attr('fill-opacity', muted ? 0.5 : 0.9)
+        .text(`${row.label}: ${row.count}`);
+    });
+    if (overflow > 0) {
+      wrap
+        .append('text')
+        .attr('x', 0)
+        .attr('y', startY + shown.length * SINK_ROW_LINE_HEIGHT + SINK_ROW_LINE_HEIGHT / 2)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('font-family', TITLE_FONT_FAMILY)
+        .attr('font-size', SINK_ROW_FONT_SIZE)
+        .attr('font-style', 'italic')
+        .attr('fill', '#9a9aa4')
+        .attr('fill-opacity', 0.7)
+        .text(`+${overflow} more`);
     }
   });
 }
@@ -808,6 +879,135 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
 
   const cardNodeById = new Map<string, CardNode>();
   for (const c of graph.cards) cardNodeById.set(c.id, { ...c, kind: 'card' });
+
+  // Deck-scoped sink-supply rows (DeckSinkRow/renderSinkRows above), keyed
+  // by card id — persists for this renderer instance's whole life (like
+  // keywordHubsById), populated/replaced wholesale by setDeckSinkRows()
+  // below whenever useGraphStore.ts's own debounced POST
+  // /api/deck-sink-supply fetch resolves. Empty until the first fetch
+  // resolves and after every full graph rebuild (this map isn't part of
+  // `graph`/GraphFile at all — GraphCanvas.vue re-applies it immediately
+  // after recreating a renderer instance, same pattern it already uses for
+  // filters/forces/search/selection).
+  const sinkRowsByCardId = new Map<string, DeckSinkRow[]>();
+
+  // ×N deck-qty badge (bottom-right corner of the art), now flanked by a
+  // "− ×N +" stepper — a mid-task correction from the coordinator: the
+  // first pass built a separate vertical +/qty/- stack to the LEFT of the
+  // node, but the simpler ask is to add the +/- directly onto the EXISTING
+  // badge instead of introducing a second qty display. Defined here (inside
+  // createGraphRenderer, not as a module-level function like
+  // renderCardArt/renderSinkRows) because the buttons need
+  // `handlers.onDeckQtyChange`, which only exists in this closure. Callable
+  // independently of a node's own enter lifecycle for the same reason
+  // renderSinkRows is: `d.qty` on an ALREADY-known node can change (a Deck
+  // edit) without that card's id ever leaving/re-entering `cardNodeById`, so
+  // something has to explicitly refresh this after the fact — see
+  // `syncCardQty` below, called from GraphCanvas.vue's own `props.graph`
+  // watcher on every Deck change.
+  // 0-qty display: reuses the ×N badge's OWN pre-existing convention
+  // verbatim (an explicit coordinator instruction, not a fresh decision) —
+  // the whole row (buttons included) only exists at all `if (d.qty)`, same
+  // as the badge always has. A card with no Deck copies shows nothing here
+  // even on hover; this control is for adjusting an EXISTING Deck entry
+  // in place, not for adding a card to the Deck for the first time (that's
+  // still ListView.vue/search/deck-import's own job).
+  // Buttons stay in the DOM at all times once the row exists (opacity 0 by
+  // default via `.card-qty-btn`/`.node-card:hover` in GraphCanvas.vue's
+  // <style>, same hover-reveal convention `.scryfall-link` already uses)
+  // rather than being added/removed on hover — hovering the whole node (not
+  // just this corner) reveals them, matching the Scryfall shortcut's own
+  // "hover anywhere on the card" discoverability. The number chip itself is
+  // NOT gated by hover — always visible per the task's own spec.
+  function renderQtyUI(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
+    sel.each(function (d) {
+      const g = d3.select(this);
+      g.selectAll('.card-deck-qty').remove();
+      if (!d.qty) return;
+      const x = -RECT_WIDTH / 2;
+      const titleY = -TOTAL_HEIGHT / 2;
+      const artY = titleY + TITLE_BAR_HEIGHT;
+      const wrap = g.append('g').attr('class', 'card-deck-qty');
+
+      const badgeText = `×${d.qty}`;
+      const numW = (8 + badgeText.length * 5.5) * NODE_SCALE;
+      const rowH = 12 * NODE_SCALE;
+      const btnW = rowH;
+      const gap = 1.5 * NODE_SCALE;
+      const by = artY + RECT_HEIGHT - rowH + 3 * NODE_SCALE;
+      // Right edge fixed to exactly where the old qty-only badge's own right
+      // edge used to sit (bottom-right corner of the art) — the row grows
+      // LEFTWARD from there so this stays visually anchored to the same
+      // corner regardless of digit count, same as before this feature.
+      const rightEdge = x + RECT_WIDTH + 3 * NODE_SCALE;
+      const plusX = rightEdge - btnW;
+      const numX = plusX - gap - numW;
+      const minusX = numX - gap - btnW;
+
+      function qtyButton(bx: number, glyph: string, delta: number, label: string) {
+        const btn = wrap
+          .append('g')
+          .attr('class', 'card-qty-btn')
+          .attr('aria-label', label)
+          .style('cursor', 'pointer')
+          .on('click', (event: MouseEvent) => {
+            // Stops here rather than bubbling to the node's own click
+            // handler (opens the peek panel) or further to the svg's own
+            // background-click handler — same posture the Scryfall
+            // shortcut's own click handler takes just above.
+            event.stopPropagation();
+            handlers.onDeckQtyChange(d, delta);
+          });
+        btn
+          .append('rect')
+          .attr('x', bx)
+          .attr('y', by)
+          .attr('width', btnW)
+          .attr('height', rowH)
+          .attr('rx', 3 * NODE_SCALE)
+          .attr('fill', '#000')
+          .attr('fill-opacity', 0.78);
+        btn
+          .append('text')
+          .attr('x', bx + btnW / 2)
+          .attr('y', by + rowH / 2)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('font-size', rowH * 0.75)
+          .attr('font-weight', 700)
+          .attr('fill', '#fff')
+          .attr('pointer-events', 'none')
+          .text(glyph);
+      }
+
+      qtyButton(minusX, '−', -1, `Remove one ${d.name} from deck`); // U+2212 minus sign, not a hyphen
+      qtyButton(plusX, '+', 1, `Add one ${d.name} to deck`);
+
+      // The ×N chip itself — always visible (no `.card-qty-btn` class, no
+      // hover gating), unchanged visually from the original badge.
+      const badge = wrap.append('g').attr('class', 'card-qty-badge');
+      badge
+        .append('rect')
+        .attr('x', numX)
+        .attr('y', by)
+        .attr('width', numW)
+        .attr('height', rowH)
+        .attr('rx', 3 * NODE_SCALE)
+        .attr('fill', '#000')
+        .attr('fill-opacity', 0.78);
+      badge
+        .append('text')
+        .attr('class', 'card-qty-number')
+        .attr('x', numX + numW / 2)
+        .attr('y', by + rowH / 2)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('font-size', 9 * NODE_SCALE)
+        .attr('font-weight', 700)
+        .attr('fill', '#fff')
+        .text(badgeText);
+    });
+  }
 
   // Keyword hubs — keyed by keyword id, persisted for this renderer
   // instance's whole lifetime (never reset/recreated wholesale) so an
@@ -1499,7 +1699,17 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
       // card-open lives in dragended rather than a native `click` listener,
       // stopPropagation alone no longer reaches it, so it's excluded here
       // instead.
-      .filter((event: MouseEvent) => event.button === 0 && !(event.target as Element)?.closest?.('.scryfall-link'))
+      // Also excludes the deck-qty stepper's own `.card-qty-btn` buttons
+      // (renderQtyUI) for the identical reason — without this, a mousedown
+      // on '+'/'-' starts dragging the whole card instead of registering as
+      // a click (confirmed live: qty never actually changed on click until
+      // this was added).
+      .filter(
+        (event: MouseEvent) =>
+          event.button === 0 &&
+          !(event.target as Element)?.closest?.('.scryfall-link') &&
+          !(event.target as Element)?.closest?.('.card-qty-btn')
+      )
       .on('start', dragstarted)
       .on('drag', dragged)
       .on('end', dragended);
@@ -1672,6 +1882,16 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
         // would sometimes double-fire (once from here, once from drag()) for
         // the cases where the native click still happens to land correctly.
         renderCardArt(g);
+        // Applies whatever deck-sink-supply data is already known at the
+        // moment this node first appears (e.g. a card entering view via a
+        // widened Colors/Rarity/Type filter, after the fetch already
+        // resolved once) — setDeckSinkRows() below handles every LATER
+        // update once the underlying data itself changes.
+        renderSinkRows(g, sinkRowsByCardId);
+        // ×N badge + deck-qty stepper (renderQtyUI's own header comment) —
+        // paints whatever `d.qty` this node started with; syncCardQty()
+        // below handles every LATER change to an already-known card's qty.
+        renderQtyUI(g);
         return g;
       });
 
@@ -1905,6 +2125,50 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     refreshHighlight();
   }
 
+  // Deck-scoped sink-supply annotation (DeckSinkRow/renderSinkRows above) —
+  // called by GraphCanvas.vue whenever useGraphStore.ts's own debounced
+  // POST /api/deck-sink-supply fetch resolves (or, immediately after a
+  // fresh renderer instance is created, to re-apply data the store already
+  // had — see that file's own watcher). Wholesale replace, not a merge: a
+  // card dropped from the Deck (or whose fetch simply didn't return a row
+  // for it) is expected to disappear here, not linger from a stale entry.
+  // Deliberately independent of render()/filters/simulation — updates
+  // whatever nodes are CURRENTLY in the DOM (`cardG`, this closure's own
+  // live selection) directly, without touching physics or triggering a
+  // reheat.
+  function setDeckSinkRows(rows: ReadonlyMap<string, DeckSinkRow[]>) {
+    sinkRowsByCardId.clear();
+    for (const [id, r] of rows) sinkRowsByCardId.set(id, r);
+    renderSinkRows(cardG, sinkRowsByCardId);
+  }
+
+  // Deck-qty stepper/×N-badge live sync (renderQtyUI above) — called by
+  // GraphCanvas.vue's own `props.graph` watcher on EVERY Deck/Scope change,
+  // not just ones that add/remove a card id. Needed because `addCards()`/
+  // `removeCards()` only ever react to a card's PRESENCE changing; a card
+  // whose id was already known to this renderer (the overwhelming common
+  // case — most nodes on screen came from the base Scope pool before ever
+  // touching the Deck) never gets its cached `CardNode.qty` refreshed
+  // otherwise, which would leave the stepper's own number frozen at
+  // whatever it was when the node was first created — including right after
+  // clicking the stepper's own +/- button on that exact node. Only rebuilds
+  // the qty UI for cards whose qty ACTUALLY changed (a plain `!==` check,
+  // `undefined` included) rather than every currently-visible card, and
+  // only for nodes currently in `cardG` (an id not on screen right now has
+  // nothing to redraw) — cheap even for a full ~300-card corpus since only
+  // Deck-affected ids ever differ on a given call.
+  function syncCardQty(cards: CardData[]) {
+    const changedIds = new Set<string>();
+    for (const c of cards) {
+      const node = cardNodeById.get(c.id);
+      if (node && node.qty !== c.qty) {
+        node.qty = c.qty;
+        changedIds.add(c.id);
+      }
+    }
+    if (changedIds.size) renderQtyUI(cardG.filter((d) => changedIds.has(d.id)));
+  }
+
   // PRD 03 "Search" (discover-add), generalized by a later task to sit
   // alongside removeCards() below — patches one or more new cards (plus any
   // links touching them) into THIS SAME renderer instance instead of a full
@@ -2124,6 +2388,20 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
     svg.selectAll('*').remove();
   }
 
-  return { render, applySearch, setCardSelection, addCards, removeCards, setForces, getForces, setGravityMode, getGravityMode, resetLayout, destroy };
+  return {
+    render,
+    applySearch,
+    setCardSelection,
+    addCards,
+    removeCards,
+    setForces,
+    getForces,
+    setGravityMode,
+    getGravityMode,
+    resetLayout,
+    setDeckSinkRows,
+    syncCardQty,
+    destroy,
+  };
 }
 

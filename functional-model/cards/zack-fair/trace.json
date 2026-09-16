@@ -44,7 +44,7 @@
       {
         "fn": "putCounter",
         "target": "Zack Fair",
-        "id": 3203,
+        "id": 4,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -81,8 +81,9 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 3204,
-        "keyword": "Indestructible"
+        "id": 5,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCounters",
@@ -93,7 +94,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 3204,
+        "id": 5,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -108,9 +109,9 @@
       {
         "fn": "equip",
         "equipment": "Buster Sword",
-        "equipmentId": 3205,
+        "equipmentId": 6,
         "target": "Grizzly Bears",
-        "id": 3204
+        "id": 5
       }
     ],
     "actions": [

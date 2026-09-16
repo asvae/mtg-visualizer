@@ -16,8 +16,13 @@ export const seiferAlmasy: CardDefinition = {
       // header). Approximated as the first creature you control, same
       // always-first-candidate `chooseTarget` bias every other targeted
       // effect here already accepts.
+      // recognizer-exception: grantKeywordTarget-effect-structural — the
+      // real printed text says "IT gains double strike" (an anaphoric
+      // reference to "a creature you control [that] attacks alone," never
+      // the literal words "target creature you control gains" — see this
+      // trigger's own comment above); a confirmed mismatch, not a bug.
       name: 'onAttacksAlone',
-      effects: [{ kind: 'grantKeywordTarget', keyword: 'DoubleStrike', owner: 'you' } satisfies Effect],
+      effects: [{ kind: 'grantKeywordTarget', keyword: 'DoubleStrike', owner: 'you', untilEndOfTurn: true } satisfies Effect],
     },
     {
       // Fire Cross — "you may cast target instant or sorcery card with mana

@@ -1,17 +1,6 @@
 {
   "source": [
     {
-      "event": "dies",
-      "target": {
-        "types": {
-          "hasAny": [
-            "Artifact",
-            "Enchantment"
-          ]
-        }
-      }
-    },
-    {
       "event": "drawCard",
       "controller": "you",
       "annotations": [
@@ -25,6 +14,31 @@
       "provenance": {
         "origin": "parser",
         "rule": "drawCard-effect-structural"
+      },
+      "triggeredBy": "onEnter"
+    },
+    {
+      "event": "destroy",
+      "target": {
+        "types": {
+          "hasAny": [
+            "Artifact",
+            "Enchantment"
+          ]
+        }
+      },
+      "targeted": true,
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 2,
+          "end": 40
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "destroyProgram-effect-structural"
       }
     }
   ],
@@ -47,6 +61,22 @@
           "Artifact",
           "Enchantment"
         ]
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

@@ -22,7 +22,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterTarget-effect-structural"
-      }
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "to": "Hand",
@@ -38,7 +39,7 @@
           "target": "oracle",
           "line": 2,
           "start": 43,
-          "end": 80
+          "end": 128
         }
       ],
       "provenance": {
@@ -59,7 +60,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 27,
+          "start": 50,
           "end": 65
         }
       ],
@@ -96,13 +97,29 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 43,
+          "start": 67,
           "end": 80
         }
       ],
       "provenance": {
         "origin": "parser",
         "rule": "moveSearchLibrary-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
       }
     }
   ]

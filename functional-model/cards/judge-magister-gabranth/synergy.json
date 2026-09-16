@@ -20,7 +20,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onCreatureOrArtifactDies"
     },
     {
       "zone": "Graveyard",

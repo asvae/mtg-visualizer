@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
 
 export const magitekInfantry: CardDefinition = {
   name: 'Magitek Infantry',
@@ -13,32 +13,34 @@ export const magitekInfantry: CardDefinition = {
   // default).
   pt: [1, 1],
 
-  // Conditional continuous P/T ability, presence-gated on ANOTHER artifact
-  // (IsPresent$ Artifact.Other+YouCtrl) — same shape gaelicat's own comment
-  // already documents (a fixed on/off threshold, not a count-scaling
-  // `ptFormula` CDA), so it stays real text.
-  staticAbilities: ['This creature gets +1/+0 as long as you control another artifact.'],
+  // Real Forge `S:Mode$ Continuous | Affected$ Card.Self | AddPower$ 1 |
+  // IsPresent$ Artifact.Other+YouCtrl` (`res/cardsfolder/m/magitek_infantry
+  // .txt`) — a fixed +1/+0 bonus, fully on or fully off once you control
+  // another real artifact (the `.Other+` excludes this permanent itself,
+  // which IS an Artifact Creature), closed 2026-09-15 (fin/16-25 pass) via
+  // `card.ts`'s new `ptFormula.kind:'thresholdBonus'` (same gap gaelicat's
+  // own comment used to document, now real via `state.ts`'s `effectivePT`).
+  ptFormula: { kind: 'thresholdBonus', power: 1, toughness: 0, condition: { type: 'Artifact', min: 1, excludeSelf: true } },
 
   // {2}{W}: Search your library for a card named Magitek Infantry, put it
-  // onto the battlefield tapped, then shuffle. No declarative Effect kind
-  // covers "search for a specifically NAMED card" (`move`'s own `validType`
-  // is type-only — creature/artifact/any — never a name filter; `dig` looks
-  // at the top of the library, not the whole thing) — `custom`, filtering
-  // the real library by name, is the honest shape. The "then shuffle" has
-  // no observable consequence in this model (no library-order tracking
-  // beyond dig's own top-N slice), so it's text-only in `describe`.
+  // onto the battlefield tapped, then shuffle — now a real declarative
+  // `move` effect (closed 2026-09-15, fin/16-25 pass, `card.ts`'s new
+  // `move.name:'self'`/`move.tapped` fields, real Forge `ChangeType$
+  // Card.namedMagitek Infantry | Tapped$ True`), migrated off the old
+  // `kind:'custom'` closure this effect used to need before those fields
+  // existed. `shuffleAfter` is now a real `actions.shuffleLibrary` call
+  // too (`move`'s own field), not just descriptive text.
   activationCost: '{2}{W}',
   effects: [
     {
-      kind: 'custom',
-      describe: 'search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle (shuffle has no observable effect in this model)',
-      run: (ctx: EffectContext, actions: Actions) => {
-        const pool = ctx.you.getCardsIn('Library').filter((c) => c.getName() === ctx.self.getName());
-        if (pool.length === 0) return;
-        const found = actions.chooseTarget(pool);
-        actions.moveTo(found, 'Battlefield');
-        actions.tap(found);
-      },
+      kind: 'move',
+      owner: 'you',
+      from: 'Library',
+      to: 'Battlefield',
+      qty: 1,
+      name: 'self',
+      tapped: true,
+      shuffleAfter: true,
     } satisfies Effect,
   ],
 };

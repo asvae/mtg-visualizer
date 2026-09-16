@@ -328,7 +328,10 @@ export declare function moveTo(target: Card, zone: ZoneType): void;
  * the untargeted branch too, the one case that field's own doc comment
  * said "no real FIN card needing this yet" — now one does). Omit for the
  * pre-existing, unrestricted-by-subtype search every other untargeted
- * `move` caller already uses.
+ * `move` caller already uses. `string[]` (2026-09-16, Phoenix Down's own
+ * real "Skeleton, Spirit, or Zombie") — OR-matched, any one hit is enough
+ * — see `card.ts`'s own `move.subtype` doc comment for the full writeup;
+ * this untargeted path shares the identical semantics.
  *
  * `from: ZoneType | ZoneType[]` and `maxCmc` (2026-09-15, Delivery
  * Moogle's own real "search your library and/or graveyard for an artifact
@@ -343,7 +346,15 @@ export declare function moveTo(target: Card, zone: ZoneType): void;
  * and an omitted `maxCmc` keeps the pool completely unfiltered by mana
  * value, exactly as before).
  */
-export declare function move(player: Player, from: ZoneType | ZoneType[], to: ZoneType, qty: number, validType?: string, subtype?: string, maxCmc?: number): Card[];
+/**
+ * `name` (2026-09-15, `card.ts`'s own `move.name:'self'` doc comment —
+ * Magitek Infantry's own real "Search your library for a card named
+ * Magitek Infantry") — an EXACT-name filter on the candidate pool, real
+ * Forge `ChangeType$ Card.named<Name>`. Already resolved to a concrete
+ * string by the caller (`card.ts`'s own `case 'move'`) before reaching
+ * here — this primitive itself doesn't know or care what `'self'` means.
+ */
+export declare function move(player: Player, from: ZoneType | ZoneType[], to: ZoneType, qty: number, validType?: string, subtype?: string | string[], maxCmc?: number, name?: string): Card[];
 
 /** Convenience wrapper over `Card.setController(...)`/a control-change effect. */
 export declare function gainControl(controller: Player, target: Card): void;
@@ -379,6 +390,45 @@ export declare function delayUntil(phase: Phase, run: () => void): void;
  * distinction.
  */
 export declare function queueExtraPhase(phaseType: PhaseGroup): void;
+
+/**
+ * Real 721.1a "end the turn" (`ApiType.EndTurn`, forge-game/src/main/java/
+ * forge/game/ability/effects/EndTurnEffect.java) — Time Stop's own real
+ * shape, Ultima (fin/38)'s own "End the turn." the FIN card that needs it.
+ * `EndTurnEffect.resolve` performs 4 real steps, in this order:
+ *   1. Exiles everything CURRENTLY on the stack — real Gatherer ruling on
+ *      Time Stop: "All spells and abilities on the stack are exiled. This
+ *      includes Time Stop, though it will continue to resolve. It also
+ *      includes spells and abilities that can't be countered."
+ *      (`game.getAction().exile(new CardCollection(game.getStackZone()
+ *      .getCards()), ...)`, then `game.getStack().clear()`.)
+ *   2. "All attacking and blocking creatures are removed from combat"
+ *      (`game.getPhaseHandler().endCombat()`).
+ *   3. State-based actions are checked — no priority, no triggered
+ *      abilities go on the stack (`game.getAction().checkStateEffects(true)`).
+ *   4. "The current phase and/or step ends. The game skips straight to the
+ *      cleanup step. The cleanup step happens in its entirety."
+ *      (`game.getPhaseHandler().endTurnByEffect()`, which itself is just
+ *      `setPhase(PhaseType.CLEANUP); onPhaseBegin();` — a direct jump, not
+ *      a walk through every intervening phase.)
+ * Mirrored here as a single zero-arg action (real Forge's own `resolve`
+ * takes no interesting params either — `Defined$`/`Optional$`/`ValidTgts$`
+ * on the SpellAbility itself decide WHO ends the turn, always "you" for
+ * every real FIN card) rather than one function per step: no FIN card
+ * needs to invoke any PART of this in isolation, and splitting it would
+ * invite a caller to skip a step Forge's own real implementation never
+ * lets you skip. `functional-model/engine.ts`'s own `endTurn` is the real
+ * implementation (stack-exile + combat-end + SBA-check via existing
+ * primitives, `functional-model/turn.ts`'s own `jumpToCleanup` for step 4);
+ * `card.ts`'s own `EffectContext.selfToExile` covers step 1's "including
+ * this card" half (this function's own real Forge counterpart handles that
+ * as part of the SAME `game.getAction().exile(...)` call, since — unlike
+ * this model, where `Stack.resolveTop` already pops the resolving object
+ * off `items` before running its effects — Forge's own StackZone still
+ * lists the currently-resolving SpellAbility as present at this exact
+ * moment).
+ */
+export declare function endTurn(): void;
 
 /**
  * Convenience wrapper over `Card.attachToEntity(GameEntity, SpellAbility)`

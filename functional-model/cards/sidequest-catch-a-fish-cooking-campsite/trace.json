@@ -25,7 +25,7 @@
         "fn": "cast",
         "card": "Sidequest: Catch a Fish",
         "instanceId": 1,
-        "id": 2213,
+        "id": 5,
         "from": "hand",
         "cost": "{2}{W}"
       },
@@ -33,14 +33,14 @@
         "fn": "enters",
         "card": "Sidequest: Catch a Fish",
         "instanceId": 1,
-        "id": 2213,
+        "id": 5,
         "zone": "Battlefield"
       },
       {
         "fn": "trigger",
         "card": "Sidequest: Catch a Fish",
         "instanceId": 1,
-        "id": 2213,
+        "id": 5,
         "name": "onUpkeep"
       },
       {
@@ -63,7 +63,7 @@
       {
         "fn": "moveTo",
         "target": "you-library-artifact-0",
-        "id": 2212,
+        "id": 4,
         "zone": "Hand",
         "controller": "you"
       },
@@ -78,7 +78,7 @@
         "fn": "activate",
         "card": "Cooking Campsite",
         "instanceId": 1,
-        "id": 2213,
+        "id": 5,
         "cost": "{3}, {T}, Sacrifice an artifact (activate only as a sorcery)"
       },
       {
@@ -89,7 +89,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2210,
+        "id": 2,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"
@@ -97,7 +97,7 @@
       {
         "fn": "putCounter",
         "target": "Grizzly Bears",
-        "id": 2211,
+        "id": 3,
         "counterType": "+1/+1",
         "amount": 1,
         "controller": "you"

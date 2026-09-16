@@ -56,6 +56,28 @@
 // confirmed against their own printed text; requiring the built pattern to
 // match EXACTLY ONE of the two variants (never both, never neither) is what
 // keeps this decline-safe rather than a guess.
+//
+// **2026-09-16 sink-annotation-narrowing fix (real user-reported bug)** — the
+// SINK fact used to reuse the SOURCE's own whole-clause annotation
+// byte-for-byte (see `buildPatterns`'s own doc comment for the fix itself).
+// Note this recognizer's own 3 real users above have SINCE migrated
+// (2026-09-14) off `kind:'custom'` onto `combinator.ts`'s typed-program AST
+// (see this recognizer's own test file's 2026-09-14 update note) — this
+// recognizer therefore no longer independently reproduces any of the 3
+// on-disk `cards/<slug>/synergy.json` facts it originally derived (the
+// `apply-recognizers.mjs` pipeline is strictly additive/retag-only, so
+// those 3 facts stayed frozen on disk from before the migration rather than
+// disappearing or auto-updating). The 3 on-disk sink annotations were
+// hand-narrowed to match exactly what this fixed logic computes (the same
+// real oracle-text object-phrase substring/offsets this recognizer's own
+// regex capture group now extracts, confirmed via direct string slice
+// against each card's own real printed text — not inferred or guessed), and
+// this file's own test file gained the matching narrower-span assertions
+// via the SAME pre-migration synthetic-closure reconstructions it already
+// used for the whole-clause span. Teaching a `kind:'program'` sibling to
+// derive these 3 facts live again (the same way `putCounterProgram-effect-
+// structural.ts` already covers Venat/Zack Fair's own different program-AST
+// shapes) is real, valuable future work, not attempted here.
 import type { Effect } from '../card';
 import type { Constraints } from '../synergy';
 import type { RecognizedFact, RecognizerResult } from './types';
@@ -86,13 +108,29 @@ function escapeRegExp(s: string): string {
  * all (a fixed `value: 1` placeholder, same as every other recognizer in
  * this catalog — see `dealDamage-effect-structural.ts`'s own doc comment for
  * the identical reasoning applied to a different Effect kind), so there is
- * nothing to lose by not pinning the quantifier word down. */
+ * nothing to lose by not pinning the quantifier word down.
+ *
+ * **The trailing "each [other] <type> you control" object phrase is its own
+ * capturing group (2026-09-16 fix)** — not just for the source's own
+ * whole-clause span (unchanged), but because the SINK fact's real claim is
+ * narrower than the whole clause: a "wants a legendary creature you control
+ * present"-shaped want is only actually asserted by the OBJECT the action
+ * lands on, not by the verb ("put ... counters on") that also happens to sit
+ * in the same sentence. Reported by a real user against Aerith
+ * Gainsborough's own sink (over-broad, span covered the whole "put X +1/+1
+ * counters on each legendary creature you control" clause including the
+ * verb) — same real "narrow the SINK to its own object phrase, leave the
+ * SOURCE as the full action clause" split `putCounterProgram-effect-
+ * structural.ts`'s own confirmed Venat/Hydaelyn shape already establishes
+ * for the sibling `kind:'program'` recognizer (see that file's own module
+ * doc comment) — this fix brings the `kind:'custom'` sibling in line with
+ * that same, already-confirmed convention rather than inventing a new one. */
 function buildPatterns(counterType: string, typeWord: string): RegExp[] {
   const ct = escapeRegExp(counterType);
   const tw = escapeRegExp(typeWord);
   return [
-    new RegExp(`\\bput \\S+ ${ct} counters? on each other ${tw} you control\\b`, 'i'),
-    new RegExp(`\\bput \\S+ ${ct} counters? on each ${tw} you control\\b`, 'i'),
+    new RegExp(`\\bput \\S+ ${ct} counters? on (each other ${tw} you control)\\b`, 'i'),
+    new RegExp(`\\bput \\S+ ${ct} counters? on (each ${tw} you control)\\b`, 'i'),
   ];
 }
 
@@ -124,7 +162,7 @@ function buildPatterns(counterType: string, typeWord: string): RegExp[] {
  * already establishes for a different field).
  */
 export function recognizePutCounterBroadcastStructural(input: StructuralRecognizerInput): RecognizerResult {
-  const customEffects = allEffects(input).filter(isCustomEffect);
+  const customEffects = allEffects(input).map((o) => o.effect).filter(isCustomEffect);
   if (customEffects.length === 0) {
     return { matched: false, reason: 'no kind:"custom" Effect on this face' };
   }
@@ -148,10 +186,10 @@ export function recognizePutCounterBroadcastStructural(input: StructuralRecogniz
     const typeWord = extraSubtypes.length === 1 ? `${extraSubtypes[0]!.toLowerCase()} creature` : 'creature';
 
     const patterns = buildPatterns(result.fact.counterType, typeWord);
-    let matches: RegExpMatchArray[] = [];
+    let matches: (RegExpMatchArray & { indices: Array<[number, number] | undefined> })[] = [];
     for (const pattern of patterns) {
-      const global = new RegExp(pattern.source, pattern.flags + 'g');
-      matches = matches.concat([...input.oracleText.matchAll(global)]);
+      const global = new RegExp(pattern.source, pattern.flags + 'gd');
+      matches = matches.concat([...input.oracleText.matchAll(global)] as typeof matches);
     }
     if (matches.length === 0) {
       return {
@@ -169,30 +207,33 @@ export function recognizePutCounterBroadcastStructural(input: StructuralRecogniz
     }
 
     const m = matches[0]!;
-    const start = m.index!;
-    const end = start + m[0]!.length;
-    const annotation = toLineOffset(input.oracleText, start, end);
-    if (!annotation) {
-      return { matched: false, reason: `matched span [${start},${end}) did not resolve to a single real oracle-text line` };
+    const [fullStart, fullEnd] = m.indices[0]!;
+    const [objStart, objEnd] = m.indices[1]!;
+    const sourceAnnotation = toLineOffset(input.oracleText, fullStart, fullEnd);
+    const sinkAnnotation = toLineOffset(input.oracleText, objStart, objEnd);
+    if (!sourceAnnotation || !sinkAnnotation) {
+      return { matched: false, reason: `matched span [${fullStart},${fullEnd}) (or its own inner object-phrase span [${objStart},${objEnd})) did not resolve to a single real oracle-text line` };
     }
 
     const target: Constraints = result.fact.target;
     facts.push({
       role: 'source',
-      fact: { event: 'putCounter', counterType: result.fact.counterType, controller: 'you', target, targeted: false, annotations: [annotation] },
+      fact: { event: 'putCounter', counterType: result.fact.counterType, controller: 'you', target, targeted: false, annotations: [sourceAnnotation] },
       provenance: { origin: 'parser', rule: RULE },
     });
     // Paired "wants this present" sink — same real convention
     // `dealDamage-effect-structural.ts`'s own tier-2 sink and this pool's
     // established `mirroredPresenceSinks`-style pairing already use: a
     // produce fact whose `target` is a positive type list implies a real
-    // "wants this present" want, anchored at the SAME real clause (there is
-    // no narrower, separately-anchorable span for "what it wants present"
-    // than the clause that both creates the counter AND names its own
-    // target bucket).
+    // "wants this present" want. **Narrower than the source's own whole-
+    // clause span (2026-09-16 fix, see `buildPatterns`'s own doc comment)**
+    // — anchored to just the trailing "each [other] <type> you control"
+    // object phrase, since that's the only part of the clause this sink
+    // actually claims (the verb "put ... counters on" is the SOURCE's own
+    // claim, not a "this must be present" want).
     facts.push({
       role: 'sink',
-      fact: { to: 'Battlefield', controller: 'you', types: target.types!, annotations: [annotation] },
+      fact: { to: 'Battlefield', controller: 'you', types: target.types!, annotations: [sinkAnnotation] },
       provenance: { origin: 'parser', rule: RULE },
     });
   }

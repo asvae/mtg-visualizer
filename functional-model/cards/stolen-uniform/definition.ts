@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { selectUpTo, applyToBound, gainControl, equipTo, anyPlayer, you } from '../../combinator';
 
 export const stolenUniform: CardDefinition = {
   name: 'Stolen Uniform',
@@ -7,13 +8,15 @@ export const stolenUniform: CardDefinition = {
 
   // Two independent targets (a creature you control AND an Equipment,
   // which can belong to anyone), then chained gainControl+equip against
-  // the SAME chosen Equipment — no single declarative Effect kind covers
-  // "gain control of one chosen permanent, then attach it to a different
-  // chosen permanent," so `custom`, built entirely out of existing
-  // `chooseTarget`/`gainControl`/`equip` actions — both real, mechanically
-  // wired (`state.ts`'s `RealPlayer.gainControl`/`RealCard.attachedToId`
-  // mutation via `interfaces.ts`'s real `gainControl`/`equip` signatures)
-  // and, as of this migration, both real, matchable `Fact` vocabulary too
+  // the SAME chosen Equipment. Migrated (2026-09-16, coordinator-routed
+  // pilot-triage escalation) off a raw `custom` closure onto
+  // `kind:'program'`'s own `SelectUpTo`/`ApplyToBound` combinator —
+  // `EachAction`'s `'gainControl'`/`'equip'` variants (built specifically
+  // for this real card and its siblings, see that union's own doc comment)
+  // chain both real, mechanically wired actions (`state.ts`'s
+  // `RealPlayer.gainControl`/`RealCard.attachedToId` mutation via
+  // `interfaces.ts`'s real `gainControl`/`equip` signatures) onto the SAME
+  // picked Equipment, real matchable `Fact` vocabulary either way
   // (`event:'gainControl'` promoted 2026-09-12 for Stiltzkin, Moogle
   // Merchant/fin-34; `event:'equip'` promoted the same day for THIS card,
   // scripts/verify-synergy.mjs's own `producedEvents` — previously parked).
@@ -34,19 +37,15 @@ export const stolenUniform: CardDefinition = {
   // comment gives a different unreachable mechanic.
   effects: [
     {
-      kind: 'custom',
+      kind: 'program',
       describe:
         "choose target creature you control and target Equipment; gain control of that Equipment until end of turn and attach it to the chosen creature (the end-of-turn control-revert and unattach delayed trigger aren't modeled — no such mechanism exists in this engine)",
-      run: (ctx: EffectContext, actions: Actions) => {
-        const creatureTarget = actions.chooseTarget(ctx.you.getCreaturesInPlay());
-        const equipmentPool = [...ctx.you.getCardsIn('Battlefield'), ...ctx.opponents.flatMap((p) => p.getCardsIn('Battlefield'))].filter((c) =>
-          c.hasSubtype('Equipment')
-        );
-        const equipmentTarget = actions.chooseTarget(equipmentPool);
-        if (!equipmentTarget) return;
-        actions.gainControl(ctx.you, equipmentTarget);
-        if (creatureTarget) actions.equip(equipmentTarget, creatureTarget);
-      },
+      program: selectUpTo(you.creaturesInPlay(), 1, 'creature', [
+        selectUpTo(anyPlayer.permanentsInPlay().filter('subtype', 'Equipment'), 1, 'equipment', [
+          applyToBound('equipment', 0, gainControl('you')),
+          applyToBound('equipment', 0, equipTo('creature', 0)),
+        ]),
+      ]),
     } satisfies Effect,
   ],
 };

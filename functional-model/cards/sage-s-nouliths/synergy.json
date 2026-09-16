@@ -12,9 +12,14 @@
           "target": "oracle",
           "line": 0,
           "start": 40,
-          "end": 82
+          "end": 106
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "jobSelectCreateTokenAndEquip-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     },
     {
       "event": "pump",
@@ -49,10 +54,14 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 30,
-          "end": 100
+          "start": 67,
+          "end": 72
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "untapTarget-effect-structural"
+      }
     },
     {
       "event": "grantType",
@@ -67,7 +76,11 @@
           "start": 105,
           "end": 147
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "continuousTypeGrantsEquipped-structural"
+      }
     }
   ],
   "sink": [
@@ -105,10 +118,30 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 30,
-          "end": 100
+          "start": 73,
+          "end": 98
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "untapTarget-effect-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 12,
+          "end": 38
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

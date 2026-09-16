@@ -28,7 +28,7 @@
         "fn": "cast",
         "card": "Louisoix's Sacrifice",
         "instanceId": 1,
-        "id": 1476,
+        "id": 3,
         "from": "hand",
         "cost": "{U}"
       },
@@ -53,7 +53,7 @@
         "fn": "move",
         "card": "Louisoix's Sacrifice",
         "instanceId": 1,
-        "id": 1476,
+        "id": 3,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

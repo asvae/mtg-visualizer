@@ -10,8 +10,30 @@
           "start": 27,
           "end": 36
         }
-      ]
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "surveil-effect-structural"
+      },
+      "triggeredBy": "onEnter"
     }
   ],
-  "sink": []
+  "sink": [
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 2,
+          "start": 0,
+          "end": 25
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
+    }
+  ]
 }

@@ -5,17 +5,42 @@
 // graveyard from the battlefield," applied to THIS permanent's own death,
 // not some other trigger clause that merely mentions "dies."
 //
-// Two facts, same real, checked shape 2 real pool cards already carry
-// hand-authored, byte for byte (`dwarven-castle-guard`, `al-bhed-
-// salvagers` — see the whole-pool check below): the trigger's own firing
-// PRECONDITION (a SINK — this card wants ITSELF to die) and the SAME real
-// dying asserted from the SOURCE side (CR 700.4 — a guaranteed
-// battlefield->graveyard move, real regardless of whatever upstream cause
-// — combat, an opponent's removal, a state-based action — actually killed
-// it; see `SYNERGY_DESIGN.md`'s own "ACT vs CONSEQUENCE" standing rule:
-// this is squarely a CONSEQUENCE fact, always eligible once the dying
-// clause exists at all, never conditional the way a `destroy`/`sacrifice`
-// ACT fact is).
+// **SINK-only, since 2026-09-17 — the companion SOURCE fact this
+// recognizer used to ALSO emit was removed as a real over-claim, not a
+// stylistic simplification (real user-reported redundancy, motivating
+// card: `aerith-gainsborough`, fin/4).** The trigger's own firing
+// PRECONDITION (a SINK — this card wants ITSELF to die, unchanged below)
+// is the only real fact this clause backs. The removed SOURCE half used to
+// assert the SAME dying from the CONSEQUENCE side (CR 700.4 —
+// battlefield->graveyard, `subject`/`target: 'self'`), reasoning it as
+// "a guaranteed occurrence once this clause exists at all" — that
+// reasoning does not actually hold for THIS trigger the way it holds for
+// `destroy-effect-structural.ts`'s own real `dies`-implying match (see
+// `synergy.ts`'s `satisfiesDestroyImpliesDies`,
+// `.claude/contracts/card-schema.md`'s "`destroy` implies `dies`" section):
+// a `destroy` effect is an ACT this card's own resolution performs, and CR
+// 700.4/704.5g make its target's death a CERTAIN follow-through once that
+// destroy actually resolves against something. A self-referential
+// "When/Whenever <self> dies" trigger's own SINK, by contrast, is not an
+// act this card performs at all — it is a PRECONDITION the card merely
+// reacts to if some wholly separate cause (combat, an opponent's removal,
+// an unrelated state-based action) happens to kill it. Nothing about a
+// card carrying this trigger makes that card any more or less likely to
+// actually die than a plain vanilla creature with no dies-trigger
+// whatsoever — the SOURCE fact was therefore granting a real, matchable
+// "this card produces a Graveyard arrival" claim (and the cross-card
+// synergy edges that claim produced) as an ARBITRARY byproduct of an
+// unrelated ability's own text existing on the card, not because this
+// specific card's own death is in any way more certain or more its own
+// doing than any other creature's. Whether a MORE GENERAL "any creature
+// could die" synthetic match-time fact (mirroring
+// `isNormalPermanent`/`syntheticCastFact`-family below in `synergy.ts`)
+// should exist to recover the lost cross-card edges pool-wide is a real,
+// separate, much bigger scope question (every creature in the pool would
+// newly connect to every graveyard-payoff card) — deliberately NOT decided
+// or built here; flagged back to the orchestrator/user instead. See this
+// recognizer's own `.test.ts` and the 7 real cards' `synergy.json` this
+// removal touched for the exact, disclosed, accepted edge losses.
 //
 // **Real, whole-pool verification done BEFORE writing this recognizer's
 // own matching regex** (same discipline every recognizer in this catalog
@@ -132,25 +157,12 @@ export function recognizeDiesTriggerStructural(input: RecognizerInput): Recogniz
     {
       // The trigger's own firing precondition — this card wants ITSELF to
       // die (co-located here as a SINK, same shape aerith-gainsborough's
-      // own former `authoredFacts` entry asserted by hand).
+      // own former `authoredFacts` entry asserted by hand). SINK-only since
+      // 2026-09-17 — see this file's own module doc comment for why the
+      // companion SOURCE fact this used to also emit was removed as a real
+      // over-claim, not merged/replaced by anything else.
       role: 'sink',
       fact: { event: 'dies', target: 'self', annotations: [annotation] },
-      provenance: { origin: 'parser', rule: RULE },
-    },
-    {
-      // The SAME real dying, asserted from the SOURCE side (CR 700.4 — a
-      // guaranteed occurrence once this clause exists at all, regardless of
-      // what upstream cause actually killed it).
-      role: 'source',
-      fact: {
-        event: 'dies',
-        from: 'Battlefield',
-        to: 'Graveyard',
-        controller: 'you',
-        subject: 'self',
-        target: 'self',
-        annotations: [annotation],
-      },
       provenance: { origin: 'parser', rule: RULE },
     },
   ];

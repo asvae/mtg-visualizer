@@ -1,0 +1,2460 @@
+{
+  "generatedAt": "2026-09-16T23:05:37.850Z",
+  "set": "fin",
+  "cards": [
+    {
+      "number": "1",
+      "name": "Summon: Bahamut",
+      "status": "verified",
+      "reasons": [
+        "8 fact(s), all recognizer-derived; 90% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "2",
+      "name": "Ultima, Origin of Oblivion",
+      "status": "verified",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 97% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "3",
+      "name": "Adelbert Steiner",
+      "status": "verified",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 81% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "4",
+      "name": "Aerith Gainsborough",
+      "status": "green",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 96% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "5",
+      "name": "Aerith Rescue Mission",
+      "status": "re-review",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 78% oracle text covered, 0 uncovered spans; was previously human-reviewed and verified, but real content has changed since — needs another look"
+      ]
+    },
+    {
+      "number": "6",
+      "name": "Ambrosia Whiteheart",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 93% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "7",
+      "name": "Ashe, Princess of Dalmasca",
+      "status": "verified",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "8",
+      "name": "Auron's Inspiration",
+      "status": "verified",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "9",
+      "name": "Battle Menu",
+      "status": "verified",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 78% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "10",
+      "name": "Cloud, Midgar Mercenary",
+      "status": "uncertain",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans; flagged with a known caveat: 2026-09-17: this card's own trigger-doubling static (\"As long as Cloud is equipped, if a triggered ability of Cloud or an Equipment attached to it triggers, that ability triggers an additional time\")…"
+      ]
+    },
+    {
+      "number": "11",
+      "name": "Cloudbound Moogle",
+      "status": "verified",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 87% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "12",
+      "name": "Coeurl",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 85% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "13",
+      "name": "Crystal Fragments // Summon: Alexander",
+      "status": "green",
+      "reasons": [
+        "10 fact(s), all recognizer-derived; 93% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "14",
+      "name": "The Crystal's Chosen",
+      "status": "verified",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 95% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "15",
+      "name": "Delivery Moogle",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 96% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "16",
+      "name": "Dion, Bahamut's Dominant // Bahamut, Warden of Light",
+      "status": "green",
+      "reasons": [
+        "15 fact(s), all recognizer-derived; 88% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "17",
+      "name": "Dragoon's Lance",
+      "status": "green",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 91% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "18",
+      "name": "Dwarven Castle Guard",
+      "status": "re-review",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans; was previously human-reviewed and verified, but real content has changed since — needs another look"
+      ]
+    },
+    {
+      "number": "19",
+      "name": "Fate of the Sun-Cryst",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "20",
+      "name": "From Father to Son",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 89% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "21",
+      "name": "G'raha Tia",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 85% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "22",
+      "name": "Gaelicat",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 68% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "23",
+      "name": "Machinist's Arsenal",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 92% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "24",
+      "name": "Magitek Armor",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "25",
+      "name": "Magitek Infantry",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 83% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "26",
+      "name": "Minwu, White Mage",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 77% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "27",
+      "name": "Moogles' Valor",
+      "status": "re-review",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 73% oracle text covered, 0 uncovered spans; was previously human-reviewed and verified, but real content has changed since — needs another look"
+      ]
+    },
+    {
+      "number": "28",
+      "name": "Paladin's Arms",
+      "status": "green",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 84% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "29",
+      "name": "Phoenix Down",
+      "status": "green",
+      "reasons": [
+        "7 fact(s), all recognizer-derived; 86% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "30",
+      "name": "Restoration Magic",
+      "status": "verified",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 79% oracle text covered, 0 uncovered spans; human-reviewed"
+      ]
+    },
+    {
+      "number": "31",
+      "name": "Sidequest: Catch a Fish // Cooking Campsite",
+      "status": "orange",
+      "reasons": [
+        "3 of 9 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "32",
+      "name": "Slash of Light",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 77% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "33",
+      "name": "Snow Villiers",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 66% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "34",
+      "name": "Stiltzkin, Moogle Merchant",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 77% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "35",
+      "name": "Summon: Choco/Mog",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 87% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "36",
+      "name": "Summon: Knights of Round",
+      "status": "green",
+      "reasons": [
+        "7 fact(s), all recognizer-derived; 85% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "37",
+      "name": "Summon: Primal Garuda",
+      "status": "green",
+      "reasons": [
+        "8 fact(s), all recognizer-derived; 86% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "38",
+      "name": "Ultima",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 95% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "39",
+      "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+      "status": "orange",
+      "reasons": [
+        "2 of 12 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "40",
+      "name": "Weapons Vendor",
+      "status": "green",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "41",
+      "name": "White Auracite",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 93% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "42",
+      "name": "White Mage's Staff",
+      "status": "yellow",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 83% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "43",
+      "name": "The Wind Crystal",
+      "status": "green",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 80% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "44",
+      "name": "You're Not Alone",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "45",
+      "name": "Zack Fair",
+      "status": "orange",
+      "reasons": [
+        "1 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "46",
+      "name": "Astrologian's Planisphere",
+      "status": "orange",
+      "reasons": [
+        "1 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "47",
+      "name": "Cargo Ship",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 93% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "48",
+      "name": "Combat Tutorial",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 86% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "49",
+      "name": "Dragoon's Wyvern",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 91% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "50",
+      "name": "Dreams of Laguna",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 98% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "51",
+      "name": "Edgar, King of Figaro",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "52",
+      "name": "Eject",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "53",
+      "name": "Ether",
+      "status": "yellow",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 22% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "54",
+      "name": "Gogo, Master of Mimicry",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: copy target activated or triggered ability you control X times; you may choose new target…"
+      ]
+    },
+    {
+      "number": "55",
+      "name": "Ice Flan",
+      "status": "green",
+      "reasons": [
+        "7 fact(s), all recognizer-derived; 94% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "56",
+      "name": "Ice Magic",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 80% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "57",
+      "name": "Il Mheg Pixie",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 94% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "58",
+      "name": "Jill, Shiva's Dominant // Shiva, Warden of Ice",
+      "status": "green",
+      "reasons": [
+        "13 fact(s), all recognizer-derived; 91% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "59",
+      "name": "Louisoix's Sacrifice",
+      "status": "orange",
+      "reasons": [
+        "2 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "60",
+      "name": "The Lunar Whale",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 95% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "61",
+      "name": "Magic Damper",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "62",
+      "name": "Matoya, Archon Elder",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 78% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "63",
+      "name": "Memories Returning",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "64",
+      "name": "The Prima Vista",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 92% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "65",
+      "name": "Qiqirn Merchant",
+      "status": "green",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 92% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "66",
+      "name": "Quistis Trepe",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: Blue Magic — when this enters, you may cast target instant or sorcery card from a graveya…"
+      ]
+    },
+    {
+      "number": "67",
+      "name": "Relm's Sketching",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "68",
+      "name": "Retrieve the Esper",
+      "status": "orange",
+      "reasons": [
+        "2 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "69",
+      "name": "Rook Turret",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 84% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "70",
+      "name": "Sage's Nouliths",
+      "status": "yellow",
+      "reasons": [
+        "7 fact(s), all recognizer-derived; 77% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "71",
+      "name": "Sahagin",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 98% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "72",
+      "name": "Scorpion Sentinel",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 85% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "73",
+      "name": "Sidequest: Card Collection // Magicked Card",
+      "status": "yellow",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 63% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "74",
+      "name": "Sleep Magic",
+      "status": "orange",
+      "reasons": [
+        "3 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "75",
+      "name": "Stolen Uniform",
+      "status": "orange",
+      "reasons": [
+        "5 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "76",
+      "name": "Stuck in Summoner's Sanctum",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "77",
+      "name": "Summon: Leviathan",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, dr…",
+        "unsupported construct: until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, dr…"
+      ]
+    },
+    {
+      "number": "78",
+      "name": "Summon: Shiva",
+      "status": "orange",
+      "reasons": [
+        "4 of 9 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "79",
+      "name": "Swallowed by Leviathan",
+      "status": "yellow",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 91% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "80",
+      "name": "Syncopate",
+      "status": "green",
+      "reasons": [
+        "1 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "81",
+      "name": "Thief's Knife",
+      "status": "yellow",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 71% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "82",
+      "name": "Travel the Overworld",
+      "status": "green",
+      "reasons": [
+        "1 fact(s), all recognizer-derived; 80% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "83",
+      "name": "Ultros, Obnoxious Octopus",
+      "status": "yellow",
+      "reasons": [
+        "4 fact(s), all recognizer-derived; 53% oracle text covered, 2 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "84",
+      "name": "Valkyrie Aerial Unit",
+      "status": "yellow",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 88% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "85",
+      "name": "The Water Crystal",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 95% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "86",
+      "name": "Y'shtola Rhul",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "87",
+      "name": "Ahriman",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 69% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "88",
+      "name": "Al Bhed Salvagers",
+      "status": "orange",
+      "reasons": [
+        "2 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "89",
+      "name": "Ardyn, the Usurper",
+      "status": "orange",
+      "reasons": [
+        "5 of 9 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "90",
+      "name": "Black Mage's Rod",
+      "status": "orange",
+      "reasons": [
+        "1 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "91",
+      "name": "Cecil, Dark Knight // Cecil, Redeemed Paladin",
+      "status": "orange",
+      "reasons": [
+        "4 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "92",
+      "name": "Circle of Power",
+      "status": "orange",
+      "reasons": [
+        "1 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "93",
+      "name": "Cornered by Black Mages",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "94",
+      "name": "Dark Confidant",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "95",
+      "name": "Dark Knight's Greatsword",
+      "status": "orange",
+      "reasons": [
+        "1 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "96",
+      "name": "The Darkness Crystal",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "97",
+      "name": "Demon Wall",
+      "status": "yellow",
+      "reasons": [
+        "1 fact(s), all recognizer-derived; 48% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "98",
+      "name": "Evil Reawakened",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "99",
+      "name": "Fang, Fearless l'Cie",
+      "status": "orange",
+      "reasons": [
+        "4 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "100",
+      "name": "Fight On!",
+      "status": "orange",
+      "reasons": [
+        "2 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "101",
+      "name": "The Final Days",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "102",
+      "name": "Gaius van Baelsar",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "103",
+      "name": "Hecteyes",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "104",
+      "name": "Jecht, Reluctant Guardian // Braska's Final Aeon",
+      "status": "orange",
+      "reasons": [
+        "2 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "105",
+      "name": "Kain, Traitorous Dragoon",
+      "status": "orange",
+      "reasons": [
+        "2 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "106",
+      "name": "Malboro",
+      "status": "orange",
+      "reasons": [
+        "2 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "107",
+      "name": "Namazu Trader",
+      "status": "orange",
+      "reasons": [
+        "2 of 10 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "108",
+      "name": "Ninja's Blades",
+      "status": "yellow",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 30% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "109",
+      "name": "Overkill",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "110",
+      "name": "Phantom Train",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "111",
+      "name": "Poison the Waters",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "112",
+      "name": "Qutrub Forayer",
+      "status": "orange",
+      "reasons": [
+        "5 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "113",
+      "name": "Reno and Rude",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: if a creature or artifact was sacrificed, you may play the exiled card this turn, and man…"
+      ]
+    },
+    {
+      "number": "114",
+      "name": "Resentful Revelation",
+      "status": "orange",
+      "reasons": [
+        "4 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "115",
+      "name": "Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel",
+      "status": "orange",
+      "reasons": [
+        "4 of 13 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "116",
+      "name": "Sephiroth's Intervention",
+      "status": "orange",
+      "reasons": [
+        "1 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "117",
+      "name": "Shambling Cie'th",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "118",
+      "name": "Shinra Reinforcements",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "119",
+      "name": "Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark",
+      "status": "orange",
+      "reasons": [
+        "4 of 11 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "120",
+      "name": "Summon: Anima",
+      "status": "orange",
+      "reasons": [
+        "3 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "121",
+      "name": "Summon: Primal Odin",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: Zantetsuken — this creature gains \"whenever this creature deals combat damage to a player…"
+      ]
+    },
+    {
+      "number": "122",
+      "name": "Tonberry",
+      "status": "orange",
+      "reasons": [
+        "2 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "123",
+      "name": "Undercity Dire Rat",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "124",
+      "name": "Vayne's Treachery",
+      "status": "orange",
+      "reasons": [
+        "5 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "125",
+      "name": "Vincent Valentine // Galian Beast",
+      "status": "orange",
+      "reasons": [
+        "3 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "126",
+      "name": "Vincent's Limit Break",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: target creature you control also gains \"when this creature dies, return it to the battlef…",
+        "unsupported construct: target creature you control also gains \"when this creature dies, return it to the battlef…",
+        "unsupported construct: target creature you control also gains \"when this creature dies, return it to the battlef…"
+      ]
+    },
+    {
+      "number": "127",
+      "name": "Zenos yae Galvus // Shinryu, Transcendent Rival",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: Burning Chains — when the chosen player loses the game, you win the game (no winGame/lose…"
+      ]
+    },
+    {
+      "number": "128",
+      "name": "Zodiark, Umbral God",
+      "status": "orange",
+      "reasons": [
+        "6 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "129",
+      "name": "Barret Wallace",
+      "status": "orange",
+      "reasons": [
+        "2 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "130",
+      "name": "Blazing Bomb",
+      "status": "yellow",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 50% oracle text covered, 2 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "131",
+      "name": "Call the Mountain Chocobo",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "132",
+      "name": "Choco-Comet",
+      "status": "orange",
+      "reasons": [
+        "2 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "133",
+      "name": "Clive, Ifrit's Dominant // Ifrit, Warden of Inferno",
+      "status": "orange",
+      "reasons": [
+        "2 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "134",
+      "name": "Coral Sword",
+      "status": "orange",
+      "reasons": [
+        "1 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "135",
+      "name": "The Fire Crystal",
+      "status": "orange",
+      "reasons": [
+        "2 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "136",
+      "name": "Fire Magic",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "137",
+      "name": "Firion, Wild Rose Warrior",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "138",
+      "name": "Freya Crescent",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "139",
+      "name": "Gilgamesh, Master-at-Arms",
+      "status": "orange",
+      "reasons": [
+        "1 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "140",
+      "name": "Haste Magic",
+      "status": "orange",
+      "reasons": [
+        "4 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "141",
+      "name": "Hill Gigas",
+      "status": "orange",
+      "reasons": [
+        "1 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "142",
+      "name": "Item Shopkeep",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "143",
+      "name": "Laughing Mad",
+      "status": "orange",
+      "reasons": [
+        "1 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "144",
+      "name": "Light of Judgment",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: destroy up to one Equipment attached to that creature (not mechanically enforced — no att…"
+      ]
+    },
+    {
+      "number": "145",
+      "name": "Mysidian Elder",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "146",
+      "name": "Nibelheim Aflame",
+      "status": "orange",
+      "reasons": [
+        "5 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "147",
+      "name": "Opera Love Song",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "148",
+      "name": "Prompto Argentum",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "149",
+      "name": "Queen Brahne",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "150",
+      "name": "Random Encounter",
+      "status": "orange",
+      "reasons": [
+        "4 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "151",
+      "name": "Raubahn, Bull of Ala Mhigo",
+      "status": "orange",
+      "reasons": [
+        "4 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "152",
+      "name": "Red Mage's Rapier",
+      "status": "orange",
+      "reasons": [
+        "1 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "153",
+      "name": "Sabotender",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 94% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "154",
+      "name": "Samurai's Katana",
+      "status": "orange",
+      "reasons": [
+        "1 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "155",
+      "name": "Sandworm",
+      "status": "orange",
+      "reasons": [
+        "4 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "156",
+      "name": "Seifer Almasy",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: you may cast target instant or sorcery card with mana value 3 or less from your graveyard…"
+      ]
+    },
+    {
+      "number": "157",
+      "name": "Self-Destruct",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "158",
+      "name": "Sidequest: Play Blitzball // World Champion, Celestial Weapon",
+      "status": "yellow",
+      "reasons": [
+        "6 fact(s), all recognizer-derived; 57% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "159",
+      "name": "Sorceress's Schemes",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: add {R} (no mana-pool concept in this model)"
+      ]
+    },
+    {
+      "number": "160",
+      "name": "Summon: Brynhildr",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: Gestalt Mode — when you next cast a creature spell this turn, it gains haste until end of…",
+        "unsupported construct: Gestalt Mode — when you next cast a creature spell this turn, it gains haste until end of…"
+      ]
+    },
+    {
+      "number": "161",
+      "name": "Summon: Esper Ramuh",
+      "status": "orange",
+      "reasons": [
+        "1 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "162",
+      "name": "Summon: G.F. Cerberus",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: Double — when you next cast an instant or sorcery spell this turn, copy it, you may choos…",
+        "unsupported construct: Triple — when you next cast an instant or sorcery spell this turn, copy it twice, you may…"
+      ]
+    },
+    {
+      "number": "163",
+      "name": "Summon: G.F. Ifrit",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: Add {R} (no mana-production mechanism exists in this engine)",
+        "unsupported construct: Add {R} (no mana-production mechanism exists in this engine)"
+      ]
+    },
+    {
+      "number": "164",
+      "name": "Suplex",
+      "status": "orange",
+      "reasons": [
+        "2 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "165",
+      "name": "Thunder Magic",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "166",
+      "name": "Triple Triad",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "167",
+      "name": "Unexpected Request",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "168",
+      "name": "Vaan, Street Thief",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "169",
+      "name": "Warrior's Sword",
+      "status": "orange",
+      "reasons": [
+        "1 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "170",
+      "name": "Zell Dincht",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "171",
+      "name": "Airship Crash",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "172",
+      "name": "Ancient Adamantoise",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "173",
+      "name": "Balamb T-Rexaur",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 84% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "174",
+      "name": "Bard's Bow",
+      "status": "orange",
+      "reasons": [
+        "1 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "175",
+      "name": "Bartz and Boko",
+      "status": "orange",
+      "reasons": [
+        "5 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "176",
+      "name": "Blitzball Shot",
+      "status": "orange",
+      "reasons": [
+        "2 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "177",
+      "name": "Cactuar",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "178",
+      "name": "Chocobo Kick",
+      "status": "orange",
+      "reasons": [
+        "5 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "179",
+      "name": "Chocobo Racetrack",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "180",
+      "name": "Clash of the Eikons",
+      "status": "orange",
+      "reasons": [
+        "5 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "181",
+      "name": "Coliseum Behemoth",
+      "status": "orange",
+      "reasons": [
+        "2 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "182",
+      "name": "Commune with Beavers",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "183",
+      "name": "Diamond Weapon",
+      "status": "orange",
+      "reasons": [
+        "2 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "184",
+      "name": "The Earth Crystal",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "185",
+      "name": "Esper Origins // Summon: Esper Maduin",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: add {G}{G}"
+      ]
+    },
+    {
+      "number": "186",
+      "name": "Galuf's Final Act",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: target creature also gains \"when this creature dies, put a number of +1/+1 counters equal…"
+      ]
+    },
+    {
+      "number": "187",
+      "name": "Gigantoad",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "188",
+      "name": "Goobbue Gardener",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "189",
+      "name": "Gran Pulse Ochu",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "190",
+      "name": "Gysahl Greens",
+      "status": "orange",
+      "reasons": [
+        "2 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "191",
+      "name": "Jumbo Cactuar",
+      "status": "gray",
+      "reasons": [
+        "synergy.json has 0 facts (source and sink both empty) — not yet authored"
+      ]
+    },
+    {
+      "number": "192",
+      "name": "Loporrit Scout",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "193",
+      "name": "Prishe's Wanderings",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "194",
+      "name": "Quina, Qu Gourmet",
+      "status": "orange",
+      "reasons": [
+        "3 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "195",
+      "name": "Reach the Horizon",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "196",
+      "name": "A Realm Reborn",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "197",
+      "name": "Ride the Shoopuf",
+      "status": "yellow",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 45% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "198",
+      "name": "Rydia's Return",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "199",
+      "name": "Sazh Katzroy",
+      "status": "orange",
+      "reasons": [
+        "6 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "200",
+      "name": "Sazh's Chocobo",
+      "status": "green",
+      "reasons": [
+        "2 fact(s), all recognizer-derived; 100% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "201",
+      "name": "Sidequest: Raise a Chocobo // Black Chocobo",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: if you control four or more Birds, transform this enchantment into Black Chocobo (no face…"
+      ]
+    },
+    {
+      "number": "202",
+      "name": "Summon: Fat Chocobo",
+      "status": "orange",
+      "reasons": [
+        "1 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "203",
+      "name": "Summon: Fenrir",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: when you next cast a creature spell this turn, that creature enters with an additional +1…"
+      ]
+    },
+    {
+      "number": "204",
+      "name": "Summon: Titan",
+      "status": "orange",
+      "reasons": [
+        "5 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "205",
+      "name": "Summoner's Grimoire",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "206",
+      "name": "Tifa Lockhart",
+      "status": "orange",
+      "reasons": [
+        "2 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "207",
+      "name": "Tifa's Limit Break",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "208",
+      "name": "Torgal, A Fine Hound",
+      "status": "orange",
+      "reasons": [
+        "5 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "209",
+      "name": "Town Greeter",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "210",
+      "name": "Traveling Chocobo",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "211",
+      "name": "Vanille, Cheerful l'Cie",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "212",
+      "name": "Absolute Virtue",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "213",
+      "name": "Balthier and Fran",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: you may pay {1}{R}{G}; if you do, after this combat phase, there is an additional combat …"
+      ]
+    },
+    {
+      "number": "214",
+      "name": "Black Waltz No. 3",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "215",
+      "name": "Choco, Seeker of Paradise",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "216",
+      "name": "Cid, Timeless Artificer",
+      "status": "orange",
+      "reasons": [
+        "2 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "217",
+      "name": "Cloud of Darkness",
+      "status": "orange",
+      "reasons": [
+        "4 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "218",
+      "name": "Emet-Selch, Unsundered // Hades, Sorcerer of Eld",
+      "status": "orange",
+      "reasons": [
+        "4 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "219",
+      "name": "The Emperor of Palamecia // The Lord Master of Hell",
+      "status": "orange",
+      "reasons": [
+        "4 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "220",
+      "name": "Exdeath, Void Warlock // Neo Exdeath, Dimension's End",
+      "status": "orange",
+      "reasons": [
+        "3 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "221",
+      "name": "Garland, Knight of Cornelia // Chaos, the Endless",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: return this card from your graveyard to the battlefield transformed (no \"which face is sh…"
+      ]
+    },
+    {
+      "number": "222",
+      "name": "Garnet, Princess of Alexandria",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "223",
+      "name": "Giott, King of the Dwarves",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "224",
+      "name": "Gladiolus Amicitia",
+      "status": "orange",
+      "reasons": [
+        "3 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "225",
+      "name": "Golbez, Crystal Collector",
+      "status": "orange",
+      "reasons": [
+        "7 of 9 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "226",
+      "name": "Hope Estheim",
+      "status": "orange",
+      "reasons": [
+        "5 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "227",
+      "name": "Ignis Scientia",
+      "status": "orange",
+      "reasons": [
+        "6 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "228",
+      "name": "Jenova, Ancient Calamity",
+      "status": "orange",
+      "reasons": [
+        "6 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "229",
+      "name": "Joshua, Phoenix's Dominant // Phoenix, Warden of Fire",
+      "status": "orange",
+      "reasons": [
+        "5 of 9 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "230",
+      "name": "Judge Magister Gabranth",
+      "status": "orange",
+      "reasons": [
+        "4 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "231",
+      "name": "Kefka, Court Mage // Kefka, Ruler of Ruin",
+      "status": "orange",
+      "reasons": [
+        "6 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "232",
+      "name": "Kuja, Genome Sorcerer // Trance Kuja, Fate Defied",
+      "status": "orange",
+      "reasons": [
+        "5 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "233",
+      "name": "Lightning, Army of One",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: Stagger — until your next turn, if a source would deal damage to that player or a permane…"
+      ]
+    },
+    {
+      "number": "234",
+      "name": "Locke Cole",
+      "status": "orange",
+      "reasons": [
+        "4 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "235",
+      "name": "Noctis, Prince of Lucis",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "236",
+      "name": "Omega, Heartless Evolution",
+      "status": "orange",
+      "reasons": [
+        "5 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "237",
+      "name": "Rinoa Heartilly",
+      "status": "orange",
+      "reasons": [
+        "5 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "238",
+      "name": "Rufus Shinra",
+      "status": "orange",
+      "reasons": [
+        "5 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "239",
+      "name": "Rydia, Summoner of Mist",
+      "status": "orange",
+      "reasons": [
+        "4 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "240",
+      "name": "Serah Farron // Crystallized Serah",
+      "status": "orange",
+      "reasons": [
+        "4 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "241",
+      "name": "Shantotto, Tactician Magician",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "242",
+      "name": "Sin, Spira's Punishment",
+      "status": "orange",
+      "reasons": [
+        "2 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "243",
+      "name": "Squall, SeeD Mercenary",
+      "status": "orange",
+      "reasons": [
+        "7 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "244",
+      "name": "Tellah, Great Sage",
+      "status": "orange",
+      "reasons": [
+        "5 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "245",
+      "name": "Terra, Magical Adept // Esper Terra",
+      "status": "orange",
+      "reasons": [
+        "5 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "246",
+      "name": "Tidus, Blitzball Star",
+      "status": "orange",
+      "reasons": [
+        "3 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "247",
+      "name": "Ultimecia, Time Sorceress // Ultimecia, Omnipotent",
+      "status": "orange",
+      "reasons": [
+        "4 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "248",
+      "name": "Vivi Ornitier",
+      "status": "orange",
+      "reasons": [
+        "3 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "249",
+      "name": "The Wandering Minstrel",
+      "status": "orange",
+      "reasons": [
+        "5 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "250",
+      "name": "Yuna, Hope of Spira",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "251",
+      "name": "Zidane, Tantalus Thief",
+      "status": "orange",
+      "reasons": [
+        "7 of 9 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "252",
+      "name": "Adventurer's Airship",
+      "status": "orange",
+      "reasons": [
+        "1 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "253",
+      "name": "Aettir and Priwen",
+      "status": "orange",
+      "reasons": [
+        "2 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "254",
+      "name": "Blitzball",
+      "status": "gray",
+      "reasons": [
+        "synergy.json has 0 facts (source and sink both empty) — not yet authored"
+      ]
+    },
+    {
+      "number": "255",
+      "name": "Buster Sword",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: you may then cast a spell from your hand with mana value less than or equal to that damag…"
+      ]
+    },
+    {
+      "number": "256",
+      "name": "Elixir",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "257",
+      "name": "Excalibur II",
+      "status": "orange",
+      "reasons": [
+        "2 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "258",
+      "name": "Genji Glove",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: after this phase, there is an additional combat phase (no turn/phase-structure Effect sha…"
+      ]
+    },
+    {
+      "number": "259",
+      "name": "Instant Ramen",
+      "status": "green",
+      "reasons": [
+        "5 fact(s), all recognizer-derived; 89% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "260",
+      "name": "Iron Giant",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "261",
+      "name": "Lion Heart",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "262",
+      "name": "Lunatic Pandora",
+      "status": "orange",
+      "reasons": [
+        "3 of 8 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "263",
+      "name": "Magic Pot",
+      "status": "orange",
+      "reasons": [
+        "4 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "264",
+      "name": "The Masamune",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "265",
+      "name": "Monk's Fist",
+      "status": "orange",
+      "reasons": [
+        "1 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "266",
+      "name": "PuPu UFO",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: until end of turn, this creature's base power becomes equal to the number of Towns you co…"
+      ]
+    },
+    {
+      "number": "267",
+      "name": "The Regalia",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: reveal cards from the top of your library until you reveal a land card; put that card ont…"
+      ]
+    },
+    {
+      "number": "268",
+      "name": "Relentless X-ATM092",
+      "status": "orange",
+      "reasons": [
+        "1 of 1 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "269",
+      "name": "Ring of the Lucii",
+      "status": "orange",
+      "reasons": [
+        "3 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "270",
+      "name": "World Map",
+      "status": "orange",
+      "reasons": [
+        "1 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "271",
+      "name": "Adventurer's Inn",
+      "status": "green",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 92% oracle text covered, 0 uncovered spans"
+      ]
+    },
+    {
+      "number": "272",
+      "name": "Balamb Garden, SeeD Academy // Balamb Garden, Airborne",
+      "status": "orange",
+      "reasons": [
+        "3 of 9 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "273",
+      "name": "Baron, Airship Kingdom",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "274",
+      "name": "Capital City",
+      "status": "orange",
+      "reasons": [
+        "1 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "275",
+      "name": "Clive's Hideaway",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "276",
+      "name": "Crossroads Village",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "277",
+      "name": "Eden, Seat of the Sanctum",
+      "status": "orange",
+      "reasons": [
+        "4 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "278",
+      "name": "Gohn, Town of Ruin",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "279",
+      "name": "The Gold Saucer",
+      "status": "orange",
+      "reasons": [
+        "7 of 10 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "280",
+      "name": "Gongaga, Reactor Town",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "281",
+      "name": "Guadosalam, Farplane Gateway",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "282",
+      "name": "Insomnia, Crown City",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "283",
+      "name": "Ishgard, the Holy See // Faith & Grief",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "284",
+      "name": "Jidoor, Aristocratic Capital // Overture",
+      "status": "orange",
+      "reasons": [
+        "2 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "285",
+      "name": "Lindblum, Industrial Regency // Mage Siege",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "286",
+      "name": "Midgar, City of Mako // Reactor Raid",
+      "status": "orange",
+      "reasons": [
+        "2 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "287",
+      "name": "Rabanastre, Royal City",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "288",
+      "name": "Sharlayan, Nation of Scholars",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "289",
+      "name": "Starting Town",
+      "status": "orange",
+      "reasons": [
+        "1 of 2 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "290",
+      "name": "Treno, Dark City",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "291",
+      "name": "Vector, Imperial Capital",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "292",
+      "name": "Windurst, Federation Center",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "293",
+      "name": "Zanarkand, Ancient Metropolis // Lasting Fayth",
+      "status": "orange",
+      "reasons": [
+        "3 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "552",
+      "name": "Cloud, Planet's Champion",
+      "status": "orange",
+      "reasons": [
+        "3 of 3 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "553",
+      "name": "Sephiroth, Planet's Heir",
+      "status": "orange",
+      "reasons": [
+        "5 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "554",
+      "name": "Beatrix, Loyal General",
+      "status": "orange",
+      "reasons": [
+        "3 of 7 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "555",
+      "name": "Rosa, Resolute White Mage",
+      "status": "orange",
+      "reasons": [
+        "3 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "556",
+      "name": "Ultimecia, Temporal Threat",
+      "status": "orange",
+      "reasons": [
+        "3 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "557",
+      "name": "Deadly Embrace",
+      "status": "orange",
+      "reasons": [
+        "6 of 6 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "558",
+      "name": "Seymour Flux",
+      "status": "yellow",
+      "reasons": [
+        "3 fact(s), all recognizer-derived; 52% oracle text covered, 1 uncovered span(s)"
+      ]
+    },
+    {
+      "number": "559",
+      "name": "Judgment Bolt",
+      "status": "orange",
+      "reasons": [
+        "4 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "560",
+      "name": "Lightning, Security Sergeant",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: you may play that card for as long as you control Lightning, Security Sergeant (no MayPla…"
+      ]
+    },
+    {
+      "number": "561",
+      "name": "Xande, Dark Mage",
+      "status": "orange",
+      "reasons": [
+        "2 of 4 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    },
+    {
+      "number": "562",
+      "name": "Magitek Scythe",
+      "status": "red",
+      "reasons": [
+        "unsupported construct: that creature must be blocked this turn if able (no combat/blocking-restriction machinery…"
+      ]
+    },
+    {
+      "number": "99b",
+      "name": "Ragnarok, Divine Deliverance",
+      "status": "gray",
+      "reasons": [
+        "no functional-model card directory found for this card"
+      ]
+    },
+    {
+      "number": "563",
+      "name": "Ultima Weapon",
+      "status": "orange",
+      "reasons": [
+        "4 of 5 fact(s) missing provenance (hand/agent-authored, not recognizer-derived)"
+      ]
+    }
+  ]
+}

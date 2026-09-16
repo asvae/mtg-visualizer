@@ -22,7 +22,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterTarget-effect-structural"
-      }
+      },
+      "triggeredBy": "onAttack"
     },
     {
       "event": "addMana",
@@ -43,7 +44,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "addMana-effect-structural"
-      }
+      },
+      "triggeredBy": "onTapLandForC"
     }
   ],
   "sink": [
@@ -58,7 +60,7 @@
         {
           "target": "oracle",
           "line": 1,
-          "start": 25,
+          "start": 49,
           "end": 60
         }
       ],

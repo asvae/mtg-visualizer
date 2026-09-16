@@ -16,7 +16,7 @@
         "fn": "activate",
         "card": "Ahriman",
         "instanceId": 1,
-        "id": 82,
+        "id": 3,
         "cost": "{3}, Sacrifice another creature or artifact"
       },
       {
@@ -55,7 +55,7 @@
         "fn": "activate",
         "card": "Ahriman",
         "instanceId": 1,
-        "id": 85,
+        "id": 6,
         "cost": "{3}, Sacrifice another creature or artifact"
       },
       {

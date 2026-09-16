@@ -1,0 +1,73 @@
+{
+  "capturedAt": "2026-09-16T18:05:09.788Z",
+  "facts": {
+    "source": [
+      {
+        "to": "Battlefield",
+        "event": "entersBattlefield",
+        "controller": "you",
+        "subject": {
+          "token": "c_1_1_hero"
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 1,
+            "start": 22,
+            "end": 69
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "token-creation-structural"
+        }
+      },
+      {
+        "event": "putCounter",
+        "counterType": "stun",
+        "target": {
+          "types": {
+            "has": [
+              "Creature"
+            ]
+          }
+        },
+        "targeted": true,
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 64,
+            "end": 97
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "selectUpTo-effect-structural"
+        }
+      }
+    ],
+    "sink": [
+      {
+        "to": "Battlefield",
+        "types": {
+          "has": [
+            "Creature"
+          ]
+        },
+        "annotations": [
+          {
+            "target": "oracle",
+            "line": 2,
+            "start": 30,
+            "end": 62
+          }
+        ],
+        "provenance": {
+          "origin": "parser",
+          "rule": "selectUpTo-effect-structural"
+        }
+      }
+    ]
+  }
+}

@@ -25,15 +25,15 @@
 // different real targeting shape needs its own template, not a silent
 // stretch of this one.
 //
-// **`machinist-s-arsenal` is the one real, confirmed, permanent decline**
-// (`+2/+2 for each artifact you control` — `card.ts`'s own
-// `continuousPTGrants` field is typed as a plain `number`, not
-// `Computed<number>`, so a per-artifact scaling pump genuinely CAN'T be
-// expressed there at all; that card's own `definition.ts` comment already
-// documents this as a real, accepted engine limitation, not something this
-// recognizer needs to re-flag) — it has no `continuousPTGrants` field to
-// read in the first place, so this recognizer naturally returns a scope
-// decline for it, same as any other card with no such field.
+// **`machinist-s-arsenal`'s own "+2/+2 for each artifact you control"
+// CLOSED 2026-09-15 (fin/16-25 pass)** — the paragraph immediately below
+// used to describe this as a permanent decline (`continuousPTGrants` typed
+// as a plain `number`, not `Computed<number>`); no longer true. `card.ts`'s
+// `continuousPTGrants` entries can now ALSO carry `scalePerType` (a real
+// `Count$Valid <Type>.YouCtrl/Times.N` scaling shape, that field's own doc
+// comment has the citation) instead of a fixed `power`/`toughness` — this
+// recognizer's second branch below reads that shape, building "Equipped
+// creature gets ±P/±T for each <type> you control."
 //
 // **Real, pre-existing fact-shape inconsistency found and fixed
 // (2026-09-15, this same pass)**: of the 7 real on-disk `event:'pump'`
@@ -66,9 +66,19 @@
 // to this canonical shape (`power`/`toughness`/redundant `types` removed)
 // BEFORE this recognizer's own first pool-wide run, so its retag (not
 // append) correctly fires for every one of them.
+//
+// **`excalibur-ii`'s own "+1/+1 for each charge counter on Excalibur II"
+// CLOSED 2026-09-16 (static-ability audit)** — `continuousPTGrants` entries
+// can now ALSO carry `scalePerSelfCounter` (real `Count$CardCounters.<TYPE>`
+// scaling, `card.ts`'s own doc comment has the citation) — the real text
+// swaps "for each <type> you control" for "for each <counterType> counter
+// on <card name>," this recognizer's third branch below builds that
+// template using the card's own real `name`.
 import type { CardDefinition } from '../card';
 import type { RecognizedFact, RecognizerInput, RecognizerResult } from './types';
 import { toLineOffset } from './types';
+
+const COUNTER_WORD: Partial<Record<string, string>> = { CHARGE: 'charge' };
 
 export type ContinuousPTGrantsRecognizerInput = RecognizerInput & Pick<CardDefinition, 'continuousPTGrants'>;
 
@@ -83,10 +93,10 @@ function formatSigned(n: number): string {
 }
 
 export function recognizeContinuousPTGrantsEquippedStructural(input: ContinuousPTGrantsRecognizerInput): RecognizerResult {
-  const qualifying = (input.continuousPTGrants ?? []).filter(
+  const allGrants = (input.continuousPTGrants ?? []).filter(
     (g) => g.equippedBySelf === true && g.includeSelf === false && g.subtype === undefined && g.onlyDuringYourTurn === undefined,
   );
-  if (qualifying.length === 0) {
+  if (allGrants.length === 0) {
     return {
       matched: false,
       reason: "no continuousPTGrants entry shaped exactly {equippedBySelf:true, includeSelf:false} with no subtype/onlyDuringYourTurn — the one real, confirmed template this recognizer covers",
@@ -94,9 +104,25 @@ export function recognizeContinuousPTGrantsEquippedStructural(input: ContinuousP
   }
 
   const facts: RecognizedFact[] = [];
-  for (const grant of qualifying) {
-    const numbers = `${escapeRegExp(formatSigned(grant.power))}\\/${escapeRegExp(formatSigned(grant.toughness))}`;
-    const pattern = new RegExp(`\\bEquipped creature gets ${numbers}\\b`, 'i');
+  for (const grant of allGrants) {
+    let pattern: RegExp;
+    if ('scalePerType' in grant) {
+      pattern = new RegExp(
+        `\\bEquipped creature gets ${escapeRegExp(formatSigned(grant.scalePerType.power))}\\/${escapeRegExp(formatSigned(grant.scalePerType.toughness))} for each ${escapeRegExp(grant.scalePerType.type.toLowerCase())} you control\\b`,
+        'i',
+      );
+    } else if ('scalePerSelfCounter' in grant) {
+      const word = COUNTER_WORD[grant.scalePerSelfCounter.counterType];
+      if (!word) {
+        return { matched: false, reason: `counterType "${grant.scalePerSelfCounter.counterType}" has no confirmed English word for this template` };
+      }
+      pattern = new RegExp(
+        `\\bEquipped creature gets ${escapeRegExp(formatSigned(grant.scalePerSelfCounter.power))}\\/${escapeRegExp(formatSigned(grant.scalePerSelfCounter.toughness))} for each ${escapeRegExp(word)} counter on ${escapeRegExp(input.name)}\\b`,
+        'i',
+      );
+    } else {
+      pattern = new RegExp(`\\bEquipped creature gets ${escapeRegExp(formatSigned(grant.power))}\\/${escapeRegExp(formatSigned(grant.toughness))}\\b`, 'i');
+    }
     const globalPattern = new RegExp(pattern.source, pattern.flags + 'g');
     const matches = [...input.oracleText.matchAll(globalPattern)];
     if (matches.length !== 1) {

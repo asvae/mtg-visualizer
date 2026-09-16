@@ -22,7 +22,7 @@
         "fn": "cast",
         "card": "Judgment Bolt",
         "instanceId": 1,
-        "id": 1361,
+        "id": 6,
         "from": "hand",
         "cost": "{3}{R}"
       },
@@ -39,9 +39,9 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
-        "sourceId": 1361,
+        "sourceId": 6,
         "target": "Grizzly Bears",
-        "id": 1360,
+        "id": 5,
         "amount": 5
       },
       {
@@ -76,7 +76,7 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
-        "sourceId": 1361,
+        "sourceId": 6,
         "target": "opp0",
         "amount": 2
       },
@@ -84,7 +84,7 @@
         "fn": "move",
         "card": "Judgment Bolt",
         "instanceId": 1,
-        "id": 1361,
+        "id": 6,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"
@@ -111,7 +111,7 @@
         "fn": "cast",
         "card": "Judgment Bolt",
         "instanceId": 1,
-        "id": 1365,
+        "id": 10,
         "from": "hand",
         "cost": "{3}{R}"
       },
@@ -128,9 +128,9 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
-        "sourceId": 1365,
+        "sourceId": 10,
         "target": "Grizzly Bears",
-        "id": 1364,
+        "id": 9,
         "amount": 5
       },
       {
@@ -143,7 +143,7 @@
       {
         "fn": "dealDamage",
         "source": "Judgment Bolt",
-        "sourceId": 1365,
+        "sourceId": 10,
         "target": "opp0",
         "amount": 0
       },
@@ -151,7 +151,7 @@
         "fn": "move",
         "card": "Judgment Bolt",
         "instanceId": 1,
-        "id": 1365,
+        "id": 10,
         "from": "stack",
         "to": "Graveyard",
         "cardType": "Instant"

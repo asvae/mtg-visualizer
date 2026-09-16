@@ -1,61 +1,121 @@
 [
   {
     "scenario": {
-      "setup": "",
-      "action": "cast from hand",
-      "result": "creature enters, no resolvable effect (the P/T bonus is a CDA with no matching ptFormula shape — see definition.ts comment)",
+      "setup": "you: 4 Island(s)",
+      "action": "engine playthrough: 2 noncreature/nonland graveyard cards present -> cast -> real graveyard-count CDA applies",
+      "result": "Xande, Dark Mage enters with 2 real noncreature, nonland cards (Phoenix Down, Elixir) already in the graveyard — layer-7a effectivePT genuinely recalculates to 5/5 (printed 3/3 +1/+1 per card), real addPerGraveyardCount CDA machinery now in place (closed 2026-09-16, same mechanism as Adelbert Steiner's/Gaelicat's own identically-shaped live P/T reads).",
       "raw": {
-        "result": "creature enters, no resolvable effect (the P/T bonus is a CDA with no matching ptFormula shape — see definition.ts comment)"
+        "result": "Xande, Dark Mage enters with 2 real noncreature, nonland cards (Phoenix Down, Elixir) already in the graveyard — layer-7a effectivePT genuinely recalculates to 5/5 (printed 3/3 +1/+1 per card), real addPerGraveyardCount CDA machinery now in place (closed 2026-09-16, same mechanism as Adelbert Steiner's/Gaelicat's own identically-shaped live P/T reads).",
+        "you": {
+          "basicLands": [
+            "Island",
+            "Swamp",
+            "Island",
+            "Swamp"
+          ],
+          "libraryCount": 5
+        },
+        "opponents": [
+          {
+            "libraryCount": 5
+          }
+        ]
       }
     },
     "log": [
       {
+        "fn": "enters",
+        "card": "Phoenix Down",
+        "zone": "Graveyard"
+      },
+      {
+        "fn": "enters",
+        "card": "Elixir",
+        "zone": "Graveyard"
+      },
+      {
         "fn": "cast",
         "card": "Xande, Dark Mage",
         "instanceId": 1,
-        "id": 3172,
         "from": "hand",
         "cost": "{2}{U}{B}"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Xande, Dark Mage"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Xande, Dark Mage"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Island",
+        "for": "Xande, Dark Mage"
+      },
+      {
+        "fn": "tapForMana",
+        "target": "Swamp",
+        "for": "Xande, Dark Mage"
       },
       {
         "fn": "enters",
         "card": "Xande, Dark Mage",
         "instanceId": 1,
-        "id": 3172,
-        "zone": "Battlefield"
-      }
-    ]
-  },
-  {
-    "scenario": {
-      "setup": "",
-      "action": "cast from hand, a duplicate legendary copy enters",
-      "result": "Legend rule: a second copy enters",
-      "raw": {
-        "label": "Legend rule: a second copy enters",
-        "duplicateLegendaryEnters": true
-      }
-    },
-    "log": [
-      {
-        "fn": "cast",
-        "card": "Xande, Dark Mage",
-        "instanceId": 1,
-        "id": 3174,
-        "from": "hand",
-        "cost": "{2}{U}{B}"
-      },
-      {
-        "fn": "enters",
-        "card": "Xande, Dark Mage",
-        "instanceId": 1,
-        "id": 3174,
         "zone": "Battlefield"
       },
       {
-        "fn": "legendRule",
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Graveyard",
+        "count": 2,
+        "creatureCount": 0
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Phoenix Down",
+        "subtype": "Land",
+        "result": false
+      },
+      {
+        "fn": "read:hasSubtype",
+        "target": "Elixir",
+        "subtype": "Land",
+        "result": false
+      },
+      {
+        "fn": "read:getNetPower",
         "card": "Xande, Dark Mage",
-        "player": "you"
+        "power": 5,
+        "toughness": 5
+      }
+    ],
+    "actions": [
+      {
+        "label": "Start",
+        "from": 0
+      },
+      {
+        "label": "Two noncreature, nonland cards already in the graveyard",
+        "from": 0
+      },
+      {
+        "label": "Cast Xande, Dark Mage ({2}{U}{B})",
+        "from": 2
+      },
+      {
+        "label": "Resolve",
+        "from": 7
+      },
+      {
+        "label": "Graveyard read — noncreature, nonland card count",
+        "from": 8
+      },
+      {
+        "label": "Layer-7a read — addPerGraveyardCount machinery now applies the +1/+1 per card",
+        "from": 11
       }
     ]
   }

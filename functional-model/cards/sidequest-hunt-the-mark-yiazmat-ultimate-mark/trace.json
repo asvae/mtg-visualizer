@@ -19,7 +19,7 @@
         "fn": "trigger",
         "card": "Sidequest: Hunt the Mark",
         "instanceId": 1,
-        "id": 2218,
+        "id": 4,
         "name": "onEnter"
       },
       {
@@ -49,7 +49,7 @@
       {
         "fn": "ceasesToExist",
         "target": "Grizzly Bears",
-        "id": 2217,
+        "id": 3,
         "zone": "Graveyard",
         "controller": "opp0"
       }
@@ -75,7 +75,7 @@
         "fn": "trigger",
         "card": "Sidequest: Hunt the Mark",
         "instanceId": 1,
-        "id": 2221,
+        "id": 7,
         "name": "onEnter"
       },
       {
@@ -114,7 +114,7 @@
         "fn": "trigger",
         "card": "Sidequest: Hunt the Mark",
         "instanceId": 1,
-        "id": 2223,
+        "id": 9,
         "name": "onEndStep"
       },
       {
@@ -163,7 +163,7 @@
         "fn": "activate",
         "card": "Yiazmat, Ultimate Mark",
         "instanceId": 1,
-        "id": 2227,
+        "id": 13,
         "cost": "{1}{B}, Sacrifice another creature or artifact"
       },
       {
@@ -182,8 +182,9 @@
       {
         "fn": "grantKeyword",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2227,
-        "keyword": "Indestructible"
+        "id": 13,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -200,7 +201,7 @@
       {
         "fn": "tap",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2227,
+        "id": 13,
         "controller": "you"
       }
     ]
@@ -221,7 +222,7 @@
         "fn": "activate",
         "card": "Yiazmat, Ultimate Mark",
         "instanceId": 1,
-        "id": 2229,
+        "id": 15,
         "cost": "{1}{B}, Sacrifice another creature or artifact"
       },
       {
@@ -235,8 +236,9 @@
       {
         "fn": "grantKeyword",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2229,
-        "keyword": "Indestructible"
+        "id": 15,
+        "keyword": "Indestructible",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCardsIn",
@@ -253,7 +255,7 @@
       {
         "fn": "tap",
         "target": "Yiazmat, Ultimate Mark",
-        "id": 2229,
+        "id": 15,
         "controller": "you"
       },
       {

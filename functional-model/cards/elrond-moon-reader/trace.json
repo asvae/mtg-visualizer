@@ -14,12 +14,69 @@
         "fn": "trigger",
         "card": "Elrond, Moon-Reader",
         "instanceId": 1,
-        "id": 766,
+        "id": 2,
         "name": "onActivateCreatureAbility"
       },
       {
         "fn": "drawCard",
         "player": "you"
+      }
+    ]
+  },
+  {
+    "scenario": {
+      "setup": "",
+      "action": "activated ({5}{U}{U})",
+      "result": "draws a card the first time you activate a creature ability this turn; a second creature-ability activation the same turn triggers no second draw (ActivationLimit 1)",
+      "raw": {
+        "result": "draws a card the first time you activate a creature ability this turn; a second creature-ability activation the same turn triggers no second draw (ActivationLimit 1)",
+        "sequence": [
+          "onActivateCreatureAbility",
+          "onActivateCreatureAbility"
+        ]
+      }
+    },
+    "log": [
+      {
+        "fn": "activate",
+        "card": "Elrond, Moon-Reader",
+        "instanceId": 1,
+        "id": 4,
+        "cost": "{5}{U}{U}"
+      },
+      {
+        "fn": "read:getCardsIn",
+        "player": "you",
+        "zone": "Battlefield",
+        "count": 1,
+        "creatureCount": 1
+      },
+      {
+        "fn": "read:isLand",
+        "target": "Elrond, Moon-Reader",
+        "result": false
+      },
+      {
+        "fn": "delayUntil",
+        "phase": "EndOfTurn"
+      },
+      {
+        "fn": "trigger",
+        "card": "Elrond, Moon-Reader",
+        "instanceId": 1,
+        "id": 4,
+        "name": "onActivateCreatureAbility"
+      },
+      {
+        "fn": "drawCard",
+        "player": "you"
+      },
+      {
+        "fn": "trigger",
+        "card": "Elrond, Moon-Reader",
+        "instanceId": 1,
+        "id": 4,
+        "name": "onActivateCreatureAbility"
       }
     ]
   },
@@ -42,7 +99,7 @@
         "fn": "activate",
         "card": "Elrond, Moon-Reader",
         "instanceId": 1,
-        "id": 770,
+        "id": 8,
         "cost": "{5}{U}{U}"
       },
       {
@@ -70,14 +127,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 768,
+        "id": 6,
         "zone": "Exile",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 769,
+        "id": 7,
         "zone": "Exile",
         "controller": "you"
       },
@@ -116,14 +173,14 @@
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 768,
+        "id": 6,
         "zone": "Battlefield",
         "controller": "you"
       },
       {
         "fn": "moveTo",
         "target": "Grizzly Bears",
-        "id": 769,
+        "id": 7,
         "zone": "Battlefield",
         "controller": "you"
       },
@@ -150,7 +207,7 @@
         "fn": "activate",
         "card": "Elrond, Moon-Reader",
         "instanceId": 1,
-        "id": 772,
+        "id": 10,
         "cost": "{5}{U}{U}"
       },
       {

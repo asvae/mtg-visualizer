@@ -11,6 +11,7 @@ export const cloudOfDarkness: CardDefinition = {
   triggers: [
     {
       name: 'onEnter',
+      on: 'enter',
       effects: [
         {
           // Real `ValidTgts$ Creature.OppCtrl` — a genuinely restricted

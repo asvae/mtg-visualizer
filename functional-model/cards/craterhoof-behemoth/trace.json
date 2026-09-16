@@ -13,7 +13,7 @@
         "fn": "cast",
         "card": "Craterhoof Behemoth",
         "instanceId": 1,
-        "id": 485,
+        "id": 2,
         "from": "hand",
         "cost": "{5}{G}{G}{G}"
       },
@@ -21,7 +21,7 @@
         "fn": "enters",
         "card": "Craterhoof Behemoth",
         "instanceId": 1,
-        "id": 485,
+        "id": 2,
         "zone": "Battlefield"
       }
     ]
@@ -44,7 +44,7 @@
         "fn": "trigger",
         "card": "Craterhoof Behemoth",
         "instanceId": 1,
-        "id": 489,
+        "id": 6,
         "name": "onEnter"
       },
       {
@@ -55,20 +55,23 @@
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 487,
-        "keyword": "Trample"
+        "id": 4,
+        "keyword": "Trample",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Grizzly Bears",
-        "id": 488,
-        "keyword": "Trample"
+        "id": 5,
+        "keyword": "Trample",
+        "untilEndOfTurn": true
       },
       {
         "fn": "grantKeyword",
         "target": "Craterhoof Behemoth",
-        "id": 489,
-        "keyword": "Trample"
+        "id": 6,
+        "keyword": "Trample",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -88,23 +91,26 @@
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 487,
+        "id": 4,
         "power": 3,
-        "toughness": 3
+        "toughness": 3,
+        "untilEndOfTurn": true
       },
       {
         "fn": "pump",
         "target": "Grizzly Bears",
-        "id": 488,
+        "id": 5,
         "power": 3,
-        "toughness": 3
+        "toughness": 3,
+        "untilEndOfTurn": true
       },
       {
         "fn": "pump",
         "target": "Craterhoof Behemoth",
-        "id": 489,
+        "id": 6,
         "power": 3,
-        "toughness": 3
+        "toughness": 3,
+        "untilEndOfTurn": true
       }
     ]
   },
@@ -126,7 +132,7 @@
         "fn": "trigger",
         "card": "Craterhoof Behemoth",
         "instanceId": 1,
-        "id": 491,
+        "id": 8,
         "name": "onEnter"
       },
       {
@@ -137,8 +143,9 @@
       {
         "fn": "grantKeyword",
         "target": "Craterhoof Behemoth",
-        "id": 491,
-        "keyword": "Trample"
+        "id": 8,
+        "keyword": "Trample",
+        "untilEndOfTurn": true
       },
       {
         "fn": "read:getCreaturesInPlay",
@@ -158,9 +165,10 @@
       {
         "fn": "pump",
         "target": "Craterhoof Behemoth",
-        "id": 491,
+        "id": 8,
         "power": 1,
-        "toughness": 1
+        "toughness": 1,
+        "untilEndOfTurn": true
       }
     ]
   }

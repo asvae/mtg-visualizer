@@ -28,6 +28,22 @@
     {
       "zone": "Battlefield",
       "controller": "you"
+    },
+    {
+      "event": "beginCombat",
+      "controller": "you",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 24,
+          "end": 64
+        }
+      ],
+      "provenance": {
+        "origin": "parser",
+        "rule": "beginCombat-trigger-structural"
+      }
     }
   ]
 }

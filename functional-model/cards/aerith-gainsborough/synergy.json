@@ -1,26 +1,6 @@
 {
   "source": [
     {
-      "event": "dies",
-      "from": "Battlefield",
-      "to": "Graveyard",
-      "controller": "you",
-      "subject": "self",
-      "target": "self",
-      "annotations": [
-        {
-          "target": "oracle",
-          "line": 2,
-          "start": 0,
-          "end": 29
-        }
-      ],
-      "provenance": {
-        "origin": "parser",
-        "rule": "dies-trigger-structural"
-      }
-    },
-    {
       "event": "putCounter",
       "counterType": "+1/+1",
       "target": "self",
@@ -35,7 +15,8 @@
       "provenance": {
         "origin": "parser",
         "rule": "putCounterSelf-effect-structural"
-      }
+      },
+      "triggeredBy": "onLifeGained"
     },
     {
       "event": "putCounter",
@@ -127,7 +108,7 @@
         {
           "target": "oracle",
           "line": 2,
-          "start": 31,
+          "start": 55,
           "end": 90
         }
       ],

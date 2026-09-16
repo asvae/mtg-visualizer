@@ -113,14 +113,14 @@
       {
         "fn": "equip",
         "equipment": "Stuck in Summoner's Sanctum",
-        "equipmentId": 2321,
+        "equipmentId": 6,
         "target": "Coeurl",
-        "id": 2320
+        "id": 5
       },
       {
         "fn": "tap",
         "target": "Coeurl",
-        "id": 2320,
+        "id": 5,
         "controller": "you"
       },
       {

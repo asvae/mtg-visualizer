@@ -1,4 +1,10 @@
 import type { AnnotationRef, Fact } from '../../functional-model/synergy';
+import type { AnnotatedNonFactSpan } from '../../server/api/card/[set]/[number]';
+
+// Re-exported so any consumer of `NonFactSpanRow` (CardDetailTabs.vue,
+// FunctionalModelText.vue) can get the underlying span type from this one
+// module too, without a second import from the server route.
+export type { AnnotatedNonFactSpan };
 
 /** One row of the Facts tab table (app/pages/app/card/[set]/[number].vue)
  * — a raw `Fact` plus its own stable display key (see that page's own
@@ -6,6 +12,61 @@ import type { AnnotationRef, Fact } from '../../functional-model/synergy';
 export interface FactRow {
   fact: Fact;
   key: string;
+}
+
+/** A non-Fact row (2026-09-16, `progress.json`'s own `annotatedNonFactSpans`
+ * — see `.claude/contracts/card-schema.md`) — real oracle-text/type-line
+ * spans that are accounted for but deliberately carry no `Fact` at all.
+ * Same "display row" shape convention as `FactRow` (a stable `key` plus the
+ * underlying data), but never has a `role` (no source/sink — these are
+ * never rendered with the role icon, and never feed synergy matching). Only
+ * ever shown behind the Facts tab's own opt-in toggle, but — once shown —
+ * ordered into the exact SAME text-ordered list as real fact rows via
+ * `orderByTextPosition` below, never a separate section
+ * (`feedback_facts_text_order_role_icon_only` applies here too). */
+export interface NonFactSpanRow {
+  span: AnnotatedNonFactSpan;
+  key: string;
+}
+
+/** Either kind of Facts-tab row `orderByTextPosition` can place — a plain
+ * union rather than a shared base interface, since a `FactRow`'s position
+ * comes off `fact.annotations[0]` and a `NonFactSpanRow`'s comes directly
+ * off its own `span` (itself already `AnnotationRef`-shaped plus `kind`/
+ * `note`) — `rowAnnotation` below is the one place that distinction is
+ * bridged. */
+export type DisplayRow = FactRow | NonFactSpanRow;
+
+// Exported (not just an internal helper) so CardDetailTabs.vue's own
+// template can narrow a `DisplayRow` the same way this module does
+// internally, rather than re-deriving an equivalent `'fact' in row` check.
+export function isFactRow(row: DisplayRow): row is FactRow {
+  return 'fact' in row;
+}
+
+/** Short, human-facing label for a non-Fact span's own `kind` (2026-09-16
+ * follow-up, per direct user feedback) — the Facts tab row itself, and
+ * `FunctionalModelText.vue`'s own hover tooltip, both show this short label
+ * instead of the raw `kind` string. The span's own `note` free text is
+ * authoring-only detail now — never rendered anywhere in the UI. */
+export const NON_FACT_SPAN_KIND_LABEL: Record<AnnotatedNonFactSpan['kind'], string> = {
+  'definition-path': 'Definition',
+  rules: 'Rules',
+  lore: 'Lore',
+};
+
+/** The one real `AnnotationRef`-shaped position a row is ordered by — a
+ * `FactRow`'s own first real annotation (unchanged from before this
+ * function went generic), or a `NonFactSpanRow`'s own `span` reinterpreted
+ * as one (`line` defaults to 0 for a `target: 'typeLine'` span, which
+ * `annotationPosition` below ignores anyway — same as a real
+ * `AnnotationRef`). */
+function rowAnnotation(row: DisplayRow): AnnotationRef | undefined {
+  if (isFactRow(row)) return row.fact.annotations?.[0];
+  const { span } = row;
+  return span.target === 'typeLine'
+    ? { target: 'typeLine', start: span.start, end: span.end }
+    : { target: 'oracle', line: span.line ?? 0, start: span.start, end: span.end };
 }
 
 /**
@@ -65,14 +126,18 @@ function annotationPosition(ann: AnnotationRef): { line: number; start: number }
   return { line: ann.target === 'typeLine' ? -1 : ann.line, start: ann.start };
 }
 
-export function orderByTextPosition(rows: FactRow[]): FactRow[] {
+// Generic over the exact row type given (`FactRow[]` in -> `FactRow[]` out,
+// unchanged from before this went generic; a mixed `DisplayRow[]`, once the
+// Facts tab's own non-Fact-span toggle is on, in -> the same mix out) —
+// preserves every existing caller's own narrower type without a cast.
+export function orderByTextPosition<T extends DisplayRow>(rows: T[]): T[] {
   const positions = new Map<string, { line: number; start: number }>();
   for (const row of rows) {
-    // Only the fact's own FIRST annotation is used as its position — same
-    // "one fact -> one position" rule the pre-pointer segment-tree walk
+    // Only the row's own FIRST annotation is used as its position — same
+    // "one row -> one position" rule the pre-pointer segment-tree walk
     // effectively enforced too (a fact's first-encountered segment), and no
-    // current fact needs more than one anchor for ordering purposes.
-    const ann = row.fact.annotations?.[0];
+    // current fact/span needs more than one anchor for ordering purposes.
+    const ann = rowAnnotation(row);
     if (ann) positions.set(row.key, annotationPosition(ann));
   }
 
@@ -91,7 +156,11 @@ export function orderByTextPosition(rows: FactRow[]): FactRow[] {
       if (!b.pos) return 1;
       if (a.pos.line !== b.pos.line) return a.pos.line - b.pos.line;
       if (a.pos.start !== b.pos.start) return a.pos.start - b.pos.start;
-      if (a.row.fact.role !== b.row.fact.role) return a.row.fact.role === 'sink' ? -1 : 1;
+      // Sink-before-source tiebreak only makes sense between two real
+      // facts (no non-Fact span has a `role` at all) — a tie involving a
+      // non-Fact span (or two of them) falls straight through to plain
+      // authored order instead.
+      if (isFactRow(a.row) && isFactRow(b.row) && a.row.fact.role !== b.row.fact.role) return a.row.fact.role === 'sink' ? -1 : 1;
       return a.i - b.i;
     })
     .map((x) => x.row);

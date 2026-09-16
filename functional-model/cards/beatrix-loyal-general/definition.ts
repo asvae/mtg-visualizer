@@ -1,4 +1,5 @@
-import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
+import type { CardDefinition, Effect } from '../../card';
+import { equipTo, selectUpTo, you } from '../../combinator';
 
 // Real script (beatrix_loyal_general.txt).
 export const beatrixLoyalGeneral: CardDefinition = {
@@ -28,14 +29,20 @@ export const beatrixLoyalGeneral: CardDefinition = {
       name: 'onBeginCombat',
       effects: [
         {
-          kind: 'custom',
+          // Migrated 2026-09-16 off a `kind:'custom'` closure onto the
+          // combinator DSL: `selectUpTo(..., 1, 'target', ...)` picks the
+          // one target creature (same `actions.chooseTarget` pool-
+          // exhaustion loop the original closure used), then a nested
+          // `Each` over the real Equipment pool (`cardType:'artifact'` +
+          // `subtype:'Equipment'`, the same Equipment-⊂-Artifact narrowing
+          // the original closure's own `isArtifact() &&
+          // hasSubtype('Equipment')` used) applies `equipTo('target', 0)` —
+          // the SAME real batch-attach-onto-one-bound-target shape this
+          // action was built for. Same real behavior, now
+          // recognizer-readable data instead of an opaque closure.
+          kind: 'program',
           describe: 'you may attach any number of Equipment you control to target creature you control',
-          run: (ctx: EffectContext, actions: Actions) => {
-            const target = actions.chooseTarget(ctx.you.getCreaturesInPlay());
-            if (!target) return;
-            const equipment = ctx.you.getCardsIn('Battlefield').filter((c) => c.isArtifact() && c.hasSubtype('Equipment'));
-            for (const e of equipment) actions.equip(e, target);
-          },
+          program: selectUpTo(you.creaturesInPlay(), 1, 'target', [you.permanentsInPlay().filter('cardType', 'artifact').filter('subtype', 'Equipment').each(equipTo('target', 0))]),
         } satisfies Effect,
       ],
     },

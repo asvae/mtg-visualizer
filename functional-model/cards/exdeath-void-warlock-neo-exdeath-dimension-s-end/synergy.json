@@ -27,6 +27,24 @@
       "provenance": {
         "origin": "parser",
         "rule": "gainLife-effect-structural"
+      },
+      "triggeredBy": "onEnter"
+    },
+    {
+      "event": "pump",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 14,
+          "end": 79
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormulaSetToCreaturesControlled-structural"
       }
     }
   ],
@@ -43,6 +61,48 @@
         ]
       },
       "face": "front"
+    },
+    {
+      "to": "Graveyard",
+      "controller": "you",
+      "types": {
+        "hasAny": [
+          "Creature",
+          "Artifact",
+          "Enchantment",
+          "Land"
+        ]
+      },
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 1,
+          "start": 32,
+          "end": 79
+        }
+      ],
+      "face": "back",
+      "provenance": {
+        "origin": "parser",
+        "rule": "ptFormulaSetToCreaturesControlled-structural"
+      }
+    },
+    {
+      "event": "entersBattlefield",
+      "target": "self",
+      "annotations": [
+        {
+          "target": "oracle",
+          "line": 0,
+          "start": 0,
+          "end": 19
+        }
+      ],
+      "face": "front",
+      "provenance": {
+        "origin": "parser",
+        "rule": "entersBattlefield-self-trigger-structural"
+      }
     }
   ]
 }

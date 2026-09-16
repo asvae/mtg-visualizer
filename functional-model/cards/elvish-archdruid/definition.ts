@@ -6,16 +6,26 @@ export const elvishArchdruid: CardDefinition = {
   typeLine: 'Creature — Elf Druid',
   pt: [2, 2],
 
-  // The anthem is still documentary-only: no ptFormula shape exists for
-  // "other creatures of a subtype get a flat CONTINUOUS bonus" (only
-  // addPerEquipmentControlled/setToCreaturesControlled exist, both self-only
-  // — same gap Thranduil, Sindarin Liege's own anthem hits) — this is a real
-  // engine-architecture gap (state.ts's layer system has no board-wide
-  // "grant others a static bonus" concept at all), not something a single
-  // card's own definition.ts can work around. Flagged as a real, recurring
-  // gap worth real infra investment (multiple cards hit it now), not fixed
-  // here.
+  // The anthem is now real, executable `continuousPTGrants` with a
+  // `subtype` broadcast (2026-09-16, static-ability audit) — the SAME
+  // real, already-existing `qualifiesForContinuousGrant` mechanism
+  // `continuousKeywordGrants`' own subtype-scoped siblings (Ardyn's
+  // "Demons you control," Dion's "other Knights you control") already use,
+  // just applied to `continuousPTGrants` instead (that field's own doc
+  // comment already covers this exact shape — `state.ts`'s `effectivePT`
+  // reads it live). This comment used to claim no such mechanism existed
+  // at all; that was stale/wrong by the time this audit checked — the
+  // shared broadcast machinery already generalizes across all three grant
+  // families. Elvish Archdruid is a cross-set reference card with no real
+  // oracle text checked in anywhere under `data/*/*_scryfall.json` (same
+  // gap `addMana-effect-structural.test.ts`'s own module doc comment
+  // already documents for its mana ability) — the mechanical grant above
+  // is genuinely real and live either way (`ptFormula`/`continuousPTGrants`
+  // never depend on oracle text at runtime, only the recognizer/synergy
+  // layer does), it just can't be auto-tagged into `synergy.json` via
+  // `apply-recognizers.mjs` for this specific card.
   staticAbilities: ['Other Elf creatures you control get +1/+1.'],
+  continuousPTGrants: [{ power: 1, toughness: 1, includeSelf: false, subtype: 'Elf' }],
 
   // The mana ability now has real (if deliberately inert) engine support —
   // see interfaces.ts's own `Player.addMana` doc comment: it leaves a real,
