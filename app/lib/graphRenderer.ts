@@ -892,10 +892,10 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   const sinkRowsByCardId = new Map<string, DeckSinkRow[]>();
 
   // ×N deck-qty badge (bottom-right corner of the art), now flanked by a
-  // "− ×N +" stepper — a mid-task correction from the coordinator: the
-  // first pass built a separate vertical +/qty/- stack to the LEFT of the
-  // node, but the simpler ask is to add the +/- directly onto the EXISTING
-  // badge instead of introducing a second qty display. Defined here (inside
+  // "− ×N +" stepper — went through two coordinator corrections before
+  // landing here, see the design writeup in .claude/agent-memory/ui/notes.md
+  // for the full history (a scrapped vertical-stack-to-the-left first
+  // attempt, then a position regression fixed below). Defined here (inside
   // createGraphRenderer, not as a module-level function like
   // renderCardArt/renderSinkRows) because the buttons need
   // `handlers.onDeckQtyChange`, which only exists in this closure. Callable
@@ -905,44 +905,46 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
   // something has to explicitly refresh this after the fact — see
   // `syncCardQty` below, called from GraphCanvas.vue's own `props.graph`
   // watcher on every Deck change.
-  // 0-qty display: reuses the ×N badge's OWN pre-existing convention
-  // verbatim (an explicit coordinator instruction, not a fresh decision) —
-  // the whole row (buttons included) only exists at all `if (d.qty)`, same
-  // as the badge always has. A card with no Deck copies shows nothing here
-  // even on hover; this control is for adjusting an EXISTING Deck entry
-  // in place, not for adding a card to the Deck for the first time (that's
-  // still ListView.vue/search/deck-import's own job).
+  // Position: the ×N chip's own box sits at EXACTLY the same (x, width)
+  // the original qty-only badge always used (bottom-right corner of the
+  // art, right edge fixed at `rightEdge`) — NOT shifted to make room for
+  // the '+' button, per an explicit correction (the first version moved the
+  // chip leftward, which read as a regression from the shipped badge's own
+  // long-standing position). The '+'/'−' buttons instead flank it and are
+  // allowed to overflow past the art's own left/right edges — also
+  // explicit: the user said overflow there is fine, don't shrink/reposition
+  // to avoid it.
+  // 0-qty behavior: unlike the badge's own OLD all-or-nothing convention (a
+  // second correction overrode the first pass's literal reuse of it), a
+  // qty-0 card must still show a hover-reachable '+' so a first copy can be
+  // added straight from the graph — '−' has nothing to do at 0 (omitted
+  // entirely, not shown disabled) and the ×N chip itself stays absent (a
+  // qty-0 card has no number to show). The lone '+' anchors at the SAME
+  // `rightEdge` corner the chip's own right edge would occupy once it
+  // exists, so going from 0→1 doesn't require the button to jump far.
   // Buttons stay in the DOM at all times once the row exists (opacity 0 by
   // default via `.card-qty-btn`/`.node-card:hover` in GraphCanvas.vue's
   // <style>, same hover-reveal convention `.scryfall-link` already uses)
   // rather than being added/removed on hover — hovering the whole node (not
   // just this corner) reveals them, matching the Scryfall shortcut's own
   // "hover anywhere on the card" discoverability. The number chip itself is
-  // NOT gated by hover — always visible per the task's own spec.
+  // NOT gated by hover — always visible whenever truthy, per the task spec.
   function renderQtyUI(sel: d3.Selection<SVGGElement, CardNode, any, any>) {
     sel.each(function (d) {
       const g = d3.select(this);
       g.selectAll('.card-deck-qty').remove();
-      if (!d.qty) return;
       const x = -RECT_WIDTH / 2;
       const titleY = -TOTAL_HEIGHT / 2;
       const artY = titleY + TITLE_BAR_HEIGHT;
       const wrap = g.append('g').attr('class', 'card-deck-qty');
 
-      const badgeText = `×${d.qty}`;
-      const numW = (8 + badgeText.length * 5.5) * NODE_SCALE;
       const rowH = 12 * NODE_SCALE;
       const btnW = rowH;
       const gap = 1.5 * NODE_SCALE;
       const by = artY + RECT_HEIGHT - rowH + 3 * NODE_SCALE;
-      // Right edge fixed to exactly where the old qty-only badge's own right
-      // edge used to sit (bottom-right corner of the art) — the row grows
-      // LEFTWARD from there so this stays visually anchored to the same
-      // corner regardless of digit count, same as before this feature.
+      // Fixed corner reference — identical formula the original qty-only
+      // badge always anchored its own right edge to.
       const rightEdge = x + RECT_WIDTH + 3 * NODE_SCALE;
-      const plusX = rightEdge - btnW;
-      const numX = plusX - gap - numW;
-      const minusX = numX - gap - btnW;
 
       function qtyButton(bx: number, glyph: string, delta: number, label: string) {
         const btn = wrap
@@ -980,11 +982,24 @@ export function createGraphRenderer(svgEl: SVGSVGElement, graph: GraphFile, hand
           .text(glyph);
       }
 
+      if (!d.qty) {
+        // No copies yet — only a lone, hover-revealed '+' to add the first
+        // one; nothing else (no '−', no number chip) exists at all.
+        qtyButton(rightEdge - btnW, '+', 1, `Add ${d.name} to deck`);
+        return;
+      }
+
+      const badgeText = `×${d.qty}`;
+      const numW = (8 + badgeText.length * 5.5) * NODE_SCALE;
+      const numX = rightEdge - numW; // exactly the ORIGINAL badge position
+      const plusX = numX + numW + gap; // pokes out past the art's right edge
+      const minusX = numX - gap - btnW; // pokes out past the chip's own left side
+
       qtyButton(minusX, '−', -1, `Remove one ${d.name} from deck`); // U+2212 minus sign, not a hyphen
       qtyButton(plusX, '+', 1, `Add one ${d.name} to deck`);
 
       // The ×N chip itself — always visible (no `.card-qty-btn` class, no
-      // hover gating), unchanged visually from the original badge.
+      // hover gating), at the SAME position the original badge always used.
       const badge = wrap.append('g').attr('class', 'card-qty-badge');
       badge
         .append('rect')

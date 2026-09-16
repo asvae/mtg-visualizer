@@ -2893,3 +2893,47 @@ worth remembering the pitfalls before re-deriving them:
     concurrent in-progress work this session, confirmed unrelated by path.
     All `.scratch-*.mjs`/`.png` throwaway verification files deleted before
     finishing.
+
+- 2026-09-17, same "− ×N +" stepper as immediately above — TWO further
+  corrections from the user after the first shipped version, both now
+  applied (supersedes the "0-qty display: reuses the badge's OWN
+  pre-existing convention verbatim" line in the entry above — that was
+  right for ONE task iteration, then explicitly overridden):
+  1. **A 0-qty card must show a hover-reachable lone '+'** (not nothing at
+     all) so a first Deck copy can be added straight from the graph, not
+     just via ListView/search/deck-import. `renderQtyUI` now always creates
+     the `.card-deck-qty` group; at `!d.qty` it draws ONLY a '+' button
+     (anchored at the same `rightEdge` corner the ×N chip's own right edge
+     would occupy once it exists) — no '−' (nothing to do at 0, omitted
+     entirely rather than shown disabled, my own call per the task leaving
+     it open) and no number chip (still nothing to show). This means EVERY
+     card node in the graph now carries a hover-reachable '+' at rest, not
+     just Deck cards — a real, deliberate scope expansion from the
+     sink-rows-adjacent "only Deck cards get extra chrome" pattern, correct
+     per this explicit ask, not an oversight.
+  2. **Position regression fixed**: the first shipped version computed the
+     ×N chip's own x by fitting it BETWEEN the '−'/'+' buttons, which
+     shifted it left of where the badge always sat before this feature
+     existed. Reverted: the chip's box now uses the EXACT same
+     `rightEdge - numW` formula the original standalone badge always used
+     (unchanged position), and the buttons flank it OUTSIDE that box
+     instead — '+' extends past the art's own right edge, '−' extends past
+     the chip's own left edge. Confirmed live the overflow is real and
+     accepted (task's own explicit instruction: don't shrink/reposition to
+     avoid it).
+  - Verified live (same node-isolation-via-`display:none` technique as the
+    entry above, since this graph's own dense overlap still applies): a
+    card with `qty` undefined shows exactly one hoverable '+' (label "Add
+    {name} to deck", no "one" — reads better for a first copy than "Add one
+    ... to deck"), opacity 1 on hover / (unchanged CSS) 0 at rest; clicking
+    it takes qty 0→1, and NOW both '−' (relabeled "Remove one ... from
+    deck") and '+' appear, chip reads "×1"; the chip's own right edge sits
+    ~flush with the art's own right edge (small fixed margin, matching the
+    pre-feature badge exactly, confirmed via a direct
+    `getBoundingClientRect` comparison against `.card-shape`), and the '+'
+    button's own right edge genuinely extends past the art's right edge
+    (`plusRect.right > artRect.right` — true); clicking '−' once takes it
+    back to 0 and the lone '+' reappears (no '−', no chip). Zero console
+    errors. `npm run typecheck` clean in all three touched files
+    throughout both correction rounds. All `.scratch-*.mjs` throwaway
+    scripts deleted before finishing both times.
