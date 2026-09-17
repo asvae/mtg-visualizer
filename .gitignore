@@ -37,3 +37,10 @@ data/.bulk-default-cards.jsonl.gz
 # functional-model/scripts/sync-combos.mjs, not meaningful project history
 # (data/combos.json, its filtered output, IS committed).
 data/.bulk-commander-spellbook-variants.json.gz
+
+# Per-card scratch context for the FDN sink-only-synergy-model experiment's
+# authoring pipeline — regenerated via
+# functional-model/scripts/prep-card-context.mjs, not meaningful project
+# history (Scryfall/Forge/XMage source dumps + a generated vocabulary
+# reference, all derivable on demand).
+functional-model/.fdn-scratch/

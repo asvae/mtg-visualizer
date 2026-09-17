@@ -62,7 +62,7 @@ function nameCandidates(name) {
   return candidates;
 }
 
-function findForge(name) {
+export function findForge(name) {
   if (!existsSync(FORGE_CARDSFOLDER)) {
     return { found: false, message: `tmp/mtg-forge not found at ${FORGE_CARDSFOLDER} — see this script's own header for the fallback (real Forge install check) before trusting trained-knowledge instead.` };
   }
@@ -99,7 +99,7 @@ function findXMageClassRef(name) {
   return undefined;
 }
 
-function findXMage(name) {
+export function findXMage(name) {
   if (!existsSync(XMAGE_CARDS_ROOT)) {
     return { found: false, message: `tmp/xmage not found at ${XMAGE_CARDS_ROOT} — secondary source only, missing is not blocking.` };
   }
@@ -112,26 +112,32 @@ function findXMage(name) {
   return { found: true, file: classFile, text: readFileSync(classFile, 'utf8') };
 }
 
-const name = process.argv[2];
-if (!name) {
-  console.error('Usage: npx tsx functional-model/scripts/forge-lookup.mjs "<card name>"');
-  process.exit(1);
-}
+// CLI entry point only — guarded so `findForge`/`findXMage` can also be
+// imported as a module (e.g. `functional-model/scripts/prep-card-
+// context.mjs`) without this file's own argv-driven printing firing on
+// import using the IMPORTING script's argv instead of this one's.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const name = process.argv[2];
+  if (!name) {
+    console.error('Usage: npx tsx functional-model/scripts/forge-lookup.mjs "<card name>"');
+    process.exit(1);
+  }
 
-console.log(`=== Forge (primary) — "${name}" ===`);
-const forge = findForge(name);
-if (forge.found) {
-  console.log(`# ${forge.file}\n`);
-  console.log(forge.text);
-} else {
-  console.log(forge.message);
-}
+  console.log(`=== Forge (primary) — "${name}" ===`);
+  const forge = findForge(name);
+  if (forge.found) {
+    console.log(`# ${forge.file}\n`);
+    console.log(forge.text);
+  } else {
+    console.log(forge.message);
+  }
 
-console.log(`\n=== XMage (secondary cross-check only) — "${name}" ===`);
-const xmage = findXMage(name);
-if (xmage.found) {
-  console.log(`# ${xmage.file}\n`);
-  console.log(xmage.text);
-} else {
-  console.log(xmage.message);
+  console.log(`\n=== XMage (secondary cross-check only) — "${name}" ===`);
+  const xmage = findXMage(name);
+  if (xmage.found) {
+    console.log(`# ${xmage.file}\n`);
+    console.log(xmage.text);
+  } else {
+    console.log(xmage.message);
+  }
 }

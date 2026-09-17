@@ -29435,3 +29435,100 @@ above (`CardDetailTabs.vue` x3/4, `card-status.ts:263`, `card.ts:2970`,
 change — no `interfaces.ts` mirror touched, no real-world rules claim
 changed, no predicate/matching logic in `saga.ts`/`crew.ts`/`match-sink.ts`
 touched.
+
+## 2026-09-18: FDN sink-model experiment, Workstream 3 (prep-card-context.mjs)
+
+Built `functional-model/scripts/prep-card-context.mjs <slug-or-name>` —
+per-card scratch-folder builder for the FDN authoring pipeline (approved
+plan, Workstream 3). Scoped strictly to that one script per the dispatch;
+did NOT touch the authoring pipeline itself, `pipeline-status.json`, or
+sink queries (Workstreams 1/2/4/5, separate tasks).
+
+**Stale-plan correction acted on** (flagged, not re-litigated silently):
+the plan said "fetch FDN Scryfall data into `data/fdn/`, mirror
+`data/fin/`'s layout" via a new fetch script. Wrong as of now —
+`data/fin/fin_scryfall.json`'s static-snapshot pattern was already
+replaced by the committed SQLite bulk sync (`data/cards.db`, via
+`scripts/sync-card-db.mjs`) specifically to stop tripping Scryfall's rate
+limit. FDN's 771 rows / 517 distinct names are already in there
+(`set_code='fdn'`). No new fetch script, no `data/fdn/` directory.
+
+**What it does**: given an FDN slug OR exact Scryfall name, resolves the
+canonical fdn-set row (`is_normal DESC, released_at DESC` tiebreak, same
+convention `sync-card-db.mjs`'s own `idx_cards_name_pick` documents),
+then writes a gitignored `functional-model/.fdn-scratch/<slug>/`
+containing: `scryfall.json` (raw card), `forge.txt`/`xmage.txt` (via
+`forge-lookup.mjs`'s own `findForge`/`findXMage`, now exported — see
+below), `siblings/*.ts` (0-2 already-authored `definition.ts` files whose
+own card NAME also appears in the fdn set — see open note below),
+`effect-vocab.md` (Effect union + combinator `ProgramNode`
+vocabulary/builder-function signatures, parsed live off the REAL current
+`card.ts`/`combinator.ts` via the `typescript` compiler API — not
+hand-maintained, can't drift stale), and `NOTES.md` (resolved identity +
+found/not-found status per source).
+
+**Location choice**: `functional-model/.fdn-scratch/<slug>/`, NOT the
+plan's own suggested `functional-model/cards/<slug>/.scratch/` — deviated
+deliberately (documented in the script's own header) because several
+existing scripts (`card-status-batch.mjs` et al.) `readdir()` +
+dynamically `import()` EVERY entry under `functional-model/cards/` as a
+card folder; a stray non-card scratch dir there risked getting swept into
+that scan. Kept as a sibling instead. `.gitignore` got a new
+`functional-model/.fdn-scratch/` entry (with its own comment block,
+matching the file's existing per-entry convention).
+
+**Slug convention confirmed** (not re-derived per-run): same `slugify` as
+`scripts/review-card.mjs` et al. (`toLowerCase().replace(/[^a-z0-9]+/g,
+'-').replace(/^-+|-+$/g,'')`), spot-checked against two real existing
+`functional-model/cards/` folder names before reuse (`a-realm-reborn`,
+`adventurer-s-airship`).
+
+**`forge-lookup.mjs` changed (additive only)**: `findForge`/`findXMage`
+now `export`ed, and its own bottom CLI block gated behind `import.meta.url
+=== \`file://${process.argv[1]}\`` so importing it as a module (this
+script does) doesn't ALSO fire its own argv-driven console output using
+the importING script's argv. Verified its original standalone CLI usage
+(`npx tsx functional-model/scripts/forge-lookup.mjs "Abrade"`) still
+prints identically post-change.
+
+**Effect-vocab derivation**: real TypeScript AST walk (`ts.createSourceFile`
++ manual union/interface/function-signature printers), not a text
+snapshot — reads `card.ts`'s `Effect` type alias (35 `kind` variants) and
+`combinator.ts`'s `ProgramNode` + supporting interfaces/type aliases +
+every exported builder function (`tap`, `each`, `selectUpTo`, `branch`,
+etc., excluding `runProgram`/`walkProgram` which are execution/analysis
+entry points, not authoring vocabulary). Doc-comment extraction is a
+best-effort one-line summary (`getLeadingCommentRanges` off the node's own
+full-start) — many `Effect` variants document per-FIELD rather than at the
+variant level (e.g. `drawCard`), so several kinds legitimately have no
+`>` summary line in the output; this is an honest reflection of the real
+source, not a bug, left as-is rather than guessing a summary from an
+unrelated field comment.
+
+**Open design note, not re-litigated but worth surfacing on review**: the
+"siblings" search matches ANY existing `functional-model/cards/*/definition.ts`
+whose own card `name` also happens to appear in the fdn set (via
+`SELECT 1 FROM cards WHERE set_code='fdn' AND name=?`) — not just
+cards specifically authored FOR the FDN pipeline (none exist yet, so that
+distinction is currently unobservable anyway). In practice this already
+surfaces real hits today: FIN-authored `druid-of-the-cowl.ts`/
+`elvish-archdruid.ts` (evergreen reprints that are also in fdn's card
+pool) get bundled as siblings for several fdn cards tested. Judged this
+as a genuine feature (a real, working, same-CardDefinition-shape example
+beats zero examples) rather than a bug, since `CardDefinition` carries no
+set identity at all — but flagged for the user/orchestrator to confirm
+this reading matches intent once the FDN-specific pipeline starts
+producing its own siblings and the two pools diverge in style.
+
+**Verified**: ran against 3 real fdn cards (`Abrade`, `Ravenous Amulet`,
+`release-the-dogs` — mixed name/slug argv forms both work), inspected
+output folders by hand (sane non-empty `scryfall.json`/`forge.txt`/
+`xmage.txt`/`effect-vocab.md`/`NOTES.md`, `siblings/` populated for all
+three via the note above). Confirmed loud, non-zero-exit failures for (a)
+`data/cards.db` temporarily moved away, (b) a nonexistent card name — both
+throw with a clear message, no silent fallback. `npx tsc --noEmit -p .`
+shows zero new errors touching either changed/added file.
+
+**Not done, out of scope for this task** (left for the workstreams that
+own them): no `pipeline-status.json`, no schema-validation gate, no
+authoring agent invocation, no card-status file changes.
