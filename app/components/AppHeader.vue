@@ -177,17 +177,12 @@ async function submitDeckImport(clear = false) {
       </NuxtLink>
       <!-- /app/engine/* — unified console (2026-09-17 consolidation) replacing
            the old standalone /app/status, /app/engine-status,
-           /app/sink-derivations routes, all removed. Each icon still links
-           straight to its own tab; EngineConsoleTabs.vue lets you switch
-           between all four (including "Keywords") once there. -->
-      <NuxtLink to="/app/engine/sets">
-        <UButton icon="i-lucide-grid-2x2" color="neutral" variant="subtle" square aria-label="Fact-authoring status dashboard" />
-      </NuxtLink>
+           /app/sink-derivations routes, all removed. One nav icon now (2026-
+           09-17 follow-up): EngineConsoleTabs.vue is the way to switch
+           between sets/features/predicates/keywords once inside, so three
+           separate header icons for what's now one page were redundant. -->
       <NuxtLink to="/app/engine/features">
-        <UButton icon="i-lucide-cpu" color="neutral" variant="subtle" square aria-label="Engine capability status dashboard" />
-      </NuxtLink>
-      <NuxtLink to="/app/engine/predicates">
-        <UButton icon="i-lucide-git-fork" color="neutral" variant="subtle" square aria-label="Sink-derivation predicate status dashboard" />
+        <UButton icon="i-lucide-cpu" color="neutral" variant="subtle" square aria-label="Engine console (status dashboards)" />
       </NuxtLink>
 
       <UPopover :content="{ side: 'bottom', align: 'end' }">
