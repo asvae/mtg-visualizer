@@ -243,6 +243,30 @@ async function submitReject() {
               </ul>
             </div>
 
+            <div class="mt-2">
+              <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Source — real evidence</div>
+              <div class="mt-1 flex flex-col gap-1">
+                <EngineConsoleCodeSection
+                  title="Predicate source"
+                  language="ts"
+                  :result="selectedEntry.sourceFiles.predicate"
+                  not-found-label="No predicate module built yet."
+                />
+                <EngineConsoleCodeSection
+                  title="Corpus manifest"
+                  language="json"
+                  :result="selectedEntry.sourceFiles.corpusManifest"
+                  not-found-label="No corpus manifest yet."
+                />
+                <EngineConsoleCodeSection
+                  title="Corpus test"
+                  language="ts"
+                  :result="selectedEntry.sourceFiles.corpusTest"
+                  not-found-label="No corpus test yet."
+                />
+              </div>
+            </div>
+
             <div v-if="selectedEntry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
               <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
                 Reviewed — {{ selectedEntry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}

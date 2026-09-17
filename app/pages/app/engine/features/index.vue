@@ -8,10 +8,11 @@
 // capability that page had — only the shell moved onto the shared
 // `useStatusFilterList`/`EngineConsoleShell`/`StatusFilterControls`/
 // `EntryListPanel` pieces.
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useStatusFilterList } from '../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
 import type { EngineStatusPageEntry } from '../../../../../server/api/engine-status/index.get';
+import type { SourceFileResult } from '../../../../../functional-model/source-files';
 
 definePageMeta({ layout: 'graph' });
 useHead({ title: 'Engine capability status' });
@@ -53,6 +54,39 @@ function statusMeta(color: StatusColor) {
 }
 
 const pendingKey = ref<string | null>(null);
+
+// Fetch-on-demand cache for `GET /api/engine-status/source`, keyed by the
+// real repo-root-relative path (one of a `testFileRefs[].matches[]` entry) —
+// NOT keyed per selected gap, since the same large file (`engine.test.ts`,
+// ~115KB) is cited by several entries; a path fetched once while looking at
+// gap #8 stays cached when the reviewer later opens gap #10's own citation
+// of the same file. `reactive(new Map())` (not `ref`) so `.set()` inside
+// `loadSource` below is tracked without needing `.value` on every access.
+const sourceCache = reactive(new Map<string, { loading: boolean; result: SourceFileResult | null }>());
+
+function sourceEntry(path: string) {
+  return sourceCache.get(path);
+}
+
+async function loadSource(path: string) {
+  if (sourceCache.has(path)) return; // already fetched or in flight — never refetch
+  sourceCache.set(path, { loading: true, result: null });
+  try {
+    const res = await $fetch<SourceFileResult>('/api/engine-status/source', { query: { path } });
+    sourceCache.set(path, { loading: false, result: res });
+  } catch (e: any) {
+    sourceCache.set(path, {
+      loading: false,
+      result: { path, exists: false, content: null, truncated: false },
+    });
+    toast.add({
+      title: 'Could not load source',
+      description: e?.data?.error ?? e?.message ?? 'Request failed.',
+      color: 'error',
+      icon: 'i-lucide-triangle-alert',
+    });
+  }
+}
 
 const rejectOpen = ref(false);
 const rejectTarget = ref<EngineStatusPageEntry | null>(null);
@@ -207,6 +241,31 @@ async function submitReject() {
             </div>
 
             <p class="mt-1.5 text-[11px] leading-relaxed text-muted italic">{{ selectedEntry.evidence.excerpt }}</p>
+
+            <div v-if="selectedEntry.testFileRefs.length" class="mt-2">
+              <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Cited test files — real evidence</div>
+              <div class="mt-1 flex flex-col gap-1">
+                <template v-for="ref in selectedEntry.testFileRefs" :key="ref.file">
+                  <EngineConsoleCodeSection
+                    v-for="path in ref.matches"
+                    :key="path"
+                    :title="path"
+                    language="ts"
+                    :loading="sourceEntry(path)?.loading ?? false"
+                    :result="sourceEntry(path)?.result ?? null"
+                    not-found-label="Failed to load."
+                    @expand="loadSource(path)"
+                  />
+                  <EngineConsoleCodeSection
+                    v-if="!ref.matches.length"
+                    :title="ref.file"
+                    language="ts"
+                    :result="{ path: ref.file, exists: false, content: null, truncated: false }"
+                    not-found-label="Citation not found on disk — this filename doesn't exist anywhere in functional-model/."
+                  />
+                </template>
+              </div>
+            </div>
 
             <div v-if="selectedEntry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
               <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">

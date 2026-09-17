@@ -3411,3 +3411,66 @@ worth remembering the pitfalls before re-deriving them:
     card-enrichment-status.json` — pre-existing, unrelated to any file
     this task touched (almost certainly the historical-sets sweep's own
     in-flight state on a peer session/branch, not this task's regression).
+
+- 2026-09-18, real evidence-viewing panel on Features/Predicates detail
+  panes (consuming that same day's `testFileRefs`/`sourceFiles` backend
+  additions to `GET /api/engine-status`/`GET /api/sink-derivations`):
+  - New shared component `app/components/engine-console/
+    EngineConsoleCodeSection.vue` — one expand/collapse disclosure row
+    (chevron + title + optional "not found" badge; body renders a
+    `<pre>`/code block only once opened). Deliberately generic over BOTH
+    consumption shapes this task needed: an already-resolved
+    `{path,exists,content,truncated}` `result` prop (Predicates' case —
+    `sourceFiles` is inlined, no fetch needed) AND a `loading` prop +
+    `@expand` emit for a caller-owned lazy-fetch cache (Features' case —
+    `testFileRefs` only carries a path, real content needs
+    `GET /api/engine-status/source?path=...` on first expand only).
+  - **Reused existing hljs-based viewers instead of adding a syntax
+    highlighter dependency**: `FunctionalModelScript.vue` (already in this
+    repo, card-agent-owned, TS via `highlight.js/lib/core`) for `.ts`
+    content, `JsonHighlight.vue` (same repo, already used by
+    `CardDetailTabs.vue`/`docs` page) for `.json` (the corpus manifest).
+    Confirmed `highlight.js` was already a transitive dep before this task
+    — no `package.json` change. Read-only reuse, didn't touch either
+    component.
+  - Features (`app/pages/app/engine/features/index.vue`): added a
+    page-level `reactive(new Map<path, {loading, result}>())` fetch cache
+    — keyed by real repo-relative PATH, not by the selected gap, since the
+    same large file (`engine.test.ts`, ~115KB) is cited by 5 different
+    gap entries and should only ever be fetched once regardless of which
+    entry's detail pane is open when the reviewer expands it. For a
+    `testFileRefs[].matches` empty array (gap #19's real `card.test.ts`
+    false-positive citation), renders a synthetic
+    `{exists:false,content:null}` result directly — no fetch attempted,
+    labelled "Citation not found on disk — this filename doesn't exist
+    anywhere in functional-model/" via the component's own
+    `not-found-label` prop, never hidden/silently dropped.
+  - Predicates (`app/pages/app/engine/predicates/index.vue`): three
+    `EngineConsoleCodeSection`s per entry (predicate source / corpus
+    manifest / corpus test) fed directly from the already-inlined
+    `selectedEntry.sourceFiles.*` — no fetch wiring needed on this page at
+    all, per the contract's own note that this axis inlines rather than
+    fetch-per-file. `exists:false` (today: every field for
+    stun-counters/finality-counters) renders "No predicate module built
+    yet."/"No corpus manifest yet."/"No corpus test yet." per-panel rather
+    than an empty box.
+  - Verified LIVE via a real Playwright/Chromium session against the dev
+    server (repo's own `playwright` devDependency): gap #19 on Features
+    shows all 4 cited files including `card.test.ts` honestly marked "not
+    found" alongside 3 real matches; expanding
+    `functional-model/state.test.ts` renders real, readable, syntax
+    -highlighted test source (confirmed real `describe`/`it`/vitest import
+    text present, zero console errors). On Predicates, Saga's 3 panels
+    show real predicate source, a real corpus manifest JSON with an actual
+    3-entry `cases` array (Summon: Bahamut / Jill / Jecht per-card
+    verdicts+notes), and real corpus test content; `stun-counters`
+    (gray, nothing built) shows the plain "not built yet" text in all 3
+    panels instead of an empty/broken box.
+  - `npx nuxi typecheck`: identical pre-existing baseline error set as
+    already on file above (`CardDetailTabs.vue`, `card-status.ts`/
+    `card.ts`/`mana.ts`, `tokens/by-key.ts`) — zero new errors from this
+    task's 3 changed/added files. `vitest run`: same 5 pre-existing
+    `scripts/relations.test.mjs` failures (historical-sets sweep's own
+    missing checked-in data files on this branch, unrelated), 1163 passed.
+  - Didn't touch `functional-model/`, `server/api/*`, Sets, or Keywords —
+    stayed inside the task's stated UI-only scope.
