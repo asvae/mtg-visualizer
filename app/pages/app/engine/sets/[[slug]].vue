@@ -225,7 +225,7 @@ const STATUS_OPTIONS: StatusFilterOption<CardStatusColor>[] = [
     color: '#3b82f6',
     description: 'Every fact is recognizer-derived and oracle text is fully covered. No current human-review opinion attached (or a prior one went stale after the content changed and was dropped).',
   },
-  { value: 'yellow', label: 'Flagged', color: '#eab308', description: 'Human-reviewed and flagged with one specific, known conceptual gap — see the card’s own caveat note.' },
+  { value: 'yellow', label: 'Rejected', color: '#eab308', description: 'Human-reviewed and REJECTED with one specific, known conceptual gap — see the card’s own caveat note.' },
   { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'Human-reviewed and confirmed as-is.' },
   {
     value: 're-review',
