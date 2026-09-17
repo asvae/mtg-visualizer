@@ -44,6 +44,20 @@
 // `definition.ts`); widen this the same way any recognizer widens, the next
 // time a real card's own sanity check needs it — never speculatively.
 //
+// **2026-09-17: `deriveOccurrences` also consults a SECOND, independent
+// occurrence family — `sink-model/predicates/*.ts`'s own hand-written
+// "sink-derivation predicates"** (`sagaChapterCompletionOccurrences`,
+// `crewTapOccurrences`, imported below), for real mechanisms whose gameplay
+// consequence is emergent from GENERIC ENGINE AUTOMATION rather than
+// anything visible in `CardDefinition.effects`/`triggers`/`program` nodes at
+// all (Saga chapter-completion sacrifice, `saga.ts`; Crew's real
+// creature-tap cost path, `engine.ts`) — see
+// `functional-model/sink-derivation-status.ts`'s own header, and each
+// predicate module's own header, for the full "why this needed its own
+// family" writeup. Each predicate is a direct function, never a guessed
+// true/false — contributes zero occurrences for a card it doesn't apply to
+// or can't structurally determine.
+//
 // **Why not just import `factsInteract` from `synergy.ts` and feed it a
 // synthetic Fact?** That was considered and rejected: `factsInteract` takes
 // TWO `PoolCard`s (a producer AND a wanter, each already carrying real
@@ -88,6 +102,17 @@ import { extractOccurrences } from '../recognizers/program-ast-walker';
 import type { Constraints, Side, StaticAttrs, Subject, TypeConstraint } from '../synergy';
 import { satisfiesConstraints, staticAttrsFor } from '../synergy';
 import type { SinkQuery } from './sink-query';
+// Engine-automation-derived occurrence sources (2026-09-17) — mechanisms
+// whose real gameplay consequence isn't visible via CardDefinition
+// effect/trigger/program walking at all (see
+// `functional-model/sink-derivation-status.ts`'s own header for the full
+// "why this needed its own predicate family" writeup, and each predicate
+// module's own header for its specific reasoning). Each is a direct
+// function answering one specific question for `card`, never a guessed
+// true/false — contributes 0 occurrences whenever it doesn't apply or can't
+// tell (see `deriveOccurrences` below).
+import { sagaChapterCompletionOccurrences } from './predicates/saga';
+import { crewTapOccurrences } from './predicates/crew';
 
 // ---------------------------------------------------------------------------
 // Producer occurrences — the structural stand-in for an authored `source`
@@ -393,6 +418,14 @@ export function deriveOccurrences(card: CardDefinition): ProducerOccurrence[] {
   const out: ProducerOccurrence[] = [];
   collectForFace(card, 'front', out);
   if (card.backFace) collectForFace(card.backFace, 'back', out);
+  // Engine-automation-derived occurrences (sink-derivation predicates) —
+  // see the imports above's own doc comment. Each predicate independently
+  // decides applicability for `card`; a non-Saga/non-Vehicle card (the
+  // overwhelming majority of the pool) gets an empty array back from both,
+  // same "declines silently, no occurrence built" convention every
+  // unrecognized `Effect.kind` above already follows.
+  out.push(...sagaChapterCompletionOccurrences(card));
+  out.push(...crewTapOccurrences(card));
   return out;
 }
 

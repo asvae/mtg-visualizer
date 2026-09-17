@@ -28,8 +28,20 @@ describe('computeSinkDerivationStatus — seeded sink-derivation-predicate mecha
     }
   });
 
-  it('every entry is currently gray — no predicate module exists on disk for any mechanism yet, which is real, not a placeholder', () => {
-    for (const e of entries) {
+  it('saga and crew are now blue — real predicate modules + fully-agreeing corpus manifests landed for both (2026-09-17); stun-counters/finality-counters stay gray (untouched, out of scope for that pass), reflecting real filesystem presence, not a hardcoded value', () => {
+    const bySlug = Object.fromEntries(entries.map((e) => [e.slug, e]));
+
+    for (const slug of ['saga', 'crew'] as const) {
+      const e = bySlug[slug]!;
+      expect(e.baseline).toBe('blue');
+      expect(e.evidence.predicateModuleExists).toBe(true);
+      expect(e.evidence.corpusManifestExists).toBe(true);
+      expect(e.evidence.corpusTotal).toBeGreaterThan(0);
+      expect(e.evidence.corpusPassing).toBe(e.evidence.corpusTotal);
+    }
+
+    for (const slug of ['stun-counters', 'finality-counters'] as const) {
+      const e = bySlug[slug]!;
       expect(e.baseline).toBe('gray');
       expect(e.evidence.predicateModuleExists).toBe(false);
       expect(e.evidence.corpusManifestExists).toBe(false);

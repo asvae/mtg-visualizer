@@ -1,0 +1,24 @@
+{
+  "total": 3,
+  "passing": 3,
+  "cases": [
+    {
+      "card": "The Lunar Whale",
+      "slug": "the-lunar-whale",
+      "expectedVerdict": "produces-tap",
+      "note": "crewCost 1 + a real activationCost. Real, checked-in engine-piloted trace (cards/the-lunar-whale/scenarios.ts) shows Item Shopkeep genuinely tapped via the real crewedBy cost-payment path."
+    },
+    {
+      "card": "Cargo Ship",
+      "slug": "cargo-ship",
+      "expectedVerdict": "produces-tap",
+      "note": "Same crewCost+activationCost shape, PLUS a separate named mana ability (card.abilities) on the same permanent (the exact shape ENGINE_GAPS.md gap #11's own bug fix targeted). Verified via a real canActivateAbility call in crew.test.ts that the crew path and the named-ability path are both independently legal and don't collide; no dedicated engine-piloted crew trace exists for this card in the pool (its own scenarios.ts stays on the older flat harness.ts style)."
+    },
+    {
+      "card": "The Regalia",
+      "slug": "the-regalia",
+      "expectedVerdict": "no-tap",
+      "note": "crewCost 1 declared with NO activationCost at all -- a real, currently-live engine gap (canActivateAbility's own 'has no such activated ability' rejection), verified directly in crew.test.ts, not a hypothetical."
+    }
+  ]
+}

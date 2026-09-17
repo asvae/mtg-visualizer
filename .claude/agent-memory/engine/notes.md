@@ -28550,3 +28550,166 @@ synergy.ts`:
     should also create its own `functional-model/sink-model/predicates/`
     directory (doesn't exist yet — this task only referenced the
     convention, never created the dir or any file in it).
+
+- **2026-09-17 (later) — first two REAL sink-derivation predicates built:
+  Saga chapter-completion (714.4) and Crew tap. Dashboard flips
+  saga/crew gray->blue for real (stun-counters/finality-counters
+  untouched, still gray).** New: `functional-model/sink-model/predicates/
+  saga.ts`+`saga.test.ts`+`saga.corpus.json`, `.../crew.ts`+`crew.test.ts`+
+  `crew.corpus.json`. Wired into `match-sink.ts`'s `deriveOccurrences` as a
+  THIRD occurrence source (alongside plain-Effect walking and program-AST
+  walking) — `sagaChapterCompletionOccurrences`/`crewTapOccurrences`, each
+  contributing 0 or 1 `ProducerOccurrence`s. Both predicates are plain
+  functions (never data-driven/declarative), each returning `{applicable,
+  verdict, via}` with an explicit `'unknown'` escalation path — never
+  guessed. `cards/*` untouched (read-only, as instructed) throughout.
+  - **Saga** (`sagaChapterCompletionResult`): mirrors `saga.ts`'s own real
+    714.4 rule structurally — finds the Saga face (front or `backFace`) and
+    its highest-numbered `chapterN` trigger, then asks whether that
+    trigger's own `effects` contain a self-referential zone move. The ONLY
+    real structural signal for that is a `kind:'program'` whose AST is a
+    non-empty `combinator.ts` `Sequence` (`sequence('Exile','Battlefield')`
+    — the exact shape Jill/Dion/Crystal-Fragments/Esper-Maduin's own
+    "transform back" chapters use); absent that, verdict is
+    `'produces-death'` (`{event:'dies', to:'Graveyard', from:'Battlefield',
+    subject:'self', target:'self'}` — same merged-fact shape
+    SYNERGY_DESIGN.md's "Fact unification" section already established for
+    Bahamut's own hand-authored fact). An opaque `kind:'custom'` effect on
+    the final chapter is NEVER assumed self-move-free -> `'unknown'`.
+  - **Real corpus, 3 cards, all traced/verified, 3/3 passing**: Summon:
+    Bahamut (produces-death, reused its own existing `runEngineScenarios()`
+    trace showing the real 714.4 sacrifice), Jill Shiva's Dominant //
+    Shiva Warden of Ice (no-death, reused its own existing trace showing
+    transform-back, no sacrifice), and a NEW real engine-piloted trace this
+    task wrote itself (in `saga.test.ts`, NOT in `cards/jecht-.../
+    scenarios.ts` — read-only) for Jecht, Reluctant Guardian // Braska's
+    Final Aeon: ALSO a transforming DFC (same front/back template as
+    Jill/Dion) but its own chapterIII sacrifices 2 OPPONENT creatures
+    without moving itself, so 714.4 fires for real (produces-death) —
+    proves the predicate checks the chapter's OWN effects, not just "is
+    this a transforming DFC." Seeded Jecht directly as already-transformed
+    (skips the front-face `onDealsDamage` trigger itself — already
+    demonstrated by Jill's own trace for the identical shape — "seed
+    directly, focus on the ability under test" convention, same as Ultima
+    Weapon's own scenario).
+  - **Real, LOUD escalation — found by grepping the WHOLE real Saga pool
+    (~20 cards, not just this task's 3-card corpus) before declaring
+    victory, per the task's own explicit instruction not to paper over real
+    shape-variety.** Documented at length in `saga.ts`'s own module header
+    + backed by real executable test assertions in `saga.test.ts` (NOT
+    counted in `saga.corpus.json`'s own passing/total — that manifest only
+    tracks the 3 agreeing cases above):
+    1. **A real false-`'unknown'`**: Joshua, Phoenix's Dominant // Phoenix,
+       Warden of Fire is a 4th real transforming-Saga card (plus Crystal
+       Fragments//Summon:Alexander and Esper Origins//Summon:Esper Maduin —
+       6 total transforming Sagas exist in the pool today, MORE than
+       `ENGINE_DESIGN.md`'s own "Saga lore-counter automation (714)"
+       section currently says ("3 of them transforming" — written when only
+       Jill/Dion/Jecht existed; the doc wasn't updated as 3 more were added
+       later — a real, likely-stale count, NOT fixed by this task since
+       editing that file's own historical build narrative was judged
+       out-of-scope for a predicate-building task; flagging for a future
+       pass). Joshua/Phoenix's own chapterIII performs the identical
+       "exile, then return" self-transform Jill/Dion do, but via an opaque
+       `kind:'custom'` closure instead of `sequence()` — this predicate
+       correctly declines to guess based on the closure's own runtime
+       behavior (would mean sniffing a JS function body — exactly the
+       fragile inference this project's "no magic strings in abilities"
+       convention rejects) and reports `'unknown'`, even though it
+       demonstrably IS `'no-death'`. Real fix (migrate that one card's own
+       `custom` to `sequence()`) is a `cards/*` edit, out of this task's
+       read-only scope.
+    2. **Real, conservative false-`'unknown'`s on 3 PLAIN (non-transforming)
+       Sagas**: Summon: Brynhildr, Summon: GF Cerberus, Summon: GF Ifrit —
+       each has a `kind:'custom'` effect on its OWN final chapter that's a
+       genuine INERT no-op placeholder for an unrelated unmodeled ability
+       (delayed-haste grant, spell-copy, mana production respectively —
+       confirmed by reading each), never a self-move. True verdict should
+       be `'produces-death'`; this predicate can't safely tell an inert
+       no-op apart from a self-moving closure without reading the closure's
+       own source, so it reports `'unknown'` for all 3 — real
+       over-conservatism, not a bug. Possible future refinement noted in
+       the predicate's own header: a narrow, EXPLICIT, declarative
+       `Effect.custom.movesSelf?: boolean` field authored per-card, rather
+       than inferring anything from a closure body.
+    3. **A real, live CROSS-MECHANISM interaction, not yet resolvable**:
+       Esper Origins // Summon: Esper Maduin's own front face places a real
+       `finality` counter on itself at transform time, but ONLY when cast
+       via Flashback. This predicate's `'produces-death'` verdict is
+       correct, but its emitted occurrence always says `to:'Graveyard'` —
+       for a real Flashback-cast copy of this specific card, the TRUE
+       eventual destination (once the separate, still out-of-scope
+       `finality-counters` mechanism's own real `state.move` redirect is
+       accounted for) is Exile, not Graveyard. Genuinely layered the same
+       way the REAL engine is (`saga.ts` calls `state.sacrifice` ->
+       `state.move`, which alone owns the finality redirect, fully decoupled
+       from `saga.ts`'s own knowledge) — flagged, not silently papered over;
+       closing it for real needs the `finality-counters` predicate to exist
+       first, then composing the two.
+  - **Crew** (`crewTapResult`): purely two structural fields —
+    `card.crewCost !== undefined && !!card.activationCost` ->
+    `'produces-tap'` (emits `{event:'tap', controller:'you', target:
+    {types:{has:['Creature']}}}` — real, NEW vocabulary the existing
+    hand-authored `crewCost-structural` recognizer never emits; that
+    recognizer only ever tags `{event:'crew', target:'self'}`, "this
+    permanent HAS a crew cost," confirmed directly against
+    `cards/cargo-ship/synergy.json`'s own real fact — never the actual tap
+    consequence on an arbitrary OTHER creature). `crewCost` set but
+    `activationCost` falsy -> `'no-tap'` (a REAL, live engine gap, not
+    hypothetical: `canActivateAbility`'s very first check,
+    `activationCostFor(card, undefined) === card.activationCost`, rejects
+    "has no such activated ability" before its own `crewCost` branch is
+    ever reached). This two-field check is EXHAUSTIVE (not a heuristic) —
+    `activateAbility`'s crew branch taps every `crewedBy` creature
+    unconditionally, independent of `card.effects` — so no `'unknown'`
+    case exists for Crew today (verified, not just assumed, by re-reading
+    `engine.ts`'s own crew branch in full before concluding this).
+  - **Real corpus, 3 cards, 3/3 passing**: The Lunar Whale (produces-tap,
+    reused its own existing real engine-piloted `runEngineScenarios()`
+    trace — genuinely taps Item Shopkeep via the real `crewedBy` cost
+    path), Cargo Ship (produces-tap, structural + a real `canActivateAbility`
+    double-check in `crew.test.ts` proving the crew path and its OWN
+    separate named "mana" ability — the exact ENGINE_GAPS.md gap #11 shape
+    — coexist without colliding; no dedicated engine-piloted crew trace
+    exists for this card in the pool, so no reused trace here), The Regalia
+    (no-tap — a REAL, currently-live gap, `crewCost:1` with NO
+    `activationCost` at all in its own checked-in `definition.ts`; verified
+    via a real `canActivateAbility` rejection in `crew.test.ts`, not
+    fabricated).
+  - **Live dashboard confirmed via a real `npm run dev` + `curl
+    localhost:3000/api/sink-derivations`** (not just the unit tests):
+    `saga`/`crew` -> `blue`, `corpus: 3/3` each; `stun-counters`/
+    `finality-counters` -> unchanged `gray`. Server stopped after
+    confirming.
+  - **Existing tests updated to reflect the REAL, now-different state**
+    (both are legitimate "the real state changed, the test must track
+    reality" updates, not test-weakening): `sink-derivation-status.test.ts`
+    (the pre-existing "every entry is currently gray" assertion no longer
+    holds now that 2 of 4 have real predicates — split into a
+    saga/crew-are-blue + stun/finality-still-gray assertion).
+    `match-sink.test.ts`'s own sink-A "DISAGREES, explained" test for
+    Summon: Bahamut (the exact documented gap this task's own predecessor
+    task named as the go/no-go blocker) now AGREES — `matchSink` against
+    the real `{zone:'Graveyard', types:{has:['Creature']}}` sink now
+    returns `matched:true` for Bahamut, via the new Saga occurrence —
+    updated the test's own expectation + comment to record the closure
+    instead of leaving a stale, now-wrong `DISAGREES` assertion in place.
+  - **Verified**: `npx vitest run functional-model` — 108 files, 1075
+    passed + 5 skipped (unchanged pre-existing skips), +39 vs. this task's
+    own start (30 new predicate/status tests + updates). `npm run
+    typecheck` — same pre-existing baseline error set (`CardDetailTabs.vue`
+    ×3, `useStatusFilterList.ts` ×4, `card-status.ts:263`, `card.ts:2970`,
+    `mana.ts:275`, `server/api/tokens/by-key.ts:32`, plus one pre-existing
+    error in an untracked `ui`-owned WIP file,
+    `app/pages/app/engine/predicates/index.vue` — none of it touched by or
+    attributable to this task), zero new errors from
+    `sink-model/predicates/*.ts`/`match-sink.ts`.
+  - **Open Forge-verification needed: none.** Both predicates mirror
+    ALREADY-Forge-cited, already-built engine mechanisms (`saga.ts`'s own
+    714.2b/c/714.4 citations; `engine.ts`'s own 702.121b/c Crew citations)
+    structurally — no new `interfaces.ts` mirror, no new real-world rule
+    claim was added this pass, so no new Forge citation was needed. The
+    Regalia's own missing `activationCost` is a real, pre-existing
+    ENGINE-REPRESENTATION gap (not a Forge rules question — the real card
+    genuinely has Crew) left deliberately unfixed per this task's own
+    read-only `cards/*` constraint.
