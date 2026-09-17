@@ -3,22 +3,22 @@
   "passing": 3,
   "cases": [
     {
-      "card": "The Lunar Whale",
-      "slug": "the-lunar-whale",
+      "case": "crewCost + a real activationCost",
+      "mirrors": "The Lunar Whale (fin/60)",
       "expectedVerdict": "produces-tap",
-      "note": "crewCost 1 + a real activationCost. Real, checked-in engine-piloted trace (cards/the-lunar-whale/scenarios.ts) shows Item Shopkeep genuinely tapped via the real crewedBy cost-payment path."
+      "note": "A mock Vehicle with both crewCost and a real activationCost set. Verified in crew.test.ts via a real activateAbility call genuinely tapping the crewing creature (not a scripted scenario/trace — a single direct engine call)."
     },
     {
-      "card": "Cargo Ship",
-      "slug": "cargo-ship",
+      "case": "crewCost + activationCost, PLUS a separate named ability on the same permanent",
+      "mirrors": "Cargo Ship (ENGINE_GAPS.md gap #11 shape)",
       "expectedVerdict": "produces-tap",
-      "note": "Same crewCost+activationCost shape, PLUS a separate named mana ability (card.abilities) on the same permanent (the exact shape ENGINE_GAPS.md gap #11's own bug fix targeted). Verified via a real canActivateAbility call in crew.test.ts that the crew path and the named-ability path are both independently legal and don't collide; no dedicated engine-piloted crew trace exists for this card in the pool (its own scenarios.ts stays on the older flat harness.ts style)."
+      "note": "A mock Vehicle with the same crewCost+activationCost shape as above, plus a second, independently-named ability (e.g. a mana ability). Verified in crew.test.ts via real canActivateAbility calls proving the crew path (no abilityName) and the named-ability path (abilityName set) are both independently legal and don't collide."
     },
     {
-      "card": "The Regalia",
-      "slug": "the-regalia",
+      "case": "crewCost declared with NO activationCost at all",
+      "mirrors": "The Regalia (fin/58) — a real, currently-live engine gap",
       "expectedVerdict": "no-tap",
-      "note": "crewCost 1 declared with NO activationCost at all -- a real, currently-live engine gap (canActivateAbility's own 'has no such activated ability' rejection), verified directly in crew.test.ts, not a hypothetical."
+      "note": "A mock Vehicle with crewCost but no activationCost. Verified in crew.test.ts via a real canActivateAbility rejection ('has no such activated ability') — not a hypothetical, this is the real engine.ts gate any card in this exact shape hits today."
     }
   ]
 }

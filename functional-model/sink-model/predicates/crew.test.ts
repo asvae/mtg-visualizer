@@ -1,86 +1,131 @@
 // Real corpus verification for `crewTapResult`/`crewTapOccurrences` —
-// reconciles the predicate's own structural verdict against REAL executed
-// engine evidence, same reconciliation discipline `scripts/verify-synergy.mjs`
-// already applies to hand-authored Facts pool-wide (hard-fail on
-// disagreement). Corpus manifest: `crew.corpus.json` (read by
+// reconciles the predicate's own structural verdict against a real
+// `canActivateAbility`/`activateAbility` engine call (a direct function
+// call, not a scripted turn-by-turn scenario/trace) using minimal,
+// hand-constructed `CardDefinition` MOCKS, per the 2026-09-18 policy
+// decision recorded in `.claude/agent-memory/engine/notes.md`: a
+// sink-derivation predicate is a pure function of `CardDefinition` SHAPE —
+// it doesn't care which real card produced that shape, so corpus fixtures
+// are built directly with the same public shapes real cards use
+// (`crewCost`/`activationCost`/`abilities`), never imported from any real
+// card's own `definition.ts`. Corpus manifest: `crew.corpus.json` (read by
 // `sink-derivation-status.ts`).
 //
-// Real cards, `functional-model/cards/*` (read-only — never modified):
-//  - The Lunar Whale (fin/60) — crewCost + a real activationCost. Its own
-//    real, checked-in `runEngineScenarios()` already crews it via the real
-//    `crewedBy` cost path (Item Shopkeep); reused verbatim here.
-//  - Cargo Ship (fin/?) — the SAME crewCost+activationCost shape, PLUS a
+// Real card names appear ONLY as readability anchors in comments/test
+// names below — the fixtures themselves are synthetic, mirroring the real
+// shape each anchor card has (checked directly against that card's own
+// `functional-model/cards/<slug>/definition.ts` at the time this file was
+// written, never copied from it):
+//  - The Lunar Whale (fin/60) — `crewCost` + a real `activationCost`.
+//  - Cargo Ship — the SAME `crewCost`+`activationCost` shape, PLUS a
 //    separate NAMED `abilities` entry (its own mana ability) on the same
 //    permanent — the exact real shape ENGINE_GAPS.md gap #11's own bug fix
-//    targeted (crewCost branch used to fire even when a DIFFERENT named
-//    ability was requested). Confirms the predicate isn't confused by that
-//    coexistence. Structural-only check (no dedicated engine-piloted crew
-//    trace exists for this card in the pool — its own `scenarios.ts` stays
-//    on the older flat `harness.ts` style).
-//  - The Regalia (fin/58) — crewCost declared with NO activationCost at
-//    all: a REAL, currently-live engine gap (not a hypothetical), verified
-//    here against a real `canActivateAbility` rejection.
+//    targeted (the crewCost branch used to fire even when a DIFFERENT
+//    named ability was requested).
+//  - The Regalia (fin/58) — `crewCost` declared with NO `activationCost`
+//    at all: a REAL, currently-live engine gap (not a hypothetical) —
+//    mirrored here as a mock rather than importing the real card, since
+//    the predicate's own claim is about the STRUCTURAL shape
+//    (crewCost-without-activationCost), not about The Regalia specifically.
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition } from '../../card';
-import { setupEnginePilot, type EnginePilotSetup } from '../../engine-trace';
-import { canActivateAbility } from '../../engine';
+import { setupEnginePilot, pilotActions, type EnginePilotSetup } from '../../engine-trace';
+import { canActivateAbility, activateAbility } from '../../engine';
 import { crewTapOccurrences, crewTapResult } from './crew';
 
-import { theLunarWhale } from '../../cards/the-lunar-whale/definition';
-import { runEngineScenarios as lunarWhaleTraces } from '../../cards/the-lunar-whale/scenarios';
-import { itemShopkeep } from '../../cards/item-shopkeep/definition';
-import { cargoShip } from '../../cards/cargo-ship/definition';
-import { theRegalia } from '../../cards/the-regalia/definition';
+/** crewCost + a real activationCost — mirrors The Lunar Whale's real shape. */
+const mockVehicleWithActivationCost: CardDefinition = {
+  name: 'Mock Vehicle (crewCost + activationCost)',
+  manaCost: '{3}',
+  typeLine: 'Artifact — Vehicle',
+  crewCost: 2,
+  activationCost: 'Crew 2',
+  effects: [{ kind: 'animate', target: 'self', types: ['Artifact', 'Creature'] }],
+};
 
-describe('crewTapResult / crewTapOccurrences — real corpus', () => {
-  it("The Lunar Whale (fin/60) — crewCost + activationCost both set: predicate says produces-tap, agreeing with the real engine-piloted trace's own fn:'tap' on the crewing creature (Item Shopkeep)", () => {
-    const result = crewTapResult(theLunarWhale);
+/** SAME crewCost+activationCost shape, PLUS a separate named ability on the same permanent — mirrors Cargo Ship's real shape (ENGINE_GAPS.md gap #11). */
+const mockVehicleWithNamedAbility: CardDefinition = {
+  name: 'Mock Vehicle (crewCost + activationCost + a separate named ability)',
+  manaCost: '{2}',
+  typeLine: 'Artifact — Vehicle',
+  crewCost: 1,
+  activationCost: 'Crew 1',
+  abilities: [{ name: 'mana', cost: '{T}', effects: [{ kind: 'addMana', color: 'C', amount: 1 }] }],
+};
+
+/** crewCost declared with NO activationCost at all — mirrors The Regalia's real, currently-live gap. */
+const mockVehicleNoActivationCost: CardDefinition = {
+  name: 'Mock Vehicle (crewCost only, no activationCost)',
+  manaCost: '{4}',
+  typeLine: 'Artifact — Vehicle',
+  crewCost: 1,
+};
+
+function pilotWithVehicleAndCrewer(vehicle: CardDefinition, crewerPower = 3) {
+  const setup: EnginePilotSetup = { you: {}, opponents: [{}] };
+  const pilot = setupEnginePilot(setup);
+  const vehicleReal = pilot.state.addCard(pilot.you, 'Battlefield', {
+    name: vehicle.name,
+    types: ['Artifact'],
+    subtypes: ['Vehicle'],
+    basePower: 4,
+    baseToughness: 4,
+    keywords: vehicle.keywords,
+  });
+  const crewerReal = pilot.state.addCard(pilot.you, 'Battlefield', {
+    name: 'Mock Crewer',
+    types: ['Creature'],
+    basePower: crewerPower,
+    baseToughness: crewerPower,
+  });
+  return { pilot, vehicleReal, crewerReal };
+}
+
+describe('crewTapResult / crewTapOccurrences — corpus (mocked CardDefinition fixtures)', () => {
+  it("crewCost + activationCost both set: predicate says produces-tap, agreeing with a real activateAbility genuinely tapping the crewing creature (mirrors The Lunar Whale's real shape)", () => {
+    const result = crewTapResult(mockVehicleWithActivationCost);
     expect(result.applicable).toBe(true);
     expect(result.verdict).toBe('produces-tap');
 
-    const [trace] = lunarWhaleTraces();
-    const tapped = trace!.log.some((e) => e.fn === 'tap' && e.target === itemShopkeep.name);
-    expect(tapped).toBe(true); // real trace agreement — hard-fail on disagreement
+    const { pilot, vehicleReal, crewerReal } = pilotWithVehicleAndCrewer(mockVehicleWithActivationCost);
+    expect(crewerReal.tapped).toBe(false); // real evidence: not tapped yet
+    const check = canActivateAbility(pilot.engine, pilot.you, vehicleReal, mockVehicleWithActivationCost, undefined, [crewerReal]);
+    expect(check.ok).toBe(true);
+    activateAbility(pilot.engine, pilot.you, vehicleReal, mockVehicleWithActivationCost, pilot.ctxFor(vehicleReal), pilotActions(pilot, vehicleReal.id), undefined, [crewerReal]);
+    expect(crewerReal.tapped).toBe(true); // real trace agreement — hard-fail on disagreement
 
-    expect(crewTapOccurrences(theLunarWhale)).toEqual([expect.objectContaining({ event: 'tap', controller: 'you' })]);
+    expect(crewTapOccurrences(mockVehicleWithActivationCost)).toEqual([expect.objectContaining({ event: 'tap', controller: 'you' })]);
   });
 
-  it('Cargo Ship — SAME crewCost+activationCost shape, PLUS a separate named mana ability on the same permanent (ENGINE_GAPS.md gap #11 shape): predicate still says produces-tap, not confused by the coexisting named ability', () => {
-    const result = crewTapResult(cargoShip);
+  it('SAME crewCost+activationCost shape, PLUS a separate named mana ability on the same permanent (mirrors Cargo Ship / ENGINE_GAPS.md gap #11 shape): predicate still says produces-tap, not confused by the coexisting named ability', () => {
+    const result = crewTapResult(mockVehicleWithNamedAbility);
     expect(result.applicable).toBe(true);
     expect(result.verdict).toBe('produces-tap');
-    expect(crewTapOccurrences(cargoShip)).toHaveLength(1);
+    expect(crewTapOccurrences(mockVehicleWithNamedAbility)).toHaveLength(1);
 
     // Real engine confirmation (not just the predicate's own structural
     // read): activating the NAMED "mana" ability does NOT go through the
     // crew cost path at all (engine.ts's own crewCost branch is gated on
     // `abilityName === undefined`), while omitting abilityName DOES —
-    // exactly the two real, distinct activations this card supports.
-    const setup: EnginePilotSetup = { you: {}, opponents: [{}] };
-    const pilot = setupEnginePilot(setup);
-    const shipReal = pilot.state.addCard(pilot.you, 'Battlefield', { name: cargoShip.name, types: ['Artifact'], subtypes: ['Vehicle'], basePower: 2, baseToughness: 3, keywords: cargoShip.keywords });
-    const crewerReal = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Test Crewer', types: ['Creature'], basePower: 1, baseToughness: 1 });
-    expect(canActivateAbility(pilot.engine, pilot.you, shipReal, cargoShip, undefined, [crewerReal]).ok).toBe(true);
-    expect(canActivateAbility(pilot.engine, pilot.you, shipReal, cargoShip, 'mana').ok).toBe(true);
+    // exactly the two real, distinct activations this shape supports.
+    const { pilot, vehicleReal, crewerReal } = pilotWithVehicleAndCrewer(mockVehicleWithNamedAbility, 1);
+    expect(canActivateAbility(pilot.engine, pilot.you, vehicleReal, mockVehicleWithNamedAbility, undefined, [crewerReal]).ok).toBe(true);
+    expect(canActivateAbility(pilot.engine, pilot.you, vehicleReal, mockVehicleWithNamedAbility, 'mana').ok).toBe(true);
   });
 
-  it("The Regalia (fin/58) — crewCost declared with NO activationCost: predicate says no-tap, agreeing with a real canActivateAbility rejection (this card's own real, live engine gap, not a guess)", () => {
-    const result = crewTapResult(theRegalia);
+  it('crewCost declared with NO activationCost: predicate says no-tap, agreeing with a real canActivateAbility rejection (mirrors The Regalia — a real, live engine gap, not a guess)', () => {
+    const result = crewTapResult(mockVehicleNoActivationCost);
     expect(result.applicable).toBe(true);
     expect(result.verdict).toBe('no-tap');
 
-    const setup: EnginePilotSetup = { you: {}, opponents: [{}] };
-    const pilot = setupEnginePilot(setup);
-    const regaliaReal = pilot.state.addCard(pilot.you, 'Battlefield', { name: theRegalia.name, types: ['Artifact'], subtypes: ['Vehicle'], basePower: 4, baseToughness: 4, keywords: theRegalia.keywords });
-    const crewerReal = pilot.state.addCard(pilot.you, 'Battlefield', { name: 'Test Crewer', types: ['Creature'], basePower: 2, baseToughness: 2 });
-
-    const check = canActivateAbility(pilot.engine, pilot.you, regaliaReal, theRegalia, undefined, [crewerReal]);
-    pilot.log.push({ fn: 'illegalAttempt', card: theRegalia.name, reason: check.reason });
+    const { pilot, vehicleReal, crewerReal } = pilotWithVehicleAndCrewer(mockVehicleNoActivationCost);
+    const check = canActivateAbility(pilot.engine, pilot.you, vehicleReal, mockVehicleNoActivationCost, undefined, [crewerReal]);
+    pilot.log.push({ fn: 'illegalAttempt', card: mockVehicleNoActivationCost.name, reason: check.reason });
     expect(check.ok).toBe(false); // real trace agreement — hard-fail on disagreement
     expect(check.reason).toMatch(/no such activated ability/);
     expect(crewerReal.tapped).toBe(false); // real evidence: nothing was ever tapped
 
-    expect(crewTapOccurrences(theRegalia)).toEqual([]);
+    expect(crewTapOccurrences(mockVehicleNoActivationCost)).toEqual([]);
   });
 
   it('a card with no crewCost at all is not applicable', () => {

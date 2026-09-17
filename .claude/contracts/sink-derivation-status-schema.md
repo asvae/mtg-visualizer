@@ -190,7 +190,7 @@ interface SinkDerivationEntry {
 ```ts
 interface SinkDerivationSourceFiles {
   predicate: SourceFileResult;       // functional-model/sink-model/predicates/<slug>.ts
-  corpusManifest: SourceFileResult;  // functional-model/sink-model/predicates/<slug>.corpus.json — RAW file content, including the real per-card `cases` array, not just the {total,passing} summary evidence already carries
+  corpusManifest: SourceFileResult;  // functional-model/sink-model/predicates/<slug>.corpus.json — RAW file content, including the real per-case `cases` array, not just the {total,passing} summary evidence already carries
   corpusTest: SourceFileResult;      // functional-model/sink-model/predicates/<slug>.test.ts
 }
 
@@ -218,7 +218,7 @@ interface SinkDerivationPageEntry {
 ### Real evidence (2026-09-18) — reading the actual predicate/corpus/test code
 
 Added so a human reviewer can read the real predicate logic, the real
-per-card corpus verdicts, and the real corpus test code — not just this
+per-case corpus verdicts, and the real corpus test code — not just this
 entry's own hand-authored `motivation`/`expectedSinkShapes[].note` prose.
 `sourceFiles` is computed fresh every request (`functional-model/
 source-files.ts`'s `readFunctionalModelFile`, same no-caching dev
@@ -241,6 +241,38 @@ computed every request (dev convention, same as
 added predicate module/corpus manifest, or a hand-edited
 `sink-derivation-reviews.json`, reflects on the next request with no
 restart).
+
+### Corpus fixtures are mocked `CardDefinition`s, not real cards (2026-09-18 policy)
+
+`computeSinkDerivationStatus()` itself only ever reads `total`/`passing`
+(both plain numbers) off a `<slug>.corpus.json` — the `cases[]` array is
+opaque to it, inlined into the served `sourceFiles.corpusManifest.content`
+verbatim for a human reviewer to read, never parsed/typed beyond those two
+fields. As of 2026-09-18, `cases[]` entries describe a hand-constructed
+MOCK `CardDefinition` shape, not a real FIN card — e.g.:
+
+```jsonc
+{
+  "case": "crewCost declared with NO activationCost at all",
+  "mirrors": "The Regalia (fin/58) — a real, currently-live engine gap",
+  "expectedVerdict": "no-tap",
+  "note": "..."
+}
+```
+
+`card`/`slug` fields (pointing at a real `functional-model/cards/<slug>/`)
+are gone from both `saga.corpus.json` and `crew.corpus.json` — a
+sink-derivation predicate is a pure function of `CardDefinition` shape, so
+its corpus fixtures are built directly from that shape (using the same
+public combinator/builder functions real cards use, e.g. `combinator.ts`'s
+`sequence`/`branch`) rather than imported from a real card's own
+`definition.ts`. A real card name may still appear as a `mirrors` field or
+in prose (a readability anchor — "this mock shape matches what card X
+prints"), but it is never a lookup key into `functional-model/cards/*`.
+This is the standing policy for every current and future mechanism on this
+axis (Stun/Finality counters included, whenever those get built) — not a
+one-off for Saga/Crew. `ui` (consumer) should not assume `cases[].card`/
+`.slug` exist or attempt to link out to a card page from a corpus case.
 
 ## Review write path
 

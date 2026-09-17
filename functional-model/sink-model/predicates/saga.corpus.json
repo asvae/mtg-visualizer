@@ -3,22 +3,22 @@
   "passing": 3,
   "cases": [
     {
-      "card": "Summon: Bahamut",
-      "slug": "summon-bahamut",
+      "case": "plain, non-transforming Saga — final chapter has no self-zone-change effect",
+      "mirrors": "Summon: Bahamut (fin/1)",
       "expectedVerdict": "produces-death",
-      "note": "Plain, non-transforming Saga. chapterIV has no self-zone-change effect. Real, checked-in engine-piloted trace (cards/summon-bahamut/scenarios.ts) shows a genuine 714.4 sacrifice once the greatest chapter fires."
+      "note": "A mock Saga whose final chapter effect has no self-move. Verified in saga.test.ts via real, repeated advanceSaga calls (a direct function call, not a scripted turn-by-turn trace) genuinely sacrificing the permanent at 714.4."
     },
     {
-      "card": "Jill, Shiva's Dominant // Shiva, Warden of Ice",
-      "slug": "jill-shiva-s-dominant-shiva-warden-of-ice",
+      "case": "transforming Saga — final chapter resolves a self-referential exile-then-return Sequence",
+      "mirrors": "Jill, Shiva's Dominant // Shiva, Warden of Ice / Dion, Bahamut's Dominant // Bahamut, Warden of Light",
       "expectedVerdict": "no-death",
-      "note": "Transforming Saga. Back face's chapterIII resolves a real self-referential sequence('Exile','Battlefield'), resetting lore counters before 714.4 checks them. Real, checked-in engine-piloted trace shows the transform-back (Shiva -> Jill) and NO sacrifice."
+      "note": "A mock Saga whose final chapter's effect is combinator.ts's sequence('Exile', 'Battlefield') (the same real AST shape Jill/Dion's own migrated definitions use). Verified in saga.test.ts via real, repeated advanceSaga calls: the permanent survives on the Battlefield with its lore counters reset (400.7), and 714.4's sacrifice never fires."
     },
     {
-      "card": "Jecht, Reluctant Guardian // Braska's Final Aeon",
-      "slug": "jecht-reluctant-guardian-braska-s-final-aeon",
+      "case": "a transform-shaped Saga (declares its own backFace) whose final chapter does NOT move itself",
+      "mirrors": "Jecht, Reluctant Guardian // Braska's Final Aeon",
       "expectedVerdict": "produces-death",
-      "note": "ALSO a transforming DFC (same front/back Saga template as Jill/Dion), but chapterIII sacrifices 2 opponent creatures without moving itself. A real engine-piloted trace built for this predicate's own corpus (saga.test.ts; cards/jecht-.../scenarios.ts itself is untouched, read-only) shows a genuine 714.4 sacrifice, proving the predicate checks the chapter's own effects rather than keying off 'is this a transforming DFC.'"
+      "note": "A mock front/back pair (same shape as the Sequence case above) whose back-face Saga's final chapter has no self-move. Verified in saga.test.ts via real, repeated advanceSaga calls genuinely sacrificing the permanent — proving the predicate checks the chapter's own effects rather than merely 'does this card have a backFace.'"
     }
   ]
 }

@@ -29350,3 +29350,88 @@ manually re-reviews/re-confirms through the UI, exactly as instructed.
 **Open Forge-verification needed: none.** This pass added test coverage
 and fixed a documentation citation only — no `interfaces.ts` mirror, no
 new real-world rules claim, no engine-core logic changed.
+
+## 2026-09-18 — Saga/Crew predicate corpora rewritten to mocked `CardDefinition` fixtures (standing policy, not one-off)
+
+User confirmed a standing policy for sink-derivation predicate corpora
+(does NOT apply to Features' `engine.test.ts` scenarios or Cards'
+`scenarios.ts`, both of which keep "real cards only"): a sink-derivation
+predicate is a pure function of `CardDefinition` shape, so its corpus
+fixtures must be minimal, hand-constructed mocks built from the same
+public combinator/builder functions real cards use (`combinator.ts`'s
+`sequence`/`branch`/`compare`, real `Effect` shapes) — never imported from
+a real card's own `definition.ts`. Real card names may still appear in
+test names/comments as a readability anchor, never as the actual fixture.
+
+Rewrote `functional-model/sink-model/predicates/saga.test.ts` and
+`crew.test.ts` (+ their `saga.corpus.json`/`crew.corpus.json` manifests)
+accordingly:
+
+- **saga.test.ts**: dropped all imports of real cards (Summon: Bahamut,
+  Jill/Shiva, Jecht/Braska, Joshua/Phoenix, Brynhildr/Cerberus/Ifrit, Esper
+  Maduin) and `engine-trace.ts`'s multi-turn pilot-script infra
+  (`pilotTransform`/`advanceToPlayersNextMain1`/`finishEnginePilotTrace`).
+  The 3 corpus-counted cases now call `saga.ts`'s real `advanceSaga`
+  directly, repeatedly (a direct function call, not a scripted turn-by-turn
+  trace) against mock Sagas built with `combinator.ts`'s `sequence()` for
+  the self-move case — reusing `engine-trace.ts`'s `setupEnginePilot`/
+  `pilotActions` purely as cheap engine/player construction (a real,
+  already-wired `Actions` implementation), not as a scenario runner. Added
+  6 new structural/escalation cases beyond the original 3 (all pure
+  `sagaChapterCompletionResult()` calls, no engine run needed, NOT counted
+  in the corpus manifest's passing/total): an opaque `custom` final chapter
+  that DOES self-move (mirrors Joshua's real gap) and one that's a genuine
+  unrelated no-op (mirrors Brynhildr/Cerberus/Ifrit's real gap) both
+  correctly escalate to `'unknown'`; the greatest chapter is found by NAME
+  not array-authoring order (a new structural case no real card in the
+  pool happens to exercise); a self-move nested inside a `Branch`'s
+  `then`/`else` arm (2 cases) and inside one mode of a `kind:'modal'`
+  effect are all detected — none of these 3 had a cheap real-card example
+  before, mocks made them free to add; a Saga typeLine with no recognized
+  `chapterI`-`V` trigger at all escalates to `'unknown'` (`finalChapterName`
+  returning undefined, previously unexercised since every real pool Saga
+  has a recognized chapter name).
+- **crew.test.ts**: same treatment — mock Vehicles with
+  `crewCost`+`activationCost` (produces-tap, mirrors The Lunar Whale),
+  `crewCost`+`activationCost`+a separate named `abilities` entry (mirrors
+  Cargo Ship/ENGINE_GAPS.md gap #11's shape, verified via a real
+  `canActivateAbility` call proving the crew path and the named-ability
+  path don't collide), and `crewCost` with no `activationCost` at all
+  (no-tap, mirrors The Regalia's real, live gap) — verified via a real
+  `canActivateAbility`/`activateAbility` call each (direct engine calls,
+  not a scenario/trace), reusing `engine-trace.ts`'s `setupEnginePilot`
+  purely as construction infra, same as before this rewrite.
+- `saga.corpus.json`/`crew.corpus.json`: dropped the real-card `card`/
+  `slug` fields entirely, replaced with `case` (a short shape description)
+  + `mirrors` (the real-card readability anchor, prose only) +
+  `expectedVerdict`/`note` (unchanged meaning). `sink-derivation-status.ts`
+  never reads anything but `total`/`passing` off this file, so this rename
+  needed zero changes there — confirmed via a throwaway scratch test
+  (`computeSinkDerivationStatus()` still reports `saga`/`crew` both
+  `blue`, `corpusTotal===corpusPassing===3`), then deleted the scratch
+  file.
+- `.claude/contracts/sink-derivation-status-schema.md`: updated the two
+  "real per-card" -> "real per-case" wording spots, and added a new
+  "Corpus fixtures are mocked `CardDefinition`s, not real cards
+  (2026-09-18 policy)" section documenting the new `cases[].case`/
+  `.mirrors` field shape and telling `ui` not to assume `.card`/`.slug`
+  exist or link out to a card page from a corpus case.
+- Did NOT touch `functional-model/cards/*`, `match-sink.ts`,
+  `engine-status.ts`, or `ENGINE_GAPS.md` (constraint — a separate
+  concurrent task owns those). Did NOT touch `saga.ts`/`crew.ts` predicate
+  logic itself, only their corpus tests/manifests.
+
+**Verified**: `npx vitest run functional-model/sink-model` — 39/39 green
+(includes `match-sink.test.ts`, confirming zero collateral effect there).
+`npx vitest run functional-model` — 1114 passed, 5 skipped (same
+pre-existing skip count). `npx vitest run` (full repo) — same 5
+pre-existing unrelated failures already documented above (`tagging/sets/
+{lea,leb,2ed,arn}`/`card-enrichment-status.json`), nothing new. `npm run
+typecheck` — same pre-existing baseline-only errors already documented
+above (`CardDetailTabs.vue` x3/4, `card-status.ts:263`, `card.ts:2970`,
+`mana.ts:275`, `server/api/tokens/by-key.ts:32`); zero new.
+
+**Open Forge-verification needed: none.** Pure test-infrastructure/policy
+change — no `interfaces.ts` mirror touched, no real-world rules claim
+changed, no predicate/matching logic in `saga.ts`/`crew.ts`/`match-sink.ts`
+touched.
