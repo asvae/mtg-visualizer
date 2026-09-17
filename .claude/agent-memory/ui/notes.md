@@ -7,6 +7,45 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- 2026-09-18: fixed the bare-color-word `STATUS_OPTIONS` labels ("Gray"/
+  "Purple"/"Blue"/"Yellow"/"Green") on the predicates/features/sets
+  `/app/engine/*` console tabs — dot color + `value`/status-computation
+  logic all untouched, label text only. Checked `keywords/[[slug]].vue`
+  first — it already uses semantic `Covered`/`Gap` labels, no fix needed
+  there.
+  - Predicates (`app/pages/app/engine/predicates/index.vue`, meanings from
+    `functional-model/sink-derivation-status.ts`): gray→"No predicate
+    yet", purple→"Unverified", blue→"Verified", yellow→"Rejected",
+    green→"Confirmed".
+  - Features (`app/pages/app/engine/features/index.vue`, meanings from
+    `functional-model/engine-status.ts`): gray→"Open gap", purple→"Closed,
+    unverified", blue→"Closed, verified", yellow→"Rejected", green→
+    "Confirmed".
+  - Sets (`app/pages/app/engine/sets/index.vue`, meanings from
+    `functional-model/card-status.ts`'s priority-order header comment) —
+    only touched the 5 bare-color entries, left `verified`/`uncertain`/
+    `re-review` alone (already semantic): green→"Fully covered", yellow→
+    "Coverage gaps", orange→"Needs provenance", red→"Unsupported
+    construct", gray→"Untouched".
+  - No stray hardcoded "Gray"/"Blue"/etc. strings existed anywhere else in
+    the three files outside `STATUS_OPTIONS` itself (grepped to confirm) —
+    every other consumer (detail-pane dot `:title`, row dot `:style`)
+    already derives from `statusMeta(...).label`/`.color`, so fixing the
+    one array's `label` field was the whole fix, no second edit point.
+  - Verified live via Playwright against a real dev server on all three
+    tabs: filter-chip button text now reads the new labels with correct
+    counts (e.g. predicates: "No predicate yet (2)", "Verified (2)";
+    features: "Open gap (3)", "Closed, unverified (15)", "Closed, verified
+    (11)"; sets: "Fully covered (56)", "Coverage gaps (14)", "Needs
+    provenance (194)", "Unsupported construct (26)", "Untouched (3)",
+    alongside the untouched "Verified (9)"/"Uncertain (1)"/"Re-review (3)"
+    trio) — 0 console/page errors. `npm run typecheck` — same
+    pre-existing unrelated errors as always (`CardDetailTabs.vue`/
+    `functional-model/card-status.ts`/`card.ts`/`mana.ts`/`server/api/
+    tokens/by-key.ts`), zero new errors from the three edited files.
+    `npx vitest run` — 1147 passed, same 5 pre-existing sandbox-only
+    `tagging/*`-data-missing failures as always, unrelated.
+
 - 2026-09-17: reworked `/app/engine-status` and `/app/sink-derivations` from
   their original flat lists into the SAME sidebar-nav + single-selected-
   detail layout `/app/keywords/[[slug]].vue` uses, per an explicit override

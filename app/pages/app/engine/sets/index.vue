@@ -160,11 +160,11 @@ const STATUS_OPTIONS: StatusFilterOption<CardStatusBucket>[] = [
   { value: 'verified', label: 'Verified', color: '#84cc16', description: 'Green, plus a human has reviewed the card’s facts.' },
   { value: 'uncertain', label: 'Uncertain', color: '#3b82f6', description: 'Facts are as complete as they can be right now, but a human has flagged a specific known conceptual modeling gap — see the card’s own caveat note.' },
   { value: 're-review', label: 'Re-review', color: '#7dd3fc', description: 'Was human-reviewed and confirmed before, but the card’s content has since drifted from that confirmed baseline — the old confirmation is stale and needs another look.' },
-  { value: 'green', label: 'Green', color: '#22c55e', description: 'No AI-authored facts — oracle text fully covered by real facts.' },
-  { value: 'yellow', label: 'Yellow', color: '#eab308', description: 'No AI-authored facts, but oracle text not fully covered yet.' },
-  { value: 'orange', label: 'Orange', color: '#f97316', description: 'Has at least one AI-authored (non-recognizer-derived) fact.' },
-  { value: 'red', label: 'Red', color: '#ef4444', description: 'Definition has an unsupported / not-yet-modeled construct.' },
-  { value: 'gray', label: 'Gray', color: '#6b7280', description: 'Untouched — no real facts extracted yet.' },
+  { value: 'green', label: 'Fully covered', color: '#22c55e', description: 'No AI-authored facts — oracle text fully covered by real facts.' },
+  { value: 'yellow', label: 'Coverage gaps', color: '#eab308', description: 'No AI-authored facts, but oracle text not fully covered yet.' },
+  { value: 'orange', label: 'Needs provenance', color: '#f97316', description: 'Has at least one AI-authored (non-recognizer-derived) fact.' },
+  { value: 'red', label: 'Unsupported construct', color: '#ef4444', description: 'Definition has an unsupported / not-yet-modeled construct.' },
+  { value: 'gray', label: 'Untouched', color: '#6b7280', description: 'Untouched — no real facts extracted yet.' },
 ];
 
 // Real FIN collector numbers aren't a clean contiguous 1-306 run (bonus/

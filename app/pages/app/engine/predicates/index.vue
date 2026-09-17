@@ -35,21 +35,21 @@ const isDev = import.meta.dev;
 
 type StatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
 const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
-  { value: 'gray', label: 'Gray', color: '#6b7280', description: 'No predicate module built yet for this mechanism.' },
+  { value: 'gray', label: 'No predicate yet', color: '#6b7280', description: 'No predicate module built yet for this mechanism.' },
   {
     value: 'purple',
-    label: 'Purple',
+    label: 'Unverified',
     color: '#a855f7',
     description: 'A predicate module exists, but not yet verified against a real scenario corpus (no manifest, or not every scenario in it agrees with real trace evidence yet).',
   },
   {
     value: 'blue',
-    label: 'Blue',
+    label: 'Verified',
     color: '#3b82f6',
     description: 'Verified: a predicate module exists AND its corpus-verification manifest shows every scenario agreeing with real trace evidence.',
   },
-  { value: 'yellow', label: 'Yellow', color: '#eab308', description: 'Human-reviewed and REJECTED — a reviewer found a real disagreement with the computed baseline; see its own note.' },
-  { value: 'green', label: 'Green', color: '#22c55e', description: 'Human-reviewed and CONFIRMED.' },
+  { value: 'yellow', label: 'Rejected', color: '#eab308', description: 'Human-reviewed and REJECTED — a reviewer found a real disagreement with the computed baseline; see its own note.' },
+  { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'Human-reviewed and CONFIRMED.' },
 ];
 
 const items = computed(() => data.value ?? []);

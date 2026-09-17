@@ -22,16 +22,16 @@ const isDev = import.meta.dev;
 
 type StatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
 const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
-  { value: 'gray', label: 'Gray', color: '#6b7280', description: 'No support at all — the tracked gap has no CLOSED marker in ENGINE_GAPS.md.' },
+  { value: 'gray', label: 'Open gap', color: '#6b7280', description: 'No support at all — the tracked gap has no CLOSED marker in ENGINE_GAPS.md.' },
   {
     value: 'purple',
-    label: 'Purple',
+    label: 'Closed, unverified',
     color: '#a855f7',
     description: 'Closed, but only schema-level / partially modeled — either the item’s own text names a real remainder still not modeled, or no *.test.ts is cited (closed by claim, not independently checkable).',
   },
-  { value: 'blue', label: 'Blue', color: '#3b82f6', description: 'Closed AND verified — cites at least one real *.test.ts and names no remainder.' },
-  { value: 'yellow', label: 'Yellow', color: '#eab308', description: 'Human-reviewed and REJECTED — a reviewer judged the computed baseline wrong; see its own note.' },
-  { value: 'green', label: 'Green', color: '#22c55e', description: 'Human-reviewed and CONFIRMED.' },
+  { value: 'blue', label: 'Closed, verified', color: '#3b82f6', description: 'Closed AND verified — cites at least one real *.test.ts and names no remainder.' },
+  { value: 'yellow', label: 'Rejected', color: '#eab308', description: 'Human-reviewed and REJECTED — a reviewer judged the computed baseline wrong; see its own note.' },
+  { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'Human-reviewed and CONFIRMED.' },
 ];
 
 const items = computed(() => data.value ?? []);
