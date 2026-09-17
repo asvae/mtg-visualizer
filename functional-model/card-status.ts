@@ -452,3 +452,138 @@ export function classifyCardStatus(input: ClassifyCardStatusInput): CardStatusEn
     reasons: [`${allFacts.length} fact(s), all recognizer-derived; oracle text coverage could not be computed`],
   };
 }
+
+// ---------------------------------------------------------------------------
+// Display-axis translation (2026-09-18) — NOT a rewrite of the 8-bucket
+// classifier above (that stays exactly as-is: still the real per-card
+// fact-authoring answer, still what `app/lib/cardStatus.ts`'s own Facts-tab
+// strip and `CardDetailTabs.vue` read directly, via the unrelated per-card
+// `GET /api/card/:set/:number` route's own `cardStatus` field — untouched by
+// this section). This is a pure MAPPING layer from that real 8-bucket
+// classification onto the SAME 5-state `gray`/`purple`/`blue`/`yellow`/
+// `green` vocabulary `engine-status.ts` (`EngineStatusBaseline`/
+// `EngineStatusColor`) and `sink-derivation-status.ts`
+// (`SinkDerivationBaseline`/`SinkDerivationColor`) already established for
+// their own axes — added so `/app/engine/sets` (`GET /api/card-status/:set`,
+// see that route's own doc comment for where this gets applied) renders
+// under the exact SAME axis `/app/engine/predicates` and
+// `/app/engine/features` already do, replacing that page's previous bespoke
+// 8-color scheme. This is now the ONE shared status axis across
+// Predicates/Features/Sets.
+//
+// It also SUPERSEDES an earlier plan detail for the not-yet-built FDN
+// authoring pipeline that called for a separate `pipeline-status.json`
+// scheme with its own distinct `red` state for "engine capacity missing"
+// (that plan detail was only ever discussed, never written to any checked-
+// in file — this comment, and this same date's entry in
+// `.claude/agent-memory/engine/notes.md`, are now the one place recording
+// that it's superseded). Whoever eventually builds real FDN-pipeline status
+// tracking should reuse THIS `CardStatusBaseline`/`CardStatusColor` pair (or
+// a same-shaped sibling of it, matching `EngineStatusBaseline`/
+// `SinkDerivationBaseline`'s own precedent of one small duplicated type pair
+// per axis rather than a single shared cross-axis type), NOT invent that
+// old 4-state-plus-distinct-red scheme.
+//
+// Mapping (approximate by design — this task's own explicit instruction:
+// "the user does not care about precisely remapping FIN's cards onto the
+// new vocabulary... just default fin cards to some low status - I don't
+// care" — so this fold optimizes for a reasonable, easy-to-revisit default,
+// not bucket-by-bucket precision):
+//   gray   <- `red`, `gray`      — nothing usable yet. `red` (a real
+//            structural "can't be modeled" marker) is folded WITH `gray`
+//            rather than `purple`: a card blocked on a genuine engine-
+//            capacity gap is judged functionally as far from usable as one
+//            nobody's touched at all, and this file's own "gray/purple are
+//            both 'pretend it doesn't exist' for real use" policy (see the
+//            "## Policy" section below, right before the type exports)
+//            makes the exact gray-vs-purple split for `red` specifically
+//            not worth relitigating.
+//   purple <- `orange`, `yellow` — has real facts, but not yet BOTH
+//            provenance-clean (no AI/hand-authored facts) AND fully text-
+//            covered — today's two distinct "almost there" buckets collapse
+//            into one "still needs work" bucket.
+//   blue   <- `green`            — provenance-clean AND fully text-covered,
+//            with no CURRENT human-review opinion attached (or a stale one
+//            deliberately dropped, see `re-review` below) — this project's
+//            own "fully covered" bar, unreviewed.
+//   green  <- `verified`         — `green` PLUS a human explicitly
+//            confirmed it — the direct analog of Predicates'/Features' own
+//            "Confirmed" review-overlay state, since `verified` already IS
+//            exactly that fact for this axis.
+//   yellow <- `uncertain`        — `green` PLUS a human flagged one
+//            specific known caveat instead of a plain confirmation — the
+//            direct analog of Predicates'/Features' own "Rejected (with a
+//            required note)" overlay state: the caveat text IS that note.
+//   blue   <- `re-review`        — was `verified`/green-quality, then the
+//            card's real content drifted since. The OLD confirmation is
+//            deliberately NOT carried forward as a (now-misleading) `green`/
+//            confirmed appearance — falls back to plain `blue` (baseline-
+//            quality, no current review opinion) until a human looks again.
+//            Not `yellow` either — nothing was actually REJECTED, the prior
+//            confirmation just went stale; that's a materially different
+//            claim than a reviewer having looked and disagreed.
+// ## Policy (documented here, NOT enforced in code by this task — 2026-09-18)
+//
+// `gray`/`purple` (i.e. anything below `blue`) are meant to be treated as
+// PROHIBITED for any real/production consumption of this data pool-wide —
+// "pretend it doesn't exist" — everywhere except within verification/review
+// work itself (a human/agent looking at the card to move it further along).
+// Only `blue`/`green`/`yellow` (all three are `blue`-or-better under the
+// mapping above: fully covered, optionally human-reviewed) may ever back a
+// real decision. This is the SAME policy `functional-model/
+// sink-derivation-status.ts`'s own "Real-matching usability gate
+// (2026-09-18)" section already implements FOR REAL, for its own axis —
+// `isSinkDerivationMechanismUsable`/`computeSinkDerivationColor` there
+// reject `gray`/`purple` from ever contributing to a real
+// `match-sink.ts`-driven synergy match, exempting only that predicate's own
+// corpus/verification test. That gate is this project's own concrete
+// reference shape for what real enforcement looks like once there's
+// something real to gate.
+//
+// There is deliberately NO equivalent gate added here: as of this writing,
+// nothing in this codebase makes a real production decision off THIS axis
+// at all — FIN's own live synergy graph (`functional-model/synergy.ts`,
+// `app/lib/buildGraph.ts`, `server/api/graph-links.ts`) never reads
+// `card-status.ts`/this file's translation at all (it matches off real
+// `Fact`s directly, independent of this dashboard-only classification), and
+// no real FDN authoring pipeline exists yet to gate. Adding a speculative
+// enforcement mechanism with nothing real to protect would be exactly the
+// kind of premature scaffolding this project's own conventions avoid
+// elsewhere (see `sink-derivation-status.ts`'s own "seeded, not pre-
+// populated" precedent). Whoever builds the real FDN pipeline (or any other
+// future consumer that makes a production decision off a card's fact-
+// authoring completeness) should add a real gate THEN, mirroring
+// `sink-derivation-status.ts`'s own shape, rather than skip it.
+export type CardStatusBaseline = 'gray' | 'purple' | 'blue';
+export type CardStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+
+/** The 3-state computed baseline half of the mapping above (`gray`/
+ * `purple`/`blue`) — exported separately from `cardStatusColor` so a
+ * consumer can tell a genuine human "Confirmed"/"Flagged" overlay apart
+ * from the underlying baseline it sits on top of, the same
+ * `baseline`-alongside-`color` shape `SinkDerivationPageEntry`/
+ * `EngineStatusPageEntry` already serve. */
+export function cardStatusBaseline(status: CardStatusBucket): CardStatusBaseline {
+  switch (status) {
+    case 'red':
+    case 'gray':
+      return 'gray';
+    case 'orange':
+    case 'yellow':
+      return 'purple';
+    case 'green':
+    case 'verified':
+    case 'uncertain':
+    case 're-review':
+      return 'blue';
+  }
+}
+
+/** The full 5-state display color — `cardStatusBaseline`, narrowed to
+ * `green`/`yellow` for the two real human-review-overlay buckets
+ * (`verified`/`uncertain`) per the mapping above. */
+export function cardStatusColor(status: CardStatusBucket): CardStatusColor {
+  if (status === 'verified') return 'green';
+  if (status === 'uncertain') return 'yellow';
+  return cardStatusBaseline(status);
+}

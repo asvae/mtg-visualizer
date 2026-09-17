@@ -1134,6 +1134,45 @@ coverage gap is already correctly flagged by that gap itself, and layering
 `uncertain`'s own more saturated `#3b82f6` so the two read as visually
 distinct at a glance, not a shade variation of the same signal.
 
+**Display-axis translation to gray/purple/blue/yellow/green (2026-09-18)**
+— the 8-bucket classification above is unchanged and remains the real
+per-card fact-authoring answer (still what `app/lib/cardStatus.ts`'s
+Facts-tab strip and `CardDetailTabs.vue` read via the per-card
+`GET /api/card/:set/:number` route's own `cardStatus` field). Separately,
+`GET /api/card-status/:set` (the batch route feeding `/app/engine/sets`
+only) now ALSO serves a `baseline: 'gray'|'purple'|'blue'` and
+`color: 'gray'|'purple'|'blue'|'yellow'|'green'` field per entry —
+`functional-model/card-status.ts`'s own `cardStatusBaseline`/
+`cardStatusColor` functions, a pure translation layer over the 8 buckets
+(see that pair's own doc comment for the full bucket-by-bucket fold). This
+puts `/app/engine/sets` on the SAME shared 5-state axis
+`/app/engine/predicates` (`GET /api/sink-derivations`) and
+`/app/engine/features` (`GET /api/engine-status`) already use, replacing
+that tab's previous bespoke 8-color scheme — this is now the ONE shared
+status axis across Predicates/Features/Sets, and it supersedes an earlier
+plan detail (never committed to any file) for the not-yet-built FDN
+authoring pipeline to use a separate `pipeline-status.json` scheme with its
+own distinct `red` state for "engine capacity missing." A future FDN
+pipeline should reuse `CardStatusBaseline`/`CardStatusColor` (or a
+same-shaped sibling), not that superseded scheme. The checked-in
+`data/fin/fin_card_status.json` snapshot's own on-disk schema is untouched
+by this — the translation is applied at serve time only, in
+`server/api/card-status/[set].get.ts`'s own `withDisplayColor`.
+
+**Policy, documented not enforced (2026-09-18)**: `gray`/`purple` (below
+`blue`) are meant to be treated as prohibited for any real/production
+decision anywhere in the app, except within verification/review work
+itself — same "pretend it doesn't exist" policy
+`functional-model/sink-derivation-status.ts`'s own "Real-matching usability
+gate" section already enforces FOR REAL on its own axis (rejecting
+`gray`/`purple` from contributing to a live `match-sink.ts` match). No
+equivalent gate exists for this axis today because nothing real consumes
+it for a production decision yet (FIN's own live synergy graph never reads
+`card-status.ts` at all; no real FDN pipeline exists yet) — whoever builds
+that real consumer should add a real gate then, mirroring
+`sink-derivation-status.ts`'s shape, per `card-status.ts`'s own "## Policy"
+comment section.
+
 **Engine has no connection to card/UI, full stop.** Logging or similar
 instrumentation baked into engine code is fine; engine code being
 imported and executed by a UI component, or engine changing anything

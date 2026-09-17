@@ -5,7 +5,15 @@
 // pool, not re-tested here — this file only covers the pure decision logic.
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from './card';
-import { classifyCardStatus, collectEffects, findUnsupportedConstructs, isUnsupportedNoOp } from './card-status';
+import {
+  cardStatusBaseline,
+  cardStatusColor,
+  classifyCardStatus,
+  collectEffects,
+  findUnsupportedConstructs,
+  isUnsupportedNoOp,
+} from './card-status';
+import type { CardStatusBucket } from './card-status';
 
 function baseCard(overrides: Partial<CardDefinition> = {}): CardDefinition {
   return { name: 'Test Card', manaCost: '{1}{W}', typeLine: 'Creature — Test', ...overrides };
@@ -300,5 +308,46 @@ describe('card-status — classifyCardStatus priority order', () => {
     const entry = classifyCardStatus({ number, name, definition: baseCard(), synergy, textCoverage: undefined });
     expect(entry.status).toBe('yellow');
     expect(entry.reasons[0]).toMatch(/could not be computed/);
+  });
+});
+
+describe('card-status — cardStatusBaseline / cardStatusColor (5-state display-axis translation)', () => {
+  it('folds red and gray to the gray baseline/color', () => {
+    for (const status of ['red', 'gray'] as const) {
+      expect(cardStatusBaseline(status)).toBe('gray');
+      expect(cardStatusColor(status)).toBe('gray');
+    }
+  });
+
+  it('folds orange and (coverage-gap) yellow to the purple baseline/color', () => {
+    for (const status of ['orange', 'yellow'] as const) {
+      expect(cardStatusBaseline(status)).toBe('purple');
+      expect(cardStatusColor(status)).toBe('purple');
+    }
+  });
+
+  it('folds green and re-review to the blue baseline/color (a stale re-review confirmation is dropped, not carried forward as green)', () => {
+    for (const status of ['green', 're-review'] as const) {
+      expect(cardStatusBaseline(status)).toBe('blue');
+      expect(cardStatusColor(status)).toBe('blue');
+    }
+  });
+
+  it('verified has a blue baseline but a green (confirmed) color', () => {
+    expect(cardStatusBaseline('verified')).toBe('blue');
+    expect(cardStatusColor('verified')).toBe('green');
+  });
+
+  it('uncertain has a blue baseline but a yellow (flagged) color', () => {
+    expect(cardStatusBaseline('uncertain')).toBe('blue');
+    expect(cardStatusColor('uncertain')).toBe('yellow');
+  });
+
+  it('every real CardStatusBucket value maps to exactly one of the 5 display colors (exhaustiveness smoke test)', () => {
+    const allBuckets: CardStatusBucket[] = ['verified', 'uncertain', 're-review', 'green', 'yellow', 'orange', 'red', 'gray'];
+    const validColors = new Set(['gray', 'purple', 'blue', 'yellow', 'green']);
+    for (const status of allBuckets) {
+      expect(validColors.has(cardStatusColor(status))).toBe(true);
+    }
   });
 });

@@ -62,12 +62,30 @@ useHead({ title: 'Fact-authoring status' });
 // union, duplicated here rather than imported — this page only ever reads
 // the generated JSON, never `functional-model/*` itself (`engine`'s lane,
 // per card-schema.md).
+//
+// 2026-09-18: this tab no longer filters/colors on the raw 8-bucket
+// `status` value directly — it now renders under the SAME shared
+// gray/purple/blue/yellow/green display axis `/app/engine/predicates` and
+// `/app/engine/features` already use (`CardStatusColor`/`CardStatusBaseline`
+// below), fed by `GET /api/card-status/:set`'s own `baseline`/`color`
+// fields (added the same day — see that route's own doc comment). `status`
+// (the real 8-bucket classification) is kept on the type purely for parity
+// with the served shape / potential future debugging use; nothing in this
+// page's own template reads it anymore. See
+// `functional-model/card-status.ts`'s own `cardStatusBaseline`/
+// `cardStatusColor` doc comment for the full bucket-by-bucket fold
+// rationale (that file, not this one, is the source of truth for the
+// mapping — this page only ever consumes the already-translated result).
 type CardStatusBucket = 'verified' | 'uncertain' | 're-review' | 'green' | 'yellow' | 'orange' | 'red' | 'gray';
+type CardStatusBaseline = 'gray' | 'purple' | 'blue';
+type CardStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
 interface CardStatusEntry {
   number: string;
   name: string;
   status: CardStatusBucket;
   reasons: string[];
+  baseline: CardStatusBaseline;
+  color: CardStatusColor;
 }
 interface CardStatusFile {
   generatedAt: string;
@@ -126,24 +144,34 @@ const rawCards = computed<CardStatusEntry[]>(() =>
 function baseReasonText(reasons: string[]): string {
   return (reasons[0] ?? '').replace(/; human-reviewed$/, '').replace(/; flagged with a known caveat:.*$/, '');
 }
+// Same review-bus-driven optimistic-overlay behavior the old 8-bucket
+// version of this function had (see git history for that version) — just
+// re-expressed on the new `baseline`/`color` fields instead of the raw
+// `status` value, per `functional-model/card-status.ts`'s own
+// `cardStatusBaseline`/`cardStatusColor` mapping: "would otherwise be
+// green/verified/uncertain/re-review" collapses exactly onto
+// `baseline === 'blue'` under that mapping, and the `status` field itself
+// is deliberately left untouched by this override (nothing reads it here
+// anymore, and this bus has no way to recompute the real 8-bucket value
+// anyway — only the derived `color` needs to visibly react).
 function applyReviewStatusChange(change: ReviewStatusChange) {
   if (change.set !== SET.value) return;
   const entry = statusOverrides.value[change.number] ?? statusFile.value?.cards.find((c) => c.number === change.number);
   if (!entry) return;
-  const narrowEligible = entry.status === 'green' || entry.status === 're-review' || entry.status === 'verified' || entry.status === 'uncertain';
+  const narrowEligible = entry.baseline === 'blue';
   if (change.review === 'human' && narrowEligible) {
     const caveat = change.reviewCaveat?.trim();
     const truncatedCaveat = caveat && caveat.length > 200 ? `${caveat.slice(0, 199)}…` : caveat;
-    const status = truncatedCaveat ? 'uncertain' : 'verified';
+    const color: CardStatusColor = truncatedCaveat ? 'yellow' : 'green';
     const suffix = truncatedCaveat ? `; flagged with a known caveat: ${truncatedCaveat}` : '; human-reviewed';
     statusOverrides.value = {
       ...statusOverrides.value,
-      [change.number]: { ...entry, status, reasons: [`${baseReasonText(entry.reasons)}${suffix}`] },
+      [change.number]: { ...entry, color, reasons: [`${baseReasonText(entry.reasons)}${suffix}`] },
     };
-  } else if (change.review === 'ai' && (entry.status === 'verified' || entry.status === 'uncertain')) {
+  } else if (change.review === 'ai' && (entry.color === 'green' || entry.color === 'yellow')) {
     statusOverrides.value = {
       ...statusOverrides.value,
-      [change.number]: { ...entry, status: 'green', reasons: [baseReasonText(entry.reasons)] },
+      [change.number]: { ...entry, color: 'blue', reasons: [baseReasonText(entry.reasons)] },
     };
   }
 }
@@ -156,15 +184,33 @@ onUnmounted(() => {
   unsubscribeReviewStatus?.();
 });
 
-const STATUS_OPTIONS: StatusFilterOption<CardStatusBucket>[] = [
-  { value: 'verified', label: 'Verified', color: '#84cc16', description: 'Green, plus a human has reviewed the card’s facts.' },
-  { value: 'uncertain', label: 'Uncertain', color: '#3b82f6', description: 'Facts are as complete as they can be right now, but a human has flagged a specific known conceptual modeling gap — see the card’s own caveat note.' },
-  { value: 're-review', label: 'Re-review', color: '#7dd3fc', description: 'Was human-reviewed and confirmed before, but the card’s content has since drifted from that confirmed baseline — the old confirmation is stale and needs another look.' },
-  { value: 'green', label: 'Fully covered', color: '#22c55e', description: 'No AI-authored facts — oracle text fully covered by real facts.' },
-  { value: 'yellow', label: 'Coverage gaps', color: '#eab308', description: 'No AI-authored facts, but oracle text not fully covered yet.' },
-  { value: 'orange', label: 'Needs provenance', color: '#f97316', description: 'Has at least one AI-authored (non-recognizer-derived) fact.' },
-  { value: 'red', label: 'Unsupported construct', color: '#ef4444', description: 'Definition has an unsupported / not-yet-modeled construct.' },
-  { value: 'gray', label: 'Untouched', color: '#6b7280', description: 'Untouched — no real facts extracted yet.' },
+// Same 5-state gray/purple/blue/yellow/green vocabulary + hex colors
+// `/app/engine/predicates` and `/app/engine/features` already use for their
+// own `STATUS_OPTIONS` — kept byte-for-byte identical (colors + the
+// "computed baseline vs. human-review overlay" split) on purpose, so the
+// three tabs read as one consistent axis rather than three similar-but-not-
+// quite-matching ones. Labels are this axis's own wording (not copy-pasted
+// from those two) since "no predicate module yet" / "gap not closed" don't
+// make sense for a per-card fact-authoring question — see
+// `functional-model/card-status.ts`'s own `cardStatusBaseline`/
+// `cardStatusColor` doc comment for exactly which of the real 8 buckets
+// folds into which of these 5.
+const STATUS_OPTIONS: StatusFilterOption<CardStatusColor>[] = [
+  { value: 'gray', label: 'Not authored yet', color: '#6b7280', description: 'No real facts extracted yet for this card — or a structural, not-yet-modeled construct blocks it entirely.' },
+  {
+    value: 'purple',
+    label: 'Incomplete',
+    color: '#a855f7',
+    description: 'Has some real facts, but not yet BOTH fully recognizer-derived (no hand/AI-authored fact) AND oracle-text-covered — see the card’s own reasons for which.',
+  },
+  {
+    value: 'blue',
+    label: 'Fully covered',
+    color: '#3b82f6',
+    description: 'Every fact is recognizer-derived and oracle text is fully covered. No current human-review opinion attached (or a prior one went stale after the content changed and was dropped).',
+  },
+  { value: 'yellow', label: 'Flagged', color: '#eab308', description: 'Human-reviewed and flagged with one specific, known conceptual gap — see the card’s own caveat note.' },
+  { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'Human-reviewed and confirmed as-is.' },
 ];
 
 // Real FIN collector numbers aren't a clean contiguous 1-306 run (bonus/
@@ -176,10 +222,10 @@ function sortKey(n: string): [number, string] {
   return match ? [Number(match[1]), match[2] ?? ''] : [Number.POSITIVE_INFINITY, n];
 }
 
-const list = useStatusFilterList<CardStatusEntry, CardStatusBucket>({
+const list = useStatusFilterList<CardStatusEntry, CardStatusColor>({
   items: rawCards,
   keyOf: (e) => e.number,
-  statusOf: (e) => e.status,
+  statusOf: (e) => e.color,
   statusOptions: STATUS_OPTIONS,
   matchesQuery: (e, q) => e.name.toLowerCase().includes(q) || e.number.toLowerCase().includes(q),
   sortBy: (a, b) => {
@@ -191,8 +237,8 @@ const list = useStatusFilterList<CardStatusEntry, CardStatusBucket>({
 });
 
 const selectedEntry = computed(() => list.selected.value);
-function statusMeta(status: CardStatusBucket) {
-  return STATUS_OPTIONS.find((o) => o.value === status)!;
+function statusMeta(color: CardStatusColor) {
+  return STATUS_OPTIONS.find((o) => o.value === color)!;
 }
 
 // Real card content, inline in the detail pane — this tab used to open the
@@ -268,8 +314,12 @@ watch(
         />
       </div>
       <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
-        One row per card, colored by how far its functional-model facts have come along — see
-        <code class="rounded bg-bg px-1 py-0.5">scripts/AI_FACT_ELIMINATION_PROCESS.md</code>.
+        One row per card, colored by how far its functional-model facts have come along, on the same
+        gray/purple/blue/yellow/green axis as
+        <NuxtLink to="/app/engine/predicates" class="text-text underline">Predicate status</NuxtLink> and
+        <NuxtLink to="/app/engine/features" class="text-text underline">Feature status</NuxtLink> — see
+        <code class="rounded bg-bg px-1 py-0.5">scripts/AI_FACT_ELIMINATION_PROCESS.md</code> for the underlying
+        per-card fact-authoring process.
         <template v-if="statusFile">
           Computed as of {{ new Date(statusFile.generatedAt).toLocaleString() }}.
         </template>
@@ -289,18 +339,21 @@ watch(
         <template #help>
           <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
             <p>
-              Priority-ordered, first match wins: <b class="text-text">Untouched</b> (no real facts yet) →
-              <b class="text-text">Needs provenance</b> once it has any hand/agent-authored (non-recognizer) fact →
-              once every fact is recognizer-derived, <b class="text-text">Coverage gaps</b> (a real span of oracle text
-              still uncovered) or <b class="text-text">Fully covered</b> (nothing left uncovered).
+              Computed baseline (automatic, off each card's own real facts/synergy data):
+              <b class="text-text">Not authored yet</b> (no real facts yet, or a structural not-yet-modeled construct
+              blocks it) → <b class="text-text">Incomplete</b> once real facts exist but aren't yet BOTH fully
+              recognizer-derived (no hand/agent-authored fact) and oracle-text-covered →
+              <b class="text-text">Fully covered</b> once both are true.
             </p>
             <p>
-              <b class="text-text">Verified</b>, <b class="text-text">Uncertain</b>, and <b class="text-text">Re-review</b>
-              are all narrowings of <b class="text-text">Fully covered</b> only, driven by human review:
-              <b class="text-text">Verified</b> once a human confirms the card's facts; <b class="text-text">Uncertain</b>
-              when a human instead flags one specific, still-unmodelable conceptual gap (a caveat); and
-              <b class="text-text">Re-review</b> when a card was previously human-confirmed but its content has since
-              drifted from that confirmed snapshot, making the old confirmation stale.
+              <b class="text-text">Flagged</b>/<b class="text-text">Confirmed</b> are a human-review overlay on top of
+              an otherwise <b class="text-text">Fully covered</b> baseline only, same split
+              <NuxtLink to="/app/engine/predicates" class="text-text underline">Predicate status</NuxtLink> and
+              <NuxtLink to="/app/engine/features" class="text-text underline">Feature status</NuxtLink> already use: a
+              human can confirm the card's facts as-is (green) or flag one specific, still-unmodelable conceptual gap
+              (yellow, with a required note). A card that was confirmed before but has since changed content reverts
+              to plain <b class="text-text">Fully covered</b> rather than keeping a now-stale confirmation, until a
+              human looks again.
             </p>
           </EngineConsoleStatusHelp>
         </template>
@@ -314,7 +367,7 @@ watch(
         @select="list.select"
       >
         <template #row="{ entry }">
-          <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.status).color }" />
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />
           <span class="shrink-0 text-[10px] tabular-nums text-muted/70">#{{ entry.number }}</span>
           <span class="truncate">{{ entry.name }}</span>
         </template>

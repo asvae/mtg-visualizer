@@ -28773,3 +28773,111 @@ synergy.ts`:
     ENGINE-REPRESENTATION gap (not a Forge rules question — the real card
     genuinely has Crew) left deliberately unfixed per this task's own
     read-only `cards/*` constraint.
+
+- **2026-09-18 — `/app/engine/sets` moved onto the shared gray/purple/blue/
+  yellow/green 5-state axis, superseding a never-committed FDN
+  `pipeline-status.json` plan**: the Sets tab previously displayed
+  `card-status.ts`'s own real 8-bucket fact-authoring classification
+  (red/gray/orange/green/yellow/verified/uncertain/re-review) directly —
+  explicitly called out by the user as "a shitshow" for being a DIFFERENT,
+  incompatible vocabulary from the one Predicates (`/app/engine/predicates`,
+  `sink-derivation-status.ts`) and Features (`/app/engine/features`,
+  `engine-status.ts`) already share. Fixed via a pure TRANSLATION layer, not
+  a rewrite of `classifyCardStatus`'s own real classification logic (that
+  logic isn't what was broken, and stays exactly as-is — still what
+  `app/lib/cardStatus.ts`'s Facts-tab strip / `CardDetailTabs.vue` read via
+  the UNRELATED per-card `cardStatus` field on `GET /api/card/:set/:number`,
+  untouched by this task).
+  - **New in `functional-model/card-status.ts`**: `CardStatusBaseline`
+    (`'gray'|'purple'|'blue'`), `CardStatusColor` (adds `'yellow'|'green'`),
+    and `cardStatusBaseline`/`cardStatusColor` — pure functions mapping the
+    real 8-bucket `status` onto the shared 5-state axis. Also a new
+    "## Policy" doc-comment section (documented, deliberately NOT enforced
+    in code by this task, per explicit instruction) recording that
+    `gray`/`purple` are meant to be treated as prohibited for any real/
+    production consumption of this data pool-wide, except within
+    verification/review work itself — same policy
+    `sink-derivation-status.ts`'s own real "Real-matching usability gate
+    (2026-09-18)" section already enforces FOR REAL on its own (unrelated,
+    concurrently-being-built) axis; no equivalent gate was added here since
+    nothing in this codebase makes a real production decision off THIS axis
+    today (FIN's own live synergy graph never reads `card-status.ts` at
+    all; no real FDN pipeline exists yet to gate) — whoever builds that real
+    consumer should add a real gate then, mirroring that file's shape.
+  - **Mapping** (approximate by explicit user instruction — "just default
+    fin cards to some low status - I don't care", not meant to be
+    bucket-by-bucket precise): `red`+`gray` -> gray/gray; `orange`+`yellow`
+    (coverage-gap) -> purple/purple; `green` -> blue/blue (fully covered, no
+    current review opinion); `verified` -> blue/green (the direct analog of
+    Predicates'/Features' own "Confirmed" overlay, since `verified` already
+    IS a human confirmation for this axis); `uncertain` -> blue/yellow (the
+    direct analog of "Rejected [with a note]" — the caveat text IS that
+    note); `re-review` -> blue/blue (a STALE prior confirmation is
+    deliberately DROPPED rather than shown as a now-misleading green, and
+    deliberately not shown as yellow either since nothing was actually
+    rejected — just fell out of date). Full bucket-by-bucket rationale lives
+    in `card-status.ts`'s own doc comment (the source of truth for this
+    mapping, easy to revisit) and is mirrored in
+    `.claude/contracts/card-schema.md`'s own new "Display-axis translation"
+    section.
+  - **Where the translation is applied**: at SERVE time only, in
+    `server/api/card-status/[set].get.ts`'s new `withDisplayColor` (wraps
+    both the DEV live-recompute branch and the PRODUCTION checked-in-
+    snapshot branch) — NOT by regenerating `data/fin/fin_card_status.json`
+    itself, whose own on-disk schema (`status`, the 8-bucket value) is
+    untouched; this route is the ONLY consumer of that checked-in file
+    besides `card-status.ts`'s own generation scripts (confirmed via a
+    full-repo grep before choosing this approach), so no other consumer was
+    at risk of seeing an unexpected new field.
+  - **`app/pages/app/engine/sets/index.vue`**: `STATUS_OPTIONS` now typed
+    `StatusFilterOption<CardStatusColor>` with the SAME 5 hex colors
+    Predicates/Features use (`#6b7280`/`#a855f7`/`#3b82f6`/`#eab308`/
+    `#22c55e`), byte-for-byte, so the 3 tabs read as one consistent axis;
+    labels are this axis's own semantic wording ("Not authored yet" /
+    "Incomplete" / "Fully covered" / "Flagged" / "Confirmed") rather than
+    Predicates'/Features' own literal labels (those don't make sense for a
+    per-card question) or bare color words, per this task's own explicit
+    "same 'No predicate yet'-style semantic labeling convention" ask. The
+    row dot / list filter / help popover all now read `entry.color` instead
+    of `entry.status`; the same-tab optimistic review-status-bus overlay
+    (`applyReviewStatusChange`) was re-expressed on `entry.baseline`/
+    `entry.color` instead of the raw 8-bucket `status` (the old
+    "would otherwise be green/verified/uncertain/re-review" narrow-
+    eligibility check collapses exactly onto `baseline === 'blue'` under
+    the new mapping — a nice simplification, not a behavior change). Old
+    stale `localStorage` filter selections (8-bucket strings, under the
+    pre-existing `engine-console-filters-sets` key) degrade gracefully —
+    `useStatusFilterList`'s own `loadStoredFilters` already falls back to
+    "everything on" when none of a stored selection's values validate
+    against the new `statusOptions`, no migration code needed.
+  - **`.claude/contracts/card-schema.md`**: added a "Display-axis
+    translation" + "Policy, documented not enforced" section (see above),
+    recording the FDN `pipeline-status.json` supersession — that plan
+    detail was only ever discussed, never committed to any checked-in file
+    (confirmed via a repo-wide grep before writing this), so this comment +
+    this notes.md entry are now the one place recording it's superseded.
+  - **FIN's live graph is provably untouched**: `git diff --stat` against
+    `app/lib/buildGraph.ts`/`server/api/graph-links.ts`/
+    `functional-model/synergy.ts` is empty — none of this task's edits
+    touched any of the three.
+  - **Verified live**: a real `npm run dev` + `curl localhost:3000/api/
+    card-status/fin` against the real FIN pool (306 cards) tallied every
+    one of the 8 real buckets present in production data through the new
+    mapping and confirmed each translated exactly as designed (e.g.
+    `verified` x9 -> `blue`/`green`; `green` x56 -> `blue`/`blue`;
+    `re-review` x3 -> `blue`/`blue`; `uncertain` x1 (Cloud, Midgar
+    Mercenary) -> `blue`/`yellow`; `orange` x194 + `yellow` x14 ->
+    `purple`/`purple`; `red` x26 + `gray` x3 -> `gray`/`gray`). Server
+    stopped after confirming.
+  - **Verified**: `npx vitest run functional-model` — 108 files, 1091
+    passed + 5 skipped (unchanged pre-existing skips), +15 vs. this task's
+    own start (`card-status.test.ts` grew a new
+    `cardStatusBaseline`/`cardStatusColor` describe block, 8 new tests plus
+    the pre-existing 34). `npm run typecheck` — same pre-existing baseline
+    error set (`CardDetailTabs.vue` x3, `card-status.ts:263`, `card.ts:2970`,
+    `mana.ts:275`, `server/api/tokens/by-key.ts:32`), zero new errors from
+    this task's own edits.
+  - **Open Forge-verification needed: none.** This task is a display-
+    vocabulary/dashboard-plumbing change only — no new `interfaces.ts`
+    mirror, no new real-world rules claim, no change to the real 8-bucket
+    classification logic or to FIN's live matching/graph code at all.

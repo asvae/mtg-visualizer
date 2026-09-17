@@ -1,7 +1,12 @@
 // GET /api/card-status/:set — ALL in-scope :set cards' fact-authoring
 // status in one request (`functional-model/card-status.ts`'s own 8-bucket
 // classifier: red/orange/green/yellow/gray/verified/uncertain/re-review),
-// for the `/app/status` grid page (`app/pages/app/status/index.vue`).
+// for `/app/engine/sets` (`app/pages/app/engine/sets/index.vue` — the old
+// standalone `/app/status` grid page this originally served was retired
+// into that tab, see that page's own header). 2026-09-18: each served
+// entry also carries a `baseline`/`color` pair translating the 8-bucket
+// `status` onto the shared gray/purple/blue/yellow/green display axis —
+// see this file's own `withDisplayColor`/`CardStatusPageEntry` below.
 // Companion to `server/api/
 // card/[set]/[number].ts`'s own per-card `cardStatus` field — same
 // confirmed real bug this fixes for the GRID instead of one card: the
@@ -39,13 +44,52 @@
 // bundle, only what's statically imported). Stale until `npm run
 // card-status` is re-run and committed, same staleness contract every
 // other checked-in generated-data consumer already carries.
-import type { CardStatusEntry } from '../../../functional-model/card-status';
+import type { CardStatusBaseline, CardStatusColor, CardStatusEntry } from '../../../functional-model/card-status';
+import { cardStatusBaseline, cardStatusColor } from '../../../functional-model/card-status';
 import finCardStatusData from '../../../data/fin/fin_card_status.json';
 
 interface CardStatusFile {
   generatedAt: string;
   set: string;
   cards: CardStatusEntry[];
+}
+
+// 2026-09-18: `/app/engine/sets` (the sole real consumer of this route, see
+// this file's own grep-confirmed usage) now renders under the SAME shared
+// gray/purple/blue/yellow/green display axis `/app/engine/predicates`
+// (`GET /api/sink-derivations`) and `/app/engine/features`
+// (`GET /api/engine-status`) already use, instead of the checked-in
+// 8-bucket classification's own bespoke 8-color scheme — see
+// `functional-model/card-status.ts`'s own `cardStatusBaseline`/
+// `cardStatusColor` doc comment for the full fold rationale. Deliberately
+// applied HERE, at serve time, rather than by regenerating the checked-in
+// `data/fin/fin_card_status.json` snapshot (`npm run card-status`'s own
+// output) — that snapshot's real schema (`status`, the 8-bucket value)
+// stays exactly as-is, still what `scripts/AI_FACT_ELIMINATION_PROCESS.md`/
+// `app/lib/cardStatus.ts`/`CardDetailTabs.vue` all read; only THIS route's
+// served shape gains the two extra `baseline`/`color` fields, same
+// `baseline`-alongside-`color` overlay shape `SinkDerivationPageEntry`/
+// `EngineStatusPageEntry` already serve for their own axes.
+export interface CardStatusPageEntry extends CardStatusEntry {
+  baseline: CardStatusBaseline;
+  color: CardStatusColor;
+}
+
+interface CardStatusPageFile {
+  generatedAt: string;
+  set: string;
+  cards: CardStatusPageEntry[];
+}
+
+function withDisplayColor(file: CardStatusFile): CardStatusPageFile {
+  return {
+    ...file,
+    cards: file.cards.map((entry) => ({
+      ...entry,
+      baseline: cardStatusBaseline(entry.status),
+      color: cardStatusColor(entry.status),
+    })),
+  };
 }
 
 // Set-scoped by design, same "only FIN exists today, add a static import
@@ -78,11 +122,11 @@ export default defineEventHandler(async (event) => {
   if (process.env.NODE_ENV === 'production') {
     const entry = STATIC_STATUS_BY_SET[set];
     if (!entry) throw createError({ statusCode: 404, statusMessage: `No card-status snapshot for set '${set}'` });
-    return entry;
+    return withDisplayColor(entry);
   }
 
   try {
-    return await computeAllCardStatusLive(set);
+    return withDisplayColor(await computeAllCardStatusLive(set));
   } catch (err) {
     throw createError({ statusCode: 500, statusMessage: `Failed to compute card status for set '${set}': ${err instanceof Error ? err.message : String(err)}` });
   }
