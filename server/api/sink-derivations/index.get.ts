@@ -28,8 +28,39 @@ import type {
   SinkDerivationEvidence,
   SinkDerivationExpectedShape,
 } from '../../../functional-model/sink-derivation-status';
+import { readFunctionalModelFile, type SourceFileResult } from '../../../functional-model/source-files';
 
 const REVIEWS_PATH = join(process.cwd(), 'functional-model', 'sink-derivation-reviews.json');
+
+/**
+ * Real, on-disk content for the 3 files backing one mechanism's predicate
+ * status — so a reviewer can actually read the predicate's own logic, the
+ * corpus manifest's real per-case verdicts (`SourceFileResult.content` here
+ * is the manifest's RAW file text, deliberately not just the `{total,
+ * passing}` summary `evidence.corpusTotal`/`corpusPassing` already carry —
+ * a reviewer needs the actual per-card `cases` array to judge anything),
+ * and the corpus test file itself. Every one of the 4 seeded mechanisms
+ * has a real, deterministic path for all three (`functional-model/
+ * sink-model/predicates/<slug>.ts` / `<slug>.corpus.json` / `<slug>.test.ts`)
+ * whether or not the file actually exists yet — `stun-counters`/
+ * `finality-counters` (still `gray`, no predicate built) correctly come
+ * back with `exists: false` on all three, not an error.
+ */
+export interface SinkDerivationSourceFiles {
+  predicate: SourceFileResult;
+  corpusManifest: SourceFileResult;
+  corpusTest: SourceFileResult;
+}
+
+function loadSourceFiles(slug: string, evidence: SinkDerivationEvidence): SinkDerivationSourceFiles {
+  const root = process.cwd();
+  const testPath = evidence.predicateModulePath.replace(/\.ts$/, '.test.ts');
+  return {
+    predicate: readFunctionalModelFile(root, evidence.predicateModulePath),
+    corpusManifest: readFunctionalModelFile(root, evidence.corpusManifestPath),
+    corpusTest: readFunctionalModelFile(root, testPath),
+  };
+}
 
 export interface SinkDerivationReview {
   verdict: 'confirm' | 'reject';
@@ -57,6 +88,8 @@ export interface SinkDerivationPageEntry {
   /** The real, computed gray/purple/blue call — UNCHANGED by review (kept alongside `color` so a consumer can always see what the reviewer actually overrode, and why `color` differs from it). */
   baseline: SinkDerivationBaseline;
   evidence: SinkDerivationEvidence;
+  /** Real, on-disk content for the 3 files backing this mechanism — see `SinkDerivationSourceFiles`'s own doc comment. */
+  sourceFiles: SinkDerivationSourceFiles;
   /** `baseline`, unless a human review overlay upgrades it to `yellow`/`green` — see `SinkDerivationReview` above. This is the field a consumer should render/filter on. */
   color: SinkDerivationColor;
   review?: SinkDerivationReview;
@@ -70,6 +103,6 @@ export default defineEventHandler((): SinkDerivationPageEntry[] => {
     const review = reviews[entry.key];
     const color: SinkDerivationColor =
       review?.verdict === 'reject' ? 'yellow' : review?.verdict === 'confirm' ? 'green' : entry.baseline;
-    return { ...entry, color, review };
+    return { ...entry, sourceFiles: loadSourceFiles(entry.slug, entry.evidence), color, review };
   });
 });

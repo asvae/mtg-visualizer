@@ -28881,3 +28881,140 @@ synergy.ts`:
     vocabulary/dashboard-plumbing change only — no new `interfaces.ts`
     mirror, no new real-world rules claim, no change to the real 8-bucket
     classification logic or to FIN's live matching/graph code at all.
+
+## 2026-09-18 — "blue means scenario-verified?" audit + real-evidence API for Features/Predicates
+
+Two-part task from orchestrator. Part 1: audit whether `engine-status.ts`'s
+`blue` classification (cites >=1 real `*.test.ts` file, no named remainder)
+actually means "backed by a real gameplay-scenario test" the way this
+project's own established standard elsewhere does (`harness.ts`'s
+`runScenario`/`engine-trace.ts`'s `runEngineScenarios`, producing a real,
+checked-in `trace.json`). Part 2: expose real evidence (test code, corpus
+data, predicate source) via API for both Features (`/api/engine-status`)
+and Predicates (`/api/sink-derivations`), read-only, scoped to
+`functional-model/`.
+
+**Part 1 finding (reported to user/orchestrator, NOT acted on — no
+classification changed): no, several `blue` entries are backed by
+materially weaker evidence than "scenario-verified" implies.** Computed the
+current 11 `blue` gaps (`gap-4,5,8,9,10,19,20,21,22,23,24`) and read every
+cited test file directly:
+
+- Only `engine.test.ts` genuinely drives the engine through real turn/phase
+  structure (`createEngine`+`advance`/`stepPriority`, real
+  `castSpell`/`declareAttackers`/`resolveCombatDamage`/etc., confirmed via
+  its own `setupGame()` helper walking real Untap->Upkeep->Draw->Main1).
+  `mana.test.ts`, `state.test.ts`, `sba.test.ts`, `turn.test.ts`,
+  `triggers.test.ts`, `combinator.test.ts`, `stack.test.ts` all call
+  `createEngine` ZERO times (confirmed via grep) — every one is a narrower
+  unit/module test calling one function directly (`GameState.mill`,
+  `checkStateBasedActions`, `advancePhase`, `fireTrigger`, `runProgram`,
+  `Stack.resolveTop`, `parseManaCost`) against hand-built minimal fixtures.
+- Gaps **#8** (damage-prevention shields), **#10** (legend rule/SBA), **#20**
+  (activation-limit tracking), **#21** (`state.pump()` expiry), **#24**
+  (combinator `SelectUpTo`) cite ONLY this narrower kind of test — zero
+  `engine.test.ts` citation, no turn/priority simulation anywhere in their
+  own evidence.
+- Gap **#22** (attack-triggered-ability auto-dispatch) cites
+  `attacks-trigger-structural.test.ts` (`functional-model/recognizers/`) —
+  this is a SYNERGY-FACT recognizer test (feeds real-card oracle text
+  through a pattern-matcher, asserts the returned `Fact` shape) — it never
+  touches `GameState`/`createEngine`/the engine runtime at all. Citing it as
+  evidence the ENGINE mechanism works is a real domain mismatch (it only
+  proves the unrelated Fact-extraction layer recognizes the phrasing).
+- Gap **#19** (mill) cites `card.test.ts` — **this file does not exist
+  anywhere in the repo** (confirmed via repo-wide `find`). The
+  `TEST_CITATION_RE` regex matched it out of ENGINE_GAPS.md's own sentence
+  "`engine.test.ts`/`card.test.ts` needed no new cases" — i.e. the doc's own
+  prose was saying that file was NOT touched, not citing it as backing
+  evidence; the naive regex can't tell the difference. Ironic wrinkle: the
+  REAL best evidence for gap #19 (the-water-crystal's own real
+  `runEngineScenarios` card-level trace, genuinely the gold-standard kind of
+  evidence this whole audit is asking about) exists and is real, but isn't
+  a `*.test.ts` file at all, so the classifier can't see or cite it.
+- Gaps **#4/#5/#9/#23** are the closest to solid: each has at least one real
+  `engine.test.ts` describe block genuinely piloting the turn-based engine
+  (confirmed per-gap: #4's fizzle describe block via real
+  `castSpell`/`resolveTop`; #9's combat via `advance()` into
+  `CombatDeclareAttackers`+first/double-strike; #22/#23's attack-trigger and
+  Cycling describe blocks likewise) — but still synthetic `CardDefinition`
+  fixtures, not real FIN cards, and no checked-in `trace.json`-equivalent a
+  reviewer can independently read outside the test file itself.
+- Minor extra finding, not load-bearing: a real `cycling.test.ts` exists
+  (pure unit test of the `basicLandcycling` builder helper) but isn't cited
+  by gap #23's own text at all — an even-narrower piece of real coverage
+  invisible to the parser, harmless either way.
+
+**Conclusion for the user:** `blue` today means "cites a `*.test.ts`
+filename per a regex, no named remainder" — genuinely NOT the same bar as
+"real gameplay-scenario verified," and the gap between them is real and
+uneven across entries, not uniform. Recommended (not applied): the
+user/orchestrator decide per-entry whether to downgrade via the existing
+yellow-reject overlay, or accept the current bar as intentionally coarser
+than the sink-derivation-predicate axis's own stricter corpus-based `blue`.
+Did NOT touch `engine-status.ts`'s classification logic itself, per
+instruction.
+
+**Part 2 — new shared module + 2 route changes, both additive, no
+classification logic touched:**
+
+- **New `functional-model/source-files.ts`** — `readFunctionalModelFile(root,
+  relPath)` (real content, `exists`/`truncated` flags, traversal-safe: any
+  path resolving outside `functional-model/` comes back `exists:false`, never
+  throws) and `findFunctionalModelFilesByBasename(root, basename)`
+  (recursive real-tree search, skips `node_modules`/dotfiles, returns EVERY
+  match sorted — deliberately an array: found a real basename collision,
+  `engine.test.ts` exists both at `functional-model/engine.test.ts` and
+  `functional-model/cards/jill-shiva-s-dominant-shiva-warden-of-ice/
+  engine.test.ts`). `MAX_INLINE_SOURCE_BYTES = 500_000` (largest real file
+  today, `engine.test.ts`, is ~115KB — generous headroom, never silently
+  truncates without saying so).
+- **`server/api/engine-status/index.get.ts`** — each served entry gained
+  `testFileRefs: {file, matches: string[]}[]`, resolving every
+  `evidence.testFiles` citation against the real tree (empty `matches` for
+  gap #19's `card.test.ts`, reported honestly, not hidden).
+- **New `server/api/engine-status/source.get.ts`** — `GET
+  /api/engine-status/source?path=<repo-root-relative path>` → real file
+  content. Kept as a SEPARATE fetch-on-demand route (not inlined into the
+  list) specifically because `engine.test.ts` is cited by 5 of the 11 blue
+  entries — inlining would repeat ~115KB per citing row for nothing.
+- **`server/api/sink-derivations/index.get.ts`** — each served entry gained
+  `sourceFiles: {predicate, corpusManifest, corpusTest}` (each a
+  `SourceFileResult`), inlined directly (not a separate route) since these
+  files are small and, unlike `engine-status`'s citations, never shared
+  across entries — no duplication cost to avoid. `corpusManifest.content` is
+  the RAW file text (including the real per-card `cases` array with
+  card/slug/expectedVerdict/note), not just the `{total,passing}` summary
+  `evidence` already carried — a reviewer needs the actual per-card verdicts
+  to judge anything. `stun-counters`/`finality-counters` (still `gray`, no
+  predicate built) correctly come back `exists:false` on all 3 files, not
+  an error.
+- Updated both contracts I own: `.claude/contracts/engine-status-schema.md`
+  (new `testFileRefs`/`source.get.ts` section, plus a new "what ui must not
+  assume" bullet spelling out the Part-1 "`blue` != scenario-verified"
+  finding so the future `ui` consumer doesn't over-trust the color) and
+  `.claude/contracts/sink-derivation-status-schema.md` (new `sourceFiles`
+  section). Did not touch `card-schema.md` (concurrent Sets-vocabulary work
+  owns it, per instruction) or `card-status.ts`.
+- **Verified live**: spun up `npx nuxt dev` on a scratch port, hit both
+  `GET /api/engine-status` (confirmed `testFileRefs` resolves correctly,
+  including the real `engine.test.ts` collision and the real empty-array
+  `card.test.ts` case) and `GET /api/engine-status/source` (real content
+  back for `functional-model/state.test.ts`; `exists:false` for the
+  nonexistent `card.test.ts`; a `../../../etc/passwd` traversal attempt
+  correctly rejected; missing `path` query param -> 400) and `GET
+  /api/sink-derivations` (real `saga`/`crew` predicate+corpus+test content
+  back, including the manifest's real `cases` array; `stun-counters`/
+  `finality-counters` correctly all-`exists:false`). Dev server stopped
+  after confirming.
+- **Verified**: `npx vitest run functional-model` — 108 files, 1091 passed +
+  5 skipped (unchanged). Full-repo `npx vitest run` — 112/113 files green,
+  same 5 pre-existing unrelated `tagging/sets/{lea,leb,2ed,arn}`/
+  `card-enrichment-status.json` failures this doc's own history already
+  documents, untouched by this task. `npx nuxt typecheck` — zero NEW errors
+  (same pre-existing baseline: `CardDetailTabs.vue` x3, `card-status.ts:263`,
+  `card.ts:2970`, `mana.ts:275`, `server/api/tokens/by-key.ts:32`; none in
+  any file this task touched).
+- **Open Forge-verification needed: none.** This task is a status-dashboard
+  evidence-serving change only — no new `interfaces.ts` mirror, no new
+  real-world rules claim, no change to any classification/matching logic.

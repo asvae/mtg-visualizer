@@ -134,16 +134,61 @@ card-enrichment-status.json`'s own flat identity-keyed shape instead.
 ## Served shape (`GET /api/engine-status`)
 
 ```ts
+interface EngineStatusTestFileRef {
+  file: string;       // one of evidence.testFiles' bare filenames, e.g. "engine.test.ts"
+  matches: string[];  // every real repo-root-relative path under functional-model/ with that exact basename — see below for why this is an array, and why it can be empty
+}
+
 interface EngineStatusPageEntry {
   key: string;
   gapNumber: number;
   title: string;
   baseline: EngineStatusBaseline;   // unchanged by review
   evidence: EngineStatusEvidence;
+  testFileRefs: EngineStatusTestFileRef[];  // real on-disk resolution of evidence.testFiles — see "Real evidence" below
   color: EngineStatusColor;         // baseline, or yellow/green if reviewed — render/filter on THIS
   review?: { verdict: 'confirm' | 'reject'; note?: string; reviewedAt?: string; reviewedBy?: string };
 }
 ```
+
+### Real evidence (2026-09-18) — reading the actual cited test code
+
+`evidence.testFiles` only ever carried a bare filename (a literal regex match
+against `ENGINE_GAPS.md`'s own prose) — no path, no way to read the real
+file. `testFileRefs` resolves each citation against the real repo tree
+(`functional-model/source-files.ts`'s `findFunctionalModelFilesByBasename`,
+recursive, fresh off disk every request, no caching):
+
+- **`matches` is an array, not one guessed path** — this repo has a real,
+  checked-in basename collision: `engine.test.ts` exists both at
+  `functional-model/engine.test.ts` AND
+  `functional-model/cards/jill-shiva-s-dominant-shiva-warden-of-ice/engine.test.ts`.
+  Collapsing that to a single picked path would silently misattribute
+  evidence to the wrong file.
+- **`matches` can legitimately be empty** — a real, found case: gap #19's
+  own ENGINE_GAPS.md text cites `card.test.ts`, which does not exist
+  anywhere in this repo (the citation is a parser false-positive off a
+  sentence saying that file "needed no new cases," not a real "this file
+  backs the closure" claim — see the engine agent's own 2026-09-18 audit
+  notes for the full write-up). A consumer should render "citation not
+  found on disk" for an empty `matches`, not hide the row or treat it as a
+  fetch error.
+- **Fetch real content for one match** via `GET /api/engine-status/source?path=<one of testFileRefs[].matches[i]>`
+  → `{ path: string; exists: boolean; content: string | null; truncated: boolean }`.
+  A SEPARATE route (not inlined into the list above) specifically because
+  several real gap entries cite the SAME large file (`engine.test.ts`, the
+  single largest cited file, ~115KB) — inlining would repeat that content
+  once per citing entry. `content` is truncated (never silently — see
+  `truncated`) above `MAX_INLINE_SOURCE_BYTES` (`functional-model/
+  source-files.ts`), generous enough for every file cited today.
+- **Read-only, hard-scoped to `functional-model/`** — `source.get.ts`
+  rejects (returns `exists: false`, never throws or serves content) any
+  `path` that resolves outside that directory, including a `..`-laden
+  traversal attempt. There is no way to read anything outside
+  `functional-model/` through this route.
+- **`evidence.testFiles`/`hasClosedMarker`/`hasNamedRemainder` themselves are
+  unchanged** — this is purely an additive enrichment on top of the
+  existing baseline computation, not a reclassification.
 
 `GET /api/engine-status` returns `EngineStatusPageEntry[]`, freshly
 computed every request (dev convention, same as `server/api/keywords/
@@ -192,6 +237,30 @@ of yellow is "reviewed AND here's why it's wrong."
   spot-checking, not for building UI copy from directly** — they're raw,
   whitespace-flattened prose fragments (Markdown backticks/asterisks may
   still be present), not curated display strings.
+- **`blue` ("engine support, VERIFIED") means "cites a `*.test.ts` file,"
+  NOT "backed by a real gameplay-scenario test."** A 2026-09-18 audit (see
+  the engine agent's own memory notes) found real, checkable variance among
+  the 11 currently-`blue` entries: only `engine.test.ts` genuinely drives
+  the engine through real turn/phase structure (`createEngine`+`advance`/
+  `stepPriority`+real `castSpell`/`declareAttackers`/etc.) — `mana.test.ts`,
+  `state.test.ts`, `sba.test.ts`, `turn.test.ts`, `triggers.test.ts`,
+  `combinator.test.ts`, and `stack.test.ts` are all narrower unit/module
+  tests that call one function directly against hand-built minimal
+  fixtures, never invoking `createEngine` at all. Several `blue` entries
+  (gaps #8, #10, #21 fully, #20/#24 fully) cite ONLY this narrower kind of
+  test, with no `engine.test.ts` citation at all. `recognizers/
+  attacks-trigger-structural.test.ts` (cited by gap #22) is a SYNERGY-FACT
+  recognizer test (real-card oracle-text pattern matching), not an engine
+  test at all — it never touches `GameState`/`createEngine`. None of the 11
+  reach this project's own established "real gameplay scenario" bar
+  (`harness.ts`'s `runScenario`/`engine-trace.ts`'s `runEngineScenarios`,
+  producing a real, checked-in `trace.json` a reviewer can independently
+  read) the way a card's own `scenarios.ts` or the sink-derivation
+  predicates' own corpus tests do. This is not (yet) reflected in
+  `baseline`/`color` — deliberately left as a human judgment call, not
+  silently reclassified. A reviewer should read the actual test content
+  (via `testFileRefs`/`GET /api/engine-status/source`) before confirming
+  `blue`, not trust the color alone.
 
 ## What `engine` (producer) must not break
 

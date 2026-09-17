@@ -124,6 +124,19 @@ interface SinkDerivationEntry {
 ## Served shape (`GET /api/sink-derivations`)
 
 ```ts
+interface SinkDerivationSourceFiles {
+  predicate: SourceFileResult;       // functional-model/sink-model/predicates/<slug>.ts
+  corpusManifest: SourceFileResult;  // functional-model/sink-model/predicates/<slug>.corpus.json — RAW file content, including the real per-card `cases` array, not just the {total,passing} summary evidence already carries
+  corpusTest: SourceFileResult;      // functional-model/sink-model/predicates/<slug>.test.ts
+}
+
+interface SourceFileResult {
+  path: string;             // repo-root-relative path checked
+  exists: boolean;
+  content: string | null;   // real file text, or null if it doesn't exist yet (e.g. every field for stun-counters/finality-counters today)
+  truncated: boolean;       // true if content was cut off at source-files.ts's MAX_INLINE_SOURCE_BYTES (none of today's 4 mechanisms' files are anywhere near this)
+}
+
 interface SinkDerivationPageEntry {
   key: string;
   slug: string;
@@ -132,10 +145,31 @@ interface SinkDerivationPageEntry {
   expectedSinkShapes: SinkDerivationExpectedShape[];
   baseline: SinkDerivationBaseline;   // unchanged by review
   evidence: SinkDerivationEvidence;
+  sourceFiles: SinkDerivationSourceFiles;  // real, on-disk content for all 3 files — see below
   color: SinkDerivationColor;         // baseline, or yellow/green if reviewed — render/filter on THIS
   review?: { verdict: 'confirm' | 'reject'; note?: string; reviewedAt?: string; reviewedBy?: string };
 }
 ```
+
+### Real evidence (2026-09-18) — reading the actual predicate/corpus/test code
+
+Added so a human reviewer can read the real predicate logic, the real
+per-card corpus verdicts, and the real corpus test code — not just this
+entry's own hand-authored `motivation`/`expectedSinkShapes[].note` prose.
+`sourceFiles` is computed fresh every request (`functional-model/
+source-files.ts`'s `readFunctionalModelFile`, same no-caching dev
+convention as everything else on this axis), read-only and hard-scoped to
+`functional-model/` — a request for a file outside that directory (or one
+that doesn't exist, like all 3 files for `stun-counters`/
+`finality-counters` today) comes back `{exists: false, content: null}`,
+never an error and never content from anywhere else on disk.
+
+Unlike the engine-status axis's own `GET /api/engine-status/source` sibling
+route, this axis inlines full file content directly into the list response
+instead of a separate fetch-per-file route — deliberately: each of the 4
+seeded mechanisms' 3 files is small (low tens of KB combined, checked
+2026-09-18) and, unlike `engine-status`'s citations, never shared across
+multiple entries, so there's no duplication cost to avoid.
 
 `GET /api/sink-derivations` returns `SinkDerivationPageEntry[]`, freshly
 computed every request (dev convention, same as

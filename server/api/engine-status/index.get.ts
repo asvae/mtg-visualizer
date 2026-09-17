@@ -24,8 +24,32 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { computeEngineStatus } from '../../../functional-model/engine-status';
 import type { EngineStatusBaseline, EngineStatusColor, EngineStatusEvidence } from '../../../functional-model/engine-status';
+import { findFunctionalModelFilesByBasename } from '../../../functional-model/source-files';
 
 const REVIEWS_PATH = join(process.cwd(), 'functional-model', 'engine-status-reviews.json');
+
+/**
+ * One real, on-disk citation from `evidence.testFiles` — resolved (not just
+ * named) against the actual repo tree, so a consumer can go straight to
+ * `GET /api/engine-status/source?path=...` instead of guessing a path from
+ * a bare filename. `matches` is an ARRAY, not a single path: this repo has
+ * a real, checked-in basename collision (`engine.test.ts` exists both at
+ * `functional-model/engine.test.ts` AND
+ * `functional-model/cards/jill-shiva-s-dominant-shiva-warden-of-ice/engine.test.ts`)
+ * — collapsing that to one guessed path would silently misattribute
+ * evidence. Empty `matches` (ENGINE_GAPS.md's own real gap #19, which cites
+ * a `card.test.ts` that does not exist anywhere in this repo) is reported
+ * as-is, not hidden.
+ */
+export interface EngineStatusTestFileRef {
+  file: string;
+  matches: string[];
+}
+
+function resolveTestFileRefs(testFiles: string[]): EngineStatusTestFileRef[] {
+  const root = process.cwd();
+  return testFiles.map((file) => ({ file, matches: findFunctionalModelFilesByBasename(root, file) }));
+}
 
 export interface EngineStatusReview {
   verdict: 'confirm' | 'reject';
@@ -51,6 +75,8 @@ export interface EngineStatusPageEntry {
   /** The real, computed gray/purple/blue call — UNCHANGED by review (kept alongside `color` so a consumer can always see what the reviewer actually overrode, and why `color` differs from it). */
   baseline: EngineStatusBaseline;
   evidence: EngineStatusEvidence;
+  /** Real on-disk resolution of every `evidence.testFiles` citation — see `EngineStatusTestFileRef`'s own doc comment for why this is an array of matches, not one guessed path, and why an empty array is a real, reportable outcome (a citation to a file that doesn't exist), not an error. Fetch actual content for one via `GET /api/engine-status/source?path=<one of these matches>`. */
+  testFileRefs: EngineStatusTestFileRef[];
   /** `baseline`, unless a human review overlay upgrades it to `yellow`/`green` — see `EngineStatusReview` above. This is the field a consumer should render/filter on. */
   color: EngineStatusColor;
   review?: EngineStatusReview;
@@ -64,6 +90,6 @@ export default defineEventHandler((): EngineStatusPageEntry[] => {
     const review = reviews[entry.key];
     const color: EngineStatusColor =
       review?.verdict === 'reject' ? 'yellow' : review?.verdict === 'confirm' ? 'green' : entry.baseline;
-    return { ...entry, color, review };
+    return { ...entry, testFileRefs: resolveTestFileRefs(entry.evidence.testFiles), color, review };
   });
 });
