@@ -1,0 +1,297 @@
+// Sink-derivation-predicate status — a NEW, currently-empty-of-real-work
+// status axis tracking a different problem than
+// `functional-model/engine-status.ts` (mechanic/vocabulary support) and
+// different again from `functional-model/synergy.ts`'s per-card `Fact`
+// model: this axis tracks progress on the small set of hand-written
+// "sink-derivation predicates" the sink-only-synergy matcher
+// (`functional-model/sink-model/match-sink.ts`) will eventually need for
+// mechanisms whose real gameplay consequences come from GENERIC ENGINE
+// AUTOMATION rather than from anything visible in a card's own
+// `CardDefinition` effects/triggers/program nodes.
+//
+// Feeds `GET /api/sink-derivations`
+// (`server/api/sink-derivations/index.get.ts`) — see
+// `.claude/contracts/sink-derivation-status-schema.md` for the served
+// shape. Same 5-state color/status vocabulary and gray/purple/blue
+// computed-baseline + yellow/green human-review-overlay split as
+// `engine-status.ts` established, just applied to a different index:
+//
+//   gray   — no predicate module exists yet for this mechanism at all.
+//   purple — a predicate module exists, but there's no real scenario-
+//            corpus manifest yet recording it as fully checked (either the
+//            manifest file is missing, or it exists but doesn't yet show
+//            every corpus scenario agreeing with real trace evidence).
+//   blue   — a predicate module exists AND its corpus manifest shows every
+//            scenario in the corpus (a real, positive count) agreeing with
+//            real trace evidence.
+//   yellow — (overlay, not computed here) a human reviewed a blue/purple
+//            baseline and found a real disagreement/wrong verdict (a
+//            required note records what's wrong).
+//   green  — (overlay, not computed here) a human reviewed and confirmed
+//            it's correct.
+//
+// ## Why this needed its OWN base index, not a reuse of `ENGINE_GAPS.md`'s
+// numbered-list parser
+//
+// `engine-status.ts` parses `ENGINE_GAPS.md`'s own "Real gaps —
+// prioritized" numbered list as its base index precisely because that list
+// already exists, hand-curated, for a DIFFERENT question ("does the engine
+// support this mechanic at all"). The 4 mechanisms tracked here (Saga,
+// Stun counters, Finality counters, Crew) already have entries in
+// `ENGINE_GAPS.md`'s OTHER section ("## FIN-specific mechanics closed") —
+// but as fully-CLOSED engine capabilities, not as "does a sink-derivation
+// predicate exist for this yet" (a narrower, newer, currently-all-`gray`
+// question this file tracks instead). Reusing that doc's parser here would
+// either misreport all 4 as "closed" (wrong axis) or require inventing a
+// second, unrelated meaning for its `CLOSED` marker. This axis is
+// deliberately its own small, hand-seeded index instead — see
+// `SINK_DERIVATION_MECHANISMS` below — mirroring how `engine-status.ts`
+// itself grows: real, already-identified entries only, no speculative
+// pre-seeding of every mechanism that COULD someday need this treatment.
+//
+// ## The real gap this whole axis exists to close
+//
+// Found while sanity-checking `functional-model/sink-model/match-sink.ts`
+// against real FIN cards (see `.claude/agent-memory/engine/notes.md`'s
+// 2026-09-17 "sink-only synergy matching prototype" entry for the full
+// writeup): Summon: Bahamut's real graveyard-transition on its Saga's
+// final chapter comes ENTIRELY from generic `saga.ts` automation (keyed off
+// its typeLine + numbered `chapterN` trigger names), with NO corresponding
+// `Effect` node anywhere in its own `definition.ts` — so a pure
+// `CardDefinition`-effect-walking matcher can never derive it. Stun
+// counters, Finality counters, and Crew are the same class of problem
+// (real per-object replacement effects / a structured non-Effect cost
+// path, both narrow engine hooks rather than declarative `Effect` data —
+// see `ENGINE_GAPS.md`'s own "Saga lore-counter automation (714)" and
+// "Stun and finality counters" entries, and gap-tracked Crew closure).
+//
+// ## What a predicate module / corpus manifest will look like once built
+// (not built by this task — this file only checks for their PRESENCE)
+//
+// For mechanism `<slug>`, this file expects (by convention, not yet
+// created):
+//   - `functional-model/sink-model/predicates/<slug>.ts` — the actual
+//     predicate function ("does THIS card's <mechanism> automation produce
+//     a creature death?" -> true/false/unknown), never a guessed answer.
+//   - `functional-model/sink-model/predicates/<slug>.corpus.json` — a small
+//     `{ total, passing }` manifest, written by a future verification pass
+//     (mirroring how `scripts/verify-synergy.mjs` already reconciles Facts
+//     against real traces) recording how many of the mechanism's real
+//     corpus scenarios the predicate agrees with.
+//
+// Neither file exists for any of the 4 seeded mechanisms yet — every entry
+// therefore starts `gray`, which is the correct, real, computed state right
+// now (not a hardcoded placeholder value).
+
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+export type SinkDerivationBaseline = 'gray' | 'purple' | 'blue';
+export type SinkDerivationColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+
+/** One real sink-query event-shape a mechanism's eventual predicate is expected to cover. */
+export interface SinkDerivationExpectedShape {
+  /** A `SinkQuery`/`Fact`-style event name, e.g. `'dies'`, `'zoneChange'`, `'untap'`. */
+  event: string;
+  /** Why this shape, in real-card terms — cites the motivating card/finding. */
+  note: string;
+}
+
+/** Statically seeded mechanism metadata — the ONLY place new entries get added (see this file's own header + the contract doc for the exact edit point). */
+export interface SinkDerivationMechanism {
+  /** Stable identity key — also the served `key` and the review-overlay key. Never reuse a retired slug for a different mechanism. */
+  slug: string;
+  label: string;
+  /** Short description of the real-card evidence that motivated tracking this mechanism (cites a real card + where the gap was found). */
+  motivation: string;
+  expectedSinkShapes: SinkDerivationExpectedShape[];
+}
+
+export interface SinkDerivationCorpusManifest {
+  total: number;
+  passing: number;
+}
+
+export interface SinkDerivationEvidence {
+  /** Repo-root-relative path this file checked for the predicate module. */
+  predicateModulePath: string;
+  predicateModuleExists: boolean;
+  /** Repo-root-relative path this file checked for the corpus-verification manifest. */
+  corpusManifestPath: string;
+  corpusManifestExists: boolean;
+  /** From the manifest, if present and parseable; 0 otherwise. */
+  corpusTotal: number;
+  corpusPassing: number;
+}
+
+export interface SinkDerivationEntry {
+  key: string;
+  slug: string;
+  label: string;
+  motivation: string;
+  expectedSinkShapes: SinkDerivationExpectedShape[];
+  baseline: SinkDerivationBaseline;
+  evidence: SinkDerivationEvidence;
+}
+
+/**
+ * The real, already-identified seed list — exactly the 4 mechanisms found
+ * during the sink-model sanity check (see this file's own header). Do NOT
+ * speculatively add mechanisms here that haven't actually surfaced a real
+ * card gap yet — same "organic growth, not a-priori enumeration" posture
+ * `engine-status.ts` established for its own index.
+ */
+export const SINK_DERIVATION_MECHANISMS: SinkDerivationMechanism[] = [
+  {
+    slug: 'saga',
+    label: 'Saga chapter-completion automation',
+    motivation:
+      "Summon: Bahamut's real graveyard-transition on its Saga's final chapter comes entirely from generic " +
+      "saga.ts automation (typeLine + numbered chapterN trigger names) — confirmed during the sink-model " +
+      "sanity check to have NO corresponding Effect node in Bahamut's own definition.ts, so a pure " +
+      "CardDefinition-effect-walking matcher (match-sink.ts) cannot derive it at all. See ENGINE_GAPS.md's " +
+      "'Saga lore-counter automation (714)' entry and .claude/agent-memory/engine/notes.md's 2026-09-17 " +
+      "'sink-only synergy matching prototype' entry for the full finding.",
+    expectedSinkShapes: [
+      {
+        event: 'dies',
+        note:
+          "714.4's chapter-completion sacrifice, once the greatest lore-counter chapter is reached — the " +
+          "Bahamut case: a real dies/graveyard-zone-transition with no Effect backing it.",
+      },
+      {
+        event: 'zoneChange',
+        note:
+          "Same 714.4 sacrifice, viewed as a Battlefield->Graveyard zone move rather than a bare 'dies' event " +
+          "— whichever shape the eventual predicate settles on should match how other zone-move Facts in " +
+          "synergy.ts are already keyed (see SYNERGY_DESIGN.md's Fact-unification notes on this exact " +
+          "zone-vs-event-shape split).",
+      },
+    ],
+  },
+  {
+    slug: 'stun-counters',
+    label: 'Stun-counter untap replacement',
+    motivation:
+      "Real per-object replacement effect (Forge Card.java ~7056-7076: STUN replaces the Untap event by " +
+      "removing a counter instead) modeled in this engine as a narrow check inside GameState.untap() " +
+      "(state.ts), not as an Effect node on the stunned card's own definition — see ENGINE_GAPS.md's " +
+      "'Stun and finality counters' entry (cites Ice Flan, Tonberry, Omega, Heartless Evolution). No " +
+      "CardDefinition-level Effect exists for 'this permanent doesn't untap' on any of those cards' own " +
+      "definition.ts files; the consequence is entirely engine-automation-derived.",
+    expectedSinkShapes: [
+      {
+        event: 'untap',
+        note:
+          "A sink wanting 'this permanent fails to untap' (or 'a stun counter was removed') has nothing to " +
+          "match against in CardDefinition today — the real behavior lives in state.ts's untap(), keyed off " +
+          "RealCard.counters presence, not any Effect.",
+      },
+    ],
+  },
+  {
+    slug: 'finality-counters',
+    label: 'Finality-counter graveyard-to-exile redirect',
+    motivation:
+      "Real per-object replacement effect (Forge Card.java ~7056-7076: FINALITY replaces a Battlefield->" +
+      "Graveyard Moved event with Battlefield->Exile) modeled in this engine as a narrow check inside " +
+      "GameState.move() (state.ts) — see ENGINE_GAPS.md's 'Stun and finality counters' entry (cites " +
+      "Relentless X-ATM092). The exile-instead-of-graveyard consequence has no Effect node on the card's own " +
+      "definition.ts; it's an engine-automation redirect keyed on RealCard.counters, same class of gap as " +
+      "Saga and Stun above.",
+    expectedSinkShapes: [
+      {
+        event: 'dies',
+        note:
+          "A sink wanting 'creature died to the graveyard' should NOT match a finality-countered permanent's " +
+          "own death (it goes to exile instead) — the predicate needs to recognize the redirect, not just " +
+          "the presence of a destroy/dies-shaped Effect.",
+      },
+      {
+        event: 'exile',
+        note:
+          "The redirected destination itself — a sink wanting 'this went to exile' currently has nothing to " +
+          "derive it from structurally for a finality-countered permanent.",
+      },
+    ],
+  },
+  {
+    slug: 'crew',
+    label: 'Crew cost activation path',
+    motivation:
+      "card.crewCost drives a real, structured cost path (canActivateAbility/activateAbility taking an " +
+      "explicit crewedBy: RealCard[]) that bypasses the free-text cost-string checks entirely — see " +
+      "ENGINE_GAPS.md's '~~Crew N~~ CLOSED' entry. The tapping of the crewing creatures (and the Vehicle's " +
+      "own resulting creature-ness for combat purposes) is real gameplay consequence produced by this " +
+      "generic engine cost-payment path, not by any Effect node on the crewed Vehicle's own definition.ts.",
+    expectedSinkShapes: [
+      {
+        event: 'tap',
+        note:
+          "A sink wanting 'a creature got tapped' currently can't see the tapping Crew produces on its " +
+          "crewing creatures — that tap comes from the generic crewedBy cost-payment path, not from any " +
+          "Effect the Vehicle's own definition declares.",
+      },
+    ],
+  },
+];
+
+function loadCorpusManifest(path: string): SinkDerivationCorpusManifest {
+  if (!existsSync(path)) return { total: 0, passing: 0 };
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8'));
+    const total = typeof parsed?.total === 'number' ? parsed.total : 0;
+    const passing = typeof parsed?.passing === 'number' ? parsed.passing : 0;
+    return { total, passing };
+  } catch {
+    return { total: 0, passing: 0 };
+  }
+}
+
+/**
+ * Computes the real, checkable gray/purple/blue baseline for every seeded
+ * sink-derivation-predicate mechanism, off real filesystem presence of a
+ * predicate module + its corpus-verification manifest. `root` defaults to
+ * `process.cwd()` (the repo root — true both inside a Nuxt server route and
+ * via a standalone script), matching `computeEngineStatus`'s own contract.
+ *
+ * No mechanism has a predicate module yet, so every entry currently
+ * computes `gray` — that's the real, correct state today, not a
+ * placeholder.
+ */
+export function computeSinkDerivationStatus(root: string = process.cwd()): SinkDerivationEntry[] {
+  const predicatesDir = join('functional-model', 'sink-model', 'predicates');
+
+  return SINK_DERIVATION_MECHANISMS.map((mechanism): SinkDerivationEntry => {
+    const predicateModulePath = join(predicatesDir, `${mechanism.slug}.ts`);
+    const corpusManifestPath = join(predicatesDir, `${mechanism.slug}.corpus.json`);
+
+    const predicateModuleExists = existsSync(join(root, predicateModulePath));
+    const corpusManifestExists = existsSync(join(root, corpusManifestPath));
+    const { total: corpusTotal, passing: corpusPassing } = corpusManifestExists
+      ? loadCorpusManifest(join(root, corpusManifestPath))
+      : { total: 0, passing: 0 };
+
+    let baseline: SinkDerivationBaseline;
+    if (!predicateModuleExists) baseline = 'gray';
+    else if (!corpusManifestExists || corpusTotal === 0 || corpusPassing < corpusTotal) baseline = 'purple';
+    else baseline = 'blue';
+
+    return {
+      key: mechanism.slug,
+      slug: mechanism.slug,
+      label: mechanism.label,
+      motivation: mechanism.motivation,
+      expectedSinkShapes: mechanism.expectedSinkShapes,
+      baseline,
+      evidence: {
+        predicateModulePath,
+        predicateModuleExists,
+        corpusManifestPath,
+        corpusManifestExists,
+        corpusTotal,
+        corpusPassing,
+      },
+    };
+  });
+}

@@ -176,6 +176,9 @@ async function submitDeckImport(clear = false) {
       <NuxtLink to="/app/engine-status">
         <UButton icon="i-lucide-cpu" color="neutral" variant="subtle" square aria-label="Engine capability status dashboard" />
       </NuxtLink>
+      <NuxtLink to="/app/sink-derivations">
+        <UButton icon="i-lucide-git-fork" color="neutral" variant="subtle" square aria-label="Sink-derivation predicate status dashboard" />
+      </NuxtLink>
 
       <UPopover :content="{ side: 'bottom', align: 'end' }">
         <UButton icon="i-lucide-circle-help" color="neutral" variant="subtle" square aria-label="Show legend" />

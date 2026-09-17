@@ -28314,3 +28314,239 @@ synergy.ts`:
     task, which was about surfacing/computing a STATUS axis over
     already-established engine work, not re-auditing that work's own
     citations).
+
+- **2026-09-17 — sink-only synergy matching prototype, core + sanity check
+  (go: holds up cleanly enough to build on, with 2 named real gaps).** New,
+  additive, `functional-model/sink-model/` (`sink-query.ts` — `SinkQuery =
+  Omit<Fact,'annotations'|'provenance'|'role'|'triggeredBy'> & {category:
+  string}`; `match-sink.ts` — `matchSink(sink, candidate: CardDefinition)`,
+  `deriveOccurrences`, `countMatchesForSink`/`countSinksSatisfiedByCard`;
+  `match-sink.test.ts`, 21 cases). Does NOT touch `cards/<slug>/*`,
+  `synergy.ts`'s types, or any `recognizers/*.ts` file — only change outside
+  the new dir is adding `"sink-model/**/*.ts"` to `functional-model/
+  tsconfig.json`'s own `include` (needed for real typecheck coverage; 0 new
+  errors, confirmed via a stash-and-rerun diff, same 251-error baseline
+  either way). `npx vitest run functional-model`: 105 files/1057 passed+5
+  skipped (unchanged +21 vs. this task's own start).
+  - **Design**: `deriveOccurrences(card)` walks `CardDefinition.effects`/
+    `triggers`/`abilities` (+ `backFace`) directly, mapping a real but
+    partial `Effect.kind` subset (`gainLife`/`drawCard`/`createToken`/
+    `destroy`/`dealDamage(Target)`/`putCounter(Target|All)`/`pump(Self|
+    Target|All)`/`grantKeyword(Target|All|Self)`/`sacrifice`/`move`/`modal`
+    (recurses)/`program`, the last via `recognizers/program-ast-walker.ts`'s
+    `extractOccurrences` — the one required reuse point) into `Fact`-shaped
+    `ProducerOccurrence`s, PLUS the same two oracle-text-free baseline
+    derivations `synergy.ts` itself already does off bare `CardDefinition`
+    data (`isNormalPermanent`/`isNormalInstantOrSorcery`, re-derived locally,
+    not imported — deliberate, see file header: avoids ANY runtime edge from
+    this new file into `synergy.ts` internals). `occurrenceSatisfiesSink` is
+    a near-verbatim mirror of `synergy.ts`'s own PRIVATE `factsInteract`
+    (zone/event shape-partition, `effectiveZone`/`effectiveController`/
+    `sidesCompatible`/`constraintsOf`/`hasAnyConstraint`/`satisfiesType` all
+    duplicated locally at a few lines each, cited as mirroring the
+    originals — not imported, `synergy.ts` doesn't export them), including
+    the real `destroy`-implies-`dies` cross-shape rule
+    (`satisfiesDestroyImpliesDies`/`guaranteedTypes`, conservative
+    `has`-only). One real, deliberate GENERALIZATION added mid-task when the
+    sanity check's own sink F (program-AST putCounter broadcast) failed:
+    `satisfiesViaSubjectOrGuarantee` — resolve a concrete subject (self/
+    token) first, else fall back to the occurrence's own `target` filter's
+    guaranteed types — now shared by BOTH the `target`-object branch and the
+    bare-hook branch (previously only the latter had any fallback at all;
+    production's `factsInteract` has NEITHER for the `target`-object branch,
+    a latent gap in production this generalization avoids, not present on
+    the FIN sink shapes checked so far).
+  - **Sanity check, 6 real FIN cards** (Summon: Bahamut, Battle Menu, Fight
+    On!, Loporrit Scout, Aerith Gainsborough, Baron, Airship Kingdom — all
+    confirmed present in `data/fin/fin_scryfall.json`), 7 sink queries (A-G
+    in `match-sink.test.ts`), cross-checked line-by-line against a real,
+    freshly-run `scripts/find-synergies.mjs` pool report (not assumed from
+    memory). 20/21 assertions AGREE with current production (after the one
+    fix above); the disagreements are all named and explained, none papered
+    over:
+    - **Real, ALREADY-DOCUMENTED production bug this independently
+      reproduces** (SYNERGY_DESIGN.md's own "Fact unification" section
+      already names this as an accepted regression, not news): an
+      event-shaped sink's own top-level `Constraints` (e.g. Loporrit
+      Scout's/Woodland Weavemaster's real `types:{has:['Creature']}`, no
+      `target` wrapper) are NEVER checked by `factsInteract`'s own final
+      `return true` fallback — confirmed live: Baron, Airship Kingdom (a
+      plain Land) genuinely shows up as a real, current match for Loporrit
+      Scout's Creature-only ETB sink in `find-synergies.mjs`'s own output.
+      This new matcher's `occurrenceSatisfiesSink` does NOT reproduce this
+      (checks top-level `Constraints` unconditionally) — but for THIS
+      specific pairing the reason it disagrees is actually a DIFFERENT,
+      ALSO-already-documented shape issue (next bullet), not this fix
+      directly — flagged precisely in the test's own comment, not
+      overclaimed.
+    - **Real, ALREADY-DOCUMENTED zone/event shape-partition regression**
+      (same SYNERGY_DESIGN.md section, explicitly named as an accepted,
+      deferred cost of the 2026-09-11 Fact-merge): "entering the
+      battlefield" is representable EITHER as a zone move (`to:
+      'Battlefield'`, what `isNormalPermanent`/`token-creation-structural.ts`
+      both emit) OR as a bare event tag (`event:'entersBattlefield'`, what a
+      handful of hand-authored Land facts use) — the two shapes can never
+      match each other. Loporrit Scout's/Woodland Weavemaster's own real
+      sinks are pure event-shape, so in PRODUCTION TODAY every one of their
+      13 real matches is a Land (never a Creature) — genuinely spurious,
+      confirmed via `find-synergies.mjs`. This new matcher inherits the same
+      partition (by design, mirroring `factsInteract`), so it agrees with
+      production's OWN (also-wrong) verdict for Battle Menu's Knight token
+      and Aerith Gainsborough's own baseline ETB (both zone-shaped in both
+      systems, correctly fail to match an event-only sink either way).
+      Added a SECOND, illustrative "zone-adapted" sink query (not on disk
+      anywhere, clearly labeled as such) showing that once "wants a Creature
+      entering" is expressed the semantically-obvious way (zone-shaped, the
+      same convention every OTHER real zone fact in the pool already uses),
+      the new matcher gets exactly the intended result (Knight token: yes;
+      Baron: no; Aerith: yes) — i.e. this fragmentation is a historical
+      AUTHORING-SHAPE artifact of the old per-recognizer pipeline, not
+      something inherent to structural matching; a from-scratch sink-only
+      corpus wouldn't need to reproduce it.
+    - **Real, named semantic gap in "pure Effect/program structural
+      matching" as a TOTAL replacement for hand-authored source Facts**
+      (the actual go/no-go question): Summon: Bahamut's own real match
+      against a "Graveyard creature" sink comes ENTIRELY from a Saga
+      (714.2b/714.4)-automation-derived `dies` fact
+      (`saga-lore-and-sacrifice-structural`) that has NO corresponding
+      `Effect` anywhere in `definition.ts` at all — lore-counter placement
+      and the chapter-completion sacrifice are emergent `saga.ts` engine
+      behavior, keyed off typeLine ("... — Saga ...") + numbered
+      `chapterN` trigger NAMES, not off any Effect/program node this (or
+      any) structural walker reads. Confirmed Bahamut's own `destroy`
+      effect ALONE does not satisfy this sink even in production (both
+      systems agree on that narrower point) — the disagreement is
+      specifically about the Saga-mechanic-derived fact, which is
+      genuinely outside "walk `CardDefinition.effects`/`triggers`" scope
+      as defined by this task. Real, not hypothetical — would need a THIRD
+      derivation family (engine-mechanic-automation-aware, not just
+      Effect-aware) to close, same class of thing `stun`/`finality`
+      counters and Crew already needed dedicated narrow handling for on
+      the engine side.
+    - **Real, deliberate `SinkQuery` scope decision** (not a bug): a sink
+      shaped `{event:'dies', target:'self'}` ("wants ITSELF to have died")
+      needs the SINK'S OWN owning `CardDefinition` to resolve whether it's a
+      legal victim of some OTHER card's unconstrained destroy — a
+      card-agnostic `SinkQuery` (per its own header, deliberately not tied
+      to one card) has nothing to resolve that against. Declines rather than
+      guessing; exercised directly (sink G) rather than left as an
+      unverified comment. A future extension could accept an optional
+      `sinkOwner: CardDefinition` param for exactly this one shape.
+  - **Escalation-worthy vocabulary gap, flagged not silently worked
+    around**: none beyond the two named above — every real `Effect.kind`
+    this pass's 6 cards actually use (`destroy`/`drawCard`/`dealDamage`/
+    `gainLife`/`createToken`/`pumpTarget`/`putCounter`-via-`program`/
+    `tapTarget` on Baron) mapped cleanly onto existing `Fact` vocabulary with
+    no new constraint shape needed.
+  - **Go/no-go read**: structural matching against `CardDefinition` directly
+    DOES hold up as a real replacement for hand-authored
+    source Facts, for everything actually expressed as an `Effect`/`Trigger`
+    (plain OR `program`-AST) — the program-AST-walker reuse in particular
+    worked cleanly against a REAL migrated card (Aerith Gainsborough's onDies
+    branch/filter/each) with zero adaptation needed beyond a thin Occurrence-
+    shape wrapper. The one REAL blocker before an FDN pipeline should be
+    built fully on this: engine-mechanic-automation-derived facts (Saga
+    today; Stun/Finality counters and Crew are the same class, all currently
+    modeled as narrow per-mechanism engine hooks rather than `Effect` data)
+    have no structural representation at all in `CardDefinition` and would
+    need their own explicit, catalogued derivation family layered on top —
+    scope that BEFORE committing to "no source Fact ever needed again," not
+    after.
+  - **Open, still needing real Forge verification**: none — this task's
+    scope was internal (matcher correctness vs. this codebase's own existing
+    production matcher/pool), not a Forge-vs-engine gap.
+
+- **2026-09-17 — sink-derivation-predicate status scaffold (5th standing
+  status axis; gray/purple/blue computed + yellow/green review overlay,
+  same pattern as the engine-capability dashboard above, applied to a
+  brand-new, currently-empty axis).** Explicitly scaffold-only per the
+  task: no Saga/Stun/Finality/Crew predicate LOGIC written, just the
+  tracking infrastructure for the 4 real, already-identified mechanisms
+  found during the sink-model sanity check (previous notes entry) whose
+  gameplay consequences come from generic engine automation rather than
+  `CardDefinition` effect-walking. New files, all additive:
+  `functional-model/sink-derivation-status.ts`
+  (`computeSinkDerivationStatus()`, `SINK_DERIVATION_MECHANISMS` seed
+  array), `functional-model/sink-derivation-status.test.ts` (6 tests),
+  `functional-model/sink-derivation-reviews.json` (flat review overlay,
+  starts `{}`), `server/api/sink-derivations/{index.get.ts,review.post.ts}`,
+  `.claude/contracts/sink-derivation-status-schema.md`. Did NOT touch
+  `sink-model/match-sink.ts`, `engine-status.ts`, or anything under
+  `cards/*`, per the task's own constraint.
+  - **Why a NEW base index, not a reuse of `engine-status.ts`'s
+    `ENGINE_GAPS.md` parser**: Saga/Stun/Finality/Crew already have
+    `ENGINE_GAPS.md` "FIN-specific mechanics closed" entries as fully
+    CLOSED engine capabilities — a different, already-answered question
+    ("does the engine support this mechanic") from this axis's actual
+    question ("does a sink-derivation PREDICATE exist for it yet," which
+    is `gray` for all 4 today). Reusing that parser would either misreport
+    all 4 as done or require overloading its `CLOSED` marker with a second
+    meaning. This axis is instead a small, hand-seeded, statically-defined
+    list (`SINK_DERIVATION_MECHANISMS`, exactly 4 entries — saga,
+    stun-counters, finality-counters, crew — no speculative extras),
+    mirroring `engine-status.ts`'s own "organic growth, real entries only"
+    posture rather than its parsing mechanism.
+  - **Baseline computed off real fs presence, not hand-set**, still
+    matching the "compute a real signal, don't hardcode a status value"
+    design principle `engine-status.ts` established: per mechanism, checks
+    `functional-model/sink-model/predicates/<slug>.ts` (predicate module —
+    doesn't exist yet for any of the 4, hence all `gray` today, for real)
+    and `functional-model/sink-model/predicates/<slug>.corpus.json` (a
+    `{total, passing}` manifest a future verification pass, mirroring
+    `scripts/verify-synergy.mjs`'s own Fact-vs-trace reconciliation, would
+    write). `gray` = no predicate module; `purple` = predicate module
+    exists but no manifest yet, or a manifest exists but `passing < total`
+    (not fully agreeing — deliberately simple: partial disagreement is
+    "not yet verified," same bucket as "not yet checked at all," since this
+    axis doesn't compute a 4th "checked-but-failing" baseline color — a
+    human reviewer catching a real disagreement is what `yellow` is for,
+    same split `engine-status.ts` already uses for its own overlay);
+    `blue` = manifest exists, `total > 0`, `passing === total`. Verified
+    the state-transition logic with a temp-dir-based test (writes a fake
+    predicate file/manifest under a throwaway root, confirms
+    gray->purple->blue->purple-on-partial-regression), not just asserted
+    against the real (still-all-gray) repo state.
+  - **Each seeded entry's `motivation`/`expectedSinkShapes` cites real
+    evidence**, not invented: Saga cites Summon: Bahamut + ENGINE_GAPS.md's
+    "Saga lore-counter automation (714)" entry +
+    `dies`/`zoneChange`-shaped sinks; Stun cites Ice
+    Flan/Tonberry/Omega/Heartless Evolution + Forge `Card.java` ~7056-7076
+    + `untap`-shaped sink; Finality cites Relentless X-ATM092 + the same
+    Forge citation + `dies`/`exile`-shaped sinks (the redirect-away-from-
+    graveyard case); Crew cites `card.crewCost`'s real `crewedBy:
+    RealCard[]` cost path + a `tap`-shaped sink (the crewing creatures'
+    own tap, invisible to the Vehicle's own `Effect` list).
+  - **Contract file** (`.claude/contracts/sink-derivation-status-schema.md`)
+    documents the exact, small edit point for adding a 5th+ mechanism
+    later: append one object to `SINK_DERIVATION_MECHANISMS` in
+    `sink-derivation-status.ts` (slug/label/motivation/expectedSinkShapes)
+    — everything else (predicate/manifest path derivation, both API
+    routes, the served shape) follows automatically from the slug: no
+    second place to update. Also flags, per the task's own worked example,
+    that `key`/`slug` here are the stable identity outright (unlike
+    `engine-status`'s `gap-<N>-<title-slug>` where only the number prefix
+    is guaranteed stable) — a real, deliberate difference from the sibling
+    contract worth calling out explicitly so `ui` doesn't assume identical
+    key-stability semantics across both axes.
+  - **Verified live**: `npx vitest run functional-model` → 106 files/1063
+    passed + 5 skipped (unchanged baseline +1 file/+6 tests vs. this task's
+    own start). `npm run typecheck` (real `nuxt typecheck`, since plain
+    `tsc` doesn't understand Nitro's `defineEventHandler`/`readBody`
+    auto-imports) → same pre-existing 6-error baseline
+    (`CardDetailTabs.vue` ×3, `card-status.ts:263`, `card.ts:2970`,
+    `mana.ts:275`, `server/api/tokens/by-key.ts:32`), 0 new errors from
+    either new route file or `sink-derivation-status.ts`/its test. Full
+    live `npm run dev` + curl round-trip on both routes: GET returns all 4
+    entries `gray`/`gray` baseline+color as expected; POST review exercised
+    reject-without-note (400), invalid key (404), reject-with-note →
+    yellow, confirm → green, GET reflecting the overlay, then cleared both
+    via `verdict:null` and confirmed `sink-derivation-reviews.json` is back
+    to checked-in `{}` before finishing.
+  - **Open follow-up, not done this pass (explicitly out of scope for
+    this task)**: no actual Saga/Stun/Finality/Crew predicate logic exists
+    yet — every entry is real `gray`. Building the first real predicate
+    (Saga is the best-motivated starting point, already has a concrete
+    named failing case — Summon: Bahamut) is the natural next task, and
+    should also create its own `functional-model/sink-model/predicates/`
+    directory (doesn't exist yet — this task only referenced the
+    convention, never created the dir or any file in it).

@@ -7,6 +7,62 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- New page `/app/sink-derivations` (2026-09-17) — the sibling status page to
+  `/app/engine-status` for the `engine` agent's separate sink-derivation-
+  predicate axis (`GET /api/sink-derivations` + `POST
+  /api/sink-derivations/review`, contract:
+  `.claude/contracts/sink-derivation-status-schema.md`). Deliberately a
+  SEPARATE flat-list page, not merged into `/app/engine-status` — the two
+  index genuinely different things (ENGINE_GAPS.md's numbered list vs. this
+  axis's own small hand-seeded `SINK_DERIVATION_MECHANISMS` array) with
+  different row shapes (no gapNumber/title/excerpt/testFiles here; instead
+  motivation/expectedSinkShapes/predicate-module+corpus-manifest evidence) —
+  didn't force a shared component given the row shapes don't line up
+  cleanly, same judgment call the task itself invited.
+  Reused the EXACT SAME STATUS_META color mapping (gray #6b7280/purple
+  #a855f7/blue #3b82f6/yellow #eab308/green #22c55e) verbatim per this
+  task's own instruction — only the per-color DESCRIPTION text differs
+  (this axis's gray/purple/blue mean predicate-module + corpus-manifest
+  filesystem presence, not an ENGINE_GAPS.md CLOSED marker). Confirm/
+  reject-with-required-note/clear-review flow is a near-identical copy of
+  `/app/engine-status`'s own `submitReview`/reject-modal pattern (same
+  optimistic in-place mutation, same `isDev`-gated controls, same dev-only
+  403 posture) — copied rather than extracted into a shared composable,
+  since engine-status's page is otherwise the only other consumer and the
+  two entries' fields differ enough (gapNumber+title vs. label+slug) that a
+  forced shared row component would need its own prop-shape-negotiation
+  either way.
+  Sort order: alphabetical by `label` (not by an array index or gapNumber
+  the way engine-status sorts) — this axis's `key`/`slug` (not a
+  numbered-prefix key) IS the stable identity per the contract's own
+  explicit "unlike engine-status... this axis's slug values ARE the stable
+  identity" note, so there's no unstable-title-vs-stable-number split to
+  preserve the way engine-status's own gapNumber-based sort exists to avoid.
+  Nav: added an 8th header icon button (`i-lucide-git-fork`) right after
+  the existing `i-lucide-cpu` engine-status one in AppHeader.vue.
+  Live-verified via Playwright against the real dev server: `GET
+  /api/sink-derivations` returned exactly the documented 4 entries (saga,
+  stun-counters, finality-counters, crew), all genuinely `gray`/baseline
+  `gray` (no predicate module exists yet for any of them, confirmed in the
+  raw JSON); page rendered all 4 labels with zero console/page errors; full
+  confirm->green->clear-review round trip AND reject-with-note->yellow->
+  clear-review round trip both worked end-to-end against the real
+  file-backed endpoint on the `saga` row (cleaned
+  `functional-model/sink-derivation-reviews.json` back to `{}` afterward,
+  confirmed via a direct read — same "undo your own live-verification
+  write" discipline as the engine-status page's own verification pass);
+  nav button click from a fresh load actually navigates to
+  `/app/sink-derivations`. `npm run typecheck` showed only the same
+  pre-existing unrelated errors already on `main` before this task
+  (`CardDetailTabs.vue`/`functional-model/card-status.ts`/`card.ts`/
+  `mana.ts`/`server/api/tokens/by-key.ts` — none touched by this change,
+  none in the new page or AppHeader.vue); `npx vitest run` — 1135 passed,
+  same 5 pre-existing `tagging/sets/*`-data-missing failures as always
+  (unrelated, sandbox-only). No project ESLint config exists (`eslint
+  --config` errors on a bare run) — there's no `npm run lint` script
+  either, so no lint pass was possible beyond typecheck; flagging in case
+  that's actually meant to exist and is just missing/misconfigured.
+
 - New page `/app/engine-status` (2026-09-17) consumes the `engine` agent's
   new gray/purple/blue/yellow/green capability-status axis
   (`GET /api/engine-status` + `POST /api/engine-status/review`, contract:
