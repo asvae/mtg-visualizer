@@ -113,6 +113,25 @@ import type { SinkQuery } from './sink-query';
 // tell (see `deriveOccurrences` below).
 import { sagaChapterCompletionOccurrences } from './predicates/saga';
 import { crewTapOccurrences } from './predicates/crew';
+// **2026-09-18: gated by live status.** `deriveOccurrences` below only
+// includes a sink-derivation predicate's own occurrences when
+// `isSinkDerivationMechanismUsable` reports its mechanism's LIVE status
+// (`sink-derivation-status.ts`, the same data `GET /api/sink-derivations`
+// serves) is `blue` (verified) or `green` (human-confirmed) — `gray` (not
+// built) and `purple` (built but not corpus-verified) must be treated as if
+// the predicate doesn't exist at all for real matching, so a THIRD
+// mechanism (Stun counters, Finality counters, or anything else) can never
+// silently contribute to real matches before its own corpus is actually
+// passing. This gate is NEVER applied to a predicate's own corpus/
+// verification test (`saga.test.ts`, `crew.test.ts`, future
+// `<mechanism>.test.ts`s) — those import `sagaChapterCompletionOccurrences`/
+// `crewTapOccurrences` etc. directly from their own module, never through
+// `deriveOccurrences`/`matchSink`, so a not-yet-blue predicate can still be
+// developed and driven to blue in the first place. See
+// `sink-derivation-status.ts`'s own "Real-matching usability gate" section
+// for the gate's implementation (including why it's cached) and
+// `match-sink.test.ts`'s own gate test(s) for a live before/after proof.
+import { isSinkDerivationMechanismUsable } from '../sink-derivation-status';
 
 // ---------------------------------------------------------------------------
 // Producer occurrences — the structural stand-in for an authored `source`
@@ -413,8 +432,14 @@ function collectForFace(face: CardDefinition, faceLabel: 'front' | 'back', out: 
 
 /** Every real occurrence a candidate `CardDefinition` structurally
  * guarantees, front face plus (if present) back face — the full stand-in
- * for what an authored `source` Fact array would have been for this card. */
-export function deriveOccurrences(card: CardDefinition): ProducerOccurrence[] {
+ * for what an authored `source` Fact array would have been for this card.
+ *
+ * `root` is passed through to the live-status gate below
+ * (`isSinkDerivationMechanismUsable`) — defaults to `process.cwd()` (real
+ * production behavior); the only reason a caller would ever override it is
+ * a test simulating a mechanism whose live status isn't blue/green yet
+ * (see `match-sink.test.ts`'s own gate test(s)). */
+export function deriveOccurrences(card: CardDefinition, root: string = process.cwd()): ProducerOccurrence[] {
   const out: ProducerOccurrence[] = [];
   collectForFace(card, 'front', out);
   if (card.backFace) collectForFace(card.backFace, 'back', out);
@@ -423,9 +448,11 @@ export function deriveOccurrences(card: CardDefinition): ProducerOccurrence[] {
   // decides applicability for `card`; a non-Saga/non-Vehicle card (the
   // overwhelming majority of the pool) gets an empty array back from both,
   // same "declines silently, no occurrence built" convention every
-  // unrecognized `Effect.kind` above already follows.
-  out.push(...sagaChapterCompletionOccurrences(card));
-  out.push(...crewTapOccurrences(card));
+  // unrecognized `Effect.kind` above already follows. GATED: a mechanism
+  // whose live status isn't blue/green contributes nothing here, same
+  // silent-decline convention — never an error, never a guess.
+  if (isSinkDerivationMechanismUsable('saga', root)) out.push(...sagaChapterCompletionOccurrences(card));
+  if (isSinkDerivationMechanismUsable('crew', root)) out.push(...crewTapOccurrences(card));
   return out;
 }
 
@@ -612,9 +639,10 @@ export interface SinkMatchResult {
 }
 
 /** Does `candidate` (read directly off its own `CardDefinition` — no
- * authored `source` Fact involved) satisfy `sink`? */
-export function matchSink(sink: SinkQuery, candidate: CardDefinition): SinkMatchResult {
-  for (const occ of deriveOccurrences(candidate)) {
+ * authored `source` Fact involved) satisfy `sink`? `root` — see
+ * `deriveOccurrences`'s own doc comment — defaults to `process.cwd()`. */
+export function matchSink(sink: SinkQuery, candidate: CardDefinition, root: string = process.cwd()): SinkMatchResult {
+  for (const occ of deriveOccurrences(candidate, root)) {
     if (occurrenceSatisfiesSink(occ, sink, candidate)) return { matched: true, via: occ.via };
   }
   return { matched: false };

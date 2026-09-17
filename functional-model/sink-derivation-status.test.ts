@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { computeSinkDerivationStatus, SINK_DERIVATION_MECHANISMS } from './sink-derivation-status';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+  computeSinkDerivationStatus,
+  computeSinkDerivationColor,
+  isSinkDerivationMechanismUsable,
+  resetSinkDerivationColorCacheForTests,
+  SINK_DERIVATION_MECHANISMS,
+} from './sink-derivation-status';
 
 describe('computeSinkDerivationStatus — seeded sink-derivation-predicate mechanism index', () => {
   const entries = computeSinkDerivationStatus();
@@ -94,6 +103,123 @@ describe('computeSinkDerivationStatus — seeded sink-derivation-predicate mecha
       expect(sagaPartial.baseline).toBe('purple');
     } finally {
       rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the real-matching usability gate (2026-09-18)', () => {
+  it('real repo root: saga and crew are blue -> usable; stun-counters and finality-counters are gray (no predicate module built yet) -> NOT usable', () => {
+    expect(computeSinkDerivationColor('saga')).toBe('blue');
+    expect(computeSinkDerivationColor('crew')).toBe('blue');
+    expect(isSinkDerivationMechanismUsable('saga')).toBe(true);
+    expect(isSinkDerivationMechanismUsable('crew')).toBe(true);
+
+    expect(computeSinkDerivationColor('stun-counters')).toBe('gray');
+    expect(computeSinkDerivationColor('finality-counters')).toBe('gray');
+    expect(isSinkDerivationMechanismUsable('stun-counters')).toBe(false);
+    expect(isSinkDerivationMechanismUsable('finality-counters')).toBe(false);
+  });
+
+  it('an unknown slug (never seeded) is treated as gray -> not usable, never throws', () => {
+    expect(computeSinkDerivationColor('not-a-real-mechanism')).toBe('gray');
+    expect(isSinkDerivationMechanismUsable('not-a-real-mechanism')).toBe(false);
+  });
+
+  it('purple (predicate module exists, no fully-agreeing corpus manifest) is NOT usable', () => {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
+    try {
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      mkdirSync(predicatesDir, { recursive: true });
+      writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate, not yet checked\n');
+
+      expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('purple');
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(false);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('blue (predicate module + fully-agreeing corpus manifest) IS usable', () => {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
+    try {
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      mkdirSync(predicatesDir, { recursive: true });
+      writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate\n');
+      writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 2, passing: 2 }));
+
+      expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('blue');
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(true);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('a human "reject" review verdict overlays gray/purple/blue to yellow -> still NOT usable (yellow means a human found a real disagreement)', () => {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
+    try {
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      mkdirSync(predicatesDir, { recursive: true });
+      writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate\n');
+      writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 2, passing: 2 }));
+      writeFileSync(
+        join(fakeRoot, 'functional-model', 'sink-derivation-reviews.json'),
+        JSON.stringify({ saga: { verdict: 'reject', note: 'simulated disagreement for this test' } }),
+      );
+
+      expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('yellow');
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(false);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('a human "confirm" review verdict overlays a NOT-yet-blue (gray/purple) baseline to green -> IS usable — the one way a not-yet-corpus-verified mechanism can still be used for real matching, via explicit human sign-off', () => {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
+    try {
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      mkdirSync(predicatesDir, { recursive: true });
+      writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate, not corpus-verified\n');
+      writeFileSync(
+        join(fakeRoot, 'functional-model', 'sink-derivation-reviews.json'),
+        JSON.stringify({ saga: { verdict: 'confirm', reviewedAt: '2026-09-18' } }),
+      );
+
+      // Baseline alone (no review) would be purple (no corpus manifest at all) —
+      // confirmed via the plain computeSinkDerivationStatus baseline call, not
+      // the overlaid color, so this test doesn't just restate its own setup.
+      expect(computeSinkDerivationStatus(fakeRoot).find((e) => e.slug === 'saga')!.baseline).toBe('purple');
+
+      expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('green');
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(true);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('isSinkDerivationMechanismUsable caches per root — a filesystem change under an already-queried root is NOT picked up until resetSinkDerivationColorCacheForTests() clears it', () => {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
+    try {
+      // Empty fake root: saga starts gray -> not usable, and this call
+      // populates the cache for this exact root/slug pair.
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(false);
+
+      // Now make it a real blue mechanism on disk — WITHOUT resetting the
+      // cache first. A naive uncached read would flip to true immediately;
+      // the cache must keep serving the stale (but real, previously computed)
+      // gray/false verdict.
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      mkdirSync(predicatesDir, { recursive: true });
+      writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate\n');
+      writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 1, passing: 1 }));
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(false);
+
+      // Reset -> the cache is cleared, so the next call re-reads the
+      // filesystem and correctly reports the now-real blue/usable state.
+      resetSinkDerivationColorCacheForTests();
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(true);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+      resetSinkDerivationColorCacheForTests();
     }
   });
 });

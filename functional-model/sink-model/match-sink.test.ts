@@ -16,15 +16,19 @@
 // approach itself, or an existing recognizer/production behavior being
 // wrong. See this task's own final report for the summarized, go/no-go
 // read across all of these.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, afterEach } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { aerithGainsborough } from '../cards/aerith-gainsborough/definition';
 import { baronAirshipKingdom } from '../cards/baron-airship-kingdom/definition';
 import { battleMenu } from '../cards/battle-menu/definition';
 import { fightOn } from '../cards/fight-on/definition';
 import { loporritScout } from '../cards/loporrit-scout/definition';
 import { summonBahamut } from '../cards/summon-bahamut/definition';
-import { matchSink } from './match-sink';
+import { matchSink, deriveOccurrences } from './match-sink';
 import type { SinkQuery } from './sink-query';
+import { sagaChapterCompletionOccurrences } from './predicates/saga';
 
 // ---------------------------------------------------------------------------
 // A — Fight On!'s own real sink, verbatim (`cards/fight-on/synergy.json`):
@@ -188,5 +192,38 @@ const selfDiesSink: SinkQuery = { category: 'Self dies (trigger condition)', eve
 describe('sink G — self dies (Aerith Gainsborough, as-authored) — documented SinkQuery scope gap', () => {
   it('DISAGREES, explained — a deliberate SinkQuery scope decision, not a matcher bug: production DOES match Summon: Bahamut’s chapter I/II "destroy up to one target nonland permanent" against this exact sink (real prod line "Summon: Bahamut --[destroy]--> Aerith Gainsborough"), because `factsInteract` resolves the SINK OWNER’s (Aerith’s) own static attrs to check she is a legal (non-Land) victim. This matcher’s `SinkQuery` has no reference to its own owning card to do the same, and declines rather than silently guessing — a real, named, documented scope limitation of a card-agnostic sink query, not a semantic gap in structural effect-matching itself.', () => {
     expect(matchSink(selfDiesSink, summonBahamut).matched).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// H — sink-derivation-predicate live-status gate (2026-09-18). Real, direct
+// proof that `deriveOccurrences`/`matchSink` only consult a sink-derivation
+// predicate's occurrences when its mechanism's LIVE status is blue/green
+// (`sink-derivation-status.ts`'s `isSinkDerivationMechanismUsable`) — never
+// gray/purple. Uses a genuinely fake ROOT (an empty temp directory — no
+// `functional-model/sink-model/predicates/saga.ts` or `.corpus.json` exists
+// under it at all) rather than any mocking, so the gate is exercised through
+// its own real, documented fs-presence computation, not a stand-in.
+describe('gate H — sink-derivation-predicate live status must be blue/green to be usable by real matching', () => {
+  let fakeRoot: string;
+  afterEach(() => {
+    if (fakeRoot) rmSync(fakeRoot, { recursive: true, force: true });
+  });
+
+  it('real repo root (process.cwd(), default): saga is blue today, so Summon: Bahamut’s chapter-completion sacrifice DOES contribute to a real match — same real production behavior as before this gate existed', () => {
+    expect(matchSink(graveyardCreatureSink, summonBahamut).matched).toBe(true);
+    expect(deriveOccurrences(summonBahamut).some((o) => o.via.includes('saga'))).toBe(true);
+  });
+
+  it('a fake root with no saga predicate module/corpus manifest at all (gray, same as if saga.ts never existed): Summon: Bahamut’s IDENTICAL CardDefinition no longer matches the same sink through the saga path — the occurrence is excluded, not an error', () => {
+    fakeRoot = mkdtempSync(join(tmpdir(), 'match-sink-gate-test-'));
+    expect(matchSink(graveyardCreatureSink, summonBahamut, fakeRoot).matched).toBe(false);
+    expect(deriveOccurrences(summonBahamut, fakeRoot).some((o) => o.via.includes('saga'))).toBe(false);
+  });
+
+  it('the raw predicate function itself is NEVER gated — saga.ts’s own corpus/verification test (saga.test.ts) calls sagaChapterCompletionOccurrences directly and must keep seeing Bahamut’s real occurrence regardless of what any fake root reports, or a not-yet-blue predicate could never be developed/verified up to blue in the first place', () => {
+    const rawOccurrences = sagaChapterCompletionOccurrences(summonBahamut);
+    expect(rawOccurrences.length).toBeGreaterThan(0);
+    expect(rawOccurrences.some((o) => o.to === 'Graveyard')).toBe(true);
   });
 });

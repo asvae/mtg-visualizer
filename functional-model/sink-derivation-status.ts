@@ -295,3 +295,111 @@ export function computeSinkDerivationStatus(root: string = process.cwd()): SinkD
     };
   });
 }
+
+// ---------------------------------------------------------------------------
+// Real-matching usability gate (2026-09-18).
+//
+// A structural guard for `functional-model/sink-model/match-sink.ts`'s own
+// `deriveOccurrences`: `gray` (not built) and `purple` (built, not yet
+// corpus-verified) must be treated as if a mechanism's predicate module
+// doesn't exist at all for any REAL/production matching call — only `blue`
+// (verified) or `green` (human-confirmed) may contribute occurrences there.
+// The one exemption is a predicate's OWN corpus/verification test
+// (`saga.test.ts`, `crew.test.ts`, future `<mechanism>.test.ts`s) — those
+// import the raw predicate function directly, bypassing this gate entirely
+// (see `match-sink.ts`'s own `deriveOccurrences` for where the gate is
+// actually applied, and those test files' own imports for confirmation they
+// never go through it).
+//
+// `green` requires the same yellow/green human-review overlay
+// `server/api/sink-derivations/index.get.ts` computes for the served
+// dashboard (a human `'confirm'` verdict in
+// `functional-model/sink-derivation-reviews.json`) — duplicated here in
+// miniature rather than imported from that route, since it's a Nuxt HTTP
+// handler, not a plain function this engine-only production-matching code
+// should depend on. `computeSinkDerivationColor` below is the single
+// source of truth for that duplicated computation; if the served-shape
+// logic in `index.get.ts` ever needs to change, keep this in sync by hand
+// (small and unlikely to drift — same tradeoff `match-sink.ts`'s own header
+// already documents for its handful of duplicated-not-imported matching
+// primitives).
+const REVIEWS_RELATIVE_PATH = join('functional-model', 'sink-derivation-reviews.json');
+
+interface SinkDerivationReviewVerdictOnly {
+  verdict?: 'confirm' | 'reject';
+}
+
+function loadReviewVerdicts(root: string): Record<string, SinkDerivationReviewVerdictOnly> {
+  const path = join(root, REVIEWS_RELATIVE_PATH);
+  if (!existsSync(path)) return {};
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+/** Live color for ONE mechanism — baseline, or the yellow/green human-review
+ * overlay on top of it — the same computation `server/api/sink-derivations/
+ * index.get.ts` performs for its whole served list, narrowed to a single
+ * slug for a matching-time gate check. Uncached — see
+ * `isSinkDerivationMechanismUsable` below for the cached, gate-facing
+ * entry point production code should actually call. */
+export function computeSinkDerivationColor(slug: string, root: string = process.cwd()): SinkDerivationColor {
+  const entry = computeSinkDerivationStatus(root).find((e) => e.slug === slug);
+  const baseline: SinkDerivationBaseline = entry?.baseline ?? 'gray';
+  const review = loadReviewVerdicts(root)[slug];
+  if (review?.verdict === 'reject') return 'yellow';
+  if (review?.verdict === 'confirm') return 'green';
+  return baseline;
+}
+
+// Per-root memoization. Benchmarked directly against this repo's real
+// filesystem (2026-09-18): ~30us per `computeSinkDerivationStatus()` call
+// (existsSync/readFileSync across 4 seeded mechanisms' predicate module +
+// corpus-manifest paths) — cheap in isolation, but this gate is consulted
+// once per tracked mechanism on every `deriveOccurrences` call, itself
+// called once per (sink, candidate) pair in an N²-style pool-wide synergy
+// build (this project's own accepted complexity budget for that — see
+// SYNERGY_DESIGN.md). A ~300-card pool's own N² comparison (~90k candidate
+// evaluations) would add ~3s of pure redundant fs-read overhead with no
+// caching at all, for a value that cannot change mid-run (predicate
+// modules/corpus manifests/the review overlay are all static for the
+// duration of one matching run/process) — so this IS cached, keyed by
+// `root` (never just a single flat value, since this file's OWN tests
+// exercise multiple distinct fake roots within one process run).
+const colorCache = new Map<string, Map<string, SinkDerivationColor>>();
+
+function cachedColor(slug: string, root: string): SinkDerivationColor {
+  let cache = colorCache.get(root);
+  if (!cache) {
+    cache = new Map();
+    colorCache.set(root, cache);
+  }
+  let color = cache.get(slug);
+  if (color === undefined) {
+    color = computeSinkDerivationColor(slug, root);
+    cache.set(slug, color);
+  }
+  return color;
+}
+
+/** Test-only escape hatch: clears the per-root color cache. Needed by tests
+ * that mutate a fake root's own filesystem (a predicate module, a corpus
+ * manifest, or the review-overlay file) between assertions and expect a
+ * fresh read afterward — never called by production code. */
+export function resetSinkDerivationColorCacheForTests(): void {
+  colorCache.clear();
+}
+
+/**
+ * The real gate: is mechanism `slug`'s LIVE status usable by real matching
+ * right now? Only `blue`/`green` are — `gray`/`purple` return `false`,
+ * meaning the caller must treat that mechanism's predicate as if it doesn't
+ * exist (contribute zero occurrences), never throw or otherwise break
+ * matching. Cached per `root` — see the cache comment above.
+ */
+export function isSinkDerivationMechanismUsable(slug: string, root: string = process.cwd()): boolean {
+  const color = cachedColor(slug, root);
+  return color === 'blue' || color === 'green';
+}

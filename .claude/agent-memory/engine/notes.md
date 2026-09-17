@@ -1,5 +1,65 @@
 # engine agent notes
 
+## Decisions
+
+- **2026-09-18 — sink-derivation-predicate real-matching gate.** Added a
+  structural guard so `match-sink.ts`'s `deriveOccurrences` can never use a
+  not-yet-`blue`/`green` sink-derivation predicate (`saga.ts`, `crew.ts`,
+  future `<mechanism>.ts`s) for real matching, while leaving each
+  predicate's own corpus/verification test (`saga.test.ts`, `crew.test.ts`)
+  free to call the raw predicate function directly (bypassing the gate —
+  confirmed via those files' own imports, unchanged, still go straight to
+  `./saga`/`./crew`, never through `match-sink.ts`).
+  - New exports in `functional-model/sink-derivation-status.ts`:
+    `computeSinkDerivationColor(slug, root?)` (baseline + the same
+    yellow/green human-review overlay `server/api/sink-derivations/
+    index.get.ts` computes, duplicated here in miniature rather than
+    imported from that Nuxt route — deliberate, documented in this file's
+    own new "Real-matching usability gate" section), `isSinkDerivationMechanismUsable(slug, root?)`
+    (`true` iff `blue`/`green`; `gray`/`purple` -> `false`, never throws),
+    and `resetSinkDerivationColorCacheForTests()`.
+  - Perf: benchmarked `computeSinkDerivationStatus()` directly against this
+    repo's real fs — ~30us/call. Cheap per-call, but `deriveOccurrences` (2
+    gate checks) is itself called once per (sink, candidate) pair in this
+    project's accepted N²-style pool-wide comparison budget (~90k pairs at
+    ~300 cards) — ~3s of pure redundant fs-read overhead with no caching,
+    for a value that's static for the life of one matching run. Added a
+    simple per-`root`-keyed `Map` cache (not over-engineered — no TTL/
+    invalidation-on-write machinery, since the underlying fs state is
+    genuinely immutable mid-run); a test-only reset hook clears it (used by
+    `sink-derivation-status.test.ts`'s own cache test, which deliberately
+    writes to a fake root's fs BETWEEN two calls and confirms the stale
+    cached value is served until reset).
+  - Wired into `match-sink.ts`: `deriveOccurrences(card, root = process.cwd())`
+    and `matchSink(sink, candidate, root = process.cwd())` both gained an
+    optional trailing `root` param (backward-compatible, existing callers
+    unaffected) purely so tests can inject a fake root simulating a
+    not-yet-blue mechanism — no `vi.mock`, consistent with this project's
+    "real filesystem simulation over mocking" convention already
+    established by `sink-derivation-status.test.ts`'s own `computeSinkDerivationStatus(fakeRoot)`
+    tests.
+  - Confirmed unaffected: `npx tsc --noEmit` clean; full `functional-model`
+    suite 108 files/1085 passed+5 skipped (no regressions); live
+    `GET /api/sink-derivations` on the already-running dev server (didn't
+    start my own — one was already up on :3000) still reports
+    `saga: blue/blue`, `crew: blue/blue` — same as before this change,
+    confirmed by curl, not assumed. New tests added:
+    `match-sink.test.ts`'s "gate H" describe block (before/after via a
+    real fake-root, same `summonBahamut`/`graveyardCreatureSink` case
+    `match-sink.test.ts` already used for the saga-agreement assertion) and
+    `sink-derivation-status.test.ts`'s new `computeSinkDerivationColor`/
+    `isSinkDerivationMechanismUsable` describe block (gray/purple/blue/
+    yellow/green + unknown-slug + caching).
+  - Didn't touch `server/api/sink-derivations/*` at all (confirmed via
+    `git diff --stat` — 0 changes) despite that route being engine-owned
+    per `.claude/contracts/sink-derivation-status-schema.md`; its own
+    yellow/green overlay computation is a small, separate, already-working
+    duplicate of the same logic and touching it wasn't needed for this
+    task.
+  - **Open, not done this pass**: no third mechanism (Stun counters,
+    Finality counters) got a real predicate module — still `gray`, as
+    before. This task was the gate only, not new predicate work.
+
 Scoped working memory for the `engine` specialist. Update before finishing
 any task: decisions made, open questions, current state worth resuming
 from. This is what makes a fresh respawn cheap — don't rely on transcript
