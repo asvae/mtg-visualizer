@@ -13,6 +13,7 @@ import { useStatusFilterList } from '../../../../composables/useStatusFilterList
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
 import type { EngineStatusPageEntry } from '../../../../../server/api/engine-status/index.get';
 import type { SourceFileResult } from '../../../../../functional-model/source-files';
+import { statusBadgeStyle } from '../../../../lib/badgeColor';
 
 definePageMeta({ layout: 'graph' });
 useHead({ title: 'Engine capability status' });
@@ -21,7 +22,7 @@ const { data, pending, error } = useFetch<EngineStatusPageEntry[]>('/api/engine-
 const toast = useToast();
 const isDev = import.meta.dev;
 
-type StatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+type StatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | 're-review';
 const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
   { value: 'gray', label: 'Open gap', color: '#6b7280', description: 'No support at all — the tracked gap has no CLOSED marker in ENGINE_GAPS.md.' },
   {
@@ -33,6 +34,12 @@ const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
   { value: 'blue', label: 'Closed, verified', color: '#3b82f6', description: 'Closed AND verified — cites at least one real *.test.ts and names no remainder.' },
   { value: 'yellow', label: 'Rejected', color: '#eab308', description: 'Human-reviewed and REJECTED — a reviewer judged the computed baseline wrong; see its own note.' },
   { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'Human-reviewed and CONFIRMED.' },
+  {
+    value: 're-review',
+    label: 'Needs re-review',
+    color: '#7dd3fc',
+    description: 'A human previously confirmed this gap, but ENGINE_GAPS.md’s own text or a cited test file has since changed — the old confirmation is stale and needs another look.',
+  },
 ];
 
 const items = computed(() => data.value ?? []);
@@ -168,19 +175,7 @@ async function submitReject() {
         @toggle="list.toggleFilter"
       >
         <template #help>
-          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
-            <p>
-              Computed baseline (automatic, off <code>ENGINE_GAPS.md</code>): <b class="text-text">Open gap</b> → once
-              the doc marks the gap <code>CLOSED</code>, either <b class="text-text">Closed, unverified</b> (no
-              <code>*.test.ts</code> cited, or the entry names a real remainder still not modeled) or, once a real test
-              is cited AND no remainder is named, <b class="text-text">Closed, verified</b>.
-            </p>
-            <p>
-              <b class="text-text">Rejected</b>/<b class="text-text">Confirmed</b> are a separate human-review layer on
-              top of whichever of those three is current — a reviewer can confirm (green) or reject with a required note
-              (yellow) at any point, independent of the underlying computed color.
-            </p>
-          </EngineConsoleStatusHelp>
+          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS" />
         </template>
       </EngineConsoleStatusFilterControls>
 
@@ -202,15 +197,13 @@ async function submitReject() {
     <template #detail>
       <div v-if="selectedEntry" class="rounded-md border border-border-subtle bg-panel p-3">
         <div class="flex items-start gap-2">
-          <span
-            class="mt-0.5 h-3 w-3 shrink-0 rounded-full"
-            :style="{ background: statusMeta(selectedEntry.color).color }"
-            :title="statusMeta(selectedEntry.color).label"
-          ></span>
           <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-baseline gap-x-2">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span class="text-[11px] tabular-nums text-muted">#{{ selectedEntry.gapNumber }}</span>
               <span class="text-sm font-semibold text-text">{{ selectedEntry.title }}</span>
+              <UBadge :style="statusBadgeStyle(statusMeta(selectedEntry.color).color)" size="sm" variant="solid">
+                {{ statusMeta(selectedEntry.color).label }}
+              </UBadge>
               <span
                 v-if="selectedEntry.review"
                 class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
@@ -275,26 +268,28 @@ async function submitReject() {
               <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
             </div>
 
-            <div v-if="isDev" class="mt-2 flex items-center gap-2">
-              <UButton
-                size="xs"
-                color="success"
-                variant="subtle"
-                :disabled="pendingKey === selectedEntry.key"
-                :loading="pendingKey === selectedEntry.key"
-                @click="confirmEntry(selectedEntry)"
-              >
-                Confirm
-              </UButton>
-              <UButton
-                size="xs"
-                color="warning"
-                variant="subtle"
-                :disabled="pendingKey === selectedEntry.key"
-                @click="openReject(selectedEntry)"
-              >
-                Reject…
-              </UButton>
+            <div v-if="isDev && (selectedEntry.baseline === 'blue' || selectedEntry.review)" class="mt-2 flex items-center gap-2">
+              <template v-if="selectedEntry.baseline === 'blue'">
+                <UButton
+                  size="xs"
+                  color="success"
+                  variant="subtle"
+                  :disabled="pendingKey === selectedEntry.key"
+                  :loading="pendingKey === selectedEntry.key"
+                  @click="confirmEntry(selectedEntry)"
+                >
+                  Confirm
+                </UButton>
+                <UButton
+                  size="xs"
+                  color="warning"
+                  variant="subtle"
+                  :disabled="pendingKey === selectedEntry.key"
+                  @click="openReject(selectedEntry)"
+                >
+                  Reject…
+                </UButton>
+              </template>
               <UButton
                 v-if="selectedEntry.review"
                 size="xs"

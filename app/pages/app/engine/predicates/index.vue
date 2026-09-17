@@ -21,6 +21,7 @@ import { computed, ref } from 'vue';
 import { useStatusFilterList } from '../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
 import type { SinkDerivationPageEntry } from '../../../../../server/api/sink-derivations/index.get';
+import { statusBadgeStyle } from '../../../../lib/badgeColor';
 
 definePageMeta({ layout: 'graph' });
 useHead({ title: 'Sink-derivation predicate status' });
@@ -33,7 +34,7 @@ const toast = useToast();
 // expression) — same local-const workaround the original page used.
 const isDev = import.meta.dev;
 
-type StatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+type StatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | 're-review';
 const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
   { value: 'gray', label: 'No predicate yet', color: '#6b7280', description: 'No predicate module built yet for this mechanism.' },
   {
@@ -50,6 +51,12 @@ const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
   },
   { value: 'yellow', label: 'Rejected', color: '#eab308', description: 'Human-reviewed and REJECTED — a reviewer found a real disagreement with the computed baseline; see its own note.' },
   { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'Human-reviewed and CONFIRMED.' },
+  {
+    value: 're-review',
+    label: 'Needs re-review',
+    color: '#7dd3fc',
+    description: 'A human previously confirmed this mechanism, but its predicate source or corpus manifest has since changed — the old confirmation is stale and needs another look.',
+  },
 ];
 
 const items = computed(() => data.value ?? []);
@@ -161,19 +168,7 @@ async function submitReject() {
         @toggle="list.toggleFilter"
       >
         <template #help>
-          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
-            <p>
-              Computed baseline (automatic, off what's on disk): <b class="text-text">No predicate yet</b> →
-              <b class="text-text">Unverified</b> once a predicate module is written, but there's no scenario-corpus
-              manifest yet (or the manifest doesn't yet show every scenario passing) → <b class="text-text">Verified</b>
-              once the manifest shows every corpus scenario agreeing with real trace evidence.
-            </p>
-            <p>
-              <b class="text-text">Rejected</b>/<b class="text-text">Confirmed</b> are a separate human-review layer on
-              top of whichever of those three is current — a reviewer can confirm (green) or reject with a required note
-              (yellow) at any point, independent of the underlying computed color.
-            </p>
-          </EngineConsoleStatusHelp>
+          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS" />
         </template>
       </EngineConsoleStatusFilterControls>
 
@@ -194,15 +189,13 @@ async function submitReject() {
     <template #detail>
       <div v-if="selectedEntry" class="rounded-md border border-border-subtle bg-panel p-3">
         <div class="flex items-start gap-2">
-          <span
-            class="mt-0.5 h-3 w-3 shrink-0 rounded-full"
-            :style="{ background: statusMeta(selectedEntry.color).color }"
-            :title="statusMeta(selectedEntry.color).label"
-          ></span>
           <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-baseline gap-x-2">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span class="text-sm font-semibold text-text">{{ selectedEntry.label }}</span>
               <span class="text-[11px] text-muted">({{ selectedEntry.slug }})</span>
+              <UBadge :style="statusBadgeStyle(statusMeta(selectedEntry.color).color)" size="sm" variant="solid">
+                {{ statusMeta(selectedEntry.color).label }}
+              </UBadge>
               <span
                 v-if="selectedEntry.review"
                 class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
@@ -275,26 +268,28 @@ async function submitReject() {
               <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
             </div>
 
-            <div v-if="isDev" class="mt-2 flex items-center gap-2">
-              <UButton
-                size="xs"
-                color="success"
-                variant="subtle"
-                :disabled="pendingKey === selectedEntry.key"
-                :loading="pendingKey === selectedEntry.key"
-                @click="confirmEntry(selectedEntry)"
-              >
-                Confirm
-              </UButton>
-              <UButton
-                size="xs"
-                color="warning"
-                variant="subtle"
-                :disabled="pendingKey === selectedEntry.key"
-                @click="openReject(selectedEntry)"
-              >
-                Reject…
-              </UButton>
+            <div v-if="isDev && (selectedEntry.baseline === 'blue' || selectedEntry.review)" class="mt-2 flex items-center gap-2">
+              <template v-if="selectedEntry.baseline === 'blue'">
+                <UButton
+                  size="xs"
+                  color="success"
+                  variant="subtle"
+                  :disabled="pendingKey === selectedEntry.key"
+                  :loading="pendingKey === selectedEntry.key"
+                  @click="confirmEntry(selectedEntry)"
+                >
+                  Confirm
+                </UButton>
+                <UButton
+                  size="xs"
+                  color="warning"
+                  variant="subtle"
+                  :disabled="pendingKey === selectedEntry.key"
+                  @click="openReject(selectedEntry)"
+                >
+                  Reject…
+                </UButton>
+              </template>
               <UButton
                 v-if="selectedEntry.review"
                 size="xs"

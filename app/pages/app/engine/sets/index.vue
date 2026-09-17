@@ -78,7 +78,7 @@ useHead({ title: 'Fact-authoring status' });
 // mapping — this page only ever consumes the already-translated result).
 type CardStatusBucket = 'verified' | 'uncertain' | 're-review' | 'green' | 'yellow' | 'orange' | 'red' | 'gray';
 type CardStatusBaseline = 'gray' | 'purple' | 'blue';
-type CardStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+type CardStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | 're-review';
 interface CardStatusEntry {
   number: string;
   name: string;
@@ -211,6 +211,12 @@ const STATUS_OPTIONS: StatusFilterOption<CardStatusColor>[] = [
   },
   { value: 'yellow', label: 'Flagged', color: '#eab308', description: 'Human-reviewed and flagged with one specific, known conceptual gap — see the card’s own caveat note.' },
   { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'Human-reviewed and confirmed as-is.' },
+  {
+    value: 're-review',
+    label: 'Needs re-review',
+    color: '#7dd3fc',
+    description: 'A human previously confirmed this card, but its facts/synergy data has since drifted from what was confirmed — the old confirmation is stale and needs another look.',
+  },
 ];
 
 // Real FIN collector numbers aren't a clean contiguous 1-306 run (bonus/
@@ -337,25 +343,7 @@ watch(
         @toggle="list.toggleFilter"
       >
         <template #help>
-          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
-            <p>
-              Computed baseline (automatic, off each card's own real facts/synergy data):
-              <b class="text-text">Not authored yet</b> (no real facts yet, or a structural not-yet-modeled construct
-              blocks it) → <b class="text-text">Incomplete</b> once real facts exist but aren't yet BOTH fully
-              recognizer-derived (no hand/agent-authored fact) and oracle-text-covered →
-              <b class="text-text">Fully covered</b> once both are true.
-            </p>
-            <p>
-              <b class="text-text">Flagged</b>/<b class="text-text">Confirmed</b> are a human-review overlay on top of
-              an otherwise <b class="text-text">Fully covered</b> baseline only, same split
-              <NuxtLink to="/app/engine/predicates" class="text-text underline">Predicate status</NuxtLink> and
-              <NuxtLink to="/app/engine/features" class="text-text underline">Feature status</NuxtLink> already use: a
-              human can confirm the card's facts as-is (green) or flag one specific, still-unmodelable conceptual gap
-              (yellow, with a required note). A card that was confirmed before but has since changed content reverts
-              to plain <b class="text-text">Fully covered</b> rather than keeping a now-stale confirmation, until a
-              human looks again.
-            </p>
-          </EngineConsoleStatusHelp>
+          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS" />
         </template>
       </EngineConsoleStatusFilterControls>
 

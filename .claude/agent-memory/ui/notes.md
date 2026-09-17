@@ -7,6 +7,129 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- 2026-09-18, `re-review` (6th shared status) wired into Predicates/
+  Features/Sets + real visual flow diagram in the help popover, following
+  that same day's backend widening of `EngineStatusColor`/
+  `SinkDerivationColor`/`CardStatusColor` to 6 values:
+  - Widened each page's own local `StatusColor`/`CardStatusColor` type
+    (`predicates/index.vue`, `features/index.vue`, `sets/index.vue`) to
+    add `'re-review'`, plus a `STATUS_OPTIONS` entry (`#7dd3fc`, label
+    "Needs re-review", page-specific description prose) on all three —
+    this cleared the 8 known pre-existing typecheck errors (`EngineStatusColor`/
+    `SinkDerivationColor` not assignable to the old 5-value local type) with
+    zero new ones. `sets/index.vue` had NO typecheck error before this (its
+    local `CardStatusEntry`/`CardStatusFile` interfaces are hand-duplicated,
+    not imported from the server route, so TS never cross-checked them
+    against the real served shape) but was a live, real runtime bug: a
+    `re-review`-colored card would fail `STATUS_OPTIONS.find(...)!` (no
+    match in the old 5-entry array) — confirmed one exists in real FIN data
+    today (fin/5, "Aerith Rescue Mission") and now renders correctly.
+  - **Part 2 (hide confirm/reject below `blue`) — Predicates/Features
+    DONE, Sets tab is OUT OF SCOPE for `ui`, needs `card`**: on
+    `predicates/index.vue`/`features/index.vue`, split the existing
+    `v-if="isDev"` button row into a `<template v-if="selectedEntry.baseline
+    === 'blue'">` wrapping ONLY Confirm/Reject (a `re-review` entry's own
+    `baseline` is always `'blue'` per contract, so it stays eligible) plus
+    an independently-gated "Clear review" button (`v-if="selectedEntry.review"`,
+    no baseline condition — clearing is always allowed per both contracts).
+    Outer wrapping div's own `v-if` widened to
+    `isDev && (selectedEntry.baseline === 'blue' || selectedEntry.review)`
+    so the whole row disappears (not an empty gap) when there's neither a
+    confirm/reject to offer NOR a stale review to clear. Verified live via
+    Playwright (real button-role queries, not text substring — first pass
+    falsely "found" a Confirm/Reject button on a gray entry because
+    `button:has-text("Confirm")` substring-matches the filter CHIP labeled
+    "Confirmed (0)"; switched to `getByRole('button', {name: /^Confirm$/})`
+    and reconfirmed 0/0 on a real gray entry, 1/1 still present on a real
+    blue entry, on both tabs). **The Sets tab has NO confirm/reject controls
+    of its own at all** — `sets/index.vue`'s detail pane only ever renders
+    `<CardDetailTabs>`; the actual Confirm/"Confirm (Uncertain)"/Unconfirm
+    buttons this axis's contract (`card-schema.md`) describes gating live
+    INSIDE `CardDetailTabs.vue` (`ReviewStatusBadge variant="button"` +
+    the separate `confirmUncertain()` text button), which is `card` agent's
+    file (extensively tracked in its own notes.md, imported by the
+    standalone `/app/card/[set]/[number]` page too, not something I own).
+    Confirmed live those buttons are STILL ungated there (render regardless
+    of `cardStatus`'s own baseline) — real, pre-existing gap the
+    card-schema.md contract itself already flagged ("not yet done as of
+    this writing, a follow-up ui task") but which actually belongs to
+    `card`, not `ui`, given where the component lives. Flagging for
+    orchestrator to route to `card`: gate `CardDetailTabs.vue`'s Confirm /
+    "Confirm (Uncertain)" (not Unconfirm — that's never gated) behind
+    `cardStatusBaseline(cardStatus.status) === 'blue'`.
+  - **Part 3 (visual flow diagram)**: redesigned `EngineConsoleStatusHelp.vue`
+    from prose-only to real `UBadge` pills + arrow connectors, generic and
+    automatic — it looks up `gray`/`purple`/`blue`/`yellow`/`green`/
+    `re-review` by VALUE in the caller's own `statusOptions` prop (not
+    position/count) and only renders the diagram when all 6 are present;
+    falls through to the original default-slot prose otherwise, so
+    `keywords/[[slug]].vue`'s own 2-value covered/gap axis (the only other
+    consumer) is completely unaffected — didn't touch that page. Three
+    horizontal mini-flow rows (gray→purple→blue; blue→yellow "rejected" /
+    blue→green "confirmed" as two separate rows, not a CSS branch/fork —
+    simpler to build reliably and just as legible; green→re-review→green
+    "once re-confirmed") using plain unicode `→` arrow glyphs, not SVG/a
+    diagramming library. Removed each of the 3 pages' own hand-authored
+    prose `<p>` tags inside `<template #help>` (now dead — `flow` is always
+    non-null for these axes, `v-else` slot never renders) — pages now just
+    pass `<EngineConsoleStatusHelp :status-options="STATUS_OPTIONS" />`
+    with no default-slot content at all.
+  - New shared `app/lib/badgeColor.ts` (`readableTextColor`/
+    `statusBadgeStyle`) — generic relative-luminance check so a `UBadge`'s
+    text stays legible against ANY of the 6 real hexes without hardcoding
+    per-color branches (yellow/re-review are light enough to need dark
+    text; the other 4 need light text). Extracted here rather than kept
+    private in `EngineConsoleStatusHelp.vue` once the SAME computation was
+    also needed for the two "prominent status display" `UBadge`s below.
+  - **Badges vs. dots, applied selectively per the task's own "use
+    judgment" framing**: converted the Predicates/Features detail-pane
+    HEADER status indicator (previously a bare colored dot with the actual
+    status name ONLY in a hover `title`, genuinely a worse case than plain
+    "dot + visible text" since the text wasn't even visible without
+    hovering) to a real `UBadge` with the status's own label text always
+    visible, right next to the entry name — the clearest "prominent status
+    display" fit the task called out. Left the SIDEBAR ROW dots (all three
+    pages) and the filter CHIP dots (`EngineConsoleStatusFilterControls.vue`)
+    as plain small dots, unchanged — both are genuinely compact/space-
+    constrained per-row UI where a full badge per row would be cluttered,
+    matching the task's own explicit "compact list rows probably still
+    want the small dot" carve-out. Did NOT touch `sets/index.vue`'s own
+    detail pane for this — it has no status display of its own to convert
+    (see the Part 2 note above: that pane is 100% delegated to
+    `CardDetailTabs.vue`, out of my lane); its sidebar dots/filter chips
+    are unchanged for the same "stay compact" reasoning as the other two.
+  - `UBadge`'s `color`/`variant` props map to Nuxt UI theme tokens, not
+    arbitrary literal hex — used `:style="statusBadgeStyle(...)"` (inline
+    `background`+`color`) the same way every dot in this codebase already
+    drives color, letting inline style's higher specificity override
+    whatever the `variant="solid"` class itself would otherwise paint; did
+    NOT add a new `color`/`variant` mapping scheme. First real usage of
+    `UBadge` anywhere in this app (confirmed via a full-tree scan before
+    starting — zero prior usages) — no established convention to follow,
+    so the inline-style approach here is the one to reuse if another
+    `UBadge` is added later.
+  - Verified everything live via Playwright against the already-running
+    dev server (localhost:3000, an existing `nuxi dev` instance, not a
+    second one): `re-review` renders with its own light-blue dot/badge and
+    "Needs re-review" label on all three tabs (found a real one on Sets,
+    fin/5 "Aerith Rescue Mission" — no real re-review entry exists yet on
+    Predicates/Features, all 4 predicates are gray/blue and none of the 29
+    engine-status gaps have drifted, so this was confirmed structurally
+    there via `find('re-review')` returning the right option + a code read
+    of the server route's own fingerprint-mismatch branch, not a live
+    example); gray/purple entries genuinely show 0 Confirm/Reject controls
+    on Predicates/Features (real blue entries still show 1/1); help
+    popover diagram renders real badges+arrows on all three tabs with
+    page-specific legend text above it, 0 console/page errors throughout.
+    `npx nuxi typecheck`: the 8 known errors gone, zero new ones (same
+    pre-existing baseline as always — `CardDetailTabs.vue` x3,
+    `card-status.ts`, `card.ts`, `mana.ts`, `tokens/by-key.ts`, none of
+    which this task touched). `npx vitest run`: 1169 passed, same 5
+    pre-existing `tagging/*`-data-missing failures as always (sandbox-only,
+    unrelated). Used a throwaway `.scratch/` dir inside the repo root for
+    the Playwright verification scripts (deleted before finishing, `git
+    status` confirms clean — never a tracked/staged artifact).
+
 - 2026-09-18: fixed the bare-color-word `STATUS_OPTIONS` labels ("Gray"/
   "Purple"/"Blue"/"Yellow"/"Green") on the predicates/features/sets
   `/app/engine/*` console tabs — dot color + `value`/status-computation
