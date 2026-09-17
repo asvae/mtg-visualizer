@@ -1,1 +1,57 @@
-{}
+{
+  "gap-4-target-legality-checking-at-cast-declare-time-an": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-5-non-basic-mana-sources": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-8-damage-prevention-shields-a-narrow-dealdamage-ho": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-9-first-double-strike-combat-sub-step": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-10-legend-rule-other-sba-adjacent-state-cleanup": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-19-no-mill-mechanism-chokepoint-at-all": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-20-per-turn-ability-activation-limit-tracking-activ": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-21-state-pump-had-no-untilendofturn-expiry-a-real-l": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-22-no-attack-triggered-ability-auto-dispatch-primit": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-23-the-entire-cycling-family-plain-cycling-islandcy": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  },
+  "gap-24-combinator-tss-selectupto-had-no-ctx-declaredtar": {
+    "verdict": "reject",
+    "note": "Evidence audit 2026-09-18: cited test does not drive a real engine scenario (createEngine/turn-priority simulation) - either a narrow unit test, a domain-mismatched citation, or (gap 19) a citation to a file that does not exist. Needs a real falsifiable scenario+trace before re-confirming.",
+    "reviewedAt": "2026-09-17"
+  }
+}
