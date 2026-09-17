@@ -159,12 +159,9 @@ export const SINK_DERIVATION_MECHANISMS: SinkDerivationMechanism[] = [
     slug: 'saga',
     label: 'Saga chapter-completion automation',
     motivation:
-      "Summon: Bahamut's real graveyard-transition on its Saga's final chapter comes entirely from generic " +
-      "saga.ts automation (typeLine + numbered chapterN trigger names) — confirmed during the sink-model " +
-      "sanity check to have NO corresponding Effect node in Bahamut's own definition.ts, so a pure " +
-      "CardDefinition-effect-walking matcher (match-sink.ts) cannot derive it at all. See ENGINE_GAPS.md's " +
-      "'Saga lore-counter automation (714)' entry and .claude/agent-memory/engine/notes.md's 2026-09-17 " +
-      "'sink-only synergy matching prototype' entry for the full finding.",
+      'Saga chapters complete via generic engine automation keyed off chapter triggers, not an Effect node on ' +
+      "the card's own definition — so recognizing the final-chapter sacrifice (e.g. on Summon: Bahamut) needs " +
+      'a dedicated predicate rather than Effect-walking.',
     expectedSinkShapes: [
       {
         event: 'dies',
@@ -186,12 +183,9 @@ export const SINK_DERIVATION_MECHANISMS: SinkDerivationMechanism[] = [
     slug: 'stun-counters',
     label: 'Stun-counter untap replacement',
     motivation:
-      "Real per-object replacement effect (Forge Card.java ~7056-7076: STUN replaces the Untap event by " +
-      "removing a counter instead) modeled in this engine as a narrow check inside GameState.untap() " +
-      "(state.ts), not as an Effect node on the stunned card's own definition — see ENGINE_GAPS.md's " +
-      "'Stun and finality counters' entry (cites Ice Flan, Tonberry, Omega, Heartless Evolution). No " +
-      "CardDefinition-level Effect exists for 'this permanent doesn't untap' on any of those cards' own " +
-      "definition.ts files; the consequence is entirely engine-automation-derived.",
+      'A stun counter causes a permanent (e.g. Ice Flan, Tonberry) to skip untapping via a built-in engine ' +
+      "replacement effect, not an Effect on the card's own definition — so a predicate is needed to recognize " +
+      'the skipped untap.',
     expectedSinkShapes: [
       {
         event: 'untap',
@@ -206,12 +200,9 @@ export const SINK_DERIVATION_MECHANISMS: SinkDerivationMechanism[] = [
     slug: 'finality-counters',
     label: 'Finality-counter graveyard-to-exile redirect',
     motivation:
-      "Real per-object replacement effect (Forge Card.java ~7056-7076: FINALITY replaces a Battlefield->" +
-      "Graveyard Moved event with Battlefield->Exile) modeled in this engine as a narrow check inside " +
-      "GameState.move() (state.ts) — see ENGINE_GAPS.md's 'Stun and finality counters' entry (cites " +
-      "Relentless X-ATM092). The exile-instead-of-graveyard consequence has no Effect node on the card's own " +
-      "definition.ts; it's an engine-automation redirect keyed on RealCard.counters, same class of gap as " +
-      "Saga and Stun above.",
+      "A finality counter redirects a permanent's death (e.g. Relentless X-ATM092) from the graveyard to " +
+      "exile via a built-in engine replacement effect, not an Effect on the card's own definition — so a " +
+      'predicate is needed to recognize the redirect and avoid mismatching it as a normal graveyard death.',
     expectedSinkShapes: [
       {
         event: 'dies',
@@ -232,11 +223,9 @@ export const SINK_DERIVATION_MECHANISMS: SinkDerivationMechanism[] = [
     slug: 'crew',
     label: 'Crew cost activation path',
     motivation:
-      "card.crewCost drives a real, structured cost path (canActivateAbility/activateAbility taking an " +
-      "explicit crewedBy: RealCard[]) that bypasses the free-text cost-string checks entirely — see " +
-      "ENGINE_GAPS.md's '~~Crew N~~ CLOSED' entry. The tapping of the crewing creatures (and the Vehicle's " +
-      "own resulting creature-ness for combat purposes) is real gameplay consequence produced by this " +
-      "generic engine cost-payment path, not by any Effect node on the crewed Vehicle's own definition.ts.",
+      "Crewing a Vehicle taps the crewing creatures through the engine's built-in cost-payment path, not " +
+      "through any Effect the Vehicle's own card declares — so a predicate is needed to recognize that tap " +
+      'as real gameplay consequence.',
     expectedSinkShapes: [
       {
         event: 'tap',

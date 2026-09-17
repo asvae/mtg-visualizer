@@ -29185,3 +29185,56 @@ disable the confirm/reject controls unless the entry's `baseline` is
 `blue` (equivalently: color is `blue` or `re-review`) — the server-side
 gate added this task makes an ineligible click 400 rather than silently
 no-op, so the UI fix is about UX polish, not correctness.
+
+## 2026-09-18 — Trimmed Predicates-tab `motivation` prose (reviewer-facing, not audit-note)
+
+User flagged the Predicates tab's detail-pane `motivation` text (e.g. the
+Crew entry) as internal-audit-note verbose — ENGINE_GAPS.md line-syntax
+cross-refs, `canActivateAbility`/`crewedBy: RealCard[]`-level implementation
+detail, Forge `Card.java` line-number citations — not something a reviewer
+making a confirm/reject call needs. Rewrote all 4
+`SINK_DERIVATION_MECHANISMS[].motivation` strings (saga, stun-counters,
+finality-counters, crew) in `functional-model/sink-derivation-status.ts` to
+1-2 plain sentences each: real-world mechanism + why it needs a predicate
+(emergent from generic engine automation, not an Effect node) — cut the
+ENGINE_GAPS.md/notes.md cross-references, class/field names, and Forge line
+citations entirely. Kept one concrete real-card example per entry (Summon:
+Bahamut / Ice Flan, Tonberry / Relentless X-ATM092) since the
+`SinkDerivationMechanism.motivation` field's own doc comment (line ~118)
+calls for citing the motivating card — trimming verbosity didn't mean
+dropping that anchor. `expectedSinkShapes[].note` text (a separate field,
+not in scope for this task) was left untouched.
+
+Did NOT touch `functional-model/sink-model/predicates/*.ts` or
+`ENGINE_GAPS.md` (constraint) or any `app/*` file (a parallel `ui` task owns
+the Predicates/Features detail-pane layout).
+
+**Verified live**: hit an already-running dev server's
+`GET /api/sink-derivations` directly (did not start or stop it) — confirmed
+all 4 entries now serve the new short `motivation` text. `npx vitest run
+functional-model/sink-derivation-status.test.ts` — 14/14 pass (the test only
+asserts `motivation.length > 0`, no hardcoded old text anywhere in the repo
+to break). `npm run typecheck` — same pre-existing baseline-only errors
+already documented above (`CardDetailTabs.vue` x3/4, `card-status.ts:263`,
+`card.ts:2970`, `mana.ts:275`, `server/api/tokens/by-key.ts:32`); zero new.
+
+**Also checked, per task instruction, whether `engine-status.ts`'s Features-
+tab excerpts have the same problem**: yes, same issue, worse in one way — the
+served `evidence.excerpt` field (`server/api/engine-status/index.get.ts`) is
+literally the first ~280 chars of `ENGINE_GAPS.md`'s own numbered-list prose
+verbatim (see `engine-status.ts` line ~135's own doc comment: "enough for a
+human to spot-check the call directly against ENGINE_GAPS.md itself") — that
+doc is written as an engineering changelog (strikethrough markdown, dated
+"CLOSED for real (2026-09-14)" stamps, inline file/line citations), not
+reviewer prose. E.g. gap 3's excerpt starts `3. ~~**Turn-structure
+completeness...**~~ **CLOSED for real, checked-against-the-pool needs**: (a)
+**Cleanup's own automatic actions** — 514.1 discard-to-maximum-hand-size...`;
+gap 6's starts `6. **Hybrid/`{X}` mana symbols.** ~~`parseManaCost` throws on
+any of these~~ **CLOSED for real Hybrid pips...` — reported to the
+orchestrator per this task's own instruction, NOT rewritten (ENGINE_GAPS.md
+itself is explicitly out of scope, actively being edited by a concurrent
+task on the same 11 gaps' scenario evidence).
+
+**Open Forge-verification needed: none.** Pure prose-content edit to one
+hand-authored data file — no `interfaces.ts` mirror, no real-world rules
+claim changed, no predicate/matching logic touched.
