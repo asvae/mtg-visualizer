@@ -1,0 +1,192 @@
+// Sanity check for the sink-only matching prototype (2026-09-17) — the
+// actual point of this task, not a formality. Every sink query below is a
+// stripped/adapted version of a REAL, already-authored `cards/<slug>/
+// synergy.json` sink Fact (never invented), and every candidate is a REAL,
+// already-authored FIN `CardDefinition` (never a synthetic placeholder):
+// Summon: Bahamut (fin/1), Battle Menu (fin/9), Fight On!, Loporrit Scout,
+// Aerith Gainsborough, Baron, Airship Kingdom — all confirmed present in
+// `data/fin/fin_scryfall.json`.
+//
+// Each block below states, in its own comment, whether the new matcher's
+// verdict AGREES with today's production system (`scripts/find-
+// synergies.mjs`'s own real, current output — re-run and grepped by hand
+// while building this file, not assumed) or DISAGREES — and if it
+// disagrees, names which of the three buckets the task asked for: a real
+// bug in this new matcher, a real semantic gap in the structural-matching
+// approach itself, or an existing recognizer/production behavior being
+// wrong. See this task's own final report for the summarized, go/no-go
+// read across all of these.
+import { describe, expect, it } from 'vitest';
+import { aerithGainsborough } from '../cards/aerith-gainsborough/definition';
+import { baronAirshipKingdom } from '../cards/baron-airship-kingdom/definition';
+import { battleMenu } from '../cards/battle-menu/definition';
+import { fightOn } from '../cards/fight-on/definition';
+import { loporritScout } from '../cards/loporrit-scout/definition';
+import { summonBahamut } from '../cards/summon-bahamut/definition';
+import { matchSink } from './match-sink';
+import type { SinkQuery } from './sink-query';
+
+// ---------------------------------------------------------------------------
+// A — Fight On!'s own real sink, verbatim (`cards/fight-on/synergy.json`):
+// `{ "zone": "Graveyard", "controller": "you", "types": { "has": ["Creature"] } }`
+// stripped of nothing but the fields `SinkQuery` always drops (this sink
+// never had `annotations`/`provenance`/`role`/`triggeredBy` to begin with).
+const graveyardCreatureSink: SinkQuery = { category: 'Graveyard fodder', zone: 'Graveyard', controller: 'you', types: { has: ['Creature'] } };
+
+describe('sink A — graveyard creature (Fight On!, as-authored)', () => {
+  it('AGREES: Battle Menu’s "destroy target creature" mode satisfies it (real prod match: "Battle Menu --[destroy]--> Fight On!")', () => {
+    expect(matchSink(graveyardCreatureSink, battleMenu).matched).toBe(true);
+  });
+
+  it('AGREES: Loporrit Scout (no destroy/sacrifice/graveyard-move effect at all) does not satisfy it (real prod: no edge into Fight On! at all)', () => {
+    expect(matchSink(graveyardCreatureSink, loporritScout).matched).toBe(false);
+  });
+
+  it('AGREES (self-check): Fight On! itself moves creatures OUT of the graveyard (Graveyard->Hand), not into it — does not satisfy its own sink', () => {
+    expect(matchSink(graveyardCreatureSink, fightOn).matched).toBe(false);
+  });
+
+  it('DISAGREES, explained — real semantic gap, not a matcher bug: Summon: Bahamut’s chapter I/II "destroy up to one target nonland permanent" ALONE does not guarantee a Creature (guaranteed types = [] once nonLand-only), matching production’s own identical verdict for that effect specifically (Bahamut never shows a "--[destroy]-->" edge into Fight On! either). Production DOES still match Bahamut overall, but only via a SEPARATE, Saga-automation-derived `dies` fact (`saga-lore-and-sacrifice-structural`, real prod line "Summon: Bahamut --[dies]--> Fight On!") that has NO corresponding Effect anywhere in Bahamut’s own definition.ts — 714.2b/714.4’s lore-counter/sacrifice bookkeeping is emergent engine automation (`saga.ts`, keyed on typeLine + numbered chapter-trigger names), not something any Effect/program AST expresses. This matcher, built strictly on Effect/Trigger data, cannot see it — a real, named gap in "pure CardDefinition-effects structural matching" as a total replacement for hand-authored source Facts.', () => {
+    expect(matchSink(graveyardCreatureSink, summonBahamut).matched).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// B — Loporrit Scout's own real sink, verbatim (`cards/loporrit-scout/synergy.json`):
+// `{ "event": "entersBattlefield", "controller": "you", "types": {"has":["Creature"]}, "excludeSelf": true }`
+const creatureEtbSinkAsAuthored: SinkQuery = { category: 'Creature ETB (as authored, event-shaped)', event: 'entersBattlefield', controller: 'you', types: { has: ['Creature'] }, excludeSelf: true };
+
+describe('sink B — creature ETB (Loporrit Scout, as-authored, event-shaped)', () => {
+  it('DISAGREES, explained — a real, ALREADY-DOCUMENTED production bug (SYNERGY_DESIGN.md’s own "Fact unification" section), not a bug in this new matcher: production genuinely matches Baron, Airship Kingdom (a plain Land, real prod line "Baron, Airship Kingdom --[enters the battlefield]--> Loporrit Scout") purely because Baron’s hand-authored `{event:\'entersBattlefield\', tapped:true}` fact happens to share the bare event string with NO `target` wrapper for factsInteract to check `types` against — the sink’s own `types:{has:[\'Creature\']}` constraint is silently never consulted. This matcher’s own `on:\'enter\'`-trigger baseline occurrence for Baron is ZONE-shaped (carries `to:\'Battlefield\'`, mirroring `synergy.ts`’s own `syntheticEntersBattlefieldFact` convention), so it never even reaches the event-vs-event branch where that bug would apply — a different structural reason, not this matcher deliberately re-implementing the type check for this exact pairing (see sink B’ below for that check demonstrated directly).', () => {
+    expect(matchSink(creatureEtbSinkAsAuthored, baronAirshipKingdom).matched).toBe(false);
+  });
+
+  it('AGREES: Battle Menu’s created Knight token does not satisfy the as-authored sink either (real prod: no "Battle Menu --> Loporrit Scout" edge at all) — both systems represent "a token enters the battlefield" as a ZONE move (`to:\'Battlefield\'`), which structurally cannot match a bare EVENT-only sink with no zone fields at all; this is the exact real, ALREADY-DOCUMENTED zone/event shape-partition regression SYNERGY_DESIGN.md’s "Fact unification" section names Loporrit Scout/Woodland Weavemaster as the two real cards it hit.', () => {
+    expect(matchSink(creatureEtbSinkAsAuthored, battleMenu).matched).toBe(false);
+  });
+
+  it('AGREES: Aerith Gainsborough’s own baseline "is itself a normal permanent entering the battlefield" does not satisfy the as-authored sink either, for the identical zone/event shape reason (real prod: no such edge)', () => {
+    expect(matchSink(creatureEtbSinkAsAuthored, aerithGainsborough).matched).toBe(false);
+  });
+});
+
+// B' — the SAME real card's SAME real intent ("wants a Creature entering
+// the battlefield"), re-expressed as a zone-shaped query instead of
+// mechanically copying today's historically event-shaped encoding. This is
+// NOT a production comparison (nothing on disk is authored this way today)
+// — it demonstrates that once a sink is expressed the way this project's
+// OWN "entering the battlefield is fundamentally a zone move" convention
+// already treats every OTHER real zone-shaped fact, the new matcher gets
+// exactly the semantically-intended result, unlike the fragmented as-
+// authored form above.
+const creatureEtbSinkZoneAdapted: SinkQuery = { category: 'Creature ETB (zone-adapted)', to: 'Battlefield', controller: 'you', types: { has: ['Creature'] }, excludeSelf: true };
+
+describe('sink B’ — creature ETB (zone-adapted, illustrative, not an on-disk sink)', () => {
+  it('correctly matches Battle Menu’s created Knight token (a real Creature token, via the createToken->resolvedAttrs path)', () => {
+    const result = matchSink(creatureEtbSinkZoneAdapted, battleMenu);
+    expect(result.matched).toBe(true);
+    expect(result.via).toContain('createToken');
+  });
+
+  it('correctly matches Aerith Gainsborough’s own baseline permanent-entering-battlefield occurrence (she IS a Creature)', () => {
+    expect(matchSink(creatureEtbSinkZoneAdapted, aerithGainsborough).matched).toBe(true);
+  });
+
+  it('correctly rejects Baron, Airship Kingdom (a real Land, not a Creature) — the type constraint genuinely gates the match this time', () => {
+    expect(matchSink(creatureEtbSinkZoneAdapted, baronAirshipKingdom).matched).toBe(false);
+  });
+
+  it('correctly rejects Fight On! (an Instant — never a permanent, no baseline ETB occurrence at all)', () => {
+    expect(matchSink(creatureEtbSinkZoneAdapted, fightOn).matched).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// D — Aerith Gainsborough's own real sink, verbatim (minus its own
+// `event:'dies'`/`putCounter`/zone sinks, tested separately below):
+// `{ "event": "lifegain", "controller": "you" }`
+const lifegainSink: SinkQuery = { category: 'Lifegain', event: 'lifegain', controller: 'you' };
+
+describe('sink D — lifegain (Aerith Gainsborough, as-authored)', () => {
+  it('AGREES: Battle Menu’s "you gain 4 life" mode satisfies it (real prod match: "Battle Menu --[life gain]--> Aerith Gainsborough")', () => {
+    expect(matchSink(lifegainSink, battleMenu).matched).toBe(true);
+  });
+
+  it('AGREES: Summon: Bahamut (no gainLife effect anywhere) does not satisfy it', () => {
+    expect(matchSink(lifegainSink, summonBahamut).matched).toBe(false);
+  });
+
+  it('AGREES: Aerith Gainsborough’s own printed Lifelink keyword does NOT satisfy it — this project’s own Lifelink-implies-lifegain synthetic derivation is a real, existing mechanism (`synergy.ts`’s `hasPrintedLifelink`/`syntheticLifelinkFact`) but explicitly PARKED by user decision as of 2026-09-14 (`LIFELINK_SYNTHETIC_FACT_ENABLED = false`) — this matcher deliberately does not implement it either, matching production’s own current (disabled) state rather than silently reviving a parked pattern.', () => {
+    expect(matchSink(lifegainSink, aerithGainsborough).matched).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// E — Aerith Gainsborough's own real zone-shaped sink, verbatim:
+// `{ "to": "Battlefield", "controller": "you", "types": {"has":["Creature","Legendary"]} }`
+// (the trigger-condition half of her own "whenever a legendary creature
+// enters" broadcast — already zone-shaped on disk, no adaptation needed).
+const legendaryCreatureEtbSink: SinkQuery = { category: 'Legendary creature ETB', to: 'Battlefield', controller: 'you', types: { has: ['Creature', 'Legendary'] } };
+
+describe('sink E — legendary creature ETB (Aerith Gainsborough, as-authored, zone-shaped)', () => {
+  it('matches Aerith Gainsborough herself (Legendary Creature — Human Cleric) — a real, KEPT self-interaction, not excluded (SYNERGY_DESIGN.md: "self-interactions are computed like any other pair, never dropped")', () => {
+    expect(matchSink(legendaryCreatureEtbSink, aerithGainsborough).matched).toBe(true);
+  });
+
+  it('AGREES: rejects Summon: Bahamut (a real Creature, but NOT Legendary — real Scryfall type line has no Legendary supertype)', () => {
+    expect(matchSink(legendaryCreatureEtbSink, summonBahamut).matched).toBe(false);
+  });
+
+  it('AGREES: rejects Baron, Airship Kingdom (a Land, not a Creature at all)', () => {
+    expect(matchSink(legendaryCreatureEtbSink, baronAirshipKingdom).matched).toBe(false);
+  });
+
+  it('AGREES: rejects Fight On! (an Instant, never a permanent)', () => {
+    expect(matchSink(legendaryCreatureEtbSink, fightOn).matched).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// F — a SINK built by turning around Aerith Gainsborough's own real SOURCE
+// fact (her onDies `kind:'program'` effect's real, migrated combinator AST
+// — `you.creaturesInPlay().filter('subtype','Legendary').each(putCounter(...))`
+// — see `cards/aerith-gainsborough/synergy.json`'s own
+// `putCounter-broadcast-structural`-tagged fact, which this query mirrors
+// exactly): "wants a +1/+1 counter put on Legendary creatures you control."
+// This is the direct test of `recognizers/program-ast-walker.ts` integration
+// end to end, against a REAL migrated `kind:'program'` card, not a synthetic
+// AST built just for this test.
+const legendaryPutCounterSink: SinkQuery = { category: 'Legendary +1/+1 counter (broadcast)', event: 'putCounter', counterType: '+1/+1', controller: 'you', target: { types: { has: ['Creature', 'Legendary'] } } };
+
+describe('sink F — legendary +1/+1 counter broadcast, via program-ast-walker', () => {
+  it('matches Aerith Gainsborough herself — her own onDies program effect (branch/each/filter(subtype,Legendary)/putCounter) resolves via extractOccurrences to exactly this pool/counterType, a real self-interaction the SAME shape her own hand-authored `putCounter-broadcast-structural` fact already declares', () => {
+    const result = matchSink(legendaryPutCounterSink, aerithGainsborough);
+    expect(result.matched).toBe(true);
+    expect(result.via).toContain('program:putCounter');
+  });
+
+  it('AGREES: rejects Summon: Bahamut, Battle Menu, Baron, Airship Kingdom, and Fight On! — none of them has any putCounter-shaped effect at all', () => {
+    expect(matchSink(legendaryPutCounterSink, summonBahamut).matched).toBe(false);
+    expect(matchSink(legendaryPutCounterSink, battleMenu).matched).toBe(false);
+    expect(matchSink(legendaryPutCounterSink, baronAirshipKingdom).matched).toBe(false);
+    expect(matchSink(legendaryPutCounterSink, fightOn).matched).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// G — Aerith Gainsborough's own real `dies, target:'self'` sink, verbatim:
+// `{ "event": "dies", "target": "self" }` — a documented, DELIBERATE gap in
+// this matcher (see `match-sink.ts`'s own `satisfiesDestroyImpliesDies` doc
+// comment): resolving "is the SINK'S OWN card a legal victim of this
+// destroy" needs the sink owner's OWN `CardDefinition`, which a `SinkQuery`
+// deliberately does not carry (it's a card-agnostic, curated query, per
+// `sink-query.ts`'s own header) — not extended for this task since none of
+// the OTHER 6 sink queries above need it, but exercised here explicitly so
+// the gap is demonstrated, not just asserted in a comment nobody runs.
+const selfDiesSink: SinkQuery = { category: 'Self dies (trigger condition)', event: 'dies', target: 'self' };
+
+describe('sink G — self dies (Aerith Gainsborough, as-authored) — documented SinkQuery scope gap', () => {
+  it('DISAGREES, explained — a deliberate SinkQuery scope decision, not a matcher bug: production DOES match Summon: Bahamut’s chapter I/II "destroy up to one target nonland permanent" against this exact sink (real prod line "Summon: Bahamut --[destroy]--> Aerith Gainsborough"), because `factsInteract` resolves the SINK OWNER’s (Aerith’s) own static attrs to check she is a legal (non-Land) victim. This matcher’s `SinkQuery` has no reference to its own owning card to do the same, and declines rather than silently guessing — a real, named, documented scope limitation of a card-agnostic sink query, not a semantic gap in structural effect-matching itself.', () => {
+    expect(matchSink(selfDiesSink, summonBahamut).matched).toBe(false);
+  });
+});
