@@ -46,6 +46,34 @@ export interface UseStatusFilterListOptions<T, C extends string> {
    * query (that case short-circuits to "everything matches"). */
   matchesQuery: (item: T, query: string) => boolean;
   sortBy?: (a: T, b: T) => number;
+  /** When given, this tab's `activeFilters` toggle selection persists to
+   * `localStorage` under this exact key and is restored on next visit —
+   * per-page/per-tab (each of the four `/app/engine/*` callers uses its own
+   * distinct key), same "per-viewer convenience, not shared/critical state"
+   * convention `/app/engine/sets`' own last-picked-set persistence already
+   * establishes (see that page's own header). Deliberately does NOT cover
+   * `searchQuery` — search always starts empty on load; only which
+   * status-color toggles are on/off persists. Read synchronously at setup
+   * time (no SSR guard beyond a bare `typeof localStorage` check) since
+   * every caller lives under `/app`, which is SPA-only. A stored value
+   * naming an unknown `C` (e.g. after a `statusOptions` axis changes) is
+   * dropped rather than kept, falling back to "everything on." */
+  storageKey?: string;
+}
+
+function loadStoredFilters<C extends string>(storageKey: string | undefined, options: StatusFilterOption<C>[]): Set<C> {
+  const all = new Set(options.map((o) => o.value));
+  if (!storageKey || typeof localStorage === 'undefined') return all;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return all;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return all;
+    const valid = parsed.filter((v): v is C => all.has(v));
+    return valid.length ? new Set(valid) : all;
+  } catch {
+    return all;
+  }
 }
 
 export function useStatusFilterList<T, C extends string>(opts: UseStatusFilterListOptions<T, C>) {
@@ -58,7 +86,7 @@ export function useStatusFilterList<T, C extends string>(opts: UseStatusFilterLi
   // `shallowRef` skips that traversal (a `Set` is always replaced whole via
   // `toggleFilter`'s own `new Set(...)`, never mutated in place, so no
   // reactivity is lost by not deep-unwrapping its contents).
-  const activeFilters = shallowRef<Set<C>>(new Set(opts.statusOptions.map((o) => o.value)));
+  const activeFilters = shallowRef<Set<C>>(loadStoredFilters(opts.storageKey, opts.statusOptions));
 
   const sorted = computed(() => {
     const arr = [...opts.items.value];
@@ -66,18 +94,26 @@ export function useStatusFilterList<T, C extends string>(opts: UseStatusFilterLi
   });
 
   const normalizedQuery = computed(() => searchQuery.value.trim().toLowerCase());
-  // Search-filtered but NOT yet status-filtered — this is the base
-  // `countsByStatus` counts against, so toggling one status filter never
-  // changes another status's own displayed count.
+  // Search-filtered but NOT yet status-filtered — this is what `visible`
+  // further narrows by `activeFilters`. `countsByStatus` (below) does NOT
+  // read this — it counts against the unfiltered `sorted` instead.
   const searched = computed(() => {
     const q = normalizedQuery.value;
     return q ? sorted.value.filter((it) => opts.matchesQuery(it, q)) : sorted.value;
   });
 
+  // Counts against the FULL dataset (`sorted`, not `searched`/`visible`) —
+  // deliberately independent of both the current search text AND which
+  // OTHER status filters are toggled on/off. A chip's own count answers
+  // "how many entries have this status, full stop" (standard faceted-
+  // filter-count UX: "how many would I see if I selected this status"), not
+  // "how many currently match everything else too." The "N of M" line
+  // elsewhere on the page (`visible.value.length` / total) is the one that
+  // SHOULD keep moving with search+filters — this is a different number.
   const countsByStatus = computed(() => {
     const counts = new Map<C, number>();
     for (const opt of opts.statusOptions) counts.set(opt.value, 0);
-    for (const it of searched.value) {
+    for (const it of sorted.value) {
       const s = opts.statusOf(it);
       counts.set(s, (counts.get(s) ?? 0) + 1);
     }
@@ -89,6 +125,9 @@ export function useStatusFilterList<T, C extends string>(opts: UseStatusFilterLi
     if (next.has(c)) next.delete(c);
     else next.add(c);
     activeFilters.value = next;
+    if (opts.storageKey && typeof localStorage !== 'undefined') {
+      localStorage.setItem(opts.storageKey, JSON.stringify([...next]));
+    }
   }
 
   // Search AND status filters both applied — this is the "currently

@@ -3219,3 +3219,99 @@ worth remembering the pitfalls before re-deriving them:
     "only commit when explicitly asked," but the orchestrator should
     commit this task's own result reasonably promptly to avoid a THIRD
     collision.
+
+- 2026-09-17 (later same day), `/app/engine/*` console prev/next follow-up
+  task — bug investigation + keyboard nav + per-page filter persistence +
+  facet-count fix:
+  - **The reported "Predicates prev/next chevrons don't move the
+    selection" bug did NOT reproduce.** Spun up a real Playwright/Chromium
+    session against the already-running dev server (this repo's
+    `playwright` devDependency, chromium already cached under
+    `~/.cache/ms-playwright`, no sudo needed once confirmed present) and
+    drove the actual UI: fresh load, sequential next/prev clicks across
+    the full 4-entry range and back, raw `page.mouse` clicks (bypassing
+    Playwright's locator auto-waiting, in case of a stacking/overlay
+    issue), direct row clicks, status-filter-driven list-narrowing, and
+    client-side route navigation INTO Predicates from both Features and
+    Keywords (in case of some stale-composable-instance concern) — every
+    one of these correctly moved `selectedKey`/the position label/the
+    detail pane's title, with zero console errors/warnings. Also
+    byte-diffed `predicates/index.vue`'s shell wiring against
+    `features/index.vue`'s (`can-prev`/`can-next`/`position-label`/`@prev`/
+    `@next`) — identical shape, no typo. Concluded this bug either never
+    existed as described, was already stale/fixed by the time this task
+    ran, or needs a much more specific repro than what was handed down
+    (exact click sequence / browser / viewport) — flagged this back to
+    the orchestrator rather than inventing a fix for a defect that
+    couldn't be found. Didn't change anything in `selectPrev`/
+    `selectNext`/`canPrev`/`canNext` as a result (no diff = no risk of a
+    "fix" that's actually a no-op or, worse, a regression).
+  - **Keyboard Left/Right nav**: added to `EngineConsoleShell.vue` itself
+    (not the composable — the composable has no DOM/focus access, and the
+    shell already receives `canPrev`/`canNext`/owns the `prev`/`next`
+    emits, so one `window` keydown listener there covers all four tabs for
+    free). Guards: skips while `document.activeElement`-equivalent (the
+    event's own `target`) is an `INPUT`/`TEXTAREA`/`SELECT`/
+    `contenteditable` element, and skips if ctrl/meta/alt is held (avoids
+    hijacking OS/browser shortcut chords that also use arrow keys). Only
+    emits when the corresponding `canPrev`/`canNext` prop is already true —
+    same bounds as the click buttons, no wraparound. Confirmed live: works
+    on both Features (nav row visible) and Predicates (nav row hidden,
+    keyboard still works), and confirmed a real ArrowRight keypress while
+    the search `<input>` was focused did NOT move selection.
+  - Worth noting for context: `/app/engine/sets/index.vue`'s own header
+    comment already flagged that the PRE-consolidation status-grid page
+    used to have its own bespoke ArrowLeft/ArrowRight nav that this
+    shell's Prev/Next buttons "superseded" (deliberately dropped, not
+    preserved) — this task's keyboard-nav addition effectively restores
+    that capability, now shared app-wide via the shell instead of
+    re-bespoked per page.
+  - **`hide-nav` prop** added to `EngineConsoleShell.vue` (`hideNav`,
+    default `false`) — suppresses ONLY the visible position-label +
+    chevron-button row (`v-if="!hideNav && (...)"`); doesn't touch
+    keyboard nav at all (verified live: `navRowCount` 0 on Predicates,
+    ArrowRight/ArrowLeft still moved the detail pane there). Only
+    Predicates passes `hide-nav` (bare boolean shorthand in the template);
+    Features/Sets/Keywords untouched, confirmed the row still renders on
+    Features live.
+  - **Per-tab persisted status-filter toggles**: `useStatusFilterList.ts`
+    gained an optional `storageKey?: string` option. When given,
+    `activeFilters`' initial value is read synchronously from
+    `localStorage.getItem(storageKey)` at setup time (JSON array of `C`
+    values, validated against `statusOptions` — an unknown/stale value is
+    dropped, not kept, falling back to "everything on"; matches
+    `/app/engine/sets`' own last-picked-set precedent for "read
+    localStorage directly, no SSR guard needed since /app is SPA-only").
+    `toggleFilter` persists the new set back on every toggle.
+    Deliberately does NOT cover `searchQuery` — that's still a bare
+    `ref('')`, always empty on load, per the task's own explicit "search
+    should NOT persist" call. Each of the four pages passes its own
+    distinct key (`engine-console-filters-{keywords,predicates,sets,
+    features}`) — confirmed live that toggling off "Blue" on Predicates
+    survives a hard reload AND leaves Features' own "Blue" filter
+    untouched (independent storage per tab, not shared state).
+  - **Facet-chip-count bug fix**: `countsByStatus` previously counted
+    against `searched` (search-applied, NOT YET status-filtered) — meaning
+    typing in the search box changed the numbers shown next to each
+    status chip. Changed to count against `sorted` (the full dataset,
+    search- and filter-independent) instead — confirmed live typing
+    "saga" into Predicates' search box left `Gray (2)`/`Blue (2)` etc.
+    unchanged while the actual row list below correctly narrowed to just
+    Saga. The "N of M" visible-count line elsewhere on each page is
+    UNCHANGED (still reads `list.visible.value.length`, which SHOULD
+    track search+filters) — only the per-chip numbers stopped moving with
+    search text.
+  - `npx nuxi typecheck` has several pre-existing errors unrelated to any
+    of this task's files (`CardDetailTabs.vue`, `functional-model/
+    {card-status,card,mana}.ts`, `server/api/tokens/by-key.ts`) — confirmed
+    via `git stash`/`typecheck`/`git stash pop` that the exact same errors
+    exist with this task's diff fully reverted, so none are this task's
+    regression; zero NEW errors introduced by this task's 6 changed files.
+  - A second, concurrent commit (`bdac7f50 Embed real card view in sets
+    tab detail pane, drop peek popup` — the `card` specialist's own
+    in-flight work this task's own constraints warned about) landed on
+    `main` mid-task; this task's one-line `storageKey` addition to
+    `/app/engine/sets/index.vue` sat cleanly alongside it with zero
+    conflict (verified via `git stash`/`pop` around the typecheck baseline
+    check above) — no actual collision this time, unlike the earlier
+    entry above.

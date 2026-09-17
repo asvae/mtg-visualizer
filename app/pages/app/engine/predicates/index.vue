@@ -10,6 +10,13 @@
 // the shared `useStatusFilterList`/`EngineConsoleShell`/
 // `StatusFilterControls`/`EntryListPanel` pieces, per this task's own
 // "collapse the duplicated shell" ask.
+//
+// 2026-09-17 addendum: this axis only ever has a handful of entries (4 as
+// of this writing) — the shell's visible position-label + chevron-button
+// row isn't useful real estate here, so this page alone passes `hide-nav`
+// to hide JUST that visible affordance (Features/Sets/Keywords keep it).
+// Arrow-key prev/next (`EngineConsoleShell.vue`'s own keydown listener)
+// still works here regardless — `hide-nav` only suppresses the buttons.
 import { computed, ref } from 'vue';
 import { useStatusFilterList } from '../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
@@ -57,6 +64,7 @@ const list = useStatusFilterList<SinkDerivationPageEntry, StatusColor>({
   // on the label directly doesn't risk row-order churn from a future
   // rewording.
   sortBy: (a, b) => a.label.localeCompare(b.label),
+  storageKey: 'engine-console-filters-predicates',
 });
 
 // Top-level alias so the template can write plain `selectedEntry` (Vue
@@ -128,6 +136,7 @@ async function submitReject() {
     :can-prev="list.canPrev.value"
     :can-next="list.canNext.value"
     :position-label="list.positionLabel.value"
+    hide-nav
     @prev="list.selectPrev"
     @next="list.selectNext"
   >

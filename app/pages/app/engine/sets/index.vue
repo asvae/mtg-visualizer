@@ -187,6 +187,7 @@ const list = useStatusFilterList<CardStatusEntry, CardStatusBucket>({
     const [bn, bs] = sortKey(b.number);
     return an - bn || as.localeCompare(bs);
   },
+  storageKey: 'engine-console-filters-sets',
 });
 
 const selectedEntry = computed(() => list.selected.value);

@@ -51,6 +51,7 @@ const list = useStatusFilterList<KeywordPageEntry, CoverageStatus>({
   statusOf: (e) => (e.status !== 'not_implemented' ? 'covered' : 'gap'),
   statusOptions: STATUS_OPTIONS,
   matchesQuery: (e, q) => e.title.toLowerCase().includes(q),
+  storageKey: 'engine-console-filters-keywords',
 });
 
 // Evergreen-then-set-specific grouping stays a purely VISUAL split within

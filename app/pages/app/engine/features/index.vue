@@ -44,6 +44,7 @@ const list = useStatusFilterList<EngineStatusPageEntry, StatusColor>({
   // Sort by the stable gap number, never by title — see the contract's own
   // "don't assume `key` is stable across a title rewording" note.
   sortBy: (a, b) => a.gapNumber - b.gapNumber,
+  storageKey: 'engine-console-filters-features',
 });
 
 const selectedEntry = computed(() => list.selected.value);
