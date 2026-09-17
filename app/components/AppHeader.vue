@@ -167,16 +167,26 @@ async function submitDeckImport(clear = false) {
         aria-label="Copy a shareable link to this exact view"
         @click="copyShareLink"
       />
+      <!-- Standalone keywords page — deliberately left in place/linked
+           alongside the /app/engine/* console's own "Keywords" tab per an
+           explicit mid-task correction (still undecided whether that tab
+           belongs in the console at all); don't remove this link without a
+           fresh explicit ask. -->
       <NuxtLink to="/app/keywords">
-        <UButton icon="i-lucide-list-checks" color="neutral" variant="subtle" square aria-label="Keyword & mechanic coverage suite" />
+        <UButton icon="i-lucide-list-checks" color="neutral" variant="subtle" square aria-label="Keyword & mechanic coverage suite (standalone)" />
       </NuxtLink>
-      <NuxtLink to="/app/status">
+      <!-- /app/engine/* — unified console (2026-09-17 consolidation) replacing
+           the old standalone /app/status, /app/engine-status,
+           /app/sink-derivations routes, all removed. Each icon still links
+           straight to its own tab; EngineConsoleTabs.vue lets you switch
+           between all four (including "Keywords") once there. -->
+      <NuxtLink to="/app/engine/sets">
         <UButton icon="i-lucide-grid-2x2" color="neutral" variant="subtle" square aria-label="Fact-authoring status dashboard" />
       </NuxtLink>
-      <NuxtLink to="/app/engine-status">
+      <NuxtLink to="/app/engine/features">
         <UButton icon="i-lucide-cpu" color="neutral" variant="subtle" square aria-label="Engine capability status dashboard" />
       </NuxtLink>
-      <NuxtLink to="/app/sink-derivations">
+      <NuxtLink to="/app/engine/predicates">
         <UButton icon="i-lucide-git-fork" color="neutral" variant="subtle" square aria-label="Sink-derivation predicate status dashboard" />
       </NuxtLink>
 

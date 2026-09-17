@@ -3110,3 +3110,112 @@ worth remembering the pitfalls before re-deriving them:
     errors. `npm run typecheck` clean in all three touched files
     throughout both correction rounds. All `.scratch-*.mjs` throwaway
     scripts deleted before finishing both times.
+
+- 2026-09-17, `/app/engine/*` console consolidation — merged keywords/
+  sink-derivations/engine-status/status (heatmap) into one tabbed shell.
+  Mid-task scope narrowed twice: recognizers dropped entirely (never
+  touched, never linked — `/app/recognizers/[[slug]].vue` stays exactly as
+  it was); then keywords ITSELF went tentative — the standalone
+  `/app/keywords/[[slug]].vue` route + its AppHeader.vue link stay in place
+  UNTOUCHED (still linked, still working) alongside a NEW duplicate
+  `/app/engine/keywords/[[slug]].vue` tab, specifically so dropping the
+  tab later loses nothing. Only sink-derivations/engine-status/status had
+  their old routes actually removed + AppHeader links repointed.
+  - Final route shape: `/app/engine/{keywords,predicates,sets,features}`,
+    each its own real page (not client tab state) — `predicates` was
+    `/app/sink-derivations`, `features` was `/app/engine-status`, `sets`
+    was `/app/status` (dropped its 50-per-row heatmap grid entirely, now
+    the same list+detail shell as the other three).
+  - Shared pieces extracted: `app/composables/useStatusFilterList.ts`
+    (search + status-filter-with-per-status-counts + visible list +
+    self-owned `selectedKey` ref + prev/next/positionLabel — generic over
+    `<T, C extends string>`), `app/components/engine-console/
+    EngineConsoleShell.vue` (nav+detail 2-pane layout + Prev/Next header
+    row, renders `EngineConsoleTabs` at the top of the nav slot itself),
+    `EngineConsoleTabs.vue` (the 4-tab bar), `EngineConsoleStatusFilterControls.vue`
+    (search box + per-status toggle buttons w/ counts + total line),
+    `EngineConsoleEntryListPanel.vue` (shared `<button>` row chrome, `row`
+    scoped slot for per-tab content — Vue 3.5 generic `<script setup
+    generic="T">` components, confirmed this repo's Vue/Nuxt versions
+    support it).
+  - **Naming landmine hit and fixed**: Nuxt's default component
+    auto-import PREFIXES a subfolder component's name with the folder
+    (kebab->Pascal) UNLESS the filename already starts with that prefix —
+    `EngineConsoleTabs.vue`/`EngineConsoleShell.vue` (both already
+    prefixed) resolved fine as-typed, but the first-drafted
+    `StatusFilterControls.vue`/`EntryListPanel.vue` (NOT prefixed) silently
+    registered as `EngineConsoleStatusFilterControls`/
+    `EngineConsoleEntryListPanel` instead — confirmed live via a real Vue
+    "Failed to resolve component" warning (not a typecheck error — this
+    class of bug is invisible to `npm run typecheck` entirely, only shows
+    at runtime). Fixed by renaming the files to match what Nuxt was going
+    to call them anyway, not by fighting the convention. Worth remembering
+    for any FUTURE component added under a subfolder here: name the file
+    with the folder's own Pascal prefix from the start, or verify with a
+    live console-warning check, not just typecheck.
+  - **Selection design split, three ways** (`useStatusFilterList`'s own
+    header comment covers this in more depth): predicates/features/sets
+    let the composable own `selectedKey` directly (self-mutating
+    `select`/`selectPrev`/`selectNext`, reset-to-first-visible-entry on
+    filter/search change via an internal `watch(visible,...)`). keywords
+    needed MORE (its own pre-existing per-entry slug URL,
+    `/app/engine/keywords/<slug>`) — layered on top by watching the
+    composable's plain exposed `selectedKey` ref from the PAGE itself
+    (route -> selectedKey, one-directional import only) and having every
+    explicit action (row click, Prev, Next) call `navigateTo` directly
+    rather than mutating the ref — deliberately did NOT make the
+    composable grow a second "externally driven" mode; a plain exposed
+    `Ref` was enough. Consequence accepted, not fixed: if the CURRENTLY
+    OPEN keyword gets search/status-filtered out, the detail pane still
+    correctly follows the composable's own reset-to-first-entry, but the
+    URL doesn't update until the next explicit click/Prev/Next (matches
+    the OLD page's own "bare route never auto-redirects to a slug"
+    behavior deliberately, at the cost of this one edge case).
+  - Template gotcha, not a real Vue limitation but easy to trip on: a
+    NESTED ref access in a template (`list.selected.value`) does NOT
+    auto-unwrap the way a TOP-LEVEL one does (`selectedEntry` when it's
+    its own top-level `<script setup>` binding) — and a `!` non-null
+    assertion inside a template expression is NOT safe to assume works the
+    way it does in `<script>`. Fixed everywhere by adding a top-level
+    `const selectedEntry = computed(() => list.selected.value)` alias per
+    page and using THAT (plus a plain `v-if` guard, no `!`) instead of
+    reaching into `list.selected.value` repeatedly in templates.
+  - `shallowRef`, not `ref`, for a composable-internal `Set<C>ownership`
+    (`activeFilters`) when `C` is a generic type parameter — plain `ref`
+    triggers Vue's deep `UnwrapRef<T>` traversal INTO the `Set`'s own
+    generic argument, producing real `tsc` errors (`Set<C>` vs a synthetic
+    `Set<UnwrapRefSimple<C>>`) on every `.has()`/`.add()`/`.delete()` call
+    site. `shallowRef` sidesteps it since the Set is always replaced whole
+    (`toggleFilter`'s own `new Set(...)`), never mutated in place.
+  - Mid-task addendum (after the shell was otherwise done): `/app/engine/
+    sets` (was `/app/status`) needed a real set-picker, not hardcoded FIN —
+    added ONE new thin discovery endpoint, `server/api/card-status/
+    sets.get.ts` (plain `readdirSync('data/')` + `existsSync(.../
+    <set>_scryfall.json)` per dir, no `functional-model/` import at all),
+    reasoning it's the same "thin data endpoint feeding a ui page"
+    pattern this agent already owns (`server/api/keywords/index.get.ts`
+    etc.) rather than a violation of a "don't touch server/api" scope
+    note — flagged the reasoning inline in the page's own header rather
+    than silently deciding it alone. Picker persists the last-picked set
+    to `localStorage` under `engine-sets-last-set` (re-validated against
+    the live `/api/card-status/sets` list on load, falls back to the
+    first real available set if the stored one's gone).
+  - **Cross-session collision, real, worth flagging for any orchestrator
+    reading this**: mid-task, a PEER orchestrator's own concurrent commits
+    (`d3eeb6d1 Add real Saga and Crew sink-derivation predicates`, likely
+    `engine` agent work, then `11bcefb4 Restore 3 page files accidentally
+    deleted by the prior commit`) landed on `main` and silently clobbered
+    this task's own in-progress, uncommitted `git rm` of the very same 3
+    old page files (`app/pages/app/{status,engine-status,sink-derivations}/
+    index.vue`) — their own commit apparently `git add -A`'d over my
+    working-tree deletion, undoing it without either side knowing, then a
+    follow-up commit from their side "restored" the files thinking the
+    deletion was accidental collateral damage from THEIR change. Caught by
+    a plain `git status` sanity check near the end of this task (files
+    were back on disk with zero git-visible diff) — redid the `git rm`
+    fresh afterward. Concrete case of the exact risk CLAUDE.md's "Multiple
+    orchestrators" section names (two orchestrators' dispatched work
+    touching the same files at once) — left staged-but-uncommitted per
+    "only commit when explicitly asked," but the orchestrator should
+    commit this task's own result reasonably promptly to avoid a THIRD
+    collision.
