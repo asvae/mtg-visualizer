@@ -34,6 +34,7 @@ import type { CardResponse } from '../lib/cardResponse';
 import { StoreKey } from '../composables/useGraphStore';
 import { CARD_STATUS_META } from '../lib/cardStatus';
 import type { CardStatusBucket } from '../lib/cardStatus';
+import { cardStatusBaseline } from '../../functional-model/card-status';
 import { emitReviewStatusChanged } from '../composables/useReviewStatusBus';
 
 // Debug column showing each row's raw `Fact` JSON, so it's inspectable
@@ -123,6 +124,28 @@ const cardStatus = computed(() => {
 // for the caveat to be visible: `reasons.join(' ')` already carries it on an
 // `uncertain` card, same as every other bucket's own reasons text.
 const cardStatusTitle = computed(() => (cardStatus.value ? `${CARD_STATUS_META[cardStatus.value.status].label}: ${cardStatus.value.reasons.join(' ')}` : ''));
+
+// Real review-action gate (`.claude/contracts/card-schema.md`'s "Real,
+// enforced gate DOES now exist for the REVIEW-ACTION side of this axis"
+// section, 2026-09-18) — confirming/rejecting is meaningless on a
+// `gray`/`purple`-baseline card ("was this card's fact-authoring ever
+// actually claimed complete" is a precondition for "a human confirmed
+// it"). `POST /api/card/review-status` already 400s a `reviewed:true`
+// attempt server-side unless the CURRENT `cardStatusBaseline` is `blue`;
+// this mirrors that same check client-side so the Confirm/"Confirm
+// (Uncertain)" controls simply aren't there to click on an ineligible
+// card, rather than surfacing that 400 as a confusing failed request.
+// Reads `cardStatus` (this component's own live, same-tab-optimistic-
+// aware badge state), not `baseCardStatus` — an in-flight/just-applied
+// local override should immediately re-open (or, in principle, close) this
+// gate the same instant it changes the visible badge, no extra reactivity
+// needed. `null` (no functional-model directory at all, or the classifier
+// couldn't run) is never eligible — same "pretend it doesn't exist" floor
+// `gray`/`purple` already get.
+const canConfirmCardStatus = computed(() => {
+  const status = cardStatus.value?.status;
+  return !!status && cardStatusBaseline(status) === 'blue';
+});
 
 // functional-model's own outline data — the card's v2 (SYNERGY_DESIGN.md)
 // AI-authored, execution-verified attribute-bag facts
@@ -1233,7 +1256,20 @@ function confirmUncertain() {
             <td class="py-1 pr-4 align-middle">Facts</td>
             <td class="py-1 align-middle">
               <span class="inline-flex items-center gap-1.5">
+                <!-- Confirm/Unconfirm — Confirm ("ai_reviewed" status) is
+                     gated behind `canConfirmCardStatus` per
+                     `.claude/contracts/card-schema.md`'s "Real, enforced
+                     gate DOES now exist for the REVIEW-ACTION side of this
+                     axis" section: confirming is meaningless on a
+                     gray/purple-baseline card, and the server already 400s
+                     the attempt, so the button just isn't here to click.
+                     Unconfirm ("human_reviewed" status) is NEVER gated —
+                     un-reviewing needs no precondition, same rule this
+                     file's other review actions already follow (mirrors
+                     `ReviewStatusBadge`'s own "Clear review" always-allowed
+                     posture for Predicates/Features). -->
                 <ReviewStatusBadge
+                  v-if="factsStatus === 'human_reviewed' || canConfirmCardStatus"
                   variant="button"
                   :status="factsStatus"
                   :readonly="!(isDev && data?.functionalModel)"
@@ -1258,9 +1294,13 @@ function confirmUncertain() {
                      label below (`cardStatus`), which already distinguishes
                      `uncertain` (blue) from `verified` (lime) from a plain
                      never-reviewed bucket, and is now live-reactive to this
-                     button too (see `cardStatusOverride`). -->
+                     button too (see `cardStatusOverride`). This is ALWAYS a
+                     forced confirm (never an unconfirm), so it shares the
+                     Confirm button's own `canConfirmCardStatus` gate
+                     unconditionally — there is no "Unconfirm" analog of this
+                     button to exempt. -->
                 <button
-                  v-if="isDev && data?.functionalModel"
+                  v-if="isDev && data?.functionalModel && canConfirmCardStatus"
                   type="button"
                   class="rounded border px-2 py-1 text-xs font-medium transition-colors hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
                   :style="{ borderColor: `${CARD_STATUS_META.uncertain.color}66`, background: `${CARD_STATUS_META.uncertain.color}1a`, color: CARD_STATUS_META.uncertain.color }"

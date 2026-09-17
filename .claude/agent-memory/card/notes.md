@@ -6437,3 +6437,71 @@ narrative/process record, that file has the authoritative shape.
   both showed only pre-existing, unrelated failures (confirmed via `git
   stash` before/after comparison) — none in this file or its dependency
   chain.
+
+## 2026-09-18: Gated Confirm/"Confirm (Uncertain)" buttons behind cardStatusBaseline === 'blue'
+
+Closed a real, already-flagged gap in `.claude/contracts/card-schema.md`'s
+"Real, enforced gate DOES now exist for the REVIEW-ACTION side of this axis"
+section — server (`POST /api/card/review-status`) already 400s a
+`reviewed:true` attempt on a `gray`/`purple`-baseline card, but the UI still
+showed the buttons regardless, so a click just got a confusing failed
+request. `app/components/CardDetailTabs.vue`:
+- Imported `cardStatusBaseline` from `functional-model/card-status.ts`
+  (engine-owned pure function, no fs/side-effects — safe cross-domain read,
+  same pattern `CARD_STATUS_META` already established for `app/lib/
+  cardStatus.ts`).
+- New `canConfirmCardStatus` computed: `!!cardStatus.value?.status &&
+  cardStatusBaseline(cardStatus.value.status) === 'blue'`. Reads the
+  component's own live `cardStatus` (already same-tab-optimistic-override-
+  aware via `cardStatusOverride`), not `baseCardStatus`.
+- Facts row's `ReviewStatusBadge` (`variant="button"`, the single
+  Confirm/Unconfirm control) now has `v-if="factsStatus === 'human_reviewed'
+  || canConfirmCardStatus"` — hides the WHOLE control only when it would
+  currently render "Confirm" (status `ai_reviewed`) on an ineligible card;
+  "Unconfirm" (status `human_reviewed`) always renders regardless of
+  baseline, matching Predicates'/Features' own "Clear review always
+  allowed" precedent (confirmed by reading `app/pages/app/engine/
+  predicates/index.vue`'s own `baseline === 'blue'`-gated
+  Confirm/Reject + ungated "Clear review" `v-if`, exact same shape).
+- "Confirm (Uncertain)" button gains `&& canConfirmCardStatus` onto its
+  existing `v-if="isDev && data?.functionalModel"` — always a forced
+  confirm, never an unconfirm, so it has no ungated analog to exempt.
+- Scenarios/Interactions review rows (separate `scenariosReview`/
+  `interactionsReview` progress.json fields, unrelated to fact-authoring
+  completeness) were explicitly NOT touched — out of this task's scope, no
+  baseline concept applies to them.
+- `/app/engine/sets` needed zero changes — it already mounts
+  `CardDetailTabs.vue` unchanged as a third consumer (see this file's own
+  2026-09-17 entry), so the gate applies there automatically.
+- Live-verified via a scratch Playwright script (chromium, not checked in,
+  deleted after use) against the running dev server, both consumers:
+  - Standalone `/app/card/fin/31` (status `orange` → baseline `purple`):
+    table buttons = `["Confirm","Confirm"]` — only Scenarios+Interactions'
+    own unrelated Confirm buttons, Facts' Confirm and Confirm (Uncertain)
+    both correctly absent.
+  - Standalone `/app/card/fin/4` (status `green` → baseline `blue`): table
+    buttons = `["Confirm","Confirm (Uncertain)","Confirm","Confirm"]` — all
+    four present as expected.
+  - Standalone `/app/card/fin/1` (status `verified`, already human-reviewed,
+    baseline `blue`): `["Unconfirm","Confirm (Uncertain)","Unconfirm",
+    "Confirm"]` — Facts row correctly shows Unconfirm (never gated) +
+    Confirm (Uncertain) (baseline blue, allowed to re-affirm/update the
+    caveat on an already-verified card).
+  - Embedded `/app/engine/sets` (clicked sidebar rows for fin/31 and fin/4
+    via their `#<number>` span's ancestor `<li>`): identical button sets to
+    the standalone page in both cases — confirms the shared-component reuse
+    holds.
+- `npx tsc --noEmit` clean. `npx vitest run` — 5 pre-existing failures in
+  `scripts/relations.test.mjs` (missing `tagging/sets/{leb,2ed,arn}/
+  *_relations.json`/`tagging/card-enrichment-status.json` — historical-sets
+  tagging sweep's own in-progress files, nothing to do with this change),
+  confirmed pre-existing via `git stash` before/after; everything else
+  (1169 passed) unaffected.
+- Files touched: `app/components/CardDetailTabs.vue` only, per this task's
+  own constraint (didn't touch `functional-model/`, `server/api/*`, or the
+  Predicates/Features/Sets page files).
+- No contract mismatch found — `.claude/contracts/card-schema.md`'s own
+  description of the gap (exact field names, exact server behavior) matched
+  the real code precisely; the "not yet done as of this writing" note in
+  that file is now stale and should be updated to reflect this fix (flagging
+  for orchestrator, not editing that shared contract file myself).

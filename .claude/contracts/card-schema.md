@@ -1217,12 +1217,13 @@ reject an ALREADY-legitimately-`verified`/`uncertain`/`re-review` card
 unless the card is independently green-quality already — see this file's
 own classifier section above), so this gate only ever blocks a genuinely
 new/premature confirm attempt on a card that hasn't earned full coverage
-yet; it cannot un-verify an already-correctly-verified card. `ui`
-(`CardDetailTabs.vue`'s Confirm/"Confirm (Uncertain)" buttons) should hide
-or disable those controls unless the card's own live `cardStatus.status`
-maps (`cardStatusBaseline`) to `blue` — not yet done as of this writing,
-a follow-up `ui` task; until then, a click on an ineligible card gets a
-real 400 with a clear message rather than a silent no-op.
+yet; it cannot un-verify an already-correctly-verified card.
+`CardDetailTabs.vue`'s Confirm/"Confirm (Uncertain)" buttons now hide
+unless the card's own live `cardStatus.status` maps (`cardStatusBaseline`)
+to `blue` (2026-09-18) — Unconfirm stays ungated always, same precedent
+as Predicates/Features' "Clear review". The server-side 400 remains as
+defense in depth (the review-status endpoint is still reachable
+directly, and the `*-reviews.json`-equivalent state is hand-editable).
 
 **Engine has no connection to card/UI, full stop.** Logging or similar
 instrumentation baked into engine code is fine; engine code being
