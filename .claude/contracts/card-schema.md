@@ -1171,15 +1171,28 @@ puts `/app/engine/sets` on the SAME shared 6-state axis
 `/app/engine/predicates` (`GET /api/sink-derivations`) and
 `/app/engine/features` (`GET /api/engine-status`) already use, replacing
 that tab's previous bespoke 8-color scheme — this is now the ONE shared
-status axis across Predicates/Features/Sets, and it supersedes an earlier
-plan detail (never committed to any file) for the not-yet-built FDN
-authoring pipeline to use a separate `pipeline-status.json` scheme with its
-own distinct `red` state for "engine capacity missing." A future FDN
-pipeline should reuse `CardStatusBaseline`/`CardStatusColor` (or a
-same-shaped sibling), not that superseded scheme. The checked-in
+status axis across Predicates/Features/Sets. The checked-in
 `data/fin/fin_card_status.json` snapshot's own on-disk schema is untouched
 by this — the translation is applied at serve time only, in
 `server/api/card-status/[set].get.ts`'s own `withDisplayColor`.
+
+**Correction, 2026-09-18, later still**: this section used to additionally
+claim it "supersedes an earlier plan detail (never committed to any file)"
+for the not-yet-built FDN authoring pipeline's own `pipeline-status.json`
+scheme. That claim was wrong — the plan in question (Workstream 4 of the
+approved sink-only-synergy-model experiment plan) IS a real, current,
+committed-to-disk plan, and was explicitly re-dispatched by name after
+this section was written. FDN's own `pipeline-status.json` axis is real,
+separate, and intentional — see "FDN authoring-pipeline status
+(`pipeline-status.json`)" below for its real shape. It is NOT superseded
+by the shared axis described in this section; the two coexist, answering
+genuinely different questions (this section: FIN fact-verification
+confidence; that section: FDN authoring-PIPELINE-STAGE). The one real
+naming overlap between them (FDN's own renamed `purple` status,
+deliberately reusing this axis's own color vocabulary for "schema support
+only, unverified" rather than coining a synonym) is a value-naming
+consistency choice only, not a type/logic merge — see that section's own
+note for the full reasoning.
 
 **Policy, documented not enforced for PRODUCTION MATCHING (2026-09-18,
 narrowed same day — see the real review-action gate immediately below)**:
@@ -1543,3 +1556,66 @@ otherwise ordinary review pass, never a separate/weaker kind of confirm.
   (`synergy.json` perturbation, `progress.json`, `verified-snapshot.json`)
   reverted immediately after, confirmed byte-identical to the pre-test
   on-disk state.
+
+## FDN authoring-pipeline status (`pipeline-status.json`) — scaffolding only, 2026-09-18
+
+New, separate from every FIN-facing schema above — a genuinely different
+axis for a genuinely different (not-yet-built) pipeline: the FDN sink-only-
+synergy-model experiment's two-tier authoring pipeline (approved plan,
+Workstream 4). Per-card file, `functional-model/cards/<slug>/pipeline-
+status.json` — **not** a reuse of `progress.json` (that tracks fact-quality
+AUDITING of already-authored facts; this tracks how far along the
+authoring PIPELINE ITSELF is, before any Fact/sink authoring has started).
+Type + pure decision logic: `functional-model/pipeline-status.ts`
+(`PipelineStatus`/`PipelineStatusFile`, `pipelineStatusFromGateResult`,
+`applyPipelineReview`, `assertPipelineStatusInvariants`,
+`readPipelineStatus`). Deterministic schema-validation gate a future
+authoring script calls to decide `blue` vs. `purple` vs. hard-fail:
+`functional-model/scripts/validate-card-definition.mjs`
+(`validateCardDefinition`, reusable) + `validate-card-definition-cli.mjs`
+(CLI wrapper — see both files' own header comments for the full design:
+a real vocabulary walk over `Effect`/combinator `kind`s via `card.ts`'s own
+`synergyTags`/`combinator.ts`'s own `walkProgram` — both already-exhaustive
+real dispatchers, reused rather than a hand-maintained "known kinds" list
+— run BEFORE a real, scoped `tsc --noEmit`).
+
+5 real states: `gray`/`purple`/`blue`/`yellow`/`green` (`*(no folder at
+all)*` is the real "not started" case — absence, not a 6th computed
+value; see `readPipelineStatus`). **Naming history, 2026-09-18, later
+same day**: originally named `red` per the plan's own literal wording,
+briefly renamed to `incomplete` per a first user ruling (broadening its
+meaning from "engine-capacity gap only" to "blocked, needs additional
+info from the engine or another system"), then renamed again to `purple`
+per that same user's immediate follow-up correction — reusing the SHARED
+axis's own "schema support only, unverified" color rather than coining a
+second synonym for the same underlying concept on a different axis. This
+is a pure naming-consistency choice, not a fold into the shared axis's
+own type/computation — `pipeline-status.ts` remains its own separate
+module/file, tracking a genuinely different question (see the correction
+note above this section). `purple` is reserved specifically for a
+genuine, detected engine-capacity/vocabulary gap
+(`failureKind:'capacity-gap'` on the gate's own return value — a
+deliberately narrower, lower-level diagnostic string than the broader
+`purple` status name it backs) — `pipelineStatusFromGateResult` THROWS
+rather than ever writing any status for a `failureKind:'other'` (doesn't
+compile / malformed shape / import failure) gate result; a caller must
+catch that throw and hard-fail/flag it separately, never fold it into
+`purple`. `gray`/`purple`/`blue`/`yellow`/`green` is the complete, final
+5-state list for this axis — no 6th status is needed.
+
+**Nothing in this section is wired to anything real yet** — no FDN card
+folder exists, no authoring script calls `pipelineStatusFromGateResult`
+yet, and Workstream 5 (the review UI — `card` agent, "Ok"/"Not ok" buttons
+writing `green`/`yellow` via `applyPipelineReview`) is a separate, not-yet-
+started task. This section exists now specifically so `card` doesn't have
+to read `functional-model/pipeline-status.ts`'s source directly once that
+task starts.
+
+**Resolved, 2026-09-18** (was previously flagged here as an unresolved
+conflict against this same file's earlier "Display-axis translation..."
+section's own since-corrected "supersedes..." claim — see that section's
+own correction note above): FDN's `pipeline-status.json` axis is a real,
+separate, intentional axis, kept distinct from the shared `card-status.ts`
+axis per explicit user ruling — not folded into it. The one naming overlap
+(`purple`) is deliberate value-vocabulary reuse, described above, not a
+type/logic merge.

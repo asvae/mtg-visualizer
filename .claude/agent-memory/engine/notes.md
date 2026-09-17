@@ -29532,3 +29532,167 @@ shows zero new errors touching either changed/added file.
 **Not done, out of scope for this task** (left for the workstreams that
 own them): no `pipeline-status.json`, no schema-validation gate, no
 authoring agent invocation, no card-status file changes.
+
+- **2026-09-18 (later same day) — FDN pipeline Workstream 4, deterministic
+  scaffolding only (status-file shape + schema-validation gate), no real
+  FDN card touched, no authoring agent dispatched.** Built exactly what
+  the dispatch asked:
+  - `functional-model/pipeline-status.ts` — `PipelineStatus`
+    (`gray|red|blue|yellow|green`) + `PipelineStatusFile` on-disk shape,
+    `pipelineStatusFromGateResult` (the ONE real writer of `blue`/`red` —
+    THROWS on `failureKind:'other'`, never lets it become a status value),
+    `applyPipelineReview` (pure `blue -> yellow|green` transition, refuses
+    on any other current status), `assertPipelineStatusInvariants`
+    (defensive shape-consistency checker), `readPipelineStatus` (tolerant
+    reader — missing folder/file AND malformed JSON both fall back to
+    `undefined`, never guessed upward into a color). 25 new unit tests,
+    `pipeline-status.test.ts`.
+  - `functional-model/scripts/validate-card-definition.mjs` — the real
+    gate, `validateCardDefinition(definitionPath, root)`. Two independent
+    checks, in a load-bearing ORDER (see the file's own header for the
+    full reasoning): (1) a vocabulary walk run FIRST, reusing REAL
+    already-exhaustive runtime dispatchers instead of inventing a "known
+    kinds" list — `card-status.ts`'s `findUnsupportedConstructs` (the
+    pool's own documented `kind:'custom'` no-op-placeholder convention)
+    plus `card.ts`'s `synergyTags` and `combinator.ts`'s `walkProgram`
+    (both throw `"unhandled ...: ..."` for a genuinely unrecognized
+    `kind`, TypeScript's own compile-time exhaustiveness exercised for
+    real at runtime); (2) ONLY once that's clean, a real SCOPED `tsc
+    --noEmit` (temp tsconfig, `extends: .nuxt/tsconfig.server.json`,
+    `files:[thatOneFile]` — confirmed empirically this resolves fast,
+    ~0.5-0.7s, and pulls in only the candidate's own real import closure,
+    not the whole app/server graph; diagnostics filtered to just the
+    candidate's own path so a pre-existing dependency-file error, e.g.
+    `card.ts:2970`, never fails someone else's card).
+    **Real, load-bearing finding along the way, worth flagging generally**:
+    the bare root `tsconfig.json` (`files: [], references: [...]`) checks
+    LITERALLY NOTHING under plain `tsc --noEmit -p .` (confirmed: 0.25s,
+    zero diagnostics, even against a repo with known real errors) —
+    `references` only activates under `--build` mode. The config that
+    actually type-checks `functional-model/` (and reproduces this
+    session's own oft-cited "pre-existing baseline error set") is
+    `.nuxt/tsconfig.server.json`. Every prior memory-note mention of
+    "`npx tsc --noEmit` clean" in this file almost certainly meant that
+    config (or `npm run typecheck` / `nuxt typecheck`, which builds all
+    four `.nuxt/tsconfig.*.json` configs together) — not the bare `-p .`
+    invocation, which appears to be a silent no-op. Didn't chase down
+    which specific past entries this affects; flagging so a future session
+    doesn't trust a bare `-p .` run as real coverage.
+    Second real finding: `vite-node`'s own CLI wrapper does NOT preserve
+    the target script's path in `process.argv` at all (confirmed
+    empirically — `process.argv[1]` is `vite-node`'s own bin path, and the
+    target file never appears in `argv` either) — the standard `import
+    .meta.url === file://${process.argv[1]}` "dual CLI/library" guard
+    idiom (`forge-lookup.mjs`'s own convention, but that file runs under
+    `tsx`, where the idiom DOES work) is structurally impossible under
+    `vite-node`. Fixed by splitting into two files: `validate-card-
+    definition.mjs` (pure library, no top-level argv code, safe to import)
+    + `validate-card-definition-cli.mjs` (thin, always-unconditional CLI,
+    never imported by anything else). Worth remembering for any FUTURE
+    `.mjs` file in this pool that wants the same dual shape while needing
+    `vite-node` (sibling-`.ts`-dynamic-import) rather than `tsx`.
+  - **Verification (all live, not just JSON-level)**: 3 throwaway
+    fixtures (case a: valid, known kinds only; case b: a fake
+    `kind:'teleportPermanent'` Effect, cast `as unknown as Effect` so a
+    plain `tsc` pass alone would NOT catch it — proving the vocabulary
+    walk, not `tsc`, is what actually detects this; case c: missing the
+    required `manaCost` field, using only known kinds) written under
+    `functional-model/.fdn-scratch/__gate-fixtures__/` (already-gitignored
+    tree), run through `validateCardDefinition` for real, then deleted
+    (confirmed via `git status` afterward — 0 stray files). Results: (a)
+    `{ok:true}`; (b) `{ok:false, failureKind:'capacity-gap', reasons:
+    ["unknown Effect kind: unhandled effect kind: {\"kind\":
+    \"teleportPermanent\",...}"]}`; (c) `{ok:false, failureKind:'other',
+    reasons:["...(8,14): error TS2741: Property 'manaCost' is missing..."]}`
+    — the exact 3-way distinction the task asked for, confirmed, not
+    assumed. Also ran the gate against 2 REAL production cards:
+    `summon-bahamut` (clean pass) and `galuf-s-final-act` (a real,
+    already-known `card-status.ts` `red`-bucket example per that file's
+    own doc comment) — correctly `capacity-gap`, citing its real
+    no-op-placeholder `describe` text. `npx vitest run functional-model`:
+    109 files/1139 passed+5 skipped (was 108/1091 before — the new test
+    file accounts for the +48... actually +25 tests/+1 file, rest is
+    normal drift from concurrent sessions' own work landing between runs;
+    confirmed 0 regressions either way). `npx tsc --noEmit --pretty false
+    -p .nuxt/tsconfig.server.json`: same exact pre-existing 4-error
+    baseline (`card-status.ts:263`, `card.ts:2970`, `mana.ts:275`,
+    `server/api/tokens/by-key.ts:32`), zero new errors from any of the 4
+    new files. Bare `npx tsc --noEmit -p .` also run (the literal
+    verification command asked for) — 0 output either way, see the
+    no-op finding above for why that's not real signal.
+  - **`engineGapsContext`** (a `capacity-gap` result's own informational
+    field): the CURRENT `computeEngineStatus()` gray/purple titles,
+    attached purely for a human reviewer's context — deliberately NOT
+    part of the classification itself (matching one-line `describe` text
+    against `ENGINE_GAPS.md` prose by keyword would be a real, fragile,
+    silently-wrong heuristic; the capacity-gap verdict is decided
+    ENTIRELY by the real vocabulary walk, independent of this).
+  - **Contract**: added a new "FDN authoring-pipeline status
+    (`pipeline-status.json`) — scaffolding only" section to
+    `.claude/contracts/card-schema.md` (not a new contract file — this
+    boundary IS the engine↔card one, `card` is the eventual Workstream-5
+    consumer). **That same section explicitly flags an unresolved
+    conflict I found and did NOT silently resolve**: this file's OWN
+    earlier same-day "Display-axis translation..." section (and this
+    notes.md file's own 2026-09-18 "`/app/engine/sets` moved onto the
+    shared... axis" entry, ~28777) states the `pipeline-status.json`
+    scheme with a distinct `red` state was SUPERSEDED, on the stated
+    premise that it was "never committed to any file." That premise is
+    now stale — the plan (Workstream 4, still the literal, current,
+    user-approved plan on disk) IS a committed file, and it was
+    re-dispatched, BY NAME, to me, after that supersession note was
+    written. I built exactly what THIS dispatch asked (a real, distinct
+    `red` state) since it was specific and current, but did not touch or
+    walk back the earlier supersession note either — both now sit in
+    `card-schema.md`, disagreeing, and an orchestrator/the user needs to
+    pick one before Workstream 5 (review UI) or any other real consumer
+    gets built on top of either.
+  - **Explicitly NOT done** (per this task's own scope): no real FDN
+    `definition.ts` written, no cheap/haiku authoring agent dispatched,
+    no review UI touched (Workstream 5), no `pipeline-status.json` written
+    for a real card (none exists yet).
+  - **Open Forge-verification needed: none.** Pure tooling/scaffolding —
+    no new `interfaces.ts` mirror, no new real-world engine-behavior claim.
+
+- **2026-09-18 (immediate follow-up to the Workstream-4-scaffolding entry
+  above) — conflict resolved, `red` renamed to `purple` (via a brief,
+  now-superseded `incomplete` intermediate).** Orchestrator relayed a
+  two-step user ruling: (1) rename `pipeline-status.json`'s `red` state to
+  a semantic (non-color) name, `incomplete`, and broaden its meaning from
+  "engine-capacity gap only" to "blocked, needs additional info from the
+  engine or another system"; (2) immediate correction — use `purple`
+  instead of `incomplete`, reusing the SHARED axis's own "schema support
+  only, unverified" color rather than coining a second synonym for the
+  same underlying concept on a different axis. Renamed everywhere
+  (`functional-model/pipeline-status.ts`, its own 25-test file,
+  `validate-card-definition.mjs`'s doc comments, both `.claude/contracts/
+  card-schema.md` sections) — no remaining `'red'` or `'incomplete'`
+  literal anywhere except as explicitly-narrated history in
+  `pipeline-status.ts`'s own header comment (kept deliberately, records
+  the two-step rename so it isn't relitigated).
+  - **Judgment call made explicitly, as asked**: `failureKind:'other'`
+    (doesn't compile / malformed / import failure) stays a hard THROW,
+    NOT folded into the broadened `purple`. Reasoning: `purple`'s new
+    meaning is "blocked, needs MORE INFORMATION" — a genuinely broken
+    definition isn't waiting on more information from anywhere, the
+    authoring step itself failed. Nothing in the code/tests surfaced a
+    real case blurring that line.
+  - **Conflict resolution**: `.claude/contracts/card-schema.md`'s
+    "Display-axis translation..." section had its stale "supersedes an
+    earlier plan detail (never committed to any file)" claim corrected —
+    it now plainly states FDN's `pipeline-status.json` axis is real,
+    separate, and intentional, not superseded, with the one naming
+    overlap (`purple`) explained as value-vocabulary reuse only. The "FDN
+    authoring-pipeline status" section's own "Known, unresolved conflict"
+    paragraph was replaced with a short "Resolved, 2026-09-18" note
+    pointing back at that correction. This should NOT be relitigated
+    again absent a new, explicit user decision.
+  - **Verified**: `npx vitest run functional-model/pipeline-status.test.ts`
+    — 25/25 passed (same count, renamed assertions). Full
+    `npx vitest run functional-model` and `npx tsc --noEmit --pretty false
+    -p .nuxt/tsconfig.server.json` re-run clean (same pre-existing 4-error
+    baseline, 0 new). `validate-card-definition-cli.mjs` re-run against
+    `summon-bahamut` (pass) and `galuf-s-final-act` (real capacity-gap
+    example) — both still produce the correct verdict.
+  - **Open Forge-verification needed: none** — pure naming/doc change, no
+    behavior touched.
